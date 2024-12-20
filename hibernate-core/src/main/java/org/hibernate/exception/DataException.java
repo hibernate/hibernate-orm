@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.exception;
 
@@ -11,7 +9,7 @@ import java.sql.SQLException;
 import org.hibernate.JDBCException;
 
 /**
- * Extends {@link JDBCException} indicating that evaluation of the
+ * A {@link JDBCException} indicating that evaluation of the
  * valid SQL statement against the given data resulted in some
  * illegal operation, mismatched types or incorrect cardinality.
  *
@@ -19,7 +17,7 @@ import org.hibernate.JDBCException;
  */
 public class DataException extends JDBCException {
 	/**
-	 * Constructor for JDBCException.
+	 * Constructor for DataException.
 	 *
 	 * @param root The underlying exception.
 	 */
@@ -28,7 +26,7 @@ public class DataException extends JDBCException {
 	}
 
 	/**
-	 * Constructor for JDBCException.
+	 * Constructor for DataException.
 	 *
 	 * @param message Optional message.
 	 * @param root    The underlying exception.

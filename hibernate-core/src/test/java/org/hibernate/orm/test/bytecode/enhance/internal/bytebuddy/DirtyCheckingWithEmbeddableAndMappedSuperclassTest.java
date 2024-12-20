@@ -1,27 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhance.internal.bytebuddy;
-
-import java.lang.reflect.Method;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
-
-import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
-import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.extractor.Extractors.resultOf;
@@ -44,10 +25,29 @@ import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_FIELD
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_GET_NAME;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_HAS_CHANGED_NAME;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.TRACKER_SUSPEND_NAME;
+import static org.hibernate.orm.test.bytecode.enhance.internal.bytebuddy.DirtyCheckingWithEmbeddableAndMappedSuperclassTest.CardGame;
 
-@TestForIssue(jiraKey = "HHH-13759")
-@RunWith(BytecodeEnhancerRunner.class)
+import java.lang.reflect.Method;
+
+import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
+import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
+
+import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+
+
+@BytecodeEnhanced(testEnhancedClasses = CardGame.class)
 @EnhancementOptions(inlineDirtyChecking = true)
+@JiraKey("HHH-13759")
 public class DirtyCheckingWithEmbeddableAndMappedSuperclassTest {
 
 	@Test

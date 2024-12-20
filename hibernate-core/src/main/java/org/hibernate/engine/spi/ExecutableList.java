@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -21,6 +19,8 @@ import java.util.Set;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.util.collections.CollectionHelper;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A list of {@link Executable executeble actions}. Responsible for
@@ -47,7 +47,7 @@ public class ExecutableList<E extends ComparableExecutable>
 
 	private final ArrayList<E> executables;
 
-	private final Sorter<E> sorter;
+	private final @Nullable Sorter<E> sorter;
 	private final boolean requiresSorting;
 	private boolean sorted;
 
@@ -57,7 +57,7 @@ public class ExecutableList<E extends ComparableExecutable>
 	 * invalidate cache regions as it is exposed from {@link #getQuerySpaces}. This value
 	 * being {@code null} indicates that the query spaces should be calculated.
 	 */
-	private transient Set<Serializable> querySpaces;
+	private transient @Nullable Set<Serializable> querySpaces;
 
 	/**
 	 * Creates a new instance with the default settings.
@@ -144,7 +144,7 @@ public class ExecutableList<E extends ComparableExecutable>
 
 	/**
 	 * Removes the entry at position index in the list.
-	 * 
+	 *
 	 * @param index The index of the element to remove
 	 *
 	 * @return the entry that was removed
@@ -177,7 +177,7 @@ public class ExecutableList<E extends ComparableExecutable>
 
 	/**
 	 * Removes the last n entries from the list.
-	 * 
+	 *
 	 * @param n The number of elements to remove.
 	 */
 	public void removeLastN(int n) {
@@ -196,7 +196,7 @@ public class ExecutableList<E extends ComparableExecutable>
 
 	/**
 	 * Add an {@link Executable} to this list.
-	 * 
+	 *
 	 * @param executable the executable to add to the list
 	 *
 	 * @return true if the object was added to the list
@@ -269,7 +269,7 @@ public class ExecutableList<E extends ComparableExecutable>
 
 	/**
 	 * Returns an iterator for the list. Wraps the list just in case something tries to modify it.
-	 * 
+	 *
 	 * @return an unmodifiable iterator
 	 */
 	@Override
@@ -279,7 +279,7 @@ public class ExecutableList<E extends ComparableExecutable>
 
 	/**
 	 * Write this list out to the given stream as part of serialization
-	 * 
+	 *
 	 * @param oos The stream to which to serialize our state
 	 */
 	@Override
@@ -296,9 +296,10 @@ public class ExecutableList<E extends ComparableExecutable>
 			oos.writeInt( -1 );
 		}
 		else {
+			final Set<Serializable> qs = querySpaces;
 			oos.writeInt( querySpaces.size() );
 			// these are always String, why we treat them as Serializable instead is beyond me...
-			for ( Serializable querySpace : querySpaces ) {
+			for ( Serializable querySpace : qs ) {
 				oos.writeUTF( querySpace.toString() );
 			}
 		}
@@ -307,7 +308,7 @@ public class ExecutableList<E extends ComparableExecutable>
 	/**
 	 * Read this object state back in from the given stream as part of
 	 * the deserialization process.
-	 * 
+	 *
 	 * @param in The stream from which to read our serial state
 	 */
 	@Override
@@ -329,17 +330,19 @@ public class ExecutableList<E extends ComparableExecutable>
 			this.querySpaces = null;
 		}
 		else {
-			querySpaces = CollectionHelper.setOfSize( numberOfQuerySpaces );
+			// The line below is for CF nullness checking purposes.
+			final Set<Serializable> querySpaces = CollectionHelper.setOfSize( numberOfQuerySpaces );
 			for ( int i = 0; i < numberOfQuerySpaces; i++ ) {
 				querySpaces.add( in.readUTF() );
 			}
+			this.querySpaces = querySpaces;
 		}
 	}
 
 	/**
 	 * Allow the {@link Executable}s to reassociate themselves with the
 	 * session after deserialization.
-	 * 
+	 *
 	 * @param session The session with which to associate the {@code Executable}s
 	 */
 	public void afterDeserialize(EventSource session) {

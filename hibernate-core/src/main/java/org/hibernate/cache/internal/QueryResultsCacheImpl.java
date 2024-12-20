@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
 
@@ -17,8 +15,9 @@ import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 
-import static org.hibernate.cache.spi.SecondLevelCacheLogger.DEBUG_ENABLED;
 import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 
 /**
@@ -51,7 +50,7 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			final QueryKey key,
 			final List<?> results,
 			final SharedSessionContractImplementor session) throws HibernateException {
-		if ( DEBUG_ENABLED ) {
+		if ( L2CACHE_LOGGER.isDebugEnabled() ) {
 			L2CACHE_LOGGER.debugf( "Caching query results in region: %s; timestamp=%s",
 					cacheRegion.getName(),
 					session.getCacheTransactionSynchronization().getCachingTimestamp() );
@@ -62,11 +61,20 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 				deepCopy( results )
 		);
 
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 		try {
 			session.getEventListenerManager().cachePutStart();
 			cacheRegion.putIntoCache( key, cacheItem, session );
 		}
 		finally {
+			eventMonitor.completeCachePutEvent(
+					cachePutEvent,
+					session,
+					cacheRegion,
+					true,
+					EventMonitor.CacheActionDescription.QUERY_RESULT
+			);
 			session.getEventListenerManager().cachePutEnd();
 		}
 
@@ -82,30 +90,32 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			final QueryKey key,
 			final Set<String> spaces,
 			final SharedSessionContractImplementor session) throws HibernateException {
-		if ( DEBUG_ENABLED ) {
+		final boolean loggerDebugEnabled = L2CACHE_LOGGER.isDebugEnabled();
+		if ( loggerDebugEnabled ) {
 			L2CACHE_LOGGER.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
 		}
 
 		final CacheItem cacheItem = getCachedData( key, session );
 		if ( cacheItem == null ) {
-			if ( DEBUG_ENABLED ) {
+			if ( loggerDebugEnabled ) {
 				L2CACHE_LOGGER.debug( "Query results were not found in cache" );
 			}
 			return null;
 		}
 
 		if ( !timestampsCache.isUpToDate( spaces, cacheItem.timestamp, session ) ) {
-			if ( DEBUG_ENABLED ) {
+			if ( loggerDebugEnabled ) {
 				L2CACHE_LOGGER.debug( "Cached query results were not up-to-date" );
 			}
 			return null;
 		}
 
-		if ( DEBUG_ENABLED ) {
+		if ( loggerDebugEnabled ) {
 			L2CACHE_LOGGER.debug( "Returning cached query results" );
 		}
 
-		return deepCopy( cacheItem.results );
+		// No need to copy results, since consumers will never mutate
+		return cacheItem.results;
 	}
 
 	@Override
@@ -113,26 +123,27 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			final QueryKey key,
 			final String[] spaces,
 			final SharedSessionContractImplementor session) throws HibernateException {
-		if ( DEBUG_ENABLED ) {
+		final boolean loggerDebugEnabled = L2CACHE_LOGGER.isDebugEnabled();
+		if ( loggerDebugEnabled ) {
 			L2CACHE_LOGGER.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
 		}
 
 		final CacheItem cacheItem = getCachedData( key, session );
 		if ( cacheItem == null ) {
-			if ( DEBUG_ENABLED ) {
+			if ( loggerDebugEnabled ) {
 				L2CACHE_LOGGER.debug( "Query results were not found in cache" );
 			}
 			return null;
 		}
 
 		if ( !timestampsCache.isUpToDate( spaces, cacheItem.timestamp, session ) ) {
-			if ( DEBUG_ENABLED ) {
+			if ( loggerDebugEnabled ) {
 				L2CACHE_LOGGER.debug( "Cached query results were not up-to-date" );
 			}
 			return null;
 		}
 
-		if ( DEBUG_ENABLED ) {
+		if ( loggerDebugEnabled ) {
 			L2CACHE_LOGGER.debug( "Returning cached query results" );
 		}
 
@@ -141,11 +152,19 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 
 	private CacheItem getCachedData(QueryKey key, SharedSessionContractImplementor session) {
 		CacheItem cachedItem = null;
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent cacheGetEvent = eventMonitor.beginCacheGetEvent();
 		try {
 			session.getEventListenerManager().cacheGetStart();
 			cachedItem = (CacheItem) cacheRegion.getFromCache( key, session );
 		}
 		finally {
+			eventMonitor.completeCacheGetEvent(
+					cacheGetEvent,
+					session,
+					cacheRegion,
+					cachedItem != null
+			);
 			session.getEventListenerManager().cacheGetEnd( cachedItem != null );
 		}
 		return cachedItem;

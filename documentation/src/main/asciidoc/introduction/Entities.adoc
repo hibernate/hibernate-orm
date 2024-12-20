@@ -75,7 +75,7 @@ We won't have much more to say about XML-based mappings in this Introduction, si
 
 ."Dynamic" models
 ****
-:maps: {userGuideBase}#dynamic-model
+:maps: {doc-user-guide-url}#dynamic-model
 :envers: https://hibernate.org/orm/envers/
 We love representing entities as classes because the classes give us a _type-safe_ model of our data.
 But Hibernate also has the ability to represent entities as detyped instances of `java.util.Map`.
@@ -122,7 +122,7 @@ It is in principle possible to mix field and property access using explicit `@Ac
 We don't recommend doing this.
 ====
 
-An entity class like `Book`, which does not extend any other entity class is called a _root entity_.
+An entity class like `Book`, which does not extend any other entity class, is called a _root entity_.
 Every root entity must declare an identifier attribute.
 
 [[entity-inheritance]]
@@ -250,7 +250,7 @@ This id maps to a SQL `identity`, `auto_increment`, or `bigserial` column:
 
 [source,java]
 ----
-@Id @GeneratedValue(strategy=IDENTITY) Long id;
+@Id @GeneratedValue(strategy = IDENTITY) Long id;
 ----
 
 The `@SequenceGenerator` and `@TableGenerator` annotations allow further control over `SEQUENCE` and `TABLE` generation respectively.
@@ -259,7 +259,7 @@ Consider this sequence generator:
 
 [source,java]
 ----
-@SequenceGenerator(name="bookSeq", sequenceName="seq_book", initialValue = 5, allocationSize=10)
+@SequenceGenerator(name = "bookSeq", sequenceName = "seq_book", initialValue = 5, allocationSize=10)
 ----
 
 Values are generated using a database sequence defined as follows:
@@ -285,7 +285,7 @@ Any identifier attribute may now make use of the generator named `bookSeq`:
 [source,java]
 ----
 @Id
-@GeneratedValue(strategy=SEQUENCE, generator="bookSeq")  // reference to generator defined elsewhere
+@GeneratedValue(generator = "bookSeq")  // reference to generator defined elsewhere
 Long id;
 ----
 
@@ -294,18 +294,38 @@ Actually, it's extremely common to place the `@SequenceGenerator` annotation on 
 [source,java]
 ----
 @Id
-@GeneratedValue(strategy=SEQUENCE, generator="bookSeq")  // reference to generator defined below
-@SequenceGenerator(name="bookSeq", sequenceName="seq_book", initialValue = 5, allocationSize=10)
+@GeneratedValue  // uses the generator defined below
+@SequenceGenerator(sequenceName = "seq_book", initialValue = 5, allocationSize=10)
 Long id;
 ----
 
-[NOTE]
-// .JPA id generators may be shared between entities
-====
-JPA id generators may be shared between entities.
-A `@SequenceGenerator` or `@TableGenerator` must have a name, and may be shared between multiple id attributes.
-This fits somewhat uncomfortably with the common practice of annotating the `@Id` attribute which makes use of the generator!
-====
+In this case, the `name` of the `@SequenceGenerator` should not be specified.
+
+We may even place a `@SequenceGenerator` or `@TableGenerator` annotation at the package level:
+
+[source,java]
+----
+@SequenceGenerator(sequenceName = "id_sequence", initialValue = 5, allocationSize=10)
+@TableGenerator(table = "id_table", initialValue = 5, allocationSize=10)
+package org.example.entities;
+----
+
+Then any entity in this package which specifies `strategy=SEQUENCE` or `strategy=TABLE` without also explicitly specifying a generator `name` will be assigned a generator based on the package-level annotation.
+
+[source,java]
+----
+@Id
+@GeneratedValue(strategy=SEQUENCE)  // uses the sequence generator defined at the package level
+Long id;
+----
+
+// [NOTE]
+// // .JPA id generators may be shared between entities
+// ====
+// JPA id generators may be shared between entities.
+// A `@SequenceGenerator` or `@TableGenerator` must have a name, and may be shared between multiple id attributes.
+// This fits somewhat uncomfortably with the common practice of annotating the `@Id` attribute which makes use of the generator!
+// ====
 
 As you can see, JPA provides quite adequate support for the most common strategies for system-generated ids.
 However, the annotations themselves are a bit more intrusive than they should be, and there's no well-defined way to extend this framework to support custom strategies for id generation.
@@ -364,42 +384,15 @@ class Book {
 But this approach comes with a problem: what object can we use to identify a `Book` and pass to methods like `find()` which accept an identifier?
 
 The solution is to write a separate class with fields that match the identifier attributes of the entity.
-The `@IdClass` annotation of the `Book` entity identifies the id class to use for that entity:
+Every such id class must override `equals()` and `hashCode()`.
+Of course, the easiest way to satisfy these requirements is to declare the id class as a `record`.
 
 [source,java]
 ----
-class BookId {
-    
-    String isbn;
-    int printing;
-
-    BookId() {}
-
-    BookId(String isbn, int printing) {
-        this.isbn = isbn;
-        this.printing = printing;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (other instanceof BookId) {
-            BookId bookId = (BookId) other;
-            return bookId.isbn.equals(isbn)
-                && bookId.printing == printing;
-        }
-        else {
-            return false;
-        }
-    }
-    
-    @Override
-    public int hashCode() {
-        return isbn.hashCode();
-    }
-}
+record BookId(String isbn, int printing) {}
 ----
 
-Every id class should override `equals()` and `hashCode()`.
+The `@IdClass` annotation of the `Book` entity identifies `BookId` as the id class to use for that entity.
 
 This is not our preferred approach.
 Instead, we recommend that the `BookId` class be declared as an `@Embeddable` type:
@@ -407,21 +400,7 @@ Instead, we recommend that the `BookId` class be declared as an `@Embeddable` ty
 [source,java]
 ----
 @Embeddable
-class BookId {
-    
-    String isbn;
-
-    int printing;
-
-    BookId() {}
-
-    BookId(String isbn, int printing) {
-        this.isbn = isbn;
-        this.printing = printing;
-    }
-
-    ...
-}
+record BookId(String isbn, int printing) {}
 ----
 
 We'll learn more about <<embeddable-objects>> below.
@@ -468,8 +447,8 @@ Version attributes are automatically assigned by Hibernate when an entity is mad
 // .Optimistic locking in Hibernate
 ====
 If an entity doesn't have a version number, which often happens when mapping legacy data, we can still do optimistic locking.
-The `@OptimisticLocking` annotation lets us specify that optimistic locks should be checked by validating the values of `ALL` fields, or only the `DIRTY` fields of the entity.
-And the `@OptimisticLock` annotation lets us selectively exclude certain fields from optimistic locking.
+The link:{doc-javadoc-url}org/hibernate/annotations/OptimisticLocking.html[`@OptimisticLocking`] annotation lets us specify that optimistic locks should be checked by validating the values of `ALL` fields, or only the `DIRTY` fields of the entity.
+And the link:{doc-javadoc-url}org/hibernate/annotations/OptimisticLock.html[`@OptimisticLock`] annotation lets us selectively exclude certain fields from optimistic locking.
 ====
 
 The `@Id` and `@Version` attributes we've already seen are just specialized examples of _basic attributes_.
@@ -490,7 +469,7 @@ If an entity doesn't have a meaningful unique key, then it's impossible to say w
 ====
 
 Since it's _extremely_ common to retrieve an entity based on its natural key, Hibernate has a way to mark the attributes of the entity which make up its natural key.
-Each attribute must be annotated `@NaturalId`.
+Each attribute must be annotated link:{doc-javadoc-url}org/hibernate/annotations/NaturalId.html[`@NaturalId`].
 
 [source,java]
 ----
@@ -528,6 +507,7 @@ Note that even when you've identified a natural key, we still recommend the use 
 A _basic_ attribute of an entity is a field or property which maps to a single column of the associated database table.
 The JPA specification defines a quite limited set of basic types:
 
+[[basic-type-list]]
 .JPA-standard basic attribute types
 [%breakable,cols="30,^14,~"]
 |====
@@ -537,7 +517,7 @@ The JPA specification defines a quite limited set of basic types:
 | Primitive wrappers | `java.lang` | `Boolean`, `Integer`, `Double`, etc
 | Strings | `java.lang` | `String`
 | Arbitrary-precision numeric types | `java.math` | `BigInteger`, `BigDecimal`
-| Date/time types | `java.time` | `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetDateTime`, `Instant`
+| Date/time types | `java.time` | `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetDateTime`, `Instant`, `Year`
 | Deprecated date/time types 💀 | `java.util` | `Date`, `Calendar`
 | Deprecated JDBC date/time types 💀 | `java.sql` | `Date`, `Time`, `Timestamp`
 | Binary and character arrays | | `byte[]`, `char[]`
@@ -566,10 +546,10 @@ Hibernate slightly extends this list with the following types:
 |====
 | Classification | Package | Types
 
-| Additional date/time types | `java.time` | `Duration`, `ZoneId`, `ZoneOffset`, `Year`, and even `ZonedDateTime`
+| Additional date/time types | `java.time` | `Duration`, `ZoneId`, `ZoneOffset`, and even `ZonedDateTime`
 | JDBC LOB types | `java.sql` | `Blob`, `Clob`, `NClob`
 | Java class object | `java.lang` | `Class`
-| Miscellaneous types | `java.util` | `Currency`, `URL`, `TimeZone`
+| Miscellaneous types | `java.util` | `Currency`, `Locale`, `URL`, `TimeZone`
 |====
 
 The `@Basic` annotation explicitly specifies that an attribute is basic, but it's often not needed, since attributes are assumed basic by default.
@@ -640,7 +620,23 @@ Status status;
 
 ----
 
-In Hibernate 6, an `enum` annotated `@Enumerated(STRING)` is mapped to:
+The `@EnumeratedValue` annotation allows the column value to be customized:
+
+[source,java]
+----
+enum Resolution {
+    UNRESOLVED(0), FIXED(1), REJECTED(-1);
+
+    @EnumeratedValue // store the code, not the enum ordinal() value
+    final int code;
+
+    Resolution(int code) {
+         this.code = code;
+    }
+}
+----
+
+Since Hibernate 6, an `enum` annotated `@Enumerated(STRING)` is mapped to:
 
 - a `VARCHAR` column type with a `CHECK` constraint on most databases, or
 - an `ENUM` column type on MySQL.
@@ -660,10 +656,20 @@ But in the country I was born, `SUNDAY` is the _first_ day of the week!
 So we prefer `@Enumerated(STRING)` for most `enum` attributes.
 ====
 
-An interesting special case is PostgreSQL.
-Postgres supports _named_ `ENUM` types, which must be declared using a DDL `CREATE TYPE` statement.
-Sadly, these `ENUM` types aren't well-integrated with the language nor well-supported by the Postgres JDBC driver, so Hibernate doesn't use them by default.
-But if you would like to use a named enumerated type on Postgres, just annotate your `enum` attribute like this:
+An interesting special case arises on PostgreSQL and Oracle.
+
+[[named-enums]]
+.Named enumerated types
+****
+Some databases support _named_ `ENUM` types, which must be declared using in DDL using:
+
+- `CREATE TYPE ... AS ENUM` on PostgreSQL, or
+- `CREATE DOMAIN ... AS ENUM` on Oracle.
+
+These look like a perfect match for Java ``enum``s, which also have names!
+
+Sadly, these `ENUM` types aren't well-integrated with the SQL language, nor well-supported by the JDBC drivers, so Hibernate doesn't use them by default.
+But if you would like to use a named enumerated type on Postgres or Oracle, just annotate your `enum` attribute like this:
 
 [source,java]
 ----
@@ -671,6 +677,9 @@ But if you would like to use a named enumerated type on Postgres, just annotate 
 @Basic(optional=false)
 Status status;
 ----
+
+Alternatively, you may enable the configuration property link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#PREFER_NATIVE_ENUM_TYPES[`hibernate.type.prefer_native_enum_types`].
+****
 
 The limited set of pre-defined basic attribute types can be stretched a bit further by supplying a _converter_.
 
@@ -689,12 +698,14 @@ There are two ways to apply a converter:
 - the `@Convert` annotation applies an `AttributeConverter` to a particular entity attribute, or
 - the `@Converter` annotation (or, alternatively, the `@ConverterRegistration` annotation) registers an `AttributeConverter` for automatic application to all attributes of a given type.
 
-For example, the following converter will be automatically applied to any attribute of type `BitSet`, and takes care of persisting the `BitSet` to a column of type `varbinary`:
+For example, the following converter will be automatically applied to any attribute of type `EnumSet<DayOfWeek>`, and takes care of persisting the `EnumSet<DayOfWeek>` to a column of type `INTEGER`:
 
 [source,java]
 ----
 @Converter(autoApply = true)
-public static class EnumSetConverter implements AttributeConverter<EnumSet<DayOfWeek>,Integer> {
+public static class EnumSetConverter
+        // converts Java values of type EnumSet<DayOfWeek> to integers for storage in an INT column
+        implements AttributeConverter<EnumSet<DayOfWeek>,Integer> {
     @Override
     public Integer convertToDatabaseColumn(EnumSet<DayOfWeek> enumSet) {
         int encoded = 0;
@@ -725,9 +736,9 @@ On the other hand, if we _don't_ set `autoapply=true`, then we must explicitly a
 
 [source,java]
 ----
-@Convert(converter = BitSetConverter.class)
+@Convert(converter = EnumSetConverter.class)
 @Basic(optional = false)
-BitSet bitset;
+EnumSet<DayOfWeek> daysOfWeek;
 ----
 
 All this is nice, but it probably won't surprise you that Hibernate goes beyond what is required by JPA.
@@ -742,6 +753,7 @@ Hibernate considers a "basic type" to be formed by the marriage of two objects:
 
 When mapping a basic attribute, we may explicitly specify a `JavaType`, a `JdbcType`, or both.
 
+[[java-type]]
 [discrete]
 ==== JavaType
 
@@ -773,10 +785,11 @@ BitSet bitSet;
 
 Alternatively, the `@JavaTypeRegistration` annotation may be used to register `BitSetJavaType` as the default `JavaType` for `BitSet`.
 
+[[jdbc-type]]
 [discrete]
 ==== JdbcType
 
-A `org.hibernate.type.descriptor.jdbc.JdbcType` is able to read and write a single Java type from and to JDBC.
+An `org.hibernate.type.descriptor.jdbc.JdbcType` is able to read and write a single Java type from and to JDBC.
 
 For example, `VarcharJdbcType` takes care of:
 
@@ -809,7 +822,7 @@ The types defined by the JDBC specification are enumerated by the integer type c
 Each JDBC type is an abstraction of a commonly-available type in SQL.
 For example, `Types.VARCHAR` represents the SQL type `VARCHAR` (or `VARCHAR2` on Oracle).
 
-Since Hibernate understand more SQL types than JDBC, there's an extended list of integer type codes in the class `org.hibernate.type.SqlTypes`.
+Since Hibernate understands more SQL types than JDBC, there's an extended list of integer type codes in the class link:{doc-javadoc-url}org/hibernate/type/SqlTypes.html[`org.hibernate.type.SqlTypes`].
 For example, `SqlTypes.GEOMETRY` represents the spatial data type `GEOMETRY`.
 ****
 
@@ -828,6 +841,82 @@ long currentTimeMillis;
 ----
 
 Let's abandon our analogy right here, before we start calling this basic type a "throuple".
+
+[[datetime-types]]
+=== Date and time types, and time zones
+
+Dates and times should always be represented using the types defined in `java.time`.
+
+[WARNING]
+====
+Never use the legacy types `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp`, or `java.util.Date`.
+At our urging, support for these types has even been https://in.relation.to/2024/04/22/stop-using-date/[officially deprecated in JPA 3.2].
+Eventually, we hope to completely remove support for these types from the JPA spec and from Hibernate.
+====
+
+Some of the types in `java.time` map naturally to an ANSI SQL column type.
+A source of confusion is that some databases still don't follow the ANSI standard naming here.
+Also, as you're probably aware, the `DATE` type on Oracle is not an ANSI SQL `DATE`.
+In fact, Oracle doesn't have `DATE` or `TIME` types--every date or time must be stored as a timestamp.
+
+.Type mappings from `java.time` to ANSI SQL
+|====
+| `java.time` class | ANSI SQL type | MySQL | SQL Server | Oracle
+
+| `LocalDate` | `DATE` | `DATE` | `DATE` | `DATE` 💀
+| `LocalTime` | `TIME` | `TIME` | `TIME` | `TIMESTAMP` 💀
+| `LocalDateTime` | `TIMSTAMP` | `DATETIME` | `DATETIME2` | `TIMESTAMP`
+| `OffsetDateTime`, `ZonedDateTime` | `TIMESTAMP WITH TIME ZONE` | `TIMESTAMP` 🙄 | `DATETIMEOFFSET` | `TIMESTAMP WITH TIME ZONE`
+|====
+
+On the other hand, there are no perfectly natural mappings for `Instant` and `Duration` on must databases.
+By default:
+
+- `Duration` is mapped to a column of type `NUMERIC(21)` holding the length of the duration in nanoseconds, and
+- `Instant` is mapped to a column of type `TIMESTAMP` (`DATETIME` on MySQL).
+
+Fortunately, these mappings can be modified by specifying the `JdbcType`.
+
+For example, if we wanted to store an `Instant` using `TIMESTAMP WITH TIME ZONE` (`TIMESTAMP` on MySQL) instead of `TIMESTAMP`, then we could annotate the field:
+
+[source,java]
+----
+// store the Instant as a TIMESTAMP WITH TIME ZONE, instead of as a TIMESTAMP
+@JdbcTypeCode(SqlTypes.TIMESTAMP_WITH_TIMEZONE)
+Instant instant;
+----
+
+Alternatively, we could set the configuration property `hibernate.type.preferred_instant_jdbc_type`:
+
+
+[source,java]
+----
+// store field of type Instant as TIMESTAMP WITH TIME ZONE, instead of as a TIMESTAMP
+config.setProperty(MappingSettings.PREFERRED_INSTANT_JDBC_TYPE, SqlTypes.TIMESTAMP_WITH_TIMEZONE);
+----
+
+We have worked very hard to make sure that Java date and time types work with consistent and correct semantics across all databases supported by Hibernate.
+In particular, Hibernate is very careful in how it handles time zones.
+
+[WARNING]
+====
+Unfortunately, with the notable exception of Oracle, most SQL databases feature embarrassingly poor support for timezones.
+Even some databases which do supposedly support `TIMESTAMP WITH TIME ZONE` simply covert the datetime to UTC.
+Here, Hibernate is limited by the capabilities of the databases themselves, and so on many databases, time zone information will not, by default, be preserved for an `OffsetDateTime` or `ZonedDateTime`.
+====
+
+[TIP]
+====
+The still-experimental annotation link:{doc-javadoc-url}org/hibernate/annotations/TimeZoneStorage.html[`@TimeZoneStorage`] provides some additional options in case the default behavior falls short.
+//
+// [source,java]
+// ----
+// @TimeZoneStorage(COLUMN)
+// @TimeZoneColumn(name = "event_offset")
+// @Column(name = "event_timestamp")
+// private OffsetDateTime eventDateTime;
+// ----
+====
 
 [[embeddable-objects]]
 === Embeddable objects
@@ -878,11 +967,6 @@ record Name(String firstName, String middleName, String lastName) {}
 
 In this case, the requirement for a constructor with no parameters is relaxed.
 
-[NOTE]
-====
-Unfortunately, as of May 2023, Java `record` types still cannot be used as ``@EmbeddedId``s.
-====
-
 We may now use our `Name` class (or record) as the type of an entity attribute:
 
 [source,java]
@@ -918,9 +1002,9 @@ Later, in <<mapping-embeddables>>, we'll see a couple of different options.
 An attribute of embeddable type represents a relationship between a Java object with a persistent identity, and a Java object with no persistent identity.
 We can think of it as a whole/part relationship.
 The embeddable object belongs to the entity, and can't be shared with other entity instances.
-And it exits for only as long as its parent entity exists.
+And it exists for only as long as its parent entity exists.
 
-Next we'll discuss a different kind of relationship: a relationship between Java objects that each have their persistent identity and persistence lifecycle.
+Next we'll discuss a different kind of relationship: a relationship between Java objects which each have their own distinct persistent identity and persistence lifecycle.
 
 [[associations]]
 === Associations
@@ -972,7 +1056,40 @@ a|
 
 We'll explain the effect of these members as we consider the various types of association mapping.
 
-Let's begin with the most common association multiplicity.
+It's not a requirement to represent _every_ foreign key relationship as an association at the Java level.
+It's perfectly acceptable to replace a `@ManyToOne` mapping with a basic-typed attribute holding an identifier, if it's inconvenient to think of this relationship as an association at the Java level.
+That said, it's possible to take this idea way to far.
+
+
+.💀 Aggregates 💀
+****
+It's come to our attention that a vocal group of people advocate that Java entity classes should be broken up into tiny disconnected islands they call "aggregates". An aggregate--at least as a first approximation--corresponds roughly to what we would usually call a parent/child relationship.
+Simple examples of aggregates might be `Order`/`Item`, or `Product`/`Part`.
+According to this way of thinking, there should be no associations _between_ aggregates, that is, that the `Item.product` association should be replaced with `productId`, that `Part.manufacturer` should be replaced with `manufacturerId`, and so on.
+(Of course, the word "aggregate" may also be employed in other senses, but this is the sense we're discussing right now.)
+
+In the example we've been using, `Book` would not be permitted to have a collection of entity type `Author`, and should instead hold only the ids of the authors, or perhaps instances of some `BookAuthor` type which duplicates some state of `Author` and is disconnected from the rest of the model.
+
+Let's stipulate that this might be a perfectly natural thing to do in certain contexts, for example, when accessing a document database.
+But one context where it doesn't usually make sense is when accessing a relational database via Hibernate.
+The reason is that Hibernate offers <<association-fetching,rich functionality>> for optimizing access to associated data, including:
+
+- the <<second-level-cache,second level cache>>, and
+- join, batch, and subselect fetching, whether via HQL, <<entity-graph,entity graphs>>, or <<fetch-profiles,fetch profiles>>.
+
+But all this functionality is lost if Hibernate doesn't know it's dealing with an association, inevitably making the application program much more vulnerable to problems with <<association-fetching,N+1 selects>>, just as soon as we encounter a business requirement which involves data from more than one aggregate.
+(Always keep in mind that business requirements change much faster than relational data models!)
+
+To put it mildly: this is not how JPA was ever intended to be used.
+
+It's difficult to respond charitably to most of the arguments in favor of this approach, since most of them don't rise above the level of hand-waving at boxes on drawn on whiteboards.
+An argument we _can_ respond to is the concern that transparent lazy fetching can lead to "accidental" fetching of an association and the potential for N+1 selects.
+This is a legit concern, and one we worry about too, but where it's really a problem we have a much better solution: just use a `StatelessSession`, or a Jakarta Data repository, where <<stateless-sessions,association fetching is always an explicit operation>>.
+Indeed, `StatelessSession` even guards against accidental _updates_, since `update()` is always an explicit operation.
+****
+
+Now that we know that associations are actually good and useful, let's see how to model the various kinds of association we might find need to map to a relational data model.
+We begin with the most common association multiplicity.
 
 [[many-to-one]]
 === Many-to-one
@@ -1045,8 +1162,10 @@ class Publisher {
 The `Publisher.books` field is called the _unowned_ side of the association.
 
 Now, we passionately _hate_ the stringly-typed `mappedBy` reference to the owning side of the association.
-Thankfully, the <<metamodel-generator, Metamodel Generator>> gives us a way to make it a
-bit more typesafe:
+Thankfully, the <<metamodel-generator, Hibernate Processor>> gives us a way to make it a
+bit more type safe:
+
+[[mapped-by-metamodel]]
 [source,java]
 ----
 @OneToMany(mappedBy=Book_.PUBLISHER)  // get used to doing it this way!
@@ -1132,7 +1251,7 @@ class Author {
 }
 ----
 
-Here, the `Author` table has a foreign key column holding the identifier of the associated `Publisher`.
+Here, the `Author` table has a foreign key column holding the identifier of the associated `Person`.
 
 [TIP]
 // .One-to-one associations are a way to represent subtyping
@@ -1158,7 +1277,7 @@ class Person {
 }
 ----
 
-`Person.author` is the unowned sure, because it's the side marked `mappedBy`.
+`Person.author` is the unowned side, because it's the side marked `mappedBy`.
 
 .Lazy fetching for one-to-one associations
 ****
@@ -1291,7 +1410,7 @@ That is, the collection is a _bag_, not a set.
 
 We've now seen the following kinds of entity attribute:
 
-[%breakable,cols="32,^15,^15,~"]
+[%breakable,cols="37,^15,^15,~"]
 |===
 | Kind of entity attribute | Kind of reference | Multiplicity | Examples
 
@@ -1321,7 +1440,7 @@ And the answer again is that _it does_. Indeed, there are two different ways to 
 
 So we may expand our taxonomy with:
 
-[%breakable,cols="32,^15,^15,~"]
+[%breakable,cols="37,^15,^15,~"]
 |===
 | Kind of entity attribute | Kind of reference | Multiplicity | Examples
 
@@ -1386,6 +1505,10 @@ class Event {
 ----
 
 The `@Array` annotation is optional, but it's important to limit the amount of storage space the database allocates to the `ARRAY` column.
+By writing `@Array(length=7)` here, we specified that DDL should be generated with the column type `TINYINT ARRAY[7]`.
+
+Just for fun, we used an enumerated type in the code above, but the array element time may be almost any <<basic-type-list,basic type>>.
+For example, the Java array types `String[]`, `UUID[]`, `double[]`, `BigDecimal[]`, `LocalDate[]`, and `OffsetDateTime[]` are all allowed, mapping to the SQL types `VARCHAR(n) ARRAY`, `UUID ARRAY`, `FLOAT(53) ARRAY`, `NUMERIC(p,s) ARRAY`, `DATE ARRAY`, and `TIMESTAMP(p) WITH TIME ZONE ARRAY`, respectively.
 
 [WARNING]
 // .Not every database has an `ARRAY` type
@@ -1435,7 +1558,7 @@ class Event {
 }
 ----
 
-Here, each collection elements are stored as separate rows of the auxiliary table.
+Here, each collection element is stored as a separate row of the auxiliary table.
 By default, this table has the following definition:
 
 [source,sql]
@@ -1444,7 +1567,7 @@ create table Event_daysOfWeek (
     Event_id bigint not null,
     daysOfWeek tinyint check (daysOfWeek between 0 and 6),
     daysOfWeek_ORDER integer not null,
-    primary key (Event1_id, daysOfWeek_ORDER)
+    primary key (Event_id, daysOfWeek_ORDER)
 )
 ----
 
@@ -1485,10 +1608,10 @@ Let's pause to remember the annotations we've met so far.
 | `@Entity` | Declare an entity class | &#10004;
 | `@MappedSuperclass` | Declare a non-entity class with mapped attributes inherited by an entity | &#10004;
 | `@Embeddable` | Declare an embeddable type | &#10004;
-| `@IdClass` | declare the identifier class for an entity with multiple `@Id` attributes | &#10004;
+| `@IdClass` | Declare the identifier class for an entity with multiple `@Id` attributes | &#10004;
 |===
 
-.Declaring basic attributes
+.Declaring basic and embedded attributes
 [%breakable,cols="22,~,^10,^13"]
 |===
 | Annotation | Purpose | | JPA-standard
@@ -1523,7 +1646,7 @@ Let's pause to remember the annotations we've met so far.
 | Annotation | Purpose | JPA-standard
 
 | `@GeneratedValue` | Specify that an identifier is system-generated | &#10004;
-| `@SequenceGenerator` | Define an id generated backed by on a database sequence | &#10004;
+| `@SequenceGenerator` | Define an id generator backed by a database sequence | &#10004;
 | `@TableGenerator` | Define an id generated backed by a database table | &#10004;
 | `@IdGeneratorType`  | Declare an annotation that associates a custom `Generator` with each `@Id` attribute it annotates | &#10006;
 | `@ValueGenerationType` | Declare an annotation that associates a custom `Generator` with each `@Basic` attribute it annotates | &#10006;
@@ -1536,7 +1659,7 @@ Let's pause to remember the annotations we've met so far.
 
 | `@ManyToOne` | Declare the single-valued side of a many-to-one association (the owning side) | &#10004;
 | `@OneToMany` | Declare the many-valued side of a many-to-one association (the unowned side) | &#10004;
-| `@ManyToMany` | Declare either side of a one-to-one association | &#10004;
+| `@ManyToMany` | Declare either side of a many-to-many association | &#10004;
 | `@OneToOne` | Declare either side of a one-to-one association | &#10004;
 | `@MapsId` | Declare that the owning side of a `@OneToOne` association maps the primary key column | &#10004;
 |===
@@ -1550,7 +1673,7 @@ That's already a lot of annotations, and we have not even started with the annot
 Entity classes should override `equals()` and `hashCode()`, especially when associations are <<set-vs-list,represented as sets>>.
 
 People new to Hibernate or JPA are often confused by exactly which fields should be included in the `hashCode()`.
-Even people with plenty of experience often argue quite religiously that one or another approach is the only right way.
+And people with more experience often argue quite religiously that one or another approach is the only right way.
 The truth is, there's no unique right way to do it, but there are some constraints.
 So please keep the following principles in mind:
 
@@ -1560,6 +1683,8 @@ So please keep the following principles in mind:
 It's OK to include any immutable, non-generated field in the hashcode.
 
 TIP: We therefore recommend identifying a <<natural-id-attributes,natural key>> for each entity, that is, a combination of fields that uniquely identifies an instance of the entity, from the perspective of the data model of the program. The natural key should correspond to a unique constraint on the database, and to the fields which are included in `equals()` and `hashCode()`.
+
+In this example, the `equals()` and `hashCode()` methods agree with the `@NaturalId` annotation:
 
 [source,java]
 ----
@@ -1573,18 +1698,25 @@ class Book {
     @Basic(optional=false)
     String isbn;
 
+    String getIsbn() {
+        return isbn;
+    }
+
     ...
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof Book
-            && ((Book) other).isbn.equals(isbn);
+        return other instanceof Book                   // check type with instanceof, not getClass()
+            && ((Book) other).getIsbn().equals(isbn);  // compare natural ids
     }
     @Override
     public int hashCode() {
-        return isbn.hashCode();
+        return isbn.hashCode();  // hashcode based on the natural id
     }
 }
 ----
 
 That said, an implementation of `equals()` and `hashCode()` based on the generated identifier of the entity can work _if you're careful_.
+
+CAUTION: Your implementation of `equals()` must be written to accommodate the possibility that the object passed to the `equals()` might be a <<proxies-and-lazy-fetching,proxy>>.
+Therefore, you should use `instanceof`, not `getClass()` to check the type of the argument, and should access fields of the passed entity via its accessor methods.

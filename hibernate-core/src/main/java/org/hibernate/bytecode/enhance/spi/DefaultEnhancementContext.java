@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.spi;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import jakarta.persistence.Basic;
-import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
@@ -15,6 +14,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
+import jakarta.persistence.metamodel.Type;
 
 /**
  * default implementation of EnhancementContext. May be sub-classed as needed.
@@ -22,6 +22,8 @@ import jakarta.persistence.Transient;
  * @author Luis Barreiro
  */
 public class DefaultEnhancementContext implements EnhancementContext {
+
+	private final ConcurrentHashMap<String, Type.PersistenceType> discoveredTypes = new ConcurrentHashMap<>();
 
 	/**
 	 * @return the classloader for this class
@@ -44,7 +46,8 @@ public class DefaultEnhancementContext implements EnhancementContext {
 	 */
 	@Override
 	public boolean isCompositeClass(UnloadedClass classDescriptor) {
-		return classDescriptor.hasAnnotation( Embeddable.class );
+		return classDescriptor.hasAnnotation( Embeddable.class )
+				|| discoveredTypes.get( classDescriptor.getName() ) == Type.PersistenceType.EMBEDDABLE;
 	}
 
 	/**
@@ -123,5 +126,15 @@ public class DefaultEnhancementContext implements EnhancementContext {
 	@Override
 	public UnloadedField[] order(UnloadedField[] persistentFields) {
 		return persistentFields;
+	}
+
+	@Override
+	public boolean isDiscoveredType(UnloadedClass classDescriptor) {
+		return discoveredTypes.containsKey( classDescriptor.getName() );
+	}
+
+	@Override
+	public void registerDiscoveredType(UnloadedClass classDescriptor, Type.PersistenceType type) {
+		discoveredTypes.put( classDescriptor.getName(), type );
 	}
 }

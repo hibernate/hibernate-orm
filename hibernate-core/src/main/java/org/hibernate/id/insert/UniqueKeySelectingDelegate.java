@@ -1,24 +1,26 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.insert;
 
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.PostInsertIdentityPersister;
-import org.hibernate.jdbc.Expectation;
-import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.type.Type;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.values.GeneratedValueBasicResultBuilder;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.metamodel.mapping.EntityRowIdMapping;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
+import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
+import org.hibernate.type.Type;
+
+import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getActualGeneratedModelPart;
 
 /**
  * Uses a unique key of the inserted entity to locate the newly inserted row.
@@ -26,40 +28,50 @@ import java.sql.SQLException;
  * @author Gavin King
  */
 public class UniqueKeySelectingDelegate extends AbstractSelectingDelegate {
-	private final PostInsertIdentityPersister persister;
-	private final Dialect dialect;
-
 	private final String[] uniqueKeyPropertyNames;
 	private final Type[] uniqueKeyTypes;
 
-	private final String idSelectString;
+	private final String selectString;
 
-	public UniqueKeySelectingDelegate(PostInsertIdentityPersister persister, Dialect dialect, String[] uniqueKeyPropertyNames) {
-		super( persister );
+	public UniqueKeySelectingDelegate(
+			EntityPersister persister,
+			String[] uniqueKeyPropertyNames,
+			EventType timing) {
+		super( persister, timing, true, true );
 
-		this.persister = persister;
-		this.dialect = dialect;
 		this.uniqueKeyPropertyNames = uniqueKeyPropertyNames;
 
-		idSelectString = persister.getSelectByUniqueKeyString( uniqueKeyPropertyNames );
 		uniqueKeyTypes = new Type[ uniqueKeyPropertyNames.length ];
-		for (int i = 0; i < uniqueKeyPropertyNames.length; i++ ) {
+		for ( int i = 0; i < uniqueKeyPropertyNames.length; i++ ) {
 			uniqueKeyTypes[i] = persister.getPropertyType( uniqueKeyPropertyNames[i] );
+		}
+
+		final EntityRowIdMapping rowIdMapping = persister.getRowIdMapping();
+		if ( !persister.isIdentifierAssignedByInsert()
+				|| persister.getInsertGeneratedProperties().size() > 1
+				|| rowIdMapping != null ) {
+			final List<GeneratedValueBasicResultBuilder> resultBuilders = jdbcValuesMappingProducer.getResultBuilders();
+			final List<String> columnNames = new ArrayList<>( resultBuilders.size() );
+			for ( GeneratedValueBasicResultBuilder resultBuilder : resultBuilders ) {
+				columnNames.add( getActualGeneratedModelPart( resultBuilder.getModelPart() ).getSelectionExpression() );
+			}
+			selectString = persister.getSelectByUniqueKeyString(
+					uniqueKeyPropertyNames,
+					columnNames.toArray( new String[0] )
+			);
+		}
+		else {
+			selectString = persister.getSelectByUniqueKeyString( uniqueKeyPropertyNames );
 		}
 	}
 
+	@Override
 	protected String getSelectSQL() {
-		return idSelectString;
-	}
-
-	@Override @Deprecated
-	public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context) {
-		return new IdentifierGeneratingInsert( persister.getFactory() );
+		return selectString;
 	}
 
 	@Override
-	public TableInsertBuilder createTableInsertBuilder(
-			BasicEntityIdentifierMapping identifierMapping,
+	public TableMutationBuilder<?> createTableMutationBuilder(
 			Expectation expectation,
 			SessionFactoryImplementor factory) {
 		return new TableInsertBuilderStandard( persister, persister.getIdentifierTableMapping(), factory );

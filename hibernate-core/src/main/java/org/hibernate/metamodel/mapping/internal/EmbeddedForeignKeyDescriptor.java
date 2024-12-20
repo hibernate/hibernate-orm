@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -16,8 +14,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.AssociationKey;
-import org.hibernate.metamodel.mapping.AttributeMappingsList;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -25,7 +24,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
@@ -196,17 +194,15 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		if ( this == modelPart || keyPart == modelPart ) {
 			return true;
 		}
-		else if ( keyPart instanceof NonAggregatedIdentifierMapping ) {
-			final AttributeMappingsList attributeMappings = ( (NonAggregatedIdentifierMapping) keyPart ).getVirtualIdEmbeddable()
-					.getAttributeMappings();
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				if ( modelPart == attributeMappings.get( i ) ) {
+		else {
+			AttributeMapping attributeMapping = modelPart.asAttributeMapping();
+			while ( attributeMapping != null && attributeMapping.getDeclaringType() instanceof EmbeddableMappingType ) {
+				final EmbeddableValuedModelPart declaringModelPart = ( (EmbeddableMappingType) attributeMapping.getDeclaringType() ).getEmbeddedValueMapping();
+				if ( declaringModelPart == keyPart ) {
 					return true;
 				}
+				attributeMapping = declaringModelPart.asAttributeMapping();
 			}
-		}
-		else if ( keyPart.isVirtual() && keyPart.getNumberOfFetchables() == 1 ) {
-			return keyPart.getFetchable( 0 ) == modelPart;
 		}
 		return false;
 	}
@@ -336,7 +332,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	private static TableGroup getUnderlyingTableGroup(TableGroup tableGroup) {
-		if ( tableGroup instanceof VirtualTableGroup ) {
+		if ( tableGroup.isVirtual() ) {
 			tableGroup = getUnderlyingTableGroup( ( (VirtualTableGroup) tableGroup ).getUnderlyingTableGroup() );
 		}
 		return tableGroup;
@@ -618,16 +614,17 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			ForeignKeyDescriptor.Side side,
 			SharedSessionContractImplementor session) {
 		final ModelPart modelPart = side.getModelPart();
-
 		// If the mapping type has an identifier type, that identifier is the key
-		if ( modelPart instanceof SingleAttributeIdentifierMapping ) {
-			return ( (SingleAttributeIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
+		if ( modelPart instanceof SingleAttributeIdentifierMapping singleAttributeIdentifierMapping ) {
+			return singleAttributeIdentifierMapping.getIdentifierIfNotUnsaved( targetObject, session );
 		}
-		else if ( modelPart instanceof CompositeIdentifierMapping ) {
-			return ( (CompositeIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
+		else if ( modelPart instanceof CompositeIdentifierMapping compositeIdentifierMapping ) {
+			return compositeIdentifierMapping.getIdentifierIfNotUnsaved( targetObject, session );
 		}
-		// Otherwise, this is a key based on the target object i.e. without id-class
-		return targetObject;
+		else {
+			// Otherwise, this is a key based on the target object i.e. without id-class
+			return targetObject;
+		}
 	}
 
 	@Override

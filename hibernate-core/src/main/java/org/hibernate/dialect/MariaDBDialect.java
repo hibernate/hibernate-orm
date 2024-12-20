@@ -1,17 +1,21 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 
+import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.MariaDBIdentityColumnSupport;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -19,6 +23,11 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.LockTimeoutException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -30,11 +39,11 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.OTHER;
@@ -42,13 +51,13 @@ import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
- * A {@linkplain Dialect SQL dialect} for MariaDB 10.3 and above.
+ * A {@linkplain Dialect SQL dialect} for MariaDB 10.5 and above.
  *
  * @author Vlad Mihalcea
  * @author Gavin King
  */
 public class MariaDBDialect extends MySQLDialect {
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 3 );
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 5 );
 	private static final DatabaseVersion MYSQL57 = DatabaseVersion.make( 5, 7 );
 
 	public MariaDBDialect() {
@@ -60,7 +69,7 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	public MariaDBDialect(DialectResolutionInfo info) {
-		super( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
+		super( createVersion( info, MINIMUM_VERSION ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
 	}
 
@@ -92,6 +101,18 @@ public class MariaDBDialect extends MySQLDialect {
 						.getBasicTypeRegistry()
 						.resolve( StandardBasicTypes.BOOLEAN )
 		);
+		commonFunctionFactory.jsonValue_mariadb();
+		commonFunctionFactory.jsonArray_mariadb();
+		commonFunctionFactory.jsonQuery_mariadb();
+		commonFunctionFactory.jsonArrayAgg_mariadb();
+		commonFunctionFactory.jsonObjectAgg_mariadb();
+		commonFunctionFactory.jsonArrayAppend_mariadb();
+
+		if ( getVersion().isSameOrAfter( 10, 6 ) ) {
+			commonFunctionFactory.unnest_emulated();
+			commonFunctionFactory.jsonTable_mysql();
+		}
+
 		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "median", "median(?1) over ()" )
 				.setInvariantType( functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE ) )
@@ -110,6 +131,20 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	public AggregateSupport getAggregateSupport() {
+		return MySQLAggregateSupport.forMariaDB( this );
+	}
+
+	@Override
+	protected void registerKeyword(String word) {
+		// The MariaDB driver reports that "STRING" is a keyword, but
+		// it's not a reserved word, and a column may be named STRING
+		if ( !"string".equalsIgnoreCase(word) ) {
+			super.registerKeyword(word);
+		}
+	}
+
+	@Override
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -118,10 +153,8 @@ public class MariaDBDialect extends MySQLDialect {
 			JdbcTypeRegistry jdbcTypeRegistry) {
 		switch ( jdbcTypeCode ) {
 			case OTHER:
-				switch ( columnTypeName ) {
-					case "uuid":
-						jdbcTypeCode = UUID;
-						break;
+				if ( columnTypeName.equals("uuid") ) {
+					jdbcTypeCode = UUID;
 				}
 				break;
 			case VARBINARY:
@@ -136,13 +169,21 @@ public class MariaDBDialect extends MySQLDialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
-		// Make sure we register the JSON type descriptor before calling super, because MariaDB does not need casting
-		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, JsonJdbcType.INSTANCE );
+		// Make sure we register the JSON type descriptor before calling super, because MariaDB needs special casting
+		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MariaDBCastingJsonJdbcType.INSTANCE );
+		jdbcTypeRegistry.addTypeConstructorIfAbsent( MariaDBCastingJsonArrayJdbcTypeConstructor.INSTANCE );
 
 		super.contributeTypes( typeContributions, serviceRegistry );
 		if ( getVersion().isSameOrAfter( 10, 7 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( VarcharUUIDJdbcType.INSTANCE );
 		}
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		return to == CastType.JSON
+				? "json_extract(?1,'$')"
+				: super.castPattern( from, to );
 	}
 
 	@Override
@@ -178,8 +219,9 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
-		return InnoDBStorageEngine.INSTANCE;
+	public boolean doesRoundTemporalOnOverflow() {
+		// See https://jira.mariadb.org/browse/MDEV-16991
+		return false;
 	}
 
 	@Override
@@ -189,7 +231,7 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
-		return getVersion().isSameOrAfter( 10, 5 );
+		return true;
 	}
 
 	@Override
@@ -245,7 +287,17 @@ public class MariaDBDialect extends MySQLDialect {
 	 */
 	@Override
 	public boolean supportsInsertReturning() {
-		return getVersion().isSameOrAfter( 10, 5 );
+		return true;
+	}
+
+	@Override
+	public boolean supportsUpdateReturning() {
+		return false;
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return MariaDBIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override
@@ -262,5 +314,57 @@ public class MariaDBDialect extends MySQLDialect {
 		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 
 		return super.buildIdentifierHelper( builder, dbMetaData );
+	}
+
+	@Override
+	public String getDual() {
+		return "dual";
+	}
+
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return (sqlException, message, sql) -> {
+			switch ( sqlException.getErrorCode() ) {
+				// If @@innodb_snapshot_isolation is set (default since 11.6.2),
+				// if an attempt to acquire a lock on a record that does not exist in the current read view is made,
+				// an error DB_RECORD_CHANGED will be raised.
+				case 1020:
+					return new LockAcquisitionException( message, sqlException, sql );
+				case 1205:
+				case 3572:
+					return new PessimisticLockException( message, sqlException, sql );
+				case 1207:
+				case 1206:
+					return new LockAcquisitionException( message, sqlException, sql );
+				case 1062:
+					// Unique constraint violation
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+					);
+			}
+
+			final String sqlState = extractSqlState( sqlException );
+			if ( sqlState != null ) {
+				switch ( sqlState ) {
+					case "41000":
+						return new LockTimeoutException( message, sqlException, sql );
+					case "40001":
+						return new LockAcquisitionException( message, sqlException, sql );
+				}
+			}
+
+			return null;
+		};
+	}
+
+	@Override
+	public boolean equivalentTypes(int typeCode1, int typeCode2) {
+		return typeCode1 == Types.LONGVARCHAR && typeCode2 == SqlTypes.JSON
+			|| typeCode1 == SqlTypes.JSON && typeCode2 == Types.LONGVARCHAR
+			|| super.equivalentTypes( typeCode1, typeCode2 );
 	}
 }

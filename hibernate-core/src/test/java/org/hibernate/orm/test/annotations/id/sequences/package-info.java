@@ -15,5 +15,3 @@
 		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
 )
 package org.hibernate.orm.test.annotations.id.sequences;
-
-

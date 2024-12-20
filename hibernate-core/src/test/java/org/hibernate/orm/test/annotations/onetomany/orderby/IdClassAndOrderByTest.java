@@ -1,12 +1,16 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.onetomany.orderby;
 
-import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitJoinTableNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategySnakeCaseImpl;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.SettingProvider;
@@ -30,7 +34,7 @@ import org.junit.jupiter.api.Test;
 
 		}
 )
-@TestForIssue(jiraKey = "HHH-16009")
+@JiraKey(value = "HHH-16009")
 public class IdClassAndOrderByTest {
 
 	public static final String COMPANY_NAME = "Foo Company";
@@ -38,7 +42,7 @@ public class IdClassAndOrderByTest {
 	public static class PhysicalNamingStrategyProvider implements SettingProvider.Provider<String> {
 		@Override
 		public String getSetting() {
-			return CamelCaseToUnderscoresNamingStrategy.class.getName();
+			return PhysicalNamingStrategySnakeCaseImpl.class.getName();
 		}
 	}
 

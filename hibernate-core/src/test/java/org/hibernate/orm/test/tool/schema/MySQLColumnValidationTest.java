@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.tool.schema;
 
@@ -23,10 +21,8 @@ import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.IndividuallySchemaValidatorImpl;
-import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaValidator;
@@ -89,23 +85,23 @@ public class MySQLColumnValidationTest {
 			}
 
 			statement.execute( "CREATE TABLE `TEST_DATA1` ( " +
-									   "  `ID` int unsigned NOT NULL, " +
-									   "  `INTEGRAL1` tinyint unsigned DEFAULT '0', " +
-									   "  `INTEGRAL2` tinyint unsigned DEFAULT '0', " +
-									   "   PRIMARY KEY (`ID`)" +
-									   ") ENGINE=InnoDB" );
+									"  `ID` int unsigned NOT NULL, " +
+									"  `INTEGRAL1` tinyint unsigned DEFAULT '0', " +
+									"  `INTEGRAL2` tinyint unsigned DEFAULT '0', " +
+									"   PRIMARY KEY (`ID`)" +
+									") ENGINE=InnoDB" );
 
 			statement.execute( "CREATE TABLE `TEST_DATA2` ( " +
-									   "  `ID` int unsigned NOT NULL, " +
-									   "  `INTEGRAL1` tinyint unsigned DEFAULT '0', " +
-									   "   PRIMARY KEY (`ID`)" +
-									   ") ENGINE=InnoDB" );
+									"  `ID` int unsigned NOT NULL, " +
+									"  `INTEGRAL1` tinyint unsigned DEFAULT '0', " +
+									"   PRIMARY KEY (`ID`)" +
+									") ENGINE=InnoDB" );
 
 			statement.execute( "CREATE TABLE `TEST_DATA3` ( " +
-									   "  `ID` int unsigned NOT NULL, " +
-									   "  `INTEGRAL1` tinyint unsigned DEFAULT '0', " +
-									   "   PRIMARY KEY (`ID`)" +
-									   ") ENGINE=InnoDB" );
+									"  `ID` int unsigned NOT NULL, " +
+									"  `INTEGRAL1` tinyint unsigned DEFAULT '0', " +
+									"   PRIMARY KEY (`ID`)" +
+									") ENGINE=InnoDB" );
 
 		}
 		catch (SQLException e) {
@@ -141,8 +137,8 @@ public class MySQLColumnValidationTest {
 				}
 		);
 
-		ConfigurationService configurationService = scope.getSessionFactory().getServiceRegistry().getService(
-				ConfigurationService.class );
+		ConfigurationService configurationService = scope.getSessionFactory().getServiceRegistry()
+				.requireService( ConfigurationService.class );
 		ExecutionOptions executionOptions = new ExecutionOptions() {
 			@Override
 			public boolean shouldManageNamespaces() {
@@ -150,18 +146,13 @@ public class MySQLColumnValidationTest {
 			}
 
 			@Override
-			public Map getConfigurationValues() {
+			public Map<String,Object> getConfigurationValues() {
 				return configurationService.getSettings();
 			}
 
 			@Override
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerLoggedImpl.INSTANCE;
-			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return SchemaFilter.ALL;
 			}
 		};
 
@@ -172,9 +163,9 @@ public class MySQLColumnValidationTest {
 
 		try {
 			schemaValidator.doValidation( scope.getMetadataImplementor(), executionOptions,
-										  contributed -> {
+										contributed -> {
 											return "test_data1".equalsIgnoreCase( contributed.getExportIdentifier() );
-										  } );
+										} );
 		}
 		catch (SchemaManagementException e) {
 			fail( e.getMessage() );
@@ -182,9 +173,9 @@ public class MySQLColumnValidationTest {
 
 		try {
 			schemaValidator.doValidation( scope.getMetadataImplementor(), executionOptions,
-										  contributed -> {
-											  return "test_data2".equalsIgnoreCase( contributed.getExportIdentifier() );
-										  } );
+										contributed -> {
+											return "test_data2".equalsIgnoreCase( contributed.getExportIdentifier() );
+										} );
 			fail( "SchemaManagementException expected" );
 		}
 		catch (SchemaManagementException e) {
@@ -196,9 +187,9 @@ public class MySQLColumnValidationTest {
 
 		try {
 			schemaValidator.doValidation( scope.getMetadataImplementor(), executionOptions,
-										  contributed -> {
-											  return "test_data3".equalsIgnoreCase( contributed.getExportIdentifier() );
-										  } );
+										contributed -> {
+											return "test_data3".equalsIgnoreCase( contributed.getExportIdentifier() );
+										} );
 			fail( "SchemaManagementException expected" );
 		}
 		catch (SchemaManagementException e) {

@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.spi;
 
-import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
@@ -31,54 +28,11 @@ public interface PersisterFactory extends Service {
 	 * @param naturalIdCacheAccessStrategy The cache access strategy for the entity's natural-id cross-ref region
 	 * @param creationContext Access to additional information needed to create the EntityPersister
 	 */
-	default EntityPersister createEntityPersister(
-			PersistentClass entityBinding,
-			EntityDataAccess entityCacheAccessStrategy,
-			NaturalIdDataAccess naturalIdCacheAccessStrategy,
-			RuntimeModelCreationContext creationContext) {
-		// for now, to minimize impact on existing custom impls, default this form to delegate to the original
-		return createEntityPersister(
-				entityBinding,
-				entityCacheAccessStrategy,
-				naturalIdCacheAccessStrategy,
-				(PersisterCreationContext) creationContext
-		);
-	}
-
-	/**
-	 * Create a collection persister instance.
-	 *
-	 * @param collectionBinding The mapping information describing the collection
-	 * @param cacheAccessStrategy The cache access strategy for the collection region
-	 * @param creationContext Access to additional information needed to create an EntityPersister
-	 */
-	default CollectionPersister createCollectionPersister(
-			Collection collectionBinding,
-			CollectionDataAccess cacheAccessStrategy,
-			RuntimeModelCreationContext creationContext) {
-		// for now, to minimize impact on existing custom impls, default this form to delegate to the original
-		return createCollectionPersister( collectionBinding, cacheAccessStrategy, (PersisterCreationContext) creationContext );
-	}
-
-	/**
-	 * Create an entity persister instance.
-	 *
-	 * @param entityBinding The mapping information describing the entity
-	 * @param entityCacheAccessStrategy The cache access strategy for the entity region
-	 * @param naturalIdCacheAccessStrategy The cache access strategy for the entity's natural-id cross-ref region
-	 * @param creationContext Access to additional information needed to create an EntityPersister
-	 *
-	 * @return An appropriate entity persister instance.
-	 *
-	 * @deprecated use {@link #createEntityPersister(PersistentClass, EntityDataAccess, NaturalIdDataAccess, RuntimeModelCreationContext)}
-	 * instead
-	 */
-	@Deprecated(since = "6.0")
 	EntityPersister createEntityPersister(
 			PersistentClass entityBinding,
 			EntityDataAccess entityCacheAccessStrategy,
 			NaturalIdDataAccess naturalIdCacheAccessStrategy,
-			PersisterCreationContext creationContext) throws HibernateException;
+			RuntimeModelCreationContext creationContext);
 
 	/**
 	 * Create a collection persister instance.
@@ -86,13 +40,9 @@ public interface PersisterFactory extends Service {
 	 * @param collectionBinding The mapping information describing the collection
 	 * @param cacheAccessStrategy The cache access strategy for the collection region
 	 * @param creationContext Access to additional information needed to create an EntityPersister
-	 *
-	 * @deprecated use {@link #createCollectionPersister(Collection, CollectionDataAccess, RuntimeModelCreationContext)}
-	 * instead
 	 */
-	@Deprecated(since = "6.0")
 	CollectionPersister createCollectionPersister(
 			Collection collectionBinding,
 			CollectionDataAccess cacheAccessStrategy,
-			PersisterCreationContext creationContext);
+			RuntimeModelCreationContext creationContext);
 }

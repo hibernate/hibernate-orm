@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Course.java 6913 2005-05-25 17:37:51Z oneovthafew $
 package org.hibernate.orm.test.ecid;
 import java.io.Serializable;
 
@@ -13,7 +9,7 @@ import java.io.Serializable;
  * @author Gavin King
  */
 public class Course implements Serializable {
-	
+
 	private String courseCode;
 	private String org;
 	private String description;
@@ -24,19 +20,19 @@ public class Course implements Serializable {
 		this.org = org;
 		this.description = description;
 	}
-	
+
 	public String getDescription() {
 		return description;
 	}
-	
+
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	
+
 	public String getCourseCode() {
 		return courseCode;
 	}
-	
+
 	public String getOrg() {
 		return org;
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.idgen.enhanced.sequence;
 
@@ -32,7 +30,7 @@ public class PooledSequenceTest {
 
 	@Test
 	public void testNormalBoundary(SessionFactoryScope scope) {
-        final EntityPersister persister = scope.getSessionFactory()
+		final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Entity.class.getName());
 		assertThat( persister.getIdentifierGenerator(), instanceOf( SequenceStyleGenerator.class ) );
@@ -48,7 +46,7 @@ public class PooledSequenceTest {
 					// The value that we get from the callback is the high value (PooledOptimizer by default)
 					// When first increment is initialValue, we can only generate one id from it -> id 1
 					Entity entity = new Entity( "" + INITIAL_VALUE );
-					session.save( entity );
+					session.persist( entity );
 
 					long expectedId = INITIAL_VALUE;
 					assertEquals( expectedId, entity.getId().longValue() );
@@ -61,7 +59,7 @@ public class PooledSequenceTest {
 					// id : 2,3,4...,11
 					for ( int i = 1; i <= increment; i++ ) {
 						entity = new Entity( "" + ( i + INITIAL_VALUE ) );
-						session.save( entity );
+						session.persist( entity );
 
 						expectedId = i + INITIAL_VALUE;
 						assertEquals( expectedId, entity.getId().longValue() );
@@ -74,7 +72,7 @@ public class PooledSequenceTest {
 					// now force a "clock over"
 					expectedId++;
 					entity = new Entity( "" + expectedId  );
-					session.save( entity );
+					session.persist( entity );
 
 					assertEquals( expectedId, entity.getId().longValue() );
 					assertEquals( 3, generator.getDatabaseStructure().getTimesAccessed() );

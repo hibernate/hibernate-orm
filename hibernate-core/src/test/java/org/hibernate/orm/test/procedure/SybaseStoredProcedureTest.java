@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.procedure;
 
@@ -10,6 +8,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.jpa.HibernateHints;
 
@@ -18,6 +17,7 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,8 +28,6 @@ import jakarta.persistence.StoredProcedureQuery;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInAutoCommit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Vlad Mihalcea
@@ -39,7 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		annotatedClasses = {
 				Person.class,
 				Phone.class,
-		}
+		},
+		properties = @Setting( name = AvailableSettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES, value = "true")
 )
 public class SybaseStoredProcedureTest {
 
@@ -77,7 +76,7 @@ public class SybaseStoredProcedureTest {
 			person1.setNickName( "JD" );
 			person1.setAddress( "Earth" );
 			person1.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 )
-														  .toInstant( ZoneOffset.UTC ) ) );
+														.toInstant( ZoneOffset.UTC ) ) );
 
 			entityManager.persist( person1 );
 
@@ -104,6 +103,22 @@ public class SybaseStoredProcedureTest {
 			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_count_phones" );
 			query.registerStoredProcedureParameter( "personId", Long.class, ParameterMode.IN );
 			query.registerStoredProcedureParameter( "phoneCount", Long.class, ParameterMode.OUT );
+
+			query.setParameter( "personId", 1L );
+
+			query.execute();
+			Long phoneCount = (Long) query.getOutputParameterValue( "phoneCount" );
+			assertEquals( Long.valueOf( 2 ), phoneCount );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.IsJtds.class, comment = "only JTDS supports named parameters and if named parameter are not supported then the parameter should be registered in the same order as defined in the stored procedure")
+	public void testStoredProcedureOutParameterDifferentParametersRegistrationOrder(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_count_phones" );
+			query.registerStoredProcedureParameter( "phoneCount", Long.class, ParameterMode.OUT );
+			query.registerStoredProcedureParameter( "personId", Long.class, ParameterMode.IN );
 
 			query.setParameter( "personId", 1L );
 

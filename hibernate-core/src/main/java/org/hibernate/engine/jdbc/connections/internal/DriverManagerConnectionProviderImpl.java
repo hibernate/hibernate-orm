@@ -1,18 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -28,18 +25,20 @@ import org.hibernate.Internal;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Database;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+import org.hibernate.internal.log.ConnectionInfoLogger;
 
-import static org.hibernate.internal.log.ConnectionPoolingLogger.CONNECTIONS_LOGGER;
-import static org.hibernate.internal.log.ConnectionPoolingLogger.CONNECTIONS_MESSAGE_LOGGER;
+import static org.hibernate.cfg.JdbcSettings.JAKARTA_JDBC_URL;
 
 /**
  * A connection provider that uses the {@link DriverManager} directly to open connections and provides
@@ -66,6 +65,8 @@ public class DriverManagerConnectionProviderImpl
 
 	private volatile PoolState state;
 
+	private static DatabaseConnectionInfo dbInfo;
+
 	// create the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private volatile ServiceRegistryImplementor serviceRegistry;
@@ -77,7 +78,7 @@ public class DriverManagerConnectionProviderImpl
 
 	@Override
 	public void configure(Map<String, Object> configurationValues) {
-		CONNECTIONS_MESSAGE_LOGGER.usingHibernateBuiltInConnectionPool();
+		ConnectionInfoLogger.INSTANCE.usingHibernateBuiltInConnectionPool();
 		PooledConnections pool = buildPool( configurationValues, serviceRegistry );
 		final long validationInterval = ConfigurationHelper.getLong( VALIDATION_INTERVAL, configurationValues, 30 );
 		this.state = new PoolState( pool, validationInterval );
@@ -131,13 +132,10 @@ public class DriverManagerConnectionProviderImpl
 			}
 		}
 
-		if ( success ) {
-			CONNECTIONS_MESSAGE_LOGGER.loadedDriver( driverClassName );
-		}
-		else {
+		StringBuilder list = new StringBuilder();
+		if ( !success ) {
 			//we're hoping that the driver is already loaded
-			CONNECTIONS_MESSAGE_LOGGER.noDriver( AvailableSettings.DRIVER );
-			StringBuilder list = new StringBuilder();
+			ConnectionInfoLogger.INSTANCE.jdbcDriverNotSpecified();
 			Enumeration<Driver> drivers = DriverManager.getDrivers();
 			while ( drivers.hasMoreElements() ) {
 				if ( list.length() != 0) {
@@ -145,35 +143,16 @@ public class DriverManagerConnectionProviderImpl
 				}
 				list.append( drivers.nextElement().getClass().getName() );
 			}
-			CONNECTIONS_MESSAGE_LOGGER.loadedDrivers( list.toString() );
 		}
 
 		if ( url == null ) {
-			final String msg = CONNECTIONS_MESSAGE_LOGGER.jdbcUrlNotSpecified( AvailableSettings.URL );
-			CONNECTIONS_LOGGER.error( msg );
-			throw new HibernateException( msg );
+			throw new HibernateException( "No JDBC URL specified by property " + JAKARTA_JDBC_URL );
 		}
-
-		CONNECTIONS_MESSAGE_LOGGER.usingUrl( url );
 
 		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( configurationValues );
 
-		// if debug level is enabled, then log the password, otherwise mask it
-		if ( CONNECTIONS_LOGGER.isDebugEnabled() ) {
-			CONNECTIONS_MESSAGE_LOGGER.connectionProperties( connectionProps );
-		}
-		else {
-			CONNECTIONS_MESSAGE_LOGGER.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
-		}
-
 		final boolean autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues );
-		CONNECTIONS_MESSAGE_LOGGER.autoCommitMode( autoCommit );
-
 		final Integer isolation = ConnectionProviderInitiator.extractIsolation( configurationValues );
-		if ( isolation != null ) {
-			CONNECTIONS_MESSAGE_LOGGER.jdbcIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( isolation ) );
-		}
-
 		final String initSql = (String) configurationValues.get( INIT_SQL );
 
 		final Object connectionCreatorFactory = configurationValues.get( CONNECTION_CREATOR_FACTORY );
@@ -187,6 +166,17 @@ public class DriverManagerConnectionProviderImpl
 		if ( factory == null ) {
 			factory = ConnectionCreatorFactoryImpl.INSTANCE;
 		}
+
+		dbInfo = new DatabaseConnectionInfoImpl(
+				url,
+				success ? driverClassName : list.toString(),
+				SimpleDatabaseVersion.ZERO_VERSION,
+				Boolean.toString( autoCommit ),
+				isolation != null ? ConnectionProviderInitiator.toIsolationNiceName(isolation) : null,
+				ConfigurationHelper.getInt(MIN_SIZE, configurationValues, 1),
+				ConfigurationHelper.getInt(AvailableSettings.POOL_SIZE, configurationValues, 20)
+		);
+
 		return factory.create(
 				driver,
 				serviceRegistry,
@@ -201,12 +191,12 @@ public class DriverManagerConnectionProviderImpl
 
 	private static Driver loadDriverIfPossible(String driverClassName, ServiceRegistryImplementor serviceRegistry) {
 		if ( driverClassName == null ) {
-			CONNECTIONS_LOGGER.debug( "No driver class specified" );
+			ConnectionInfoLogger.INSTANCE.debug( "No driver class specified" );
 			return null;
 		}
 
 		if ( serviceRegistry != null ) {
-			final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+			final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 			final Class<Driver> driverClass = classLoaderService.classForName( driverClassName );
 			try {
 				return driverClass.newInstance();
@@ -226,13 +216,14 @@ public class DriverManagerConnectionProviderImpl
 
 	private static ConnectionCreatorFactory loadConnectionCreatorFactory(String connectionCreatorFactoryClassName, ServiceRegistryImplementor serviceRegistry) {
 		if ( connectionCreatorFactoryClassName == null ) {
-			CONNECTIONS_LOGGER.debug( "No connection creator factory class specified" );
+			ConnectionInfoLogger.INSTANCE.debug( "No connection creator factory class specified" );
 			return null;
 		}
 
 		if ( serviceRegistry != null ) {
-			final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-			final Class<ConnectionCreatorFactory> factoryClass = classLoaderService.classForName( connectionCreatorFactoryClassName );
+			final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
+			final Class<ConnectionCreatorFactory> factoryClass =
+					classLoaderService.classForName( connectionCreatorFactoryClassName );
 			try {
 				return factoryClass.newInstance();
 			}
@@ -261,16 +252,29 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
+	public void closeConnection(Connection connection) throws SQLException {
 		if ( state == null ) {
 			throw new IllegalStateException( "Cannot close a connection as the driver manager is not properly initialized" );
 		}
-		state.closeConnection( conn );
+		state.closeConnection( connection );
 	}
 
 	@Override
 	public boolean supportsAggressiveRelease() {
 		return false;
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return new DatabaseConnectionInfoImpl(
+				dbInfo.getJdbcUrl(),
+				dbInfo.getJdbcDriver(),
+				dialect.getVersion(),
+				dbInfo.getAutoCommitMode(),
+				dbInfo.getIsolationLevel(),
+				dbInfo.getPoolMinSize(),
+				dbInfo.getPoolMaxSize()
+		);
 	}
 
 	@Override
@@ -291,11 +295,19 @@ public class DriverManagerConnectionProviderImpl
 		}
 	}
 
+	protected int getOpenConnections() {
+		return state.pool.allConnections.size() - state.pool.availableConnections.size();
+	}
+
 	protected void validateConnectionsReturned() {
-		int allocationCount = state.pool.allConnections.size() - state.pool.availableConnections.size();
+		int allocationCount = getOpenConnections();
 		if ( allocationCount != 0 ) {
-			CONNECTIONS_MESSAGE_LOGGER.error( "Connection leak detected: there are " + allocationCount + " unclosed connections");
+			ConnectionInfoLogger.INSTANCE.error( "Connection leak detected: there are " + allocationCount + " unclosed connections");
 		}
+	}
+
+	protected void validateConnections(ConnectionValidator validator) {
+		state.validateConnections( validator );
 	}
 
 	// destroy the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -351,7 +363,7 @@ public class DriverManagerConnectionProviderImpl
 
 		private PooledConnections(
 				Builder builder) {
-			CONNECTIONS_LOGGER.debugf( "Initializing Connection pool with %s Connections", builder.initialSize );
+			ConnectionInfoLogger.INSTANCE.debugf( "Initializing Connection pool with %s Connections", builder.initialSize );
 			connectionCreator = builder.connectionCreator;
 			connectionValidator = builder.connectionValidator == null
 					? ConnectionValidator.ALWAYS_VALID
@@ -359,7 +371,6 @@ public class DriverManagerConnectionProviderImpl
 			autoCommit = builder.autoCommit;
 			maxSize = builder.maxSize;
 			minSize = builder.minSize;
-			CONNECTIONS_MESSAGE_LOGGER.hibernateConnectionPoolSize( maxSize, minSize );
 			addConnections( builder.initialSize );
 		}
 
@@ -369,18 +380,18 @@ public class DriverManagerConnectionProviderImpl
 			if ( !primed && size >= minSize ) {
 				// IMPL NOTE : the purpose of primed is to allow the pool to lazily reach its
 				// defined min-size.
-				CONNECTIONS_LOGGER.debug( "Connection pool now considered primed; min-size will be maintained" );
+				ConnectionInfoLogger.INSTANCE.debug( "Connection pool now considered primed; min-size will be maintained" );
 				primed = true;
 			}
 
 			if ( size < minSize && primed ) {
 				int numberToBeAdded = minSize - size;
-				CONNECTIONS_LOGGER.debugf( "Adding %s Connections to the pool", numberToBeAdded );
+				ConnectionInfoLogger.INSTANCE.debugf( "Adding %s Connections to the pool", numberToBeAdded );
 				addConnections( numberToBeAdded );
 			}
 			else if ( size > maxSize ) {
 				int numberToBeRemoved = size - maxSize;
-				CONNECTIONS_LOGGER.debugf( "Removing %s Connections from the pool", numberToBeRemoved );
+				ConnectionInfoLogger.INSTANCE.debugf( "Removing %s Connections from the pool", numberToBeRemoved );
 				removeConnections( numberToBeRemoved );
 			}
 		}
@@ -405,7 +416,7 @@ public class DriverManagerConnectionProviderImpl
 				t = ex;
 			}
 			closeConnection( conn, t );
-			CONNECTIONS_MESSAGE_LOGGER.debug( "Connection release failed. Closing pooled connection", t );
+			ConnectionInfoLogger.INSTANCE.debug( "Connection release failed. Closing pooled connection", t );
 			return null;
 		}
 
@@ -440,7 +451,7 @@ public class DriverManagerConnectionProviderImpl
 				t = ex;
 			}
 			closeConnection( conn, t );
-			CONNECTIONS_MESSAGE_LOGGER.debug( "Connection preparation failed. Closing pooled connection", t );
+			ConnectionInfoLogger.INSTANCE.debug( "Connection preparation failed. Closing pooled connection", t );
 			return null;
 		}
 
@@ -449,7 +460,7 @@ public class DriverManagerConnectionProviderImpl
 				conn.close();
 			}
 			catch (SQLException ex) {
-				CONNECTIONS_MESSAGE_LOGGER.unableToCloseConnection( ex );
+				ConnectionInfoLogger.INSTANCE.unableToClosePooledConnection( ex );
 				if ( t != null ) {
 					t.addSuppressed( ex );
 				}
@@ -462,33 +473,26 @@ public class DriverManagerConnectionProviderImpl
 		public void close() throws SQLException {
 			try {
 				int allocationCount = allConnections.size() - availableConnections.size();
-				if(allocationCount > 0) {
-					CONNECTIONS_LOGGER.error( "Connection leak detected: there are " + allocationCount + " unclosed connections upon shutting down pool " + getUrl());
+				if (allocationCount > 0) {
+					ConnectionInfoLogger.INSTANCE.error( "Connection leak detected: there are " + allocationCount + " unclosed connections upon shutting down pool " + getUrl());
 				}
 			}
 			finally {
-				for ( Connection connection : allConnections ) {
-					connection.close();
-				}
+				removeConnections( Integer.MAX_VALUE );
 			}
 		}
 
 		public int size() {
-			return availableConnections.size();
+			return allConnections.size();
 		}
 
 		protected void removeConnections(int numberToBeRemoved) {
 			for ( int i = 0; i < numberToBeRemoved; i++ ) {
-				Connection connection = availableConnections.poll();
-				try {
-					if ( connection != null ) {
-						connection.close();
-					}
-					allConnections.remove( connection );
+				final Connection connection = availableConnections.poll();
+				if ( connection == null ) {
+					break;
 				}
-				catch (SQLException e) {
-					CONNECTIONS_MESSAGE_LOGGER.unableToCloseConnection( e );
-				}
+				closeConnection( connection, null );
 			}
 		}
 
@@ -601,32 +605,17 @@ public class DriverManagerConnectionProviderImpl
 				if ( !active ) {
 					return;
 				}
-				CONNECTIONS_MESSAGE_LOGGER.cleaningUpConnectionPool( pool.getUrl() );
+				ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool( pool.getUrl() );
 				active = false;
 				if ( executorService != null ) {
-					PrivilegedAction delegateToPrivilegedAction =
-							new PrivilegedAction() {
-
-								@Override
-								public Object run() {
-									executorService.shutdown();
-									return null;
-								}
-							};
-					if ( SystemSecurityManager.isSecurityManagerEnabled() ) {
-						AccessController.doPrivileged(
-								delegateToPrivilegedAction );
-					}
-					else {
-						delegateToPrivilegedAction.run();
-					}
+					executorService.shutdown();
 				}
 				executorService = null;
 				try {
 					pool.close();
 				}
 				catch (SQLException e) {
-					CONNECTIONS_MESSAGE_LOGGER.unableToClosePooledConnection( e );
+					ConnectionInfoLogger.INSTANCE.unableToDestroyConnectionPool( e );
 				}
 			}
 			finally {
@@ -656,6 +645,42 @@ public class DriverManagerConnectionProviderImpl
 			}
 			finally {
 				statelock.readLock().unlock();
+			}
+		}
+
+		public void validateConnections(ConnectionValidator validator) {
+			if ( !active ) {
+				return;
+			}
+			statelock.writeLock().lock();
+			try {
+				RuntimeException ex = null;
+				for ( Iterator<Connection> iterator = pool.allConnections.iterator(); iterator.hasNext(); ) {
+					final Connection connection = iterator.next();
+					SQLException e = null;
+					boolean isValid = false;
+					try {
+						isValid = validator.isValid( connection );
+					}
+					catch (SQLException sqlException) {
+						e = sqlException;
+					}
+					if ( !isValid ) {
+						pool.closeConnection( connection, e );
+						if ( ex == null ) {
+							ex = new RuntimeException( e );
+						}
+						else if ( e != null ) {
+							ex.addSuppressed( e );
+						}
+					}
+				}
+				if ( ex != null ) {
+					throw ex;
+				}
+			}
+			finally {
+				statelock.writeLock().unlock();
 			}
 		}
 	}

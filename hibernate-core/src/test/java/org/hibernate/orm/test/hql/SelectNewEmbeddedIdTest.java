@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
 
@@ -15,7 +13,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -56,37 +54,37 @@ public class SelectNewEmbeddedIdTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4712")
+	@JiraKey(value = "HHH-4712")
 	public void testSelectNewListEntity() {
 		assertQueryRowCount( "select new list(e) FROM Simple e", 1 );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4712")
+	@JiraKey(value = "HHH-4712")
 	public void testSelectNewListEmbeddedIdValue() {
 		assertQueryRowCount( "select new list(e.simpleId) FROM Simple e", 1 );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4712")
+	@JiraKey(value = "HHH-4712")
 	public void testSelectNewMapEntity() {
 		assertQueryRowCount( "select new map(e.id, e) FROM Simple e", 1 );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4712")
+	@JiraKey(value = "HHH-4712")
 	public void testSelectNewMapEmbeddedIdValue() {
 		assertQueryRowCount( "select new map(e.simpleId, e.simpleId) FROM Simple e", 1 );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4712")
+	@JiraKey(value = "HHH-4712")
 	public void testSelectNewObjectEntity() {
 		assertQueryRowCount( "select new " + Wrapper.class.getName() + "(e) FROM Simple e", 1 );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4712")
+	@JiraKey(value = "HHH-4712")
 	public void testSelectNewObjectEmbeddedIdValue() {
 		assertQueryRowCount( "select new " + Wrapper.class.getName() + "(e.simpleId) FROM Simple e", 1 );
 	}

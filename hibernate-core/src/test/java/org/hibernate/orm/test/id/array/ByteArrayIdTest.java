@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.array;
 
@@ -19,7 +17,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.Query;
 import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -74,14 +72,14 @@ public class ByteArrayIdTest {
 	 * Removes two records from database.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-8999")
+	@JiraKey(value = "HHH-8999")
 	public void testMultipleDeletions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					Query query = session.createQuery( "SELECT s FROM ByteArrayIdTest$DemoEntity s" );
 					List results = query.list();
-					session.delete( results.get( 0 ) );
-					session.delete( results.get( 1 ) );
+					session.remove( results.get( 0 ) );
+					session.remove( results.get( 1 ) );
 				}
 		);
 
@@ -97,7 +95,7 @@ public class ByteArrayIdTest {
 	 * Updates two records from database.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-8999")
+	@JiraKey(value = "HHH-8999")
 	public void testMultipleUpdates(SessionFactoryScope scope) {
 		final String lastResultName = scope.fromTransaction(
 				session -> {

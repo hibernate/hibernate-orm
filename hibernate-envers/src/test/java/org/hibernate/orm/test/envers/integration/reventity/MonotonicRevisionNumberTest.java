@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.reventity;
 
@@ -23,14 +21,14 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-7669")
+@JiraKey(value = "HHH-7669")
 @RequiresDialect(OracleDialect.class)
 public class MonotonicRevisionNumberTest extends BaseEnversFunctionalTestCase {
 	@Override
@@ -40,7 +38,7 @@ public class MonotonicRevisionNumberTest extends BaseEnversFunctionalTestCase {
 
 	@Test
 	public void testOracleSequenceOrder() {
-        EntityPersister persister = sessionFactory().getMappingMetamodel().getEntityDescriptor(SequenceIdRevisionEntity.class.getName());
+		EntityPersister persister = sessionFactory().getMappingMetamodel().getEntityDescriptor(SequenceIdRevisionEntity.class.getName());
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		Assert.assertTrue( OrderedSequenceGenerator.class.isInstance( generator ) );
 

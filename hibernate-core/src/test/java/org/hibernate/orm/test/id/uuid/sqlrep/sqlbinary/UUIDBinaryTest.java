@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.uuid.sqlrep.sqlbinary;
 
@@ -10,7 +8,9 @@ import java.sql.Types;
 import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -36,6 +36,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @DomainModel(annotatedClasses = { UUIDBinaryTest.Node.class })
 @SessionFactory
 @SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "Postgres has its own UUID type")
+@SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true,
+		reason = "Skipped for Sybase to avoid problems with UUIDs potentially ending with a trailing 0 byte")
+@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support unique / primary constraints on binary columns")
 public class UUIDBinaryTest {
 
 	private static class UUIDPair {
@@ -57,11 +60,11 @@ public class UUIDBinaryTest {
 
 		final UUIDPair uuidPair = scope.fromTransaction( session -> {
 			final Node root = new Node( "root" );
-			session.save( root );
+			session.persist( root );
 			assertThat( root.id, notNullValue());
 
 			final Node child = new Node( "child", root );
-			session.save( child );
+			session.persist( child );
 			assertThat( child.id, notNullValue() );
 
 			return new UUIDPair(root.id, child.id);

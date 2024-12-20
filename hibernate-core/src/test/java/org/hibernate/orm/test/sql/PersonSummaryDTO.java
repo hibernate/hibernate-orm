@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql;
 
@@ -12,26 +10,26 @@ package org.hibernate.orm.test.sql;
 //tag::sql-hibernate-dto-query-example[]
 public class PersonSummaryDTO {
 
-    private Number id;
+	private Number id;
 
-    private String name;
+	private String name;
 
-    //Getters and setters are omitted for brevity
+	//Getters and setters are omitted for brevity
 
-    public Number getId() {
-        return id;
-    }
+	public Number getId() {
+		return id;
+	}
 
-    public void setId(Number id) {
-        this.id = id;
-    }
+	public void setId(Number id) {
+		this.id = id;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 }
 //end::sql-hibernate-dto-query-example[]

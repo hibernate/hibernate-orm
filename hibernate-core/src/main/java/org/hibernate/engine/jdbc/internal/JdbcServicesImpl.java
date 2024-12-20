@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.internal;
 
@@ -35,6 +33,13 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	private SqlStatementLogger sqlStatementLogger;
 	private ParameterMarkerStrategy parameterMarkerStrategy;
 
+	public JdbcServicesImpl() {
+	}
+
+	public JdbcServicesImpl(ServiceRegistryImplementor serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
+	}
+
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
@@ -42,9 +47,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 	@Override
 	public void configure(Map<String, Object> configValues) {
-		this.jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
-		assert jdbcEnvironment != null : "JdbcEnvironment was not found";
-
+		this.jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
 		this.sqlStatementLogger = serviceRegistry.getService( SqlStatementLogger.class );
 		this.parameterMarkerStrategy = serviceRegistry.getService( ParameterMarkerStrategy.class );
 	}
@@ -79,26 +82,20 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 	@Override
 	public SqlExceptionHelper getSqlExceptionHelper() {
-		if ( jdbcEnvironment != null ) {
-			return jdbcEnvironment.getSqlExceptionHelper();
-		}
-		return null;
+		assert jdbcEnvironment != null : "JdbcEnvironment was not found";
+		return jdbcEnvironment.getSqlExceptionHelper();
 	}
 
 	@Override
 	public ExtractedDatabaseMetaData getExtractedMetaDataSupport() {
-		if ( jdbcEnvironment != null ) {
-			return jdbcEnvironment.getExtractedDatabaseMetaData();
-		}
-		return null;
+		assert jdbcEnvironment != null : "JdbcEnvironment was not found";
+		return jdbcEnvironment.getExtractedDatabaseMetaData();
 	}
 
 	@Override
 	public LobCreator getLobCreator(LobCreationContext lobCreationContext) {
-		if ( jdbcEnvironment != null ) {
-			return jdbcEnvironment.getLobCreatorBuilder().buildLobCreator( lobCreationContext );
-		}
-		return null;
+		assert jdbcEnvironment != null : "JdbcEnvironment was not found";
+		return jdbcEnvironment.getLobCreatorBuilder().buildLobCreator( lobCreationContext );
 	}
 
 }

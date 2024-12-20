@@ -1,15 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
-
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.fetchmode.toone;
 
@@ -59,13 +50,13 @@ public class EagerToOneWithJoinFetchModeTests {
 		scope.inTransaction( session -> {
 			SimpleEntity manyToOneSimpleEntity = new SimpleEntity( 1, "manyToOne" );
 			SimpleEntity oneToOneSimpleEntity = new SimpleEntity( 2, "oneToOne" );
-			session.save( manyToOneSimpleEntity );
-			session.save( oneToOneSimpleEntity );
+			session.persist( manyToOneSimpleEntity );
+			session.persist( oneToOneSimpleEntity );
 
 			RootEntity rootEntity = new RootEntity( 1, "root" );
 			rootEntity.manyToOneSimpleEntity = manyToOneSimpleEntity;
 			rootEntity.oneToOneSimpleEntity = oneToOneSimpleEntity;
-			session.save( rootEntity );
+			session.persist( rootEntity );
 		} );
 	}
 

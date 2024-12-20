@@ -1,13 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
-import jakarta.persistence.AttributeConverter;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BooleanJavaType;
 import org.hibernate.type.descriptor.java.CharacterJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -18,11 +14,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public abstract class CharBooleanConverter
-		implements AttributeConverter<Boolean, Character>, BasicValueConverter<Boolean, Character> {
-	/**
-	 * Singleton access
-	 */
+public abstract class CharBooleanConverter implements StandardBooleanConverter<Character> {
 	@Override
 	public Character convertToDatabaseColumn(Boolean attribute) {
 		return toRelationalValue( attribute );

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.database.qualfiedTableNaming;
 
@@ -34,7 +32,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -63,9 +60,10 @@ import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.CustomParameterized;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -89,7 +87,12 @@ import jakarta.persistence.TableGenerator;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(CustomParameterized.class)
-@TestForIssue(jiraKey = { "HHH-14921", "HHH-14922", "HHH-15212", "HHH-16177" })
+@JiraKeyGroup( value = {
+		@JiraKey( value = "HHH-14921" ),
+		@JiraKey( value = "HHH-14922" ),
+		@JiraKey( value = "HHH-15212" ),
+		@JiraKey( value = "HHH-16177" )
+} )
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class DefaultCatalogAndSchemaTest {
 
@@ -287,12 +290,6 @@ public class DefaultCatalogAndSchemaTest {
 		settings.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
 		settings.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, "true" );
-		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
-			settings.put(
-					AvailableSettings.CONNECTION_PROVIDER,
-					SharedDriverManagerConnectionProviderImpl.getInstance()
-			);
-		}
 		if ( defaultCatalog != null ) {
 			settings.put( AvailableSettings.DEFAULT_CATALOG, defaultCatalog );
 		}
@@ -300,7 +297,7 @@ public class DefaultCatalogAndSchemaTest {
 			settings.put( AvailableSettings.DEFAULT_SCHEMA, defaultSchema );
 		}
 
-		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder( bsr );
+		final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder( bsr );
 		ssrb.applySettings( settings );
 		StandardServiceRegistry registry = ssrb.build();
 		toClose.add( registry );
@@ -315,7 +312,12 @@ public class DefaultCatalogAndSchemaTest {
 	}
 
 	@Test
-	@SkipForDialect(value = { SQLServerDialect.class, SybaseDialect.class },
+	@SkipForDialect(value = SQLServerDialect.class,
+			comment = "SQL Server and Sybase support catalogs but their implementation of DatabaseMetaData"
+					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
+					+ " which results in nasty errors when generating an update script"
+					+ " and some catalogs don't exist.")
+	@SkipForDialect(value = SybaseDialect.class,
 			comment = "SQL Server and Sybase support catalogs but their implementation of DatabaseMetaData"
 					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
 					+ " which results in nasty errors when generating an update script"
@@ -410,7 +412,7 @@ public class DefaultCatalogAndSchemaTest {
 		// because ID generators table/sequence names are prefixed with the owning entity name.
 
 		{
-			final MutationOperationGroup staticSqlInsertGroup = persister.getInsertCoordinator().getStaticInsertGroup();
+			final MutationOperationGroup staticSqlInsertGroup = persister.getInsertCoordinator().getStaticMutationOperationGroup();
 			final String[] insertSqls = new String[staticSqlInsertGroup.getNumberOfOperations()];
 			for ( int tablePosition = 0;
 					tablePosition < staticSqlInsertGroup.getNumberOfOperations();
@@ -429,7 +431,7 @@ public class DefaultCatalogAndSchemaTest {
 		}
 
 		{
-			final MutationOperationGroup staticSqlUpdateGroup = persister.getUpdateCoordinator().getStaticUpdateGroup();
+			final MutationOperationGroup staticSqlUpdateGroup = persister.getUpdateCoordinator().getStaticMutationOperationGroup();
 			final String[] sqlUpdateStrings = new String[staticSqlUpdateGroup.getNumberOfOperations()];
 			for ( int tablePosition = 0;
 					tablePosition < staticSqlUpdateGroup.getNumberOfOperations();
@@ -444,7 +446,7 @@ public class DefaultCatalogAndSchemaTest {
 
 
 		{
-			final MutationOperationGroup staticDeleteGroup = persister.getDeleteCoordinator().getStaticDeleteGroup();
+			final MutationOperationGroup staticDeleteGroup = persister.getDeleteCoordinator().getStaticMutationOperationGroup();
 			final String[] sqlDeleteStrings = new String[staticDeleteGroup.getNumberOfOperations()];
 			for ( int tablePosition = 0; tablePosition < staticDeleteGroup.getNumberOfOperations(); tablePosition++ ) {
 				final MutationOperation operation = staticDeleteGroup.getOperation( tablePosition );
@@ -695,7 +697,6 @@ public class DefaultCatalogAndSchemaTest {
 		);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private String generateScriptFromSessionFactory(String action) {
 		ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
 		Map<String, Object> settings = new HashMap<>(
@@ -1127,7 +1128,7 @@ public class DefaultCatalogAndSchemaTest {
 	public static class EntityWithDefaultQualifiersWithTableGenerator {
 		public static final String NAME = "EntityWithDefaultQualifiersWithTableGenerator";
 		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
+		@GeneratedValue(strategy = GenerationType.TABLE, generator = NAME + "_generator")
 		@TableGenerator(name = NAME + "_generator", table = NAME + "_tableseq")
 		private Long id;
 		@Basic
@@ -1139,7 +1140,7 @@ public class DefaultCatalogAndSchemaTest {
 	public static class EntityWithExplicitQualifiersWithTableGenerator {
 		public static final String NAME = "EntityWithExplicitQualifiersWithTableGenerator";
 		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
+		@GeneratedValue(strategy = GenerationType.TABLE, generator = NAME + "_generator")
 		@TableGenerator(name = NAME + "_generator", table = NAME + "_tableseq",
 				catalog = EXPLICIT_CATALOG, schema = EXPLICIT_SCHEMA)
 		private Long id;
@@ -1152,7 +1153,7 @@ public class DefaultCatalogAndSchemaTest {
 	public static class EntityWithDefaultQualifiersWithIncrementGenerator {
 		public static final String NAME = "EntityWithDefaultQualifiersWithIncrementGenerator";
 		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
+		@GeneratedValue(generator = NAME + "_generator")
 		@GenericGenerator(name = NAME + "_generator", strategy = "increment")
 		private Long id;
 		@Basic
@@ -1164,7 +1165,7 @@ public class DefaultCatalogAndSchemaTest {
 	public static class EntityWithExplicitQualifiersWithIncrementGenerator {
 		public static final String NAME = "EntityWithExplicitQualifiersWithIncrementGenerator";
 		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
+		@GeneratedValue(generator = NAME + "_generator")
 		@GenericGenerator(name = NAME + "_generator", strategy = "increment", parameters = {
 				@Parameter(name = "catalog", value = EXPLICIT_CATALOG),
 				@Parameter(name = "schema", value = EXPLICIT_SCHEMA)
@@ -1178,7 +1179,7 @@ public class DefaultCatalogAndSchemaTest {
 	public static class EntityWithDefaultQualifiersWithEnhancedSequenceGenerator {
 		public static final String NAME = "EntityWithDefaultQualifiersWithEnhancedSequenceGenerator";
 		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
+		@GeneratedValue(generator = NAME + "_generator")
 		@GenericGenerator(name = NAME + "_generator", strategy = "enhanced-sequence", parameters = {
 				@Parameter(name = "sequence_name", value = NAME + "_seq")
 		})
@@ -1192,7 +1193,7 @@ public class DefaultCatalogAndSchemaTest {
 	public static class EntityWithExplicitQualifiersWithEnhancedSequenceGenerator {
 		public static final String NAME = "EntityWithExplicitQualifiersWithEnhancedSequenceGenerator";
 		@Id
-		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = NAME + "_generator")
+		@GeneratedValue(generator = NAME + "_generator")
 		@GenericGenerator(name = NAME + "_generator", strategy = "enhanced-sequence", parameters = {
 				@Parameter(name = "sequence_name", value = NAME + "_seq"),
 				@Parameter(name = "catalog", value = EXPLICIT_CATALOG),

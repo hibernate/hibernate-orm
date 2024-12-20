@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -103,7 +101,7 @@ public interface CompositeType extends Type {
 	 *
 	 * @param component The component instance
 	 * @param values The values to inject
-	 * @return A new instance is necessary
+	 * @return A new instance as necessary
 	 *
 	 * @throws HibernateException Indicates an issue performing the injection
 	 *
@@ -157,6 +155,22 @@ public interface CompositeType extends Type {
 	 * {@code false} otherwise.
 	 */
 	boolean hasNotNullProperty();
+
+	/**
+	 * Convenience method to quickly check if {@link #getPropertyNullability} contains a nullable sub-properties.
+	 *
+	 * @return {@code true} if any of the properties are nullable as indicated by {@link #getPropertyNullability},
+	 * {@code false} otherwise.
+	 */
+	default boolean hasNullProperty() {
+		final boolean[] propertyNullability = getPropertyNullability();
+		for ( int i = 0; i < propertyNullability.length; i++ ) {
+			if ( propertyNullability[i] ) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * Convenience method for locating the property index for a given property name.

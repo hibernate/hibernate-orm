@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.lob;
 
@@ -27,14 +25,15 @@ import junit.framework.AssertionFailedError;
  *
  * @author Gail Badner
  */
-@RequiresDialect( { SQLServerDialect.class, SybaseDialect.class })
+@RequiresDialect(SQLServerDialect.class)
+@RequiresDialect(SybaseDialect.class)
 public class ImageTest extends BaseCoreFunctionalTestCase {
 	private static final int ARRAY_SIZE = 10000;
 
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.WRAPPER_ARRAY_HANDLING, WrapperArrayHandling.ALLOW.name() );
+		configuration.setProperty( AvailableSettings.WRAPPER_ARRAY_HANDLING, WrapperArrayHandling.ALLOW );
 	}
 
 	@Test
@@ -45,7 +44,7 @@ public class ImageTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		ImageHolder entity = new ImageHolder();
-		s.save(entity);
+		s.persist(entity);
 		s.getTransaction().commit();
 		s.close();
 
@@ -96,11 +95,11 @@ public class ImageTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		entity = (ImageHolder) s.get(ImageHolder.class, entity.getId());
+		entity = s.get( ImageHolder.class, entity.getId());
 		Assert.assertNull( entity.getLongByteArray() );
 		Assert.assertNull( entity.getDog() );
 		Assert.assertNull( entity.getPicByteArray() );
-		s.delete(entity);
+		s.remove(entity);
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -149,7 +148,7 @@ public class ImageTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-    public Class<?>[] getAnnotatedClasses() {
+	public Class<?>[] getAnnotatedClasses() {
 		return new Class[] { ImageHolder.class };
 	}
 

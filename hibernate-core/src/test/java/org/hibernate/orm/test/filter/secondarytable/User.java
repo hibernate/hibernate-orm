@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.filter.secondarytable;
 
@@ -27,24 +25,24 @@ import jakarta.persistence.Table;
 @Filter(name="ageFilter", condition="{u}.AGE < :age AND {s}.LOCKED_OUT <> 1",
 				aliases={@SqlFragmentAlias(alias="u", table="T_USER"), @SqlFragmentAlias(alias="s", table="SECURITY_USER")})
 public class User {
-	
+
 	@Id
 	@GeneratedValue
 	@Column(name="USER_ID")
 	private int id;
-	
+
 	@Column(name="EMAIL_ADDRESS")
 	private String emailAddress;
-	
+
 	@Column(name="AGE")
 	private int age;
-	
+
 	@Column(name="SECURITY_USERNAME", table="SECURITY_USER")
 	private String username;
-	
+
 	@Column(name="SECURITY_PASSWORD", table="SECURITY_USER")
 	private String password;
-	
+
 	@Column(name="LOCKED_OUT", table="SECURITY_USER")
 	@Convert( converter = NumericBooleanConverter.class )
 	private boolean lockedOut;
@@ -96,5 +94,5 @@ public class User {
 	public void setLockedOut(boolean lockedOut) {
 		this.lockedOut = lockedOut;
 	}
-	
+
 }

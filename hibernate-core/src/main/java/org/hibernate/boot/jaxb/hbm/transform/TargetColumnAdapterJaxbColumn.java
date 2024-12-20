@@ -1,24 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.hbm.transform;
 
-import org.hibernate.boot.jaxb.mapping.JaxbColumn;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbCheckConstraintImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Steve Ebersole
  */
 public class TargetColumnAdapterJaxbColumn implements TargetColumnAdapter {
-	private final JaxbColumn jaxbColumn;
+	private final JaxbColumnImpl jaxbColumn;
 
 	public TargetColumnAdapterJaxbColumn(ColumnDefaults columnDefaults) {
-		this( new JaxbColumn(), columnDefaults );
+		this( new JaxbColumnImpl(), columnDefaults );
 	}
 
-	public TargetColumnAdapterJaxbColumn(JaxbColumn jaxbColumn, ColumnDefaults columnDefaults) {
+	public TargetColumnAdapterJaxbColumn(JaxbColumnImpl jaxbColumn, ColumnDefaults columnDefaults) {
 		this.jaxbColumn = jaxbColumn;
 		this.jaxbColumn.setLength( columnDefaults.getLength() );
 		this.jaxbColumn.setScale( columnDefaults.getScale() );
@@ -29,7 +29,7 @@ public class TargetColumnAdapterJaxbColumn implements TargetColumnAdapter {
 		this.jaxbColumn.setUpdatable( columnDefaults.isUpdateable() );
 	}
 
-	public JaxbColumn getTargetColumn() {
+	public JaxbColumnImpl getTargetColumn() {
 		return jaxbColumn;
 	}
 
@@ -104,7 +104,12 @@ public class TargetColumnAdapterJaxbColumn implements TargetColumnAdapter {
 
 	@Override
 	public void setCheck(String value) {
-		jaxbColumn.setCheck( value );
+		if ( StringHelper.isEmpty( value ) ) {
+			return;
+		}
+		final JaxbCheckConstraintImpl checkConstraint = new JaxbCheckConstraintImpl();
+		checkConstraint.setConstraint( value );
+		jaxbColumn.getCheckConstraints().add( checkConstraint );
 	}
 
 	@Override

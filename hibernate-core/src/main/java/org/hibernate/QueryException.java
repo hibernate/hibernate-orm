@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -110,44 +108,5 @@ public class QueryException extends HibernateException {
 
 	protected final String getOriginalMessage() {
 		return super.getMessage();
-	}
-
-	/**
-	 * Wraps this exception with another, of same kind, with the specified query string.
-	 * If this exception already has a query string defined, the same exception ({@code this})
-	 * is returned. Otherwise, the protected {@link #generateQueryException(String)} is called,
-	 * to allow subclasses to properly create the correct subclass for return.
-	 *
-	 * @param queryString The query string that led to the QueryException
-	 *
-	 * @return {@code this}, if {@code this} has {@code null} for {@link #getQueryString()};
-	 *         otherwise a new {@code QueryException} (or subclass) is returned.
-	 *
-	 * @deprecated This method is no longer used
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	public final QueryException wrapWithQueryString(String queryString) {
-		if ( this.getQueryString() != null ) {
-			return this;
-		}
-
-		return generateQueryException( queryString );
-	}
-
-	/**
-	 * Called from {@link #wrapWithQueryString(String)} when we really need to
-	 * generate a new {@code QueryException} (or subclass).
-	 *
-	 * @implNote implementors should take care to use {@link #getOriginalMessage()}
-	 *           for the message, not {@link #getMessage()}
-	 *
-	 * @param queryString The query string
-	 *
-	 * @return The generated {@code QueryException} (or subclass)
-	 *
-	 * @see #getOriginalMessage()
-	 */
-	protected QueryException generateQueryException(String queryString) {
-		return new QueryException( getOriginalMessage(), queryString, this );
 	}
 }

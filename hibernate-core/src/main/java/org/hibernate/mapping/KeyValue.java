@@ -1,14 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
+import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.generator.Generator;
 
 /**
@@ -22,54 +19,24 @@ import org.hibernate.generator.Generator;
 public interface KeyValue extends Value {
 
 	ForeignKey createForeignKeyOfEntity(String entityName);
-	
+
 	boolean isCascadeDeleteEnabled();
-	
+
+	enum NullValueSemantic { VALUE, NULL, NEGATIVE, UNDEFINED, NONE, ANY }
+
+	NullValueSemantic getNullValueSemantic();
+
 	String getNullValue();
-	
+
 	boolean isUpdateable();
 
-	Generator createGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			RootClass rootClass);
-
 	/**
-	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
-	 *
-	 * @return {@code null} if the {@code Generator} returned by {@link #createGenerator} is not an instance
-	 *         of {@link IdentifierGenerator}.
+	 * @deprecated No longer called, except from tests.
+	 *             Use {@link #createGenerator(Dialect, RootClass, Property, GeneratorSettings)}
 	 */
-	@Deprecated(since="6.2")
-	default IdentifierGenerator createIdentifierGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			String defaultCatalog,
-			String defaultSchema,
-			RootClass rootClass) {
-		final Generator generator = createGenerator( identifierGeneratorFactory, dialect, rootClass );
-		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
-	}
+	@Deprecated(since = "7.0", forRemoval = true)
+	Generator createGenerator(Dialect dialect, RootClass rootClass);
 
-	/**
-	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
-	 *
-	 * @return {@code null} if the {@code Generator} returned by {@link #createGenerator} is not an instance
-	 *         of {@link IdentifierGenerator}.
-	 */
-	@Deprecated(since="6.2")
-	default IdentifierGenerator createIdentifierGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			RootClass rootClass) {
-		final Generator generator = createGenerator( identifierGeneratorFactory, dialect, rootClass );
-		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
-	}
-
-	/**
-	 * @deprecated We need to add {@code Column.isIdentity()}
-	 */
-	@Deprecated(since="6.2")
-	boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect);
-
+	@Incubating
+	Generator createGenerator(Dialect dialect, RootClass rootClass, Property property, GeneratorSettings defaults);
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal;
 
@@ -44,7 +42,7 @@ public final class SqmInsertStrategyHelper {
 
 			functionExpression = new SelfRenderingWindowFunctionSqlAstExpression(
 					"dense_rank",
-					(appender, args, walker) -> appender.appendSql( "dense_rank()" ),
+					(appender, args, returnType, walker) -> appender.appendSql( "dense_rank()" ),
 					Collections.emptyList(),
 					null,
 					null,
@@ -71,7 +69,7 @@ public final class SqmInsertStrategyHelper {
 		else {
 			functionExpression = new SelfRenderingWindowFunctionSqlAstExpression(
 					"row_number",
-					(appender, args, walker) -> appender.appendSql( "row_number()" ),
+					(appender, args, returnType, walker) -> appender.appendSql( "row_number()" ),
 					Collections.emptyList(),
 					null,
 					null,

@@ -1,16 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
 
 import java.sql.Types;
 import java.util.TimeZone;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
@@ -19,9 +14,15 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -55,6 +56,25 @@ public class TimeZoneMappingTests {
 		scope.inTransaction(
 				(session) -> session.find(EntityWithTimeZone.class, 1)
 		);
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17726" )
+	public void testUpdateQuery(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new EntityWithTimeZone( 1, TimeZone.getDefault() ) ) );
+		scope.inTransaction( session -> {
+			final TimeZone timeZone = TimeZone.getTimeZone( "UTC" );
+			session.createMutationQuery( "update EntityWithTimeZone e set e.timeZone = :timeZone" )
+					.setParameter( "timeZone", timeZone )
+					.executeUpdate();
+			final EntityWithTimeZone entity = session.find( EntityWithTimeZone.class, 1 );
+			assertThat( entity.timeZone, equalTo( timeZone ) );
+		} );
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.createMutationQuery( "delete EntityWithTimeZone" ).executeUpdate() );
 	}
 
 	@Entity(name = "EntityWithTimeZone")

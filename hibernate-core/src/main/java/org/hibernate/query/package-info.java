@@ -15,6 +15,13 @@
  * {@link org.hibernate.query.QueryProducer}, that is, from any
  * {@link org.hibernate.Session} or {@link org.hibernate.StatelessSession}.
  * <p>
+ * The classes {@link org.hibernate.query.Order}, {@link org.hibernate.query.Page},
+ * {@link org.hibernate.query.KeyedPage}, and {@link org.hibernate.query.KeyedResultList}
+ * define an API for dynamic ordering and key-based pagination. These
+ * classes are especially useful as parameters of generated
+ * {@link org.hibernate.annotations.processing.Find @Find} and
+ * {@link org.hibernate.annotations.processing.HQL @HQL} methods.
+ * <p>
  * Hibernate's extensions to the JPA criteria query API are defined in the
  * subpackage {@link org.hibernate.query.criteria}, with
  * {@link org.hibernate.query.criteria.HibernateCriteriaBuilder} as the

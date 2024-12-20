@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.scanning;
 
@@ -11,13 +9,13 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.hibernate.archive.scan.internal.ClassDescriptorImpl;
+import org.hibernate.boot.archive.scan.internal.DisabledScanner;
+import org.hibernate.archive.scan.internal.MappingFileDescriptorImpl;
+import org.hibernate.archive.scan.internal.PackageDescriptorImpl;
+import org.hibernate.archive.scan.internal.ScanResultImpl;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.archive.internal.ByteArrayInputStreamAccess;
-import org.hibernate.boot.archive.scan.internal.ClassDescriptorImpl;
-import org.hibernate.boot.archive.scan.internal.DisabledScanner;
-import org.hibernate.boot.archive.scan.internal.MappingFileDescriptorImpl;
-import org.hibernate.boot.archive.scan.internal.PackageDescriptorImpl;
-import org.hibernate.boot.archive.scan.internal.ScanResultImpl;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 import org.hibernate.boot.archive.scan.spi.PackageDescriptor;
@@ -27,7 +25,7 @@ import org.hibernate.boot.archive.scan.spi.ScanParameters;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
 import org.hibernate.boot.model.process.internal.ScanningCoordinator;
@@ -35,9 +33,10 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Logger;
 import org.hibernate.testing.orm.junit.MessageKeyInspection;
 import org.hibernate.testing.orm.junit.MessageKeyWatcher;
@@ -70,6 +69,7 @@ public class ScanningCoordinatorTest {
 	private BootstrapContext bootstrapContext = Mockito.mock( BootstrapContext.class );
 	private ClassmateContext classmateContext = new ClassmateContext();
 	private XmlMappingBinderAccess xmlMappingBinderAccess = Mockito.mock( XmlMappingBinderAccess.class );
+	private MetadataBuildingOptions metadataBuildingOptions = Mockito.mock( MetadataBuildingOptions.class );
 
 	private ScanEnvironment scanEnvironment = Mockito.mock( ScanEnvironment.class );
 	private StandardServiceRegistry serviceRegistry = Mockito.mock( StandardServiceRegistry.class );
@@ -87,7 +87,11 @@ public class ScanningCoordinatorTest {
 		when( bootstrapContext.getScanEnvironment() ).thenReturn( scanEnvironment );
 		when( bootstrapContext.getClassmateContext() ).thenReturn( classmateContext );
 		when( bootstrapContext.getServiceRegistry() ).thenReturn( serviceRegistry );
-		when( serviceRegistry.getService( ClassLoaderService.class ) ).thenReturn( classLoaderService );
+		when( bootstrapContext.getMetadataBuildingOptions() ).thenReturn( metadataBuildingOptions );
+
+		when( serviceRegistry.requireService( ClassLoaderService.class ) ).thenReturn( classLoaderService );
+
+		when( metadataBuildingOptions.isXmlMappingEnabled() ).thenReturn( true );
 
 		when( scanEnvironment.getExplicitlyListedClassNames() ).thenReturn(
 				Arrays.asList( "a.b.C" ) );
@@ -124,7 +128,7 @@ public class ScanningCoordinatorTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14473")
+	@JiraKey(value = "HHH-14473")
 	public void testApplyScanResultsToManagedResultsWhileExplicitClassNameLoadable() {
 		Class<Object> expectedClass = Object.class;
 		when( classLoaderService.classForName( eq( "a.b.C" ) ) ).thenReturn( expectedClass );
@@ -142,13 +146,13 @@ public class ScanningCoordinatorTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12505")
+	@JiraKey(value = "HHH-12505")
 	public void testManagedResourcesAfterCoordinateScanWithDisabledScanner() {
 		assertManagedResourcesAfterCoordinateScanWithScanner( new DisabledScanner(), true );
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12505")
+	@JiraKey(value = "HHH-12505")
 	public void testManagedResourcesAfterCoordinateScanWithCustomEnabledScanner() {
 		final Scanner scanner = new Scanner() {
 			@Override
@@ -165,7 +169,7 @@ public class ScanningCoordinatorTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10778")
+	@JiraKey(value = "HHH-10778")
 	public void testManagedResourcesAfterCoordinateScanWithConverterScanner() {
 
 		when( classLoaderService.classForName( "converter" ) ).thenReturn( (Class) IntegerToVarcharConverter.class );

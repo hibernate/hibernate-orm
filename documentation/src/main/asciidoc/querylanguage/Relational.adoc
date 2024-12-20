@@ -141,7 +141,7 @@ But it's better to specify the projection explicitly, except in the simplest cas
 ==== Duplicate removal
 
 The `distinct` keyword helps remove duplicate results from the query result list.
-It's only effect is to add `distinct` to the generated SQL.
+Its only effect is to add `distinct` to the generated SQL.
 
 [[distinct-projection-query-example]]
 [source, hql]
@@ -178,12 +178,16 @@ The standard aggregate functions defined in both ANSI SQL and JPQL are these one
 
 | `count()`, including `count(distinct)`, `count(all)`, and `count(*)` | Any | `Long` | ✔/✔
 | `avg()` | Any numeric type | `Double` | ✔/✔
+| `median()` | Any numeric type | `Double` | ✖/✖
 | `min()` | Any numeric type, or string | Same as the argument type | ✔/✔
 | `max()` | Any numeric type, or string | Same as the argument type | ✔/✔
 | `sum()` | Any numeric type | See table below | ✔/✔
 | `var_pop()`, `var_samp()` | Any numeric type | `Double` | ✖/✔
 | `stddev_pop()`, `stddev_samp()` | Any numeric type | `Double` | ✖/✔
 |===
+
+[NOTE]
+The `median()` function is not supported on MySQL or Sybase ASE.
 
 [[aggregate-functions-example]]
 [source, hql]
@@ -237,8 +241,8 @@ HQL defines two additional aggregate functions which accept a logical predicate 
 |===
 | Aggregate function | Argument type | Result type | JPA standard
 
-| `any()` | Logical predicate | `Boolean` | ✖
-| `every()` | Logical predicate | `Boolean` | ✖
+| `any()` or `some()` | Logical predicate | `Boolean` | ✖
+| `every()` or `all()` | Logical predicate | `Boolean` | ✖
 |===
 
 We may write, for example, `every(p.amount < 1000.0)`.

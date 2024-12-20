@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal;
 
@@ -85,7 +83,7 @@ public class CacheableFileXmlSource extends XmlSource {
 		else {
 			if ( !isSerfileObsolete() ) {
 				try {
-					return readSerFile();
+					return new Binding( readSerFile(), getOrigin() );
 				}
 				catch ( SerializationException e ) {
 					log.unableToDeserializeCache( serFile.getName(), e );
@@ -117,6 +115,9 @@ public class CacheableFileXmlSource extends XmlSource {
 	}
 
 	private static void writeSerFile(Serializable binding, File xmlFile, File serFile) {
+		if ( binding instanceof Binding<?> bindingWrapper ) {
+			binding = (Serializable) bindingWrapper.getRoot();
+		}
 		try ( FileOutputStream fos = new FileOutputStream( serFile ) ) {
 			if ( log.isDebugEnabled() ) {
 				log.debugf( "Writing cache file for: %s to: %s", xmlFile.getAbsolutePath(), serFile.getAbsolutePath() );
@@ -144,7 +145,7 @@ public class CacheableFileXmlSource extends XmlSource {
 				outputFile
 		);
 	}
-	
+
 	private boolean isSerfileObsolete() {
 		return xmlFile.exists() && serFile.exists() && xmlFile.lastModified() > serFile.lastModified();
 	}

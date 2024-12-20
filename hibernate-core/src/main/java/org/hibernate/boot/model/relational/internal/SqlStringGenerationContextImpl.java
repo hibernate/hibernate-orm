@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.relational.internal;
 
@@ -139,11 +137,6 @@ public class SqlStringGenerationContextImpl
 	}
 
 	@Override
-	public IdentifierHelper getIdentifierHelper() {
-		return identifierHelper;
-	}
-
-	@Override
 	public Identifier toIdentifier(String text) {
 		return identifierHelper != null ? identifierHelper.toIdentifier( text ) : Identifier.toIdentifier( text );
 	}
@@ -154,45 +147,8 @@ public class SqlStringGenerationContextImpl
 	}
 
 	@Override
-	public Identifier catalogWithDefault(Identifier explicitCatalogOrNull) {
-		return explicitCatalogOrNull != null ? explicitCatalogOrNull : defaultCatalog;
-	}
-
-	@Override
 	public Identifier getDefaultSchema() {
 		return defaultSchema;
-	}
-
-	@Override
-	public Identifier schemaWithDefault(Identifier explicitSchemaOrNull) {
-		return explicitSchemaOrNull != null ? explicitSchemaOrNull : defaultSchema;
-	}
-
-	private QualifiedTableName withDefaults(QualifiedTableName name) {
-		if ( name.getCatalogName() == null && defaultCatalog != null
-				|| name.getSchemaName() == null && defaultSchema != null ) {
-			return new QualifiedTableName( catalogWithDefault( name.getCatalogName() ),
-					schemaWithDefault( name.getSchemaName() ), name.getTableName() );
-		}
-		return name;
-	}
-
-	private QualifiedSequenceName withDefaults(QualifiedSequenceName name) {
-		if ( name.getCatalogName() == null && defaultCatalog != null
-				|| name.getSchemaName() == null && defaultSchema != null ) {
-			return new QualifiedSequenceName( catalogWithDefault( name.getCatalogName() ),
-					schemaWithDefault( name.getSchemaName() ), name.getSequenceName() );
-		}
-		return name;
-	}
-
-	private QualifiedName withDefaults(QualifiedName name) {
-		if ( name.getCatalogName() == null && defaultCatalog != null
-				|| name.getSchemaName() == null && defaultSchema != null ) {
-			return new QualifiedSequenceName( catalogWithDefault( name.getCatalogName() ),
-					schemaWithDefault( name.getSchemaName() ), name.getObjectName() );
-		}
-		return name;
 	}
 
 	@Override

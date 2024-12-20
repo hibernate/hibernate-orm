@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -18,7 +16,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
@@ -41,7 +38,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 		ProcedureParameterExtractionAware<T>,
 		ProcedureParameterNamedBinder<T>,
 		DynamicParameterizedType {
-	
+
 	public static final String CLASS_NAME = "classname";
 
 	private static final long serialVersionUID = 1L;
@@ -83,7 +80,7 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 			}
 			try {
 				@SuppressWarnings("unchecked")
-				Class<T> classForName = ReflectHelper.classForName(className);
+				Class<T> classForName = (Class<T>) ReflectHelper.classForName(className);
 				setJavaTypeDescriptor( new SerializableJavaType<>(classForName) );
 			}
 			catch ( ClassNotFoundException e ) {
@@ -126,14 +123,14 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
 		return value == null ? ArrayHelper.FALSE : ArrayHelper.TRUE;
 	}
 
 	@Override
 	public String[] getRegistrationKeys() {
 		return registerUnderJavaType()
-				? new String[] { getName(), javaType.getJavaType().getTypeName() }
+				? new String[] { getName(), javaType.getTypeName() }
 				: new String[] { getName() };
 	}
 
@@ -169,12 +166,12 @@ public class SerializableToBlobType<T extends Serializable> implements BasicType
 	}
 
 	@Override
-	public final int getColumnSpan(Mapping mapping) throws MappingException {
+	public final int getColumnSpan(MappingContext mapping) throws MappingException {
 		return 1;
 	}
 
 	@Override
-	public final int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
+	public final int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
 		return sqlTypes;
 	}
 

@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -35,22 +34,22 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 
 	public AbstractSqmFunctionDescriptor(
 			String name,
-			ArgumentsValidator argumentsValidator) {
+			@Nullable ArgumentsValidator argumentsValidator) {
 		this( name, argumentsValidator, null, null );
 	}
 
 	public AbstractSqmFunctionDescriptor(
 			String name,
-			ArgumentsValidator argumentsValidator,
-			FunctionArgumentTypeResolver argumentTypeResolver) {
+			@Nullable ArgumentsValidator argumentsValidator,
+			@Nullable FunctionArgumentTypeResolver argumentTypeResolver) {
 		this( name, argumentsValidator, null, argumentTypeResolver );
 	}
 
 	public AbstractSqmFunctionDescriptor(
 			String name,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			FunctionArgumentTypeResolver argumentTypeResolver) {
+			@Nullable ArgumentsValidator argumentsValidator,
+			@Nullable FunctionReturnTypeResolver returnTypeResolver,
+			@Nullable FunctionArgumentTypeResolver argumentTypeResolver) {
 		this.name = name;
 		this.argumentsValidator = argumentsValidator == null
 				? StandardArgumentsValidators.NONE
@@ -222,8 +221,6 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	 * function descriptors that wish to customize creation of the node.
 	 *
 	 * @param arguments         the arguments of the function invocation
-	 * @param respectNulls
-	 * @param fromFirst
 	 * @param impliedResultType the function return type as inferred from its usage
 	 */
 	protected <T> SelfRenderingSqmWindowFunction<T> generateSqmWindowFunctionExpression(
@@ -240,4 +237,3 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 		);
 	}
 }
-

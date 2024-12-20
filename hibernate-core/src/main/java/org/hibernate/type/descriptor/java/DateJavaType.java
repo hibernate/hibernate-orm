@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -52,6 +50,7 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
+		// this "Date" is really a timestamp
 		return dialect.getDefaultTimestampPrecision();
 	}
 
@@ -125,7 +124,7 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
 			final java.sql.Time rtn = value instanceof java.sql.Time
 					? ( java.sql.Time ) value
-					: new java.sql.Time( value.getTime() );
+					: new java.sql.Time( value.getTime() % 86_400_000 );
 			return (X) rtn;
 		}
 		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
@@ -152,16 +151,16 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Date) {
-			return (Date) value;
+		if (value instanceof Date date) {
+			return date;
 		}
 
-		if (value instanceof Long) {
-			return new Date( (Long) value );
+		if (value instanceof Long longValue) {
+			return new Date( longValue );
 		}
 
-		if (value instanceof Calendar) {
-			return new Date( ( (Calendar) value ).getTimeInMillis() );
+		if (value instanceof Calendar calendar) {
+			return new Date( calendar.getTimeInMillis() );
 		}
 
 		throw unknownWrap( value.getClass() );
@@ -169,14 +168,10 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getJavaType().getTypeName() ) {
-			case "java.sql.Date":
-			case "java.sql.Timestamp":
-			case "java.util.Calendar":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "java.sql.Date", "java.sql.Timestamp", "java.util.Calendar" -> true;
+			default -> false;
+		};
 	}
 
 	@Override

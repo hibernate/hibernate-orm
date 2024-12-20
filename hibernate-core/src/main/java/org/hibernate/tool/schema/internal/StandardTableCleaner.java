@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
@@ -18,7 +16,10 @@ import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.spi.Cleaner;
 
 import java.util.Collection;
-import java.util.stream.Collectors;
+
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toList;
+import static org.hibernate.internal.util.collections.ArrayHelper.join;
 
 /**
  * The basic implementation of {@link Cleaner}.
@@ -46,10 +47,16 @@ public class StandardTableCleaner implements Cleaner {
 	@Override
 	public String[] getSqlTruncateStrings(Collection<Table> tables, Metadata metadata, SqlStringGenerationContext context) {
 		String[] tableNames = tables.stream()
-				.map( table -> context.format( getTableName(table) ) )
-				.collect( Collectors.toList() )
+				.map( table -> context.format( getTableName( table ) ) )
+				.collect( toList() )
 				.toArray( ArrayHelper.EMPTY_STRING_ARRAY );
-		return dialect.getTruncateTableStatements( tableNames );
+		String[] truncateTableStatements = dialect.getTruncateTableStatements( tableNames );
+		String[] initStatements = tables.stream()
+				.flatMap( table -> table.getInitCommands( context ).stream() )
+				.flatMap( command -> stream( command.getInitCommands() ) )
+				.collect( toList() )
+				.toArray( ArrayHelper.EMPTY_STRING_ARRAY );
+		return join( truncateTableStatements, initStatements );
 	}
 
 	@Override

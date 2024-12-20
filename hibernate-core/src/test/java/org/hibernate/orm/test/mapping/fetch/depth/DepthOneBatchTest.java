@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.mapping.fetch.depth;
 
 import java.util.HashSet;
@@ -52,7 +56,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				@Setting(name = AvailableSettings.FORMAT_SQL, value = "false")
 		}
 )
-@RequiresDialect(value = H2Dialect.class, majorVersion = 2, comment = "H2 didn't support SQL arrays before version 2")
+@RequiresDialect(value = H2Dialect.class)
 @JiraKey("HHH-16469")
 public class DepthOneBatchTest {
 
@@ -153,7 +157,6 @@ public class DepthOneBatchTest {
 
 		@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 		@PrimaryKeyJoinColumn(name = "AGENCY_ID")
-		@BatchSize(size = 2)
 		public AgencyDetail getAgencyDetail() {
 			return agencyDetail;
 		}

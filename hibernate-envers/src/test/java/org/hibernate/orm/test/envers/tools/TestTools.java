@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.tools;
 
@@ -74,10 +72,9 @@ public class TestTools {
 	}
 
 	public static Set<String> extractModProperties(PersistentClass persistentClass, String suffix) {
-		final Set<String> result = new HashSet<String>();
-		final Iterator iterator = persistentClass.getPropertyIterator();
-		while ( iterator.hasNext() ) {
-			final Property property = (Property) iterator.next();
+		final Set<String> result = new HashSet<>();
+		final List<Property> props = persistentClass.getProperties();
+		for ( Property property : props ) {
 			final String propertyName = property.getName();
 			if ( propertyName.endsWith( suffix ) ) {
 				result.add( propertyName );

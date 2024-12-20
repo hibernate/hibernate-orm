@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Thing.java 7715 2005-08-01 16:46:57Z oneovthafew $
 package org.hibernate.orm.test.version;
 
 
@@ -14,7 +10,7 @@ public class Thing {
 	private Person person;
 	private int version;
 	private String longDescription;
-	
+
 	public int getVersion() {
 		return version;
 	}

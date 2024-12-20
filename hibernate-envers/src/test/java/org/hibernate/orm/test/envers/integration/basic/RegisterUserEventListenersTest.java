@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.basic;
 
@@ -19,7 +17,7 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,7 +31,7 @@ public class RegisterUserEventListenersTest extends BaseEnversFunctionalTestCase
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7478")
+	@JiraKey(value = "HHH-7478")
 	public void testTransactionProcessSynchronization() {
 		final EventListenerRegistry registry = sessionFactory().getServiceRegistry()
 				.getService( EventListenerRegistry.class );
@@ -44,7 +42,7 @@ public class RegisterUserEventListenersTest extends BaseEnversFunctionalTestCase
 		Session session = openSession();
 		session.getTransaction().begin();
 		StrTestEntity entity = new StrTestEntity( "str1" );
-		session.save( entity );
+		session.persist( entity );
 		session.getTransaction().commit();
 		session.close();
 

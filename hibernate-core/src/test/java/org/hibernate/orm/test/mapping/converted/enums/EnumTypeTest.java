@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.enums;
 
@@ -11,11 +9,13 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Session;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.JdbcBindingLogging;
 import org.hibernate.type.descriptor.JdbcExtractingLogging;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
@@ -23,6 +23,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import org.jboss.logging.Logger;
+
+import java.lang.invoke.MethodHandles;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -35,12 +37,14 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 
 	@Rule
 	public LoggerInspectionRule binderLogInspection = new LoggerInspectionRule( Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			JdbcBindingLogging.NAME
 	) );
 
 	@Rule
 	public LoggerInspectionRule extractorLogInspection = new LoggerInspectionRule( Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			JdbcExtractingLogging.NAME
 	) );
@@ -58,6 +62,12 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 
 	protected String[] getMappings() {
 		return new String[] { "org/hibernate/orm/test/mapping/converted/enums/Person.hbm.xml" };
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
+		configuration.setProperty( Environment.PREFER_NATIVE_ENUM_TYPES, "false" );
 	}
 
 	@Override
@@ -80,7 +90,7 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8153")
+	@JiraKey(value = "HHH-8153")
 	public void hbmEnumTypeTest() {
 		doInHibernate(
 				this::sessionFactory,
@@ -113,7 +123,7 @@ public class EnumTypeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12978")
+	@JiraKey(value = "HHH-12978")
 	public void testEnumAsBindParameterAndExtract() {
 		doInHibernate( this::sessionFactory, s -> {
 			binderTriggerable.reset();

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
@@ -13,12 +11,11 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.SqlTypes;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -41,7 +38,7 @@ import jakarta.persistence.TypedQuery;
 		annotatedClasses = VarbinaryArrayTest.EntityWithArrays.class
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-16085")
+@JiraKey(value = "HHH-16085")
 @SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
 public class VarbinaryArrayTest {
 
@@ -215,7 +212,7 @@ public class VarbinaryArrayTest {
 
 	@ParameterizedTest
 	@MethodSource("perTypeArguments")
-	@SkipForDialect( dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
+	@SkipForDialect( dialectClass = HANADialect.class, matchSubTypes = true, reason = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
 	<T> void queryByData(String propertyName, long id, T value, Function<EntityWithArrays, T> getter,
 			SessionFactoryScope scope) {
 		scope.inTransaction( session -> {

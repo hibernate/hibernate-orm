@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.readonly;
 
@@ -30,7 +28,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		scope.inTransaction(
 				session -> {
 					session.createQuery( "select v from VersionedNode v" ).list()
-							.forEach( node -> session.delete( node ) );
+							.forEach( node -> session.remove( node ) );
 				}
 		);
 	}
@@ -104,7 +102,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 					assertEquals( "diff-node-name", node.getName() );
 					assertEquals( 1, node.getVersion() );
 					session.setReadOnly( node, true );
-					session.delete( node );
+					session.remove( node );
 				}
 		);
 
@@ -136,7 +134,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 					assertEquals( "node", node.getName() );
 					assertEquals( 0, node.getVersion() );
 					session.setReadOnly( node, true );
-					session.delete( node );
+					session.remove( node );
 				}
 		);
 
@@ -168,7 +166,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 					assertEquals( "node-name", node.getName() );
 					assertEquals( 1, node.getVersion() );
 					session.setReadOnly( node, true );
-					session.delete( node );
+					session.remove( node );
 				}
 		);
 
@@ -220,7 +218,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 					VersionedNode node = session.get( VersionedNode.class, n.getId() );
 					assertEquals( "node-name", node.getName() );
 					assertEquals( 1, node.getVersion() );
-					session.delete( node );
+					session.remove( node );
 				}
 		);
 	}
@@ -249,7 +247,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 					VersionedNode node = session.get( VersionedNode.class, n.getId() );
 					assertEquals( "node-name", node.getName() );
 					assertEquals( 1, node.getVersion() );
-					session.delete( node );
+					session.remove( node );
 				}
 		);
 	}
@@ -282,7 +280,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 					assertEquals( 1, parent.getVersion() );
 					VersionedNode child = session.get( VersionedNode.class, c.getId() );
 					assertNotNull( child );
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 	}
@@ -299,8 +297,8 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 
 		scope.inTransaction(
 				session -> {
-					session.update( p );
-					session.setReadOnly( p, true );
+					VersionedNode v = session.merge( p );
+					session.setReadOnly( v, true );
 				}
 		);
 
@@ -320,8 +318,8 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 					assertEquals( 0, child.getVersion() );
 					session.setReadOnly( parent, true );
 					session.setReadOnly( child, true );
-					session.delete( parent );
-					session.delete( child );
+					session.remove( parent );
+					session.remove( child );
 				}
 		);
 
@@ -362,8 +360,8 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 					assertEquals( 0, child.getVersion() );
 					session.setReadOnly( parent, true );
 					session.setReadOnly( child, true );
-					session.delete( parent );
-					session.delete( child );
+					session.remove( parent );
+					session.remove( child );
 				}
 		);
 
@@ -404,8 +402,8 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 					assertSame( parent, child.getParent() );
 					assertSame( child, parent.getChildren().iterator().next() );
 					assertEquals( 0, child.getVersion() );
-					session.delete( parent );
-					session.delete( child );
+					session.remove( parent );
+					session.remove( child );
 				}
 		);
 
@@ -448,7 +446,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 
 		scope.inTransaction(
 				session -> {
-					VersionedNode parentLoad = (VersionedNode) session.load( parent.getClass(), parent.getId() );
+					VersionedNode parentLoad = session.getReference( parent.getClass(), parent.getId() );
 					session.merge( parent );
 				}
 		);
@@ -467,8 +465,8 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 					assertSame( parent_, child.getParent() );
 					assertSame( child, parent_.getChildren().iterator().next() );
 					assertEquals( 0, child.getVersion() );
-					session.delete( parent_ );
-					session.delete( child );
+					session.remove( parent_ );
+					session.remove( child );
 				}
 		);
 
@@ -504,7 +502,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 					VersionedNode parent = session.get( VersionedNode.class, p.getId() );
 					assertNotNull( parent );
 					session.setReadOnly( child, true );
-					session.delete( child );
+					session.remove( child );
 				}
 		);
 
@@ -525,12 +523,12 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 
 		scope.inTransaction(
 				session -> {
-					session.update( c );
-					session.setReadOnly( c, true );
+					VersionedNode merged = session.merge( c );
+					session.setReadOnly( merged, true );
 				}
 		);
 
-		assertUpdateCount( 0, scope );
+		assertUpdateCount( 1, scope );
 		assertInsertCount( 1, scope );
 		clearCounts( scope );
 
@@ -543,11 +541,11 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 					assertEquals( 0, child.getVersion() );
 					assertNotNull( parent );
 					assertEquals( 0, parent.getChildren().size() );
-					assertEquals( 0, parent.getVersion() );
+					assertEquals( 1, parent.getVersion() );
 					session.setReadOnly( parent, true );
 					session.setReadOnly( child, true );
-					session.delete( parent );
-					session.delete( child );
+					session.remove( parent );
+					session.remove( child );
 				}
 		);
 
@@ -588,8 +586,8 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 					assertEquals( 1, parent.getVersion() );    // hmmm, why was version updated?
 					session.setReadOnly( parent, true );
 					session.setReadOnly( child, true );
-					session.delete( parent );
-					session.delete( child );
+					session.remove( parent );
+					session.remove( child );
 				}
 		);
 
@@ -632,8 +630,8 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 					assertEquals( 1, parent.getVersion() ); // / hmmm, why was version updated?
 					session.setReadOnly( parent, true );
 					session.setReadOnly( child, true );
-					session.delete( parent );
-					session.delete( child );
+					session.remove( parent );
+					session.remove( child );
 				}
 		);
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.spi;
 
@@ -15,7 +13,9 @@ import java.util.Map;
 import static java.util.Collections.emptyMap;
 
 /**
- * A service SPI for collecting statistics about various events that occur at runtime.
+ * A service SPI for collecting statistics about various events occurring at runtime.
+ * <p>
+ * A custom implementation may be provided via a {@link StatisticsFactory}.
  *
  * @author Emmanuel Bernard
  */
@@ -79,6 +79,13 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 * @param entityName The name of the entity updated.
 	 */
 	void updateEntity(String entityName);
+
+	/**
+	 * Callback about an entity being upserted.
+	 *
+	 * @param entityName The name of the entity upserted.
+	 */
+	void upsertEntity(String entityName);
 
 	/**
 	 * Callback about an entity being inserted
@@ -192,7 +199,7 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 * Callback indicating a get from natural id cache resulted in a hit.
 	 */
 	void naturalIdCacheHit(NavigableRole rootEntityName, String regionName);
-	
+
 	/**
 	 * Callback indicating a get from natural id cache resulted in a miss.
 	 */

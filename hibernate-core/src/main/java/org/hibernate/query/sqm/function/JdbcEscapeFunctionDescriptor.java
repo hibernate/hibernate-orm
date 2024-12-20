@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
@@ -44,10 +42,10 @@ public class JdbcEscapeFunctionDescriptor
 
 		return new SelfRenderingSqmFunction<>(
 				JdbcEscapeFunctionDescriptor.this,
-				(sqlAppender, sqlAstArguments, walker) -> {
+				(sqlAppender, sqlAstArguments, returnType, walker) -> {
 					sqlAppender.appendSql("{fn ");
-					delegate.getRenderingSupport()
-							.render(sqlAppender, sqlAstArguments, walker);
+					delegate.getFunctionRenderer()
+							.render( sqlAppender, sqlAstArguments, returnType, walker);
 					sqlAppender.appendSql("}");
 				},
 				arguments,

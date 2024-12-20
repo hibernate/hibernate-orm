@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.constraint;
 
@@ -31,7 +29,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -55,7 +53,7 @@ import static org.junit.Assert.fail;
  * It tries to get to the bottom of the failures in
  * {@link ForeignKeyConstraintTest#testGet}
  */
-@TestForIssue( jiraKey = "HHH-11180" )
+@JiraKey( value = "HHH-11180" )
 @DomainModel(
 		annotatedClasses = {
 				NonRootTablePolymorphicTests.Root.class,
@@ -158,7 +156,7 @@ public class NonRootTablePolymorphicTests {
 					assertThat( toOne.getTable().getName(), is( "sub_parent" ) );
 
 					assertThat( toOne.getColumnSpan(), is( 1 ) );
-					final Selectable selectable = toOne.getColumnIterator().next();
+					final Selectable selectable = toOne.getSelectables().get( 0 );
 					assertThat( selectable.getText(), is( "parent_sub_fk" ) );
 
 					assertThat( subParent.getTable().getForeignKeys().size(), is( 1 ) );

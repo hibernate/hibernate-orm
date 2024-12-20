@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.onetoone.hhh9798;
 
@@ -11,7 +9,7 @@ import jakarta.persistence.PersistenceException;
 import org.hibernate.Transaction;
 import org.hibernate.exception.ConstraintViolationException;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -21,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.fail;
 
-@TestForIssue(jiraKey = "HHH-9798")
+@JiraKey(value = "HHH-9798")
 @DomainModel( annotatedClasses = { Shipment.class, Item.class } )
 @SessionFactory
 public class OneToOneJoinTableTest {
@@ -34,13 +32,13 @@ public class OneToOneJoinTableTest {
 						Transaction tx = session.beginTransaction();
 
 						Item someItem = new Item( "Some Item" );
-						session.save( someItem );
+						session.persist( someItem );
 
 						Shipment shipment1 = new Shipment( someItem );
-						session.save( shipment1 );
+						session.persist( shipment1 );
 
 						Shipment shipment2 = new Shipment( someItem );
-						session.save( shipment2 );
+						session.persist( shipment2 );
 
 						tx.commit();
 

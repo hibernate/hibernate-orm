@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.notfound.exception;
 
 import java.util.Set;
@@ -6,7 +10,7 @@ import org.hibernate.FetchNotFoundException;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -34,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15229")
+@JiraKey(value = "HHH-15229")
 public class NotFoundExceptionTest {
 
 	@AfterEach

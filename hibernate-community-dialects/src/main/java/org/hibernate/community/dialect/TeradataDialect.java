@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -38,7 +36,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -75,15 +73,17 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
  */
 public class TeradataDialect extends Dialect {
 
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 12, 0 );
+
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
 	public TeradataDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
 		registerKeywords( info );
 	}
 
 	public TeradataDialect() {
-		this( DatabaseVersion.make( 12, 0 ) );
+		this( DEFAULT_VERSION );
 	}
 
 	public TeradataDialect(DatabaseVersion version) {
@@ -134,6 +134,11 @@ public class TeradataDialect extends Dialect {
 	@Override
 	public boolean useInputStreamToInsertBlob() {
 		return getVersion().isSameOrAfter( 14 );
+	}
+
+	@Override
+	public boolean useConnectionToCreateLob() {
+		return false;
 	}
 
 	@Override
@@ -194,7 +199,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
-	 	// Do duration arithmetic in a seconds, but
+		// Do duration arithmetic in a seconds, but
 		// with the fractional part
 		return 1_000_000_000; //seconds!!
 	}
@@ -630,7 +635,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return TopLimitHandler.INSTANCE;
+		return new TopLimitHandler( false );
 	}
 
 }

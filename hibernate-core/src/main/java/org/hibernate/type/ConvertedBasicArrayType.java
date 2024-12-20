@@ -1,10 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
+
+import java.util.Objects;
 
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -97,5 +97,19 @@ public class ConvertedBasicArrayType<T,S,E>
 	@Override
 	public JdbcLiteralFormatter<T> getJdbcLiteralFormatter() {
 		return jdbcLiteralFormatter;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		return o == this || super.equals( o )
+				&& o instanceof ConvertedBasicArrayType<?, ?, ?>
+				&& Objects.equals( converter, ( (ConvertedBasicArrayType<?, ?, ?>) o ).converter );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + converter.hashCode();
+		return result;
 	}
 }

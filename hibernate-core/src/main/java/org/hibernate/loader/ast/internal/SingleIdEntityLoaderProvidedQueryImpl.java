@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
 
@@ -25,11 +23,11 @@ import jakarta.persistence.Parameter;
  */
 public class SingleIdEntityLoaderProvidedQueryImpl<T> implements SingleIdEntityLoader<T> {
 	private final EntityMappingType entityDescriptor;
-	private final NamedQueryMemento namedQueryMemento;
+	private final NamedQueryMemento<?> namedQueryMemento;
 
 	public SingleIdEntityLoaderProvidedQueryImpl(
 			EntityMappingType entityDescriptor,
-			NamedQueryMemento namedQueryMemento) {
+			NamedQueryMemento<?> namedQueryMemento) {
 		this.entityDescriptor = entityDescriptor;
 		this.namedQueryMemento = namedQueryMemento;
 	}

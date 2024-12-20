@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.procedure;
 
@@ -30,7 +28,7 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -153,7 +151,7 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 			person1.setNickName( "JD" );
 			person1.setAddress( "Earth" );
 			person1.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 )
-														  .toInstant( ZoneOffset.UTC ) ) );
+														.toInstant( ZoneOffset.UTC ) ) );
 
 			entityManager.persist( person1 );
 
@@ -265,7 +263,7 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11863")
+	@JiraKey(value = "HHH-11863")
 	public void testSysRefCursorAsOutParameter() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -309,7 +307,7 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11863")
+	@JiraKey(value = "HHH-11863")
 	public void testSysRefCursorAsOutParameterOld() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			StoredProcedureQuery function = entityManager.createStoredProcedureQuery( "singleRefCursor" );
@@ -335,7 +333,7 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12905")
+	@JiraKey(value = "HHH-12905")
 	public void testFunctionProcedureNullParameterHibernate() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -364,7 +362,7 @@ public class PostgreSQLFunctionProcedureTest extends BaseEntityManagerFunctional
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12905")
+	@JiraKey(value = "HHH-12905")
 	public void testFunctionProcedureNullParameterHibernateWithoutEnablePassingNulls() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {

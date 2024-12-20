@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -17,13 +15,15 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.hibernate.Length;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -39,20 +39,22 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -70,17 +72,23 @@ import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.EnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
+import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
+import static java.lang.Integer.parseInt;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BIT;
@@ -114,15 +122,19 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A {@linkplain Dialect SQL dialect} for MySQL 5.7 and above.
+ * A {@linkplain Dialect SQL dialect} for MySQL 8 and above.
+ * <p>
+ * Please refer to the
+ * <a href="https://dev.mysql.com/doc/refman/9.1/en/">MySQL documentation</a>.
  *
  * @author Gavin King
  */
 public class MySQLDialect extends Dialect {
 
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 5, 7 );
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 8 );
 
 	private final MySQLStorageEngine storageEngine = createStorageEngine();
+
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
 		@Override
 		public Size resolveSize(
@@ -148,6 +160,16 @@ public class MySQLDialect extends Dialect {
 					//we set scale > 20
 					size.setScale( Math.min( size.getPrecision(), 20 ) );
 					return size;
+				case BLOB:
+				case NCLOB:
+				case CLOB:
+					return super.resolveSize(
+							jdbcType,
+							javaType,
+							precision,
+							scale,
+							length == null ? getDefaultLobLength() : length
+					);
 				default:
 					return super.resolveSize( jdbcType, javaType, precision, scale, length );
 			}
@@ -183,19 +205,24 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public MySQLDialect(DialectResolutionInfo info) {
-		this( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
+		this( createVersion( info ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
 	}
 
+	@Deprecated(since="6.6")
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info) {
+		return createVersion( info, MINIMUM_VERSION );
+	}
+
+	protected static DatabaseVersion createVersion(DialectResolutionInfo info, DatabaseVersion defaultVersion) {
 		final String versionString = info.getDatabaseVersion();
 		if ( versionString != null ) {
-			final String[] components = versionString.split( "\\." );
+			final String[] components = StringHelper.split( ".-", versionString );
 			if ( components.length >= 3 ) {
 				try {
-					final int majorVersion = Integer.parseInt( components[0] );
-					final int minorVersion = Integer.parseInt( components[1] );
-					final int patchLevel = Integer.parseInt( components[2] );
+					final int majorVersion = parseInt( components[0] );
+					final int minorVersion = parseInt( components[1] );
+					final int patchLevel = parseInt( components[2] );
 					return DatabaseVersion.make( majorVersion, minorVersion, patchLevel );
 				}
 				catch (NumberFormatException ex) {
@@ -203,7 +230,7 @@ public class MySQLDialect extends Dialect {
 				}
 			}
 		}
-		return info.makeCopy();
+		return info.makeCopyOrDefault( defaultVersion );
 	}
 
 	@Override
@@ -238,36 +265,39 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-				// HHH-6935: Don't use "boolean" i.e. tinyint(1) due to JDBC ResultSetMetaData
-				return "bit";
+		return switch (sqlTypeCode) {
+			// HHH-6935: Don't use "boolean" i.e. tinyint(1) due to JDBC ResultSetMetaData
+			case BOOLEAN -> "bit";
 
-			case TIMESTAMP:
-				return "datetime($p)";
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp($p)";
-			case NUMERIC:
-				// it's just a synonym
-				return columnType( DECIMAL );
+			case TIMESTAMP -> "datetime($p)";
+			case TIMESTAMP_WITH_TIMEZONE -> "timestamp($p)";
+
+			case NUMERIC -> columnType( DECIMAL ); // it's just a synonym
+
+			// MySQL strips space characters from any value stored in a char column, which
+			// is especially pathological in the case of storing characters in char(1)
+			case CHAR -> "varchar($l)";
 
 			// on MySQL 8, the nchar/nvarchar types use a deprecated character set
-			case NCHAR:
-				return "char($l) character set utf8";
-			case NVARCHAR:
-				return "varchar($l) character set utf8";
+			case NCHAR, NVARCHAR -> "varchar($l) character set utf8mb4";
 
 			// the maximum long LOB length is 4_294_967_295, bigger than any Java string
-			case BLOB:
-				return "longblob";
-			case NCLOB:
-				return "longtext character set utf8";
-			case CLOB:
-				return "longtext";
+			case BLOB -> "longblob";
+			case NCLOB -> "longtext character set utf8mb4";
+			case CLOB -> "longtext";
 
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			default -> super.columnType( sqlTypeCode );
+		};
+	}
+
+	/**
+	 * MySQL strips any trailing space character from a
+	 * value stored in a column of type {@code char(n)}.
+	 * @return {@code true}
+	 */
+	@Override
+	public boolean stripsTrailingSpacesFromChar() {
+		return true;
 	}
 
 	@Override
@@ -275,42 +305,33 @@ public class MySQLDialect extends Dialect {
 		// MySQL has no real concept of LOBs, so we can just use longtext/longblob with the materialized JDBC APIs
 		return false;
 	}
+	@Override
+	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
+		// Use the true/false constants since these evaluate to true/false literals in JSON functions
+		appender.appendSql( bool );
+	}
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-			case BIT:
-				//special case for casting to Boolean
-				return "unsigned";
-			case TINYINT:
-			case SMALLINT:
-			case INTEGER:
-			case BIGINT:
-				//MySQL doesn't let you cast to INTEGER/BIGINT/TINYINT
-				return "signed";
-			case FLOAT:
-			case REAL:
-			case DOUBLE:
-				//MySQL doesn't let you cast to DOUBLE/FLOAT
-				//but don't just return 'decimal' because
-				//the default scale is 0 (no decimal places)
-				return "decimal($p,$s)";
-			case CHAR:
-			case NCHAR:
-			case VARCHAR:
-			case NVARCHAR:
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				//MySQL doesn't let you cast to TEXT/LONGTEXT
-				return "char";
-			case BINARY:
-			case VARBINARY:
-			case LONG32VARBINARY:
-				//MySQL doesn't let you cast to BLOB/TINYBLOB/LONGBLOB
-				return "binary";
-		}
-		return super.castType( sqlTypeCode );
+		return switch (sqlTypeCode) {
+			// special case for casting to Boolean
+			case BOOLEAN, BIT -> "unsigned";
+			// MySQL doesn't let you cast to INTEGER/BIGINT/TINYINT
+			case TINYINT, SMALLINT, INTEGER, BIGINT -> "signed";
+			// MySQL doesn't let you cast to DOUBLE/FLOAT
+			// but don't just return 'decimal' because
+			// the default scale is 0 (no decimal places)
+			case FLOAT, REAL, DOUBLE -> getMySQLVersion().isSameOrAfter( 8, 0, 17 )
+					// In newer versions of MySQL, casting to float/double is supported
+					? super.castType( sqlTypeCode )
+					: "decimal($p,$s)";
+			// MySQL doesn't let you cast to TEXT/LONGTEXT
+			case CHAR, VARCHAR, LONG32VARCHAR, CLOB -> "char";
+			case NCHAR, NVARCHAR, LONG32NVARCHAR, NCLOB -> "char character set utf8mb4";
+			// MySQL doesn't let you cast to BLOB/TINYBLOB/LONGBLOB
+			case BINARY, VARBINARY, LONG32VARBINARY, BLOB -> "binary";
+			default -> super.castType(sqlTypeCode);
+		};
 	}
 
 	@Override
@@ -332,14 +353,17 @@ public class MySQLDialect extends Dialect {
 		final int maxLobLen = 65_535;
 		final int maxMediumLobLen = 16_777_215;
 
-		final CapacityDependentDdlType.Builder varcharBuilder = CapacityDependentDdlType.builder(
-						VARCHAR,
-						columnType( CLOB ),
-						"char",
-						this
-				)
-				.withTypeCapacity( getMaxVarcharLength(), "varchar($l)" )
-				.withTypeCapacity( maxMediumLobLen, "mediumtext" );
+		final CapacityDependentDdlType.Builder varcharBuilder =
+				CapacityDependentDdlType.builder(
+								VARCHAR,
+								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
+								columnType( CLOB ),
+								columnType( CHAR ),
+								castType( CHAR ),
+								this
+						)
+						.withTypeCapacity( getMaxVarcharLength(), "varchar($l)" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext" );
 		if ( getMaxVarcharLength() < maxLobLen ) {
 			varcharBuilder.withTypeCapacity( maxLobLen, "text" );
 		}
@@ -347,38 +371,48 @@ public class MySQLDialect extends Dialect {
 
 		// do not use nchar/nvarchar/ntext because these
 		// types use a deprecated character set on MySQL 8
-		final CapacityDependentDdlType.Builder nvarcharBuilder = CapacityDependentDdlType.builder(
-						NVARCHAR,
-						columnType( NCLOB ),
-						"char character set utf8",
-						this
-				)
-				.withTypeCapacity( getMaxVarcharLength(), "varchar($l) character set utf8" )
-				.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8" );
+		final CapacityDependentDdlType.Builder nvarcharBuilder =
+				CapacityDependentDdlType.builder(
+								NVARCHAR,
+								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
+								columnType( NCLOB ),
+								columnType( NCHAR ),
+								castType( NCHAR ),
+								this
+						)
+						.withTypeCapacity( getMaxVarcharLength(), "varchar($l) character set utf8mb4" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8mb4" );
 		if ( getMaxVarcharLength() < maxLobLen ) {
-			nvarcharBuilder.withTypeCapacity( maxLobLen, "text character set utf8" );
+			nvarcharBuilder.withTypeCapacity( maxLobLen, "text character set utf8mb4" );
 		}
 		ddlTypeRegistry.addDescriptor( nvarcharBuilder.build() );
 
-		final CapacityDependentDdlType.Builder varbinaryBuilder = CapacityDependentDdlType.builder(
-						VARBINARY,
-						columnType( BLOB ),
-						"binary",
-						this
-				)
-				.withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" )
-				.withTypeCapacity( maxMediumLobLen, "mediumblob" );
+		final CapacityDependentDdlType.Builder varbinaryBuilder =
+				CapacityDependentDdlType.builder(
+								VARBINARY,
+								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
+								columnType( BLOB ),
+								columnType( BINARY ),
+								castType( BINARY ),
+								this
+						)
+						.withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" )
+						.withTypeCapacity( maxMediumLobLen, "mediumblob" );
 		if ( getMaxVarbinaryLength() < maxLobLen ) {
 			varbinaryBuilder.withTypeCapacity( maxLobLen, "blob" );
 		}
 		ddlTypeRegistry.addDescriptor( varbinaryBuilder.build() );
 
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARBINARY, columnType( BLOB ), "binary", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARCHAR, columnType( CLOB ), "char", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32NVARCHAR, columnType( CLOB ), "char", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARBINARY,
+				columnType( BLOB ), castType( BINARY ), this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARCHAR,
+				columnType( CLOB ), castType( CHAR ), this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32NVARCHAR,
+				columnType( CLOB ), castType( CHAR ), this ) );
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( BLOB, columnType( BLOB ), "binary", this )
+				CapacityDependentDdlType.builder( BLOB,
+								columnType( BLOB ), castType( BINARY ), this )
 						.withTypeCapacity( maxTinyLobLen, "tinyblob" )
 						.withTypeCapacity( maxMediumLobLen, "mediumblob" )
 						.withTypeCapacity( maxLobLen, "blob" )
@@ -386,7 +420,8 @@ public class MySQLDialect extends Dialect {
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( CLOB, columnType( CLOB ), "char", this )
+				CapacityDependentDdlType.builder( CLOB,
+								columnType( CLOB ), castType( CHAR ), this )
 						.withTypeCapacity( maxTinyLobLen, "tinytext" )
 						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
 						.withTypeCapacity( maxLobLen, "text" )
@@ -394,17 +429,24 @@ public class MySQLDialect extends Dialect {
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( NCLOB, columnType( NCLOB ), "char character set utf8", this )
-						.withTypeCapacity( maxTinyLobLen, "tinytext character set utf8" )
-						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8" )
-						.withTypeCapacity( maxLobLen, "text character set utf8" )
+				CapacityDependentDdlType.builder( NCLOB,
+								columnType( NCLOB ), castType( NCHAR ), this )
+						.withTypeCapacity( maxTinyLobLen, "tinytext character set utf8mb4" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8mb4" )
+						.withTypeCapacity( maxLobLen, "text character set utf8mb4" )
 						.build()
 		);
 
-		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl(this) );
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
 	}
 
-	@Deprecated
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return MySQLAggregateSupport.forMySQL( this );
+	}
+
+	@Deprecated(since="6.4")
 	protected static int getCharacterSetBytesPerCharacter(DatabaseMetaData databaseMetaData) {
 		if ( databaseMetaData != null ) {
 			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
@@ -413,29 +455,12 @@ public class MySQLDialect extends Dialect {
 					final String characterSet = rs.getString( 1 );
 					final int collationIndex = characterSet.indexOf( '_' );
 					// According to https://dev.mysql.com/doc/refman/8.0/en/charset-charsets.html
-					switch ( collationIndex == -1 ? characterSet : characterSet.substring( 0, collationIndex ) ) {
-						case "utf16":
-						case "utf16le":
-						case "utf32":
-						case "utf8mb4":
-						case "gb18030":
-							return 4;
-						case "utf8":
-						case "utf8mb3":
-						case "eucjpms":
-						case "ujis":
-							return 3;
-						case "ucs2":
-						case "cp932":
-						case "big5":
-						case "euckr":
-						case "gb2312":
-						case "gbk":
-						case "sjis":
-							return 2;
-						default:
-							return 1;
-					}
+					return switch ( collationIndex == -1 ? characterSet : characterSet.substring( 0, collationIndex ) ) {
+						case "utf16", "utf16le", "utf32", "utf8mb4", "gb18030" -> 4;
+						case "utf8", "utf8mb3", "eucjpms", "ujis" -> 3;
+						case "ucs2", "cp932", "big5", "euckr", "gb2312", "gbk", "sjis" -> 2;
+						default -> 1;
+					};
 				}
 			}
 			catch (SQLException ex) {
@@ -450,17 +475,12 @@ public class MySQLDialect extends Dialect {
 	}
 
 	private static int maxVarcharLength(DatabaseVersion version, int bytesPerCharacter) {
-		switch ( bytesPerCharacter ) {
-			case 1:
-				return 65_535;
-			case 2:
-				return 32_767;
-			case 3:
-				return 21_844;
-			case 4:
-			default:
-				return 16_383;
-		}
+		return switch (bytesPerCharacter) {
+			case 1 -> 65_535;
+			case 2 -> 32_767;
+			case 3 -> 21_844;
+			default -> 16_383;
+		};
 	}
 
 	@Override
@@ -480,11 +500,11 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getNullColumnString(String columnType) {
 		// Good job MySQL https://dev.mysql.com/doc/refman/8.0/en/timestamp-initialization.html
-		// If the explicit_defaults_for_timestamp system variable is enabled, TIMESTAMP columns permit NULL values only if declared with the NULL attribute.
-		if ( columnType.regionMatches( true, 0, "timestamp", 0, "timestamp".length() ) ) {
-			return " null";
-		}
-		return super.getNullColumnString( columnType );
+		// If the explicit_defaults_for_timestamp system variable is enabled, TIMESTAMP columns
+		// permit NULL values only if declared with the NULL attribute.
+		return columnType.regionMatches( true, 0, "timestamp", 0, "timestamp".length() )
+				? " null"
+				: super.getNullColumnString( columnType );
 	}
 
 	public DatabaseVersion getMySQLVersion() {
@@ -498,8 +518,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public long getDefaultLobLength() {
-		//max length for mediumblob or mediumtext
-		return 16_777_215;
+		return Length.LONG32;
 	}
 
 	@Override
@@ -528,8 +547,25 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public int resolveSqlTypeLength(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			int displaySize) {
+		// It seems MariaDB/MySQL return the precision in bytes depending on the charset,
+		// so to detect whether we have a single character here, we check the display size
+		return jdbcTypeCode == Types.CHAR && precision <= 4 ? displaySize : precision;
+	}
+
+	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BIT;
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		return SqlTypes.JSON_ARRAY;
 	}
 
 //	@Override
@@ -557,7 +593,6 @@ public class MySQLDialect extends Dialect {
 		functionFactory.space();
 		functionFactory.repeat();
 		functionFactory.pad_space();
-		functionFactory.md5();
 		functionFactory.yearMonthDay();
 		functionFactory.hourMinuteSecond();
 		functionFactory.dayofweekmonthyear();
@@ -573,7 +608,6 @@ public class MySQLDialect extends Dialect {
 		functionFactory.crc32();
 		functionFactory.sha1();
 		functionFactory.sha2();
-		functionFactory.sha();
 		functionFactory.bitLength();
 		functionFactory.octetLength();
 		functionFactory.ascii();
@@ -600,28 +634,12 @@ public class MySQLDialect extends Dialect {
 
 		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 
-		functionRegistry.noArgsBuilder( "localtime" )
-				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ))
-				.setUseParenthesesWhenNoArgs( false )
-				.register();
-
 		// pi() produces a value with 7 digits unless we're explicit
-		if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
-			functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )
-					.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )
-					.setExactArgumentCount( 0 )
-					.setArgumentListSignature( "" )
-					.register();
-		}
-		else {
-			// But before MySQL 8, it's not possible to cast to double. Double has a default precision of 53
-			// and since the internal representation of pi has only 15 decimal places, we cast to decimal(53,15)
-			functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as decimal(53,15))" )
-					.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )
-					.setExactArgumentCount( 0 )
-					.setArgumentListSignature( "" )
-					.register();
-		}
+		functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )
+				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )
+				.setExactArgumentCount( 0 )
+				.setArgumentListSignature( "" )
+				.register();
 
 		// By default char() produces a binary string, not a character string.
 		// (Note also that char() is actually a variadic function in MySQL.)
@@ -643,6 +661,43 @@ public class MySQLDialect extends Dialect {
 		}
 
 		functionFactory.listagg_groupConcat();
+
+		functionFactory.jsonValue_mysql();
+		functionFactory.jsonQuery_mysql();
+		functionFactory.jsonExists_mysql();
+		functionFactory.jsonObject_mysql();
+		functionFactory.jsonArray_mysql();
+		functionFactory.jsonArrayAgg_mysql();
+		functionFactory.jsonObjectAgg_mysql();
+		functionFactory.jsonSet_mysql();
+		functionFactory.jsonRemove_mysql();
+		functionFactory.jsonReplace_mysql();
+		functionFactory.jsonInsert_mysql();
+		functionFactory.jsonMergepatch_mysql();
+		functionFactory.jsonArrayAppend_mysql();
+		functionFactory.jsonArrayInsert_mysql();
+
+		if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
+			functionFactory.unnest_emulated();
+			functionFactory.jsonTable_mysql();
+		}
+		if ( supportsRecursiveCTE() ) {
+			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
+		}
+
+		functionFactory.hex( "hex(?1)" );
+		functionFactory.sha( "unhex(sha2(?1, 256))" );
+		functionFactory.md5( "unhex(md5(?1))" );
+	}
+
+	/**
+	 * MySQL doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		// The maximum recursion depth of MySQL
+		return 1000;
 	}
 
 	@Override
@@ -652,6 +707,7 @@ public class MySQLDialect extends Dialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 
 		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MySQLCastingJsonJdbcType.INSTANCE );
+		jdbcTypeRegistry.addTypeConstructorIfAbsent( MySQLCastingJsonArrayJdbcTypeConstructor.INSTANCE );
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcType( NullJdbcType.INSTANCE );
@@ -666,7 +722,8 @@ public class MySQLDialect extends Dialect {
 				)
 		);
 
-		jdbcTypeRegistry.addDescriptor( new MySQLEnumJdbcType() );
+		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
 	}
 
 	@Override
@@ -702,9 +759,8 @@ public class MySQLDialect extends Dialect {
 	private void time(FunctionContributions queryEngine) {
 		queryEngine.getFunctionRegistry().namedDescriptorBuilder( "time" )
 				.setExactArgumentCount( 1 )
-				.setInvariantType(
-					queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
-				)
+				.setInvariantType( queryEngine.getTypeConfiguration().getBasicTypeRegistry()
+						.resolve( StandardBasicTypes.STRING ) )
 				.register();
 	}
 
@@ -746,58 +802,45 @@ public class MySQLDialect extends Dialect {
 	 * extract() function, but we can emulate some of them by
 	 * using the appropriate named functions instead of
 	 * extract().
-	 *
+	 * <p>
 	 * Thus, the additional supported fields are
 	 * {@link TemporalUnit#DAY_OF_YEAR},
 	 * {@link TemporalUnit#DAY_OF_MONTH},
 	 * {@link TemporalUnit#DAY_OF_YEAR}.
-	 *
+	 * <p>
 	 * In addition, the field {@link TemporalUnit#SECOND} is
 	 * redefined to include microseconds.
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch (unit) {
-			case SECOND:
-				return "(second(?2)+microsecond(?2)/1e6)";
-			case WEEK:
-				return "weekofyear(?2)"; //same as week(?2,3), the ISO week
-			case DAY_OF_WEEK:
-				return "dayofweek(?2)";
-			case DAY_OF_MONTH:
-				return "dayofmonth(?2)";
-			case DAY_OF_YEAR:
-				return "dayofyear(?2)";
+		return switch (unit) {
+			case SECOND -> "(second(?2)+microsecond(?2)/1e6)";
+			case WEEK -> "weekofyear(?2)"; // same as week(?2,3), the ISO week
+			case DAY_OF_WEEK -> "dayofweek(?2)";
+			case DAY_OF_MONTH -> "dayofmonth(?2)";
+			case DAY_OF_YEAR -> "dayofyear(?2)";
 			//TODO: case WEEK_YEAR: yearweek(?2, 3)/100
-			case EPOCH:
-				return "unix_timestamp(?2)";
-			default:
-				return "?1(?2)";
-		}
+			case EPOCH -> "unix_timestamp(?2)";
+			default -> "?1(?2)";
+		};
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		switch (unit) {
-			case NANOSECOND:
-				return "timestampadd(microsecond,(?2)/1e3,?3)";
-			case NATIVE:
-				return "timestampadd(microsecond,?2,?3)";
-			default:
-				return "timestampadd(?1,?2,?3)";
-		}
+		return switch (unit) {
+			case NANOSECOND -> "timestampadd(microsecond,(?2)/1e3,?3)";
+			case NATIVE -> "timestampadd(microsecond,?2,?3)";
+			default -> "timestampadd(?1,?2,?3)";
+		};
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		switch (unit) {
-			case NANOSECOND:
-				return "timestampdiff(microsecond,?2,?3)*1e3";
-			case NATIVE:
-				return "timestampdiff(microsecond,?2,?3)";
-			default:
-				return "timestampdiff(?1,?2,?3)";
-		}
+		return switch (unit) {
+			case NANOSECOND -> "timestampdiff(microsecond,?2,?3)*1e3";
+			case NATIVE -> "timestampdiff(microsecond,?2,?3)";
+			default -> "timestampdiff(?1,?2,?3)";
+		};
 	}
 
 	@Override
@@ -809,6 +852,7 @@ public class MySQLDialect extends Dialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -836,7 +880,12 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Date date,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
 				appender.appendSql( "date '" );
@@ -862,6 +911,7 @@ public class MySQLDialect extends Dialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -897,7 +947,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String getEnumTypeDeclaration(String name, String[] values) {
-		StringBuilder type = new StringBuilder();
+		final StringBuilder type = new StringBuilder();
 		type.append( "enum (" );
 		String separator = "";
 		for ( String value : values ) {
@@ -909,7 +959,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String getQueryHintString(String query, String hints) {
-		return IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
+		return addQueryHints( query, hints );
 	}
 
 	/**
@@ -926,12 +976,12 @@ public class MySQLDialect extends Dialect {
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
+				final String sqlState = extractSqlState( sqle );
 				if ( sqlState != null ) {
-					switch ( Integer.parseInt( sqlState ) ) {
-						case 23000:
-							return extractUsingTemplate( " for key '", "'", sqle.getMessage() );
-					}
+					return switch ( parseInt( sqlState ) ) {
+						case 23000 -> extractUsingTemplate( " for key '", "'", sqle.getMessage() );
+						default -> null;
+					};
 				}
 				return null;
 			} );
@@ -996,6 +1046,11 @@ public class MySQLDialect extends Dialect {
 		return '`';
 	}
 
+	/**
+	 * Here we interpret "catalog" as a MySQL database.
+	 *
+	 * @return {@code true}
+	 */
 	@Override
 	public boolean canCreateCatalog() {
 		return true;
@@ -1011,6 +1066,14 @@ public class MySQLDialect extends Dialect {
 		return new String[] { "drop database " + catalogName };
 	}
 
+	/**
+	 * MySQL does support the {@code create schema} command, but
+	 * it's a synonym for {@code create database}. Hibernate has
+	 * always treated a MySQL database as a
+	 * {@linkplain #canCreateCatalog catalog}.
+	 *
+	 * @return {@code false}
+	 */
 	@Override
 	public boolean canCreateSchema() {
 		return false;
@@ -1037,6 +1100,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsCommentOn() {
+		return true;
+	}
+
+	@Override
 	public String getTableComment(String comment) {
 		return " comment='" + comment + "'";
 	}
@@ -1055,7 +1123,6 @@ public class MySQLDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-
 		return new LocalTemporaryTableMutationStrategy(
 				TemporaryTable.createIdTable(
 						rootEntityDescriptor,
@@ -1071,7 +1138,6 @@ public class MySQLDialect extends Dialect {
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-
 		return new LocalTemporaryTableInsertStrategy(
 				TemporaryTable.createEntityTable(
 						rootEntityDescriptor,
@@ -1190,9 +1256,18 @@ public class MySQLDialect extends Dialect {
 				case 1207:
 				case 1206:
 					return new LockAcquisitionException( message, sqlException, sql );
+				case 1062:
+					// Unique constraint violation
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+					);
 			}
 
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+			final String sqlState = extractSqlState( sqlException );
 			if ( sqlState != null ) {
 				switch ( sqlState ) {
 					case "41000":
@@ -1353,16 +1428,12 @@ public class MySQLDialect extends Dialect {
 	}
 
 	private String withTimeout(String lockString, int timeout) {
-		switch (timeout) {
-			case LockOptions.NO_WAIT:
-				return supportsNoWait() ? lockString + " nowait" : lockString;
-			case LockOptions.SKIP_LOCKED:
-				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			case LockOptions.WAIT_FOREVER:
-				return lockString;
-			default:
-				return supportsWait() ? lockString + " wait " + timeout : lockString;
-		}
+		return switch (timeout) {
+			case LockOptions.NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case LockOptions.SKIP_LOCKED -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case LockOptions.WAIT_FOREVER -> lockString;
+			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
+		};
 	}
 
 	@Override
@@ -1372,7 +1443,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String getWriteLockString(String aliases, int timeout) {
-		return withTimeout( getForUpdateString(aliases), timeout );
+		return withTimeout( getForUpdateString( aliases ), timeout );
 	}
 
 	@Override
@@ -1383,7 +1454,7 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getReadLockString(String aliases, int timeout) {
 		if ( supportsAliasLocks() && supportsForShare() ) {
-			return withTimeout(" for share of " + aliases, timeout );
+			return withTimeout( " for share of " + aliases, timeout );
 		}
 		else {
 			// fall back to locking all aliases
@@ -1451,12 +1522,12 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getMySQLVersion().isSameOrAfter( 8 );
+		return true;
 	}
 
 	@Override
 	public boolean supportsNoWait() {
-		return getMySQLVersion().isSameOrAfter( 8 );
+		return true;
 	}
 
 	@Override
@@ -1477,11 +1548,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	boolean supportsForShare() {
-		return getMySQLVersion().isSameOrAfter( 8 );
+		return true;
 	}
 
 	boolean supportsAliasLocks() {
-		return getMySQLVersion().isSameOrAfter( 8 );
+		return true;
 	}
 
 	@Override
@@ -1502,5 +1573,32 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getEnableConstraintsStatement() {
 		return "set foreign_key_checks = 1";
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
+	}
+
+	@Override
+	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
+		return isNotEmpty( checkConstraint.getOptions() )
+				? sqlCheckConstraint + " " + checkConstraint.getOptions()
+				: sqlCheckConstraint;
+	}
+
+	@Override
+	public boolean supportsBindingNullSqlTypeForSetNull() {
+		return true;
+	}
+
+	@Override
+	public String getDual() {
+		return "dual";
 	}
 }

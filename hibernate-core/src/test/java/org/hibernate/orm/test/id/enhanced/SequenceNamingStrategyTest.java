@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.enhanced;
 
@@ -20,18 +18,22 @@ import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.enhanced.LegacyNamingStrategy;
 import org.hibernate.id.enhanced.SingleNamingStrategy;
 import org.hibernate.id.enhanced.SequenceStructure;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.StandardNamingStrategy;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.orm.test.idgen.n_ative.GeneratorSettingsImpl;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -128,7 +130,7 @@ public class SequenceNamingStrategyTest {
 			assertThat( sequence ).isNotNull();
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( entityType.getName() );
-			final IdentifierGenerator generator = extractGenerator( entityBinding );
+			final IdentifierGenerator generator = extractGenerator( metadata, entityBinding );
 			assertThat( generator ).isInstanceOf( SequenceStyleGenerator.class );
 			final SequenceStyleGenerator sequenceStyleGenerator = (SequenceStyleGenerator) generator;
 			assertThat( sequenceStyleGenerator.getDatabaseStructure() ).isInstanceOf( SequenceStructure.class );
@@ -138,7 +140,7 @@ public class SequenceNamingStrategyTest {
 	}
 
 	private static void withMetadata(Class<?> entityClass, String namingStrategy, Consumer<MetadataImplementor> consumer) {
-		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
+		final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder();
 		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
 
 		if ( namingStrategy != null ) {
@@ -157,8 +159,15 @@ public class SequenceNamingStrategyTest {
 		}
 	}
 
-	private IdentifierGenerator extractGenerator(PersistentClass entityBinding) {
-		return entityBinding.getIdentifier().createIdentifierGenerator( null, null, null );
+	private IdentifierGenerator extractGenerator(MetadataImplementor metadataImplementor, PersistentClass entityBinding) {
+		KeyValue keyValue = entityBinding.getIdentifier();
+		final Generator generator = keyValue.createGenerator(
+				metadataImplementor.getDatabase().getDialect(),
+				entityBinding.getRootClass(),
+				entityBinding.getIdentifierProperty(),
+				new GeneratorSettingsImpl( metadataImplementor )
+		);
+		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
 	}
 
 	@Entity(name = "TestEntity")

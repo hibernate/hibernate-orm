@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.derived;
 
@@ -26,11 +24,11 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -64,6 +62,9 @@ import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.metamodel.Attribute;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static java.util.Objects.requireNonNullElse;
 
 /**
  * @author Christian Beikov
@@ -82,7 +83,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 
 	public AnonymousTupleEmbeddableValuedModelPart(
 			SqmExpressible<?> sqmExpressible,
-			List<SqlSelection> sqlSelections,
+			SqlTypedMapping[] sqlTypedMappings,
 			int selectionIndex,
 			String selectionExpression,
 			Set<String> compatibleTableExpressions,
@@ -93,7 +94,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 			int fetchableIndex) {
 		this.modelPartMap = createModelParts(
 				sqmExpressible,
-				sqlSelections,
+				sqlTypedMappings,
 				selectionIndex,
 				selectionExpression,
 				compatibleTableExpressions,
@@ -109,7 +110,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 
 	private Map<String, ModelPart> createModelParts(
 			SqmExpressible<?> sqmExpressible,
-			List<SqlSelection> sqlSelections,
+			SqlTypedMapping[] sqlTypedMappings,
 			int selectionIndex,
 			String selectionExpression,
 			Set<String> compatibleTableExpressions,
@@ -126,7 +127,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 					this,
 					sqmExpressible,
 					attributeType,
-					sqlSelections,
+					sqlTypedMappings,
 					selectionIndex,
 					selectionExpression + "_" + attribute.getName(),
 					attribute.getName(),
@@ -159,11 +160,6 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	}
 
 	@Override
-	public MappingType getPartMappingType() {
-		return this;
-	}
-
-	@Override
 	public JavaType<?> getJavaType() {
 		return domainType.getExpressibleJavaType();
 	}
@@ -192,11 +188,6 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	public EmbeddableRepresentationStrategy getRepresentationStrategy() {
 		return existingModelPartContainer.getEmbeddableTypeDescriptor()
 				.getRepresentationStrategy();
-	}
-
-	@Override
-	public boolean isCreateEmptyCompositesEnabled() {
-		return false;
 	}
 
 	@Override
@@ -241,28 +232,22 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 
 	@Override
 	public Object[] getValues(Object instance) {
-		return existingModelPartContainer.getEmbeddableTypeDescriptor()
-				.getValues( instance );
+		return existingModelPartContainer.getEmbeddableTypeDescriptor().getValues( instance );
 	}
 
 	@Override
 	public Object getValue(Object instance, int position) {
-		return existingModelPartContainer.getEmbeddableTypeDescriptor()
-				.getAttributeMapping( position )
-				.getValue( instance );
+		return existingModelPartContainer.getEmbeddableTypeDescriptor().getValue( instance, position );
 	}
 
 	@Override
 	public void setValues(Object instance, Object[] resolvedValues) {
-		existingModelPartContainer.getEmbeddableTypeDescriptor()
-						.setValues( instance, resolvedValues );
+		existingModelPartContainer.getEmbeddableTypeDescriptor().setValues( instance, resolvedValues );
 	}
 
 	@Override
 	public void setValue(Object instance, int position, Object value) {
-		existingModelPartContainer.getEmbeddableTypeDescriptor()
-				.getAttributeMapping( position )
-				.setValue( instance, value );
+		existingModelPartContainer.getEmbeddableTypeDescriptor().setValue( instance, position, value );
 	}
 
 	@Override
@@ -358,13 +343,13 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
-		final SqlAstJoinType joinType = requestedJoinType == null ? SqlAstJoinType.INNER : requestedJoinType;
+		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
@@ -383,18 +368,13 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 	public TableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType sqlAstJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
+			@Nullable Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
-		return new StandardVirtualTableGroup(
-				navigablePath,
-				this,
-				lhs,
-				fetched
-		);
+		return new StandardVirtualTableGroup( navigablePath, this, lhs, fetched );
 	}
 
 	@Override

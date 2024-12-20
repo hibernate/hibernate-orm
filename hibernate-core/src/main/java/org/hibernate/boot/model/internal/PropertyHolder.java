@@ -1,20 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
 import org.hibernate.annotations.ColumnTransformer;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.ForeignKey;
@@ -33,9 +31,9 @@ public interface PropertyHolder {
 
 	Table getTable();
 
-	void addProperty(Property prop, XClass declaringClass);
+	void addProperty(Property prop, MemberDetails memberDetails, ClassDetails declaringClass);
 
-	void addProperty(Property prop, AnnotatedColumns columns, XClass declaringClass);
+	void addProperty(Property prop, MemberDetails memberDetails, AnnotatedColumns columns, ClassDetails declaringClass);
 
 	KeyValue getIdentifier();
 
@@ -81,15 +79,17 @@ public interface PropertyHolder {
 
 	/**
 	 * return
-	 *  - null if no join table is present,
-	 *  - the join table if not overridden,
-	 *  - the overridden join table otherwise
+	 * - null if no join table is present,
+	 * - the join table if not overridden,
+	 * - the overridden join table otherwise
 	 */
-	JoinTable getJoinTable(XProperty property);
+	JoinTable getJoinTable(MemberDetails attributeMember);
 
 	String getEntityName();
 
 	Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation);
+
+	Join addJoin(JoinTable joinTable, Table table, boolean noDelayInPkColumnCreation);
 
 	boolean isInIdClass();
 
@@ -101,12 +101,12 @@ public interface PropertyHolder {
 	 *
 	 * @param property The property
 	 */
-	void startingProperty(XProperty property);
+	void startingProperty(MemberDetails property);
 
 	/**
 	 * Determine the AttributeConverter to use for the given property.
 	 *
 	 * @return The ConverterDescriptor
 	 */
-	ConverterDescriptor resolveAttributeConverterDescriptor(XProperty property);
+	ConverterDescriptor resolveAttributeConverterDescriptor(MemberDetails property);
 }

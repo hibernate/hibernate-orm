@@ -6,10 +6,9 @@
  */
 package org.hibernate.orm.docs;
 
-import javax.inject.Inject;
-
 import org.gradle.api.DefaultTask;
-import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -20,37 +19,41 @@ import org.gradle.api.tasks.TaskAction;
  * @author Steve Ebersole
  */
 public abstract class PublishDescriptorTask extends DefaultTask {
-	private final Provider<String> docServerUrl;
-	private final Provider<RegularFile> jsonFile;
+	public static final String UPLOAD_DESC_TASK_NAME = "uploadDocumentationDescriptor";
 
-	@Inject
-	public PublishDescriptorTask(DocumentationPublishing config) {
-		setGroup( "Release" );
+	private final Provider<Object> projectVersion;
+	private final Property<String> docDescriptorUploadUrl;
+	private final RegularFileProperty jsonFile;
+
+	public PublishDescriptorTask() {
+		setGroup( "documentation" );
 		setDescription( "Publishes the documentation publication descriptor (JSON)" );
 
-		getInputs().property( "hibernate-version", getProject().getVersion() );
-
-		docServerUrl = config.getDocDescriptorServerUrl();
-		jsonFile = config.getUpdatedJsonFile();
+		projectVersion = getProject().provider( () -> getProject().getVersion() );
+		docDescriptorUploadUrl = getProject().getObjects().property( String.class );
+		jsonFile = getProject().getObjects().fileProperty();
 	}
 
 	@InputFile
 	@SkipWhenEmpty
-	public Provider<RegularFile> getJsonFile() {
+	public RegularFileProperty getJsonFile() {
 		return jsonFile;
 	}
 
 	@Input
-	public Provider<String> getDocServerUrl() {
-		return docServerUrl;
+	public Property<String> getDocDescriptorUploadUrl() {
+		return docDescriptorUploadUrl;
 	}
+
+	@Input
+	public Provider<Object> getProjectVersion() {
+		return projectVersion;
+	}
+
 
 	@TaskAction
 	public void uploadDescriptor() {
-		final String base = docServerUrl.get();
-		final String normalizedBase = base.endsWith( "/" ) ? base : base + "/";
-		final String url = normalizedBase + "_outdated-content/orm.json";
-
+		final String url = docDescriptorUploadUrl.get();
 		RsyncHelper.rsync( jsonFile.get(), url, getProject() );
 	}
 }

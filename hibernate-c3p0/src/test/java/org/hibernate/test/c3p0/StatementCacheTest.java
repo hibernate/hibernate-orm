@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.test.c3p0;
 
@@ -11,20 +9,27 @@ import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
- * Tests that when using cached prepared statement with batching enabled doesn't bleed over into new transactions. 
- * 
+ * Tests that when using cached prepared statement with batching enabled doesn't bleed over into new transactions.
+ *
  * @author Shawn Clowater
  */
+@SkipForDialect(dialectClass = SybaseASEDialect.class,
+		reason = "JtdsConnection.isValid not implemented")
 public class StatementCacheTest extends BaseCoreFunctionalTestCase {
 	@Test
-	@TestForIssue( jiraKey = "HHH-7193" )
+	@JiraKey(value = "HHH-7193")
+	@SkipForDialect(dialectClass = SQLServerDialect.class,
+			reason = "started failing after upgrade to c3p0 0.10")
 	public void testStatementCaching() {
 		inSession(
 				session -> {
@@ -33,10 +38,10 @@ public class StatementCacheTest extends BaseCoreFunctionalTestCase {
 					//save 2 new entities, one valid, one invalid (neither should be persisted)
 					IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 					irrelevantEntity.setName( "valid 1" );
-					session.save( irrelevantEntity );
+					session.persist( irrelevantEntity );
 					//name is required
 					irrelevantEntity = new IrrelevantEntity();
-					session.save( irrelevantEntity );
+					session.persist( irrelevantEntity );
 					try {
 						session.flush();
 						Assert.fail( "Validation exception did not occur" );
@@ -53,12 +58,13 @@ public class StatementCacheTest extends BaseCoreFunctionalTestCase {
 					//save a new entity and commit it
 					IrrelevantEntity irrelevantEntity = new IrrelevantEntity();
 					irrelevantEntity.setName( "valid 2" );
-					session.save( irrelevantEntity );
+					session.persist( irrelevantEntity );
 					session.flush();
 				}
 		);
 
-		//only one entity should have been inserted to the database (if the statement in the cache wasn't cleared then it would have inserted both entities)
+		// only one entity should have been inserted to the database
+		// (if the statement in the cache wasn't cleared then it would have inserted both entities)
 		inTransaction(
 				session -> {
 					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();

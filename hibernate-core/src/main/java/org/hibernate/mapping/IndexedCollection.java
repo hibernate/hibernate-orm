@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -12,6 +10,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
@@ -41,27 +40,33 @@ public abstract class IndexedCollection extends Collection {
 	public Value getIndex() {
 		return index;
 	}
+
 	public void setIndex(Value index) {
 		this.index = index;
 	}
+
 	public final boolean isIndexed() {
 		return true;
 	}
 
+	public boolean hasMapKeyProperty() {
+		return false;
+	}
+
 	@Override
 	public boolean isSame(Collection other) {
-		return other instanceof IndexedCollection
-				&& isSame( (IndexedCollection) other );
+		return other instanceof IndexedCollection indexedCollection
+			&& isSame( indexedCollection );
 	}
 
 	public boolean isSame(IndexedCollection other) {
 		return super.isSame( other )
-				&& isSame( index, other.index );
+			&& isSame( index, other.index );
 	}
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
+			final PrimaryKey pk = new PrimaryKey( getCollectionTable() );
 			pk.addColumns( getKey() );
 
 			// index should be last column listed
@@ -91,20 +96,26 @@ public abstract class IndexedCollection extends Collection {
 //		}
 	}
 
+	@Deprecated
 	public void validate(Mapping mapping) throws MappingException {
-		super.validate( mapping );
+		validate( (MappingContext) mapping);
+	}
+
+	public void validate(MappingContext mappingContext) throws MappingException {
+		super.validate( mappingContext );
 
 		assert getElement() != null : "IndexedCollection index not bound : " + getRole();
 
-		if ( !getIndex().isValid(mapping) ) {
+		if ( !getIndex().isValid( mappingContext ) ) {
 			throw new MappingException(
-				"collection index mapping has wrong number of columns: " +
-				getRole() +
-				" type: " +
-				getIndex().getType().getName()
+					"collection index mapping has wrong number of columns: " +
+							getRole() +
+							" type: " +
+							getIndex().getType().getName()
 			);
 		}
 	}
+
 
 	public boolean isList() {
 		return false;

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.embeddable;
 
@@ -51,8 +49,8 @@ public class MappedByEmbeddableTest extends BaseCoreFunctionalTestCase {
 		} );
 
 		inTransaction( session -> {
-			Containing containing1 = session.load( Containing.class, 1 );
-			Containing containing2 = session.load( Containing.class, 2 );
+			Containing containing1 = session.getReference( Containing.class, 1 );
+			Containing containing2 = session.getReference( Containing.class, 2 );
 
 			Embed embed1 = containing1.getEmbed();
 			Embed embed2 = containing2.getEmbed();
@@ -117,7 +115,7 @@ public class MappedByEmbeddableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private void loadContaining(Session session, Integer containingId, Integer containedId) {
-		Contained contained = session.load( Contained.class, containedId );
+		Contained contained = session.getReference( Contained.class, containedId );
 		Containing containing = contained.getContaining();
 
 		assertThat( containing.getId() ).isEqualTo( containingId );

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper;
 
@@ -103,44 +101,42 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 			final Map<String, Object> data,
 			final Object newObj,
 			final Object oldObj) {
-		return doPrivileged( () -> {
-			boolean ret = false;
-			for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
-				final PropertyData propertyData = entry.getKey();
-				final PropertyMapper propertyMapper = entry.getValue();
+		boolean ret = false;
+		for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
+			final PropertyData propertyData = entry.getKey();
+			final PropertyMapper propertyMapper = entry.getValue();
 
-				// synthetic properties are not part of the entity model; therefore they should be ignored.
-				if ( propertyData.isSynthetic() ) {
-					continue;
-				}
+			// synthetic properties are not part of the entity model; therefore they should be ignored.
+			if ( propertyData.isSynthetic() ) {
+				continue;
+			}
 
-				Getter getter;
-				if ( newObj != null ) {
-					getter = ReflectionTools.getGetter(
-							newObj.getClass(),
-							propertyData,
-							session.getFactory().getServiceRegistry()
-					);
-				}
-				else if ( oldObj != null ) {
-					getter = ReflectionTools.getGetter(
-							oldObj.getClass(),
-							propertyData,
-							session.getFactory().getServiceRegistry()
-					);
-				}
-				else {
-					return false;
-				}
-
-				ret |= propertyMapper.mapToMapFromEntity(
-						session, data,
-						newObj == null ? null : getter.get( newObj ),
-						oldObj == null ? null : getter.get( oldObj )
+			Getter getter;
+			if ( newObj != null ) {
+				getter = ReflectionTools.getGetter(
+						newObj.getClass(),
+						propertyData,
+						session.getFactory().getServiceRegistry()
 				);
 			}
-			return ret;
-		} );
+			else if ( oldObj != null ) {
+				getter = ReflectionTools.getGetter(
+						oldObj.getClass(),
+						propertyData,
+						session.getFactory().getServiceRegistry()
+				);
+			}
+			else {
+				return false;
+			}
+
+			ret |= propertyMapper.mapToMapFromEntity(
+					session, data,
+					newObj == null ? null : getter.get( newObj ),
+					oldObj == null ? null : getter.get( oldObj )
+			);
+		}
+		return ret;
 	}
 
 	@Override
@@ -149,44 +145,40 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 			final Map<String, Object> data,
 			final Object newObj,
 			final Object oldObj) {
-		doPrivileged( () -> {
-			for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
-				final PropertyData propertyData = entry.getKey();
-				final PropertyMapper propertyMapper = entry.getValue();
+		for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
+			final PropertyData propertyData = entry.getKey();
+			final PropertyMapper propertyMapper = entry.getValue();
 
-				// synthetic properties are not part of the entity model; therefore they should be ignored.
-				if ( propertyData.isSynthetic() ) {
-					continue;
-				}
-
-				Getter getter;
-				if ( newObj != null ) {
-					getter = ReflectionTools.getGetter(
-							newObj.getClass(),
-							propertyData,
-							session.getFactory().getServiceRegistry()
-					);
-				}
-				else if ( oldObj != null ) {
-					getter = ReflectionTools.getGetter(
-							oldObj.getClass(),
-							propertyData,
-							session.getFactory().getServiceRegistry()
-					);
-				}
-				else {
-					break;
-				}
-
-				propertyMapper.mapModifiedFlagsToMapFromEntity(
-						session, data,
-						newObj == null ? null : getter.get( newObj ),
-						oldObj == null ? null : getter.get( oldObj )
-				);
+			// synthetic properties are not part of the entity model; therefore they should be ignored.
+			if ( propertyData.isSynthetic() ) {
+				continue;
 			}
 
-			return null;
-		} );
+			Getter getter;
+			if ( newObj != null ) {
+				getter = ReflectionTools.getGetter(
+						newObj.getClass(),
+						propertyData,
+						session.getFactory().getServiceRegistry()
+				);
+			}
+			else if ( oldObj != null ) {
+				getter = ReflectionTools.getGetter(
+						oldObj.getClass(),
+						propertyData,
+						session.getFactory().getServiceRegistry()
+				);
+			}
+			else {
+				break;
+			}
+
+			propertyMapper.mapModifiedFlagsToMapFromEntity(
+					session, data,
+					newObj == null ? null : getter.get( newObj ),
+					oldObj == null ? null : getter.get( oldObj )
+			);
+		}
 	}
 
 	@Override

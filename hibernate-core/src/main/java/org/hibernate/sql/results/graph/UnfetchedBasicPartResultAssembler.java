@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph;
 
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -19,7 +16,7 @@ public class UnfetchedBasicPartResultAssembler<J>  implements DomainResultAssemb
 	}
 
 	@Override
-	public J assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+	public J assemble(RowProcessingState rowProcessingState) {
 		return null;
 	}
 
@@ -27,4 +24,5 @@ public class UnfetchedBasicPartResultAssembler<J>  implements DomainResultAssemb
 	public JavaType<J> getAssembledJavaType() {
 		return javaType;
 	}
+
 }

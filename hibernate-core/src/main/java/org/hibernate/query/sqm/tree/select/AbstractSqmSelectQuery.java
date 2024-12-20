@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
 
@@ -16,14 +14,19 @@ import java.util.function.Function;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCteCriteria;
+import org.hibernate.query.criteria.JpaFunctionRoot;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.criteria.JpaSetReturningFunction;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionRoot;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
@@ -36,6 +39,8 @@ import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
 
+import static java.lang.Character.isAlphabetic;
+
 /**
  * @author Steve Ebersole
  */
@@ -45,7 +50,7 @@ public abstract class AbstractSqmSelectQuery<T>
 		implements SqmSelectQuery<T> {
 	private final Map<String, SqmCteStatement<?>> cteStatements;
 	private SqmQueryPart<T> sqmQueryPart;
-	private Class<T> resultType;
+	private final Class<T> resultType;
 
 	public AbstractSqmSelectQuery(Class<T> resultType, NodeBuilder builder) {
 		this( new SqmQuerySpec<>( builder ), resultType, builder );
@@ -79,11 +84,11 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	protected Map<String, SqmCteStatement<?>> copyCteStatements(SqmCopyContext context) {
-		final Map<String, SqmCteStatement<?>> cteStatements = new LinkedHashMap<>( this.cteStatements.size() );
-		for ( Map.Entry<String, SqmCteStatement<?>> entry : this.cteStatements.entrySet() ) {
-			cteStatements.put( entry.getKey(), entry.getValue().copy( context ) );
+		final Map<String, SqmCteStatement<?>> copies = new LinkedHashMap<>( cteStatements.size() );
+		for ( Map.Entry<String, SqmCteStatement<?>> entry : cteStatements.entrySet() ) {
+			copies.put( entry.getKey(), entry.getValue().copy( context ) );
 		}
-		return cteStatements;
+		return copies;
 	}
 
 	@Override
@@ -112,21 +117,21 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	@Override
 	public <X> JpaCteCriteria<X> with(AbstractQuery<X> criteria) {
-		return withInternal( Long.toString( System.nanoTime() ), criteria );
+		return withInternal( SqmCreationHelper.acquireUniqueAlias(), criteria );
 	}
 
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionAll(
 			AbstractQuery<X> baseCriteria,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		return withInternal( Long.toString( System.nanoTime() ), baseCriteria, false, recursiveCriteriaProducer );
+		return withInternal( SqmCreationHelper.acquireUniqueAlias(), baseCriteria, false, recursiveCriteriaProducer );
 	}
 
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionDistinct(
 			AbstractQuery<X> baseCriteria,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		return withInternal( Long.toString( System.nanoTime() ), baseCriteria, true, recursiveCriteriaProducer );
+		return withInternal( SqmCreationHelper.acquireUniqueAlias(), baseCriteria, true, recursiveCriteriaProducer );
 	}
 
 	@Override
@@ -154,7 +159,7 @@ public abstract class AbstractSqmSelectQuery<T>
 		if ( name == null || name.isBlank() ) {
 			throw new IllegalArgumentException( "Illegal empty CTE name" );
 		}
-		if ( !Character.isAlphabetic( name.charAt( 0 ) ) ) {
+		if ( !isAlphabetic( name.charAt( 0 ) ) ) {
 			throw new IllegalArgumentException(
 					String.format(
 							"Illegal CTE name [%s]. Names must start with an alphabetic character!",
@@ -165,7 +170,7 @@ public abstract class AbstractSqmSelectQuery<T>
 		return name;
 	}
 
-	private <X> JpaCteCriteria<X> withInternal(String name, AbstractQuery<X> criteria) {
+	protected <X> JpaCteCriteria<X> withInternal(String name, AbstractQuery<X> criteria) {
 		final SqmCteStatement<X> cteStatement = new SqmCteStatement<>(
 				name,
 				(SqmSelectQuery<X>) criteria,
@@ -178,7 +183,7 @@ public abstract class AbstractSqmSelectQuery<T>
 		return cteStatement;
 	}
 
-	private <X> JpaCteCriteria<X> withInternal(
+	protected <X> JpaCteCriteria<X> withInternal(
 			String name,
 			AbstractQuery<X> baseCriteria,
 			boolean unionDistinct,
@@ -202,10 +207,6 @@ public abstract class AbstractSqmSelectQuery<T>
 		return resultType;
 	}
 
-	protected void setResultType(Class<T> resultType) {
-		this.resultType = resultType;
-	}
-
 	@Override
 	public SqmQuerySpec<T> getQuerySpec() {
 		return sqmQueryPart.getFirstQuerySpec();
@@ -221,11 +222,12 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public Set<Root<?>> getRoots() {
 		return (Set) getQuerySpec().getRoots();
 	}
 
+	@SuppressWarnings("rawtypes")
 	public List<Root<?>> getRootList() {
 		return (List) getQuerySpec().getRootList();
 	}
@@ -253,6 +255,13 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	public <X> JpaRoot<X> from(JpaCteCriteria<X> cte) {
 		final SqmCteRoot<X> root = new SqmCteRoot<>( ( SqmCteStatement<X> ) cte, null );
+		addRoot( root );
+		return root;
+	}
+
+	@Override
+	public <X> JpaFunctionRoot<X> from(JpaSetReturningFunction<X> function) {
+		final SqmFunctionRoot<X> root = new SqmFunctionRoot<>( (SqmSetReturningFunction<X>) function, null );
 		addRoot( root );
 		return root;
 	}
@@ -320,7 +329,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	// Grouping
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public List<Expression<?>> getGroupList() {
 		return (List) getQuerySpec().getGroupingExpressions();
 	}
@@ -331,7 +340,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public SqmSelectQuery<T> groupBy(List<Expression<?>> grouping) {
 		getQuerySpec().setGroupingExpressions( (List) grouping );
 		return this;
@@ -410,7 +419,6 @@ public abstract class AbstractSqmSelectQuery<T>
 					break;
 				}
 				default: {
-					setResultType( (Class<T>) Object[].class );
 					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selections );
 				}
 			}

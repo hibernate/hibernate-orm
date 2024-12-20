@@ -1,13 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.query;
 
 import java.util.Objects;
 import java.util.UUID;
+
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -15,7 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterAll;
@@ -26,7 +27,7 @@ import org.junit.jupiter.api.BeforeAll;
 /**
  * @author Jan Schatteman
  */
-@TestForIssue( jiraKey = "HHH-15257" )
+@JiraKey( value = "HHH-15257" )
 @Jpa(
 		annotatedClasses = {
 				NonWhereQueryTest.TestUser.class
@@ -104,7 +105,7 @@ public class NonWhereQueryTest {
 
 		public AbstractEntity() {
 			super();
-			this.uuid = UUID.randomUUID();
+			this.uuid = SafeRandomUUIDGenerator.safeRandomUUID();
 		}
 
 		@Override

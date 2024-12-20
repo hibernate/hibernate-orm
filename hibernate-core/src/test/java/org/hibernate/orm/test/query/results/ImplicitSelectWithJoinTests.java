@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.results;
 
@@ -16,6 +14,7 @@ import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.retail.Product;
 import org.hibernate.testing.orm.domain.retail.Vendor;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -34,10 +33,32 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 @JiraKey( "HHH-15133" )
 public class ImplicitSelectWithJoinTests {
 	private static final String HQL = "from Product p join p.vendor v where v.name like '%Steve%'";
+	private static final String HQL0 = "from Product this join this.vendor v where v.name like '%Steve%'";
 	private static final String HQL2 = "select p " + HQL;
 	private static final String HQL3 = "from Product q join q.vendor w, Product p join p.vendor v where v.name like '%Steve%' and w.name like '%Gavin%'";
 
 	@Test
+	public void testNoExpectedTypeWithThis(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final SelectionQuery<?> query = session.createSelectionQuery( HQL0 );
+
+			{
+				final List<?> results = query.list();
+				assertThat( results ).hasSize( 1 );
+				final Object result = results.get( 0 );
+				assertThat( result ).isInstanceOf( Product.class );
+			}
+
+			try (ScrollableResults<?> results = query.scroll()) {
+				assertThat( results.next() ).isTrue();
+				final Object result = results.get();
+				assertThat( result ).isInstanceOf( Product.class );
+				assertThat( results.next() ).isFalse();
+			}
+		} );
+	}
+
+	@Test @FailureExpected(reason = "this functionality was disabled, and an exception is now thrown")
 	public void testNoExpectedType(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final SelectionQuery<?> query = session.createSelectionQuery( HQL );
@@ -49,8 +70,7 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( result ).isInstanceOf( Product.class );
 			}
 
-			{
-				final ScrollableResults<?> results = query.scroll();
+			try (ScrollableResults<?> results = query.scroll()) {
 				assertThat( results.next() ).isTrue();
 				final Object result = results.get();
 				assertThat( result ).isInstanceOf( Product.class );
@@ -71,8 +91,7 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( result ).isNotNull();
 			}
 
-			{
-				final ScrollableResults<Product> results = query.scroll();
+			try (ScrollableResults<Product> results = query.scroll()) {
 				assertThat( results.next() ).isTrue();
 				final Product result = results.get();
 				assertThat( result ).isNotNull();
@@ -81,7 +100,7 @@ public class ImplicitSelectWithJoinTests {
 		} );
 	}
 
-	@Test
+	@Test @FailureExpected(reason = "this functionality was disabled, and an exception is now thrown")
 	public void testArrayResultNoResultType(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final SelectionQuery<?> query = session.createSelectionQuery( HQL3 );
@@ -96,8 +115,7 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( (Object[]) result ).hasExactlyElementsOfTypes(Product.class, Vendor.class, Product.class, Vendor.class);
 			}
 
-			{
-				final ScrollableResults<?> results = query.scroll();
+			try (ScrollableResults<?> results = query.scroll()) {
 				assertThat( results.next() ).isTrue();
 				final Object result = results.get();
 				assertThat( result ).isNotNull();
@@ -153,8 +171,7 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( result ).hasExactlyElementsOfTypes(Product.class, Vendor.class, Product.class, Vendor.class);
 			}
 
-			{
-				final ScrollableResults<Object[]> results = query.scroll();
+			try (ScrollableResults<Object[]> results = query.scroll()) {
 				assertThat( results.next() ).isTrue();
 				final Object[] result = results.get();
 				assertThat( results.next() ).isFalse();
@@ -182,8 +199,7 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( result ).hasExactlyElementsOfTypes(Product.class, Vendor.class);
 			}
 
-			{
-				final ScrollableResults<Object[]> results = query.scroll();
+			try (final ScrollableResults<Object[]> results = query.scroll()) {
 				assertThat( results.next() ).isTrue();
 				final Object[] result = results.get();
 				assertThat( results.next() ).isFalse();
@@ -212,8 +228,7 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( result[ 0 ] ).isInstanceOf( Product.class );
 			}
 
-			{
-				final ScrollableResults<Object[]> results = query.scroll();
+			try (ScrollableResults<Object[]> results = query.scroll()) {
 				assertThat( results.next() ).isTrue();
 				final Object[] result = results.get();
 				assertThat( results.next() ).isFalse();
@@ -237,8 +252,7 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( result ).isNotNull();
 			}
 
-			{
-				final ScrollableResults<Product> results = query.scroll();
+			try (ScrollableResults<Product> results = query.scroll()) {
 				assertThat( results.next() ).isTrue();
 				final Product result = results.get();
 				assertThat( result ).isNotNull();

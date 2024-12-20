@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
 
@@ -156,20 +154,18 @@ public class PostgreSQLCallableStatementSupport extends AbstractStandardCallable
 				);
 				final OutputableType<?> type = registration.getParameterType();
 				final String castType;
+				if ( parameter.getName() != null ) {
+					buffer.append( parameter.getName() ).append( " => " );
+				}
 				if ( type != null && type.getJdbcType() instanceof AbstractPostgreSQLStructJdbcType ) {
 					// We have to cast struct type parameters so that PostgreSQL understands nulls
-					castType = ( (AbstractPostgreSQLStructJdbcType) type.getJdbcType() ).getTypeName();
+					castType = ( (AbstractPostgreSQLStructJdbcType) type.getJdbcType() ).getStructTypeName();
 					buffer.append( "cast(" );
 				}
 				else {
 					castType = null;
 				}
-				if ( registration.getName() != null ) {
-					buffer.append( ':' ).append( registration.getName() );
-				}
-				else {
-					buffer.append( "?" );
-				}
+				buffer.append( "?" );
 				if ( castType != null ) {
 					buffer.append( " as " ).append( castType ).append( ')' );
 				}

@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.envers.integration.inheritance.joined.primarykeyjoin;
 
 import java.util.Arrays;
@@ -87,6 +84,6 @@ public class ChildPrimaryKeyJoinAuditing extends BaseEnversJPAFunctionalTestCase
 		// for the existence of the specific key column rather than the expectation that is exists at
 		// a specific order in the iterator.
 		final PersistentClass persistentClass = metadata().getEntityBinding( ChildPrimaryKeyJoinEntity.class.getName() + "_AUD" );
-		Assert.assertNotNull( getColumnFromIteratorByName( persistentClass.getKey().getColumnIterator(), "other_id" ) );
+		Assert.assertNotNull( getColumnFromIteratorByName( persistentClass.getKey().getSelectables(), "other_id" ) );
 	}
 }

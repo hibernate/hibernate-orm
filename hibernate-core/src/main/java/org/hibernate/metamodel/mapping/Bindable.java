@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
@@ -169,7 +167,7 @@ public interface Bindable extends JdbcMappingContainer {
 	 * Visit each constituent JDBC value extracted from the entity instance itself.
 	 *
 	 * Short-hand form of calling {@link #disassemble} and piping its result to
-	 * {@link #forEachDisassembledJdbcValue(Object, int, JdbcValuesConsumer, SharedSessionContractImplementor)} 
+	 * {@link #forEachDisassembledJdbcValue(Object, int, JdbcValuesConsumer, SharedSessionContractImplementor)}
 	 */
 	default <X, Y> int forEachJdbcValue(
 			Object value,
@@ -180,7 +178,7 @@ public interface Bindable extends JdbcMappingContainer {
 			SharedSessionContractImplementor session) {
 		return forEachDisassembledJdbcValue( disassemble( value, session ), offset, x, y, valuesConsumer, session );
 	}
-	
+
 	/**
 	 * A short hand form of {@link #forEachJdbcValue(Object, Object, Object, JdbcValuesBiConsumer, SharedSessionContractImplementor)},
 	 * that passes null for the two values {@code X} and {@code Y}.

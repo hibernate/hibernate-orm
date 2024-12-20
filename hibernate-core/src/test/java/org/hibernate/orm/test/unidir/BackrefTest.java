@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.unidir;
 
@@ -33,7 +31,7 @@ public class BackrefTest extends BaseCoreFunctionalTestCase {
 	protected String[] getMappings() {
 		return new String[] { "unidir/ParentChild.hbm.xml" };
 	}
-	
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		// No test needed at this time.  This was purely to test a
@@ -44,7 +42,7 @@ public class BackrefTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+		configuration.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 	}
 
 	@Test
@@ -110,7 +108,7 @@ public class BackrefTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		Parent me = new Parent( "Steve", 192837465 );
 		me.getChildren().add( new Child( "Joe" ) );
-  		s.persist( me );
+		s.persist( me );
 		s.getTransaction().commit();
 		s.close();
 
@@ -122,7 +120,7 @@ public class BackrefTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		// load 'me' to associate it with the new session as a proxy (this may have occurred as 'prior work'
 		// to the reattachment below)...
-		Object meProxy = s.load( Parent.class, me.getName() );
+		Object meProxy = s.getReference( Parent.class, me.getName() );
 		assertFalse( Hibernate.isInitialized( meProxy ) );
 		// now, do the reattchment...
 		s.merge( me );
@@ -137,4 +135,3 @@ public class BackrefTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 }
-

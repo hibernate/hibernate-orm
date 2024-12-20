@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.loaders;
 
 import jakarta.persistence.Column;
@@ -10,6 +14,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -83,7 +88,7 @@ public class HqlSelectTest {
 		@Column(name = "Uuid_id")
 		Long id;
 
-		java.util.UUID uuid = java.util.UUID.randomUUID();
+		java.util.UUID uuid = SafeRandomUUIDGenerator.safeRandomUUID();
 
 		boolean deleted = false;
 

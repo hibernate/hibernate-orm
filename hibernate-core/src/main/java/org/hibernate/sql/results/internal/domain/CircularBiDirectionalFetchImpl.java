@@ -1,21 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.internal.domain;
 
-import org.hibernate.LockMode;
+import java.util.BitSet;
+
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.EntityUniqueKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
@@ -24,43 +16,39 @@ import org.hibernate.sql.results.graph.BiDirectionalFetch;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.collection.CollectionInitializer;
+import org.hibernate.sql.results.graph.InitializerData;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Andrea Boriero
  */
 public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
-	private final FetchTiming timing;
 	private final NavigablePath navigablePath;
-	private final ToOneAttributeMapping fetchable;
-
+	private final ToOneAttributeMapping fetchedModelPart;
 	private final FetchParent fetchParent;
-	private final LockMode lockMode;
+	private final @Nullable DomainResult<?> keyResult;
+	private final FetchTiming timing;
 	private final NavigablePath referencedNavigablePath;
-	private final DomainResult<?> keyDomainResult;
 
 	public CircularBiDirectionalFetchImpl(
 			FetchTiming timing,
 			NavigablePath navigablePath,
 			FetchParent fetchParent,
-			ToOneAttributeMapping fetchable,
-			LockMode lockMode,
+			ToOneAttributeMapping referencedModelPart,
 			NavigablePath referencedNavigablePath,
-			DomainResult<?> keyDomainResult) {
-		this.timing = timing;
-		this.fetchParent = fetchParent;
+			@Nullable DomainResult<?> keyResult) {
 		this.navigablePath = navigablePath;
-		this.fetchable = fetchable;
-		this.lockMode = lockMode;
+		this.fetchedModelPart = referencedModelPart;
+		this.fetchParent = fetchParent;
+		this.keyResult = keyResult;
+		this.timing = timing;
 		this.referencedNavigablePath = referencedNavigablePath;
-		this.keyDomainResult = keyDomainResult;
 	}
 
 	@Override
@@ -69,8 +57,13 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 	}
 
 	@Override
-	public NavigablePath getReferencedPath() {
-		return referencedNavigablePath;
+	public ToOneAttributeMapping getFetchedMapping() {
+		return fetchedModelPart;
+	}
+
+	@Override
+	public JavaType<?> getResultJavaType() {
+		return fetchedModelPart.getJavaType();
 	}
 
 	@Override
@@ -79,25 +72,8 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 	}
 
 	@Override
-	public Fetchable getFetchedMapping() {
-		return fetchable;
-	}
-
-	@Override
-	public JavaType<?> getResultJavaType() {
-		return fetchable.getJavaType();
-	}
-
-	@Override
-	public DomainResultAssembler createAssembler(
-			FetchParentAccess parentAccess,
-			AssemblerCreationState creationState) {
-		return new CircularFetchAssembler(
-				fetchable,
-				getReferencedPath(),
-				fetchable.getJavaType(),
-				keyDomainResult == null ? null : keyDomainResult.createResultAssembler( parentAccess, creationState )
-		);
+	public NavigablePath getReferencedPath() {
+		return referencedNavigablePath;
 	}
 
 	@Override
@@ -110,76 +86,62 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 		return true;
 	}
 
-	private static class CircularFetchAssembler implements DomainResultAssembler<Object> {
-		private final NavigablePath circularPath;
-		private final JavaType<?> javaType;
-		private final ToOneAttributeMapping fetchable;
-		private final DomainResultAssembler<?> keyDomainResultAssembler;
+	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		if ( keyResult != null ) {
+			keyResult.collectValueIndexesToCache( valueIndexes );
+		}
+	}
 
-		public CircularFetchAssembler(
-				ToOneAttributeMapping fetchable,
-				NavigablePath circularPath,
+	@Override
+	public DomainResultAssembler createAssembler(InitializerParent<?> parent, AssemblerCreationState creationState) {
+		return new CircularBiDirectionalFetchAssembler(
+				getResultJavaType(),
+				keyResult == null ? null : keyResult.createResultAssembler( parent, creationState ),
+				resolveCircularInitializer( parent )
+		);
+	}
+
+	private EntityInitializer<?> resolveCircularInitializer(InitializerParent<?> parent) {
+		while (parent != null && getReferencedPath().isParent( parent.getNavigablePath() ) ) {
+			parent = parent.getParent();
+		}
+		assert parent instanceof EntityInitializer && parent.getNavigablePath().equals( getReferencedPath() );
+		return parent.asEntityInitializer();
+	}
+
+	private static class CircularBiDirectionalFetchAssembler implements DomainResultAssembler<Object> {
+		private final JavaType<Object> javaType;
+		private final @Nullable DomainResultAssembler<?> keyDomainResultAssembler;
+		private final EntityInitializer<InitializerData> initializer;
+
+		public CircularBiDirectionalFetchAssembler(
 				JavaType<?> javaType,
-				DomainResultAssembler<?> keyDomainResultAssembler) {
-			this.fetchable = fetchable;
-			this.circularPath = circularPath;
-			this.javaType = javaType;
+				@Nullable DomainResultAssembler<?> keyDomainResultAssembler,
+				EntityInitializer<?> initializer) {
+			//noinspection unchecked
+			this.javaType = (JavaType<Object>) javaType;
 			this.keyDomainResultAssembler = keyDomainResultAssembler;
+			this.initializer = (EntityInitializer<InitializerData>) initializer;
 		}
 
 		@Override
-		public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
+		public Object assemble(RowProcessingState rowProcessingState) {
 			if ( keyDomainResultAssembler != null ) {
-				final Object foreignKey = keyDomainResultAssembler.assemble( rowProcessingState, options );
+				final Object foreignKey = keyDomainResultAssembler.assemble( rowProcessingState );
 				if ( foreignKey == null ) {
 					return null;
 				}
 			}
-			EntityInitializer initializer = resolveCircularInitializer( rowProcessingState );
-			if ( initializer == null ) {
-				if ( circularPath.getParent() != null ) {
-					NavigablePath path = circularPath.getParent();
-					Initializer parentInitializer = rowProcessingState.resolveInitializer( path );
-					while ( !parentInitializer.isEntityInitializer() && path.getParent() != null ) {
-						path = path.getParent();
-						parentInitializer = rowProcessingState.resolveInitializer( path );
-					}
-					initializer = parentInitializer.asEntityInitializer();
-				}
-				else {
-					final Initializer parentInitializer = rowProcessingState.resolveInitializer( circularPath );
-					assert parentInitializer.isCollectionInitializer();
-					final CollectionInitializer circ = (CollectionInitializer) parentInitializer;
-					final EntityPersister entityPersister = (EntityPersister) fetchable.asAttributeMapping().getMappedType();
-					final CollectionKey collectionKey = circ.resolveCollectionKey( rowProcessingState );
-					final Object key = collectionKey.getKey();
-					final SharedSessionContractImplementor session = rowProcessingState.getSession();
-					final PersistenceContext persistenceContext = session.getPersistenceContext();
-					if ( fetchable.getReferencedPropertyName() != null ) {
-						return loadByUniqueKey( entityPersister, key, session, persistenceContext );
-					}
-					else {
-						final EntityKey entityKey = new EntityKey( key, entityPersister );
-
-						final Object proxy = persistenceContext.getProxy( entityKey );
-						// it is conceivable there is a proxy, so check that first
-						if ( proxy == null || !( proxy.getClass()
-								.isAssignableFrom( javaType.getJavaTypeClass() ) ) ) {
-							// otherwise look for an initialized version
-							return persistenceContext.getEntity( entityKey );
-						}
-						return proxy;
-					}
-				}
+			final InitializerData data = initializer.getData( rowProcessingState );
+			final Initializer.State state = data.getState();
+			if ( state == Initializer.State.KEY_RESOLVED ) {
+				initializer.resolveInstance( data );
 			}
-			if ( initializer.getInitializedInstance() == null ) {
-				initializer.resolveKey( rowProcessingState );
-				initializer.resolveInstance( rowProcessingState );
-			}
-			final Object initializedInstance = initializer.getInitializedInstance();
+			final Object initializedInstance = initializer.getResolvedInstance( data );
 			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( initializedInstance );
 			if ( lazyInitializer != null ) {
-				final Class<?> concreteProxyClass = initializer.getConcreteDescriptor().getConcreteProxyClass();
+				final Class<?> concreteProxyClass = initializer.getConcreteDescriptor( data ).getConcreteProxyClass();
 				if ( concreteProxyClass.isInstance( initializedInstance ) ) {
 					return initializedInstance;
 				}
@@ -191,66 +153,20 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 			return initializedInstance;
 		}
 
-		private Object loadByUniqueKey(
-				EntityPersister entityPersister,
-				Object key,
-				SharedSessionContractImplementor session,
-				PersistenceContext persistenceContext) {
-			final String uniqueKeyPropertyName = fetchable.getReferencedPropertyName();
-			final EntityUniqueKey euk = new EntityUniqueKey(
-					entityPersister.getEntityName(),
-					uniqueKeyPropertyName,
-					key,
-					entityPersister.getIdentifierType(),
-					session.getFactory()
-			);
-			Object entityInstance = persistenceContext.getEntity( euk );
-			if ( entityInstance == null ) {
-				entityInstance = entityPersister.loadByUniqueKey(
-						uniqueKeyPropertyName,
-						key,
-						session
-				);
-
-				// If the entity was not in the Persistence Context, but was found now,
-				// add it to the Persistence Context
-				if ( entityInstance != null ) {
-					persistenceContext.addEntity( euk, entityInstance );
-				}
+		@Override
+		public void resolveState(RowProcessingState rowProcessingState) {
+			if ( keyDomainResultAssembler != null ) {
+				keyDomainResultAssembler.resolveState( rowProcessingState );
 			}
-			return entityInstance;
-		}
-
-		private EntityInitializer resolveCircularInitializer(RowProcessingState rowProcessingState) {
-			final Initializer initializer = rowProcessingState.resolveInitializer( circularPath );
-			final EntityInitializer entityInitializer = initializer.asEntityInitializer();
-			if ( entityInitializer!=null ) {
-				return entityInitializer;
-			}
-			if ( initializer.isCollectionInitializer() ) {
-				return null;
-			}
-			final ModelPart initializedPart = initializer.getInitializedPart();
-			if ( initializedPart instanceof EntityInitializer ) {
-				return (EntityInitializer) initializedPart;
-			}
-
-			NavigablePath path = circularPath.getParent();
-			Initializer parentInitializer = rowProcessingState.resolveInitializer( path );
-			while ( !parentInitializer.isEntityInitializer() && path.getParent() != null ) {
-				path = path.getParent();
-				parentInitializer = rowProcessingState.resolveInitializer( path );
-			}
-
-			if ( !parentInitializer.isEntityInitializer() ) {
-				return null;
-			}
-
-			return parentInitializer.asEntityInitializer();
 		}
 
 		@Override
-		public JavaType getAssembledJavaType() {
+		public @Nullable Initializer<?> getInitializer() {
+			return keyDomainResultAssembler == null ? null : keyDomainResultAssembler.getInitializer();
+		}
+
+		@Override
+		public JavaType<Object> getAssembledJavaType() {
 			return javaType;
 		}
 	}

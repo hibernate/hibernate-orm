@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 import java.util.HashSet;
@@ -63,15 +61,15 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, "false" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+		cfg.setProperty( Environment.USE_QUERY_CACHE, false );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
 	}
 
 	private void createData() {
 		stateProvince = new StateProvince();
 		stateProvince.setName( "IL" );
 
-	    zoo1 = new Zoo();
+		zoo1 = new Zoo();
 		zoo1.setName( "Zoo" );
 		Address address1 = new Address();
 		address1.setStreet( "1313 Mockingbird Lane" );
@@ -103,7 +101,7 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		zoo2Director2 = new Human();
 		zoo2Director2.setName( new Name( "Fat", 'A', "Cat" ) );
 		zoo2.getDirectors().put( "Head Honcho", zoo2Director1 );
-		zoo2.getDirectors().put( "Asst. Head Honcho", zoo2Director2 );		
+		zoo2.getDirectors().put( "Asst. Head Honcho", zoo2Director2 );
 
 		zoo3 = new Zoo();
 		zoo3.setName( "Zoo" );
@@ -127,15 +125,15 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		s.save( stateProvince );
-		s.save( zoo1Mammal1 );
-		s.save( zoo1Mammal2 );
-		s.save( zoo1 );
-		s.save( zoo2Director1 );
-		s.save( zoo2Director2 );
-		s.save( zoo2 );
-		s.save( zoo3 );
-		s.save( zoo4 );
+		s.persist( stateProvince );
+		s.persist( zoo1Mammal1 );
+		s.persist( zoo1Mammal2 );
+		s.persist( zoo1 );
+		s.persist( zoo2Director1 );
+		s.persist( zoo2Director2 );
+		s.persist( zoo2 );
+		s.persist( zoo3 );
+		s.persist( zoo4 );
 		t.commit();
 		s.close();
 
@@ -151,39 +149,39 @@ public class OrderByTests extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		if ( zoo1 != null ) {
-			s.delete( zoo1 );
+			s.remove( zoo1 );
 			zoo1 = null;
 		}
 		if ( zoo2 != null ) {
-			s.delete( zoo2 );
+			s.remove( zoo2 );
 			zoo2 = null;
 		}
 		if ( zoo3 != null ) {
-			s.delete( zoo3 );
+			s.remove( zoo3 );
 			zoo3 = null;
 		}
 		if ( zoo4 != null ) {
-			s.delete( zoo4 );
+			s.remove( zoo4 );
 			zoo4 = null;
 		}
 		if ( zoo1Mammal1 != null ) {
-			s.delete( zoo1Mammal1 );
+			s.remove( zoo1Mammal1 );
 			zoo1Mammal1 = null;
 		}
 		if ( zoo1Mammal2 != null ) {
-			s.delete( zoo1Mammal2 );
+			s.remove( zoo1Mammal2 );
 			zoo1Mammal2 = null;
 		}
 		if ( zoo2Director1 != null ) {
-			s.delete( zoo2Director1 );
+			s.remove( zoo2Director1 );
 			zoo2Director1 = null;
 		}
 		if ( zoo2Director2 != null ) {
-			s.delete( zoo2Director2 );
-			zoo2Director2 = null;			
+			s.remove( zoo2Director2 );
+			zoo2Director2 = null;
 		}
 		if ( stateProvince != null ) {
-			s.delete( stateProvince );
+			s.remove( stateProvince );
 		}
 		t.commit();
 		s.close();

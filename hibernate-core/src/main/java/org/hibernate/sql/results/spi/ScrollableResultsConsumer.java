@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.spi;
 
@@ -26,7 +24,11 @@ import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 public class ScrollableResultsConsumer<R> implements ResultsConsumer<ScrollableResultsImplementor<R>, R> {
 	/**
 	 * Singleton access to the standard scrollable-results consumer instance
+	 *
+	 * @deprecated in favor of {@link #instance()}
 	 */
+	@SuppressWarnings( "rawtypes" )
+	@Deprecated( forRemoval = true )
 	public static final ScrollableResultsConsumer INSTANCE = new ScrollableResultsConsumer();
 
 	@SuppressWarnings("unchecked")
@@ -42,7 +44,7 @@ public class ScrollableResultsConsumer<R> implements ResultsConsumer<ScrollableR
 			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
 			RowProcessingStateStandardImpl rowProcessingState,
 			RowReader<R> rowReader) {
-		session.getPersistenceContext().getLoadContexts().register( jdbcValuesSourceProcessingState );
+		rowReader.startLoading( rowProcessingState );
 		if ( containsCollectionFetches( jdbcValues.getValuesMapping() ) ) {
 			return new FetchingScrollableResultsImpl<>(
 					jdbcValues,

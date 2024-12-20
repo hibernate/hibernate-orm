@@ -1,35 +1,37 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.multitenancy;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak
  */
-@TestForIssue(jiraKey = "HHH-7311")
+@JiraKey(value = "HHH-7311")
+@RequiresDialect( H2Dialect.class )
 public class ConfigurationValidationTest extends BaseUnitTestCase {
 
 	@Test(expected = ServiceException.class)
 	public void testInvalidConnectionProvider() {
 		ServiceRegistryImplementor serviceRegistry = null;
 		try {
-			serviceRegistry	= (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+			serviceRegistry	= (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 					.applySetting( Environment.MULTI_TENANT_CONNECTION_PROVIDER, "class.not.present.in.classpath" )
 					.build();
 
@@ -50,7 +52,7 @@ public class ConfigurationValidationTest extends BaseUnitTestCase {
 	public void testReleaseMode() {
 		ServiceRegistryImplementor serviceRegistry = null;
 		try {
-			serviceRegistry	= (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+			serviceRegistry	= (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 					.applySetting( Environment.CONNECTION_HANDLING, PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT.name() )
 					.addService(
 							MultiTenantConnectionProvider.class,

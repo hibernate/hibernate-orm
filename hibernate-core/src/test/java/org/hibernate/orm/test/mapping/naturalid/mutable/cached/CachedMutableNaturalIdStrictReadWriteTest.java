@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid.mutable.cached;
 
@@ -10,7 +8,7 @@ import org.hibernate.Transaction;
 import org.hibernate.stat.NaturalIdStatistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -37,27 +35,27 @@ import static org.junit.Assert.assertNull;
 public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNaturalIdTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9203" )
+	@JiraKey( value = "HHH-9203" )
 	public void testToMapConversion(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
 		scope.inTransaction(
-				(session) -> session.save( new AllCached( "IT" ) )
+				(session) -> session.persist( new AllCached( "IT" ) )
 		);
 
 		final NaturalIdStatistics naturalIdStatistics = statistics.getNaturalIdStatistics( AllCached.class.getName() );
 		assertEquals( 1, naturalIdStatistics.getCachePutCount() );
 	}
-	
+
 	@Test
-	@TestForIssue( jiraKey = "HHH-7278" )
+	@JiraKey( value = "HHH-7278" )
 	public void testInsertedNaturalIdCachedAfterTransactionSuccess(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
 		scope.inTransaction(
-				(session) -> session.save( new Another( "it" ) )
+				(session) -> session.persist( new Another( "it" ) )
 		);
 
 		scope.inTransaction(
@@ -68,9 +66,9 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 		);
 		assertEquals( 1, statistics.getNaturalIdCacheHitCount() );
 	}
-	
+
 	@Test
-	@TestForIssue( jiraKey = "HHH-7278" )
+	@JiraKey( value = "HHH-7278" )
 	public void testInsertedNaturalIdNotCachedAfterTransactionFailure(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
@@ -80,7 +78,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 					final Transaction transaction = session.getTransaction();
 					transaction.begin();
 
-					session.save( new Another( "it" ) );
+					session.persist( new Another( "it" ) );
 					session.flush();
 
 					transaction.rollback();
@@ -95,15 +93,15 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 				}
 		);
 	}
-	
+
 	@Test
-	@TestForIssue( jiraKey = "HHH-7278" )
+	@JiraKey( value = "HHH-7278" )
 	public void testChangedNaturalIdCachedAfterTransactionSuccess(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
 		scope.inTransaction(
-				(session) -> session.save( new Another( "it" ) )
+				(session) -> session.persist( new Another( "it" ) )
 		);
 
 		scope.inTransaction(
@@ -126,15 +124,15 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 
 		assertEquals( 1, statistics.getNaturalIdCacheHitCount() );
 	}
-	
+
 	@Test
-	@TestForIssue( jiraKey = "HHH-7278" )
+	@JiraKey( value = "HHH-7278" )
 	public void testChangedNaturalIdNotCachedAfterTransactionFailure(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
 		scope.inTransaction(
-				(session) -> session.save( new Another( "it" ) )
+				(session) -> session.persist( new Another( "it" ) )
 		);
 
 		scope.inTransaction(
@@ -162,9 +160,9 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 
 		assertEquals(0, statistics.getNaturalIdCacheHitCount());
 	}
-	
+
 	@Test
-	@TestForIssue( jiraKey = "HHH-7309" )
+	@JiraKey( value = "HHH-7309" )
 	public void testInsertUpdateEntity_NaturalIdCachedAfterTransactionSuccess(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
@@ -173,7 +171,7 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 				(session) -> {
 					Another it = new Another( "it" );
 					// schedules an InsertAction
-					session.save( it );
+					session.persist( it );
 
 					// schedules an UpdateAction
 					// 	- without bug-fix this will re-cache natural-id with identical key and at same time invalidate it
@@ -192,14 +190,14 @@ public class CachedMutableNaturalIdStrictReadWriteTest extends CachedMutableNatu
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9200" )
+	@JiraKey( value = "HHH-9200" )
 	public void testNaturalIdCacheStatisticsReset(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
 
 		scope.inTransaction(
 				(session) -> {
-					session.save( new Another( "IT" ) );
+					session.persist( new Another( "IT" ) );
 				}
 		);
 

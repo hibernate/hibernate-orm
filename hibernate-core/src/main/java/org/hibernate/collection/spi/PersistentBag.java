@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
 
@@ -18,8 +16,6 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.Internal;
-import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -51,7 +47,7 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	/**
 	 * Constructs a PersistentBag.  Needed for SOAP libraries, etc
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public PersistentBag() {
 	}
 
@@ -417,7 +413,7 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 
 	@Override
 	public boolean addAll(Collection<? extends E> values) {
-		if ( values.size() == 0 ) {
+		if ( values.isEmpty() ) {
 			return false;
 		}
 		if ( !isOperationQueueEnabled() ) {
@@ -499,7 +495,7 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	 *
 	 * @return The number of occurrences.
 	 */
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public int occurrences(Object o) {
 		read();
 		final Iterator<E> itr = bag.iterator();
@@ -591,14 +587,12 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	}
 
 	/**
-	 * Bag does not respect the collection API and do an
-	 * JVM instance comparison to do the equals.
-	 * The semantic is broken not to have to initialize a
-	 * collection for a simple equals() operation.
+	 * For efficiency, bag does not respect the semantics of
+	 * {@link List#equals(Object)} as specified by the supertype
+	 * {@link List}. Instead, instance equality is used, to avoid
+	 * the need to fetch the elements of the bag.
 	 *
 	 * @see Object#equals(Object)
-	 * <p>
-	 * {@inheritDoc}
 	 */
 	@Override
 	public boolean equals(Object obj) {

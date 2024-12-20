@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.dialect.internal;
 
@@ -14,6 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DialectLogging;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
@@ -39,6 +38,7 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 			"org.hibernate.community.dialect.DerbyTenFiveDialect",
 			"org.hibernate.community.dialect.DerbyTenSevenDialect",
 			"org.hibernate.community.dialect.DerbyTenSixDialect",
+			"org.hibernate.community.dialect.DerbyDialect",
 			"org.hibernate.community.dialect.MariaDB10Dialect",
 			"org.hibernate.community.dialect.MariaDB53Dialect",
 			"org.hibernate.community.dialect.MariaDB102Dialect",
@@ -189,7 +189,7 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 		if ( resolutionInfoSource == null ) {
 			throw new HibernateException(
 					"Unable to determine Dialect without JDBC metadata "
-					+ "(please set 'javax.persistence.jdbc.url', 'hibernate.connection.url', or 'hibernate.dialect')"
+					+ "(please set '" + JdbcSettings.JAKARTA_JDBC_URL + "' for common cases or '" + JdbcSettings.DIALECT + "' when a custom Dialect implementation must be provided)"
 			);
 		}
 

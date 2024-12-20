@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cdi.type;
 
@@ -12,8 +10,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 import jakarta.inject.Singleton;
@@ -60,12 +58,14 @@ public class UrlType implements UserType<URL> {
 	}
 
 	@Override
-	public URL nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public URL nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+			throws SQLException {
 		throw new UnsupportedOperationException( "Not used" );
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, URL value, int index, SharedSessionContractImplementor session) throws SQLException {
+	public void nullSafeSet(PreparedStatement st, URL value, int index, WrapperOptions options)
+			throws SQLException {
 		throw new UnsupportedOperationException( "Not used" );
 	}
 

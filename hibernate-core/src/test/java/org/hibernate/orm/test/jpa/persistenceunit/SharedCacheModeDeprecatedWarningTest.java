@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.persistenceunit;
 
@@ -14,7 +12,7 @@ import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LogInspectionHelper;
 import org.hibernate.testing.logger.TriggerOnPrefixLogListener;
 import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
@@ -32,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Marco Belladelli
  */
-@TestForIssue(jiraKey = "HHH-15768")
+@JiraKey(value = "HHH-15768")
 public class SharedCacheModeDeprecatedWarningTest {
 
 	private TriggerOnPrefixLogListener trigger;

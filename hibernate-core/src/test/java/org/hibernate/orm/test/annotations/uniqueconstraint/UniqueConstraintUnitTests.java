@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.uniqueconstraint;
 
@@ -25,8 +23,9 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
@@ -39,9 +38,9 @@ import static org.junit.Assert.fail;
 public class UniqueConstraintUnitTests extends BaseUnitTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8026" )
+	@JiraKey( value = "HHH-8026" )
 	public void testUnNamedConstraints() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			final Metadata metadata = new MetadataSources( ssr )
@@ -61,7 +60,7 @@ public class UniqueConstraintUnitTests extends BaseUnitTestCase {
 			}
 
 			assertTrue( "Could not find the expected tables.", tableA != null && tableB != null );
-            assertFalse(
+			assertFalse(
 					tableA.getUniqueKeys().values().iterator().next().getName().equals(
 							tableB.getUniqueKeys().values().iterator().next().getName()
 					)
@@ -73,9 +72,9 @@ public class UniqueConstraintUnitTests extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8537" )
+	@JiraKey( value = "HHH-8537" )
 	public void testNonExistentColumn() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			final Metadata metadata = new MetadataSources( ssr )

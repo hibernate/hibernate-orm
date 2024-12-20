@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -91,18 +89,4 @@ public @interface Cache {
 	 * @see LazyGroup
 	 */
 	boolean includeLazy() default true;
-
-	/**
-	 * When bytecode enhancement is used, and {@linkplain LazyGroup
-	 * field-level lazy fetching} is enabled, specifies which attributes
-	 * of the entity are included in the second-level cache, either:
-	 * <ul>
-	 * <li>{@code "all"} properties, the default, or
-	 * <li>only {@code "non-lazy"} properties.
-	 * </ul>
-	 *
-	 * @deprecated Use {@link #includeLazy()} for the sake of typesafety.
-	 */
-	@Deprecated
-	String include() default "all";
 }

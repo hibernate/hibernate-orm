@@ -1,10 +1,14 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.stream;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
@@ -20,7 +24,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				JpaNativeQueryFlushSessionTest.Person.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-16492")
+@JiraKey(value = "HHH-16492")
 public class JpaNativeQueryFlushSessionTest {
 
 	@AfterEach

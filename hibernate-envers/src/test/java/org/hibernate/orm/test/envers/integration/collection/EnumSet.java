@@ -1,17 +1,18 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.collection;
 
 import java.sql.Types;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+
 import jakarta.persistence.EntityManager;
 import org.assertj.core.api.Assertions;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -25,7 +26,7 @@ import org.hibernate.orm.test.envers.entities.collection.EnumSetEntity.E1;
 import org.hibernate.orm.test.envers.entities.collection.EnumSetEntity.E2;
 import org.hibernate.orm.test.envers.tools.TestTools;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.type.SqlTypes;
 import org.junit.Test;
 
@@ -40,6 +41,12 @@ public class EnumSet extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {EnumSetEntity.class};
+	}
+
+	@Override
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put( AvailableSettings.PREFER_NATIVE_ENUM_TYPES, "false" );
 	}
 
 	@Test
@@ -105,7 +112,7 @@ public class EnumSet extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7780")
+	@JiraKey(value = "HHH-7780")
 	public void testEnumRepresentation() {
 		EntityManager entityManager = getEntityManager();
 

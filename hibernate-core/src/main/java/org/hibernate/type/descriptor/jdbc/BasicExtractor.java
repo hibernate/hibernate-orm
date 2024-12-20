@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
@@ -43,7 +41,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 	public J extract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 		final J value = doExtract( rs, paramIndex, options );
 		if ( value == null || rs.wasNull() ) {
-			if ( JdbcExtractingLogging.TRACE_ENABLED ) {
+			if ( JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcExtractingLogging.logNullExtracted(
 						paramIndex,
 						getJdbcType().getDefaultSqlTypeCode()
@@ -52,7 +50,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 			return null;
 		}
 		else {
-			if ( JdbcExtractingLogging.TRACE_ENABLED ) {
+			if ( JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcExtractingLogging.logExtracted(
 						paramIndex,
 						getJdbcType().getDefaultSqlTypeCode(),
@@ -79,7 +77,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 	public J extract(CallableStatement statement, int paramIndex, WrapperOptions options) throws SQLException {
 		final J value = doExtract( statement, paramIndex, options );
 		if ( value == null || statement.wasNull() ) {
-			if ( JdbcExtractingLogging.TRACE_ENABLED ) {
+			if ( JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcExtractingLogging.LOGGER.tracef(
 						"extracted procedure output  parameter ([%s] : [%s]) - [null]",
 						paramIndex,
@@ -89,7 +87,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 			return null;
 		}
 		else {
-			if ( JdbcExtractingLogging.TRACE_ENABLED ) {
+			if ( JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcExtractingLogging.LOGGER.tracef(
 						"extracted procedure output  parameter ([%s] : [%s]) - [%s]",
 						paramIndex,
@@ -117,7 +115,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 	public J extract(CallableStatement statement, String paramName, WrapperOptions options) throws SQLException {
 		final J value = doExtract( statement, paramName, options );
 		if ( value == null || statement.wasNull() ) {
-			if ( JdbcExtractingLogging.TRACE_ENABLED ) {
+			if ( JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcExtractingLogging.LOGGER.tracef(
 						"extracted named procedure output  parameter ([%s] : [%s]) - [null]",
 						paramName,
@@ -127,7 +125,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 			return null;
 		}
 		else {
-			if ( JdbcExtractingLogging.TRACE_ENABLED ) {
+			if ( JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcExtractingLogging.LOGGER.tracef(
 						"extracted named procedure output  parameter ([%s] : [%s]) - [%s]",
 						paramName,

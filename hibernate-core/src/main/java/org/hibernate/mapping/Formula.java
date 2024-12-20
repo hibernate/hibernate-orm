@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -10,7 +8,6 @@ import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -44,7 +41,7 @@ public class Formula implements Selectable, Serializable {
 
 	@Override
 	public String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration, SqmFunctionRegistry registry) {
-		final String template = renderWhereStringTemplate( formula, dialect, typeConfiguration, registry );
+		final String template = renderWhereStringTemplate( formula, dialect, typeConfiguration );
 		return safeInterning( replace( template, "{alias}", TEMPLATE ) );
 	}
 
@@ -94,5 +91,16 @@ public class Formula implements Selectable, Serializable {
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + "( " + formula + " )";
+	}
+
+	@Override
+	public boolean equals(Object that) {
+		return that instanceof Formula other
+			&& formula.equals( other.formula );
+	}
+
+	@Override
+	public int hashCode() {
+		return formula.hashCode();
 	}
 }

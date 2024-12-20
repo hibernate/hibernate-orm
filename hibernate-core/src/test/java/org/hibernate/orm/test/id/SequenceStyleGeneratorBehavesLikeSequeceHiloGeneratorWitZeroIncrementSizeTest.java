@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id;
 
@@ -11,6 +9,7 @@ import java.util.Properties;
 import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -18,15 +17,21 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
 
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsSequences;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,7 +53,7 @@ public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncreme
 
 	@BeforeEach
 	public void setUp() throws Exception {
-		serviceRegistry = new StandardServiceRegistryBuilder()
+		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.enableAutoClose()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 				.build();
@@ -62,17 +67,52 @@ public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncreme
 		properties.setProperty( SequenceStyleGenerator.SEQUENCE_PARAM, TEST_SEQUENCE );
 		properties.setProperty( SequenceStyleGenerator.OPT_PARAM, "legacy-hilo" );
 		properties.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "0" ); // JPA allocationSize of 1
-		properties.put(
-				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
-				buildingContext.getObjectNameNormalizer()
-		);
 		generator.configure(
-				buildingContext.getBootstrapContext()
-						.getTypeConfiguration()
-						.getBasicTypeRegistry()
-						.resolve( StandardBasicTypes.LONG ),
-				properties,
-				serviceRegistry
+				new GeneratorCreationContext() {
+					@Override
+					public Database getDatabase() {
+						return buildingContext.getMetadataCollector().getDatabase();
+					}
+
+					@Override
+					public ServiceRegistry getServiceRegistry() {
+						return serviceRegistry;
+					}
+
+					@Override
+					public String getDefaultCatalog() {
+						return "";
+					}
+
+					@Override
+					public String getDefaultSchema() {
+						return "";
+					}
+
+					@Override
+					public PersistentClass getPersistentClass() {
+						return null;
+					}
+
+					@Override
+					public RootClass getRootClass() {
+						return null;
+					}
+
+					@Override
+					public Property getProperty() {
+						return null;
+					}
+
+					@Override
+					public Type getType() {
+						return buildingContext.getBootstrapContext()
+								.getTypeConfiguration()
+								.getBasicTypeRegistry()
+								.resolve( StandardBasicTypes.LONG );
+					}
+				},
+				properties
 		);
 
 		final Metadata metadata = new MetadataSources( serviceRegistry ).buildMetadata();
@@ -80,7 +120,7 @@ public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncreme
 
 		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 		generator.initialize( sessionFactory.getSqlStringGenerationContext() );
-        sequenceValueExtractor = new SequenceValueExtractor(sessionFactory.getJdbcServices().getDialect(), TEST_SEQUENCE );
+		sequenceValueExtractor = new SequenceValueExtractor(sessionFactory.getJdbcServices().getDialect(), TEST_SEQUENCE );
 	}
 
 	@AfterEach

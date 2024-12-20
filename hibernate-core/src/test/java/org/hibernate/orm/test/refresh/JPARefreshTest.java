@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.refresh;
 
 import java.io.Serializable;
@@ -172,7 +176,7 @@ public class JPARefreshTest {
 	public static class RealmAttributeEntity {
 
 		@Id
-		@ManyToOne(fetch= FetchType.LAZY)
+		@ManyToOne(fetch= FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@JoinColumn(name = "REALM_ID")
 		protected RealmEntity realm;
 

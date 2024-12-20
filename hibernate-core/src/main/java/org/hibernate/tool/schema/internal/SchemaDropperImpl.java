@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
@@ -42,7 +40,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.SourceType;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
@@ -63,6 +61,7 @@ import org.jboss.logging.Logger;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.tool.schema.internal.Helper.applyScript;
+import static org.hibernate.tool.schema.internal.Helper.applySqlString;
 import static org.hibernate.tool.schema.internal.Helper.applySqlStrings;
 import static org.hibernate.tool.schema.internal.Helper.createSqlStringGenerationContext;
 import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabled;
@@ -92,13 +91,14 @@ public class SchemaDropperImpl implements SchemaDropper {
 	}
 
 	public SchemaDropperImpl(ServiceRegistry serviceRegistry, SchemaFilter schemaFilter) {
-		SchemaManagementTool smt = serviceRegistry.getService( SchemaManagementTool.class );
-		if ( !(smt instanceof HibernateSchemaManagementTool) ) {
-			smt = new HibernateSchemaManagementTool();
-			( (HibernateSchemaManagementTool) smt ).injectServices( (ServiceRegistryImplementor) serviceRegistry );
+		if ( serviceRegistry.getService( SchemaManagementTool.class )
+				instanceof HibernateSchemaManagementTool schemaManagementTool ) {
+			tool = schemaManagementTool;
 		}
-
-		this.tool = (HibernateSchemaManagementTool) smt;
+		else {
+			tool = new HibernateSchemaManagementTool();
+			tool.injectServices( (ServiceRegistryImplementor) serviceRegistry );
+		}
 		this.schemaFilter = schemaFilter;
 	}
 
@@ -209,6 +209,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 		// NOTE : init commands are irrelevant for dropping...
 
+		applySqlString( dialect.getBeforeDropStatement(), formatter, options, targets );
+
 		final SqlStringGenerationContext context = createSqlStringGenerationContext( options, metadata );
 		// Reverse the list on drop to retain possible dependencies
 		dropAuxiliaryObjectsBeforeTables( metadata, options, dialect, formatter, context, targets );
@@ -222,8 +224,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 				targets
 		);
 		dropAuxiliaryObjectsAfterTables( metadata, options, dialect, formatter, context, targets );
-		dropUserDefinedTypes( metadata, options, dialect, formatter, context, targets );
-		dropSchemasAndCatalogs( metadata, options, dialect, formatter, context, targets );
+		dropUserDefinedTypes( metadata, options, schemaFilter, dialect, formatter, context, targets );
+		dropSchemasAndCatalogs( metadata, options, schemaFilter, dialect, formatter, context, targets );
 	}
 
 	private void dropConstraintsTablesSequences(
@@ -236,7 +238,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			GenerationTarget[] targets) {
 		final Set<String> exportIdentifiers = setOfSize( 50 );
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+			if ( schemaFilter.includeNamespace( namespace ) ) {
 
 				// we need to drop all constraints/indexes prior to dropping the tables
 				applyConstraintDropping(
@@ -253,6 +255,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 				dropTables(
 						metadata,
 						options,
+						schemaFilter,
 						inclusionFilter,
 						dialect,
 						formatter,
@@ -265,6 +268,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 				dropSequences(
 						metadata,
 						options,
+						schemaFilter,
 						inclusionFilter,
 						dialect,
 						formatter,
@@ -323,6 +327,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	private static void dropSequences(
 			Metadata metadata,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			ContributableMatcher inclusionFilter,
 			Dialect dialect,
 			Formatter formatter,
@@ -331,7 +336,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Namespace namespace,
 			GenerationTarget[] targets) {
 		for ( Sequence sequence : namespace.getSequences() ) {
-			if ( options.getSchemaFilter().includeSequence( sequence )
+			if ( schemaFilter.includeSequence( sequence )
 					&& inclusionFilter.matches( sequence ) ) {
 				checkExportIdentifier( sequence, exportIdentifiers);
 				applySqlStrings(
@@ -347,6 +352,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	private static void dropTables(
 			Metadata metadata,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			ContributableMatcher inclusionFilter,
 			Dialect dialect,
 			Formatter formatter,
@@ -357,7 +363,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		for ( Table table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
 					&& table.isView()
-					&& options.getSchemaFilter().includeTable( table )
+					&& schemaFilter.includeTable( table )
 					&& inclusionFilter.matches( table ) ) {
 				checkExportIdentifier( table, exportIdentifiers);
 				applySqlStrings(
@@ -371,7 +377,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		for ( Table table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
 					&& !table.isView()
-					&& options.getSchemaFilter().includeTable( table )
+					&& schemaFilter.includeTable( table )
 					&& inclusionFilter.matches( table ) ) {
 				checkExportIdentifier( table, exportIdentifiers);
 				applySqlStrings(
@@ -384,16 +390,18 @@ public class SchemaDropperImpl implements SchemaDropper {
 		}
 	}
 
-	private static void dropUserDefinedTypes(
+	static void dropUserDefinedTypes(
 			Metadata metadata,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			Dialect dialect,
 			Formatter formatter,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
-				final List<UserDefinedType> dependencyOrderedUserDefinedTypes = namespace.getDependencyOrderedUserDefinedTypes();
+			if ( schemaFilter.includeNamespace( namespace ) ) {
+				final List<UserDefinedType> dependencyOrderedUserDefinedTypes =
+						namespace.getDependencyOrderedUserDefinedTypes();
 				Collections.reverse( dependencyOrderedUserDefinedTypes );
 				for ( UserDefinedType userDefinedType : dependencyOrderedUserDefinedTypes ) {
 					applySqlStrings(
@@ -411,6 +419,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 	private static void dropSchemasAndCatalogs(
 			Metadata metadata,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			Dialect dialect,
 			Formatter formatter,
 			SqlStringGenerationContext context,
@@ -420,7 +429,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		if ( tryToDropCatalogs || tryToDropSchemas) {
 			final Set<Identifier> exportedCatalogs = new HashSet<>();
 			for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-				if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+				if ( schemaFilter.includeNamespace( namespace ) ) {
 					Namespace.Name logicalName = namespace.getName();
 					Namespace.Name physicalName = namespace.getPhysicalName();
 
@@ -464,7 +473,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		if ( dialect.dropConstraints() ) {
 			for ( Table table : namespace.getTables() ) {
 				if ( table.isPhysicalTable()
-						&& options.getSchemaFilter().includeTable( table )
+						&& schemaFilter.includeTable( table )
 						&& inclusionFilter.matches( table ) ) {
 					for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
 						applySqlStrings(
@@ -494,7 +503,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			ContributableMatcher inclusionFilter,
 			SourceDescriptor sourceDescriptor) {
 		final JournalingGenerationTarget target = new JournalingGenerationTarget();
-		final Dialect dialect = tool.getServiceRegistry().getService( JdbcEnvironment.class ).getDialect();
+		final Dialect dialect = tool.getServiceRegistry().requireService( JdbcEnvironment.class ).getDialect();
 		doDrop( metadata, options, inclusionFilter, dialect, sourceDescriptor, target );
 		return new DelayedDropActionImpl( target.commands, tool.getCustomDatabaseGenerationTarget() );
 	}
@@ -509,7 +518,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 		doDrop(
 				metadata,
 				serviceRegistry,
-				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
+				serviceRegistry.requireService( ConfigurationService.class ).getSettings(),
 				manageNamespaces,
 				targets
 		);
@@ -528,7 +537,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			final JdbcContext jdbcContext = tool.resolveJdbcContext( settings );
 			targets = new GenerationTarget[] {
 				new GenerationTargetToDatabase(
-						serviceRegistry.getService( TransactionCoordinatorBuilder.class )
+						serviceRegistry.requireService( TransactionCoordinatorBuilder.class )
 								.buildDdlTransactionIsolator( jdbcContext ),
 						true
 				)
@@ -552,14 +561,9 @@ public class SchemaDropperImpl implements SchemaDropper {
 					public ExceptionHandler getExceptionHandler() {
 						return ExceptionHandlerLoggedImpl.INSTANCE;
 					}
-
-					@Override
-					public SchemaFilter getSchemaFilter() {
-						return schemaFilter;
-					}
 				},
 				(contributed) -> true,
-				serviceRegistry.getService( JdbcEnvironment.class ).getDialect(),
+				serviceRegistry.requireService( JdbcEnvironment.class ).getDialect(),
 				new SourceDescriptor() {
 					@Override
 					public SourceType getSourceType() {
@@ -611,7 +615,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 			if ( target == null ) {
 				target = new GenerationTargetToDatabase(
-						serviceRegistry.getService( TransactionCoordinatorBuilder.class )
+						serviceRegistry.requireService( TransactionCoordinatorBuilder.class )
 								.buildDdlTransactionIsolator( jdbcContext ),
 						true
 				);
@@ -643,7 +647,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 			public JdbcContextDelayedDropImpl(ServiceRegistry serviceRegistry) {
 				this.serviceRegistry = serviceRegistry;
-				this.jdbcServices = serviceRegistry.getService( JdbcServices.class );
+				this.jdbcServices = serviceRegistry.requireService( JdbcServices.class );
 				this.jdbcConnectionAccess = jdbcServices.getBootstrapJdbcConnectionAccess();
 				if ( jdbcConnectionAccess == null ) {
 					// todo : log or error?

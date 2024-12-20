@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.tool.schema;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -39,15 +38,16 @@ import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaValidator;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.boot.JdbcConnectionAccessImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.junit.After;
 import org.junit.Before;
@@ -61,19 +61,19 @@ import static org.junit.Assert.assertFalse;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-11864")
+@JiraKey(value = "HHH-11864")
 @RequiresDialect(H2Dialect.class)
 public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestCase {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, IndividuallySchemaValidatorImplConnectionTest.class.getName() ) );
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, IndividuallySchemaValidatorImplConnectionTest.class.getName() ) );
 
 	private StandardServiceRegistry ssr;
 
 	protected HibernateSchemaManagementTool tool;
 
-	private Map configurationValues;
+	private Map<String,Object> configurationValues;
 
 	private ExecutionOptions executionOptions;
 
@@ -89,13 +89,13 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 
 		connection = connectionProvider.getConnection();
 
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 			.applySetting( AvailableSettings.JAKARTA_HBM2DDL_CONNECTION, connection )
 			.build();
 
 		tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );
 
-		configurationValues = ssr.getService( ConfigurationService.class ).getSettings();
+		configurationValues = ssr.requireService( ConfigurationService.class ).getSettings();
 
 		executionOptions = new ExecutionOptions() {
 			@Override
@@ -104,18 +104,13 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 			}
 
 			@Override
-			public Map getConfigurationValues() {
+			public Map<String,Object> getConfigurationValues() {
 				return configurationValues;
 			}
 
 			@Override
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerLoggedImpl.INSTANCE;
-			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return SchemaFilter.ALL;
 			}
 		};
 	}
@@ -143,7 +138,7 @@ public class IndividuallySchemaValidatorImplConnectionTest extends BaseUnitTestC
 
 		Map<String, Object> settings = new HashMap<>(  );
 
-		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( settings )
 				.build();
 

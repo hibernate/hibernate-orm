@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.collection.mutation;
 
@@ -26,7 +24,6 @@ import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED;
 
 /**
  * OneToMany insert coordinator if the element is a {@link org.hibernate.persister.entity.UnionSubclassEntityPersister}.
@@ -67,7 +64,8 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 			Object id,
 			EntryFilter entryChecker,
 			SharedSessionContractImplementor session) {
-		if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+		final boolean loggerDebugEnabled = MODEL_MUTATION_LOGGER.isDebugEnabled();
+		if ( loggerDebugEnabled ) {
 			MODEL_MUTATION_LOGGER.debugf(
 					"Inserting collection rows - %s : %s",
 					mutationTarget.getRolePath(),
@@ -81,11 +79,13 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 		final Iterator<?> entries = collection.entries( collectionDescriptor );
 		collection.preInsert( collectionDescriptor );
 		if ( !entries.hasNext() ) {
-			MODEL_MUTATION_LOGGER.debugf(
-					"No collection rows to insert - %s : %s",
-					mutationTarget.getRolePath(),
-					id
-			);
+			if ( loggerDebugEnabled ) {
+				MODEL_MUTATION_LOGGER.debugf(
+						"No collection rows to insert - %s : %s",
+						mutationTarget.getRolePath(),
+						id
+				);
+			}
 			return;
 		}
 		final MutationExecutor[] executors = new MutationExecutor[subclassEntries.length];
@@ -124,11 +124,13 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 				entryCount++;
 			}
 
-			MODEL_MUTATION_LOGGER.debugf(
-					"Done inserting `%s` collection rows : %s",
-					entryCount,
-					mutationTarget.getRolePath()
-			);
+			if ( loggerDebugEnabled ) {
+				MODEL_MUTATION_LOGGER.debugf(
+						"Done inserting `%s` collection rows : %s",
+						entryCount,
+						mutationTarget.getRolePath()
+				);
+			}
 
 		}
 		finally {

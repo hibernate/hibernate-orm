@@ -1,20 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.caching.internal;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.caching.QueryCachePutManager;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
+import org.hibernate.sql.results.jdbc.internal.CachedJdbcValuesMetadata;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
@@ -35,7 +32,7 @@ public class QueryCachePutManagerEnabledImpl implements QueryCachePutManager {
 			StatisticsImplementor statistics,
 			QueryKey queryKey,
 			String queryIdentifier,
-			JdbcValuesMetadata metadataForCache) {
+			CachedJdbcValuesMetadata metadataForCache) {
 		this.queryCache = queryCache;
 		this.statistics = statistics;
 		this.queryKey = queryKey;
@@ -46,26 +43,27 @@ public class QueryCachePutManagerEnabledImpl implements QueryCachePutManager {
 	}
 
 	@Override
-	public void registerJdbcRow(Object[] values) {
-
-		// todo (6.0) : verify whether we really need to copy these..
-		//		`RowProcessingStateStandardImpl` (see `#finishRowProcessing`) already creates new array
-		//		instances for each row
-//		dataToCache.add( values );
-		dataToCache.add( Arrays.copyOf( values, values.length ) );
+	public void registerJdbcRow(Object values) {
+		dataToCache.add( values );
 	}
 
 	@Override
 	public void finishUp(SharedSessionContractImplementor session) {
-		if ( queryKey != null ) {
-			final boolean put = queryCache.put(
-					queryKey,
-					dataToCache,
-					session
-			);
-			if ( put && statistics.isStatisticsEnabled() ) {
-				statistics.queryCachePut( queryIdentifier, queryCache.getRegion().getName() );
-			}
+		finishUp( dataToCache.size() - 1, session );
+	}
+
+	@Override
+	public void finishUp(int resultCount, SharedSessionContractImplementor session) {
+		if ( !dataToCache.isEmpty() ) {
+			dataToCache.add( resultCount );
+		}
+		final boolean put = queryCache.put(
+				queryKey,
+				dataToCache,
+				session
+		);
+		if ( put && statistics.isStatisticsEnabled() ) {
+			statistics.queryCachePut( queryIdentifier, queryCache.getRegion().getName() );
 		}
 	}
 }

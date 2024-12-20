@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
@@ -15,6 +14,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -44,7 +44,7 @@ public interface MetadataImplementor extends Metadata {
 	 */
 	SqmFunctionRegistry getFunctionRegistry();
 
-	NamedObjectRepository buildNamedQueryRepository(SessionFactoryImplementor sessionFactory);
+	NamedObjectRepository buildNamedQueryRepository();
 
 	@Incubating
 	void orderColumns(boolean forceOrdering);
@@ -58,4 +58,6 @@ public interface MetadataImplementor extends Metadata {
 	void visitRegisteredComponents(Consumer<Component> consumer);
 
 	Component getGenericComponent(Class<?> componentClass);
+
+	DiscriminatorType<?> resolveEmbeddableDiscriminatorType(Class<?> embeddableClass, Supplier<DiscriminatorType<?>> supplier);
 }

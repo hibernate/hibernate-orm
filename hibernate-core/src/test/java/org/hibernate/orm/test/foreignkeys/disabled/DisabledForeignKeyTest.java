@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.foreignkeys.disabled;
 
@@ -20,8 +18,9 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -33,10 +32,9 @@ import static org.junit.Assert.assertFalse;
 public class DisabledForeignKeyTest extends BaseUnitTestCase {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9704" )
+	@JiraKey( value = "HHH-9704" )
 	public void basicTests() {
-		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
-		StandardServiceRegistry standardRegistry = registryBuilder.build();
+		StandardServiceRegistry standardRegistry = ServiceRegistryUtil.serviceRegistry();
 		try {
 			final MetadataSources sources = new MetadataSources( standardRegistry );
 
@@ -74,10 +72,9 @@ public class DisabledForeignKeyTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9704" )
+	@JiraKey( value = "HHH-9704" )
 	public void expandedTests() {
-		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
-		StandardServiceRegistry standardRegistry = registryBuilder.build();
+		StandardServiceRegistry standardRegistry = ServiceRegistryUtil.serviceRegistry();
 		try {
 			final MetadataSources sources = new MetadataSources( standardRegistry );
 

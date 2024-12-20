@@ -1,28 +1,32 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.dialect.OracleArrayJdbcType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.FetchClauseType;
-import org.hibernate.query.sqm.FrameExclusion;
-import org.hibernate.query.sqm.FrameKind;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.common.FrameExclusion;
+import org.hibernate.query.common.FrameKind;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -34,12 +38,15 @@ import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
@@ -50,9 +57,11 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * A SQL AST translator for Oracle.
@@ -63,6 +72,54 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 	public OracleLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
+		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
+			// Render plain insert statement and possibly run into unique constraint violation
+			super.visitInsertStatementOnly( statement );
+		}
+		else {
+			visitInsertStatementEmulateMerge( statement );
+		}
+	}
+
+	@Override
+	protected void visitUpdateStatementOnly(UpdateStatement statement) {
+		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
+			visitUpdateStatementEmulateInlineView( statement );
+		}
+		else {
+			renderUpdateClause( statement );
+			renderSetClause( statement.getAssignments() );
+			visitWhereClause( statement.getRestriction() );
+			visitReturningColumns( statement.getReturningColumns() );
+		}
+	}
+
+	@Override
+	protected void renderMergeUpdateClause(List<Assignment> assignments, Predicate wherePredicate) {
+		appendSql( " then update" );
+		renderSetClause( assignments );
+		visitWhereClause( wherePredicate );
+	}
+
+	@Override
+	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
+		super.renderDmlTargetTableExpression( tableReference );
+		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	protected void visitConflictClause(ConflictClause conflictClause) {
+		if ( conflictClause != null ) {
+			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
+			}
+		}
 	}
 
 	@Override
@@ -225,7 +282,14 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 	@Override
 	protected void visitValuesList(List<Values> valuesList) {
-		visitValuesListEmulateSelectUnion( valuesList );
+		if ( valuesList.size() < 2 ) {
+			visitValuesListStandard( valuesList );
+		}
+		else {
+			// Oracle doesn't support a multi-values insert
+			// So we render a select union emulation instead
+			visitValuesListEmulateSelectUnion( valuesList );
+		}
 	}
 
 	@Override
@@ -240,9 +304,42 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 	@Override
 	public void visitFunctionTableReference(FunctionTableReference tableReference) {
-		append( "table(" );
 		tableReference.getFunctionExpression().accept( this );
-		append( CLOSE_PARENTHESIS );
+		if ( !tableReference.rendersIdentifierVariable() ) {
+			renderDerivedTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	public void renderNamedSetReturningFunction(String functionName, List<? extends SqlAstNode> sqlAstArguments, AnonymousTupleTableGroupProducer tupleType, String tableIdentifierVariable, SqlAstNodeRenderingMode argumentRenderingMode) {
+		final ModelPart ordinalitySubPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null );
+		if ( ordinalitySubPart != null ) {
+			appendSql( "lateral (select t.*, rownum " );
+			appendSql( ordinalitySubPart.asBasicValuedModelPart().getSelectionExpression() );
+			appendSql( " from table(" );
+			renderSimpleNamedFunction( functionName, sqlAstArguments, argumentRenderingMode );
+			append( ") t)" );
+		}
+		else {
+			appendSql( "table(" );
+			super.renderNamedSetReturningFunction( functionName, sqlAstArguments, tupleType, tableIdentifierVariable, argumentRenderingMode );
+			append( ')' );
+		}
+	}
+
+	@Override
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
+		if ( tableReference instanceof FunctionTableReference && tableReference.isLateral() ) {
+			// No need for a lateral keyword for functions
+			tableReference.accept( this );
+		}
+		else {
+			super.renderDerivedTableReference( tableReference );
+		}
+	}
+
+	@Override
+	protected void renderDerivedTableReferenceIdentificationVariable(DerivedTableReference tableReference) {
 		renderTableReferenceIdentificationVariable( tableReference );
 	}
 
@@ -454,7 +551,8 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 			renderComparisonEmulateDecode( lhs, operator, rhs );
 			return;
 		}
-		switch ( lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() ) {
+		final JdbcType jdbcType = lhsExpressionType.getSingleJdbcMapping().getJdbcType();
+		switch ( jdbcType.getDdlTypeCode() ) {
 			case SqlTypes.SQLXML:
 				// In Oracle, XMLTYPE is not "comparable", so we have to use the xmldiff function for this purpose
 				switch ( operator ) {
@@ -499,44 +597,57 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				appendSql( ')' );
 				break;
 			case SqlTypes.ARRAY:
+				final String arrayTypeName = ( (OracleArrayJdbcType) jdbcType ).getSqlTypeName();
 				switch ( operator ) {
 					case DISTINCT_FROM:
-						appendSql( "decode(" );
-						arrayToString( lhs );
-						appendSql( ',' );
-						arrayToString( rhs );
-						appendSql( ",0,1)=1" );
-						break;
 					case NOT_DISTINCT_FROM:
-						appendSql( "decode(" );
-						arrayToString( lhs );
+						appendSql( arrayTypeName );
+						appendSql( "_distinct(" );
+						visitSqlSelectExpression( lhs );
 						appendSql( ',' );
-						arrayToString( rhs );
-						appendSql( ",0,1)=0" );
+						visitSqlSelectExpression( rhs );
+						appendSql( ")" );
 						break;
 					default:
-						arrayToString( lhs );
-						appendSql( operator.sqlText() );
-						arrayToString( rhs );
+						appendSql( arrayTypeName );
+						appendSql( "_cmp(" );
+						visitSqlSelectExpression( lhs );
+						appendSql( ',' );
+						visitSqlSelectExpression( rhs );
+						appendSql( ")" );
+						break;
+				}
+				switch ( operator ) {
+					case DISTINCT_FROM:
+						appendSql( "=1" );
+						break;
+					case NOT_DISTINCT_FROM:
+						appendSql( "=0" );
+						break;
+					case EQUAL:
+						appendSql( "=0" );
+						break;
+					case NOT_EQUAL:
+						appendSql( "<>0" );
+						break;
+					case LESS_THAN:
+						appendSql( "=-1" );
+						break;
+					case GREATER_THAN:
+						appendSql( "=1" );
+						break;
+					case LESS_THAN_OR_EQUAL:
+						appendSql( "<=0" );
+						break;
+					case GREATER_THAN_OR_EQUAL:
+						appendSql( ">=0" );
+						break;
 				}
 				break;
 			default:
 				renderComparisonEmulateDecode( lhs, operator, rhs );
 				break;
 		}
-	}
-
-	private void arrayToString(Expression expression) {
-		appendSql("case when ");
-		expression.accept( this );
-		appendSql(" is not null then (select listagg(column_value||',')");
-		if ( !getDialect().getVersion().isSameOrAfter( 18 ) ) {
-			// The within group clause became optional in 18
-			appendSql(" within group(order by rownum)");
-		}
-		appendSql("||';' from table(");
-		expression.accept( this );
-		appendSql(")) else null end");
 	}
 
 	@Override
@@ -598,16 +709,6 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInSubQuery() {
 		return getDialect().getVersion().isSameOrAfter( 9 );
-	}
-
-	@Override
-	protected String getFromDual() {
-		return " from dual";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return getFromDual();
 	}
 
 	private boolean supportsOffsetFetchClause() {

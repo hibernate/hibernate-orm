@@ -1,17 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.typeoverride;
 
 import java.sql.Types;
 
 import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
@@ -22,11 +20,11 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 
 /**
@@ -71,9 +69,9 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}
-		else if ( AbstractHANADialect.class.isInstance( dialect ) ) {
-			assertSame(
-					( (AbstractHANADialect) dialect ).getBlobTypeDescriptor(),
+		else if ( HANADialect.class.isInstance( dialect ) ) {
+			Assertions.assertInstanceOf(
+					HANADialect.HANABlobType.class,
 					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}
@@ -98,7 +96,7 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 		Entity e = new Entity( "name" );
 		inTransaction(
 				session ->
-						session.save( e )
+						session.persist( e )
 		);
 
 		inTransaction(
@@ -106,7 +104,7 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 					Entity entity = session.get( Entity.class, e.getId() );
 					assertFalse( entity.getName().startsWith( StoredPrefixedStringType.PREFIX ) );
 					assertEquals( "name", entity.getName() );
-					session.delete( entity );
+					session.remove( entity );
 				}
 		);
 	}
@@ -117,7 +115,7 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 		Entity e = new Entity( "name " );
 		inTransaction(
 				session ->
-						session.save( e )
+						session.persist( e )
 		);
 
 		inTransaction(
@@ -130,12 +128,7 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 
 		inTransaction(
 				session ->
-						session.delete( e )
+						session.remove( e )
 		);
 	}
 }
-
-
-
-
-

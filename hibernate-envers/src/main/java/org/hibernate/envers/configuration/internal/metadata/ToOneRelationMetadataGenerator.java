@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
@@ -85,7 +83,7 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 
 		// Adding an element to the mapping corresponding to the references entity id's
 		idMapping.getRelation()
-				.getAttributesPrefixed( lastPropertyPrefix, value.getColumnIterator(), false, insertable )
+				.getAttributesPrefixed( lastPropertyPrefix, value.getSelectables().iterator(), false, insertable )
 				.forEach( mapping::addAttribute );
 
 		boolean lazy = ( (ToOne) value ).isLazy();

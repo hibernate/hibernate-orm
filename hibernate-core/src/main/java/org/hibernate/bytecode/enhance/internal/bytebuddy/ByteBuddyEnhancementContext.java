@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -16,11 +15,14 @@ import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedF
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 
 import jakarta.persistence.Embedded;
+import jakarta.persistence.metamodel.Type;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.pool.TypePool;
+import org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy;
 
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 
@@ -31,13 +33,10 @@ class ByteBuddyEnhancementContext {
 	private final EnhancementContext enhancementContext;
 
 	private final ConcurrentHashMap<TypeDescription, Map<String, MethodDescription>> getterByTypeMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Object> locksMap = new ConcurrentHashMap<>();
 
-	ByteBuddyEnhancementContext(EnhancementContext enhancementContext) {
-		this.enhancementContext = enhancementContext;
-	}
-
-	public ClassLoader getLoadingClassLoader() {
-		return enhancementContext.getLoadingClassLoader();
+	ByteBuddyEnhancementContext(final EnhancementContext enhancementContext) {
+		this.enhancementContext = Objects.requireNonNull( enhancementContext );
 	}
 
 	public boolean isEntityClass(TypeDescription classDescriptor) {
@@ -88,16 +87,84 @@ class ByteBuddyEnhancementContext {
 		return enhancementContext.doBiDirectionalAssociationManagement( field );
 	}
 
+	public boolean isDiscoveredType(TypeDescription typeDescription) {
+		return enhancementContext.isDiscoveredType( new UnloadedTypeDescription( typeDescription ) );
+	}
+
+	public void registerDiscoveredType(TypeDescription typeDescription, Type.PersistenceType type) {
+		enhancementContext.registerDiscoveredType( new UnloadedTypeDescription( typeDescription ), type );
+	}
+
+	public UnsupportedEnhancementStrategy getUnsupportedEnhancementStrategy() {
+		return enhancementContext.getUnsupportedEnhancementStrategy();
+	}
+
+	public void discoverCompositeTypes(TypeDescription managedCtClass, TypePool typePool) {
+		if ( isDiscoveredType( managedCtClass ) ) {
+			return;
+		}
+		final Type.PersistenceType determinedPersistenceType;
+		if ( isEntityClass( managedCtClass ) ) {
+			determinedPersistenceType = Type.PersistenceType.ENTITY;
+		}
+		else if ( isCompositeClass( managedCtClass ) ) {
+			determinedPersistenceType = Type.PersistenceType.EMBEDDABLE;
+		}
+		else if ( isMappedSuperclassClass( managedCtClass ) ) {
+			determinedPersistenceType = Type.PersistenceType.MAPPED_SUPERCLASS;
+		}
+		else {
+			// Default to assuming a basic type if this is not a managed type
+			determinedPersistenceType = Type.PersistenceType.BASIC;
+		}
+		registerDiscoveredType( managedCtClass, determinedPersistenceType );
+		if ( determinedPersistenceType != Type.PersistenceType.BASIC ) {
+			final EnhancerImpl.AnnotatedFieldDescription[] enhancedFields = PersistentAttributeTransformer.collectPersistentFields(
+							managedCtClass,
+							this,
+							typePool
+					)
+					.getEnhancedFields();
+			for ( EnhancerImpl.AnnotatedFieldDescription enhancedField : enhancedFields ) {
+				final TypeDescription type = enhancedField.getType().asErasure();
+				if ( !type.isInterface() && enhancedField.hasAnnotation( Embedded.class ) ) {
+					registerDiscoveredType( type, Type.PersistenceType.EMBEDDABLE );
+				}
+				discoverCompositeTypes( type, typePool );
+			}
+		}
+	}
+
 	Optional<MethodDescription> resolveGetter(FieldDescription fieldDescription) {
-		Map<String, MethodDescription> getters = getterByTypeMap
-				.computeIfAbsent( fieldDescription.getDeclaringType().asErasure(), declaringType -> {
-					return MethodGraph.Compiler.DEFAULT.compile( declaringType )
+		//There is a non-straightforward cache here, but we really need this to be able to
+		//efficiently handle enhancement of large models.
+
+		final TypeDescription erasure = fieldDescription.getDeclaringType().asErasure();
+
+		//Always try to get with a simple "get" before doing a "computeIfAbsent" operation,
+		//otherwise large models might exhibit significant contention on the map.
+		Map<String, MethodDescription> getters = getterByTypeMap.get( erasure );
+
+		if ( getters == null ) {
+			//poor man lock striping: as CHM#computeIfAbsent has too coarse lock granularity
+			//and has been shown to trigger significant, unnecessary contention.
+			final String lockKey = erasure.toString();
+			final Object candidateLock = new Object();
+			final Object existingLock = locksMap.putIfAbsent( lockKey, candidateLock );
+			final Object lock = existingLock == null ? candidateLock : existingLock;
+			synchronized ( lock ) {
+				getters = getterByTypeMap.get( erasure );
+				if ( getters == null ) {
+					getters = MethodGraph.Compiler.DEFAULT.compile( erasure )
 							.listNodes()
 							.asMethodList()
 							.filter( IS_GETTER )
 							.stream()
 							.collect( Collectors.toMap( MethodDescription::getActualName, Function.identity() ) );
-				} );
+					getterByTypeMap.put( erasure, getters );
+				}
+			}
+		}
 
 		String capitalizedFieldName = Character.toUpperCase( fieldDescription.getName().charAt( 0 ) )
 				+ fieldDescription.getName().substring( 1 );

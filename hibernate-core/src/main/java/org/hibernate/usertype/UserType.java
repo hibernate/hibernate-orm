@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.usertype;
 
@@ -10,12 +8,14 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
 
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -64,16 +64,14 @@ import org.hibernate.type.spi.TypeConfiguration;
  *     }
  *
  *     &#64;Override
- *     public Period nullSafeGet(ResultSet rs, int position,
- *                               SharedSessionContractImplementor session, Object owner)
+ *     public Period nullSafeGet(ResultSet rs, int position, WrapperOptions options)
  *                 throws SQLException {
- *         String string = rs.getString( position );
+ *         String string = rs.getString(position);
  *         return rs.wasNull() ? null : Period.parse(string);
  *     }
  *
  *     &#64;Override
- *     public void nullSafeSet(PreparedStatement st, Period value, int index,
- *                             SharedSessionContractImplementor session)
+ *     public void nullSafeSet(PreparedStatement st, Period value, int index, WrapperOptions options)
  *                 throws SQLException {
  *         if ( value == null ) {
  *             st.setNull(index, VARCHAR);
@@ -170,16 +168,14 @@ import org.hibernate.type.spi.TypeConfiguration;
  *     }
  *
  *     &#64;Override
- *     public BitSet nullSafeGet(ResultSet rs, int position,
- *                               SharedSessionContractImplementor session, Object owner)
+ *     public BitSet nullSafeGet(ResultSet rs, int position, WrapperOptions options)
  *                 throws SQLException {
  *         String string = rs.getString(position);
  *         return rs.wasNull()? null : parseBitSet(columnValue);
  *     }
  *
  *     &#64;Override
- *     public void nullSafeSet(PreparedStatement st, BitSet bitSet, int index,
- *                             SharedSessionContractImplementor session)
+ *     public void nullSafeSet(PreparedStatement st, BitSet bitSet, int index, WrapperOptions options)
  *                 throws SQLException {
  *         if (bitSet == null) {
  *             st.setNull(index, VARCHAR);
@@ -271,35 +267,95 @@ public interface UserType<J> {
 	 * Compare two instances of the Java class mapped by this custom
 	 * type for persistence "equality", that is, equality of their
 	 * persistent state.
+	 *
+	 * @implNote The default implementation calls {@link Objects#equals}.
 	 */
-	boolean equals(J x, J y);
+	default boolean equals(J x, J y) {
+		return Objects.equals( x, y );
+	}
 
 	/**
 	 * Get a hash code for the given instance of the Java class mapped
 	 * by this custom type, consistent with the definition of
 	 * {@linkplain #equals(Object, Object) persistence "equality"} for
 	 * this custom type.
+	 *
+	 * @implNote The default implementation calls {@link Objects#hashCode}.
 	 */
-	int hashCode(J x);
+	default int hashCode(J x) {
+		return Objects.hashCode( x );
+	}
 
 	/**
 	 * Read an instance of the Java class mapped by this custom type
 	 * from the given JDBC {@link ResultSet}. Implementors must handle
 	 * null column values.
 	 *
-	 * @param owner in Hibernate 6, this is always null
+	 * @param owner since Hibernate 6, this is always null
+	 *
+	 * @deprecated Implement {@link #nullSafeGet(ResultSet, int, WrapperOptions)}
 	 */
-	J nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, @Deprecated Object owner)
-			throws SQLException;
+	@Deprecated(since = "7", forRemoval = true)
+	default J nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, @Deprecated Object owner)
+			throws SQLException {
+		return nullSafeGet( rs, position, session );
+	}
+
+	/**
+	 * Read an instance of the Java class mapped by this custom type
+	 * from the given JDBC {@link ResultSet}. Implementors must handle
+	 * null column values.
+	 *
+	 * @implNote The default implementation calls
+	 *           {@link ResultSet#getObject(int, Class)} with the
+	 *           given {@code position} and with the
+	 *           {@linkplain #returnedClass returned class}.
+	 */
+	default J nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+			throws SQLException {
+		J result = rs.getObject( position, returnedClass() );
+		return rs.wasNull() ? null : result;
+	}
 
 	/**
 	 * Write an instance of the Java class mapped by this custom type
 	 * to the given JDBC {@link PreparedStatement}. Implementors must
 	 * handle null values of the Java class. A multi-column type should
 	 * be written to parameters starting from {@code index}.
+	 *
+	 * @implNote The default implementation calls
+	 *           {@link PreparedStatement#setObject(int, Object, int)}
+	 *           with the given {@code position} and {@code value} and
+	 *           with the {@linkplain #getSqlType SQL type}.
+	 *
+	 * @deprecated Implement {@link #nullSafeSet(PreparedStatement, Object, int, WrapperOptions)}
 	 */
-	void nullSafeSet(PreparedStatement st, J value, int index, SharedSessionContractImplementor session)
-			throws SQLException;
+	@Deprecated(since = "7", forRemoval = true)
+	default void nullSafeSet(PreparedStatement st, J value, int position, SharedSessionContractImplementor session)
+			throws SQLException {
+		nullSafeSet( st, value, position, (WrapperOptions) session );
+	}
+
+	/**
+	 * Write an instance of the Java class mapped by this custom type
+	 * to the given JDBC {@link PreparedStatement}. Implementors must
+	 * handle null values of the Java class. A multi-column type should
+	 * be written to parameters starting from {@code index}.
+	 *
+	 * @implNote The default implementation calls
+	 *           {@link PreparedStatement#setObject(int, Object, int)}
+	 *           with the given {@code position} and {@code value} and
+	 *           with the {@linkplain #getSqlType SQL type}.
+	 */
+	default void nullSafeSet(PreparedStatement st, J value, int position, WrapperOptions options)
+			throws SQLException {
+		if ( value == null ) {
+			st.setNull( position, getSqlType() );
+		}
+		else {
+			st.setObject( position, value, getSqlType() );
+		}
+	}
 
 	/**
 	 * Return a clone of the given instance of the Java class mapped
@@ -317,7 +373,8 @@ public interface UserType<J> {
 	 * </ul>
 	 *
 	 * @param value the object to be cloned, which may be null
-	 * @return a clone
+	 * @return a clone if the argument is mutable, or the argument if
+	 *         it's an immutable object
 	 */
 	J deepCopy(J value);
 
@@ -344,12 +401,25 @@ public interface UserType<J> {
 	 * This is an optional operation, but, if left unimplemented,
 	 * this type will not be cacheable in the second-level cache.
 	 *
+	 * @implNote The default implementation calls {@link #deepCopy}
+	 *           and then casts the result to {@link Serializable}.
+	 *
 	 * @param value the object to be cached
 	 * @return a cacheable representation of the object
+	 * @throws UnsupportedOperationException if this type cannot
+	 *         be cached in the second-level cache.
 	 *
 	 * @see org.hibernate.Cache
 	 */
-	Serializable disassemble(J value);
+	default Serializable disassemble(J value) {
+		if ( Serializable.class.isAssignableFrom( returnedClass() ) ) {
+			return (Serializable) deepCopy( value );
+		}
+		else {
+			throw new UnsupportedOperationException( "User-defined type '"
+					+ getClass().getName() + "' does not override 'disassemble()'" );
+		}
+	}
 
 	/**
 	 * Reconstruct a value from its destructured representation,
@@ -364,13 +434,25 @@ public interface UserType<J> {
 	 * This is an optional operation, but, if left unimplemented,
 	 * this type will not be cacheable in the second-level cache.
 	 *
+	 * @implNote The default implementation calls {@link #deepCopy}.
+	 *
 	 * @param cached the object to be cached
 	 * @param owner the owner of the cached object
 	 * @return a reconstructed object from the cacheable representation
+	 * @throws UnsupportedOperationException if this type cannot
+	 *         be cached in the second-level cache.
 	 *
 	 * @see org.hibernate.Cache
 	 */
-	J assemble(Serializable cached, Object owner);
+	default J assemble(Serializable cached, Object owner) {
+		if ( returnedClass().isInstance( cached) ) {
+			return deepCopy( (J) cached );
+		}
+		else {
+			throw new UnsupportedOperationException( "User-defined type '"
+					+ getClass().getName() + "' does not override 'assemble()'" );
+		}
+	}
 
 	/**
 	 * During merge, replace the existing (target) value in the

@@ -1,13 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.naming.quotation;
 
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.Collection;
 import jakarta.persistence.EntityManager;
 
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
@@ -101,9 +99,8 @@ public class QuotedFieldsTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	private Column getColumnByName(Table table, String columnName) {
-		Iterator<Column> columnIterator = table.getColumnIterator();
-		while ( columnIterator.hasNext() ) {
-			Column column = columnIterator.next();
+		Collection<Column> columns = table.getColumns();
+		for ( Column column : columns ) {
 			if ( columnName.equals( column.getName() ) ) {
 				return column;
 			}

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.idclass;
 
 import java.io.Serializable;
@@ -61,7 +65,7 @@ public class IdClassWithSuperclassTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "MyEntity")
 	@IdClass(ChildPrimaryKey.class)
 	public static class MyEntity {
 

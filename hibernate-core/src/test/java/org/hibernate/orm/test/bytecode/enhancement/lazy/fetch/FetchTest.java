@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.fetch;
 
@@ -89,6 +87,33 @@ public class FetchTest extends BaseNonConfigCoreFunctionalTestCase {
 					long count = stats.getPrepareStatementCount();
 					session.fetch( school.students);
 					assertTrue( Hibernate.isInitialized( school.students) );
+					assertEquals( 1, school.students.size() );
+
+					assertEquals( count+1, stats.getPrepareStatementCount() );
+				}
+		);
+	}
+
+	@Test
+	public void testFetchEmpty() {
+		inStatelessTransaction(
+				session -> {
+					Secondary secondary = new Secondary( "BHS" );
+					session.insert(secondary);
+				}
+		);
+
+		inStatelessSession(
+				session -> {
+					final Statistics stats = sessionFactory().getStatistics();
+					stats.clear();
+					final School school = session.get( School.class, "BHS" );
+					assertFalse( Hibernate.isInitialized( school.students) );
+					assertTrue( school.students instanceof PersistentSet );
+					long count = stats.getPrepareStatementCount();
+					session.fetch( school.students);
+					assertTrue( Hibernate.isInitialized( school.students) );
+					assertTrue( school.students.isEmpty() );
 
 					assertEquals( count+1, stats.getPrepareStatementCount() );
 				}

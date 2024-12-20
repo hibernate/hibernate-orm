@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy.pojo.bytebuddy;
 
@@ -17,6 +15,8 @@ import org.hibernate.proxy.AbstractSerializableProxy;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.CompositeType;
 
+import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDefaultBytecodeProvider;
+
 public final class SerializableProxy extends AbstractSerializableProxy {
 	private final Class<?> persistentClass;
 	private final Class<?>[] interfaces;
@@ -30,6 +30,8 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 
 	private final CompositeType componentIdType;
 
+	private static volatile BytecodeProviderImpl fallbackBytecodeProvider;
+
 	public SerializableProxy(
 			String entityName,
 			Class<?> persistentClass,
@@ -37,11 +39,12 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 			Object id,
 			Boolean readOnly,
 			String sessionFactoryUuid,
+			String sessionFactoryName,
 			boolean allowLoadOutsideTransaction,
 			Method getIdentifierMethod,
 			Method setIdentifierMethod,
 			CompositeType componentIdType) {
-		super( entityName, id, readOnly, sessionFactoryUuid, allowLoadOutsideTransaction );
+		super( entityName, id, readOnly, sessionFactoryUuid, sessionFactoryName, allowLoadOutsideTransaction );
 		this.persistentClass = persistentClass;
 		this.interfaces = interfaces;
 		if ( getIdentifierMethod != null ) {
@@ -110,26 +113,36 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 	}
 
 	private Object readResolve() {
-		final SessionFactoryImplementor sessionFactory = retrieveMatchingSessionFactory( this.sessionFactoryUuid );
+		final SessionFactoryImplementor sessionFactory = retrieveMatchingSessionFactory( this.sessionFactoryUuid, this.sessionFactoryName );
 		BytecodeProviderImpl byteBuddyBytecodeProvider = retrieveByteBuddyBytecodeProvider( sessionFactory );
 		HibernateProxy proxy = byteBuddyBytecodeProvider.getByteBuddyProxyHelper().deserializeProxy( this );
 		afterDeserialization( (ByteBuddyInterceptor) proxy.getHibernateLazyInitializer() );
 		return proxy;
 	}
 
-	private static SessionFactoryImplementor retrieveMatchingSessionFactory(final String sessionFactoryUuid) {
+	private static SessionFactoryImplementor retrieveMatchingSessionFactory(final String sessionFactoryUuid, final String sessionFactoryName) {
 		Objects.requireNonNull( sessionFactoryUuid );
-		final SessionFactoryImplementor sessionFactory = SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
-		if ( sessionFactory != null ) {
-			return sessionFactory;
-		}
-		else {
-			throw new IllegalStateException( "Could not identify any active SessionFactory having UUID " + sessionFactoryUuid );
-		}
+		return SessionFactoryRegistry.INSTANCE.findSessionFactory( sessionFactoryUuid, sessionFactoryName );
 	}
 
 	private static BytecodeProviderImpl retrieveByteBuddyBytecodeProvider(final SessionFactoryImplementor sessionFactory) {
-		final BytecodeProvider bytecodeProvider = sessionFactory.getServiceRegistry().getService( BytecodeProvider.class );
+		if ( sessionFactory == null ) {
+			// When the session factory is not available fallback to local bytecode provider
+			return getFallbackBytecodeProvider();
+		}
+
+		return castBytecodeProvider( sessionFactory.getServiceRegistry().getService( BytecodeProvider.class ) );
+	}
+
+	private static BytecodeProviderImpl getFallbackBytecodeProvider() {
+		BytecodeProviderImpl provider = fallbackBytecodeProvider;
+		if ( provider == null ) {
+			provider = fallbackBytecodeProvider = castBytecodeProvider( buildDefaultBytecodeProvider() );
+		}
+		return provider;
+	}
+
+	private static BytecodeProviderImpl castBytecodeProvider(BytecodeProvider bytecodeProvider) {
 		if ( bytecodeProvider instanceof BytecodeProviderImpl ) {
 			return (BytecodeProviderImpl) bytecodeProvider;
 		}
@@ -137,5 +150,4 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 			throw new IllegalStateException( "Unable to deserialize a SerializableProxy proxy: the bytecode provider is not ByteBuddy." );
 		}
 	}
-
 }

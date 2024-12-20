@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.cid;
 
@@ -18,8 +16,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PersistenceException;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.SQLServer2012Dialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -34,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * getters and setters have been omitted for clarity of the code. A separate test has been made for
  * {@link GenerationType#SEQUENCE}, {@link GenerationType#TABLE}, and
  * {@link GenerationType#AUTO} since there are known complications with some {@link Dialect}s (e.g.
- * {@link SQLServer2012Dialect}) and the {@link GenerationType#IDENTITY}
+ * {@link SQLServerDialect}) and the {@link GenerationType#IDENTITY}
  *
  * @author Jason Pyeron <support@pdinc.us>
  * @see <a href='https://hibernate.atlassian.net/browse/HHH-10956'>HHH-10956</a> Persisting partially-generated
@@ -43,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * {@link GenerationType#IDENTITY}
  * @see <a href='https://hibernate.atlassian.net/browse/HHH-4848'>HHH-4848</a> introduced the regression
  */
-@TestForIssue(jiraKey = "HHH-10956")
+@JiraKey(value = "HHH-10956")
 @DomainModel(
 		annotatedClasses = {
 				CompositeIdFkGeneratedValueTest.Head.class,

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
@@ -120,7 +118,8 @@ public interface JdbcType extends Serializable {
 	 */
 	// todo (6.0) : move to {@link org.hibernate.metamodel.mapping.JdbcMapping}?
 	default <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
-		return (appender, value, dialect, wrapperOptions) -> appender.appendSql( value.toString() );
+		return (appender, value, dialect, wrapperOptions) ->
+				appender.appendSql( value.toString() );
 	}
 
 	/**
@@ -248,6 +247,24 @@ public interface JdbcType extends Serializable {
 		return false;
 	}
 
+	default boolean isLobOrLong() {
+		return isLobOrLong( getDdlTypeCode() );
+	}
+
+	static boolean isLobOrLong(int jdbcTypeCode) {
+		switch ( jdbcTypeCode ) {
+			case BLOB:
+			case CLOB:
+			case NCLOB:
+			case LONG32VARBINARY:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR: {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	default boolean isNationalized() {
 		return isNationalized( getDdlTypeCode() );
 	}
@@ -267,6 +284,27 @@ public interface JdbcType extends Serializable {
 
 	default boolean isInterval() {
 		return isIntervalType( getDdlTypeCode() );
+	}
+
+	default boolean isDuration() {
+		final int ddlTypeCode = getDefaultSqlTypeCode();
+		return isDurationType( ddlTypeCode )
+			|| isIntervalType( ddlTypeCode );
+	}
+
+	default boolean isArray() {
+		return isArray( getDdlTypeCode() );
+	}
+
+	static boolean isArray(int jdbcTypeCode) {
+		switch ( jdbcTypeCode ) {
+			case ARRAY:
+			case STRUCT_ARRAY:
+			case JSON_ARRAY:
+			case XML_ARRAY:
+				return true;
+		}
+		return false;
 	}
 
 	default CastType getCastType() {
@@ -310,6 +348,12 @@ public interface JdbcType extends Serializable {
 				return CastType.TIMESTAMP;
 			case TIMESTAMP_WITH_TIMEZONE:
 				return CastType.OFFSET_TIMESTAMP;
+			case JSON:
+			case JSON_ARRAY:
+				return CastType.JSON;
+			case SQLXML:
+			case XML_ARRAY:
+				return CastType.XML;
 			case NULL:
 				return CastType.NULL;
 			default:
@@ -333,16 +377,88 @@ public interface JdbcType extends Serializable {
 		callableStatement.registerOutParameter( index, getJdbcTypeCode() );
 	}
 
+	/**
+	 * Add auxiliary database objects for this {@linkplain JdbcType} to the {@link Database} object.
+	 *
+	 * @since 6.5
+	 */
 	@Incubating
 	default void addAuxiliaryDatabaseObjects(
 			JavaType<?> javaType,
+			BasicValueConverter<?, ?> valueConverter,
 			Size columnSize,
 			Database database,
-			TypeConfiguration typeConfiguration) {
+			JdbcTypeIndicators context) {
 	}
 
 	@Incubating
 	default String getExtraCreateTableInfo(JavaType<?> javaType, String columnName, String tableName, Database database) {
 		return "";
+	}
+
+	@Incubating
+	default boolean isComparable() {
+		final int code = getDefaultSqlTypeCode();
+		return isCharacterType( code )
+			|| isTemporalType( code )
+			|| isNumericType( code )
+			|| isEnumType( code )
+			// both Java and the SQL database consider
+			// that false < true is a sensible thing
+			|| isBoolean()
+			// both Java and the database consider UUIDs
+			// comparable, so go ahead and accept them
+			|| code == UUID;
+	}
+
+	@Incubating
+	default boolean hasDatePart() {
+		return SqlTypes.hasDatePart( getDefaultSqlTypeCode() );
+	}
+
+	@Incubating
+	default boolean hasTimePart() {
+		return SqlTypes.hasTimePart( getDefaultSqlTypeCode() );
+	}
+
+	@Incubating
+	default boolean isStringLikeExcludingClob() {
+		final int code = getDefaultSqlTypeCode();
+		return isCharacterType( code ) || isEnumType( code );
+	}
+
+	@Incubating
+	default boolean isSpatial() {
+		return isSpatialType( getDefaultSqlTypeCode() );
+	}
+
+	@Incubating
+	default boolean isJson() {
+		return isJsonType( getDefaultSqlTypeCode() );
+	}
+
+	@Incubating
+	default boolean isImplicitJson() {
+		return isImplicitJsonType( getDefaultSqlTypeCode() );
+	}
+
+	@Incubating
+	default boolean isXml() {
+		return isXmlType( getDefaultSqlTypeCode() );
+	}
+
+	@Incubating
+	default boolean isImplicitXml() {
+		return isImplicitXmlType( getDefaultSqlTypeCode() );
+	}
+
+	@Incubating
+	default boolean isBoolean() {
+		return getDefaultSqlTypeCode() == BOOLEAN;
+	}
+
+	@Incubating
+	default boolean isSmallInteger() {
+		return isSmallOrTinyInt( getDefaultSqlTypeCode() );
 	}
 }

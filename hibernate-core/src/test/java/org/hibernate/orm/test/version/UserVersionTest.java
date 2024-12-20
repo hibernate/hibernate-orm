@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.version;
 
 import java.io.Serializable;
@@ -10,9 +14,10 @@ import java.util.Objects;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserVersionType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +29,7 @@ import org.hamcrest.CoreMatchers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
-@TestForIssue( jiraKey = "HHH-15240")
+@JiraKey( value = "HHH-15240")
 public class UserVersionTest extends BaseSessionFactoryFunctionalTest {
 
 	private static long versionValue;
@@ -143,8 +148,7 @@ public class UserVersionTest extends BaseSessionFactoryFunctionalTest {
 		public CustomVersion nullSafeGet(
 				ResultSet resultSet,
 				int position,
-				SharedSessionContractImplementor session,
-				Object owner) throws HibernateException, SQLException {
+				WrapperOptions options) throws SQLException {
 			return new CustomVersion( resultSet.getLong( position ) );
 		}
 
@@ -153,7 +157,7 @@ public class UserVersionTest extends BaseSessionFactoryFunctionalTest {
 				PreparedStatement statement,
 				CustomVersion value,
 				int index,
-				SharedSessionContractImplementor session) throws HibernateException, SQLException {
+				WrapperOptions options) throws SQLException {
 			statement.setLong( index, value.getRev() );
 		}
 

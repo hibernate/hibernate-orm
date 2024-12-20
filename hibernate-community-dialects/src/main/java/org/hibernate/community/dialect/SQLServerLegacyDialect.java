@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -16,8 +14,13 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.SQLServerCastingXmlArrayJdbcTypeConstructor;
+import org.hibernate.dialect.SQLServerCastingXmlJdbcType;
 import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.SQLServerAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.SQLServerFormatEmulation;
@@ -35,20 +38,28 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Table;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -59,16 +70,17 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
-import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -85,7 +97,8 @@ import java.util.TimeZone;
 
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.query.common.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
@@ -107,6 +120,43 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 
 	private final StandardSequenceExporter exporter;
 	private final UniqueDelegate uniqueDelegate;
+
+	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
+		@Override
+		public Size resolveSize(
+				JdbcType jdbcType,
+				JavaType<?> javaType,
+				Integer precision,
+				Integer scale,
+				Long length) {
+			switch ( jdbcType.getDdlTypeCode() ) {
+				case BLOB:
+				case CLOB:
+				case NCLOB:
+					return super.resolveSize(
+							jdbcType,
+							javaType,
+							precision,
+							scale,
+							length == null ? getDefaultLobLength() : length
+					);
+				default:
+					return super.resolveSize( jdbcType, javaType, precision, scale, length );
+			}
+		}
+	};
+	private final StandardTableExporter sqlServerTableExporter = new StandardTableExporter( this ) {
+		@Override
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+			if ( jdbcType.isXml() ) {
+				// XML columns can't have check constraints
+				return;
+			}
+			super.applyAggregateColumnCheck( buf, aggregateColumn );
+		}
+	};
+
 
 	public SQLServerLegacyDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
@@ -212,6 +262,11 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		return XML_ARRAY;
+	}
+
+	@Override
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -256,7 +311,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		// this is essentially the only legal length for
 		// a "lob" in SQL Server, i.e. the value of MAX
 		// (caveat: for NVARCHAR it is half this value)
-		return 2_147_483_647;
+		return Length.LONG32;
 	}
 
 	@Override
@@ -275,8 +330,9 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 				Types.TINYINT,
 				TinyIntAsSmallIntJdbcType.INSTANCE
 		);
-		typeContributions.contributeJdbcType( XmlJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( SQLServerCastingXmlJdbcType.INSTANCE );
 		typeContributions.contributeJdbcType( UUIDJdbcType.INSTANCE );
+		typeContributions.contributeJdbcTypeConstructor( SQLServerCastingXmlArrayJdbcTypeConstructor.INSTANCE );
 	}
 
 	@Override
@@ -300,7 +356,8 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 						"count_big",
 						"+",
 						"varchar(max)",
-						false
+						false,
+						"varbinary(max)"
 				)
 		);
 
@@ -366,13 +423,42 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		functionFactory.windowFunctions();
 		functionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+		if ( getVersion().isSameOrAfter( 13 ) ) {
+			functionFactory.jsonValue_sqlserver();
+			functionFactory.jsonQuery_sqlserver();
+			functionFactory.jsonExists_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonObject_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonArray_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonSet_sqlserver();
+			functionFactory.jsonRemove_sqlserver();
+			functionFactory.jsonReplace_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonInsert_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonArrayAppend_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonArrayInsert_sqlserver();
+			functionFactory.jsonTable_sqlserver();
+		}
+		functionFactory.xmlelement_sqlserver();
+		functionFactory.xmlcomment_sqlserver();
+		functionFactory.xmlforest_sqlserver();
+		functionFactory.xmlconcat_sqlserver();
+		functionFactory.xmlpi_sqlserver();
+		functionFactory.xmlquery_sqlserver();
+		functionFactory.xmlexists_sqlserver();
+		functionFactory.xmlagg_sqlserver();
+		functionFactory.xmltable_sqlserver();
+
+		functionFactory.unnest_sqlserver();
+
 		if ( getVersion().isSameOrAfter( 14 ) ) {
 			functionFactory.listagg_stringAggWithinGroup( "varchar(max)" );
+			functionFactory.jsonArrayAgg_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonObjectAgg_sqlserver( getVersion().isSameOrAfter( 16 ) );
 		}
 		if ( getVersion().isSameOrAfter( 16 ) ) {
 			functionFactory.leastGreatest();
 			functionFactory.dateTrunc_datetrunc();
 			functionFactory.trunc_round_datetrunc();
+			functionFactory.generateSeries_sqlserver( getMaximumSeriesSize() );
 		}
 		else {
 			functionContributions.getFunctionRegistry().register(
@@ -380,29 +466,47 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 					new SqlServerConvertTruncFunction( functionContributions.getTypeConfiguration() )
 			);
 			functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+			if ( supportsRecursiveCTE() ) {
+				functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
+			}
+		}
+	}
+
+	/**
+	 * SQL Server doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		if ( getVersion().isSameOrAfter( 16 ) ) {
+			return 10000;
+		}
+		else {
+			// The maximum recursion depth of SQL Server
+			return 100;
 		}
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
+	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		if ( getVersion().isSameOrAfter( 16 ) ) {
 			switch ( specification ) {
 				case BOTH:
-					return character == ' '
+					return isWhitespace
 							? "trim(?1)"
-							: "trim('" + character + "' from ?1)";
+							: "trim(?2 from ?1)";
 				case LEADING:
-					return character == ' '
+					return isWhitespace
 							? "ltrim(?1)"
-							: "ltrim(?1,'" + character + "')";
+							: "ltrim(?1,?2)";
 				case TRAILING:
-					return character == ' '
+					return isWhitespace
 							? "rtrim(?1)"
-							: "rtrim(?1,'" + character + "')";
+							: "rtrim(?1,?2)";
 			}
 			throw new UnsupportedOperationException( "Unsupported specification: " + specification );
 		}
-		return super.trimPattern( specification, character );
+		return super.trimPattern( specification, isWhitespace );
 	}
 
 	@Override
@@ -414,6 +518,16 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 				return new SQLServerLegacySqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return SQLServerAggregateSupport.valueOf( this );
+	}
+
+	@Override
+	public SizeStrategy getSizeStrategy() {
+		return sizeStrategy;
 	}
 
 	@Override
@@ -722,6 +836,20 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	public boolean supportsFetchClause(FetchClauseType type) {
 		return getVersion().isSameOrAfter( 11 );
 	}
+	@Override
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
+		return new TemplatedViolatedConstraintNameExtractor(
+				sqle -> {
+					switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
+						case 2627:
+						case 2601:
+							return extractUsingTemplate( "'", "'", sqle.getMessage() );
+						default:
+							return null;
+					}
+				}
+		);
+	}
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
@@ -730,44 +858,44 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		}
 		return (sqlException, message, sql) -> {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 			if ( "HY008".equals( sqlState ) ) {
-				throw new QueryTimeoutException( message, sqlException, sql );
+				return new QueryTimeoutException( message, sqlException, sql );
 			}
-			if ( 1222 == errorCode ) {
-				throw new LockTimeoutException( message, sqlException, sql );
+
+			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			switch ( errorCode ) {
+				case 1222:
+					return new LockTimeoutException( message, sqlException, sql );
+				case 2627:
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+					);
+				case 2601:
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+					);
+				default:
+					return null;
 			}
-			return null;
 		};
 	}
 
-	/**
-	 * SQL server supports up to 7 decimal digits of
-	 * fractional second precision in a datetime2,
-	 * but since its duration arithmetic functions
-	 * try to fit durations into an int,
-	 * which is impossible with such high precision,
-	 * so default to generating {@code datetime2(3)}
-	 * columns.
-	 */
 	@Override
 	public int getDefaultTimestampPrecision() {
-		return 6; //microseconds!
+		return 7;
 	}
 
-	/**
-	 * SQL server supports up to 7 decimal digits of
-	 * fractional second precision in a datetime2,
-	 * but unfortunately its duration arithmetic
-	 * functions have a nasty habit of overflowing.
-	 * So to give ourselves a little extra headroom,
-	 * we will use {@code microsecond} as the native
-	 * unit of precision (but even then we have to
-	 * use tricks when calling {@code dateadd()}).
-	 */
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
-		return 1_000; //microseconds!
+//		return 100; // 1/10th microsecond
+		return 1; // Even though SQL Server only supports 1/10th microsecond precision, use nanosecond scale for easier computation
 	}
 
 	@Override
@@ -784,7 +912,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 //				return "(datepart(second,?2)*1000000000+datepart(nanosecond,?2))";
 			case SECOND:
 				//this should evaluate to a floating point type
-				return "(datepart(second,?2)+datepart(nanosecond,?2)/1e9)";
+				return "(datepart(second,?2)+datepart(nanosecond,?2)/1000000000)";
 			case EPOCH:
 				return "datediff_big(second, '1970-01-01', ?2)";
 			case WEEK:
@@ -805,13 +933,11 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		// calls to dateadd() to add a whole duration
 		switch (unit) {
 			case NANOSECOND:
-				//Java Durations are usually the only thing
-				//we find expressed in nanosecond precision,
-				//and they can easily be very large
-				return "dateadd(nanosecond,?2%1000000000,dateadd(second,?2/1000000000,?3))";
 			case NATIVE:
-				//microsecond is the "native" precision
-				return "dateadd(microsecond,?2%1000000,dateadd(second,?2/1000000,?3))";
+				return "dateadd(nanosecond,?2%1000000000,dateadd(second,?2/1000000000,?3))";
+//			case NATIVE:
+//				// 1/10th microsecond is the "native" precision
+//				return "dateadd(nanosecond,?2%10000000,dateadd(second,?2/10000000,?3))";
 			default:
 				return "dateadd(?1,?2,?3)";
 		}
@@ -820,7 +946,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( unit == TemporalUnit.NATIVE ) {//use microsecond as the "native" precision
-			return "datediff_big(microsecond,?2,?3)";
+			return "datediff_big(nanosecond,?2,?3)";
 		}
 
 		//datediff() returns an int, and can easily
@@ -833,9 +959,9 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String translateDurationField(TemporalUnit unit) {
-		//use microsecond as the "native" precision
+		//use nanosecond as the "native" precision
 		if ( unit == TemporalUnit.NATIVE ) {
-			return "microsecond";
+			return "nanosecond";
 		}
 
 		return super.translateDurationField( unit );
@@ -1054,6 +1180,11 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public Exporter<Table> getTableExporter() {
+		return this.sqlServerTableExporter;
+	}
+
+	@Override
 	public Exporter<Sequence> getSequenceExporter() {
 		if ( exporter == null ) {
 			return super.getSequenceExporter();
@@ -1074,12 +1205,6 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 			// Keeping the catalog in the name does not break on ORM, but it fails using Vert.X for Reactive.
 			return context.formatWithoutCatalog( name );
 		}
-	}
-
-	@Override
-	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) {
-		// Not sure if it's a JDBC driver issue, but it doesn't work
-		return false;
 	}
 
 	@Override
@@ -1104,4 +1229,31 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 //	public String getEnableConstraintStatement(String tableName, String name) {
 //		return "alter table " + tableName + " with check check constraint " + name;
 //	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
+	}
+
+	@Override
+	public String getCheckConstraintString(CheckConstraint checkConstraint) {
+		final String constraintName = checkConstraint.getName();
+		return constraintName == null
+				?
+				" check " + getCheckConstraintOptions( checkConstraint ) + "(" + checkConstraint.getConstraint() + ")"
+				:
+				" constraint " + constraintName + " check " + getCheckConstraintOptions( checkConstraint ) + "(" + checkConstraint.getConstraint() + ")";
+	}
+
+	private String getCheckConstraintOptions(CheckConstraint checkConstraint) {
+		if ( StringHelper.isNotEmpty( checkConstraint.getOptions() ) ) {
+			return checkConstraint.getOptions() + " ";
+		}
+		return "";
+	}
 }

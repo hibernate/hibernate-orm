@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi;
 
@@ -24,8 +22,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
  * Note that the fields of this object must contain every explicit and
  * implicit setting and parameter argument that affects the result list
  * of the query, including things like the {@link #maxRows limit} and
- * {@link #firstRow offset}, {@link #tenantIdentifier current tenant id},
- * and {@link #enabledFilterNames enabled filters}.
+ * {@link #firstRow offset} and {@link #enabledFilterNames enabled filters}.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -41,7 +38,7 @@ public class QueryKey implements Serializable {
 			String sqlQueryString,
 			Limit limit,
 			QueryParameterBindings parameterBindings,
-			SharedSessionContractImplementor persistenceContext) {
+			SharedSessionContractImplementor session) {
 		// todo (6.0) : here is where we should centralize cacheable-or-not
 		//		if this method returns null, the query should be considered un-cacheable
 		//
@@ -52,11 +49,10 @@ public class QueryKey implements Serializable {
 
 		return new QueryKey(
 				sqlQueryString,
-				parameterBindings.generateQueryKeyMemento( persistenceContext ),
+				parameterBindings.generateQueryKeyMemento( session ),
 				limitToUse.getFirstRow(),
 				limitToUse.getMaxRows(),
-				persistenceContext.getTenantIdentifier(),
-				persistenceContext.getLoadQueryInfluencers().getEnabledFilterNames()
+				session.getLoadQueryInfluencers().getEnabledFilterNames()
 		);
 	}
 
@@ -65,7 +61,6 @@ public class QueryKey implements Serializable {
 	private final ParameterBindingsMemento parameterBindingsMemento;
 	private final Integer firstRow;
 	private final Integer maxRows;
-	private final String tenantIdentifier;
 	private final String[] enabledFilterNames;
 
 	/**
@@ -79,13 +74,11 @@ public class QueryKey implements Serializable {
 			ParameterBindingsMemento parameterBindingsMemento,
 			Integer firstRow,
 			Integer maxRows,
-			String tenantIdentifier,
 			Set<String> enabledFilterNames) {
 		this.sqlQueryString = sql;
 		this.parameterBindingsMemento = parameterBindingsMemento;
 		this.firstRow = firstRow;
 		this.maxRows = maxRows;
-		this.tenantIdentifier = tenantIdentifier;
 		this.enabledFilterNames = enabledFilterNames.toArray( String[]::new );
 		this.hashCode = generateHashCode();
 	}
@@ -109,7 +102,6 @@ public class QueryKey implements Serializable {
 		// Don't include the firstRow and maxRows in the hash as these values are rarely useful for query caching
 //		result = 37 * result + ( firstRow==null ? 0 : firstRow );
 //		result = 37 * result + ( maxRows==null ? 0 : maxRows );
-		result = 37 * result + ( tenantIdentifier==null ? 0 : tenantIdentifier.hashCode() );
 		result = 37 * result + parameterBindingsMemento.hashCode();
 		result = 37 * result + Arrays.hashCode( enabledFilterNames );
 		return result;
@@ -130,10 +122,6 @@ public class QueryKey implements Serializable {
 		}
 
 		if ( ! Objects.equals( sqlQueryString, that.sqlQueryString ) ) {
-			return false;
-		}
-
-		if ( ! Objects.equals( tenantIdentifier, that.tenantIdentifier ) ) {
 			return false;
 		}
 

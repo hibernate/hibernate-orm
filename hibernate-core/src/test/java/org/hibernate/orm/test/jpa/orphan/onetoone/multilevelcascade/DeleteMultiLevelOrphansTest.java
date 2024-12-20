@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.orphan.onetoone.multilevelcascade;
 
@@ -13,7 +11,7 @@ import jakarta.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -70,7 +68,7 @@ public class DeleteMultiLevelOrphansTest extends BaseEntityManagerFunctionalTest
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9091")
+	@JiraKey( value = "HHH-9091")
 	public void testDirectAssociationOrphanedWhileManaged() {
 		createData();
 
@@ -114,7 +112,7 @@ public class DeleteMultiLevelOrphansTest extends BaseEntityManagerFunctionalTest
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9091")
+	@JiraKey( value = "HHH-9091")
 	public void testReplacedDirectAssociationWhileManaged() {
 		createData();
 
@@ -203,7 +201,7 @@ public class DeleteMultiLevelOrphansTest extends BaseEntityManagerFunctionalTest
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9091")
+	@JiraKey( value = "HHH-9091")
 	public void testDirectAndNestedAssociationsOrphanedWhileManaged() {
 		createData();
 

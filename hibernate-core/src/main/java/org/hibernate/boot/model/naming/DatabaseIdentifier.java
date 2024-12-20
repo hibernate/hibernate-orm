@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.naming;
 
-import org.hibernate.internal.util.StringHelper;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * Models an identifier (name), retrieved from the database.
@@ -26,13 +24,13 @@ public class DatabaseIdentifier extends Identifier {
 	}
 
 	public static DatabaseIdentifier toIdentifier(String text) {
-		if ( StringHelper.isEmpty( text ) ) {
+		if ( isEmpty( text ) ) {
 			return null;
 		}
 		else if ( isQuoted( text ) ) {
 			// exclude the quotes from text
-			final String unquotedtext = text.substring( 1, text.length() - 1 );
-			return new DatabaseIdentifier( unquotedtext );
+			final String unquoted = text.substring( 1, text.length() - 1 );
+			return new DatabaseIdentifier( unquoted );
 		}
 		else {
 			return new DatabaseIdentifier( text );

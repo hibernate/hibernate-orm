@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
@@ -10,7 +8,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -26,6 +26,7 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.dialect.function.CastFunction.renderCastArrayToString;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
 public class CastingConcatFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
@@ -56,15 +57,18 @@ public class CastingConcatFunction extends AbstractSqmSelfRenderingFunctionDescr
 		this.argumentRenderingMode = argumentRenderingMode;
 		this.concatArgumentCastType = typeConfiguration.getDdlTypeRegistry().getDescriptor( SqlTypes.VARCHAR )
 				.getCastTypeName(
+						Size.nil(),
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING ),
-						null,
-						null,
-						null
+						typeConfiguration.getDdlTypeRegistry()
 				);
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> walker) {
 		// Apache Derby and DB2 add up the sizes of operands for concat operations and has a limit of 4000/32k until
 		// it changes the data type to long varchar, at which point problems start arising, because a long varchar
 		// can't be compared with a regular varchar for some reason.
@@ -92,12 +96,16 @@ public class CastingConcatFunction extends AbstractSqmSelfRenderingFunctionDescr
 
 	private void renderAsString(SqlAppender sqlAppender, SqlAstTranslator<?> translator, Expression expression) {
 		final JdbcMapping sourceMapping = expression.getExpressionType().getSingleJdbcMapping();
+		final CastType sourceType = sourceMapping.getCastType();
 		// No need to cast if we already have a string
-		if ( sourceMapping.getCastType() == CastType.STRING ) {
+		if ( sourceType == CastType.STRING ) {
 			translator.render( expression, argumentRenderingMode );
 		}
+		else if ( sourceType == CastType.OTHER && sourceMapping.getJdbcType().isArray() ) {
+			renderCastArrayToString( sqlAppender, expression, dialect, translator );
+		}
 		else {
-			final String cast = dialect.castPattern( sourceMapping.getCastType(), CastType.STRING );
+			final String cast = dialect.castPattern( sourceType, CastType.STRING );
 			new PatternRenderer( cast.replace( "?2", concatArgumentCastType ), argumentRenderingMode )
 					.render( sqlAppender, Collections.singletonList( expression ), translator );
 		}

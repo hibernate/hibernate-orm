@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util.collections;
 
@@ -24,8 +22,17 @@ import org.hibernate.type.Type;
 
 public final class ArrayHelper {
 
-	public static boolean contains(Object[] array, Object object) {
+	public static <T> boolean contains(T[] array, T object) {
 		return indexOf( array, object ) > -1;
+	}
+
+	public static <T> boolean containsAll(T[] array, T[] elements) {
+		for ( T element : elements ) {
+			if ( !contains( array, element ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public static boolean contains(int[] array, int value) {

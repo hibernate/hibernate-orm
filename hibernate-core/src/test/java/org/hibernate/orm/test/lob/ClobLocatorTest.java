@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.lob;
 
@@ -60,7 +58,7 @@ public class ClobLocatorTest {
 				session -> {
 					LobHolder entity = new LobHolder();
 					entity.setClobLocator( session.getLobHelper().createClob( original ) );
-					session.save( entity );
+					session.persist( entity );
 					return entity.getId();
 				}
 		);
@@ -158,7 +156,7 @@ public class ClobLocatorTest {
 								assertEquals( empty.length(), entity.getClobLocator().length() );
 								assertEquals( empty, extractData( entity.getClobLocator() ) );
 							}
-							session.delete( entity );
+							session.remove( entity );
 						}
 						catch (Exception e) {
 							fail( e );
@@ -181,7 +179,7 @@ public class ClobLocatorTest {
 				session -> {
 					LobHolder entity = new LobHolder();
 					entity.setClobLocator( session.getLobHelper().createClob( original ) );
-					session.save( entity );
+					session.persist( entity );
 					return entity.getId();
 				}
 		);
@@ -199,7 +197,7 @@ public class ClobLocatorTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( lobHolder )
+						session.remove( lobHolder )
 		);
 	}
 

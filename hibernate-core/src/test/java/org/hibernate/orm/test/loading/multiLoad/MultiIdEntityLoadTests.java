@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.loading.multiLoad;
 
@@ -12,7 +10,9 @@ import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.domain.gambit.EntityWithAggregateId;
+import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryFunctionalTesting;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -45,6 +45,18 @@ public class MultiIdEntityLoadTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-17201" )
+	public void testSimpleEntityUnOrderedMultiLoad(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					List<Integer> idList = List.of( 0, 1 );
+					session.byMultipleIds( SimpleEntity.class )
+							.enableOrderedReturn( false ).multiLoad( idList );
+				}
+		);
+	}
+
+	@Test
 	public void testBasicEntityOrderedLoad(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -64,7 +76,7 @@ public class MultiIdEntityLoadTests {
 		// using ordered results
 		scope.inTransaction(
 				session -> {
-					session.delete( session.get( BasicEntity.class, 2 ) );
+					session.remove( session.get( BasicEntity.class, 2 ) );
 
 					// test control - no delete-checking
 					{
@@ -115,7 +127,7 @@ public class MultiIdEntityLoadTests {
 		// using un-ordered results
 		scope.inTransaction(
 				session -> {
-					session.delete( session.get( BasicEntity.class, 2 ) );
+					session.remove( session.get( BasicEntity.class, 2 ) );
 
 					// test control - no delete-checking
 					{
@@ -170,18 +182,18 @@ public class MultiIdEntityLoadTests {
 					final BasicEntity first = new BasicEntity( 1, "first" );
 					final BasicEntity second = new BasicEntity( 2, "second" );
 					final BasicEntity third = new BasicEntity( 3, "third" );
-					session.save( first );
-					session.save( second );
-					session.save( third );
+					session.persist( first );
+					session.persist( second );
+					session.persist( third );
 
-					session.save(
+					session.persist(
 							new EntityWithAggregateId(
 									new EntityWithAggregateId.Key( "abc", "def"),
 									"ghi"
 							)
 					);
 
-					session.save(
+					session.persist(
 							new EntityWithAggregateId(
 									new EntityWithAggregateId.Key( "123", "456"),
 									"789"

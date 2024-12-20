@@ -1,19 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.internal;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
 
 import org.hibernate.CacheMode;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -24,27 +16,21 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.results.ResultsLogger;
-import org.hibernate.sql.results.graph.AssemblerCreationState;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.instantiation.DynamicInstantiationResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingResolution;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.EntityType;
 
 /**
  * @author Steve Ebersole
@@ -54,112 +40,24 @@ public class ResultsHelper {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ResultsHelper.class );
 
 	public static <R> RowReader<R> createRowReader(
-			ExecutionContext executionContext,
-			LockOptions lockOptions,
+			SessionFactoryImplementor sessionFactory,
 			RowTransformer<R> rowTransformer,
 			Class<R> transformedResultJavaType,
 			JdbcValues jdbcValues) {
-		return createRowReader( executionContext, lockOptions, rowTransformer, transformedResultJavaType, jdbcValues.getValuesMapping());
+		return createRowReader( sessionFactory, rowTransformer, transformedResultJavaType, jdbcValues.getValuesMapping() );
 	}
 
 	public static <R> RowReader<R> createRowReader(
-			ExecutionContext executionContext,
-			LockOptions lockOptions,
+			SessionFactoryImplementor sessionFactory,
 			RowTransformer<R> rowTransformer,
 			Class<R> transformedResultJavaType,
 			JdbcValuesMapping jdbcValuesMapping) {
-		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
-
-		final Map<NavigablePath, Initializer> initializerMap = new LinkedHashMap<>();
-		final InitializersList.Builder initializersBuilder = new InitializersList.Builder();
-
-		final List<DomainResultAssembler<?>> assemblers = jdbcValuesMapping.resolveAssemblers(
-				new AssemblerCreationState() {
-					Boolean dynamicInstantiation;
-
-					@Override
-					public boolean isScrollResult() {
-						return executionContext.isScrollResult();
-					}
-
-					@Override
-					public boolean isDynamicInstantiation() {
-						if ( dynamicInstantiation == null ) {
-							dynamicInstantiation = jdbcValuesMapping.getDomainResults()
-									.stream()
-									.anyMatch( domainResult -> domainResult instanceof DynamicInstantiationResult );
-						}
-						return dynamicInstantiation;
-					}
-
-					@Override
-					public LockMode determineEffectiveLockMode(String identificationVariable) {
-						return lockOptions.getEffectiveLockMode( identificationVariable );
-					}
-
-					@Override
-					public Initializer resolveInitializer(
-							NavigablePath navigablePath,
-							ModelPart fetchedModelPart,
-							Supplier<Initializer> producer) {
-						final Initializer existing = initializerMap.get( navigablePath );
-						if ( existing != null ) {
-							if ( fetchedModelPart.getNavigableRole().equals(
-									existing.getInitializedPart().getNavigableRole() ) ) {
-								ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
-										"Returning previously-registered initializer : %s",
-										existing
-								);
-								return existing;
-							}
-						}
-
-						final Initializer initializer = producer.get();
-						ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
-								"Registering initializer : %s",
-								initializer
-						);
-
-						initializerMap.put( navigablePath, initializer );
-						initializersBuilder.addInitializer( initializer );
-
-						return initializer;
-					}
-
-					@Override
-					public SqlAstCreationContext getSqlAstCreationContext() {
-						return sessionFactory;
-					}
-
-					@Override
-					public ExecutionContext getExecutionContext() {
-						return executionContext;
-					}
-				}
+		final JdbcValuesMappingResolution jdbcValuesMappingResolution = jdbcValuesMapping.resolveAssemblers( sessionFactory );
+		return new StandardRowReader<>(
+				jdbcValuesMappingResolution,
+				rowTransformer,
+				transformedResultJavaType
 		);
-
-		logInitializers( initializerMap );
-
-		final InitializersList initializersList = initializersBuilder.build( initializerMap );
-
-		return new StandardRowReader<>( assemblers, initializersList, rowTransformer, transformedResultJavaType );
-	}
-
-	private static void logInitializers(Map<NavigablePath, Initializer> initializerMap) {
-		if ( ! ResultsLogger.DEBUG_ENABLED ) {
-			return;
-		}
-
-		ResultsLogger.RESULTS_MESSAGE_LOGGER.debug( "Initializer list" );
-		initializerMap.forEach( (navigablePath, initializer) -> {
-			ResultsLogger.RESULTS_MESSAGE_LOGGER.debugf(
-					"    %s -> %s@%s (%s)",
-					navigablePath,
-					initializer,
-					initializer.hashCode(),
-					initializer.getInitializedPart()
-			);
-		} );
 	}
 
 	public static void finalizeCollectionLoading(
@@ -168,16 +66,14 @@ public class ResultsHelper {
 			PersistentCollection<?> collectionInstance,
 			Object key,
 			boolean hasNoQueuedAdds) {
+		final SharedSessionContractImplementor session = persistenceContext.getSession();
+
 		CollectionEntry collectionEntry = persistenceContext.getCollectionEntry( collectionInstance );
 		if ( collectionEntry == null ) {
-			collectionEntry = persistenceContext.addInitializedCollection(
-					collectionDescriptor,
-					collectionInstance,
-					key
-			);
+			collectionEntry = persistenceContext.addInitializedCollection( collectionDescriptor, collectionInstance, key );
 		}
 		else {
-			collectionEntry.postInitialize( collectionInstance );
+			collectionEntry.postInitialize( collectionInstance, session );
 		}
 
 		if ( collectionDescriptor.getCollectionType().hasHolder() ) {
@@ -195,7 +91,6 @@ public class ResultsHelper {
 		final BatchFetchQueue batchFetchQueue = persistenceContext.getBatchFetchQueue();
 		batchFetchQueue.removeBatchLoadableCollection( collectionEntry );
 
-		final SharedSessionContractImplementor session = persistenceContext.getSession();
 		// add to cache if:
 		final boolean addToCache =
 				// there were no queued additions
@@ -246,9 +141,7 @@ public class ResultsHelper {
 
 		if ( session.getLoadQueryInfluencers().hasEnabledFilters() && collectionDescriptor.isAffectedByEnabledFilters( session ) ) {
 			// some filters affecting the collection are enabled on the session, so do not do the put into the cache.
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Refusing to add to cache due to enabled filters" );
-			}
+			LOG.debug( "Refusing to add to cache due to enabled filters" );
 			// todo : add the notion of enabled filters to the cache key to differentiate filtered collections from non-filtered;
 			//      DefaultInitializeCollectionEventHandler.initializeCollectionFromCache() (which makes sure to not read from
 			//      cache with enabled filters).
@@ -273,9 +166,7 @@ public class ResultsHelper {
 					}
 				}
 				if ( collectionOwner == null ) {
-					if ( LOG.isDebugEnabled() ) {
-						LOG.debugf( "Unable to resolve owner of loading collection for second level caching. Refusing to add to cache.");
-					}
+					LOG.debugf( "Unable to resolve owner of loading collection for second level caching. Refusing to add to cache.");
 					return;
 				}
 			}
@@ -295,8 +186,8 @@ public class ResultsHelper {
 		);
 
 		boolean isPutFromLoad = true;
-		if ( collectionDescriptor.getElementType().isAssociationType() ) {
-			final EntityPersister entityPersister = ( (QueryableCollection) collectionDescriptor ).getElementPersister();
+		if ( collectionDescriptor.getElementType() instanceof EntityType ) {
+			final EntityPersister entityPersister = collectionDescriptor.getElementPersister();
 			for ( Object id : entry.getState() ) {
 				if ( persistenceContext.wasInsertedDuringTransaction( entityPersister, id ) ) {
 					isPutFromLoad = false;
@@ -308,9 +199,12 @@ public class ResultsHelper {
 		// CollectionRegionAccessStrategy has no update, so avoid putting uncommitted data via putFromLoad
 		if ( isPutFromLoad ) {
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
+			boolean put = false;
 			try {
 				eventListenerManager.cachePutStart();
-				final boolean put = cacheAccess.putFromLoad(
+				put = cacheAccess.putFromLoad(
 						session,
 						cacheKey,
 						collectionDescriptor.getCacheEntryStructure().structure( entry ),
@@ -318,6 +212,17 @@ public class ResultsHelper {
 						factory.getSessionFactoryOptions().isMinimalPutsEnabled()
 								&& session.getCacheMode()!= CacheMode.REFRESH
 				);
+			}
+			finally {
+				eventMonitor.completeCachePutEvent(
+						cachePutEvent,
+						session,
+						cacheAccess,
+						collectionDescriptor,
+						put,
+						EventMonitor.CacheActionDescription.COLLECTION_INSERT
+				);
+				eventListenerManager.cachePutEnd();
 
 				final StatisticsImplementor statistics = factory.getStatistics();
 				if ( put && statistics.isStatisticsEnabled() ) {
@@ -326,9 +231,7 @@ public class ResultsHelper {
 							collectionDescriptor.getCacheAccessStrategy().getRegion().getName()
 					);
 				}
-			}
-			finally {
-				eventListenerManager.cachePutEnd();
+
 			}
 		}
 	}

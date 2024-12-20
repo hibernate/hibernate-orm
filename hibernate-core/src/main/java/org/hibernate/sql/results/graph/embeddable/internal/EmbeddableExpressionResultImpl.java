@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
@@ -21,9 +19,10 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerParent;
+import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
@@ -33,9 +32,11 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent implements EmbeddableResultGraphNode, DomainResult<T>, EmbeddableResult<T> {
+public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent implements EmbeddableResultGraphNode, DomainResult<T>, EmbeddableResult<T>,
+		InitializerProducer<EmbeddableExpressionResultImpl<T>> {
 	private final String resultVariable;
 	private final boolean containsAnyNonScalars;
+	private final EmbeddableMappingType fetchContainer;
 
 	public EmbeddableExpressionResultImpl(
 			NavigablePath navigablePath,
@@ -43,7 +44,8 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 			SqlTuple sqlExpression,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		super( modelPart.getEmbeddableTypeDescriptor(), navigablePath );
+		super( navigablePath );
+		this.fetchContainer = modelPart.getEmbeddableTypeDescriptor();
 		this.resultVariable = resultVariable;
 
 		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( modelPart );
@@ -69,7 +71,8 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 							resolveNavigablePath( attribute ),
 							attribute,
 							FetchTiming.IMMEDIATE,
-							creationState
+							creationState,
+							!sqlSelection.isVirtual()
 					)
 			);
 		}
@@ -100,7 +103,7 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 
 	@Override
 	public EmbeddableMappingType getFetchContainer() {
-		return (EmbeddableMappingType) super.getFetchContainer();
+		return this.fetchContainer;
 	}
 
 	@Override
@@ -120,21 +123,22 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 
 	@Override
 	public DomainResultAssembler<T> createResultAssembler(
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			AssemblerCreationState creationState) {
-		final EmbeddableInitializer initializer = creationState.resolveInitializer(
-				getNavigablePath(),
-				getReferencedModePart(),
-				() -> new EmbeddableResultInitializer(
-						this,
-						parentAccess,
-						creationState
-				)
-		).asEmbeddableInitializer();
-
-		assert initializer != null;
-
 		//noinspection unchecked
-		return new EmbeddableAssembler( initializer );
+		return new EmbeddableAssembler( creationState.resolveInitializer( this, parent, this ).asEmbeddableInitializer() );
+	}
+
+	@Override
+	public Initializer<?> createInitializer(
+			EmbeddableExpressionResultImpl<T> resultGraphNode,
+			InitializerParent<?> parent,
+			AssemblerCreationState creationState) {
+		return resultGraphNode.createInitializer( parent, creationState );
+	}
+
+	@Override
+	public Initializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
+		return new EmbeddableInitializerImpl( this, null, parent, creationState, true );
 	}
 }

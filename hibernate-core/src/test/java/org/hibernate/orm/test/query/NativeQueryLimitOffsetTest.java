@@ -1,26 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
 
 import java.util.List;
 
-import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.SpannerDialect;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		annotatedClasses = { NativeQueryLimitOffsetTest.Person.class }
 )
 @SessionFactory
+@JiraKey("HHH-16020")
 public class NativeQueryLimitOffsetTest {
 
 	@BeforeEach
@@ -61,7 +55,6 @@ public class NativeQueryLimitOffsetTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-16020" )
 	public void testFullLimitOffsetOnNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -77,11 +70,6 @@ public class NativeQueryLimitOffsetTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-16020" )
-	@SkipForDialect( dialectClass = MySQLDialect.class, matchSubTypes = true)
-	@SkipForDialect( dialectClass = OracleDialect.class, majorVersion = 12, minorVersion = 2, matchSubTypes = true)
-	@SkipForDialect( dialectClass = AbstractHANADialect.class, matchSubTypes = true)
-	@SkipForDialect( dialectClass = SpannerDialect.class, matchSubTypes = true)
 	public void testPartialLimitOffsetOnNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -100,6 +88,24 @@ public class NativeQueryLimitOffsetTest {
 					assertEquals( 3, l.size() );
 				}
 		);
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18309" )
+	public void testLimitOffsetZeroValue(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			List<Long> l = session.createNativeQuery( "select id from Person where name like :name", Long.class )
+					.setParameter( "name", "J%" )
+					.setFirstResult( 0 )
+					.getResultList();
+			assertEquals( 5, l.size() );
+
+			l = session.createNativeQuery( "select id from Person where name like :name", Long.class )
+					.setParameter( "name", "J%" )
+					.setMaxResults( 0 )
+					.getResultList();
+			assertEquals( 0, l.size() );
+		} );
 	}
 
 	@Entity(name = "Person")

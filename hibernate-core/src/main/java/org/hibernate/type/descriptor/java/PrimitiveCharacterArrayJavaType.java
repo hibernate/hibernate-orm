@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
 import java.io.Reader;
 import java.io.StringReader;
 import java.sql.Clob;
+import java.sql.NClob;
 import java.util.Arrays;
 
 import org.hibernate.engine.jdbc.CharacterStream;
@@ -39,7 +38,7 @@ public class PrimitiveCharacterArrayJavaType extends AbstractClassJavaType<char[
 	@Override
 	public boolean areEqual(char[] one, char[] another) {
 		return one == another
-				|| ( one != null && another != null && Arrays.equals( one, another ) );
+			|| one != null && another != null && Arrays.equals( one, another );
 	}
 
 	@Override
@@ -62,6 +61,9 @@ public class PrimitiveCharacterArrayJavaType extends AbstractClassJavaType<char[
 		if ( String.class.isAssignableFrom( type ) ) {
 			return (X) new String( value );
 		}
+		if ( NClob.class.isAssignableFrom( type ) ) {
+			return (X) options.getLobCreator().createNClob( new String( value ) );
+		}
 		if ( Clob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createClob( new String( value ) );
 		}
@@ -78,17 +80,21 @@ public class PrimitiveCharacterArrayJavaType extends AbstractClassJavaType<char[
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof char[]) {
-			return (char[]) value;
+		if (value instanceof char[] chars) {
+			return chars;
 		}
-		if (value instanceof String) {
-			return ( (String) value ).toCharArray();
+		if (value instanceof String string) {
+			return string.toCharArray();
 		}
-		if (value instanceof Clob) {
-			return DataHelper.extractString( ( (Clob) value ) ).toCharArray();
+		if (value instanceof Clob clob) {
+			return DataHelper.extractString( clob ).toCharArray();
 		}
-		if (value instanceof Reader) {
-			return DataHelper.extractString( ( (Reader) value ) ).toCharArray();
+		if (value instanceof Reader reader) {
+			return DataHelper.extractString( reader ).toCharArray();
+		}
+		else if ( value instanceof Character character ) {
+			// Support binding a single element as parameter value
+			return new char[]{ character };
 		}
 		throw unknownWrap( value.getClass() );
 	}

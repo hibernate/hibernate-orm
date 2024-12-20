@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.caching.mocked;
 
@@ -10,7 +8,7 @@ import org.junit.Test;
 
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.UnknownAccessTypeException;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
@@ -21,7 +19,7 @@ import static org.junit.Assert.fail;
 public class CacheAccessTypeTest {
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9844")
+	@JiraKey( value = "HHH-9844")
 	public void testExplicitExternalNames() {
 		assertSame( AccessType.READ_ONLY, AccessType.fromExternalName( "read-only" ) );
 		assertSame( AccessType.READ_WRITE, AccessType.fromExternalName( "read-write" ) );
@@ -30,7 +28,7 @@ public class CacheAccessTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9844")
+	@JiraKey( value = "HHH-9844")
 	public void testEnumNames() {
 		assertSame( AccessType.READ_ONLY, AccessType.fromExternalName( "READ_ONLY" ) );
 		assertSame( AccessType.READ_WRITE, AccessType.fromExternalName( "READ_WRITE" ) );
@@ -39,7 +37,7 @@ public class CacheAccessTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9844")
+	@JiraKey( value = "HHH-9844")
 	public void testLowerCaseEnumNames() {
 		assertSame( AccessType.READ_ONLY, AccessType.fromExternalName( "read_only" ) );
 		assertSame( AccessType.READ_WRITE, AccessType.fromExternalName( "read_write" ) );
@@ -48,7 +46,7 @@ public class CacheAccessTypeTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9844")
+	@JiraKey( value = "HHH-9844")
 	public void testUpperCaseWithHyphens() {
 		try {
 			AccessType.fromExternalName( "READ-ONLY" );

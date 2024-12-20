@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.legacy;
 
@@ -25,7 +23,7 @@ public class A {
 	public Long getId() {
 		return id;
 	}
-	
+
 	/**
 	 * Returns the name.
 	 * @return String
@@ -33,7 +31,7 @@ public class A {
 	public String getName() {
 		return name;
 	}
-	
+
 	/**
 	 * Sets the id.
 	 * @param id The id to set
@@ -41,7 +39,7 @@ public class A {
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
+
 	/**
 	 * Sets the name.
 	 * @param name The name to set
@@ -49,7 +47,7 @@ public class A {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public E getForward() {
 		return forward;
 	}
@@ -59,9 +57,3 @@ public class A {
 	}
 
 }
-
-
-
-
-
-

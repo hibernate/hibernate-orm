@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.boot.internal;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.configuration.internal.MappingCollector;
@@ -53,7 +52,10 @@ public interface EnversService extends Service {
 	 */
 	boolean isInitialized();
 
-	void initialize(MetadataImplementor metadata, MappingCollector mappingCollector);
+	void initialize(
+			MetadataImplementor metadata,
+			MappingCollector mappingCollector,
+			EffectiveMappingDefaults effectiveMappingDefaults);
 
 	Configuration getConfig();
 

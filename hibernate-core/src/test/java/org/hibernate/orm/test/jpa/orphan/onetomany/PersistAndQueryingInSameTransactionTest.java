@@ -1,13 +1,17 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.jpa.orphan.onetomany;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -36,7 +40,7 @@ import static org.hamcrest.Matchers.notNullValue;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15512")
+@JiraKey(value = "HHH-15512")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class PersistAndQueryingInSameTransactionTest {
 
@@ -52,7 +56,7 @@ public class PersistAndQueryingInSameTransactionTest {
 
 	@Test
 	public void testSelectingThePersistedEntity(SessionFactoryScope scope) {
-		String parentId = UUID.randomUUID().toString();
+		String parentId = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
 		scope.inTransaction(
 				session -> {
 					Child child = new Child();
@@ -93,7 +97,7 @@ public class PersistAndQueryingInSameTransactionTest {
 
 	@Test
 	public void testSelectingAndModifying(SessionFactoryScope scope) {
-		String parentId = UUID.randomUUID().toString();
+		String parentId = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
 		scope.inTransaction(
 				session -> {
 					Child child = new Child();

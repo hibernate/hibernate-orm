@@ -1,15 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa;
 
+import java.net.URL;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceConfiguration;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.spi.LoadState;
 import jakarta.persistence.spi.PersistenceProvider;
@@ -17,15 +18,15 @@ import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.spi.ProviderUtil;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
-import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.ProviderChecker;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
-
-import org.jboss.logging.Logger;
 
 /**
  * The best-ever implementation of a JPA {@link PersistenceProvider}.
@@ -35,10 +36,10 @@ import org.jboss.logging.Logger;
  * @author Brett Meyer
  */
 public class HibernatePersistenceProvider implements PersistenceProvider {
-	private static final Logger log = Logger.getLogger( HibernatePersistenceProvider.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( HibernatePersistenceProvider.class );
 
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
-	
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -74,14 +75,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		log.tracef( "Attempting to obtain correct EntityManagerFactoryBuilder for persistenceUnitName : %s", persistenceUnitName );
 
 		final Map<?,?> integration = wrap( properties );
-		final List<ParsedPersistenceXmlDescriptor> units;
-		try {
-			units = PersistenceXmlParser.locatePersistenceUnits( integration );
-		}
-		catch (Exception e) {
-			log.debug( "Unable to locate persistence units", e );
-			throw new PersistenceException( "Unable to locate persistence units", e );
-		}
+		final Collection<PersistenceUnitDescriptor> units = locatePersistenceUnits( integration, providedClassLoader, providedClassLoaderService );
 
 		log.debugf( "Located and parsed %s persistence units; checking each", units.size() );
 
@@ -90,7 +84,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			throw new PersistenceException( "No name provided and multiple persistence units found" );
 		}
 
-		for ( ParsedPersistenceXmlDescriptor persistenceUnit : units ) {
+		for ( PersistenceUnitDescriptor persistenceUnit : units ) {
 			if ( log.isDebugEnabled() ) {
 				log.debugf(
 						"Checking persistence-unit [name=%s, explicit-provider=%s] against incoming persistence unit name [%s]",
@@ -126,6 +120,28 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 	protected static Map<?,?> wrap(Map<?,?> properties) {
 		return properties == null ? Collections.emptyMap() : Collections.unmodifiableMap( properties );
+	}
+
+	// Check before changing: may be overridden in Quarkus
+	protected Collection<PersistenceUnitDescriptor> locatePersistenceUnits(Map<?, ?> integration, ClassLoader providedClassLoader,
+			ClassLoaderService providedClassLoaderService) {
+		final Collection<PersistenceUnitDescriptor> units;
+		try {
+			var parser = PersistenceXmlParser.create( integration, providedClassLoader, providedClassLoaderService );
+			final List<URL> xmlUrls = parser.getClassLoaderService().locateResources( "META-INF/persistence.xml" );
+			if ( xmlUrls.isEmpty() ) {
+				log.unableToFindPersistenceXmlInClasspath();
+				units = List.of();
+			}
+			else {
+				units = parser.parse( xmlUrls ).values();
+			}
+		}
+		catch (Exception e) {
+			log.debug( "Unable to locate persistence units", e );
+			throw new PersistenceException( "Unable to locate persistence units", e );
+		}
+		return units;
 	}
 
 	/**
@@ -193,6 +209,16 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			return PersistenceUtilHelper.getLoadState( object );
 		}
 	};
+
+	@Override
+	public EntityManagerFactory createEntityManagerFactory(PersistenceConfiguration configuration) {
+		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilder(
+				new PersistenceConfigurationDescriptor( configuration ),
+				Collections.emptyMap(),
+				HibernatePersistenceProvider.class.getClassLoader()
+		);
+		return builder.build();
+	}
 
 	@Override
 	public ProviderUtil getProviderUtil() {

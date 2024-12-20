@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cdi.general.mixed;
 
@@ -10,7 +8,6 @@ import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.enterprise.inject.spi.BeanManager;
 
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.resource.beans.container.internal.CdiBeanContainerExtendedAccessImpl;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
@@ -20,6 +17,8 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.orm.test.cdi.testsupport.TestingExtendedBeanManager;
+
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -37,7 +36,7 @@ public class ExtendedMixedAccessTest implements BeanContainer.LifecycleOptions {
 	}
 
 	private void doTest(TestingExtendedBeanManager extendedBeanManager) {
-		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		try (final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 				.applySetting( AvailableSettings.CDI_BEAN_MANAGER, extendedBeanManager )
 				.build()) {

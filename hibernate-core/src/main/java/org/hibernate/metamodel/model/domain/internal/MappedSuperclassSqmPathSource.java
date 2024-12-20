@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
@@ -20,12 +18,16 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
  * @author Steve Ebersole
  */
 public class MappedSuperclassSqmPathSource<J> extends AbstractSqmPathSource<J> implements SqmJoinable<Object, J> {
+	private final boolean isGeneric;
+
 	public MappedSuperclassSqmPathSource(
 			String localPathName,
 			SqmPathSource<J> pathModel,
 			MappedSuperclassDomainType<J> domainType,
-			BindableType jpaBindableType) {
+			BindableType jpaBindableType,
+			boolean isGeneric) {
 		super( localPathName, pathModel, domainType, jpaBindableType );
+		this.isGeneric = isGeneric;
 	}
 
 	@Override
@@ -37,6 +39,11 @@ public class MappedSuperclassSqmPathSource<J> extends AbstractSqmPathSource<J> i
 	public SqmPathSource<?> findSubPathSource(String name) {
 		final MappedSuperclassDomainType<J> sqmPathType = getSqmPathType();
 		return sqmPathType.findSubPathSource( name );
+	}
+
+	@Override
+	public boolean isGeneric() {
+		return isGeneric;
 	}
 
 	@Override

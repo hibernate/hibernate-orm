@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.mutation.internal;
 
@@ -15,15 +13,13 @@ import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.sql.model.EntityMutationOperationGroup;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 
 /**
- * Standard MutationExecutorService implementation
+ * Standard {@link MutationExecutorService} implementation
  *
  * @see MutationExecutorServiceInitiator
  *
@@ -53,20 +49,7 @@ public class StandardMutationExecutorService implements MutationExecutorService 
 				? globalBatchSize
 				: sessionBatchSize;
 
-		final int numberOfOperations = operationGroup.getNumberOfOperations();
-		final MutationType mutationType = operationGroup.getMutationType();
-		final EntityMutationOperationGroup entityMutationOperationGroup = operationGroup.asEntityMutationOperationGroup();
-
-		if ( mutationType == MutationType.INSERT
-				&& entityMutationOperationGroup != null
-				&& entityMutationOperationGroup.getMutationTarget().getIdentityInsertDelegate() != null ) {
-			if ( numberOfOperations > 1 ) {
-				return new MutationExecutorPostInsert( entityMutationOperationGroup, session );
-			}
-			return new MutationExecutorPostInsertSingleTable( entityMutationOperationGroup, session );
-		}
-
-		if ( numberOfOperations == 1 ) {
+		if ( operationGroup.getNumberOfOperations() == 1 ) {
 			final MutationOperation singleOperation = operationGroup.getSingleOperation();
 			if ( singleOperation instanceof SelfExecutingUpdateOperation ) {
 				return new MutationExecutorSingleSelfExecuting( (SelfExecutingUpdateOperation) singleOperation, session );
@@ -78,7 +61,13 @@ public class StandardMutationExecutorService implements MutationExecutorService 
 				return new MutationExecutorSingleBatched( jdbcOperation, batchKey, batchSizeToUse, session );
 			}
 
-			return new MutationExecutorSingleNonBatched( jdbcOperation, session );
+			return new MutationExecutorSingleNonBatched(
+					jdbcOperation,
+					operationGroup.asEntityMutationOperationGroup() != null ?
+							operationGroup.asEntityMutationOperationGroup().getMutationDelegate() :
+							null,
+					session
+			);
 		}
 
 		return new MutationExecutorStandard( operationGroup, batchKeySupplier, batchSizeToUse, session );

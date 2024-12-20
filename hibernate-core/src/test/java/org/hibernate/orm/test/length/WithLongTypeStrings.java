@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.length;
 
 import jakarta.persistence.Entity;
@@ -8,13 +12,13 @@ import org.hibernate.type.SqlTypes;
 
 @Entity
 public class WithLongTypeStrings {
-    @Id
-    @GeneratedValue
-    public int id;
+	@Id
+	@GeneratedValue
+	public int id;
 
-    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
-    public String longish;
+	@JdbcTypeCode(SqlTypes.LONGVARCHAR)
+	public String longish;
 
-    @JdbcTypeCode(SqlTypes.LONG32VARCHAR)
-    public String long32;
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+	public String long32;
 }

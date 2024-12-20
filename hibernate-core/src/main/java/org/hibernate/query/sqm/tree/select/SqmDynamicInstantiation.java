@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
 
@@ -22,11 +20,15 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
+import static java.util.stream.Collectors.toList;
 import static org.hibernate.query.sqm.DynamicInstantiationNature.CLASS;
 import static org.hibernate.query.sqm.DynamicInstantiationNature.LIST;
 import static org.hibernate.query.sqm.DynamicInstantiationNature.MAP;
+import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.isConstructorCompatible;
+import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.isInjectionCompatible;
 
 /**
  * Represents a dynamic instantiation ({@code select new XYZ(...) ...}) as part of the SQM.
@@ -109,6 +111,46 @@ public class SqmDynamicInstantiation<T>
 		super( sqmExpressible, criteriaBuilder );
 		this.instantiationTarget = instantiationTarget;
 		this.arguments = arguments;
+	}
+
+	public boolean checkInstantiation(TypeConfiguration typeConfiguration) {
+		if ( getInstantiationTarget().getNature() == CLASS ) {
+			if ( getJavaType().isArray() ) {
+				// hack to accommodate the needs of jpamodelgen
+				// where Class objects not available during build
+				return true;
+			}
+			final List<Class<?>> argTypes = argumentTypes();
+			if ( isFullyAliased() ) {
+				final List<String> aliases =
+						getArguments().stream()
+								.map(SqmDynamicInstantiationArgument::getAlias)
+								.collect(toList());
+				return isInjectionCompatible( getJavaType(), aliases, argTypes )
+					|| isConstructorCompatible( getJavaType(), argTypes, typeConfiguration );
+			}
+			else {
+				return isConstructorCompatible( getJavaType(), argTypes, typeConfiguration );
+			}
+		}
+		else {
+			// TODO: is there anything we need to check for list/map instantiation?
+			return true;
+		}
+	}
+
+	private List<Class<?>> argumentTypes() {
+		return getArguments().stream()
+				.map( arg -> {
+					final SqmExpressible<?> expressible = arg.getExpressible();
+					return expressible != null && expressible.getExpressibleJavaType() != null ?
+							expressible.getExpressibleJavaType().getJavaTypeClass() :
+							Void.class;
+				} ).collect( toList() );
+	}
+
+	public boolean isFullyAliased() {
+		return getArguments().stream().allMatch( arg -> arg.getAlias() != null );
 	}
 
 	@Override
@@ -289,10 +331,5 @@ public class SqmDynamicInstantiation<T>
 		final List<SqmSelectableNode<?>> list = new ArrayList<>();
 		visitSubSelectableNodes( list::add );
 		return list;
-	}
-
-	@Override
-	public boolean isCompoundSelection() {
-		return false;
 	}
 }

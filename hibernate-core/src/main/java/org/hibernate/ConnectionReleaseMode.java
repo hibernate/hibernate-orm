@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import java.util.Locale;
 
-import org.hibernate.internal.util.StringHelper;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * Enumerates various policies for releasing JDBC {@linkplain java.sql.Connection
@@ -74,12 +72,12 @@ public enum ConnectionReleaseMode{
 			return null;
 		}
 
-		if ( setting instanceof ConnectionReleaseMode ) {
-			return (ConnectionReleaseMode) setting;
+		if ( setting instanceof ConnectionReleaseMode mode ) {
+			return mode;
 		}
 
 		final String value = setting.toString();
-		if ( StringHelper.isEmpty( value ) ) {
+		if ( isEmpty( value ) ) {
 			return null;
 		}
 

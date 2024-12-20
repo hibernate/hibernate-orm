@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
 
@@ -91,8 +89,10 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 						i + offset,
 						procedureCall
 				);
-				if ( registration.getName() != null ) {
-					buffer.append( ':' ).append( registration.getName() );
+				if ( parameter.getName() != null
+						&& session.getJdbcServices().getExtractedMetaDataSupport().supportsNamedParameters()
+						&& session.getFactory().getSessionFactoryOptions().isPassProcedureParameterNames() ) {
+					appendNameParameter( buffer, parameter, registration );
 				}
 				else {
 					buffer.append( "?" );
@@ -106,6 +106,13 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 
 		builder.setCallableName( buffer.toString() );
 		return builder.buildJdbcCall();
+	}
+
+	protected void appendNameParameter(
+			StringBuilder buffer,
+			ProcedureParameterImplementor parameter,
+			JdbcCallParameterRegistration registration) {
+		buffer.append( '?' );
 	}
 
 	private void verifyRefCursorSupport(Dialect dialect) {

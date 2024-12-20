@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.bytecode.enhancement.cache;
 
 import org.hibernate.annotations.BatchSize;
@@ -5,16 +9,17 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.Proxy;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.DiscriminatorColumn;
@@ -33,31 +38,31 @@ import jakarta.persistence.Table;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 
-@RunWith(BytecodeEnhancerRunner.class)
 @JiraKey("HHH-16473")
-public class ManyToOneNoProxyTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+			ManyToOneNoProxyTest.Actor.class,
+				ManyToOneNoProxyTest.User.class,
+				ManyToOneNoProxyTest.UserGroup.class,
+				ManyToOneNoProxyTest.ActorGroup.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class ManyToOneNoProxyTest {
 
 	private static final String ENTITY_A_NAME = "Alice";
 	private static final String ENTITY_B_NAME = "Bob";
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Actor.class,
-				User.class,
-				UserGroup.class,
-				ActorGroup.class
-		};
-	}
 
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
-	}
-
-	@Before
-	public void setUp() {
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 
 					User user1 = new User();
@@ -87,7 +92,7 @@ public class ManyToOneNoProxyTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					session.getSessionFactory().getCache().evictAllRegions();
 				}
@@ -95,8 +100,8 @@ public class ManyToOneNoProxyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSelect() {
-		inTransaction(
+	public void testSelect(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					User user = session.getReference( User.class, 1 );
 
@@ -108,7 +113,6 @@ public class ManyToOneNoProxyTest extends BaseCoreFunctionalTestCase {
 
 	@Entity
 	@Table(name = "users")
-	@Proxy(lazy = false)
 	@BatchSize(size = 512)
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	@Cacheable
@@ -143,7 +147,6 @@ public class ManyToOneNoProxyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Proxy(lazy = false)
 	@BatchSize(size = 512)
 	@DiscriminatorValue(value = "USER")
 	public static class User extends Actor {
@@ -165,7 +168,6 @@ public class ManyToOneNoProxyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Proxy(lazy = false)
 	@DiscriminatorValue("USERS")
 	@BatchSize(size = 256)
 	public static class UserGroup extends ActorGroup<User> {
@@ -175,7 +177,6 @@ public class ManyToOneNoProxyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Proxy(lazy = false)
 	@Table(name = "actor_group")
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	@DiscriminatorColumn(name = "TYPE")

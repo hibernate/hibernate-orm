@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.type.java;
 
@@ -11,8 +9,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.Locale;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.descriptor.java.LocaleJavaType;
+
 import org.junit.Test;
 
 /**
@@ -21,7 +19,29 @@ import org.junit.Test;
  * @author Christian Beikov
  * @author Steve Ebersole
  */
-public class LocaleJavaTypeDescriptorTest extends BaseUnitTestCase {
+public class LocaleJavaTypeDescriptorTest extends AbstractDescriptorTest<Locale> {
+	final Locale original = toLocale( "de", "DE", null );
+	final Locale copy = toLocale( "de", "DE", null );
+	final Locale different = toLocale( "de", null, null );
+
+	public LocaleJavaTypeDescriptorTest() {
+		super( LocaleJavaType.INSTANCE );
+	}
+
+	@Override
+	protected Data<Locale> getTestData() {
+		return new Data<>( original, copy, different );
+	}
+
+	@Override
+	protected boolean shouldBeMutable() {
+		return false;
+	}
+
+	@Override
+	protected boolean isIdentityDifferentFromEquality() {
+		return false;
+	}
 
 	@Test
 	public void testConversionFromString() {
@@ -36,7 +56,7 @@ public class LocaleJavaTypeDescriptorTest extends BaseUnitTestCase {
 		assertEquals( Locale.ROOT, LocaleJavaType.INSTANCE.fromString( "" ) );
 	}
 
-	public Locale toLocale(String lang, String region, String variant) {
+	private static Locale toLocale(String lang, String region, String variant) {
 		final Locale.Builder builder = new Locale.Builder();
 		if ( StringHelper.isNotEmpty( lang ) ) {
 			builder.setLanguage( lang );

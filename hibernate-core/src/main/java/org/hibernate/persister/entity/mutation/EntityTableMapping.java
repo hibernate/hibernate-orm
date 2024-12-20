@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity.mutation;
 
@@ -65,14 +63,33 @@ public class EntityTableMapping implements TableMapping {
 			boolean cascadeDeleteEnabled,
 			Expectation deleteExpectation,
 			String deleteCustomSql,
-			boolean deleteCallable) {
+			boolean deleteCallable,
+			boolean dynamicUpdate,
+			boolean dynamicInsert) {
 		this.tableName = tableName;
 		this.relativePosition = relativePosition;
 		this.keyMapping = keyMapping;
 		this.attributeIndexes = attributeIndexes;
-		this.insertDetails = new MutationDetails( MutationType.INSERT, insertExpectation, insertCustomSql, insertCallable );
-		this.updateDetails = new MutationDetails( MutationType.UPDATE, updateExpectation, updateCustomSql, updateCallable );
-		this.deleteDetails = new MutationDetails( MutationType.DELETE, deleteExpectation, deleteCustomSql, deleteCallable );
+		this.insertDetails = new MutationDetails(
+				MutationType.INSERT,
+				insertExpectation,
+				insertCustomSql,
+				insertCallable,
+				dynamicInsert
+		);
+		this.updateDetails = new MutationDetails(
+				MutationType.UPDATE,
+				updateExpectation,
+				updateCustomSql,
+				updateCallable,
+				dynamicUpdate
+		);
+		this.deleteDetails = new MutationDetails(
+				MutationType.DELETE,
+				deleteExpectation,
+				deleteCustomSql,
+				deleteCallable
+		);
 
 		if ( isOptional ) {
 			flags.set( Flag.OPTIONAL.ordinal() );
@@ -285,7 +302,7 @@ public class EntityTableMapping implements TableMapping {
 		}
 	}
 
-	public static class KeyColumn implements SelectableMapping, TableDetails.KeyColumn {
+	public static class KeyColumn implements TableDetails.KeyColumn {
 		private final String tableName;
 		private final String columnName;
 		private final String writeExpression;
@@ -376,6 +393,11 @@ public class EntityTableMapping implements TableMapping {
 
 		@Override
 		public Integer getScale() {
+			return null;
+		}
+
+		@Override
+		public Integer getTemporalPrecision() {
 			return null;
 		}
 

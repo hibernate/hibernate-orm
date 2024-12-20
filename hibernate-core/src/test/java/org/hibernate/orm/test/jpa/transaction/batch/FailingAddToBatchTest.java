@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.transaction.batch;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
+import org.hibernate.cfg.BatchSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.NotImplementedYet;
@@ -24,17 +21,17 @@ import jakarta.persistence.PersistenceException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@TestForIssue(jiraKey = "HHH-15082")
+@JiraKey(value = "HHH-15082")
 @Jpa(
 		annotatedClasses = {
 				FailingAddToBatchTest.MyEntity.class
 		},
 		integrationSettings = {
-				@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "50")
+				@Setting(name = BatchSettings.STATEMENT_BATCH_SIZE, value = "50")
 		},
 		settingProviders = {
 				@SettingProvider(
-						settingName = BatchBuilderInitiator.BUILDER,
+						settingName = BatchSettings.BUILDER,
 						provider = AbstractBatchingTest.ErrorBatch2BuilderSettingProvider.class
 				)
 		}
@@ -58,7 +55,7 @@ public class FailingAddToBatchTest extends AbstractBatchingTest {
 	}
 
 	@Test
-	@NotImplementedYet( reason = "Still need to work on entity update executors", strict = false )
+	@NotImplementedYet( reason = "Still need to work on entity update executors" )
 	public void testUpdate(EntityManagerFactoryScope scope) {
 		throw new RuntimeException();
 //		final Long id = scope.fromTransaction( (em) -> {
@@ -81,7 +78,7 @@ public class FailingAddToBatchTest extends AbstractBatchingTest {
 	}
 
 	@Test
-	@NotImplementedYet( reason = "Still need to work on entity delete executors", strict = false )
+	@NotImplementedYet( reason = "Still need to work on entity delete executors" )
 	public void testRemove(EntityManagerFactoryScope scope) {
 		throw new RuntimeException();
 //		Long id = scope.fromTransaction( em -> {

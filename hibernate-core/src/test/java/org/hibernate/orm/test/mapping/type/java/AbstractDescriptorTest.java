@@ -1,20 +1,29 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.type.java;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.util.TimeZone;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -37,6 +46,62 @@ public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 
 	private final JavaType<T> typeDescriptor;
 
+	protected final WrapperOptions wrapperOptions = new WrapperOptions() {
+		@Override
+		public SharedSessionContractImplementor getSession() {
+			return null;
+		}
+
+		public boolean useStreamForLobBinding() {
+			return false;
+		}
+
+		@Override
+		public int getPreferredSqlTypeCodeForBoolean() {
+			return 0;
+		}
+
+		public LobCreator getLobCreator() {
+			return NonContextualLobCreator.INSTANCE;
+		}
+
+		public JdbcType remapSqlTypeDescriptor(JdbcType sqlTypeDescriptor) {
+			return sqlTypeDescriptor;
+		}
+
+		@Override
+		public TimeZone getJdbcTimeZone() {
+			return null;
+		}
+
+		private final Dialect dialect = new H2Dialect() {
+			@Override
+			public boolean useConnectionToCreateLob() {
+				return false;
+			}
+		};
+
+		@Override
+		public Dialect getDialect() {
+			return dialect;
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return null;
+		}
+
+		@Override
+		public FormatMapper getXmlFormatMapper() {
+			return null;
+		}
+
+		@Override
+		public FormatMapper getJsonFormatMapper() {
+			return null;
+		}
+	};
+
 	public AbstractDescriptorTest(JavaType<T> typeDescriptor) {
 		this.typeDescriptor = typeDescriptor;
 	}
@@ -56,9 +121,15 @@ public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 
 	protected abstract boolean shouldBeMutable();
 
+	protected boolean isIdentityDifferentFromEquality() {
+		return true;
+	}
+
 	@Test
 	public void testEquality() {
-		assertFalse( testData.originalValue == testData.copyOfOriginalValue );
+		if ( isIdentityDifferentFromEquality() ) {
+			assertFalse( testData.originalValue == testData.copyOfOriginalValue );
+		}
 		assertTrue( typeDescriptor.areEqual( testData.originalValue, testData.originalValue ) );
 		assertTrue( typeDescriptor.areEqual( testData.originalValue, testData.copyOfOriginalValue ) );
 		assertFalse( typeDescriptor.areEqual( testData.originalValue, testData.differentValue ) );
@@ -70,6 +141,23 @@ public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 		String externalized = typeDescriptor.toString( testData.originalValue );
 		T consumed = typeDescriptor.fromString( externalized );
 		assertTrue( typeDescriptor.areEqual( testData.originalValue, consumed ) );
+	}
+
+	/**
+	 * Check that wrapping/unwrapping a value that already has the expected type
+	 * does not fail and returns a value that is considered equal.
+	 */
+	@Test
+	@JiraKey("HHH-17466")
+	public void testPassThrough() {
+		assertTrue( typeDescriptor.areEqual(
+				testData.originalValue,
+				typeDescriptor.wrap( testData.originalValue, wrapperOptions )
+		) );
+		assertTrue( typeDescriptor.areEqual(
+				testData.originalValue,
+				typeDescriptor.unwrap( testData.originalValue, typeDescriptor.getJavaTypeClass(), wrapperOptions )
+		) );
 	}
 
 	@Test

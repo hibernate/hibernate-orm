@@ -1,10 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
+
+import java.util.Objects;
 
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -50,5 +50,16 @@ public class BasicArrayType<T,E>
 		//  also, maybe move that logic into the ArrayJdbcType
 		//noinspection unchecked
 		return (BasicType<X>) this;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		return o == this || o.getClass() == BasicArrayType.class
+				&& Objects.equals( baseDescriptor, ( (BasicArrayType<?, ?>) o ).baseDescriptor );
+	}
+
+	@Override
+	public int hashCode() {
+		return baseDescriptor.hashCode();
 	}
 }

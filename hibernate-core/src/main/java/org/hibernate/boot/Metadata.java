@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot;
 
@@ -21,12 +19,12 @@ import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.type.MappingContext;
 
 /**
  * Represents the ORM model as determined by aggregating the provided mapping sources.
@@ -36,7 +34,7 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
  *
  * @since 5.0
  */
-public interface Metadata extends Mapping {
+public interface Metadata extends MappingContext {
 	/**
 	 * Get the builder for {@link SessionFactory} instances based on this metamodel.
 	 *
@@ -115,24 +113,24 @@ public interface Metadata extends Mapping {
 	 *
 	 * @return The named query metadata, or {@code null}.
 	 */
-	NamedHqlQueryDefinition getNamedHqlQueryMapping(String name);
+	NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(String name);
 
 	/**
 	 * Visit all named HQL query definitions
 	 */
-	void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition> definitionConsumer);
+	void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition<?>> definitionConsumer);
 
 	/**
 	 * Retrieve named SQL query metadata.
 	 *
 	 * @return The named query metadata, or {@code null}
 	 */
-	NamedNativeQueryDefinition getNamedNativeQueryMapping(String name);
+	NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(String name);
 
 	/**
 	 * Visit all named native query definitions
 	 */
-	void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition> definitionConsumer);
+	void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition<?>> definitionConsumer);
 
 	/**
 	 * Retrieve named procedure metadata.

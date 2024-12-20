@@ -1,116 +1,116 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.association;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
-import java.util.UUID;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
 /**
  * @author Luis Barreiro
  */
-@RunWith( BytecodeEnhancerRunner.class )
+@BytecodeEnhanced
 public class OneToOneAssociationTest {
 
-    @Test
-    public void test() {
-        User user = new User();
-        user.setLogin( UUID.randomUUID().toString() );
+	@Test
+	public void test() {
+		User user = new User();
+		user.setLogin( SafeRandomUUIDGenerator.safeRandomUUIDAsString() );
 
-        Customer customer = new Customer();
-        customer.setUser( user );
+		Customer customer = new Customer();
+		customer.setUser( user );
 
-        Assert.assertEquals( customer, user.getCustomer() );
+		assertEquals( customer, user.getCustomer() );
 
-        // check dirty tracking is set automatically with bi-directional association management
-        EnhancerTestUtils.checkDirtyTracking( user, "login", "customer" );
+		// check dirty tracking is set automatically with bi-directional association management
+		EnhancerTestUtils.checkDirtyTracking( user, "login", "customer" );
 
-        User anotherUser = new User();
-        anotherUser.setLogin( UUID.randomUUID().toString() );
+		User anotherUser = new User();
+		anotherUser.setLogin( SafeRandomUUIDGenerator.safeRandomUUIDAsString() );
 
-        customer.setUser( anotherUser );
+		customer.setUser( anotherUser );
 
-        Assert.assertNull( user.getCustomer() );
-        Assert.assertEquals( customer, anotherUser.getCustomer() );
+		assertNull( user.getCustomer() );
+		assertEquals( customer, anotherUser.getCustomer() );
 
-        user.setCustomer( new Customer() );
+		user.setCustomer( new Customer() );
 
-        Assert.assertEquals( user, user.getCustomer().getUser() );
-    }
+		assertEquals( user, user.getCustomer().getUser() );
+	}
 
-    @Test
-    public void testSetNull() {
-        User user = new User();
-        user.setLogin( UUID.randomUUID().toString() );
+	@Test
+	public void testSetNull() {
+		User user = new User();
+		user.setLogin( SafeRandomUUIDGenerator.safeRandomUUIDAsString() );
 
-        Customer customer = new Customer();
-        customer.setUser( user );
+		Customer customer = new Customer();
+		customer.setUser( user );
 
-        Assert.assertEquals( customer, user.getCustomer() );
+		assertEquals( customer, user.getCustomer() );
 
-        // check dirty tracking is set automatically with bi-directional association management
-        EnhancerTestUtils.checkDirtyTracking( user, "login", "customer" );
+		// check dirty tracking is set automatically with bi-directional association management
+		EnhancerTestUtils.checkDirtyTracking( user, "login", "customer" );
 
-        user.setCustomer( null );
+		user.setCustomer( null );
 
-        Assert.assertNull( user.getCustomer() );
-        Assert.assertNull( customer.getUser() );
-    }
+		assertNull( user.getCustomer() );
+		assertNull( customer.getUser() );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    private static class Customer {
+	@Entity
+	private static class Customer {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        @OneToOne
-        User user;
+		@OneToOne
+		User user;
 
-        User getUser() {
-            return user;
-        }
+		User getUser() {
+			return user;
+		}
 
-        void setUser(User newUser) {
-            user = newUser;
-        }
-    }
+		void setUser(User newUser) {
+			user = newUser;
+		}
+	}
 
-    @Entity
-    private static class User {
+	@Entity
+	private static class User {
 
-        @Id
-        Long id;
+		@Id
+		Long id;
 
-        String login;
+		String login;
 
-        String password;
+		String password;
 
-        @OneToOne( mappedBy = "user" )
-        Customer customer;
+		@OneToOne( mappedBy = "user" )
+		Customer customer;
 
-        void setLogin(String login) {
-            this.login = login;
-        }
+		void setLogin(String login) {
+			this.login = login;
+		}
 
-        Customer getCustomer() {
-            return customer;
-        }
+		Customer getCustomer() {
+			return customer;
+		}
 
-        void setCustomer(Customer customer) {
-            this.customer = customer;
-        }
-    }
+		void setCustomer(Customer customer) {
+			this.customer = customer;
+		}
+	}
 }

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.jpa.criteria;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
@@ -78,7 +82,7 @@ public class SelectOnlyArrayPropertyTest extends BaseEntityManagerFunctionalTest
 		} );
 	}
 
-	@Entity
+	@Entity(name = "EntityWithIdAndIntegerArray")
 	public static class EntityWithIdAndIntegerArray {
 
 		@Id

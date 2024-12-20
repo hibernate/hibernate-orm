@@ -1,32 +1,32 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model;
 
+import jakarta.persistence.GenerationType;
+import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
+import org.hibernate.Internal;
+import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.models.spi.TypeDetails;
+
 import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import org.hibernate.AnnotationException;
-import org.hibernate.AssertionFailure;
-import org.hibernate.Internal;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter.GeneratorNameDeterminationContext;
-import org.hibernate.id.IdentifierGenerator;
-
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Index;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.TableGenerator;
-import jakarta.persistence.UniqueConstraint;
-
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 import static java.util.Collections.unmodifiableMap;
+import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSequenceGenerator;
+import static org.hibernate.boot.model.internal.GeneratorParameters.interpretTableGenerator;
+import static org.hibernate.boot.model.internal.GeneratorStrategies.generatorStrategy;
+import static org.hibernate.boot.models.JpaAnnotations.SEQUENCE_GENERATOR;
+import static org.hibernate.boot.models.JpaAnnotations.TABLE_GENERATOR;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
@@ -92,179 +92,59 @@ public class IdentifierGeneratorDefinition implements Serializable {
 	@Internal
 	public static IdentifierGeneratorDefinition createImplicit(
 			String name,
-			Class<?> idType,
+			TypeDetails idType,
 			String generatorName,
-			IdGeneratorStrategyInterpreter generationInterpreter,
 			GenerationType generationType) {
 		// If we were unable to locate an actual matching named generator assume
 		// a sequence/table of the given name, make one based on GenerationType.
 
-		if ( generationType == null) {
-			return buildSequenceGeneratorDefinition( name, generationInterpreter );
+		if ( generationType == null ) {
+			generationType = GenerationType.SEQUENCE;
 		}
 
-		final String strategyName;
 		switch ( generationType ) {
 			case SEQUENCE:
-				return buildSequenceGeneratorDefinition( name, generationInterpreter );
+				return buildSequenceGeneratorDefinition( name );
 			case TABLE:
-				return buildTableGeneratorDefinition( name, generationInterpreter );
-			// really AUTO and IDENTITY work the same in this respect, aside from the actual strategy name
+				return buildTableGeneratorDefinition( name );
 			case IDENTITY:
 				throw new AnnotationException(
 						"@GeneratedValue annotation specified 'strategy=IDENTITY' and 'generator'"
 								+ " but the generator name is unnecessary"
 				);
-			case AUTO:
-				strategyName = generationInterpreter.determineGeneratorName(
-						generationType,
-						new GeneratorNameDeterminationContext() {
-							@Override
-							public Class<?> getIdType() {
-								return idType;
-							}
-							@Override
-							public String getGeneratedValueGeneratorName() {
-								return generatorName;
-							}
-						}
+			case UUID:
+				throw new AnnotationException(
+						"@GeneratedValue annotation specified 'strategy=UUID' and 'generator'"
+								+ " but the generator name is unnecessary"
 				);
-				break;
+			case AUTO:
+				return new IdentifierGeneratorDefinition(
+						name,
+						generatorStrategy( generationType, generatorName, idType ),
+						singletonMap( IdentifierGenerator.GENERATOR_NAME, name )
+				);
 			default:
-				//case UUID:
-				// (use the name instead for compatibility with javax.persistence)
-				if ( "UUID".equals( generationType.name() ) ) {
-					throw new AnnotationException(
-							"@GeneratedValue annotation specified 'strategy=UUID' and 'generator'"
-									+ " but the generator name is unnecessary"
-					);
-				}
-				else {
-					throw new AssertionFailure( "unknown generator type: " + generationType );
-				}
+				throw new AssertionFailure( "unknown generator type: " + generationType );
 		}
-
-		return new IdentifierGeneratorDefinition(
-				name,
-				strategyName,
-				Collections.singletonMap( IdentifierGenerator.GENERATOR_NAME, name )
-		);
 	}
 
-	private static IdentifierGeneratorDefinition buildTableGeneratorDefinition(
-			String name, IdGeneratorStrategyInterpreter generationInterpreter) {
+	private static IdentifierGeneratorDefinition buildTableGeneratorDefinition(String name) {
 		final Builder builder = new Builder();
-		generationInterpreter.interpretTableGenerator(
-				new TableGenerator() {
-					@Override
-					public String name() {
-						return name;
-					}
-
-					@Override
-					public String table() {
-						return "";
-					}
-
-					@Override
-					public int initialValue() {
-						return 0;
-					}
-
-					@Override
-					public int allocationSize() {
-						return 50;
-					}
-
-					@Override
-					public String catalog() {
-						return "";
-					}
-
-					@Override
-					public String schema() {
-						return "";
-					}
-
-					@Override
-					public String pkColumnName() {
-						return "";
-					}
-
-					@Override
-					public String valueColumnName() {
-						return "";
-					}
-
-					@Override
-					public String pkColumnValue() {
-						return "";
-					}
-
-					@Override
-					public UniqueConstraint[] uniqueConstraints() {
-						return new UniqueConstraint[0];
-					}
-
-					@Override
-					public Index[] indexes() {
-						return new Index[0];
-					}
-
-					@Override
-					public Class<? extends Annotation> annotationType() {
-						return TableGenerator.class;
-					}
-				},
-				builder
-		);
-
+		final TableGeneratorJpaAnnotation tableGeneratorUsage = TABLE_GENERATOR.createUsage( null );
+		if ( StringHelper.isNotEmpty( name ) ) {
+			tableGeneratorUsage.name( name );
+		}
+		interpretTableGenerator( tableGeneratorUsage, builder );
 		return builder.build();
 	}
 
-	private static IdentifierGeneratorDefinition buildSequenceGeneratorDefinition(
-			String name, IdGeneratorStrategyInterpreter generationInterpreter) {
+	private static IdentifierGeneratorDefinition buildSequenceGeneratorDefinition(String name) {
 		final Builder builder = new Builder();
-		generationInterpreter.interpretSequenceGenerator(
-				new SequenceGenerator() {
-					@Override
-					public String name() {
-						return name;
-					}
-
-					@Override
-					public String sequenceName() {
-						return "";
-					}
-
-					@Override
-					public String catalog() {
-						return "";
-					}
-
-					@Override
-					public String schema() {
-						return "";
-					}
-
-					@Override
-					public int initialValue() {
-						return 1;
-					}
-
-					@Override
-					public int allocationSize() {
-						return 50;
-					}
-
-					@Override
-					public Class<? extends Annotation> annotationType() {
-						return SequenceGenerator.class;
-					}
-				},
-				builder
-		);
-
+		final SequenceGeneratorJpaAnnotation sequenceGeneratorUsage = SEQUENCE_GENERATOR.createUsage( null );
+		if ( StringHelper.isNotEmpty( name ) ) {
+			sequenceGeneratorUsage.name( name );
+		}
+		interpretSequenceGenerator( sequenceGeneratorUsage, builder );
 		return builder.build();
 	}
 

@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.jpa;
 
 import java.io.Serializable;
@@ -107,7 +103,7 @@ public class Cat implements Serializable {
 
 	@PostUpdate
 	private void someLateUpdateWorking() {
-        log.debug("PostUpdate for: " + this.toString());
+		log.debug("PostUpdate for: " + this.toString());
 		postVersion++;
 	}
 
@@ -158,25 +154,25 @@ public class Cat implements Serializable {
 	 * of this object.
 	 */
 	@Override
-    public String toString()
+	public String toString()
 	{
-	    final String TAB = "    ";
+		final String TAB = "    ";
 
-	    String retValue = "";
+		String retValue = "";
 
-	    retValue = "Cat ( "
-	        + super.toString() + TAB
-	        + "id = " + this.id + TAB
-	        + "name = " + this.name + TAB
-	        + "dateOfBirth = " + this.dateOfBirth + TAB
-	        + "age = " + this.age + TAB
-	        + "length = " + this.length + TAB
-	        + "lastUpdate = " + this.lastUpdate + TAB
-	        + "manualVersion = " + this.manualVersion + TAB
-	        + "postVersion = " + Cat.postVersion + TAB
-	        + "kittens = " + this.kittens + TAB
-	        + " )";
+		retValue = "Cat ( "
+			+ super.toString() + TAB
+			+ "id = " + this.id + TAB
+			+ "name = " + this.name + TAB
+			+ "dateOfBirth = " + this.dateOfBirth + TAB
+			+ "age = " + this.age + TAB
+			+ "length = " + this.length + TAB
+			+ "lastUpdate = " + this.lastUpdate + TAB
+			+ "manualVersion = " + this.manualVersion + TAB
+			+ "postVersion = " + Cat.postVersion + TAB
+			+ "kittens = " + this.kittens + TAB
+			+ " )";
 
-	    return retValue;
+		return retValue;
 	}
 }

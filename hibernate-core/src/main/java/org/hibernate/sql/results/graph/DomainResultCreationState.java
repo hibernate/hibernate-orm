@@ -1,14 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph;
+
+import java.util.function.Function;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -19,10 +21,11 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
-import static org.hibernate.query.results.ResultsHelper.attributeName;
+import static org.hibernate.query.results.internal.ResultsHelper.attributeName;
 
 /**
  * Contains state related to building {@link DomainResult} and
@@ -117,13 +120,37 @@ public interface DomainResultCreationState {
 		}
 	}
 
+	default BasicFetch<?> visitEmbeddableDiscriminatorFetch(EmbeddableResultGraphNode fetchParent, boolean nested) {
+		final EmbeddableMappingType embeddableType = fetchParent.getReferencedMappingType();
+		final EmbeddableDiscriminatorMapping discriminatorMapping = embeddableType.getDiscriminatorMapping();
+		if ( discriminatorMapping != null ) {
+			final Function<FetchParent, BasicFetch<?>> fetchSupplier = fp -> discriminatorMapping.generateFetch(
+					fp,
+					fp.getNavigablePath().append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
+					FetchTiming.IMMEDIATE,
+					true,
+					null,
+					this
+			);
+			if ( nested ) {
+				return withNestedFetchParent( fetchParent, fetchSupplier );
+			}
+			else {
+				return fetchSupplier.apply( fetchParent );
+			}
+		}
+		else {
+			return null;
+		}
+	}
+
 	/**
 	 * Visit fetches for the given parent.
 	 *
 	 * We walk fetches via the SqlAstCreationContext because each "context"
 	 * will define differently what should be fetched (HQL versus load)
 	 */
- 	/*
+	/*
 	 * todo (6.0) : centralize the implementation of this
 	 * 		most of the logic in the impls of this is identical.  variations include:
 	 * 				1) given a Fetchable, determine the FetchTiming and `selected`[1].  Tricky as functional
@@ -147,10 +174,14 @@ public interface DomainResultCreationState {
 	 * todo (6.0) : wrt the "trickiness" of `selected[1]`, that may no longer be an issue given how TableGroups
 	 * 		are built/accessed.  Comes down to how we'd know whether to join fetch or select fetch.  Simply pass
 	 * 		along FetchStyle?
- 	 */
+	*/
 	ImmutableFetchList visitFetches(FetchParent fetchParent);
 
-	ImmutableFetchList visitNestedFetches(FetchParent fetchParent);
+	default ImmutableFetchList visitNestedFetches(FetchParent fetchParent) {
+		return withNestedFetchParent( fetchParent, this::visitFetches );
+	}
+
+	<R> R withNestedFetchParent(FetchParent fetchParent, Function<FetchParent, R> action);
 
 	boolean isResolvingCircularFetch();
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.internal;
 
@@ -18,7 +16,7 @@ import org.hibernate.stat.SessionStatistics;
 public class SessionStatisticsImpl implements SessionStatistics {
 
 	private final SessionImplementor session;
-	
+
 	public SessionStatisticsImpl(SessionImplementor session) {
 		this.session = session;
 	}
@@ -26,19 +24,19 @@ public class SessionStatisticsImpl implements SessionStatistics {
 	public int getEntityCount() {
 		return session.getPersistenceContextInternal().getNumberOfManagedEntities();
 	}
-	
+
 	public int getCollectionCount() {
 		return session.getPersistenceContextInternal().getCollectionEntriesSize();
 	}
-	
+
 	public Set<?> getEntityKeys() {
 		return Collections.unmodifiableSet( session.getPersistenceContextInternal().getEntitiesByKey().keySet() );
 	}
-	
+
 	public Set<?> getCollectionKeys() {
 		return Collections.unmodifiableSet( session.getPersistenceContextInternal().getCollectionsByKey().keySet() );
 	}
-	
+
 	public String toString() {
 		return "SessionStatistics[" +
 				"entity count=" + getEntityCount() +

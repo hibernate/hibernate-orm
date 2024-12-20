@@ -1,19 +1,26 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.connections;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
+
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.util.connections.ConnectionCheckingConnectionProvider;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -21,37 +28,17 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Query;
-import javax.sql.DataSource;
-
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
-import org.hibernate.orm.test.jpa.connection.BaseDataSource;
-import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.spy;
 
 /**
  * @author Selaron
  */
-@TestForIssue(jiraKey = "HHH-4808")
+@JiraKey("HHH-4808")
 public class LazyLoadingConnectionCloseTest extends EntityManagerFactoryBasedFunctionalTest {
 
-	private ConnectionProviderDecorator connectionProvider;
+	private ConnectionCheckingConnectionProvider connectionProvider;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -68,8 +55,9 @@ public class LazyLoadingConnectionCloseTest extends EntityManagerFactoryBasedFun
 		);
 
 		options.put( AvailableSettings.AUTOCOMMIT, "false" );
+		options.put( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, "false" );
 
-		connectionProvider = new ConnectionProviderDecorator( getDataSource() );
+		connectionProvider = new ConnectionCheckingConnectionProvider();
 		options.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
 
 	}
@@ -247,7 +235,6 @@ public class LazyLoadingConnectionCloseTest extends EntityManagerFactoryBasedFun
 		}
 
 		@OneToMany(targetEntity = ChildEntity.class, mappedBy = "parent")
-		@LazyCollection(LazyCollectionOption.EXTRA)
 		@Fetch(FetchMode.SELECT)
 		public Set<ChildEntity> getChildren() {
 			return children;
@@ -285,77 +272,12 @@ public class LazyLoadingConnectionCloseTest extends EntityManagerFactoryBasedFun
 
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn
-		@LazyToOne(LazyToOneOption.PROXY)
 		public SimpleEntity getParent() {
 			return parent;
 		}
 
 		public void setParent(final SimpleEntity parent) {
 			this.parent = parent;
-		}
-	}
-
-	private BaseDataSource getDataSource() {
-		final Properties connectionProps = new Properties();
-		connectionProps.put( "user", Environment.getProperties().getProperty( Environment.USER ) );
-		connectionProps.put( "password", Environment.getProperties().getProperty( Environment.PASS ) );
-
-		final String url = Environment.getProperties().getProperty( Environment.URL );
-		return new BaseDataSource() {
-			@Override
-			public Connection getConnection() throws SQLException {
-				return DriverManager.getConnection( url, connectionProps );
-			}
-
-			@Override
-			public Connection getConnection(String username, String password) throws SQLException {
-				return DriverManager.getConnection( url, connectionProps );
-			}
-		};
-	}
-
-	public static class ConnectionProviderDecorator extends UserSuppliedConnectionProviderImpl {
-
-		private final DataSource dataSource;
-
-		private int connectionCount;
-		private int openConnections;
-
-		private Connection connection;
-
-		public ConnectionProviderDecorator(DataSource dataSource) {
-			this.dataSource = dataSource;
-		}
-
-		@Override
-		public Connection getConnection() throws SQLException {
-			connectionCount++;
-			openConnections++;
-			connection = spy( dataSource.getConnection() );
-			return connection;
-		}
-
-		@Override
-		public void closeConnection(Connection connection) throws SQLException {
-			connection.close();
-			openConnections--;
-		}
-
-		public int getTotalOpenedConnectionCount() {
-			return this.connectionCount;
-		}
-
-		public int getCurrentOpenConnections() {
-			return openConnections;
-		}
-
-		public boolean areAllConnectionClosed() {
-			return openConnections == 0;
-		}
-
-		public void clear() {
-			connectionCount = 0;
-			openConnections = 0;
 		}
 	}
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity.mutation;
 
@@ -39,6 +37,8 @@ public interface UpdateValuesAnalysis extends ValuesAnalysis {
 	 * Descriptor of the tables which had any non-null value bindings
 	 */
 	TableSet getTablesWithPreviousNonNullValues();
+
+	TableSet getTablesNeedingDynamicUpdate();
 
 	/**
 	 * Descriptors for the analysis of each attribute

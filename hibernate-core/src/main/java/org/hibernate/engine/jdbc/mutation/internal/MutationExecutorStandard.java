@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.mutation.internal;
 
@@ -22,8 +20,13 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
+import org.hibernate.sql.model.EntityMutationOperationGroup;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
+import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 import org.hibernate.sql.model.TableMapping;
@@ -33,7 +36,7 @@ import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
- * Standard MutationExecutor implementation
+ * Standard {@link org.hibernate.engine.jdbc.mutation.MutationExecutor}
  *
  * @author Steve Ebersole
  */
@@ -49,6 +52,7 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 	 * Any non-batched JDBC statements
 	 */
 	private final PreparedStatementGroup nonBatchedStatementGroup;
+	private final GeneratedValuesMutationDelegate generatedValuesDelegate;
 
 	/**
 	 * Operations which handle their own execution
@@ -66,6 +70,9 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 			int batchSize,
 			SharedSessionContractImplementor session) {
 		this.mutationOperationGroup = mutationOperationGroup;
+		this.generatedValuesDelegate = mutationOperationGroup.asEntityMutationOperationGroup() != null ?
+				mutationOperationGroup.asEntityMutationOperationGroup().getMutationDelegate() :
+				null;
 
 		final BatchKey batchKey = batchKeySupplier.getBatchKey();
 
@@ -82,11 +89,10 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 		for ( int i = mutationOperationGroup.getNumberOfOperations() - 1; i >= 0; i-- ) {
 			final MutationOperation operation = mutationOperationGroup.getOperation( i );
 			if ( operation instanceof SelfExecutingUpdateOperation ) {
-				final SelfExecutingUpdateOperation selfExecutingMutation = (SelfExecutingUpdateOperation) operation;
 				if ( selfExecutingMutations == null ) {
 					selfExecutingMutations = new ArrayList<>();
 				}
-				selfExecutingMutations.add( 0, selfExecutingMutation );
+				selfExecutingMutations.add( 0, ( (SelfExecutingUpdateOperation) operation ) );
 			}
 			else {
 				final PreparableMutationOperation preparableMutationOperation = (PreparableMutationOperation) operation;
@@ -126,6 +132,7 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 			this.batch = null;
 		}
 		else {
+			assert generatedValuesDelegate == null : "Unsupported batched mutation for entity target with generated values delegate";
 			final List<PreparableMutationOperation> batchedMutationsRef = batchedJdbcMutations;
 			this.batch = session.getJdbcCoordinator().getBatch(
 					batchKey,
@@ -133,6 +140,7 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 					() -> ModelMutationHelper.toPreparedStatementGroup(
 							mutationOperationGroup.getMutationType(),
 							mutationOperationGroup.getMutationTarget(),
+							null,
 							batchedMutationsRef,
 							session
 					)
@@ -143,6 +151,7 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 		this.nonBatchedStatementGroup = ModelMutationHelper.toPreparedStatementGroup(
 				mutationOperationGroup.getMutationType(),
 				mutationOperationGroup.getMutationTarget(),
+				generatedValuesDelegate,
 				nonBatchedJdbcMutations,
 				session
 		);
@@ -202,22 +211,59 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 	}
 
 	@Override
-	protected void performNonBatchedOperations(
+	protected GeneratedValues performNonBatchedOperations(
+			Object modelReference,
 			ValuesAnalysis valuesAnalysis,
 			TableInclusionChecker inclusionChecker,
 			OperationResultChecker resultChecker,
 			SharedSessionContractImplementor session) {
 		if ( nonBatchedStatementGroup == null || nonBatchedStatementGroup.getNumberOfStatements() <= 0 ) {
-			return;
+			return null;
 		}
 
-		nonBatchedStatementGroup.forEachStatement( (tableName, statementDetails) -> performNonBatchedMutation(
-				statementDetails,
-				valueBindings,
-				inclusionChecker,
-				resultChecker,
-				session
-		) );
+		final GeneratedValues generatedValues;
+		if ( generatedValuesDelegate != null ) {
+			final EntityMutationOperationGroup entityGroup = mutationOperationGroup.asEntityMutationOperationGroup();
+			final EntityMutationTarget entityTarget = entityGroup.getMutationTarget();
+			final PreparedStatementDetails details = nonBatchedStatementGroup.getPreparedStatementDetails(
+					entityTarget.getIdentifierTableName()
+			);
+			generatedValues = generatedValuesDelegate.performMutation(
+					details,
+					valueBindings,
+					modelReference,
+					session
+			);
+
+			final Object id = entityGroup.getMutationType() == MutationType.INSERT && details.getMutatingTableDetails().isIdentifierTable() ?
+					generatedValues.getGeneratedValue( entityTarget.getTargetPart().getIdentifierMapping() ) :
+					null;
+			nonBatchedStatementGroup.forEachStatement( (tableName, statementDetails) -> {
+				if ( !statementDetails.getMutatingTableDetails().isIdentifierTable() ) {
+					performNonBatchedMutation(
+							statementDetails,
+							id,
+							valueBindings,
+							inclusionChecker,
+							resultChecker,
+							session
+					);
+				}
+			} );
+		}
+		else {
+			generatedValues = null;
+			nonBatchedStatementGroup.forEachStatement( (tableName, statementDetails) -> performNonBatchedMutation(
+					statementDetails,
+					null,
+					valueBindings,
+					inclusionChecker,
+					resultChecker,
+					session
+			) );
+		}
+
+		return generatedValues;
 	}
 
 	@Override
@@ -237,11 +283,12 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 	@Override
 	protected void performBatchedOperations(
 			ValuesAnalysis valuesAnalysis,
-			TableInclusionChecker inclusionChecker) {
+			TableInclusionChecker inclusionChecker,
+			Batch.StaleStateMapper staleStateMapper) {
 		if ( batch == null ) {
 			return;
 		}
-		batch.addToBatch( valueBindings, inclusionChecker );
+		batch.addToBatch( valueBindings, inclusionChecker, staleStateMapper );
 	}
 
 	@Override

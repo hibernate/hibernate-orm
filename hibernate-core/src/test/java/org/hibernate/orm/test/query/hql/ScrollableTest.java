@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
@@ -19,7 +17,7 @@ import org.hibernate.query.Query;
 
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -40,8 +38,8 @@ public class ScrollableTest extends BaseCoreFunctionalTestCase {
 		try (Session session = openSession()) {
 			session.getTransaction().begin();
 			try {
-				session.save( new MyEntity( 1L, "entity_1" ) );
-				session.save( new MyEntity( 2L, "entity_2" ) );
+				session.persist( new MyEntity( 1L, "entity_1" ) );
+				session.persist( new MyEntity( 2L, "entity_2" ) );
 				session.getTransaction().commit();
 			}
 			catch (Exception e) {
@@ -71,7 +69,7 @@ public class ScrollableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10860")
+	@JiraKey(value = "HHH-10860")
 	public void testScrollableResults() {
 		final List<Long> params = new ArrayList<>();
 		params.add( 1L );
@@ -97,7 +95,7 @@ public class ScrollableTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10860")
+	@JiraKey(value = "HHH-10860")
 	public void testScrollableResults2() {
 		final List<Long> params = new ArrayList<>();
 		params.add( 1L );

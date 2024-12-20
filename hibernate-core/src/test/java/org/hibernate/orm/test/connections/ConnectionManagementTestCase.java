@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.connections;
 
+import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -14,7 +13,6 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -134,19 +132,21 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 		Session sessionUnderTest = getSessionUnderTest();
 
 		// force the connection to be retained
-		sessionUnderTest.createQuery( "from Silly" ).scroll().next();
+		try (ScrollableResults sr = sessionUnderTest.createQuery( "from Silly" ).scroll()) {
+			sr.next();
 
-		try {
-			SerializationHelper.serialize( sessionUnderTest );
+			try {
+				SerializationHelper.serialize( sessionUnderTest );
 
-			fail( "Serialization of connected session allowed!" );
-		}
-		catch( IllegalStateException e ) {
-			// expected behaviour
-		}
-		finally {
-			release( sessionUnderTest );
-			done();
+				fail( "Serialization of connected session allowed!" );
+			}
+			catch (IllegalStateException e) {
+				// expected behaviour
+			}
+			finally {
+				release( sessionUnderTest );
+				done();
+			}
 		}
 	}
 
@@ -244,21 +244,22 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 		Session sessionUnderTest = getSessionUnderTest();
 
 		Silly silly = new Silly( "tester" );
-		sessionUnderTest.save( silly );
+		sessionUnderTest.persist( silly );
 		sessionUnderTest.flush();
 
-		sessionUnderTest.createQuery( "from Silly" ).scroll();
+		try (ScrollableResults sr = sessionUnderTest.createQuery( "from Silly" ).scroll()) {
 
-		disconnect( sessionUnderTest );
-		SerializationHelper.serialize( sessionUnderTest );
-		checkSerializedState( sessionUnderTest );
+			disconnect( sessionUnderTest );
+			SerializationHelper.serialize( sessionUnderTest );
+			checkSerializedState( sessionUnderTest );
 
-		reconnect( sessionUnderTest );
-		sessionUnderTest.delete( silly );
-		sessionUnderTest.flush();
+			reconnect( sessionUnderTest );
+			sessionUnderTest.remove( silly );
+			sessionUnderTest.flush();
 
-		release( sessionUnderTest );
-		done();
+			release( sessionUnderTest );
+			done();
+		}
 	}
 
 	/**

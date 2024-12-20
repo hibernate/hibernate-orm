@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.internal;
 
@@ -16,7 +14,6 @@ import java.util.function.BiConsumer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -94,7 +91,7 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 						for ( Object bindValue : bindValues ) {
 							final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
 							jdbcParameterBinders.add( jdbcParameter );
-							lastBindValue = bindValue == null ? null : valueConverter.toRelationalValue( bindValue );
+							lastBindValue = valueConverter.toRelationalValue( bindValue );
 							addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, lastBindValue ) );
 						}
 						if ( bindValueMaxCount != bindValueCount ) {

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.inheritance.mixed;
 
@@ -62,8 +60,8 @@ public class SubclassTest {
 					checkClassType( f2, doc, folder );
 					f2 = result.get( 1 );
 					checkClassType( f2, doc, folder );
-					session.delete( result.get( 0 ) );
-					session.delete( result.get( 1 ) );
+					session.remove( result.get( 0 ) );
+					session.remove( result.get( 1 ) );
 				}
 		);
 	}

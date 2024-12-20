@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.batch;
 
 import java.util.ArrayList;
@@ -18,7 +22,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -93,7 +96,7 @@ public class SubselectTest {
 					List<String> sqlQueries = statementInspector.getSqlQueries();
 					assertThat( sqlQueries.size() ).isEqualTo( 1 );
 					String query = sqlQueries.get( 0 );
-					assertFalse( containsSubquery( query ), " The query should contain a subquery" );
+					assertFalse( containsSubquery( query ), " The query should not contain a subquery" );
 
 				}
 		);

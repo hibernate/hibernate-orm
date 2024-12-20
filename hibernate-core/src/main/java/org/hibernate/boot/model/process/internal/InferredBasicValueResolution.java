@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.process.internal;
 
@@ -27,6 +25,7 @@ public class InferredBasicValueResolution<J,T> implements BasicValue.Resolution<
 	private final JdbcMapping jdbcMapping;
 
 	private final BasicType<J> legacyType;
+	private BasicType<?> updatedType;
 
 	public InferredBasicValueResolution(
 			JdbcMapping jdbcMapping,
@@ -45,12 +44,12 @@ public class InferredBasicValueResolution<J,T> implements BasicValue.Resolution<
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
-		return jdbcMapping;
+		return updatedType == null ? jdbcMapping : updatedType;
 	}
 
 	@Override
 	public BasicType<J> getLegacyResolvedBasicType() {
-		return legacyType;
+		return updatedType == null ? legacyType : (BasicType<J>) updatedType;
 	}
 
 	@Override
@@ -65,17 +64,24 @@ public class InferredBasicValueResolution<J,T> implements BasicValue.Resolution<
 
 	@Override
 	public JdbcType getJdbcType() {
-		return jdbcType;
+		return updatedType == null ? jdbcType : updatedType.getJdbcType();
 	}
 
 	@Override
 	public BasicValueConverter<J,T> getValueConverter() {
 		//noinspection unchecked
-		return (BasicValueConverter<J, T>) jdbcMapping.getValueConverter();
+		return updatedType == null
+				? (BasicValueConverter<J, T>) jdbcMapping.getValueConverter()
+				: (BasicValueConverter<J, T>) updatedType.getValueConverter();
 	}
 
 	@Override
 	public MutabilityPlan<J> getMutabilityPlan() {
 		return mutabilityPlan;
+	}
+
+	@Override
+	public void updateResolution(BasicType<?> type) {
+		this.updatedType = type;
 	}
 }

@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Person.java 4592 2004-09-26 00:39:43Z oneovthafew $
 package org.hibernate.orm.test.cuk;
 import java.io.Serializable;
 import java.util.HashSet;
@@ -81,15 +77,15 @@ public class Person implements Serializable {
 	public void setAccounts(Set accounts) {
 		this.accounts = accounts;
 	}
-	
+
 	public boolean isDeleted() {
 		return deleted;
 	}
-	
+
 	public void setDeleted(boolean deleted) {
 		this.deleted = deleted;
 	}
-	
+
 	public boolean equals(Object other) {
 		if (other instanceof Person) {
 			Person that = (Person) other;
@@ -99,7 +95,7 @@ public class Person implements Serializable {
 			return false;
 		}
 	}
-	
+
 	public int hashCode() {
 		return userId.hashCode();
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -24,6 +22,7 @@ import org.hibernate.loader.ast.internal.SimpleNaturalIdLoader;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -43,7 +42,8 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlAr
 /**
  * Single-attribute NaturalIdMapping implementation
  */
-public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements JavaType.CoercionContext {
+public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements JavaType.CoercionContext,
+		BasicValuedMapping {
 	private final SingularAttributeMapping attribute;
 	private final SessionFactoryImplementor sessionFactory;
 	private final TypeConfiguration typeConfiguration;
@@ -139,7 +139,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 							"Incoming natural-id value [%s (`%s`)] is not of expected type [`%s`] and could not be coerced",
 							naturalIdValue,
 							naturalIdValueClass.getName(),
-							getJavaType().getJavaType().getTypeName()
+							getJavaType().getTypeName()
 					)
 			);
 		}
@@ -242,6 +242,11 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping() {
+		return attribute.getSingleJdbcMapping();
+	}
+
+	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		return attribute.forEachJdbcType( offset, action );
 	}
@@ -316,5 +321,10 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	@Override
 	public boolean hasPartitionedSelectionMapping() {
 		return attribute.hasPartitionedSelectionMapping();
+	}
+
+	@Override
+	public MappingType getMappedType() {
+		return attribute.getMappedType();
 	}
 }

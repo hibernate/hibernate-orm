@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
 
@@ -15,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import jakarta.persistence.PersistenceUnitTransactionType;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
@@ -28,7 +27,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -37,9 +36,7 @@ import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
@@ -59,6 +56,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.schema.Action;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.usertype.UserType;
@@ -66,7 +64,6 @@ import org.hibernate.usertype.UserType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.SharedCacheMode;
 
-import static java.util.Collections.emptyList;
 
 /**
  * A convenience API making it easier to bootstrap an instance of Hibernate.
@@ -77,15 +74,28 @@ import static java.util.Collections.emptyList;
  * <li>{@linkplain #setProperty(String, String) configuration properties}
  *     from various sources, and
  * <li>entity O/R mappings, defined in either {@linkplain #addAnnotatedClass
- *    annotated classes}, or {@linkplain #addFile XML mapping documents}.
+ *     annotated classes}, or {@linkplain #addFile XML mapping documents}.
  * </ul>
  * <p>
  * Note that XML mappings may be expressed using the JPA {@code orm.xml}
  * format, or in Hibernate's legacy {@code .hbm.xml} format.
  * <p>
  * Configuration properties are enumerated by {@link AvailableSettings}.
+ * <p>
+ * When instantiated, an instance of {@code Configuration} has its properties
+ * initially populated from the {@linkplain Environment#getProperties()
+ * environment}, including:
+ * <ul>
+ * <li>JVM {@linkplain System#getProperties() system properties}, and
+ * <li>properties specified in {@code hibernate.properties}.
+ * </ul>
+ * <p>
+ * These initial properties may be completely discarded by calling
+ * {@link #setProperties(Properties)}, or they may be overridden
+ * individually by calling {@link #setProperty(String, String)}.
+ * <p>
  * <pre>
- *  SessionFactory factory = new Configuration()
+ * SessionFactory factory = new Configuration()
  *     // scan classes for mapping annotations
  *     .addAnnotatedClass(Item.class)
  *     .addAnnotatedClass(Bid.class)
@@ -95,7 +105,7 @@ import static java.util.Collections.emptyList;
  *     // set a configuration property
  *     .setProperty(AvailableSettings.DATASOURCE,
  *                  "java:comp/env/jdbc/test")
- *     .getSessionFactory();
+ *     .buildSessionFactory();
  * </pre>
  * <p>
  * In addition, there are convenience methods for adding
@@ -117,19 +127,25 @@ import static java.util.Collections.emptyList;
  * Programs may directly use the APIs defined under {@link org.hibernate.boot},
  * as an alternative to using an instance of this class.
  *
+ * @apiNote The {@link org.hibernate.jpa.HibernatePersistenceConfiguration}
+ * is a new alternative to this venerable API, and extends the JPA-standard
+ * {@link jakarta.persistence.PersistenceConfiguration}.
+ *
  * @author Gavin King
  * @author Steve Ebersole
  *
  * @see SessionFactory
  * @see AvailableSettings
  * @see org.hibernate.boot
+ * @see org.hibernate.jpa.HibernatePersistenceConfiguration
  */
 public class Configuration {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Configuration.class );
 
 	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 	private final MetadataSources metadataSources;
-	private final ClassmateContext classmateContext;
+	final private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
+	private final ClassmateContext classmateContext = new ClassmateContext();
 
 	// used during processing mappings
 	private ImplicitNamingStrategy implicitNamingStrategy;
@@ -138,11 +154,11 @@ public class Configuration {
 	private List<UserTypeRegistration> userTypeRegistrations;
 	private final List<TypeContributor> typeContributorRegistrations = new ArrayList<>();
 	private final List<FunctionContributor> functionContributorRegistrations = new ArrayList<>();
-	private Map<String, NamedHqlQueryDefinition> namedQueries;
-	private Map<String, NamedNativeQueryDefinition> namedSqlQueries;
-	private Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
-	private Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappings;
-	private Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
+	private final Map<String, NamedHqlQueryDefinition<?>> namedQueries = new HashMap<>();
+	private final Map<String, NamedNativeQueryDefinition<?>> namedSqlQueries = new HashMap<>();
+	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap = new HashMap<>();
+	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappings = new HashMap<>();
+	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap = new HashMap<>();
 
 	private Map<String, SqmFunctionDescriptor> customFunctionDescriptors;
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
@@ -150,19 +166,15 @@ public class Configuration {
 	private List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
 
 	// used to build SF
-	private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
+	private Properties properties = new Properties();
+	private Interceptor interceptor = EmptyInterceptor.INSTANCE;
 	private EntityNotFoundDelegate entityNotFoundDelegate;
-	private Interceptor interceptor;
 	private SessionFactoryObserver sessionFactoryObserver;
 	private StatementInspector statementInspector;
-	private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
+	private CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver;
 	private CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
 	private ColumnOrderingStrategy columnOrderingStrategy;
-	private Properties properties;
 	private SharedCacheMode sharedCacheMode;
-
-	@Deprecated(since = "6", forRemoval = true)
-	public static final String ARTEFACT_PROCESSING_ORDER = AvailableSettings.ARTIFACT_PROCESSING_ORDER;
 
 	/**
 	 * Create a new instance, using a default {@link BootstrapServiceRegistry}
@@ -179,10 +191,10 @@ public class Configuration {
 	 * and a newly instantiated {@link MetadataSources}.
 	 */
 	public Configuration(BootstrapServiceRegistry serviceRegistry) {
-		this.bootstrapServiceRegistry = serviceRegistry;
-		this.metadataSources = new MetadataSources( serviceRegistry, createMappingBinderAccess( serviceRegistry ) );
-		this.classmateContext = new ClassmateContext();
-		reset();
+		bootstrapServiceRegistry = serviceRegistry;
+		metadataSources = new MetadataSources( serviceRegistry, createMappingBinderAccess( serviceRegistry ) );
+		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
+		properties.putAll( standardServiceRegistryBuilder.getSettings() );
 	}
 
 	private XmlMappingBinderAccess createMappingBinderAccess(BootstrapServiceRegistry serviceRegistry) {
@@ -197,18 +209,17 @@ public class Configuration {
 	 * {@link BootstrapServiceRegistry} obtained from the {@link MetadataSources}.
 	 */
 	public Configuration(MetadataSources metadataSources) {
-		this.bootstrapServiceRegistry = getBootstrapRegistry( metadataSources.getServiceRegistry() );
 		this.metadataSources = metadataSources;
-		this.classmateContext = new ClassmateContext();
-		reset();
+		bootstrapServiceRegistry = getBootstrapRegistry( metadataSources.getServiceRegistry() );
+		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
+		properties.putAll( standardServiceRegistryBuilder.getSettings() );
 	}
 
 	private static BootstrapServiceRegistry getBootstrapRegistry(ServiceRegistry serviceRegistry) {
-		if ( serviceRegistry instanceof BootstrapServiceRegistry ) {
-			return (BootstrapServiceRegistry) serviceRegistry;
+		if ( serviceRegistry instanceof BootstrapServiceRegistry bootstrapServiceRegistry ) {
+			return bootstrapServiceRegistry;
 		}
-		else if ( serviceRegistry instanceof StandardServiceRegistry ) {
-			final StandardServiceRegistry ssr = (StandardServiceRegistry) serviceRegistry;
+		else if ( serviceRegistry instanceof StandardServiceRegistry ssr ) {
 			return (BootstrapServiceRegistry) ssr.getParentServiceRegistry();
 		}
 
@@ -217,21 +228,6 @@ public class Configuration {
 						"and could not determine how to locate BootstrapServiceRegistry " +
 						"from Configuration instantiation"
 		);
-	}
-
-	protected void reset() {
-		implicitNamingStrategy = ImplicitNamingStrategyJpaCompliantImpl.INSTANCE;
-		physicalNamingStrategy = PhysicalNamingStrategyStandardImpl.INSTANCE;
-		namedQueries = new HashMap<>();
-		namedSqlQueries = new HashMap<>();
-		sqlResultSetMappings = new HashMap<>();
-		namedEntityGraphMap = new HashMap<>();
-		namedProcedureCallMap = new HashMap<>();
-
-		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );
-		interceptor = EmptyInterceptor.INSTANCE;
-		properties = new Properties(  );
-		properties.putAll( standardServiceRegistryBuilder.getSettings() );
 	}
 
 
@@ -281,6 +277,62 @@ public class Configuration {
 	public Configuration setProperty(String propertyName, String value) {
 		properties.setProperty( propertyName, value );
 		return this;
+	}
+
+	/**
+	 * Set a property to a boolean value by name
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value The new boolean property value
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.5
+	 */
+	public Configuration setProperty(String propertyName, boolean value) {
+		return setProperty( propertyName, Boolean.toString(value) );
+	}
+
+	/**
+	 * Set a property to a Java class name
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value The Java class
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.5
+	 */
+	public Configuration setProperty(String propertyName, Class<?> value) {
+		return setProperty( propertyName, value.getName() );
+	}
+
+	/**
+	 * Set a property to the name of a value of an enumerated type
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value A value of an enumerated type
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.5
+	 */
+	public Configuration setProperty(String propertyName, Enum<?> value) {
+		return setProperty( propertyName, value.name() );
+	}
+
+	/**
+	 * Set a property to an integer value by name
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value The new integer property value
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 6.5
+	 */
+	public Configuration setProperty(String propertyName, int value) {
+		return setProperty( propertyName, Integer.toString(value) );
 	}
 
 	/**
@@ -401,6 +453,75 @@ public class Configuration {
 	public Configuration configure(File configFile) throws HibernateException {
 		standardServiceRegistryBuilder.configure( configFile );
 		properties.putAll( standardServiceRegistryBuilder.getSettings() );
+		return this;
+	}
+
+	// New typed property setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Set {@value AvailableSettings#SHOW_SQL}, {@value AvailableSettings#FORMAT_SQL},
+	 * and {@value AvailableSettings#HIGHLIGHT_SQL}.
+	 *
+	 * @param showSql should SQL be logged to console?
+	 * @param formatSql should logged SQL be formatted
+	 * @param highlightSql should logged SQL be highlighted with pretty colors
+	 */
+	public Configuration showSql(boolean showSql, boolean formatSql, boolean highlightSql) {
+		setProperty( AvailableSettings.SHOW_SQL, Boolean.toString(showSql) );
+		setProperty( AvailableSettings.FORMAT_SQL, Boolean.toString(formatSql) );
+		setProperty( AvailableSettings.HIGHLIGHT_SQL, Boolean.toString(highlightSql) );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#HBM2DDL_AUTO}.
+	 *
+	 * @param action the {@link Action}
+	 */
+	public Configuration setSchemaExportAction(Action action) {
+		setProperty( AvailableSettings.HBM2DDL_AUTO, action.getExternalHbm2ddlName() );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#USER} and {@value AvailableSettings#PASS}.
+	 *
+	 * @param user the user id
+	 * @param pass the password
+	 */
+	public Configuration setCredentials(String user, String pass) {
+		setProperty( AvailableSettings.USER, user );
+		setProperty( AvailableSettings.PASS, pass );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#URL}.
+	 *
+	 * @param url the JDBC URL
+	 */
+	public Configuration setJdbcUrl(String url) {
+		setProperty( AvailableSettings.URL, url );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#DATASOURCE}.
+	 *
+	 * @param jndiName the JNDI name of the datasource
+	 */
+	public Configuration setDatasource(String jndiName) {
+		setProperty( AvailableSettings.DATASOURCE, jndiName );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#JAKARTA_TRANSACTION_TYPE}.
+	 *
+	 * @param transactionType the {@link PersistenceUnitTransactionType}
+	 */
+	public Configuration setTransactionType(PersistenceUnitTransactionType transactionType) {
+		setProperty( AvailableSettings.JAKARTA_TRANSACTION_TYPE, transactionType.toString() );
 		return this;
 	}
 
@@ -633,7 +754,7 @@ public class Configuration {
 	 * @throws MappingException Indicates problems locating the resource or
 	 * processing the contained mapping document.
 	 */
-	public Configuration addClass(Class entityClass) throws MappingException {
+	public Configuration addClass(Class<?> entityClass) throws MappingException {
 		if ( entityClass == null ) {
 			throw new IllegalArgumentException( "The specified class cannot be null" );
 		}
@@ -652,8 +773,22 @@ public class Configuration {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	public Configuration addAnnotatedClass(Class annotatedClass) {
+	public Configuration addAnnotatedClass(Class<?> annotatedClass) {
 		metadataSources.addAnnotatedClass( annotatedClass );
+		return this;
+	}
+
+	/**
+	 * Read metadata from the annotations associated with the given classes.
+	 *
+	 * @param annotatedClasses The classes containing annotations
+	 *
+	 * @return this (for method chaining)
+	 */
+	public Configuration addAnnotatedClasses(Class... annotatedClasses) {
+		for (Class annotatedClass : annotatedClasses) {
+			addAnnotatedClass( annotatedClass );
+		}
 		return this;
 	}
 
@@ -668,6 +803,22 @@ public class Configuration {
 	 */
 	public Configuration addPackage(String packageName) throws MappingException {
 		metadataSources.addPackage( packageName );
+		return this;
+	}
+
+	/**
+	 * Read package-level metadata.
+	 *
+	 * @param packageNames java package names
+	 *
+	 * @return this (for method chaining)
+	 *
+	 * @throws MappingException in case there is an error in the mapping data
+	 */
+	public Configuration addPackages(String... packageNames) throws MappingException {
+		for (String packageName : packageNames) {
+			addPackage( packageName );
+		}
 		return this;
 	}
 
@@ -792,7 +943,7 @@ public class Configuration {
 	/**
 	 * The {@link CurrentTenantIdentifierResolver}, if any, that was added to this configuration.
 	 */
-	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
+	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
 		return currentTenantIdentifierResolver;
 	}
 
@@ -801,7 +952,7 @@ public class Configuration {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	public Configuration setCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver currentTenantIdentifierResolver) {
+	public Configuration setCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver) {
 		this.currentTenantIdentifierResolver = currentTenantIdentifierResolver;
 		return this;
 	}
@@ -965,14 +1116,18 @@ public class Configuration {
 		}
 	}
 
-	public Map<String,SqmFunctionDescriptor> getSqlFunctions() {
-		return customFunctionDescriptors;
-	}
-
 	/**
-	 * Adds a {@linkplain SqmFunctionDescriptor SQL function descriptor} to this configuration.
+	 * Adds a {@linkplain SqmFunctionDescriptor function descriptor} to
+	 * this configuration.
+	 *
+	 * @apiNote For historical reasons, this method is misnamed.
+	 *          The function descriptor actually describes a function
+	 *          available in HQL, and it may or may not map directly
+	 *          to a function defined in SQL.
 	 *
 	 * @return {@code this} for method chaining
+	 *
+	 * @see SqmFunctionDescriptor
 	 */
 	public Configuration addSqlFunction(String functionName, SqmFunctionDescriptor function) {
 		if ( customFunctionDescriptors == null ) {
@@ -1104,7 +1259,7 @@ public class Configuration {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// todo : decide about these
 
-	public Map<String, NamedNativeQueryDefinition> getNamedSQLQueries() {
+	public Map<String, NamedNativeQueryDefinition<?>> getNamedSQLQueries() {
 		return namedSqlQueries;
 	}
 
@@ -1113,11 +1268,11 @@ public class Configuration {
 	}
 
 	public java.util.Collection<NamedEntityGraphDefinition> getNamedEntityGraphs() {
-		return namedEntityGraphMap == null ? emptyList() : namedEntityGraphMap.values();
+		return namedEntityGraphMap.values();
 	}
 
 
-	public Map<String, NamedHqlQueryDefinition> getNamedQueries() {
+	public Map<String, NamedHqlQueryDefinition<?>> getNamedQueries() {
 		return namedQueries;
 	}
 
@@ -1126,18 +1281,22 @@ public class Configuration {
 	}
 
 	/**
-	 * Adds the incoming properties to the internal properties structure, as
-	 * long as the internal structure does not already contain an entry for
-	 * the given key.
+	 * Adds the incoming properties to the internal properties structure,
+	 * as long as the internal structure does <em>not</em> already contain
+	 * an entry for the given key. If a given property is already set in
+	 * this {@code Configuration}, ignore the setting specified in the
+	 * argument {@link Properties} object.
+	 *
+	 * @apiNote You're probably looking for {@link #addProperties(Properties)}.
 	 *
 	 * @param properties The properties to merge
 	 *
 	 * @return {@code this} for method chaining
 	 */
 	public Configuration mergeProperties(Properties properties) {
-		for ( Map.Entry<Object,Object> entry : properties.entrySet() ) {
-			if ( !properties.containsKey( entry.getKey() ) ) {
-				properties.setProperty( (String) entry.getKey(), (String) entry.getValue() );
+		for ( String property : properties.stringPropertyNames() ) {
+			if ( !this.properties.containsKey( property ) ) {
+				this.properties.setProperty( property, properties.getProperty( property ) );
 			}
 		}
 		return this;

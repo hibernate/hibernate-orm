@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.exec;
 
@@ -57,7 +55,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 )
 @ServiceRegistry(
 		settings = {
-				@Setting(name = AvailableSettings.POOL_SIZE, value = "15"),
 				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false")
 		}
 )
@@ -74,11 +71,11 @@ public class SmokeTests {
 					simpleEntity.setName( "Fab" );
 					simpleEntity.setGender2( Gender.MALE );
 					simpleEntity.setComponent( new Component( "a1", "a2" ) );
-					session.save( simpleEntity );
+					session.persist( simpleEntity );
 					OtherEntity otherEntity = new OtherEntity();
 					otherEntity.setId( 2 );
 					otherEntity.setName( "Bar" );
-					session.save( otherEntity );
+					session.persist( otherEntity );
 				}
 		);
 	}
@@ -237,7 +234,7 @@ public class SmokeTests {
 					simpleEntity.setName( "Andrea" );
 					simpleEntity.setGender2( Gender.FEMALE );
 					simpleEntity.setComponent( new Component( "b1", "b2" ) );
-					session.save( simpleEntity );
+					session.persist( simpleEntity );
 				}
 		);
 
@@ -272,7 +269,7 @@ public class SmokeTests {
 					simpleEntity.setName( "Andrea" );
 					simpleEntity.setGender2( Gender.FEMALE );
 					simpleEntity.setComponent( new Component( "b1", "b2" ) );
-					session.save( simpleEntity );
+					session.persist( simpleEntity );
 				}
 		);
 

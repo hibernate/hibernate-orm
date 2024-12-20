@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.sequence;
 
@@ -16,7 +14,6 @@ import jakarta.persistence.Table;
 import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.enhanced.NoopOptimizer;
@@ -26,13 +23,16 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
 import org.jboss.logging.Logger;
+
+import java.lang.invoke.MethodHandles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -45,17 +45,17 @@ public class NegativeValueSequenceTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, SequenceStyleGenerator.class.getName() )
+			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, SequenceStyleGenerator.class.getName() )
 	);
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-5933")
+	@JiraKey( value = "HHH-5933")
 	public void testNegativeOneAllocationSizeNoopOptimizer() {
 		ServiceRegistryImplementor serviceRegistry = null;
 		SessionFactoryImplementor sessionFactory = null;
 		Session session = null;
 		try {
-			serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+			serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
@@ -97,13 +97,13 @@ public class NegativeValueSequenceTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-5933")
+	@JiraKey( value = "HHH-5933")
 	public void testNegativeTwoAllocationSizeNoopOptimizer() {
 		ServiceRegistryImplementor serviceRegistry = null;
 		SessionFactoryImplementor sessionFactory = null;
 		Session session = null;
 		try {
-			serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+			serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
@@ -146,13 +146,13 @@ public class NegativeValueSequenceTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11709" )
+	@JiraKey( value = "HHH-11709" )
 	public void testPositiveOneAllocationSizeNoopOptimizer() {
 		ServiceRegistryImplementor serviceRegistry = null;
 		SessionFactoryImplementor sessionFactory = null;
 		Session session = null;
 		try {
-			serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+			serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
@@ -194,13 +194,13 @@ public class NegativeValueSequenceTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11709" )
+	@JiraKey( value = "HHH-11709" )
 	public void testPositiveTwoAllocationSizeNoopOptimizer() {
 		ServiceRegistryImplementor serviceRegistry = null;
 		SessionFactoryImplementor sessionFactory = null;
 		Session session = null;
 		try {
-			serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+			serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 					.applySetting( AvailableSettings.PREFERRED_POOLED_OPTIMIZER, "none" )
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
@@ -245,13 +245,13 @@ public class NegativeValueSequenceTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11709" )
+	@JiraKey( value = "HHH-11709" )
 	public void testPositiveTwoAllocationSizePooledOptimizer() {
 		ServiceRegistryImplementor serviceRegistry = null;
 		SessionFactoryImplementor sessionFactory = null;
 		Session session = null;
 		try {
-			serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+			serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 
@@ -295,13 +295,13 @@ public class NegativeValueSequenceTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11712" )
+	@JiraKey( value = "HHH-11712" )
 	public void testNegativeTwoAllocationSizePositiveStartNoopOptimizer() {
 		ServiceRegistryImplementor serviceRegistry = null;
 		SessionFactoryImplementor sessionFactory = null;
 		Session session = null;
 		try {
-			serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+			serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 					.build();
 

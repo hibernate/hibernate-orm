@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.converter.elementCollection;
 
@@ -19,7 +17,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -52,7 +50,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Markus Heiden
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-9495" )
+@JiraKey( value = "HHH-9495" )
 @DomainModel(
 		annotatedClasses = ElementCollectionTests.TheEntity.class
 )
@@ -79,13 +77,13 @@ public class ElementCollectionTests {
 
 		sfScope.inTransaction(
 				(session) -> {
-					session.save( entity );
+					session.persist( entity );
 				}
 		);
 
 		sfScope.inTransaction(
 				(session) -> {
-					TheEntity retrieved = (TheEntity) session.load( TheEntity.class, 1 );
+					TheEntity retrieved = (TheEntity) session.getReference( TheEntity.class, 1 );
 					assertEquals( 1, retrieved.getSet().size() );
 					assertEquals( new ValueType( "set_value" ), retrieved.getSet().iterator().next() );
 					assertEquals( 1, retrieved.getMap().size() );

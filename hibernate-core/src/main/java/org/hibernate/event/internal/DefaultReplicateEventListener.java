@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
@@ -24,16 +22,20 @@ import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
+
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * Defines the default replicate event listener used by Hibernate to replicate
  * entities in response to generated replicate events.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated since {@link org.hibernate.Session#replicate} is deprecated
  */
+@Deprecated(since="6")
 public class DefaultReplicateEventListener
 		extends AbstractSaveEventListener<ReplicationMode>
 		implements ReplicateEventListener {
@@ -46,94 +48,76 @@ public class DefaultReplicateEventListener
 	 *
 	 * @throws TransientObjectException An invalid attempt to replicate a transient entity.
 	 */
+	@Override
 	public void onReplicate(ReplicateEvent event) {
 		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		if ( persistenceContext.reassociateIfUninitializedProxy( event.getObject() ) ) {
 			LOG.trace( "Uninitialized proxy passed to replicate()" );
-			return;
 		}
-
-		Object entity = persistenceContext.unproxyAndReassociate( event.getObject() );
-
-		if ( persistenceContext.isEntryFor( entity ) ) {
-			LOG.trace( "Ignoring persistent instance passed to replicate()" );
-			//hum ... should we cascade anyway? throw an exception? fine like it is?
-			return;
+		else {
+			final Object entity = persistenceContext.unproxyAndReassociate( event.getObject() );
+			if ( persistenceContext.isEntryFor( entity ) ) {
+				LOG.trace( "Ignoring persistent instance passed to replicate()" );
+				//hum ... should we cascade anyway? throw an exception? fine like it is?
+			}
+			else {
+				doReplicate( event, source, entity );
+			}
 		}
+	}
 
-		EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
-
-		// get the id from the object
-		/*if ( persister.isUnsaved(entity, source) ) {
-			throw new TransientObjectException("transient instance passed to replicate()");
-		}*/
-		Object id = persister.getIdentifier( entity, source );
-		if ( id == null ) {
-			throw new TransientObjectException( "instance with null id passed to replicate()" );
-		}
-
+	private void doReplicate(ReplicateEvent event, EventSource source, Object entity) {
+		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity);
 		final ReplicationMode replicationMode = event.getReplicationMode();
 
+		// get the id from the object - we accept almost anything at all,
+		// except null (that is, even ids which look like they're unsaved)
+		final Object id = persister.getIdentifier( entity, source );
+		if ( id == null ) {
+			throw new TransientObjectException( "Cannot replicate instance of entity '" + persister.getEntityName()
+					+ "' because it has a null identifier" );
+		}
+
 		final Object oldVersion = replicationMode == ReplicationMode.EXCEPTION
-				? null //always do an INSERT, and let it fail by constraint violation
-				: persister.getCurrentVersion(id, source); //what is the version on the database?
+				? null // always do an INSERT, and let it fail by constraint violation
+				: persister.getCurrentVersion( id, source); // what is the version on the database?
 
 		if ( oldVersion != null ) {
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Found existing row for {0}", MessageHelper.infoString(
-						persister,
-						id,
-						source.getFactory()
-				)
-				);
+				LOG.trace( "Found existing row for " + infoString( persister, id, event.getFactory() ) );
 			}
-
-			@SuppressWarnings("unchecked")
-			final BasicType<Object> versionType = (BasicType<Object>) persister.getVersionType();
-			final Object realOldVersion = persister.isVersioned() ? oldVersion : null; /// HHH-2378
-			boolean canReplicate = replicationMode.shouldOverwriteCurrentVersion(
-					entity,
-					realOldVersion,
-					persister.getVersion( entity ),
-					versionType
-			);
-
-			// if can replicate, will result in a SQL UPDATE
-			// else do nothing (don't even re-associate object!)
-			if ( canReplicate ) {
+			// If the entity has no version, getCurrentVersion() just returns
+			// a meaningless value to indicate that the row exists (HHH-2378)
+			final Object realOldVersion = persister.isVersioned() ? oldVersion : null;
+			if ( shouldOverwrite( replicationMode,
+					persister.getVersion( entity ), realOldVersion,
+					persister.getVersionType() ) ) {
+				// execute a SQL UPDATE
 				performReplication( entity, id, realOldVersion, persister, replicationMode, source );
 			}
 			else if ( LOG.isTraceEnabled() ) {
+				// do nothing (don't even re-associate object!)
 				LOG.trace( "No need to replicate" );
 			}
 
 			//TODO: would it be better to do a refresh from db?
 		}
 		else {
-			// no existing row - do an insert
+			// no existing row - execute a SQL INSERT
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"No existing row, replicating new instance {0}",
-						MessageHelper.infoString( persister, id, source.getFactory() )
-				);
+				LOG.trace( "No existing row, replicating new instance "
+							+ infoString( persister, id, event.getFactory() ) );
 			}
-
 			final boolean regenerate = persister.isIdentifierAssignedByInsert(); // prefer re-generation of identity!
 			final EntityKey key = regenerate ? null : source.generateEntityKey( id, persister );
-
-			performSaveOrReplicate(
-					entity,
-					key,
-					persister,
-					regenerate,
-					replicationMode,
-					source,
-					true
-			);
-
+			performSaveOrReplicate( entity, key, persister, regenerate, replicationMode, source, false );
 		}
+	}
+
+	private static <T> boolean shouldOverwrite(
+			ReplicationMode replicationMode, Object entityVersion, Object realOldVersion, BasicType<T> versionType) {
+		return replicationMode.shouldOverwriteCurrentVersion( (T) realOldVersion, (T) entityVersion, versionType );
 	}
 
 	@Override
@@ -173,7 +157,7 @@ public class DefaultReplicateEventListener
 			EventSource source) throws HibernateException {
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Replicating changes to {0}", MessageHelper.infoString( persister, id, source.getFactory() ) );
+			LOG.trace( "Replicating changes to " + infoString( persister, id, source.getFactory() ) );
 		}
 
 		new OnReplicateVisitor( source, id, entity, true ).process( entity, persister );

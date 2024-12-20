@@ -1,30 +1,35 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import java.lang.reflect.Array;
+import java.util.Iterator;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentArrayHolder;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerData;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Chris Cranford
  */
-public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
-	private static final String CONCRETE_NAME = ArrayInitializer.class.getSimpleName();
-
+public class ArrayInitializer extends AbstractImmediateCollectionInitializer<AbstractImmediateCollectionInitializer.ImmediateCollectionInitializerData> {
 	private final DomainResultAssembler<Integer> listIndexAssembler;
 	private final DomainResultAssembler<?> elementAssembler;
 
@@ -33,44 +38,56 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 	public ArrayInitializer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping arrayDescriptor,
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parent,
 			LockMode lockMode,
-			DomainResultAssembler<?> collectionKeyAssembler,
-			DomainResultAssembler<?> collectionValueKeyAssembler,
-			DomainResultAssembler<Integer> listIndexAssembler,
-			DomainResultAssembler<?> elementAssembler) {
+			DomainResult<?> collectionKeyResult,
+			DomainResult<?> collectionValueKeyResult,
+			boolean isResultInitializer,
+			AssemblerCreationState creationState,
+			Fetch listIndexFetch,
+			Fetch elementFetch) {
 		super(
 				navigablePath,
 				arrayDescriptor,
-				parentAccess,
+				parent,
 				lockMode,
-				collectionKeyAssembler,
-				collectionValueKeyAssembler
+				collectionKeyResult,
+				collectionValueKeyResult,
+				isResultInitializer,
+				creationState
 		);
-		this.listIndexAssembler = listIndexAssembler;
-		this.elementAssembler = elementAssembler;
+		//noinspection unchecked
+		this.listIndexAssembler = (DomainResultAssembler<Integer>) listIndexFetch.createAssembler( this, creationState );
+		this.elementAssembler = elementFetch.createAssembler( this, creationState );
 		this.indexBase = getCollectionAttributeMapping().getIndexMetadata().getListIndexBase();
 	}
 
 	@Override
-	protected String getSimpleConcreteImplName() {
-		return CONCRETE_NAME;
+	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
+		super.forEachSubInitializer( consumer, data );
+		final Initializer<?> initializer = elementAssembler.getInitializer();
+		if ( initializer != null ) {
+			consumer.accept( initializer, data.getRowProcessingState() );
+		}
 	}
 
 	@Override
-	public PersistentArrayHolder<?> getCollectionInstance() {
-		return (PersistentArrayHolder<?>) super.getCollectionInstance();
+	public @Nullable PersistentArrayHolder<?> getCollectionInstance(ImmediateCollectionInitializerData data) {
+		return (PersistentArrayHolder<?>) super.getCollectionInstance( data );
 	}
 
 	@Override
-	protected void readCollectionRow(
-			CollectionKey collectionKey,
-			List<Object> loadingState,
-			RowProcessingState rowProcessingState) {
+	protected void readCollectionRow(ImmediateCollectionInitializerData data, List<Object> loadingState) {
+		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		final Integer indexValue = listIndexAssembler.assemble( rowProcessingState );
 		if ( indexValue == null ) {
 			throw new HibernateException( "Illegal null value for array index encountered while reading: "
 					+ getCollectionAttributeMapping().getNavigableRole() );
+		}
+		final Object element = elementAssembler.assemble( rowProcessingState );
+		if ( element == null ) {
+			// If element is null, then NotFoundAction must be IGNORE
+			return;
 		}
 		int index = indexValue;
 
@@ -82,7 +99,54 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 			loadingState.add( i, null );
 		}
 
-		loadingState.set( index, elementAssembler.assemble( rowProcessingState ) );
+		loadingState.set( index, element );
+	}
+
+	@Override
+	public void initializeInstanceFromParent(Object parentInstance, ImmediateCollectionInitializerData data) {
+		final Object[] array = (Object[]) getInitializedPart().getValue( parentInstance );
+		assert array != null;
+		data.setCollectionInstance( data.getRowProcessingState().getSession()
+				.getPersistenceContextInternal()
+				.getCollectionHolder( array ) );
+		data.setState( State.INITIALIZED );
+		initializeSubInstancesFromParent( data );
+	}
+
+	@Override
+	protected void initializeSubInstancesFromParent(ImmediateCollectionInitializerData data) {
+		final Initializer<?> initializer = elementAssembler.getInitializer();
+		if ( initializer != null ) {
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			final Iterator iter = getCollectionInstance( data ).elements();
+			while ( iter.hasNext() ) {
+				initializer.initializeInstanceFromParent( iter.next(), rowProcessingState );
+			}
+		}
+	}
+
+	@Override
+	protected void resolveInstanceSubInitializers(ImmediateCollectionInitializerData data) {
+		final Initializer<?> initializer = elementAssembler.getInitializer();
+		if ( initializer != null ) {
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			final Integer index = listIndexAssembler.assemble( rowProcessingState );
+			if ( index != null ) {
+				final PersistentArrayHolder<?> arrayHolder = getCollectionInstance( data );
+				assert arrayHolder != null;
+				initializer.resolveInstance( Array.get( arrayHolder.getArray(), index ), rowProcessingState );
+			}
+		}
+	}
+
+	@Override
+	public DomainResultAssembler<?> getIndexAssembler() {
+		return listIndexAssembler;
+	}
+
+	@Override
+	public DomainResultAssembler<?> getElementAssembler() {
+		return elementAssembler;
 	}
 
 	@Override

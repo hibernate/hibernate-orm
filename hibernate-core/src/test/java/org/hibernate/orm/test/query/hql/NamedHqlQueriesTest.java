@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
@@ -61,8 +59,8 @@ public class NamedHqlQueriesTest {
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.save( GOD_OF_WAR );
-					session.save( THE_LAST_OF_US );
+					session.persist( GOD_OF_WAR );
+					session.persist( THE_LAST_OF_US );
 				} );
 	}
 
@@ -71,7 +69,7 @@ public class NamedHqlQueriesTest {
 		scope.inTransaction(
 				session -> session.createQuery( "from VideoGame vg", VideoGame.class )
 						.list()
-						.forEach(session::delete)
+						.forEach(session::remove)
 		);
 	}
 

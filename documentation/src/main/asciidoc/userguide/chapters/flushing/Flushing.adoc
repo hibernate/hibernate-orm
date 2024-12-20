@@ -43,7 +43,7 @@ In the following example, an entity is persisted, and then the transaction is co
 [[flushing-auto-flush-commit-example]]
 .Automatic flushing on commit
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-commit-example]
 ----
@@ -70,7 +70,7 @@ A flush may also be triggered when executing an entity query.
 [[flushing-auto-flush-jpql-example]]
 .Automatic flushing on JPQL/HQL
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-jpql-example]
 ----
@@ -86,7 +86,7 @@ The reason why the `Advertisement` entity query didn't trigger a flush is that t
 [[flushing-auto-flush-jpql-entity-example]]
 .Automatic flushing on JPQL/HQL entities
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-jpql-entity-example]
 ----
@@ -97,7 +97,7 @@ When querying for a `Person` entity, the flush is triggered prior to executing t
 [[flushing-auto-flush-jpql-overlap-example]]
 .Automatic flushing on JPQL/HQL
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-jpql-overlap-example]
 ----
@@ -117,7 +117,7 @@ When executing a native SQL query, a flush is always triggered when using the `E
 [[flushing-auto-flush-sql-example]]
 .Automatic flushing on native SQL using `EntityManager`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-sql-example]
 ----
@@ -129,7 +129,7 @@ the `Session` API will trigger a flush automatically when executing a native que
 [[flushing-auto-flush-sql-native-example]]
 .Automatic flushing on native SQL using `Session`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-flushing}/HibernateAutoFlushTest.java[tags=flushing-auto-flush-sql-native-example]
 ----
@@ -140,7 +140,7 @@ To flush the `Session`, the query must use a synchronization:
 [[flushing-auto-flush-sql-synchronization-example]]
 .Automatic flushing on native SQL with `Session` synchronization
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-flushing}/AutoFlushTest.java[tags=flushing-auto-flush-sql-synchronization-example]
 ----
@@ -161,7 +161,7 @@ When executing a JPQL query, the persistence context is only flushed when the cu
 [[flushing-commit-flush-jpql-example]]
 .`COMMIT` flushing on JPQL
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-flushing}/CommitFlushTest.java[tags=flushing-commit-flush-jpql-example]
 ----
@@ -177,7 +177,7 @@ Because the Jakarta Persistence doesn't impose a strict rule on delaying flushin
 [[flushing-commit-flush-sql-example]]
 .`COMMIT` flushing on native SQL
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-flushing}/CommitFlushTest.java[tags=flushing-commit-flush-sql-example]
 ----
@@ -201,7 +201,7 @@ The `ALWAYS` flush mode triggers a persistence context flush even when executing
 [[flushing-always-flush-sql-example]]
 .`COMMIT` flushing on native SQL
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-flushing}/AlwaysFlushTest.java[tags=flushing-always-flush-sql-example]
 ----
@@ -221,7 +221,7 @@ Hibernate also provides a `MANUAL` flush mode so the persistence context can onl
 [[flushing-manual-flush-example]]
 .`MANUAL` flushing
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-flushing}/ManualFlushTest.java[tags=flushing-manual-flush-example]
 ----
@@ -256,7 +256,7 @@ To visualize how this works, consider the following example:
 [[flushing-order-example]]
 .Flush operation order
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-flushing}/FlushOrderTest.java[tags=flushing-order-example]
 ----

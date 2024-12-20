@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
@@ -12,7 +10,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.SqlTypes;
@@ -90,14 +87,11 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 	}
 
 	protected boolean needsLob(JdbcTypeIndicators indicators) {
-		final Dialect dialect = indicators.getTypeConfiguration()
-				.getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getDialect();
+		final Dialect dialect = indicators.getDialect();
 		final long length = indicators.getColumnLength();
-		final long maxLength = indicators.isNationalized() ?
-				dialect.getMaxNVarcharLength() :
-				dialect.getMaxVarcharLength();
+		final long maxLength = indicators.isNationalized()
+				? dialect.getMaxNVarcharLength()
+				: dialect.getMaxVarcharLength();
 		if ( length > maxLength ) {
 			return true;
 		}
@@ -124,14 +118,24 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
 					final String json = ( (JsonAsStringJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
-					st.setNString( index, json );
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						st.setNString( index, json );
+					}
+					else {
+						st.setString( index, json );
+					}
 				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
 					final String json = ( (JsonAsStringJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
-					st.setNString( name, json );
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						st.setNString( name, json );
+					}
+					else {
+						st.setString( name, json );
+					}
 				}
 			};
 		}
@@ -146,19 +150,34 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 			return new BasicExtractor<>( javaType, this ) {
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					return fromString( rs.getNString( paramIndex ), getJavaType(), options );
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						return fromString( rs.getNString( paramIndex ), getJavaType(), options );
+					}
+					else {
+						return fromString( rs.getString( paramIndex ), getJavaType(), options );
+					}
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 						throws SQLException {
-					return fromString( statement.getNString( index ), getJavaType(), options );
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						return fromString( statement.getNString( index ), getJavaType(), options );
+					}
+					else {
+						return fromString( statement.getString( index ), getJavaType(), options );
+					}
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 						throws SQLException {
-					return fromString( statement.getNString( name ), getJavaType(), options );
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						return fromString( statement.getNString( name ), getJavaType(), options );
+					}
+					else {
+						return fromString( statement.getString( name ), getJavaType(), options );
+					}
 				}
 
 			};

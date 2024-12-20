@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.test.components;
 
@@ -16,7 +14,7 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.Hibernate;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -64,7 +62,7 @@ public class ComponentCriteriaTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9642")
+	@JiraKey(value = "HHH-9642")
 	public void testOneToManyJoinFetchedInEmbeddable() {
 		Client client = new Client( 111, "steve", "ebersole" );
 		Alias alias = new Alias( "a", "guy", "work" );
@@ -115,21 +113,21 @@ public class ComponentCriteriaTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4586")
+	@JiraKey(value = "HHH-4586")
 	public void testParameterizedFunctions() {
 		doInJPA( this::entityManagerFactory, em -> {
-					 CriteriaBuilder cb = em.getCriteriaBuilder();
-					 // lower
-					 CriteriaQuery<Client> cq = cb.createQuery( Client.class );
-					 Root<Client> root = cq.from( Client.class );
-					 cq.where( cb.equal( cb.lower( root.get( Client_.name ).get( Name_.lastName ) ), "test" ) );
-					 em.createQuery( cq ).getResultList();
-					 // upper
-					 cq = cb.createQuery( Client.class );
-					 root = cq.from( Client.class );
-					 cq.where( cb.equal( cb.upper( root.get( Client_.name ).get( Name_.lastName ) ), "test" ) );
-					 em.createQuery( cq ).getResultList();
-				 }
+					CriteriaBuilder cb = em.getCriteriaBuilder();
+					// lower
+					CriteriaQuery<Client> cq = cb.createQuery( Client.class );
+					Root<Client> root = cq.from( Client.class );
+					cq.where( cb.equal( cb.lower( root.get( Client_.name ).get( Name_.lastName ) ), "test" ) );
+					em.createQuery( cq ).getResultList();
+					// upper
+					cq = cb.createQuery( Client.class );
+					root = cq.from( Client.class );
+					cq.where( cb.equal( cb.upper( root.get( Client_.name ).get( Name_.lastName ) ), "test" ) );
+					em.createQuery( cq ).getResultList();
+				}
 		);
 	}
 }

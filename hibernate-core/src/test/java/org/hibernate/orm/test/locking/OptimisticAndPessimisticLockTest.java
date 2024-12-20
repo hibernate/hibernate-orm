@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.locking;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -6,7 +10,7 @@ import java.util.stream.Stream;
 
 import org.hibernate.LockMode;
 import org.hibernate.dialect.CockroachDialect;
-
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -26,6 +30,7 @@ import jakarta.persistence.Version;
 @SessionFactory
 @JiraKey("HHH-16461")
 @SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB uses SERIALIZABLE isolation, and does not support this")
+@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2, reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
 public class OptimisticAndPessimisticLockTest {
 
 	public Stream<LockMode> pessimisticLockModes() {

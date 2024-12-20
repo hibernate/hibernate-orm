@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.exec.onetoone.bidirectional;
 
@@ -49,8 +47,8 @@ public class EntityWithOneBidirectionalJoinTableAssociationTest {
 					Parent parent = new Parent( 1, "Hibernate" );
 					Child child = new Child( 2, parent );
 					child.setName( "Acme" );
-					session.save( parent );
-					session.save( child );
+					session.persist( parent );
+					session.persist( child );
 				} );
 	}
 

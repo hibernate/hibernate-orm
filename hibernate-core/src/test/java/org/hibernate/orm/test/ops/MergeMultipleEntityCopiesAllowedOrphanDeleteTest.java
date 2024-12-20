@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.ops;
 
@@ -473,19 +471,19 @@ public class MergeMultipleEntityCopiesAllowedOrphanDeleteTest {
 					session.createQuery( "delete from SubItem" ).executeUpdate();
 					for ( Hoarder hoarder : (List<Hoarder>) session.createQuery( "from Hoarder" ).list() ) {
 						hoarder.getItems().clear();
-						session.delete( hoarder );
+						session.remove( hoarder );
 					}
 
 					for ( Category category : (List<Category>) session.createQuery( "from Category" ).list() ) {
 						if ( category.getExampleItem() != null ) {
 							category.setExampleItem( null );
-							session.delete( category );
+							session.remove( category );
 						}
 					}
 
 					for ( Item item : (List<Item>) session.createQuery( "from Item" ).list() ) {
 						item.setCategory( null );
-						session.delete( item );
+						session.remove( item );
 					}
 
 					session.createQuery( "delete from Item" ).executeUpdate();

@@ -1,32 +1,61 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
 import java.util.Properties;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 
 /**
- * An {@link IdentifierGenerator} that supports "configuration".
+ * A {@link org.hibernate.generator.Generator} that supports "configuration".
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
 public interface Configurable {
 	/**
-	 * Configure this instance, given the value of parameters
-	 * specified by the user as {@code &lt;param&gt;} elements.
-	 * This method is called just once, following instantiation.
-	 *
-	 * @param type The id property type descriptor
-	 * @param params param values, keyed by parameter name
-	 * @param serviceRegistry Access to service that may be needed.
+	 * @deprecated Use {@link #configure(GeneratorCreationContext, Properties)} instead
 	 */
-	void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException;
+	@Deprecated( since = "7.0", forRemoval = true )
+	default void configure(Type type, Properties parameters, ServiceRegistry serviceRegistry) throws MappingException {
+	}
+
+	/**
+	 * Configure this instance, given the value of parameters
+	 * specified by the user as XML {@code <param>} elements and
+	 * {@link org.hibernate.annotations.Parameter @Parameter}
+	 * annotations.
+	 * <p>
+	 * This method is called just once, following instantiation.
+	 * If this instance also implements {@code ExportableProducer},
+	 * then this method is always called before
+	 * {@link org.hibernate.boot.model.relational.ExportableProducer#registerExportables(Database)},
+	 *
+	 * @param creationContext Access to the generator creation context
+	 * @param parameters param values, keyed by parameter name
+	 *
+	 * @throws MappingException when there's something wrong with the given parameters
+	 */
+	default void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
+		configure( creationContext.getType(), parameters, creationContext.getServiceRegistry() );
+	}
+
+	/**
+	 * Initializes this instance, pre-generating SQL if necessary.
+	 * <p>
+	 * If this instance also implements {@code ExportableProducer},
+	 * then this method is always called after
+	 * {@link org.hibernate.boot.model.relational.ExportableProducer#registerExportables(Database)},
+	 * and before first use.
+	 *
+	 * @param context A context to help generate SQL strings
+	 */
+	default void initialize(SqlStringGenerationContext context) {}
 }

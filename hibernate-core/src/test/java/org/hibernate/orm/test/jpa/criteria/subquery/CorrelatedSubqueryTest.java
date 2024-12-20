@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.subquery;
 
@@ -23,7 +21,7 @@ import org.hibernate.orm.test.jpa.metamodel.LineItem;
 import org.hibernate.orm.test.jpa.metamodel.LineItem_;
 import org.hibernate.orm.test.jpa.metamodel.Order;
 import org.hibernate.orm.test.jpa.metamodel.Order_;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 
@@ -35,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Steve Ebersole
  */
 public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
-	
+
 	@Test
 	public void testBasicCorrelation() {
 		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
@@ -123,21 +121,21 @@ public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 		em.getTransaction().commit();
 		em.close();
 	}
-	
+
 	@Test
-	@TestForIssue(jiraKey = "HHH-8556")
+	@JiraKey(value = "HHH-8556")
 	public void testCorrelatedJoinsFromSubquery() {
 		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
 		CriteriaQuery<Customer> cquery = builder.createQuery(Customer.class);
-        Root<Customer> customer = cquery.from(Customer.class);
-        cquery.select(customer);
-        Subquery<Order> sq = cquery.subquery(Order.class);
-        Join<Customer, Order> sqo = sq.correlate(customer.join(Customer_.orders));
-        sq.select(sqo);
-        Set<Join<?, ?>> cJoins = sq.getCorrelatedJoins();
-        
-        // ensure the join is returned in #getCorrelatedJoins
-        assertEquals( cJoins.size(), 1);
+		Root<Customer> customer = cquery.from(Customer.class);
+		cquery.select(customer);
+		Subquery<Order> sq = cquery.subquery(Order.class);
+		Join<Customer, Order> sqo = sq.correlate(customer.join(Customer_.orders));
+		sq.select(sqo);
+		Set<Join<?, ?>> cJoins = sq.getCorrelatedJoins();
+
+		// ensure the join is returned in #getCorrelatedJoins
+		assertEquals( cJoins.size(), 1);
 	}
 
 	@Test

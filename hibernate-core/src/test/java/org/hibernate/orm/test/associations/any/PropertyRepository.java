@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.associations.any;
 
@@ -29,37 +27,37 @@ import static org.hibernate.annotations.CascadeType.ALL;
 @Table(name = "property_repository")
 public class PropertyRepository {
 
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
-    @ManyToAny
-    @AnyDiscriminator(DiscriminatorType.STRING)
-    @Column(name = "property_type")
-    @AnyKeyJavaClass(Long.class)
-    @AnyDiscriminatorValue(discriminator = "S", entity = StringProperty.class)
-    @AnyDiscriminatorValue(discriminator = "I", entity = IntegerProperty.class)
-    @Cascade(ALL)
-    @JoinTable(name = "repository_properties",
-            joinColumns = @JoinColumn(name = "repository_id"),
-            inverseJoinColumns = @JoinColumn(name = "property_id")
-   )
-    private List<Property<?>> properties = new ArrayList<>();
+	@ManyToAny
+	@AnyDiscriminator(DiscriminatorType.STRING)
+	@Column(name = "property_type")
+	@AnyKeyJavaClass(Long.class)
+	@AnyDiscriminatorValue(discriminator = "S", entity = StringProperty.class)
+	@AnyDiscriminatorValue(discriminator = "I", entity = IntegerProperty.class)
+	@Cascade(ALL)
+	@JoinTable(name = "repository_properties",
+			joinColumns = @JoinColumn(name = "repository_id"),
+			inverseJoinColumns = @JoinColumn(name = "property_id")
+)
+	private List<Property<?>> properties = new ArrayList<>();
 
-    //Getters and setters are omitted for brevity
+	//Getters and setters are omitted for brevity
 
 //end::associations-many-to-any-example[]
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public List<Property<?>> getProperties() {
-        return properties;
-    }
+	public List<Property<?>> getProperties() {
+		return properties;
+	}
 
-    //tag::associations-many-to-any-example[]
+	//tag::associations-many-to-any-example[]
 }
 //end::associations-many-to-any-example[]

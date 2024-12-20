@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import java.util.Locale;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.FindOption;
 
 /**
  * Controls how the session interacts with the {@linkplain Cache second-level cache}
@@ -30,7 +29,7 @@ import jakarta.persistence.CacheStoreMode;
  * @see CacheStoreMode
  * @see CacheRetrieveMode
  */
-public enum CacheMode {
+public enum CacheMode implements FindOption {
 
 	/**
 	 * The session may read items from the cache, and add items to the cache
@@ -161,30 +160,17 @@ public enum CacheMode {
 			retrieveMode = CacheRetrieveMode.BYPASS;
 		}
 
-		switch ( storeMode ) {
-			case USE: {
-				switch ( retrieveMode ) {
-					case USE:
-						return NORMAL;
-					case BYPASS:
-						return PUT;
-				}
-			}
-			case BYPASS: {
-				switch ( retrieveMode ) {
-					case USE:
-						return GET;
-					case BYPASS:
-						return IGNORE;
-				}
-			}
-			case REFRESH: {
-				// technically should combo CacheStoreMode#REFRESH and CacheRetrieveMode#USE be illegal?
-				return REFRESH;
-			}
-			default: {
-				throw new AssertionFailure( "Unrecognized CacheStoreMode: " + storeMode );
-			}
-		}
+		return switch (storeMode) {
+			case USE -> switch (retrieveMode) {
+				case USE -> NORMAL;
+				case BYPASS -> PUT;
+			};
+			case BYPASS -> switch (retrieveMode) {
+				case USE -> GET;
+				case BYPASS -> IGNORE;
+			};
+			// technically should combo CacheStoreMode#REFRESH and CacheRetrieveMode#USE be illegal?
+			case REFRESH -> REFRESH;
+		};
 	}
 }

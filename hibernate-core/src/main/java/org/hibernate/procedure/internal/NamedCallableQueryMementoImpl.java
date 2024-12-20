@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
 
@@ -30,7 +28,7 @@ import org.hibernate.query.spi.QueryImplementor;
  *
  * @author Steve Ebersole
  */
-public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento implements NamedCallableQueryMemento {
+public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento<Object> implements NamedCallableQueryMemento {
 	private final String callableName;
 
 	private final ParameterStrategy parameterStrategy;
@@ -64,6 +62,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 			Map<String, Object> hints) {
 		super(
 				name,
+				Object.class,
 				cacheable,
 				cacheRegion,
 				cacheMode,
@@ -132,7 +131,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 	}
 
 	@Override
-	public <T> QueryImplementor<T> toQuery(SharedSessionContractImplementor session) {
+	public QueryImplementor<Object> toQuery(SharedSessionContractImplementor session) {
 		return new ProcedureCallImpl<>( session, this );
 	}
 
@@ -142,7 +141,7 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 	}
 
 	@Override
-	public NamedQueryMemento makeCopy(String name) {
+	public NamedQueryMemento<Object> makeCopy(String name) {
 		return new NamedCallableQueryMementoImpl(
 				name,
 				callableName,

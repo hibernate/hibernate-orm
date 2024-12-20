@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.performance;
 
@@ -22,7 +20,7 @@ import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.orm.test.envers.entities.onetomany.SetRefEdEntity;
 import org.hibernate.orm.test.envers.entities.onetomany.SetRefIngEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,7 +34,7 @@ public class EvictAuditDataAfterCommitTest extends BaseEnversFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6614")
+	@JiraKey(value = "HHH-6614")
 	public void testSessionCacheClear() {
 		Session session = openSession();
 		session.getTransaction().begin();
@@ -47,7 +45,7 @@ public class EvictAuditDataAfterCommitTest extends BaseEnversFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-6614")
+	@JiraKey(value = "HHH-6614")
 	public void testSessionCacheCollectionClear() {
 		final String[] auditEntityNames = new String[] {
 				"org.hibernate.orm.test.envers.entities.onetomany.SetRefEdEntity_AUD",
@@ -69,14 +67,14 @@ public class EvictAuditDataAfterCommitTest extends BaseEnversFunctionalTestCase 
 		checkEmptyAuditSessionCache( session, auditEntityNames );
 
 		session.getTransaction().begin();
-		ed1 = (SetRefEdEntity) session.load( SetRefEdEntity.class, ed1.getId() );
+		ed1 = (SetRefEdEntity) session.getReference( SetRefEdEntity.class, ed1.getId() );
 		ing1.setReference( ed1 );
 		ing2.setReference( ed1 );
 		session.getTransaction().commit();
 		checkEmptyAuditSessionCache( session, auditEntityNames );
 
 		session.getTransaction().begin();
-		ed2 = (SetRefEdEntity) session.load( SetRefEdEntity.class, ed2.getId() );
+		ed2 = (SetRefEdEntity) session.getReference( SetRefEdEntity.class, ed2.getId() );
 		Set<SetRefIngEntity> reffering = new HashSet<SetRefIngEntity>();
 		reffering.add( ing1 );
 		reffering.add( ing2 );
@@ -85,13 +83,13 @@ public class EvictAuditDataAfterCommitTest extends BaseEnversFunctionalTestCase 
 		checkEmptyAuditSessionCache( session, auditEntityNames );
 
 		session.getTransaction().begin();
-		ed2 = (SetRefEdEntity) session.load( SetRefEdEntity.class, ed2.getId() );
+		ed2 = (SetRefEdEntity) session.getReference( SetRefEdEntity.class, ed2.getId() );
 		ed2.getReffering().remove( ing1 );
 		session.getTransaction().commit();
 		checkEmptyAuditSessionCache( session, auditEntityNames );
 
 		session.getTransaction().begin();
-		ed2 = (SetRefEdEntity) session.load( SetRefEdEntity.class, ed2.getId() );
+		ed2 = (SetRefEdEntity) session.getReference( SetRefEdEntity.class, ed2.getId() );
 		ed2.getReffering().iterator().next().setData( "mod_data_ing_2" );
 		session.getTransaction().commit();
 		checkEmptyAuditSessionCache( session, auditEntityNames );

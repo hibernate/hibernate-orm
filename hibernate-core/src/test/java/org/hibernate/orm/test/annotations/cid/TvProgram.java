@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.cid;
 import java.util.Date;
 import jakarta.persistence.AssociationOverride;
@@ -35,7 +31,7 @@ public class TvProgram {
 	public TvMagazinPk id;
 
 	@Temporal( TemporalType.TIME )
-    @Column(name="`time`")
+	@Column(name="`time`")
 	Date time;
 
 	@Column( name = "TXT", table = "TV_PROGRAM_EXT" )

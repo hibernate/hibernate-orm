@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graph;
 
@@ -48,23 +46,13 @@ public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	default void addAttributeNodes(Attribute<J, ?>... attributes) {
-		if ( attributes != null ) {
-			for ( Attribute<J, ?> attribute : attributes ) {
-				addAttributeNode( (PersistentAttribute<J,?>) attribute );
-			}
-		}
+	default <X> SubGraph<X> addSubgraph(Attribute<? super J, X> attribute) {
+		return addSubGraph( (PersistentAttribute<? super J,X>)  attribute );
 	}
 
 	@Override
-	default <X> SubGraph<X> addSubgraph(Attribute<J, X> attribute) {
-		return addSubGraph( (PersistentAttribute<J,X>)  attribute );
-	}
-
-	@Override
-	default <X> SubGraph<? extends X> addSubgraph(Attribute<J, X> attribute, Class<? extends X> type) {
-		return addSubGraph( (PersistentAttribute<J,X>) attribute, type );
+	default <X> Subgraph<? extends X> addSubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
+		return addSubGraph( (PersistentAttribute<? super J,X>) attribute, type );
 	}
 
 	@Override
@@ -78,13 +66,13 @@ public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 	}
 
 	@Override
-	default <X> SubGraph<X> addKeySubgraph(Attribute<J, X> attribute) {
-		return addKeySubGraph( (PersistentAttribute<J,X>) attribute );
+	default <X> SubGraph<X> addKeySubgraph(Attribute<? super J, X> attribute) {
+		return addKeySubGraph( (PersistentAttribute<? super J,X>) attribute );
 	}
 
 	@Override
-	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<J, X> attribute, Class<? extends X> type) {
-		return addKeySubGraph( (PersistentAttribute<J,X>) attribute, type );
+	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
+		return addKeySubGraph( (PersistentAttribute<? super J,X>) attribute, type );
 	}
 
 	@Override

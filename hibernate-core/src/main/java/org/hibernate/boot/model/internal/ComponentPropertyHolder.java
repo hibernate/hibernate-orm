@@ -1,38 +1,38 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
+import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.spi.NavigablePath;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
-import jakarta.persistence.Converts;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 
-import static org.hibernate.boot.model.internal.HCANNHelper.hasAnnotation;
+import static org.hibernate.boot.model.internal.ClassPropertyHolder.addPropertyToMappedSuperclass;
+import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.qualifyConditionally;
+import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 /**
  * {@link PropertyHolder} for composites (Embeddable/Embedded).
@@ -66,6 +66,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	private final Component component;
 	private final boolean isOrWithinEmbeddedId;
 	private final boolean isWithinElementCollection;
+	private final Map<ClassDetails, InheritanceState> inheritanceStatePerClass;
 
 	private final String embeddedAttributeName;
 	private final Map<String,AttributeConversionInfo> attributeConversionInfoMap;
@@ -75,24 +76,44 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			String path,
 			PropertyData inferredData,
 			PropertyHolder parent,
-			MetadataBuildingContext context) {
-		super( path, parent, inferredData.getPropertyClass(), context );
-		final XProperty embeddedXProperty = inferredData.getProperty();
-		setCurrentProperty( embeddedXProperty );
+			MetadataBuildingContext context,
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass) {
+		super( path, parent, inferredData.getPropertyType().determineRawClass(), context );
+		final MemberDetails embeddedMemberDetails = inferredData.getAttributeMember();
+		setCurrentProperty( embeddedMemberDetails );
 		this.component = component;
 		this.isOrWithinEmbeddedId = parent.isOrWithinEmbeddedId()
-				|| hasAnnotation( embeddedXProperty, Id.class, EmbeddedId.class );
-		this.isWithinElementCollection = parent.isWithinElementCollection() ||
-			parent instanceof CollectionPropertyHolder;
+				|| hasAnnotation( embeddedMemberDetails, Id.class, EmbeddedId.class );
+		this.isWithinElementCollection = parent.isWithinElementCollection()
+				|| parent instanceof CollectionPropertyHolder;
+		this.inheritanceStatePerClass = inheritanceStatePerClass;
 
-		if ( embeddedXProperty != null ) {
-			this.embeddedAttributeName = embeddedXProperty.getName();
-			this.attributeConversionInfoMap = processAttributeConversions( embeddedXProperty );
+		if ( embeddedMemberDetails != null ) {
+			this.embeddedAttributeName = embeddedMemberDetails.getName();
+			this.attributeConversionInfoMap = processAttributeConversions( embeddedMemberDetails );
 		}
 		else {
 			this.embeddedAttributeName = "";
-			this.attributeConversionInfoMap = processAttributeConversions( inferredData.getClassOrElement() );
+			this.attributeConversionInfoMap = processAttributeConversions( inferredData.getClassOrElementType() );
 		}
+	}
+
+	private boolean hasAnnotation(
+			MemberDetails memberDetails,
+			Class<? extends Annotation> annotationType) {
+		if ( memberDetails == null ) {
+			return false;
+		}
+
+		return memberDetails.hasDirectAnnotationUsage( annotationType );
+	}
+
+	private boolean hasAnnotation(
+			MemberDetails memberDetails,
+			Class<? extends Annotation> annotationType1,
+			Class<? extends Annotation> annotationType2) {
+		return hasAnnotation( memberDetails, annotationType1 )
+				|| hasAnnotation( memberDetails, annotationType2 );
 	}
 
 	/**
@@ -108,78 +129,45 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	 * {@literal @Convert/@Converts} annotations at the Embeddable attribute level are handled in the calls to
 	 * {@link #startingProperty}.  Duplicates are simply ignored there.
 	 *
-	 * @param embeddedXProperty The property that is the composite being described by this ComponentPropertyHolder
+	 * @param embeddedMemberDetails The property that is the composite being described by this ComponentPropertyHolder
 	 */
-	private Map<String,AttributeConversionInfo> processAttributeConversions(XProperty embeddedXProperty) {
+	private Map<String,AttributeConversionInfo> processAttributeConversions(MemberDetails embeddedMemberDetails) {
 		final Map<String,AttributeConversionInfo> infoMap = new HashMap<>();
 
-		final XClass embeddableXClass = embeddedXProperty.getType();
+		final TypeDetails embeddableTypeDetails = embeddedMemberDetails.getType();
 
 		// as a baseline, we want to apply conversions from the Embeddable and then overlay conversions
 		// from the Embedded
 
 		// first apply conversions from the Embeddable...
-		processAttributeConversions( embeddableXClass, infoMap );
+		processAttributeConversions( embeddableTypeDetails, infoMap );
 
 		// then we can overlay any conversions from the Embedded attribute
-		{
-			// @Convert annotation on the Embedded attribute
-			final Convert convertAnnotation = embeddedXProperty.getAnnotation( Convert.class );
-			if ( convertAnnotation != null ) {
-				final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, embeddableXClass );
-				if ( isEmpty( info.getAttributeName() ) ) {
-					throw new IllegalStateException( "Convert placed on Embedded attribute must define (sub)attributeName" );
-				}
-				infoMap.put( info.getAttributeName(), info );
+		embeddedMemberDetails.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
+			final AttributeConversionInfo info = new AttributeConversionInfo( usage, embeddedMemberDetails );
+			if ( isEmpty( info.getAttributeName() ) ) {
+				throw new IllegalStateException( "Convert placed on Embedded attribute must define (sub)attributeName" );
 			}
-		}
-		{
-			// @Converts annotation on the Embedded attribute
-			final Converts convertsAnnotation = embeddedXProperty.getAnnotation( Converts.class );
-			if ( convertsAnnotation != null ) {
-				for ( Convert convertAnnotation : convertsAnnotation.value() ) {
-					final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, embeddableXClass );
-					if ( isEmpty( info.getAttributeName() ) ) {
-						throw new IllegalStateException( "Convert placed on Embedded attribute must define (sub)attributeName" );
-					}
-					infoMap.put( info.getAttributeName(), info );
-				}
-			}
-		}
+			infoMap.put( info.getAttributeName(), info );
+		} );
 
 		return infoMap;
 	}
 
-	private void processAttributeConversions(XClass embeddableXClass, Map<String, AttributeConversionInfo> infoMap) {
-		{
-			// @Convert annotation on the Embeddable class level
-			final Convert convertAnnotation = embeddableXClass.getAnnotation( Convert.class );
-			if ( convertAnnotation != null ) {
-				final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, embeddableXClass );
-				if ( isEmpty( info.getAttributeName() ) ) {
-					throw new IllegalStateException( "@Convert placed on @Embeddable must define attributeName" );
-				}
-				infoMap.put( info.getAttributeName(), info );
+	private void processAttributeConversions(TypeDetails embeddableTypeDetails, Map<String, AttributeConversionInfo> infoMap) {
+		final ClassDetails embeddableClassDetails = embeddableTypeDetails.determineRawClass();
+		embeddableClassDetails.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
+			final AttributeConversionInfo info = new AttributeConversionInfo( usage, embeddableClassDetails );
+			if ( isEmpty( info.getAttributeName() ) ) {
+				throw new IllegalStateException( "@Convert placed on @Embeddable must define attributeName" );
 			}
-		}
-		{
-			// @Converts annotation on the Embeddable class level
-			final Converts convertsAnnotation = embeddableXClass.getAnnotation( Converts.class );
-			if ( convertsAnnotation != null ) {
-				for ( Convert convertAnnotation : convertsAnnotation.value() ) {
-					final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, embeddableXClass );
-					if ( isEmpty( info.getAttributeName() ) ) {
-						throw new IllegalStateException( "@Converts placed on @Embeddable must define attributeName" );
-					}
-					infoMap.put( info.getAttributeName(), info );
-				}
-			}
-		}
+			infoMap.put( info.getAttributeName(), info );
+		} );
 	}
 
-	private Map<String,AttributeConversionInfo> processAttributeConversions(XClass embeddableXClass) {
+	private Map<String,AttributeConversionInfo> processAttributeConversions(TypeDetails embeddableTypeDetails) {
 		final Map<String,AttributeConversionInfo> infoMap = new HashMap<>();
-		processAttributeConversions( embeddableXClass, infoMap );
+		processAttributeConversions( embeddableTypeDetails, infoMap );
 		return infoMap;
 	}
 
@@ -194,8 +182,8 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
-	public void startingProperty(XProperty property) {
-		if ( property == null ) {
+	public void startingProperty(MemberDetails propertyMemberDetails) {
+		if ( propertyMemberDetails == null ) {
 			return;
 		}
 
@@ -205,40 +193,27 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 		// technically we should only do this for properties of "basic type"
 
-		final String path = embeddedAttributeName + '.' + property.getName();
+		final String attributeName = propertyMemberDetails.resolveAttributeName();
+		final String path = embeddedAttributeName + '.' + attributeName;
 		if ( attributeConversionInfoMap.containsKey( path ) ) {
 			return;
 		}
 
-		{
-			// @Convert annotation on the Embeddable attribute
-			final Convert convertAnnotation = property.getAnnotation( Convert.class );
-			if ( convertAnnotation != null ) {
-				final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, property );
-				attributeConversionInfoMap.put( property.getName(), info );
-			}
-		}
-		{
-			// @Converts annotation on the Embeddable attribute
-			final Converts convertsAnnotation = property.getAnnotation( Converts.class );
-			if ( convertsAnnotation != null ) {
-				for ( Convert convertAnnotation : convertsAnnotation.value() ) {
-					final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, property );
-					attributeConversionInfoMap.put( property.getName(), info );
-				}
-			}
-		}
+		propertyMemberDetails.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
+			final AttributeConversionInfo info = new AttributeConversionInfo( usage, propertyMemberDetails );
+			attributeConversionInfoMap.put( attributeName, info );
+		} );
 	}
 
 	@Override
-	protected AttributeConversionInfo locateAttributeConversionInfo(XProperty property) {
+	protected AttributeConversionInfo locateAttributeConversionInfo(MemberDetails attributeMember) {
 		// conversions on parent would have precedence
-		return locateAttributeConversionInfo( property.getName() );
+		return locateAttributeConversionInfo( attributeMember.resolveAttributeName() );
 	}
 
 	@Override
 	protected AttributeConversionInfo locateAttributeConversionInfo(String path) {
-		final String embeddedPath = StringHelper.qualifyConditionally( embeddedAttributeName, path );
+		final String embeddedPath = qualifyConditionally( embeddedAttributeName, path );
 		final AttributeConversionInfo fromParent = parent.locateAttributeConversionInfo( embeddedPath );
 		if ( fromParent != null ) {
 			return fromParent;
@@ -258,14 +233,14 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
-	public void addProperty(Property property, AnnotatedColumns columns, XClass declaringClass) {
+	public void addProperty(Property property, MemberDetails attributeMemberDetails, AnnotatedColumns columns, ClassDetails declaringClass) {
 		//Ejb3Column.checkPropertyConsistency( ); //already called earlier
 		// Check table matches between the component and the columns
 		// if not, change the component table if no properties are set
 		// if a property is set already the core cannot support that
 		if ( columns != null ) {
 			final Table table = columns.getTable();
-			if ( !table.equals( component.getTable() ) ) {
+			if ( !table.equals( getTable() ) ) {
 				if ( component.getPropertySpan() == 0 ) {
 					component.setTable( table );
 				}
@@ -278,12 +253,17 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 				}
 			}
 		}
-		addProperty( property, declaringClass );
+		addProperty( property, attributeMemberDetails, declaringClass );
 	}
 
 	@Override
-	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
-		return parent.addJoin( joinTableAnn, noDelayInPkColumnCreation );
+	public Join addJoin(JoinTable joinTable, boolean noDelayInPkColumnCreation) {
+		return parent.addJoin( joinTable, noDelayInPkColumnCreation );
+	}
+
+	@Override
+	public Join addJoin(JoinTable joinTable, Table table, boolean noDelayInPkColumnCreation) {
+		return parent.addJoin( joinTable, table, noDelayInPkColumnCreation );
 	}
 
 	@Override
@@ -296,14 +276,26 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		return component.getOwner().getClassName();
 	}
 
+	public AggregateColumn getAggregateColumn() {
+		final AggregateColumn aggregateColumn = component.getAggregateColumn();
+		return aggregateColumn != null ? aggregateColumn : component.getParentAggregateColumn();
+	}
+
 	@Override
 	public Table getTable() {
 		return component.getTable();
 	}
 
 	@Override
-	public void addProperty(Property prop, XClass declaringClass) {
-		component.addProperty( prop );
+	public void addProperty(Property prop, MemberDetails attributeMemberDetails, ClassDetails declaringClass) {
+		handleGenericComponentProperty( prop, attributeMemberDetails, getContext() );
+		if ( declaringClass != null ) {
+			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
+			if ( inheritanceState != null && inheritanceState.isEmbeddableSuperclass() ) {
+				addPropertyToMappedSuperclass( prop, attributeMemberDetails, declaringClass, getContext() );
+			}
+		}
+		component.addProperty( prop, declaringClass );
 	}
 
 	@Override
@@ -346,13 +338,13 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		//FIXME this is yukky
 		Column[] result = super.getOverriddenColumn( propertyName );
 		if ( result == null ) {
-			String userPropertyName = extractUserPropertyName( "id", propertyName );
+			final String userPropertyName = extractUserPropertyName( "id", propertyName );
 			if ( userPropertyName != null ) {
 				result = super.getOverriddenColumn( userPropertyName );
 			}
 		}
 		if ( result == null ) {
-			String userPropertyName = extractUserPropertyName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY, propertyName );
+			final String userPropertyName = extractUserPropertyName( IDENTIFIER_MAPPER_PROPERTY, propertyName );
 			if ( userPropertyName != null ) {
 				result = super.getOverriddenColumn( userPropertyName );
 			}
@@ -371,11 +363,6 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			return className + propertyName.substring( className.length() + 1 + redundantString.length() );
 		}
 		return null;
-	}
-
-	@Override
-	public JoinColumn[] getOverriddenJoinColumn(String propertyName) {
-		return super.getOverriddenJoinColumn( propertyName );
 	}
 
 	@Override

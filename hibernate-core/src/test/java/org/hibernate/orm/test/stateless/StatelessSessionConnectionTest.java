@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.stateless;
 
 import jakarta.persistence.Entity;
@@ -11,7 +15,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -21,6 +25,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import org.jboss.logging.Logger;
+
+import java.lang.invoke.MethodHandles;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -35,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 public class StatelessSessionConnectionTest {
 
 	final CoreMessageLogger messageLogger = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			SequenceStyleGenerator.class.getName()
 	);
@@ -45,7 +52,7 @@ public class StatelessSessionConnectionTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11732")
+	@JiraKey(value = "HHH-11732")
 	public void test(EntityManagerFactoryScope scope) {
 		Triggerable triggerable = logInspection.watchForLogMessages( "HHH000352" );
 		triggerable.reset();

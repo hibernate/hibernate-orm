@@ -5,4 +5,4 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-jdbcDependency 'com.ibm.db2:jcc:11.5.8.0'
+jdbcDependency 'com.ibm.db2:jcc:11.5.9.0'

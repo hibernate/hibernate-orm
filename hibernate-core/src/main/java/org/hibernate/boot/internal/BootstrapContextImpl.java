@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
 
@@ -13,23 +11,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.boot.model.TypeBeanInstanceProducer;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
-import org.hibernate.boot.model.internal.JPAXMLOverriddenMetadataProvider;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -40,10 +35,9 @@ import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
 /**
@@ -64,7 +58,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	private boolean isJpaBootstrap;
 
-	private final JavaReflectionManager hcannReflectionManager;
 	private final ClassmateContext classmateContext;
 
 	private ScanOptions scanOptions;
@@ -72,7 +65,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private Object scannerSetting;
 	private ArchiveDescriptorFactory archiveDescriptorFactory;
 
-	private IndexView jandexView;
+	private Object jandexView;
 
 	private HashMap<String,SqmFunctionDescriptor> sqlFunctionMap;
 	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
@@ -88,10 +81,9 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.metadataBuildingOptions = metadataBuildingOptions;
 
 		this.classLoaderAccess = new ClassLoaderAccessImpl( serviceRegistry.getService( ClassLoaderService.class ) );
-		this.hcannReflectionManager = generateHcannReflectionManager();
 
-		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
-		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
+		final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
 
 		this.jpaCompliance = new MutableJpaComplianceImpl( configService.getSettings() );
 		this.scanOptions = new StandardScanOptions(
@@ -109,7 +101,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.representationStrategySelector = ManagedTypeRepresentationResolverStandard.INSTANCE;
 
 		this.typeConfiguration = new TypeConfiguration();
-		this.beanInstanceProducer = new TypeBeanInstanceProducer( configService );
+		this.beanInstanceProducer = new TypeBeanInstanceProducer( configService, serviceRegistry );
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
 	}
 
@@ -189,12 +181,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public ReflectionManager getReflectionManager() {
-		return hcannReflectionManager;
-	}
-
-	@Override
-	public IndexView getJandexView() {
+	public Object getJandexView() {
 		return jandexView;
 	}
 
@@ -220,17 +207,17 @@ public class BootstrapContextImpl implements BootstrapContext {
 		return cacheRegionDefinitions == null ? Collections.emptyList() : cacheRegionDefinitions;
 	}
 
-	private final Map<String,BasicTypeImpl<?>> adHocBasicTypeRegistrations = new HashMap<>();
+	private final Map<String,BasicType<?>> adHocBasicTypeRegistrations = new HashMap<>();
 
 	@Override
-	public void registerAdHocBasicType(BasicTypeImpl<?> basicType) {
+	public void registerAdHocBasicType(BasicType<?> basicType) {
 		adHocBasicTypeRegistrations.put( basicType.getName(), basicType );
 	}
 
 	@Override
-	public <T> BasicTypeImpl<T> resolveAdHocBasicType(String key) {
+	public <T> BasicType<T> resolveAdHocBasicType(String key) {
 		//noinspection unchecked
-		return (BasicTypeImpl<T>) adHocBasicTypeRegistrations.get( key );
+		return (BasicType<T>) adHocBasicTypeRegistrations.get( key );
 	}
 
 	@Override
@@ -312,7 +299,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.archiveDescriptorFactory = factory;
 	}
 
-	void injectJandexView(IndexView jandexView) {
+	void injectJandexView(Object jandexView) {
 		log.debugf( "Injecting Jandex IndexView [%s] into BootstrapContext; was [%s]", jandexView, this.jandexView );
 		this.jandexView = jandexView;
 	}
@@ -338,11 +325,4 @@ public class BootstrapContextImpl implements BootstrapContext {
 		}
 		cacheRegionDefinitions.add( cacheRegionDefinition );
 	}
-
-	private JavaReflectionManager generateHcannReflectionManager() {
-		final JavaReflectionManager reflectionManager = new JavaReflectionManager();
-		reflectionManager.setMetadataProvider( new JPAXMLOverriddenMetadataProvider( this ) );
-		return reflectionManager;
-	}
-
 }

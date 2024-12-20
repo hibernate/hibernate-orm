@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.junit4;
 
@@ -16,8 +14,6 @@ import jakarta.transaction.SystemException;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 
 import org.hibernate.testing.AfterClassOnce;
-import org.hibernate.testing.BeforeClassOnce;
-import org.hibernate.testing.cleaner.DatabaseCleaner;
 import org.hibernate.testing.jdbc.leak.ConnectionLeakUtil;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.junit.After;
@@ -35,24 +31,6 @@ import org.jboss.logging.Logger;
  */
 @RunWith( CustomRunner.class )
 public abstract class BaseUnitTestCase {
-
-	private static Throwable schemaClearError;
-
-	static {
-		try {
-			DatabaseCleaner.clearSchemas();
-		}
-		catch (Throwable t) {
-			schemaClearError = t;
-		}
-	}
-
-	@BeforeClassOnce
-	public static void checkClearSchema() throws Throwable {
-		if (schemaClearError!=null) {
-			throw schemaClearError;
-		}
-	}
 
 	protected final Logger log = Logger.getLogger( getClass() );
 

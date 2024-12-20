@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.ast;
 
@@ -173,7 +171,10 @@ public class SmokeTests {
 
 					// ScalarDomainResultImpl creates and caches the assembler at its creation.
 					// this just gets access to that cached one
-					final DomainResultAssembler<?> resultAssembler = domainResult.createResultAssembler( null, null );
+					final DomainResultAssembler<?> resultAssembler = domainResult.createResultAssembler(
+							null,
+							null
+					);
 
 					assertThat( resultAssembler, instanceOf( BasicResultAssembler.class ) );
 

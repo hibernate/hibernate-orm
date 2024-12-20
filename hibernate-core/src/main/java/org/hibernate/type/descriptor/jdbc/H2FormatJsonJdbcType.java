@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
@@ -16,7 +14,9 @@ import org.hibernate.sql.ast.spi.SqlAppender;
  * '{@code ? format json}' write expression for H2.
  *
  * @author Marco Belladelli
+ * @deprecated Use {@link org.hibernate.dialect.H2JsonJdbcType} instead
  */
+@Deprecated(forRemoval = true, since = "6.5")
 public class H2FormatJsonJdbcType extends JsonJdbcType {
 	/**
 	 * Singleton access

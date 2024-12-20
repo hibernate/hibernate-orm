@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.process.internal;
 
@@ -16,14 +14,17 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Internal;
+import org.hibernate.boot.BootLogging;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.jaxb.spi.BindableMappingDescriptor;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.cfg.MappingSettings;
 
 import jakarta.persistence.AttributeConverter;
+
 
 /**
  * @author Steve Ebersole
@@ -33,7 +34,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 	private final Set<Class<?>> annotatedClassReferences = new LinkedHashSet<>();
 	private final Set<String> annotatedClassNames = new LinkedHashSet<>();
 	private final Set<String> annotatedPackageNames = new LinkedHashSet<>();
-	private final List<Binding<BindableMappingDescriptor>> mappingFileBindings = new ArrayList<>();
+	private final List<Binding<JaxbBindableMappingDescriptor>> mappingFileBindings = new ArrayList<>();
 	private Map<String, Class<?>> extraQueryImports;
 
 	public static ManagedResourcesImpl baseline(MetadataSources sources, BootstrapContext bootstrapContext) {
@@ -42,9 +43,25 @@ public class ManagedResourcesImpl implements ManagedResources {
 		impl.annotatedClassReferences.addAll( sources.getAnnotatedClasses() );
 		impl.annotatedClassNames.addAll( sources.getAnnotatedClassNames() );
 		impl.annotatedPackageNames.addAll( sources.getAnnotatedPackages() );
-		impl.mappingFileBindings.addAll( sources.getXmlBindings() );
+		handleXmlMappings( sources, impl, bootstrapContext );
 		impl.extraQueryImports = sources.getExtraQueryImports();
 		return impl;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static void handleXmlMappings(
+			MetadataSources sources,
+			ManagedResourcesImpl impl,
+			BootstrapContext bootstrapContext) {
+		if ( !bootstrapContext.getMetadataBuildingOptions().isXmlMappingEnabled() ) {
+			BootLogging.BOOT_LOGGER.debugf(
+					"Ignoring %s XML mappings due to `%s`",
+					sources.getMappingXmlBindings().size(),
+					MappingSettings.XML_MAPPING_ENABLED
+			);
+			return;
+		}
+		impl.mappingFileBindings.addAll( (List) sources.getXmlBindings() );
 	}
 
 	public ManagedResourcesImpl() {
@@ -71,7 +88,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 	}
 
 	@Override
-	public Collection<Binding<BindableMappingDescriptor>> getXmlMappingBindings() {
+	public Collection<Binding<JaxbBindableMappingDescriptor>> getXmlMappingBindings() {
 		return Collections.unmodifiableList( mappingFileBindings );
 	}
 
@@ -105,7 +122,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 	}
 
 	@Internal
-	public void addXmlBinding(Binding<BindableMappingDescriptor> binding) {
+	public void addXmlBinding(Binding<JaxbBindableMappingDescriptor> binding) {
 		mappingFileBindings.add( binding );
 	}
 }

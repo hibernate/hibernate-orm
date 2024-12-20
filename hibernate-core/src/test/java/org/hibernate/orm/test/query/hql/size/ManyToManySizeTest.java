@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.query.hql.size;
 
 import java.util.ArrayList;
@@ -17,9 +14,9 @@ import jakarta.persistence.ManyToMany;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Imported;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -31,7 +28,7 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
-@TestForIssue( jiraKey = "HHH-13619" )
+@JiraKey( value = "HHH-13619" )
 @DomainModel( annotatedClasses = { ManyToManySizeTest.Company.class, ManyToManySizeTest.Customer.class, ManyToManySizeTest.CompanyDto.class } )
 @SessionFactory
 public class ManyToManySizeTest {
@@ -295,7 +292,7 @@ public class ManyToManySizeTest {
 		scope.inTransaction(
 				(session) -> {
 					for ( Company company : session.createQuery( "from Company", Company.class ).list() ) {
-						session.delete( company );
+						session.remove( company );
 					}
 				}
 		);

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -24,7 +22,7 @@ public class ManyToOne extends ToOne {
 	private boolean isLogicalOneToOne;
 	private NotFoundAction notFoundAction;
 
-	private Type resolvedType;
+	private transient Type resolvedType;
 
 	public ManyToOne(MetadataBuildingContext buildingContext, Table table) {
 		super( buildingContext, table );
@@ -60,9 +58,9 @@ public class ManyToOne extends ToOne {
 	}
 
 	@Override
-	public void createUniqueKey() {
+	public void createUniqueKey(MetadataBuildingContext context) {
 		if ( !hasFormula() ) {
-			getTable().createUniqueKey( getConstraintColumns() );
+			getTable().createUniqueKey( getConstraintColumns(), context );
 		}
 	}
 
@@ -92,19 +90,20 @@ public class ManyToOne extends ToOne {
 			if ( property==null ) {
 				throw new MappingException( "Referenced entity '" + referencedEntityName
 						+ "' has no property named '" + referencedPropertyName + "'" );
-			} 
+			}
 			else {
 				// Make sure synthetic properties are sorted
-				if ( property.getValue() instanceof Component ) {
-					( (Component) property.getValue() ).sortProperties();
+				if ( property.getValue() instanceof Component component ) {
+					component.sortProperties();
 				}
 				// todo : if "none" another option is to create the ForeignKey object still	but to set its #disableCreation flag
 				if ( isForeignKeyEnabled() && !hasFormula() ) {
 					final ForeignKey foreignKey = getTable().createForeignKey(
-							getForeignKeyName(), 
-							getConstraintColumns(), 
-							( (EntityType) getType() ).getAssociatedEntityName(), 
+							getForeignKeyName(),
+							getConstraintColumns(),
+							( (EntityType) getType() ).getAssociatedEntityName(),
 							getForeignKeyDefinition(),
+							getForeignKeyOptions(),
 							new ArrayList<>( property.getColumns() )
 					);
 					foreignKey.setReferencedTable( property.getValue().getTable() );
@@ -113,7 +112,7 @@ public class ManyToOne extends ToOne {
 			}
 		}
 	}
-	
+
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
@@ -142,5 +141,10 @@ public class ManyToOne extends ToOne {
 
 	public boolean isLogicalOneToOne() {
 		return isLogicalOneToOne;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return getReferencedPropertyName() != null || super.isNullable();
 	}
 }

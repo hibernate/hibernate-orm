@@ -1,5 +1,3 @@
-import java.lang.Override;
-
 public class LatestAndGreatestConnectionProviderImpl
     implements ConnectionProvider, Startable, Stoppable, Configurable {
 
@@ -10,7 +8,7 @@ public class LatestAndGreatestConnectionProviderImpl
     private boolean available = false;
 
     @Override
-    public void configure(Map configurationValues) {
+    public void configure(Map<String, Object> configurationValues) {
         // extract our config from the settings map
         lagPoolBuilder = buildBuilder( configurationValues );
     }
@@ -34,7 +32,7 @@ public class LatestAndGreatestConnectionProviderImpl
     @Override
     public Connection getConnection() throws SQLException {
         if ( !available ) {
-            throwException(
+            throw new HibernateException(
                 "LatestAndGreatest ConnectionProvider not available for use" )
         }
 
@@ -45,7 +43,7 @@ public class LatestAndGreatestConnectionProviderImpl
     public void closeConnection(Connection conn) throws SQLException {
         if ( !available ) {
             warn(
-                "LatestAndGreatest ConnectionProvider not available for use" )
+                "LatestAndGreatestConnectionProvider not available for use" )
         }
 
         if ( conn == null ) {

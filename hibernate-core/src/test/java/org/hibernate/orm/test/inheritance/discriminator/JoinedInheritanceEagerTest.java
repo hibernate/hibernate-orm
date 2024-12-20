@@ -1,25 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * Copyright (c) 2014, Red Hat Inc. or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Inc.
- *
- * This copyrighted material is made available to anyone wishing to use, modify,
- * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this distribution; if not, write to:
- * Free Software Foundation, Inc.
- * 51 Franklin Street, Fifth Floor
- * Boston, MA  02110-1301  USA
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.inheritance.discriminator;
 
@@ -35,7 +16,7 @@ import jakarta.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -95,16 +76,16 @@ public class JoinedInheritanceEagerTest {
 					EntityD entityD = session.get( EntityD.class, 2L );
 					EntityC entityC = session.get( EntityC.class, 1L );
 
-					session.delete( entityD );
-					session.delete( entityC );
-					session.delete( entityA );
-					session.delete( entityB );
+					session.remove( entityD );
+					session.remove( entityC );
+					session.remove( entityA );
+					session.remove( entityB );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12375")
+	@JiraKey(value = "HHH-12375")
 	public void joinFindEntity(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			EntityA entityA = session.get( EntityA.class, 4L );
@@ -114,7 +95,7 @@ public class JoinedInheritanceEagerTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12375")
+	@JiraKey(value = "HHH-12375")
 	public void joinFindParenEntity(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			BaseEntity baseEntity = session.get( BaseEntity.class, 4L );
@@ -134,7 +115,7 @@ public class JoinedInheritanceEagerTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12375")
+	@JiraKey(value = "HHH-12375")
 	public void selectBaseType(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			List result = session.createQuery( "from BaseEntity" ).list();

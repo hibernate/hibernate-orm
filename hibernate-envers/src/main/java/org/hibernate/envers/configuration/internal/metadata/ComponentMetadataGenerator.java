@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
@@ -53,7 +51,7 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 		final Component propComponent = (Component) value;
 		final EmbeddableInstantiator instantiator;
 		if ( propComponent.getCustomInstantiator() != null ) {
-			if ( getMetadataBuildingContext().getBuildingOptions().disallowExtensionsInCdi() ) {
+			if ( !getMetadataBuildingContext().getBuildingOptions().isAllowExtensionsInCdi() ) {
 				instantiator = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( propComponent.getCustomInstantiator() );
 			}
 			else {
@@ -68,7 +66,7 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 			final Class<CompositeUserType<?>> userTypeClass = getMetadataBuildingContext().getBootstrapContext()
 					.getClassLoaderAccess()
 					.classForName( propComponent.getTypeName() );
-			if ( getMetadataBuildingContext().getBuildingOptions().disallowExtensionsInCdi() ) {
+			if ( !getMetadataBuildingContext().getBuildingOptions().isAllowExtensionsInCdi() ) {
 				final CompositeUserType<?> compositeUserType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
 				//noinspection rawtypes
 				instantiator = new EmbeddableCompositeUserTypeInstantiator( (CompositeUserType) compositeUserType );

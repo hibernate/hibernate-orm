@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
@@ -13,7 +11,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.ReturnableType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
@@ -22,8 +20,10 @@ import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -34,6 +34,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Arrays.asList;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
@@ -53,8 +54,13 @@ public class TimestampdiffFunction
 		extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private final Dialect dialect;
+	private final SqlAstNodeRenderingMode[] renderingModes;
 
 	public TimestampdiffFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
+		this( dialect, typeConfiguration, SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	public TimestampdiffFunction(Dialect dialect, TypeConfiguration typeConfiguration, SqlAstNodeRenderingMode... renderingModes) {
 		super(
 				"timestampdiff",
 				new ArgumentTypesValidator(
@@ -68,12 +74,14 @@ public class TimestampdiffFunction
 				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, TEMPORAL_UNIT, TEMPORAL, TEMPORAL )
 		);
 		this.dialect = dialect;
+		this.renderingModes = renderingModes;
 	}
 
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> arguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 
 		final DurationUnit field = (DurationUnit) arguments.get( 0 );
@@ -86,7 +94,7 @@ public class TimestampdiffFunction
 	private PatternRenderer patternRenderer(TemporalUnit unit, Expression from, Expression to) {
 		TemporalType lhsTemporalType = getSqlTemporalType( from.getExpressionType() );
 		TemporalType rhsTemporalType = getSqlTemporalType( to.getExpressionType() );
-		return new PatternRenderer( dialect.timestampdiffPattern( unit, lhsTemporalType, rhsTemporalType ) );
+		return new PatternRenderer( dialect.timestampdiffPattern( unit, lhsTemporalType, rhsTemporalType ), renderingModes );
 	}
 
 	public SelfRenderingFunctionSqlAstExpression expression(
@@ -127,6 +135,7 @@ public class TimestampdiffFunction
 		@Override
 		public ReturnableType<?> resolveFunctionReturnType(
 				ReturnableType<?> impliedType,
+				@Nullable SqmToSqlAstConverter converter,
 				List<? extends SqmTypedNode<?>> arguments,
 				TypeConfiguration typeConfiguration) {
 			final BasicType<?> invariantType;
@@ -141,7 +150,9 @@ public class TimestampdiffFunction
 		}
 
 		@Override
-		public BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
+		public BasicValuedMapping resolveFunctionReturnType(
+				Supplier<BasicValuedMapping> impliedTypeAccess,
+				List<? extends SqlAstNode> arguments) {
 			final BasicType<?> invariantType;
 			if ( ( (SqmDurationUnit<?>) arguments.get( 0 ) ).getUnit() == TemporalUnit.SECOND ) {
 				invariantType = doubleType;
@@ -154,7 +165,8 @@ public class TimestampdiffFunction
 
 		@Override
 		public String getReturnType() {
-			return longType + "|" + doubleType;
+			return longType.getJavaType().getSimpleName()
+				+ "|" + doubleType.getJavaType().getSimpleName();
 		}
 	}
 

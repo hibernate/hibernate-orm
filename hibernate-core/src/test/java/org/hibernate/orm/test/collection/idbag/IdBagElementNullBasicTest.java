@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.idbag;
 
@@ -55,7 +53,7 @@ public class IdBagElementNullBasicTest {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -84,7 +82,7 @@ public class IdBagElementNullBasicTest {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -114,7 +112,7 @@ public class IdBagElementNullBasicTest {
 					AnEntity e = session.get( AnEntity.class, entityId );
 					assertEquals( 0, e.aCollection.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}
@@ -151,7 +149,7 @@ public class IdBagElementNullBasicTest {
 					assertEquals( 1, e.aCollection.size() );
 					assertEquals( 1, getCollectionElementRows( e.id, scope ).size() );
 					assertEquals( "ghi", e.aCollection.get( 0 ) );
-					session.delete( e );
+					session.remove( e );
 				}
 		);
 	}

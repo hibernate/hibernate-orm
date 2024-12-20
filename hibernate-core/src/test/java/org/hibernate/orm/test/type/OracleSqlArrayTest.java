@@ -1,23 +1,31 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.type;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import org.hibernate.annotations.Array;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.type.SqlTypes;
-import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import org.hibernate.annotations.Array;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.type.SqlTypes;
+
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +34,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SessionFactory
 @DomainModel(annotatedClasses = {OracleSqlArrayTest.Container.class})
 @RequiresDialect(OracleDialect.class)
+// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+@BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
 public class OracleSqlArrayTest {
 
 	@Test public void test(SessionFactoryScope scope) {
@@ -52,7 +62,7 @@ public class OracleSqlArrayTest {
 				ResultSet tableInfo = c.getMetaData().getColumns(null, null, "CONTAINERWITHARRAYS", "BIGINTEGERS" );
 				while ( tableInfo.next() ) {
 					String type = tableInfo.getString(6);
-					assertEquals( "BIGINTEGERARRAY", type );
+					assertEquals( "BIGINTEGERBIGDECIMALARRAY", type );
 					return;
 				}
 				fail("named array column not exported");
@@ -80,7 +90,7 @@ public class OracleSqlArrayTest {
 				ResultSet tableInfo = c.getMetaData().getColumns(null, null, "CONTAINERWITHARRAYS", "ACTIVITYKINDS" );
 				while ( tableInfo.next() ) {
 					String type = tableInfo.getString(6);
-					assertEquals( "ACTIVITYKINDARRAY", type );
+					assertEquals( "ACTIVITYKINDBYTEARRAY", type );
 					return;
 				}
 				fail("named array column not exported");

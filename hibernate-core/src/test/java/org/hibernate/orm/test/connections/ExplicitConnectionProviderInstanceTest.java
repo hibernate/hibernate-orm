@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.connections;
 
@@ -15,6 +13,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -23,7 +22,7 @@ import org.junit.Test;
 public class ExplicitConnectionProviderInstanceTest extends BaseUnitTestCase {
 	@Test
 	public void testPassingConnectionProviderInstanceToBootstrap() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.CONNECTION_PROVIDER, TestingConnectionProviderImpl.INSTANCE )
 				.build();
 		try {
@@ -46,8 +45,7 @@ public class ExplicitConnectionProviderInstanceTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public void closeConnection(Connection conn) throws SQLException {
-
+		public void closeConnection(Connection connection) {
 		}
 
 		@Override

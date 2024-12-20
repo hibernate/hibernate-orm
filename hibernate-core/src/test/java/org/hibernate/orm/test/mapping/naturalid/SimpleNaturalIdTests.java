@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid;
 
@@ -14,6 +12,7 @@ import javax.money.Monetary;
 
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.NaturalIdMultiLoadAccess;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.MappingMetamodel;
@@ -41,7 +40,7 @@ import static org.hamcrest.Matchers.notNullValue;
 @DomainModel( standardModels = StandardDomainModel.RETAIL )
 @SessionFactory
 public class SimpleNaturalIdTests {
-	private static final UUID uuid = UUID.randomUUID();
+	private static final UUID uuid = SafeRandomUUIDGenerator.safeRandomUUID();
 
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {

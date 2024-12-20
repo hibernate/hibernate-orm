@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.internal;
 
@@ -17,7 +15,6 @@ import org.hibernate.jpa.spi.MutableJpaCompliance;
  * @author Steve Ebersole
  */
 public class MutableJpaComplianceImpl implements MutableJpaCompliance {
-	private boolean listCompliance;
 	private boolean orderByMappingCompliance;
 	private boolean proxyCompliance;
 	private boolean generatorNameScopeCompliance;
@@ -38,12 +35,6 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	public MutableJpaComplianceImpl(Map<?,?> configurationSettings, boolean jpaByDefault) {
 		final Object legacyQueryCompliance = configurationSettings.get( AvailableSettings.JPAQL_STRICT_COMPLIANCE );
 
-		//noinspection deprecation
-		listCompliance = ConfigurationHelper.getBoolean(
-				AvailableSettings.JPA_LIST_COMPLIANCE,
-				configurationSettings,
-				jpaByDefault
-		);
 		proxyCompliance = ConfigurationHelper.getBoolean(
 				AvailableSettings.JPA_PROXY_COMPLIANCE,
 				configurationSettings,
@@ -96,9 +87,8 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 		return transactionCompliance;
 	}
 
-	@Override
-	public boolean isJpaListComplianceEnabled() {
-		return listCompliance;
+	public boolean isJpaCascadeComplianceEnabled() {
+		return true;
 	}
 
 	@Override
@@ -135,8 +125,7 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	// Mutators
 
 	@Override
-	public void setListCompliance(boolean listCompliance) {
-		this.listCompliance = listCompliance;
+	public void setCascadeCompliance(boolean cascadeCompliance) {
 	}
 
 	@Override
@@ -180,8 +169,7 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 
 	@Override
 	public JpaCompliance immutableCopy() {
-		JpaComplianceImpl.JpaComplianceBuilder builder = new JpaComplianceImpl.JpaComplianceBuilder();
-		builder = builder.setListCompliance( listCompliance )
+		return new JpaComplianceImpl.JpaComplianceBuilder()
 				.setProxyCompliance( proxyCompliance )
 				.setOrderByMappingCompliance( orderByMappingCompliance )
 				.setGlobalGeneratorNameCompliance( generatorNameScopeCompliance )
@@ -189,7 +177,7 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 				.setTransactionCompliance( transactionCompliance )
 				.setClosedCompliance( closedCompliance )
 				.setCachingCompliance( cachingCompliance )
-				.setLoadByIdCompliance( loadByIdCompliance );
-		return builder.createJpaCompliance();
+				.setLoadByIdCompliance( loadByIdCompliance )
+				.createJpaCompliance();
 	}
 }

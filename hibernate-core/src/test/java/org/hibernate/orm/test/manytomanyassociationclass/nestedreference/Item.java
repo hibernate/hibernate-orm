@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.manytomanyassociationclass.nestedreference;
 import java.util.ArrayList;
@@ -33,20 +31,20 @@ public class Item {
 	}
 
 	public String getDescription() {
-		  return description;
-	 }
+		return description;
+	}
 
 	public void setDescription(String description) {
-		  this.description = description;
-	 }
+		this.description = description;
+	}
 
 	public Long getId() {
-		  return id;
-	 }
+		return id;
+	}
 
 	public void setId(Long id) {
-		  this.id = id;
-	 }
+		this.id = id;
+	}
 
 	public long getVersion() {
 		return version;
@@ -57,12 +55,12 @@ public class Item {
 	}
 
 	public String getName() {
-		  return name;
-	 }
+		return name;
+	}
 
 	public void setName(String name) {
-		  this.name = name;
-	 }
+		this.name = name;
+	}
 
 	public Item getOwner() {
 		return owner;

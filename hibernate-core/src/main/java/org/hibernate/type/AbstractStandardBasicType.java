@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -19,7 +17,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -27,11 +24,13 @@ import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Convenience base class for {@link BasicType} implementations.
@@ -49,8 +48,8 @@ public abstract class AbstractStandardBasicType<T>
 	private final ValueBinder<T> jdbcValueBinder;
 	private final ValueExtractor<T> jdbcValueExtractor;
 	private final JdbcLiteralFormatter<T> jdbcLiteralFormatter;
-	private final AbstractClassJavaType<T> javaTypeAsAbstractClassJavaType;
-	private final Class javaTypeClass;
+	private final @Nullable Type typeForEqualsHashCode;
+	private final Class<?> javaTypeClass;
 	private final MutabilityPlan<T> mutabilityPlan;
 	private final Comparator<T> javatypeComparator;
 
@@ -67,13 +66,7 @@ public abstract class AbstractStandardBasicType<T>
 		this.javaTypeClass = javaType.getJavaTypeClass();
 		this.mutabilityPlan = javaType.getMutabilityPlan();
 		this.javatypeComparator = javaType.getComparator();
-		//This is a dispatch optimisation to avoid megamorphic invocations on the most common type:
-		if ( javaType instanceof AbstractClassJavaType ) {
-			this.javaTypeAsAbstractClassJavaType = (AbstractClassJavaType) javaType;
-		}
-		else {
-			this.javaTypeAsAbstractClassJavaType = null;
-		}
+		this.typeForEqualsHashCode = javaType.useObjectEqualsHashCode() ? null : this;
 	}
 
 	@Override
@@ -97,13 +90,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	public T fromString(CharSequence string) {
-		final AbstractClassJavaType<T> type = this.javaTypeAsAbstractClassJavaType;
-		if ( type != null ) {
-			return type.fromString( string );
-		}
-		else {
-			return javaType.fromString( string );
-		}
+		return javaType.fromString( string );
 	}
 
 	protected MutabilityPlan<T> getMutabilityPlan() {
@@ -111,14 +98,14 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
 		return value == null ? ArrayHelper.FALSE : ArrayHelper.TRUE;
 	}
 
 	@Override
 	public String[] getRegistrationKeys() {
 		return registerUnderJavaType()
-				? new String[] { getName(), javaType.getJavaType().getTypeName() }
+				? new String[] { getName(), javaType.getTypeName() }
 				: new String[] { getName() };
 	}
 
@@ -137,17 +124,17 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public final Class getReturnedClass() {
+	public final Class<?> getReturnedClass() {
 		return javaTypeClass;
 	}
 
 	@Override
-	public final int getColumnSpan(Mapping mapping) throws MappingException {
+	public final int getColumnSpan(MappingContext mapping) throws MappingException {
 		return 1;
 	}
 
 	@Override
-	public final int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
+	public final int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
 		return sqlTypes;
 	}
 
@@ -195,25 +182,19 @@ public abstract class AbstractStandardBasicType<T>
 		else if ( one == null || another == null ) {
 			return false;
 		}
+		else if ( typeForEqualsHashCode == null ) {
+			return one.equals( another );
+		}
 		else {
-			final AbstractClassJavaType<T> type = this.javaTypeAsAbstractClassJavaType;
-			if ( type != null ) {
-				//Optimize for the most common case: avoid the megamorphic call
-				return type.areEqual( (T) one, (T) another );
-			}
-			else {
-				return javaType.areEqual( (T) one, (T) another );
-			}
+			return javaType.areEqual( (T) one, (T) another );
 		}
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public int getHashCode(Object x) {
-		final AbstractClassJavaType<T> type = this.javaTypeAsAbstractClassJavaType;
-		if ( type != null ) {
-			//Optimize for the most common case: avoid the megamorphic call
-			return type.extractHashCode( (T) x );
+		if ( typeForEqualsHashCode == null ) {
+			return x.hashCode();
 		}
 		else {
 			return javaType.extractHashCode( (T) x );
@@ -223,6 +204,11 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	public final int getHashCode(Object x, SessionFactoryImplementor factory) {
 		return getHashCode( x );
+	}
+
+	@Override
+	public @Nullable Type getTypeForEqualsHashCode() {
+		return typeForEqualsHashCode;
 	}
 
 	@Override
@@ -242,7 +228,9 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	protected final boolean isDirty(Object old, Object current) {
-		return !isSame( old, current );
+		// MutableMutabilityPlan.INSTANCE is a special plan for which we always have to assume the value is dirty,
+		// because we can't actually copy a value, but have no knowledge about the mutability of the java type
+		return getMutabilityPlan() == MutableMutabilityPlan.INSTANCE || !isSame( old, current );
 	}
 
 	@Override

@@ -5,4 +5,4 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-jdbcDependency 'com.microsoft.sqlserver:mssql-jdbc:12.2.0.jre11'
+jdbcDependency 'com.microsoft.sqlserver:mssql-jdbc:12.6.1.jre11'

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.ql;
 
@@ -56,7 +54,7 @@ public class NamedNativeQueryWithGenericsTest {
 	@NamedNativeQueries(value = {
 			@NamedNativeQuery(
 					name = "MyEntity.findMyEntity",
-					query = "WITH RECURSIVE all_my_entities AS " +
+					query = "WITH all_my_entities AS " +
 							"(SELECT me.* FROM my_entity me) " +
 							"SELECT {ame.*} FROM all_my_entities ame")
 	})

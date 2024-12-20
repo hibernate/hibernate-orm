@@ -1,8 +1,12 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.polymorphic;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -25,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-15718")
+@JiraKey( value = "HHH-15718")
 public class PolymorphicQueriesTest {
 
 	@BeforeEach
@@ -60,6 +64,8 @@ public class PolymorphicQueriesTest {
 				session -> {
 					List<I> results = session.createQuery( "from " + I.class.getName(), I.class ).list();
 					assertThat( results.size() ).isEqualTo( 2 );
+					assertThat(results.get(0)).isInstanceOf(EntityA.class);
+					assertThat(results.get(1)).isInstanceOf(EntityB.class);
 				}
 		);
 
@@ -67,6 +73,8 @@ public class PolymorphicQueriesTest {
 				session -> {
 					List<I> results = session.createQuery( "from " + I.class.getName() + " i", I.class ).list();
 					assertThat( results.size() ).isEqualTo( 2 );
+					assertThat(results.get(0)).isInstanceOf(EntityA.class);
+					assertThat(results.get(1)).isInstanceOf(EntityB.class);
 				}
 		);
 
@@ -75,6 +83,8 @@ public class PolymorphicQueriesTest {
 					List<I> results = session.createQuery( "select i from " + I.class.getName() + " i", I.class )
 							.list();
 					assertThat( results.size() ).isEqualTo( 2 );
+					assertThat(results.get(0)).isInstanceOf(EntityA.class);
+					assertThat(results.get(1)).isInstanceOf(EntityB.class);
 				}
 		);
 	}

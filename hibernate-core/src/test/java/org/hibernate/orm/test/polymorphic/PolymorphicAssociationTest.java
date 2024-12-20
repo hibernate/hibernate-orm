@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.polymorphic;
 
@@ -50,16 +48,16 @@ public class PolymorphicAssociationTest {
 
 			level3.setName( "initial-name" );
 
-			session.save( level1 );
-			session.save( level2 );
-			session.save( level3 );
+			session.persist( level1 );
+			session.persist( level2 );
+			session.persist( level3 );
 		} );
 	}
 
 	@Test
 	public void testLoad(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			Level3 level3 = session.load( Level3.class, 3 );
+			Level3 level3 = session.getReference( Level3.class, 3 );
 			Level2 level2 = level3.getLevel2Parent();
 			assertThat( level2 ).isNotNull();
 			final Level3 level3Child = level2.getLevel3Child();
@@ -67,7 +65,7 @@ public class PolymorphicAssociationTest {
 		} );
 
 		scope.inTransaction( session -> {
-			Level1 level1 = session.load( Level1.class, 1 );
+			Level1 level1 = session.getReference( Level1.class, 1 );
 			DerivedLevel2 level2 = level1.getLevel2Child();
 			assertThat( level2 ).isNotNull();
 			assertThat( level2.getLevel1Parent() ).extracting( "id" ).isEqualTo( 1 );

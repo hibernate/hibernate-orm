@@ -1,18 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
-
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Objects;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FetchMode;
@@ -24,7 +14,6 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -33,27 +22,57 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Objects;
+
 import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
 import static org.hibernate.internal.util.collections.ArrayHelper.join;
+import static org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Handles "any" mappings
- * 
+ *
  * @author Gavin King
  */
 public class AnyType extends AbstractType implements CompositeType, AssociationType {
 	private final TypeConfiguration typeConfiguration;
 	private final Type identifierType;
-	private final Type discriminatorType;
+	private final MetaType discriminatorType;
 	private final boolean eager;
 
-	public AnyType(TypeConfiguration typeConfiguration, Type discriminatorType, Type identifierType, boolean lazy) {
+	public AnyType(TypeConfiguration typeConfiguration, MetaType discriminatorType, Type identifierType, boolean lazy) {
 		this.typeConfiguration = typeConfiguration;
 		this.discriminatorType = discriminatorType;
 		this.identifierType = identifierType;
 		this.eager = !lazy;
+	}
+
+	/**
+	 * @deprecated Use {@linkplain AnyType#AnyType(TypeConfiguration, MetaType, Type, boolean)} instead
+	 */
+	@Deprecated
+	public AnyType(TypeConfiguration typeConfiguration, Type discriminatorType, Type identifierType, boolean lazy) {
+		this(
+				typeConfiguration,
+				wrapDiscriminatorType( discriminatorType ),
+				identifierType,
+				lazy
+		);
+	}
+
+	private static MetaType wrapDiscriminatorType(Type discriminatorType) {
+		if ( discriminatorType instanceof MetaType metaType ) {
+			return metaType;
+		}
+
+		return new MetaType( discriminatorType, FULL_NAME_STRATEGY, null );
 	}
 
 	public Type getIdentifierType() {
@@ -78,8 +97,8 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
-		return join( discriminatorType.getSqlTypeCodes( mapping ), identifierType.getSqlTypeCodes( mapping ) );
+	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
+		return join( discriminatorType.getSqlTypeCodes( mappingContext ), identifierType.getSqlTypeCodes( mappingContext ) );
 	}
 
 	@Override
@@ -149,7 +168,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		final EntityPersister concretePersister = guessEntityPersister( entity, factory );
 		return concretePersister == null
 				? null
-				: concretePersister.getIdentifier( entity, null );
+				: concretePersister.getIdentifier( entity );
 	}
 
 	private EntityPersister guessEntityPersister(Object object, SessionFactoryImplementor factory) {
@@ -210,7 +229,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
 		final boolean[] result = new boolean[ getColumnSpan( mapping ) ];
 		if ( value != null ) {
 			Arrays.fill( result, true );
@@ -225,7 +244,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public int getColumnSpan(Mapping session) {
+	public int getColumnSpan(MappingContext session) {
 		return 2;
 	}
 
@@ -393,6 +412,11 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	public boolean hasNotNullProperty() {
 		// both are non-nullable
 		return true;
+	}
+
+	@Override
+	public boolean hasNullProperty() {
+		return false;
 	}
 
 	@Override

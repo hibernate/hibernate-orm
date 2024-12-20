@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cfg;
 
@@ -16,8 +14,9 @@ import jakarta.persistence.Persistence;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.hibernate.internal.util.ConfigHelper.findAsResource;
@@ -26,7 +25,7 @@ import static org.junit.Assert.assertNull;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-13227")
+@JiraKey(value = "HHH-13227")
 public class CfgFilePropertyTest extends BaseUnitTestCase {
 
 	@Test
@@ -38,6 +37,7 @@ public class CfgFilePropertyTest extends BaseUnitTestCase {
 			try {
 				final Properties props = new Properties();
 				props.setProperty( AvailableSettings.CFG_XML_FILE, "/org/hibernate/orm/test/boot/cfgXml/hibernate.cfg.xml" );
+				ServiceRegistryUtil.applySettings( props );
 
 				Persistence.createEntityManagerFactory( "ExcludeUnlistedClassesTest1", props );
 			}

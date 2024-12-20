@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.query;
 
@@ -21,7 +19,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 /**
  * @author Andrea Boriero
@@ -53,7 +51,7 @@ public class QueryWithLiteralsInSelectExpressionTest extends BaseEntityManagerFu
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10230")
+	@JiraKey(value = "HHH-10230")
 	public void testSelectLiterals() {
 		final EntityManager entityManager = getOrCreateEntityManager();
 		try {
@@ -73,7 +71,7 @@ public class QueryWithLiteralsInSelectExpressionTest extends BaseEntityManagerFu
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10230")
+	@JiraKey(value = "HHH-10230")
 	public void testSelectNonNullLiteralsCastToBoolean() {
 		final EntityManager entityManager = getOrCreateEntityManager();
 		try {
@@ -93,7 +91,7 @@ public class QueryWithLiteralsInSelectExpressionTest extends BaseEntityManagerFu
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10230")
+	@JiraKey(value = "HHH-10230")
 	public void testSelectNullLiterals() {
 		final EntityManager entityManager = getOrCreateEntityManager();
 		try {

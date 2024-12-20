@@ -1,17 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.FetchMode;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
@@ -21,6 +20,7 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.MetaType;
 import org.hibernate.type.Type;
+import org.hibernate.type.MappingContext;
 
 /**
  * A mapping model object which represents something that's persisted "by value",
@@ -39,12 +39,6 @@ public interface Value extends Serializable {
 	 * The number of columns and formulas in the mapping.
 	 */
 	int getColumnSpan();
-
-	/**
-	 * @deprecated moving away from the use of {@link Iterator} as a return type
-	 */
-	@Deprecated(since = "6.0")
-	Iterator<Selectable> getColumnIterator();
 
 	/**
 	 * The mapping to columns and formulas.
@@ -78,25 +72,29 @@ public interface Value extends Serializable {
 
 	Type getType() throws MappingException;
 
-	@Incubating
+
+	/**
+	 * @deprecated use {@link #getSelectableType(MappingContext, int)}
+	 */
+	@Deprecated(since = "7.0")
 	default JdbcMapping getSelectableType(Mapping factory, int index) throws MappingException {
-		return getType( factory, getType(), index );
+		return getSelectableType( (MappingContext) factory, index );
 	}
 
-	private JdbcMapping getType(Mapping factory, Type elementType, int index) {
-		if ( elementType instanceof CompositeType ) {
-			final Type[] subtypes = ( (CompositeType) elementType ).getSubtypes();
+	@Incubating
+	default JdbcMapping getSelectableType(MappingContext mappingContext, int index) throws MappingException {
+		return getType( mappingContext, getType(), index );
+	}
+
+	private JdbcMapping getType(MappingContext factory, Type elementType, int index) {
+		if ( elementType instanceof CompositeType compositeType ) {
+			final Type[] subtypes = compositeType.getSubtypes();
 			for ( int i = 0; i < subtypes.length; i++ ) {
 				final Type subtype = subtypes[i];
-				final int columnSpan;
-				if ( subtype instanceof EntityType ) {
-					final EntityType entityType = (EntityType) subtype;
-					final Type idType = getIdType( entityType );
-					columnSpan = idType.getColumnSpan( factory );
-				}
-				else {
-					columnSpan = subtype.getColumnSpan( factory );
-				}
+				final int columnSpan =
+						subtype instanceof EntityType entityType
+								? getIdType( entityType ).getColumnSpan( factory )
+								: subtype.getColumnSpan( factory );
 				if ( columnSpan < index ) {
 					index -= columnSpan;
 				}
@@ -107,28 +105,24 @@ public interface Value extends Serializable {
 			// Should never happen
 			throw new IllegalStateException( "Type index is past the types column span!" );
 		}
-		else if ( elementType instanceof EntityType ) {
-			final EntityType entityType = (EntityType) elementType;
-			final Type idType = getIdType( entityType );
-			return getType( factory, idType, index );
+		else if ( elementType instanceof EntityType entityType ) {
+			return getType( factory, getIdType( entityType ), index );
 		}
-		else if ( elementType instanceof MetaType ) {
-			return (JdbcMapping) ( (MetaType) elementType ).getBaseType();
+		else if ( elementType instanceof MetaType metaType ) {
+			return (JdbcMapping) metaType.getBaseType();
 		}
-		return (JdbcMapping) elementType;
+		else {
+			return (JdbcMapping) elementType;
+		}
 	}
 
 	private Type getIdType(EntityType entityType) {
-		final PersistentClass entityBinding = getBuildingContext().getMetadataCollector()
-				.getEntityBinding( entityType.getAssociatedEntityName() );
-		final Type idType;
-		if ( entityType.isReferenceToPrimaryKey() ) {
-			idType = entityBinding.getIdentifier().getType();
-		}
-		else {
-			idType = entityBinding.getProperty( entityType.getRHSUniqueKeyPropertyName() ).getType();
-		}
-		return idType;
+		final PersistentClass entityBinding =
+				getBuildingContext().getMetadataCollector()
+						.getEntityBinding( entityType.getAssociatedEntityName() );
+		return entityType.isReferenceToPrimaryKey()
+				? entityBinding.getIdentifier().getType()
+				: entityBinding.getProperty( entityType.getRHSUniqueKeyPropertyName() ).getType();
 	}
 
 	FetchMode getFetchMode();
@@ -146,11 +140,19 @@ public interface Value extends Serializable {
 	// called when this is the foreign key of a
 	// @OneToOne with a FK, or a @OneToMany with
 	// a join table
-	void createUniqueKey();
+	void createUniqueKey(MetadataBuildingContext context);
 
 	boolean isSimpleValue();
 
-	boolean isValid(Mapping mapping) throws MappingException;
+	/**
+	 * @deprecated use {@link #isValid(MappingContext)}
+	 */
+	@Deprecated(since = "7.0")
+	default boolean isValid(Mapping mapping) throws MappingException{
+		return isValid( (MappingContext) mapping );
+	}
+
+	boolean isValid(MappingContext mappingContext) throws MappingException;
 
 	void setTypeUsingReflection(String className, String propertyName) throws MappingException;
 
@@ -178,5 +180,32 @@ public interface Value extends Serializable {
 	@Incubating
 	default String getExtraCreateTableInfo() {
 		return "";
+	}
+
+	/**
+	 * Checks if this value contains any duplicate column. A column
+	 * is considered duplicate when its {@link Column#getName() name} is
+	 * already contained in the {@code distinctColumn} set.
+	 * <p>
+	 * If a duplicate column is found, a {@link MappingException} is thrown.
+	 *
+	 * @param distinctColumns set containing the names of the columns to check
+	 * @param owner the owner of this value, used just for error reporting
+	 */
+	@Internal
+	default void checkColumnDuplication(Set<String> distinctColumns, String owner) {
+		for ( int i = 0; i < getSelectables().size(); i++ ) {
+			final Selectable selectable = getSelectables().get( i );
+			if ( isColumnInsertable( i ) || isColumnUpdateable( i ) ) {
+				final Column col = (Column) selectable;
+				if ( !distinctColumns.add( col.getName() ) ) {
+					throw new MappingException(
+							"Column '" + col.getName()
+									+ "' is duplicated in mapping for " + owner
+									+ " (use '@Column(insertable=false, updatable=false)' when mapping multiple properties to the same column)"
+					);
+				}
+			}
+		}
 	}
 }

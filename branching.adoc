@@ -11,7 +11,7 @@ Describes the paradigm used for branching within the ORM project
 * PR branches for performance improvements, security fixes and bugfixes target the affected minor branches (which could be main for a short period of time)
 
 [[process]]
-== THe Process
+== The Process
 
 Process (using 6.3 -> 6.4 as an example):
 

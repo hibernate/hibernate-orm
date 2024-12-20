@@ -1,14 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.Set;
 import java.util.function.Consumer;
 
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -73,7 +78,7 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	 * Extract a specific attribute value from the entity instance, by position
 	 */
 	default Object getValue(Object instance, int position) {
-		return getAttributeMapping( position ).getValue( instance );
+		return getAttributeMapping( position ).getPropertyAccess().getGetter().get( instance );
 	}
 
 	/**
@@ -85,7 +90,7 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	 * Inject a specific attribute value into the entity instance, by position
 	 */
 	default void setValue(Object instance, int position, Object value) {
-		getAttributeMapping( position ).setValue( instance, value );
+		getAttributeMapping( position ).getPropertyAccess().getSetter().set( instance, value );
 	}
 
 	default boolean anyRequiresAggregateColumnWriter() {
@@ -108,6 +113,37 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 			AttributeMapping attributeMapping = attributeMappings.get( i );
 			if ( attributeMapping.hasPartitionedSelectionMapping() ) {
 				return true;
+			}
+		}
+		return false;
+	}
+
+	default boolean isAffectedByEnabledFilters(
+			Set<ManagedMappingType> visitedTypes,
+			LoadQueryInfluencers influencers,
+			boolean onlyApplyForLoadByKey) {
+		if ( !visitedTypes.add( this ) ) {
+			return false;
+		}
+		// we still need to verify collection fields to be eagerly loaded by join
+		final AttributeMappingsList attributeMappings = getAttributeMappings();
+		for ( int i = 0; i < attributeMappings.size(); i++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( i );
+			final FetchOptions mappedFetchOptions = attributeMapping.getMappedFetchOptions();
+			if ( mappedFetchOptions.getTiming() == FetchTiming.IMMEDIATE
+					&& mappedFetchOptions.getStyle() == FetchStyle.JOIN ) {
+				if ( attributeMapping instanceof PluralAttributeMapping ) {
+					final CollectionPersister collectionDescriptor = ( (PluralAttributeMapping) attributeMapping ).getCollectionDescriptor();
+					if ( collectionDescriptor.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey ) ) {
+						return true;
+					}
+				}
+				else if ( attributeMapping instanceof ToOneAttributeMapping ) {
+					final EntityMappingType entityMappingType = ( (ToOneAttributeMapping) attributeMapping ).getEntityMappingType();
+					if ( entityMappingType.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey ) ) {
+						return true;
+					}
+				}
 			}
 		}
 		return false;

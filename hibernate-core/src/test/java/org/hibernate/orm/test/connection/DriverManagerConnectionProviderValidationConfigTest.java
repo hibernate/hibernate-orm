@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.connection;
 
@@ -10,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -25,7 +24,11 @@ import static org.junit.Assert.assertTrue;
  */
 @Jpa(
 		annotatedClasses = { DriverManagerConnectionProviderValidationConfigTest.Event.class },
-		integrationSettings = @Setting(name = DriverManagerConnectionProviderImpl.VALIDATION_INTERVAL, value = "1")
+		integrationSettings = {
+				// Force a non-shared connection provider to avoid re-creation of the shared pool
+				@Setting(name = AvailableSettings.CONNECTION_PROVIDER, value = ""),
+				@Setting(name = DriverManagerConnectionProviderImpl.VALIDATION_INTERVAL, value = "1")
+		}
 )
 public class DriverManagerConnectionProviderValidationConfigTest {
 

@@ -1,21 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.insert;
 
 import java.sql.PreparedStatement;
 
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
-import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.jdbc.Expectation;
-import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 
 /**
  * Each implementation defines a strategy for retrieving a primary key
@@ -37,42 +30,14 @@ import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
  * @see org.hibernate.generator.OnExecutionGenerator
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link GeneratedValuesMutationDelegate} instead.
  */
-public interface InsertGeneratedIdentifierDelegate {
-	/**
-	 * Create a {@link TableInsertBuilder} with any specific identity
-	 * handling already built in.
-	 */
-	TableInsertBuilder createTableInsertBuilder(
-			BasicEntityIdentifierMapping identifierMapping,
-			Expectation expectation,
-			SessionFactoryImplementor sessionFactory);
+@Deprecated(since = "6.5", forRemoval = true)
+public interface InsertGeneratedIdentifierDelegate extends GeneratedValuesMutationDelegate {
 
+	@Override
 	PreparedStatement prepareStatement(String insertSql, SharedSessionContractImplementor session);
-
-	/**
-	 * Perform the {@code insert} and extract the database-generated
-	 * primary key value.
-	 *
-	 * @see #createTableInsertBuilder
-	 */
-	Object performInsert(
-			PreparedStatementDetails insertStatementDetails,
-			JdbcValueBindings valueBindings,
-			Object entity,
-			SharedSessionContractImplementor session);
-
-	/**
-	 * Build an {@linkplain org.hibernate.sql.Insert insert statement}
-	 * specific to the delegate's mode of handling generated key values.
-	 *
-	 * @param context A context to help generate SQL strings
-	 * @return An {@link IdentifierGeneratingInsert}
-	 *
-	 * @deprecated this is no longer called
-	 */
-	@Deprecated(since = "6.2")
-	IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context);
 
 	/**
 	 * Append SQL specific to this delegate's mode of handling generated
@@ -91,9 +56,8 @@ public interface InsertGeneratedIdentifierDelegate {
 	 * @param insertSQL The {@code insert} statement string
 	 * @param session The session in which we are operating
 	 * @param binder The parameter binder
-	 * 
+	 *
 	 * @return The generated identifier value
 	 */
-	Object performInsert(String insertSQL, SharedSessionContractImplementor session, Binder binder);
-
+	GeneratedValues performInsertReturning(String insertSQL, SharedSessionContractImplementor session, Binder binder);
 }

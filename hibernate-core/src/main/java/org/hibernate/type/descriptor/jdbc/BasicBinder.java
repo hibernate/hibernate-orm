@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
@@ -42,7 +40,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	@Override
 	public final void bind(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException {
 		if ( value == null ) {
-			if ( JdbcBindingLogging.TRACE_ENABLED ) {
+			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcBindingLogging.logNullBinding(
 						index,
 						jdbcType.getDefaultSqlTypeCode()
@@ -51,7 +49,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 			doBindNull( st, index, options );
 		}
 		else {
-			if ( JdbcBindingLogging.TRACE_ENABLED ) {
+			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcBindingLogging.logBinding(
 						index,
 						jdbcType.getDefaultSqlTypeCode(),
@@ -65,7 +63,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	@Override
 	public final void bind(CallableStatement st, J value, String name, WrapperOptions options) throws SQLException {
 		if ( value == null ) {
-			if ( JdbcBindingLogging.TRACE_ENABLED ) {
+			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcBindingLogging.logNullBinding(
 						name,
 						jdbcType.getDefaultSqlTypeCode()
@@ -74,7 +72,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 			doBindNull( st, name, options );
 		}
 		else {
-			if ( JdbcBindingLogging.TRACE_ENABLED ) {
+			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcBindingLogging.logBinding(
 						name,
 						jdbcType.getDefaultSqlTypeCode(),
@@ -83,6 +81,12 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 			}
 			doBind( st, value, name, options );
 		}
+	}
+
+	@Override
+	public Object getBindValue(J value, WrapperOptions options) throws SQLException {
+		final Class<?> preferredJavaTypeClass = jdbcType.getPreferredJavaTypeClass( options );
+		return preferredJavaTypeClass == null ? value : getJavaType().unwrap( value, preferredJavaTypeClass, options );
 	}
 
 	/**

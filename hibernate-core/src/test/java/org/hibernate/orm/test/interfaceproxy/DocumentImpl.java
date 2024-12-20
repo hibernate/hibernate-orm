@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: DocumentImpl.java 4407 2004-08-22 01:20:08Z oneovthafew $
 package org.hibernate.orm.test.interfaceproxy;
 import java.sql.Blob;
 import java.util.Calendar;

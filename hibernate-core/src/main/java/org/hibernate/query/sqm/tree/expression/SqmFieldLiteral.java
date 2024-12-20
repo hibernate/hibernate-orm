@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
@@ -29,6 +27,8 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
@@ -111,7 +111,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 	}
 
 	@Override
-	public void applyInferableType(SqmExpressible<?> type) {
+	public void applyInferableType(@Nullable SqmExpressible<?> type) {
 	}
 
 	@Override
@@ -153,13 +153,28 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 	}
 
 	@Override
-	public SqmPredicate equalTo(Expression<T> that) {
+	public SqmPredicate equalTo(Expression<?> that) {
 		return nodeBuilder().equal( this, that );
 	}
 
 	@Override
-	public SqmPredicate equalTo(T that) {
+	public SqmPredicate equalTo(Object that) {
 		return nodeBuilder().equal( this, that );
+	}
+
+	@Override
+	public Predicate notEqualTo(Expression<?> that) {
+		return nodeBuilder().notEqual( this, that );
+	}
+
+	@Override
+	public Predicate notEqualTo(Object that) {
+		return nodeBuilder().notEqual( this, that );
+	}
+
+	@Override
+	public <X> SqmExpression<X> cast(Class<X> type) {
+		return null;
 	}
 
 	@Override
@@ -179,7 +194,8 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 
 	@Override
 	public SqmPredicate in(Collection<?> values) {
-		return nodeBuilder().in( this, values );
+		//noinspection unchecked
+		return nodeBuilder().in( this, (Collection<T>) values );
 	}
 
 	@Override
@@ -243,7 +259,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 				String.format(
 						Locale.ROOT,
 						"Static field reference [%s#%s] cannot be de-referenced",
-						fieldJavaType.getJavaType().getTypeName(),
+						fieldJavaType.getTypeName(),
 						fieldName
 				)
 		);
@@ -258,7 +274,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 				String.format(
 						Locale.ROOT,
 						"Static field reference [%s#%s] cannot be de-referenced",
-						fieldJavaType.getJavaType().getTypeName(),
+						fieldJavaType.getTypeName(),
 						fieldName
 				)
 		);

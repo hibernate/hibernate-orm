@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy;
 
@@ -10,7 +8,7 @@ import java.io.Serializable;
 
 /**
  * Convenience base class for the serialized form of {@link AbstractLazyInitializer}.
- * 
+ *
  * @author Gail Badner
  */
 public abstract class AbstractSerializableProxy implements Serializable {
@@ -18,6 +16,7 @@ public abstract class AbstractSerializableProxy implements Serializable {
 	private final Object id;
 	private final Boolean readOnly;
 	protected final String sessionFactoryUuid;
+	protected final String sessionFactoryName;
 	private final boolean allowLoadOutsideTransaction;
 
 	protected AbstractSerializableProxy(
@@ -25,11 +24,13 @@ public abstract class AbstractSerializableProxy implements Serializable {
 			Object id,
 			Boolean readOnly,
 			String sessionFactoryUuid,
+			String sessionFactoryName,
 			boolean allowLoadOutsideTransaction) {
 		this.entityName = entityName;
 		this.id = id;
 		this.readOnly = readOnly;
 		this.sessionFactoryUuid = sessionFactoryUuid;
+		this.sessionFactoryName = sessionFactoryName;
 		this.allowLoadOutsideTransaction = allowLoadOutsideTransaction;
 	}
 
@@ -50,6 +51,6 @@ public abstract class AbstractSerializableProxy implements Serializable {
 	 * @param li the {@link AbstractLazyInitializer} to initialize.
 	 */
 	protected void afterDeserialization(AbstractLazyInitializer li) {
-		li.afterDeserialization( readOnly, sessionFactoryUuid, allowLoadOutsideTransaction );
+		li.afterDeserialization( readOnly, sessionFactoryUuid, sessionFactoryName, allowLoadOutsideTransaction );
 	}
 }

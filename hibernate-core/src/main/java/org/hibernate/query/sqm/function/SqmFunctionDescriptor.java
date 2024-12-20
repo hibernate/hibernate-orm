@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
@@ -36,6 +34,51 @@ import static java.util.Collections.singletonList;
  * returns {@link SelfRenderingSqmFunction}, which is an object
  * that is permitted to take over the logic of producing the
  * SQL AST subtree, so de-sugaring may also be performed there.
+ * <p>
+ * User-written function descriptors may be contributed via a
+ * {@link org.hibernate.boot.model.FunctionContributor} or by
+ * calling {@link org.hibernate.cfg.Configuration#addSqlFunction}.
+ * The {@link SqmFunctionRegistry} exposes methods which simplify
+ * the definition of a function, including
+ * {@link SqmFunctionRegistry#namedDescriptorBuilder(String)} and
+ * {@link SqmFunctionRegistry#patternAggregateDescriptorBuilder(String, String)}.
+ * <p>
+ * For example, this code registers a function named {@code prefixes()}:
+ * <pre>
+ * Configuration config = ... ;
+ * config.addSqlFunction("prefixes",
+ *         new SqmFunctionDescriptor() {
+ *             &#064;Override
+ *             public &lt;T&gt; SelfRenderingSqmFunction&lt;T&gt; generateSqmExpression(
+ *                     List&lt;? extends SqmTypedNode&lt;?&gt;&gt; arguments,
+ *                     ReturnableType&lt;T&gt; impliedResultType,
+ *                     QueryEngine queryEngine) {
+ *                 final SqmFunctionRegistry registry = queryEngine.getSqmFunctionRegistry();
+ *                 final TypeConfiguration types = queryEngine.getTypeConfiguration();
+ *                 return registry.patternDescriptorBuilder("prefix", "(left(?1, character_length(?2)) = ?2)" )
+ *                         .setExactArgumentCount(2)
+ *                         .setParameterTypes(FunctionParameterType.STRING, FunctionParameterType.STRING)
+ *                         .setInvariantType(types.standardBasicTypeForJavaType(Boolean.class))
+ *                         .descriptor()
+ *                         .generateSqmExpression(arguments, impliedResultType, queryEngine);
+ *             }
+ *
+ *             &#064;Override
+ *             public ArgumentsValidator getArgumentsValidator() {
+ *                 return new ArgumentTypesValidator(
+ *                         StandardArgumentsValidators.exactly(2),
+ *                         FunctionParameterType.STRING, FunctionParameterType.STRING
+ *                 );
+ *             }
+ *         }
+ * );
+ * </pre>
+ * The function may be called like this: {@code prefixes('Hibernate',book.title)}.
+ *
+ * @see org.hibernate.query.sqm.function.SqmFunctionRegistry
+ * @see org.hibernate.cfg.Configuration#addSqlFunction
+ * @see org.hibernate.boot.MetadataBuilder#applySqlFunction
+ * @see org.hibernate.boot.model.FunctionContributor
  *
  * @author David Channon
  * @author Steve Ebersole
@@ -133,16 +176,16 @@ public interface SqmFunctionDescriptor {
 	 * <p>
 	 * Instances of this interface are usually used for rendering of functions.
 	 * However, there are cases where Hibernate needs to consume a fragment
-	 * and decide if a token represents a function name.  In cases where the 
+	 * and decide if a token represents a function name.  In cases where the
 	 * token is followed by an opening parenthesis, we can safely assume the
-	 * token is a function name. Bur if the next token is not an opening 
-	 * parenthesis, the token might still represent a function if the function 
+	 * token is a function name. Bur if the next token is not an opening
+	 * parenthesis, the token might still represent a function if the function
 	 * has a "no paren" form in the case of no arguments.
 	 * <p>
-	 * For example, many databases do not require parentheses for functions 
-	 * like {@code current_timestamp} and friends. This method helps account 
+	 * For example, many databases do not require parentheses for functions
+	 * like {@code current_timestamp} and friends. This method helps account
 	 * for those cases.
-	 * 
+	 *
 	 * @apiNote The most common case, by far, is that a function call requires
 	 *          the parentheses. So this method returns true by default.
 	 *
@@ -177,4 +220,13 @@ public interface SqmFunctionDescriptor {
 	 * @return an instance of {@link ArgumentsValidator}
 	 */
 	ArgumentsValidator getArgumentsValidator();
+
+	/**
+	 * Whether the function renders as a predicate.
+	 *
+	 * @since 7.0
+	 */
+	default boolean isPredicate() {
+		return false;
+	}
 }

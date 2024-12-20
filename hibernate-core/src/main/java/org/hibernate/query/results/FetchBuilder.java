@@ -1,40 +1,40 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results;
 
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-
 import org.hibernate.Incubating;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
-import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
+import java.util.function.BiConsumer;
+
 /**
- * Responsible for building a single {@link DomainResult} instance as part of
- * the overall mapping of native / procedure query results.
+ * Responsible for building a single {@link Fetch} instance.
+ * Given the following HQL for illustration,
+ * <pre>
+ *     select b from Book b join fetch b.authors
+ * </pre>
+ * we have a single fetch : `Book(b).authors`
  *
- * @apiNote By definition a fetch is a reference to the fetched ModelPart
+ * @see ResultBuilder
+ *
  * @author Steve Ebersole
  */
 @Incubating
-public interface FetchBuilder {
+public interface FetchBuilder extends GraphNodeBuilder {
 	Fetch buildFetch(
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState);
 
-	default void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
+	default void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
 	}
 
 	FetchBuilder cacheKeyInstance();

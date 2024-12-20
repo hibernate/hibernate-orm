@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.testing;
 
 import org.hibernate.dialect.CockroachDialect;
@@ -21,7 +18,6 @@ import org.hibernate.spatial.testing.dialects.db2.DB2TestSupport;
 import org.hibernate.spatial.testing.dialects.h2gis.H2GisTestSupport;
 import org.hibernate.spatial.testing.dialects.hana.HANATestSupport;
 import org.hibernate.spatial.testing.dialects.mariadb.MariaDBTestSupport;
-import org.hibernate.spatial.testing.dialects.mysql.MySQL56TestSupport;
 import org.hibernate.spatial.testing.dialects.mysql.MySQL8TestSupport;
 import org.hibernate.spatial.testing.dialects.oracle.OracleSDOTestSupport;
 import org.hibernate.spatial.testing.dialects.postgis.PostgisTestSupport;
@@ -61,7 +57,7 @@ public class TestSupportFactories {
 
 
 		if ( MySQLDialect.class.isAssignableFrom( dialect.getClass() ) ) {
-			return dialect.getVersion().isSameOrAfter( 8 ) ? MySQL8TestSupport.class : MySQL56TestSupport.class;
+			return MySQL8TestSupport.class;
 		}
 
 		if ( H2Dialect.class.isAssignableFrom( dialect.getClass() ) ) {

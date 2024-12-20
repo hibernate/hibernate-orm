@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.select;
 
@@ -12,25 +10,41 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
+import jakarta.persistence.criteria.Nulls;
+
 /**
  * @author Steve Ebersole
  */
 public class SortSpecification implements SqlAstNode {
 	private final Expression sortExpression;
 	private final SortDirection sortOrder;
-	private final NullPrecedence nullPrecedence;
+	private final Nulls nullPrecedence;
+	private final boolean ignoreCase;
 
 	public SortSpecification(Expression sortExpression, SortDirection sortOrder) {
-		this( sortExpression, sortOrder, NullPrecedence.NONE );
+		this( sortExpression, sortOrder, Nulls.NONE, false );
 	}
 
+	public SortSpecification(Expression sortExpression, SortDirection sortOrder, Nulls nullPrecedence) {
+		this( sortExpression, sortOrder, nullPrecedence, false );
+	}
+
+	/**
+	 * @deprecated Use {@linkplain #SortSpecification(Expression, SortDirection, Nulls)} instead
+	 */
+	@Deprecated
 	public SortSpecification(Expression sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
+		this( sortExpression, sortOrder, nullPrecedence.getJpaValue() );
+	}
+
+	public SortSpecification(Expression sortExpression, SortDirection sortOrder, Nulls nullPrecedence, boolean ignoreCase) {
 		assert sortExpression != null;
 		assert sortOrder != null;
 		assert nullPrecedence != null;
 		this.sortExpression = sortExpression;
 		this.sortOrder = sortOrder;
 		this.nullPrecedence = nullPrecedence;
+		this.ignoreCase = ignoreCase;
 	}
 
 	public Expression getSortExpression() {
@@ -41,8 +55,12 @@ public class SortSpecification implements SqlAstNode {
 		return sortOrder;
 	}
 
-	public NullPrecedence getNullPrecedence() {
+	public Nulls getNullPrecedence() {
 		return nullPrecedence;
+	}
+
+	public boolean isIgnoreCase() {
+		return ignoreCase;
 	}
 
 	@Override

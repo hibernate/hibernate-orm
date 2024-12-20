@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.spi;
 
@@ -100,12 +98,8 @@ public interface TransactionCoordinator {
 	int getTimeOut();
 
 	default boolean isTransactionActive() {
-		return isTransactionActive( true );
-	}
-
-	default boolean isTransactionActive(boolean isMarkedRollbackConsideredActive) {
 		return isJoined()
-			&& getTransactionDriverControl().isActive( isMarkedRollbackConsideredActive );
+			&& getTransactionDriverControl().isActive();
 	}
 
 	default void invalidate(){}
@@ -136,10 +130,13 @@ public interface TransactionCoordinator {
 
 		void markRollbackOnly();
 
-		default boolean isActive(boolean isMarkedRollbackConsideredActive) {
+		default boolean isActive() {
 			final TransactionStatus status = getStatus();
-			return status == ACTIVE
-				|| isMarkedRollbackConsideredActive && status == MARKED_ROLLBACK;
+			return status == ACTIVE || status == MARKED_ROLLBACK;
+		}
+
+		default boolean isActiveAndNoMarkedForRollback() {
+			return getStatus() == ACTIVE;
 		}
 
 		// todo : org.hibernate.Transaction will need access to register local Synchronizations.

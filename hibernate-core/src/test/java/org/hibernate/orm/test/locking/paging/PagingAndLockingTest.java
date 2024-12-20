@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.locking.paging;
 
@@ -15,7 +13,7 @@ import org.hibernate.LockMode;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -28,7 +26,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Steve Ebersole
  */
-@TestForIssue(jiraKey = "HHH-1168")
+@JiraKey(value = "HHH-1168")
 public class PagingAndLockingTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -39,10 +37,10 @@ public class PagingAndLockingTest extends BaseCoreFunctionalTestCase {
 	public void createTestData() {
 		inTransaction(
 				session -> {
-					session.save( new Door( 1, "Front" ) );
-					session.save( new Door( 2, "Back" ) );
-					session.save( new Door( 3, "Garage" ) );
-					session.save( new Door( 4, "French" ) );
+					session.persist( new Door( 1, "Front" ) );
+					session.persist( new Door( 2, "Back" ) );
+					session.persist( new Door( 3, "Garage" ) );
+					session.persist( new Door( 4, "French" ) );
 
 				}
 		);

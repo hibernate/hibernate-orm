@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.sequence;
 
@@ -15,8 +13,9 @@ import org.hibernate.boot.spi.MetadataImplementor;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +37,7 @@ public class SequenceExportTest extends BaseUnitTestCase {
 
 	@Before
 	public void prepare() {
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 	}
 
 	@After
@@ -47,7 +46,7 @@ public class SequenceExportTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9936" )
+	@JiraKey( value = "HHH-9936" )
 	public void testMultipleUsesOfDefaultSequenceName() {
 		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( Entity1.class )
@@ -71,7 +70,7 @@ public class SequenceExportTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9936" )
+	@JiraKey( value = "HHH-9936" )
 	public void testMultipleUsesOfExplicitSequenceName() {
 		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 				.addAnnotatedClass( Entity3.class )

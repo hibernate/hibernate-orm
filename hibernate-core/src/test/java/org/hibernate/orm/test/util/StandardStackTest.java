@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.util;
 
@@ -148,7 +146,7 @@ public class StandardStackTest {
 	// utility functions
 
 	private Stack<Integer> allocateStack(int size) {
-		final Stack<Integer> stack = new StandardStack<>( Integer.class );
+		final Stack<Integer> stack = new StandardStack<>();
 		for ( int i = 0; i < size; i++ ) {
 			stack.push( i );
 		}

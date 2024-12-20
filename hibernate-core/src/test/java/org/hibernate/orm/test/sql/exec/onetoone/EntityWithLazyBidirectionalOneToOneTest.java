@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.exec.onetoone;
 
@@ -60,8 +58,8 @@ public class EntityWithLazyBidirectionalOneToOneTest {
 			);
 
 			entity.setOther( other );
-			session.save( other );
-			session.save( entity );
+			session.persist( other );
+			session.persist( entity );
 		} );
 
 		EntityWithLazyOneToOne entity = new EntityWithLazyOneToOne( 3, "second", Integer.MAX_VALUE );
@@ -78,8 +76,8 @@ public class EntityWithLazyBidirectionalOneToOneTest {
 			);
 
 			entity.setOther( other );
-			session.save( other );
-			session.save( entity );
+			session.persist( other );
+			session.persist( entity );
 		} );
 	}
 
@@ -246,4 +244,3 @@ public class EntityWithLazyBidirectionalOneToOneTest {
 
 	}
 }
-

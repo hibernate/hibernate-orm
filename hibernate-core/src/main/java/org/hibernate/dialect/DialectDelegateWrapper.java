@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -12,7 +10,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalAmount;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -48,26 +49,27 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
@@ -79,7 +81,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.tool.schema.internal.TableMigrator;
+import org.hibernate.tool.schema.spi.TableMigrator;
 import org.hibernate.tool.schema.spi.Cleaner;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
@@ -89,6 +91,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 /**
@@ -124,7 +127,7 @@ public class DialectDelegateWrapper extends Dialect {
 		}
 	}
 
-    /**
+	/**
 	 * Exposed so to allow code needing to know the implementation.
 	 * @return the wrapped Dialect
 	 */
@@ -132,19 +135,19 @@ public class DialectDelegateWrapper extends Dialect {
 		return wrapped;
 	}
 
-	//can't be overriden because of how Dialects get initialized: see constructor of parent
+	//can't be overridden because of how Dialects get initialized: see constructor of parent
 	@Override
 	protected final void checkVersion() {
 		//intentionally empty: this is used by the super constructor (yuk)
 	}
 
-	//can't be overriden because of how Dialects get initialized: see constructor of parent
+	//can't be overridden because of how Dialects get initialized: see constructor of parent
 	@Override
 	protected final void registerDefaultKeywords() {
 		//intentionally empty: this is used by the super constructor (yuk)
 	}
 
-	//can't be overriden because of how Dialects get initialized: see constructor of parent
+	//can't be overridden because of how Dialects get initialized: see constructor of parent
 	@Override
 	protected final void initDefaultProperties() {
 		//intentionally empty: this is used by the super constructor (yuk)
@@ -286,8 +289,8 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
-		return wrapped.trimPattern( specification, character );
+	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
+		return wrapped.trimPattern( specification, isWhitespace );
 	}
 
 	@Override
@@ -295,12 +298,12 @@ public class DialectDelegateWrapper extends Dialect {
 		return wrapped.supportsFractionalTimestampArithmetic();
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		return wrapped.timestampdiffPattern( unit, fromTemporalType, toTemporalType );
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return wrapped.timestampaddPattern( unit, temporalType, intervalType );
 	}
@@ -351,8 +354,8 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	public String getNativeIdentifierGeneratorStrategy() {
-		return wrapped.getNativeIdentifierGeneratorStrategy();
+	public GenerationType getNativeValueGenerationStrategy() {
+		return wrapped.getNativeValueGenerationStrategy();
 	}
 
 	@Override
@@ -401,13 +404,7 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean isLockTimeoutParameterized() {
-		return wrapped.isLockTimeoutParameterized();
-	}
-
-	@Override
-	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		return wrapped.getLockingStrategy( lockable, lockMode );
 	}
 
@@ -872,7 +869,7 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	public Exporter<Constraint> getUniqueKeyExporter() {
+	public Exporter<UniqueKey> getUniqueKeyExporter() {
 		return wrapped.getUniqueKeyExporter();
 	}
 
@@ -1037,9 +1034,8 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	@Deprecated(since = "6", forRemoval = true)
-	public boolean supportsParametersInInsertSelect() {
-		return wrapped.supportsParametersInInsertSelect();
+	public boolean useConnectionToCreateLob() {
+		return wrapped.useConnectionToCreateLob();
 	}
 
 	@Override
@@ -1057,11 +1053,6 @@ public class DialectDelegateWrapper extends Dialect {
 		return wrapped.supportsNullPrecedence();
 	}
 
-	@Override
-	@Deprecated(since = "6")
-	public boolean isAnsiNullOn() {
-		return wrapped.isAnsiNullOn();
-	}
 
 	@Override
 	public boolean requiresCastForConcatenatingNonStrings() {
@@ -1358,12 +1349,6 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	@Deprecated(since = "6", forRemoval = true)
-	public String inlineLiteral(String literal) {
-		return wrapped.inlineLiteral( literal );
-	}
-
-	@Override
 	public void appendLiteral(SqlAppender appender, String literal) {
 		wrapped.appendLiteral( appender, literal );
 	}
@@ -1579,13 +1564,19 @@ public class DialectDelegateWrapper extends Dialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		wrapped.appendDateTimeLiteral( appender, temporalAccessor, precision, jdbcTimeZone );
 	}
 
 	@Override
-	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Date date,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
 		wrapped.appendDateTimeLiteral( appender, date, precision, jdbcTimeZone );
 	}
 
@@ -1593,6 +1584,7 @@ public class DialectDelegateWrapper extends Dialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		wrapped.appendDateTimeLiteral( appender, calendar, precision, jdbcTimeZone );
@@ -1600,6 +1592,11 @@ public class DialectDelegateWrapper extends Dialect {
 
 	@Override
 	public void appendIntervalLiteral(SqlAppender appender, Duration literal) {
+		wrapped.appendIntervalLiteral( appender, literal );
+	}
+
+	@Override
+	public void appendIntervalLiteral(SqlAppender appender, TemporalAmount literal) {
 		wrapped.appendIntervalLiteral( appender, literal );
 	}
 
@@ -1631,5 +1628,217 @@ public class DialectDelegateWrapper extends Dialect {
 	@Override
 	public String getRowIdColumnString(String rowId) {
 		return wrapped.getRowIdColumnString( rowId );
+	}
+
+	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return wrapped.determineDatabaseVersion( info );
+	}
+
+	@Override
+	public boolean isLob(int sqlTypeCode) {
+		return wrapped.isLob( sqlTypeCode );
+	}
+
+	@Override
+	public String getEnumTypeDeclaration(Class<? extends Enum<?>> enumType) {
+		return wrapped.getEnumTypeDeclaration( enumType );
+	}
+
+	@Override
+	public String[] getCreateEnumTypeCommand(String name, String[] values) {
+		return wrapped.getCreateEnumTypeCommand( name, values );
+	}
+
+	@Override
+	public String[] getCreateEnumTypeCommand(Class<? extends Enum<?>> enumType) {
+		return wrapped.getCreateEnumTypeCommand( enumType );
+	}
+
+	@Override
+	public String[] getDropEnumTypeCommand(String name) {
+		return wrapped.getDropEnumTypeCommand( name );
+	}
+
+	@Override
+	public String[] getDropEnumTypeCommand(Class<? extends Enum<?>> enumType) {
+		return wrapped.getDropEnumTypeCommand( enumType );
+	}
+
+	@Override
+	public String getCheckCondition(String columnName, Class<? extends Enum<?>> enumType) {
+		return wrapped.getCheckCondition( columnName, enumType );
+	}
+
+	@Deprecated(since = "6.5", forRemoval = true)
+	@Override
+	public String getCheckCondition(String columnName, long[] values) {
+		return wrapped.getCheckCondition( columnName, values );
+	}
+
+	@Override
+	public String getCheckCondition(String columnName, Long[] values) {
+		return wrapped.getCheckCondition( columnName, values );
+	}
+
+	@Override
+	public String getCheckCondition(String columnName, Collection<?> valueSet, JdbcType jdbcType) {
+		return wrapped.getCheckCondition( columnName, valueSet, jdbcType );
+	}
+
+	@Override
+	public String buildStringToBooleanCast(String trueValue, String falseValue) {
+		return wrapped.buildStringToBooleanCast( trueValue, falseValue );
+	}
+
+	@Override
+	public String buildStringToBooleanCastDecode(String trueValue, String falseValue) {
+		return wrapped.buildStringToBooleanCastDecode( trueValue, falseValue );
+	}
+
+	@Override
+	public String buildStringToBooleanDecode(String trueValue, String falseValue) {
+		return wrapped.buildStringToBooleanDecode( trueValue, falseValue );
+	}
+
+	@Override
+	public String getDual() {
+		return wrapped.getDual();
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return wrapped.getFromDualForSelectOnly();
+	}
+
+	@Deprecated(since = "7.0", forRemoval = true)
+	@Override
+	public String getNativeIdentifierGeneratorStrategy() {
+		return wrapped.getNativeIdentifierGeneratorStrategy();
+	}
+
+	@Override
+	public int getTimeoutInSeconds(int millis) {
+		return wrapped.getTimeoutInSeconds( millis );
+	}
+
+	@Override
+	public String getBeforeDropStatement() {
+		return wrapped.getBeforeDropStatement();
+	}
+
+	@Override
+	public boolean useCrossReferenceForeignKeys() {
+		return wrapped.useCrossReferenceForeignKeys();
+	}
+
+	@Override
+	public String getCrossReferenceParentTableFilter() {
+		return wrapped.getCrossReferenceParentTableFilter();
+	}
+
+	@Override
+	public boolean supportsIsTrue() {
+		return wrapped.supportsIsTrue();
+	}
+
+	@Override
+	public String quoteCollation(String collation) {
+		return wrapped.quoteCollation( collation );
+	}
+
+	@Override
+	public boolean supportsInsertReturningRowId() {
+		return wrapped.supportsInsertReturningRowId();
+	}
+
+	@Override
+	public boolean supportsUpdateReturning() {
+		return wrapped.supportsUpdateReturning();
+	}
+
+	@Override
+	public boolean unquoteGetGeneratedKeys() {
+		return wrapped.unquoteGetGeneratedKeys();
+	}
+
+	@Override
+	public boolean supportsNationalizedMethods() {
+		return wrapped.supportsNationalizedMethods();
+	}
+
+	@Override
+	public boolean useArrayForMultiValuedParameters() {
+		return wrapped.useArrayForMultiValuedParameters();
+	}
+
+	@Override
+	public boolean supportsConflictClauseForInsertCTE() {
+		return wrapped.supportsConflictClauseForInsertCTE();
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return wrapped.supportsFromClauseInUpdate();
+	}
+
+	@Override
+	public int getDefaultIntervalSecondScale() {
+		return wrapped.getDefaultIntervalSecondScale();
+	}
+
+	@Override
+	public boolean doesRoundTemporalOnOverflow() {
+		return wrapped.doesRoundTemporalOnOverflow();
+	}
+
+	@Override
+	public Boolean supportsBatchUpdates() {
+		return wrapped.supportsBatchUpdates();
+	}
+
+	@Override
+	public Boolean supportsRefCursors() {
+		return wrapped.supportsRefCursors();
+	}
+
+	@Override
+	public @Nullable String getDefaultOrdinalityColumnName() {
+		return wrapped.getDefaultOrdinalityColumnName();
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return wrapped.getDmlTargetColumnQualifierSupport();
+	}
+
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return wrapped.getFunctionalDependencyAnalysisSupport();
+	}
+
+	@Override
+	public String getCheckConstraintString(CheckConstraint checkConstraint) {
+		return wrapped.getCheckConstraintString( checkConstraint );
+	}
+
+	@Override
+	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
+		return wrapped.appendCheckConstraintOptions( checkConstraint, sqlCheckConstraint );
+	}
+
+	@Override
+	public boolean supportsTableOptions() {
+		return wrapped.supportsTableOptions();
+	}
+
+	@Override
+	public boolean supportsBindingNullSqlTypeForSetNull() {
+		return wrapped.supportsBindingNullSqlTypeForSetNull();
+	}
+
+	@Override
+	public boolean supportsBindingNullForSetObject() {
+		return wrapped.supportsBindingNullForSetObject();
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graph.internal.parse;
 
@@ -66,9 +64,9 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final Stack<GraphImplementor> graphStack = new StandardStack<>( GraphImplementor.class );
-	private final Stack<AttributeNodeImplementor> attributeNodeStack = new StandardStack<>( AttributeNodeImplementor.class );
-	private final Stack<SubGraphGenerator> graphSourceStack = new StandardStack<>(SubGraphGenerator.class);
+	private final Stack<GraphImplementor> graphStack = new StandardStack<>();
+	private final Stack<AttributeNodeImplementor> attributeNodeStack = new StandardStack<>();
+	private final Stack<SubGraphGenerator> graphSourceStack = new StandardStack<>();
 
 	public GraphParser(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -139,7 +137,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 		final GraphImplementor<?> currentGraph = graphStack.getCurrent();
 		assert currentGraph != null;
 
-		final AttributeNodeImplementor attributeNode = currentGraph.addAttributeNode( attributeName );
+		final AttributeNodeImplementor attributeNode = currentGraph.findOrCreateAttributeNode( attributeName );
 		assert attributeNode != null;
 
 		return attributeNode;

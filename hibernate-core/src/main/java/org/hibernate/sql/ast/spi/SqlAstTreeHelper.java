@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.spi;
 
@@ -12,21 +10,15 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 /**
  * @author Steve Ebersole
  */
-public class SqlAstTreeHelper {
-	/**
-	 * Singleton access
-	 */
-	public static final SqlAstTreeHelper INSTANCE = new SqlAstTreeHelper();
+public final class SqlAstTreeHelper {
 
 	private SqlAstTreeHelper() {
 	}
-
 
 	public static Predicate combinePredicates(Predicate baseRestriction, Predicate incomingRestriction) {
 		if ( baseRestriction == null ) {
 			return incomingRestriction;
 		}
-
 		if ( incomingRestriction == null ) {
 			return baseRestriction;
 		}
@@ -52,7 +44,16 @@ public class SqlAstTreeHelper {
 			combinedPredicate.add( baseRestriction );
 		}
 
-		combinedPredicate.add( incomingRestriction );
+		final Junction secondJunction;
+		if ( incomingRestriction instanceof Junction
+				&& ( secondJunction = (Junction) incomingRestriction ).getNature() == Junction.Nature.CONJUNCTION ) {
+			for ( Predicate predicate : secondJunction.getPredicates() ) {
+				combinedPredicate.add( predicate );
+			}
+		}
+		else {
+			combinedPredicate.add( incomingRestriction );
+		}
 
 		return combinedPredicate;
 	}

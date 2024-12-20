@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.ast.builder;
 
@@ -19,7 +17,13 @@ public interface ColumnValuesTableMutationBuilder {
 	/**
 	 * Add a column as part of the values list
 	 */
-	void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping);
+	void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping, boolean isLob);
+	/**
+	 * Add a column as part of the values list
+	 */
+	default void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
+		addValueColumn( columnName, columnWriteFragment, jdbcMapping, jdbcMapping.getJdbcType().isLob() );
+	}
 
 	/**
 	 * Add a column as part of the values list
@@ -28,7 +32,8 @@ public interface ColumnValuesTableMutationBuilder {
 		addValueColumn(
 				selectableMapping.getSelectionExpression(),
 				selectableMapping.getWriteExpression(),
-				selectableMapping.getJdbcMapping()
+				selectableMapping.getJdbcMapping(),
+				selectableMapping.isLob()
 		);
 	}
 

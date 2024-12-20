@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.pc;
 
@@ -22,7 +20,6 @@ import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.PersistenceUtil;
 
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.NaturalId;
@@ -250,34 +247,6 @@ public class PersistenceContextTest extends BaseEntityManagerFunctionalTestCase 
 			session.refresh(person);
 			assertEquals("JOHN DOE", person.getName());
 			//end::pc-refresh-native-example[]
-		});
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap(Session.class);
-			Long personId = _personId;
-
-			//tag::pc-detach-reattach-lock-example[]
-			Person person = session.byId(Person.class).load(personId);
-			//Clear the Session so the person entity becomes detached
-			session.clear();
-			person.setName("Mr. John Doe");
-
-			session.lock(person, LockMode.NONE);
-			//end::pc-detach-reattach-lock-example[]
-		});
-
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Session session = entityManager.unwrap(Session.class);
-			Long personId = _personId;
-
-			//tag::pc-detach-reattach-saveOrUpdate-example[]
-			Person person = session.byId(Person.class).load(personId);
-			//Clear the Session so the person entity becomes detached
-			session.clear();
-			person.setName("Mr. John Doe");
-
-			session.merge(person);
-			//end::pc-detach-reattach-saveOrUpdate-example[]
 		});
 
 		doInJPA(this::entityManagerFactory, entityManager -> {

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.test.c3p0;
 
 import java.sql.Connection;
@@ -11,7 +15,6 @@ import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
 import org.hibernate.testing.util.ReflectionUtil;
 
 import org.mockito.Answers;
-import org.mockito.MockSettings;
 import org.mockito.Mockito;
 
 /**
@@ -49,10 +52,9 @@ public class C3P0ProxyConnectionProvider extends C3P0ConnectionProvider {
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		Connection originalConnection = connectionSpyMap.get( conn );
-
-		super.closeConnection( originalConnection != null ? originalConnection : conn );
+	public void closeConnection(Connection connection) throws SQLException {
+		final Connection originalConnection = connectionSpyMap.get( connection );
+		super.closeConnection( originalConnection != null ? originalConnection : connection);
 	}
 
 	public Map<Connection, Connection> getConnectionSpyMap() {

@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
@@ -76,6 +75,7 @@ public class PatternBasedSqmFunctionDescriptor
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		renderer.render( sqlAppender, sqlAstArguments, null, walker );
 	}
@@ -85,6 +85,7 @@ public class PatternBasedSqmFunctionDescriptor
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		renderer.render( sqlAppender, sqlAstArguments, filter, walker );
 	}
@@ -95,6 +96,7 @@ public class PatternBasedSqmFunctionDescriptor
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			List<SortSpecification> withinGroup,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		renderer.render( sqlAppender, sqlAstArguments, filter, withinGroup, walker );
 	}
@@ -106,6 +108,7 @@ public class PatternBasedSqmFunctionDescriptor
 			Predicate filter,
 			Boolean respectNulls,
 			Boolean fromFirst,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		renderer.render( sqlAppender, sqlAstArguments, filter, respectNulls, fromFirst, walker );
 	}

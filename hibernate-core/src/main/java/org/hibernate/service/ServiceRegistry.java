@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service;
 
@@ -26,17 +24,20 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public interface ServiceRegistry extends AutoCloseable {
 	/**
 	 * Retrieve this registry's parent registry.
-	 * 
+	 *
 	 * @return The parent registry.  May be null.
 	 */
 	@Nullable ServiceRegistry getParentServiceRegistry();
 
 	/**
-	 * Retrieve a service by role.  If service is not found, but a {@link org.hibernate.service.spi.ServiceInitiator} is
-	 * registered for this service role, the service will be initialized and returned.
+	 * Retrieve a service by role, returning null if there is no such service.
+	 * If service is not found, but a {@link org.hibernate.service.spi.ServiceInitiator}
+	 * is registered for this service role, the service will be initialized and returned.
+	 * Most of the time, use of {@link #requireService(Class)} is preferred, being much
+	 * less likely to cause a {@link NullPointerException} in the client.
 	 *
 	 * @apiNote We cannot return {@code <R extends Service<T>>} here because the service might come from the parent.
-	 * 
+	 *
 	 * @param serviceRole The service role
 	 * @param <R> The service role type
 	 *
@@ -47,8 +48,9 @@ public interface ServiceRegistry extends AutoCloseable {
 	<R extends Service> @Nullable R getService(Class<R> serviceRole);
 
 	/**
-	 * Retrieve a service by role.  If service is not found, but a {@link org.hibernate.service.spi.ServiceInitiator} is
-	 * registered for this service role, the service will be initialized and returned.
+	 * Retrieve a service by role, throwing an exception if there is no such service.
+	 * If service is not found, but a {@link org.hibernate.service.spi.ServiceInitiator}
+	 * is registered for this service role, the service will be initialized and returned.
 	 *
 	 * @apiNote We cannot return {@code <R extends Service<T>>} here because the service might come from the parent.
 	 *

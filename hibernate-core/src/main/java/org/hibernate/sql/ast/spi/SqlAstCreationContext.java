@@ -1,22 +1,20 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.query.BindingContext;
 
 /**
  * The "context" in which creation of SQL AST occurs.  Provides
- * access to generally needed when creating SQL AST nodes
+ * access to stuff generally needed when creating SQL AST nodes
  *
  * @author Steve Ebersole
  */
-public interface SqlAstCreationContext {
+public interface SqlAstCreationContext extends BindingContext {
 	/**
 	 * The SessionFactory
 	 */
@@ -26,11 +24,6 @@ public interface SqlAstCreationContext {
 	 * The runtime MappingMetamodelImplementor
 	 */
 	MappingMetamodelImplementor getMappingMetamodel();
-
-	/**
-	 * Access to Services
-	 */
-	ServiceRegistry getServiceRegistry();
 
 	/**
 	 * When creating {@link org.hibernate.sql.results.graph.Fetch} references,

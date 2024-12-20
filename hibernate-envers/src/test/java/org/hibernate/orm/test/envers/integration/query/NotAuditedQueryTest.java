@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.query;
 
@@ -13,7 +11,7 @@ import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.fail;
@@ -28,7 +26,7 @@ public class NotAuditedQueryTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11558")
+	@JiraKey(value = "HHH-11558")
 	public void testRevisionsOfEntityNotAuditedMultipleResults() {
 		try {
 			getAuditReader().createQuery()
@@ -42,7 +40,7 @@ public class NotAuditedQueryTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11558")
+	@JiraKey(value = "HHH-11558")
 	public void testRevisionsOfEntityNotAuditedSingleResult() {
 		try {
 			getAuditReader().createQuery()
@@ -57,7 +55,7 @@ public class NotAuditedQueryTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11558")
+	@JiraKey(value = "HHH-11558")
 	public void testForEntitiesAtRevisionNotAuditedMultipleResults() {
 		try {
 			getAuditReader().createQuery()
@@ -71,7 +69,7 @@ public class NotAuditedQueryTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11558")
+	@JiraKey(value = "HHH-11558")
 	public void testForEntitiesAtRevisionNotAuditedSingleResult() {
 		try {
 			getAuditReader().createQuery()
@@ -86,7 +84,7 @@ public class NotAuditedQueryTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11558")
+	@JiraKey(value = "HHH-11558")
 	public void testForEntitiesModifiedAtRevisionNotAuditedMultipleResults() {
 		try {
 			getAuditReader().createQuery()
@@ -100,7 +98,7 @@ public class NotAuditedQueryTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11558")
+	@JiraKey(value = "HHH-11558")
 	public void testForEntitiesModifiedAtRevisionNotAuditedSingleResult() {
 		try {
 			getAuditReader().createQuery()

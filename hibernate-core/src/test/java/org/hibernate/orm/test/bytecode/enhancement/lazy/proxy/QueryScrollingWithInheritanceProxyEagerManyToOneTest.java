@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
@@ -15,19 +13,16 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.Query;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -42,34 +37,37 @@ import jakarta.persistence.Table;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 /**
  * @author Andrea Boriero
  */
-@RunWith(BytecodeEnhancerRunner.class)
-public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyStatisticsSupport( true );
-		sfb.applySecondLevelCacheSupport( false );
-		sfb.applyQueryCacheSupport( false );
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( EmployeeParent.class );
-		sources.addAnnotatedClass( Employee.class );
-		sources.addAnnotatedClass( OtherEntity.class );
-	}
+@DomainModel(
+		annotatedClasses = {
+				QueryScrollingWithInheritanceProxyEagerManyToOneTest.EmployeeParent.class,
+				QueryScrollingWithInheritanceProxyEagerManyToOneTest.Employee.class,
+				QueryScrollingWithInheritanceProxyEagerManyToOneTest.OtherEntity.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "false" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class QueryScrollingWithInheritanceProxyEagerManyToOneTest {
 
 	@Test
-	public void testScrollableWithStatelessSession() {
-		final StatisticsImplementor stats = sessionFactory().getStatistics();
+	public void testScrollableWithStatelessSession(SessionFactoryScope scope) {
+		final StatisticsImplementor stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 		ScrollableResults scrollableResults = null;
-		final StatelessSession statelessSession = sessionFactory().openStatelessSession();
+		final StatelessSession statelessSession = scope.getSessionFactory().openStatelessSession();
 
 		try {
 			statelessSession.beginTransaction();
@@ -77,18 +75,7 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 					"select distinct e from Employee e left join fetch e.otherEntities order by e.dept",
 					Employee.class
 			);
-			if ( getDialect() instanceof DB2Dialect || getDialect() instanceof DerbyDialect ) {
-				/*
-					FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
-					but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
-					set type of TYPE_FORWARD_ONLY and db2 does not support it.
-				*/
-				scrollableResults = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
-			}
-			else {
-				scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
-			}
-
+			scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
 			while ( scrollableResults.next() ) {
 				final Employee employee = (Employee) scrollableResults.get();
 				assertThat( Hibernate.isPropertyInitialized( employee, "otherEntities" ), is( true ) );
@@ -129,11 +116,11 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 	}
 
 	@Test
-	public void testScrollableWithSession() {
-		final StatisticsImplementor stats = sessionFactory().getStatistics();
+	public void testScrollableWithSession(SessionFactoryScope scope) {
+		final StatisticsImplementor stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 		ScrollableResults scrollableResults = null;
-		final Session session = sessionFactory().openSession();
+		final Session session = scope.getSessionFactory().openSession();
 
 		try {
 			session.beginTransaction();
@@ -141,18 +128,7 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 					"select distinct e from Employee e left join fetch e.otherEntities order by e.dept",
 					Employee.class
 			);
-			if ( getDialect() instanceof DB2Dialect || getDialect() instanceof DerbyDialect ) {
-				/*
-					FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
-					but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
-					set type of TYPE_FORWARD_ONLY and db2 does not support it.
-				*/
-				scrollableResults = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
-			}
-			else {
-				scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
-			}
-
+			scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
 			while ( scrollableResults.next() ) {
 				final Employee employee = (Employee) scrollableResults.get();
 				assertThat( Hibernate.isPropertyInitialized( employee, "otherEntities" ), is( true ) );
@@ -192,9 +168,9 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 		}
 	}
 
-	@Before
-	public void prepareTestData() {
-		inTransaction(
+	@BeforeEach
+	public void prepareTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Employee e1 = new Employee( "ENG1" );
 					Employee e2 = new Employee( "ENG2" );
@@ -216,9 +192,9 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest extends BaseNo
 		);
 	}
 
-	@After
-	public void cleanUpTestData() {
-		inTransaction(
+	@AfterEach
+	public void cleanUpTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from OtherEntity" ).executeUpdate();
 					session.createQuery( "delete from Employee" ).executeUpdate();

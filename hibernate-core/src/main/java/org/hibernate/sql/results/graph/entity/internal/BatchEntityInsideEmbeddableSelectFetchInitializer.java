@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
@@ -15,21 +13,29 @@ import java.util.Map;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.Setter;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.InitializerData;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.type.Type;
 
-public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer {
-	private Map<EntityKey, List<ParentInfo>> toBatchLoad;
-	private final String rootEmbeddablePropertyName;
+public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer<BatchEntityInsideEmbeddableSelectFetchInitializer.BatchEntityInsideEmbeddableSelectFetchInitializerData> {
+	protected final Setter referencedModelPartSetter;
+	protected final AttributeMapping[] rootEmbeddableAttributes;
+	protected final Getter[] rootEmbeddableGetters;
+	protected final Type[] rootEmbeddablePropertyTypes;
 
 	/**
 	 * Marker value for batch properties, needed by the EmbeddableInitializer to instantiate the
@@ -46,160 +52,166 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 		}
 	};
 
+	public static class BatchEntityInsideEmbeddableSelectFetchInitializerData extends AbstractBatchEntitySelectFetchInitializerData {
+		private HashMap<EntityKey, List<ParentInfo>> toBatchLoad;
+
+		public BatchEntityInsideEmbeddableSelectFetchInitializerData(
+				BatchEntityInsideEmbeddableSelectFetchInitializer initializer,
+				RowProcessingState rowProcessingState) {
+			super( initializer, rowProcessingState );
+		}
+	}
+
 	public BatchEntityInsideEmbeddableSelectFetchInitializer(
-			FetchParentAccess parentAccess,
+			InitializerParent<?> parentAccess,
 			ToOneAttributeMapping referencedModelPart,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
-			DomainResultAssembler<?> identifierAssembler) {
-		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, identifierAssembler );
+			DomainResult<?> keyResult,
+			boolean affectedByFilter,
+			AssemblerCreationState creationState) {
+		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter, creationState );
 
-		rootEmbeddablePropertyName = getRootEmbeddablePropertyName(
-				firstEntityInitializer,
+		this.referencedModelPartSetter = referencedModelPart.getAttributeMetadata().getPropertyAccess().getSetter();
+		final String rootEmbeddablePropertyName = getRootEmbeddablePropertyName(
+				owningEntityInitializer,
 				parentAccess,
 				referencedModelPart
 		);
-	}
-
-	@Override
-	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( state == State.INITIALIZED ) {
-			return;
-		}
-		resolveKey( rowProcessingState, referencedModelPart, parentAccess );
-		if ( entityKey == null ) {
-			return;
-		}
-		state = State.INITIALIZED;
-		initializedEntityInstance = getExistingInitializedInstance( rowProcessingState );
-		if ( initializedEntityInstance == null ) {
-
-			// need to add the key to the batch queue only when the entity has not been already loaded or
-			// there isn't another initializer that is loading it
-			registerToBatchFetchQueue( rowProcessingState );
-
-			initializedEntityInstance = BATCH_PROPERTY;
-		}
-	}
-
-	@Override
-	protected void registerResolutionListener() {
-		parentAccess.registerResolutionListener( parentInstance -> {
-			final AttributeMapping parentAttribute = getParentEntityAttribute( rootEmbeddablePropertyName );
-			if ( parentAttribute != null ) {
-				getParentInfos().add( new ParentInfo(
-						firstEntityInitializer.getEntityKey(),
-						parentInstance,
-						parentAttribute.getStateArrayPosition()
-				) );
+		this.rootEmbeddableAttributes = getParentEntityAttributes( rootEmbeddablePropertyName );
+		final Getter[] getters = new Getter[rootEmbeddableAttributes.length];
+		for ( int i = 0; i < rootEmbeddableAttributes.length; i++ ) {
+			if ( rootEmbeddableAttributes[i] != null ) {
+				getters[i] = rootEmbeddableAttributes[i].getAttributeMetadata().getPropertyAccess().getGetter();
 			}
-		} );
-	}
-
-	private List<ParentInfo> getParentInfos() {
-		if ( toBatchLoad == null ) {
-			toBatchLoad = new HashMap<>();
 		}
-		return toBatchLoad.computeIfAbsent( entityKey, key -> new ArrayList<>() );
+		this.rootEmbeddableGetters = getters;
+		this.rootEmbeddablePropertyTypes = getParentEntityAttributeTypes( rootEmbeddablePropertyName );
 	}
 
 	@Override
-	public boolean isEntityInitialized() {
-		return false;
+	protected InitializerData createInitializerData(RowProcessingState rowProcessingState) {
+		return new BatchEntityInsideEmbeddableSelectFetchInitializerData( this, rowProcessingState );
+	}
+
+	protected Type[] getParentEntityAttributeTypes(String attributeName) {
+		final EntityPersister entityDescriptor = owningEntityInitializer.getEntityDescriptor();
+		final Type[] attributeTypes = new Type[
+				entityDescriptor.getRootEntityDescriptor()
+						.getSubclassEntityNames()
+						.size()
+				];
+		initializeAttributeType( attributeTypes, entityDescriptor, attributeName );
+		for ( EntityMappingType subMappingType : entityDescriptor.getSubMappingTypes() ) {
+			initializeAttributeType( attributeTypes, subMappingType.getEntityPersister(), attributeName );
+		}
+		return attributeTypes;
+	}
+
+	protected void initializeAttributeType(Type[] attributeTypes, EntityPersister entityDescriptor, String attributeName) {
+		if ( rootEmbeddableAttributes[entityDescriptor.getSubclassId()] != null ) {
+			attributeTypes[entityDescriptor.getSubclassId()] = entityDescriptor.getPropertyType( attributeName );
+		}
+	}
+
+	@Override
+	protected void registerToBatchFetchQueue(BatchEntityInsideEmbeddableSelectFetchInitializerData data) {
+		super.registerToBatchFetchQueue( data );
+		data.setInstance( BATCH_PROPERTY );
+	}
+
+	@Override
+	public void initializeInstance(BatchEntityInsideEmbeddableSelectFetchInitializerData data) {
+		super.initializeInstance( data );
+		// todo: check why this can't be moved to #registerToBatchFetchQueue
+		if ( data.getInstance() == BATCH_PROPERTY ) {
+			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			final InitializerData owningData = owningEntityInitializer.getData( rowProcessingState );
+			final int owningEntitySubclassId = owningEntityInitializer.getConcreteDescriptor( owningData ).getSubclassId();
+			final AttributeMapping rootEmbeddableAttribute = rootEmbeddableAttributes[owningEntitySubclassId];
+			if ( rootEmbeddableAttribute != null ) {
+				HashMap<EntityKey, List<ParentInfo>> toBatchLoad = data.toBatchLoad;
+				if ( toBatchLoad == null ) {
+					toBatchLoad = data.toBatchLoad = new HashMap<>();
+				}
+				toBatchLoad.computeIfAbsent( data.entityKey, key -> new ArrayList<>() ).add(
+						new ParentInfo(
+								owningEntityInitializer.getTargetInstance( owningData ),
+								parent.getResolvedInstance( rowProcessingState ),
+								rootEmbeddableAttribute.getStateArrayPosition(),
+								owningEntitySubclassId
+						)
+				);
+			}
+		}
+	}
+
+	@Override
+	protected void registerResolutionListener(BatchEntityInsideEmbeddableSelectFetchInitializerData data) {
 	}
 
 	private static class ParentInfo {
-		private final EntityKey initializerEntityKey;
+		private final Object parentEntityInstance;
 		private final Object parentInstance;
 		private final int propertyIndex;
+		private final int parentEntitySubclassId;
 
-		public ParentInfo(EntityKey initializerEntityKey, Object parentInstance, int propertyIndex) {
-			this.initializerEntityKey = initializerEntityKey;
+		public ParentInfo(
+				Object parentEntityInstance,
+				Object parentInstance,
+				int propertyIndex,
+				int parentEntitySubclassId) {
+			this.parentEntityInstance = parentEntityInstance;
 			this.parentInstance = parentInstance;
 			this.propertyIndex = propertyIndex;
+			this.parentEntitySubclassId = parentEntitySubclassId;
 		}
 	}
 
 	@Override
-	public void endLoading(ExecutionContext context) {
+	public void endLoading(BatchEntityInsideEmbeddableSelectFetchInitializerData data) {
+		super.endLoading( data );
+		final HashMap<EntityKey, List<ParentInfo>> toBatchLoad = data.toBatchLoad;
 		if ( toBatchLoad != null ) {
-			toBatchLoad.forEach(
-					(entityKey, parentInfos) -> {
-						final SharedSessionContractImplementor session = context.getSession();
-						final Object loadedInstance = loadInstance( entityKey, referencedModelPart, session );
-						for ( ParentInfo parentInfo : parentInfos ) {
-							final PersistenceContext persistenceContext = session.getPersistenceContext();
-							setInstance(
-									firstEntityInitializer,
-									referencedModelPart,
-									rootEmbeddablePropertyName,
-									parentInfo.propertyIndex,
-									loadedInstance,
-									parentInfo.parentInstance,
-									parentInfo.initializerEntityKey,
-									persistenceContext.getEntry( persistenceContext.getEntity( parentInfo.initializerEntityKey ) ),
-									session
-							);
-						}
+			for ( Map.Entry<EntityKey, List<ParentInfo>> entry : toBatchLoad.entrySet() ) {
+				final EntityKey entityKey = entry.getKey();
+				final List<ParentInfo> parentInfos = entry.getValue();
+				final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
+				final SessionFactoryImplementor factory = session.getFactory();
+				final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+				final Object loadedInstance = loadInstance( entityKey, toOneMapping, affectedByFilter, session );
+				for ( ParentInfo parentInfo : parentInfos ) {
+					final Object parentEntityInstance = parentInfo.parentEntityInstance;
+					final EntityEntry parentEntityEntry = persistenceContext.getEntry( parentEntityInstance );
+					referencedModelPartSetter.set( parentInfo.parentInstance, loadedInstance );
+					final Object[] loadedState = parentEntityEntry.getLoadedState();
+					if ( loadedState != null ) {
+						/*
+						E.g.
+
+						ParentEntity -> RootEmbeddable -> ParentEmbeddable -> toOneAttributeMapping
+
+						The value of RootEmbeddable is needed to update the ParentEntity loaded state
+						 */
+						final int parentEntitySubclassId = parentInfo.parentEntitySubclassId;
+						final Object rootEmbeddable = rootEmbeddableGetters[parentEntitySubclassId].get( parentEntityInstance );
+						loadedState[parentInfo.propertyIndex] = rootEmbeddablePropertyTypes[parentEntitySubclassId].deepCopy(
+								rootEmbeddable,
+								factory
+						);
 					}
-			);
-			toBatchLoad.clear();
-		}
-	}
-
-	protected static void setInstance(
-			EntityInitializer entityInitializer,
-			ToOneAttributeMapping referencedModelPart,
-			String rootEmbeddablePropertyName,
-			int propertyIndex,
-			Object loadedInstance,
-			Object embeddableParentInstance,
-			EntityKey parentEntityKey,
-			EntityEntry parentEntityEntry,
-			SharedSessionContractImplementor session) {
-		referencedModelPart.getPropertyAccess().getSetter().set( embeddableParentInstance, loadedInstance );
-		updateRootEntityLoadedState(
-				entityInitializer,
-				rootEmbeddablePropertyName,
-				propertyIndex,
-				parentEntityKey,
-				parentEntityEntry,
-				session
-		);
-	}
-
-	private static void updateRootEntityLoadedState(
-			EntityInitializer entityInitializer,
-			String rootEmbeddablePropertyName,
-			int propertyIndex,
-			EntityKey parentEntityKey,
-			EntityEntry parentEntityEntry,
-			SharedSessionContractImplementor session) {
-		Object[] loadedState = parentEntityEntry.getLoadedState();
-		if ( loadedState != null ) {
-			/*
-			 E.g.
-
-			 ParentEntity -> RootEmbeddable -> ParentEmbeddable -> toOneAttributeMapping
-
-			 The value of RootEmbeddable is needed to update the ParentEntity loaded state
-			 */
-			final EntityPersister entityDescriptor = entityInitializer.getEntityDescriptor();
-			final Object rootEmbeddable = entityDescriptor.getPropertyValue(
-					session.getPersistenceContext().getEntity( parentEntityKey ),
-					rootEmbeddablePropertyName
-			);
-			loadedState[propertyIndex] = entityDescriptor.getPropertyType( rootEmbeddablePropertyName )
-					.deepCopy( rootEmbeddable, session.getFactory() );
+				}
+			}
+			data.toBatchLoad = null;
 		}
 	}
 
 	protected static String getRootEmbeddablePropertyName(
-			EntityInitializer firstEntityInitializer,
-			FetchParentAccess parentAccess,
+			EntityInitializer<?> firstEntityInitializer,
+			InitializerParent<?> parent,
 			ToOneAttributeMapping referencedModelPart) {
 		final NavigablePath entityPath = firstEntityInitializer.getNavigablePath();
-		NavigablePath navigablePath = parentAccess.getNavigablePath();
+		NavigablePath navigablePath = parent.getNavigablePath();
 		if ( navigablePath == entityPath ) {
 			return referencedModelPart.getPartName();
 		}

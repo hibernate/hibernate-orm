@@ -1,17 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.internal;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -20,8 +16,6 @@ import java.util.Objects;
 import java.util.StringTokenizer;
 
 import org.hibernate.JDBCException;
-import org.hibernate.boot.model.TruthValue;
-import org.hibernate.boot.model.naming.DatabaseIdentifier;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.cfg.AvailableSettings;
@@ -34,8 +28,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
@@ -47,12 +39,19 @@ import org.hibernate.tool.schema.extract.spi.SchemaExtractionException;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 
+import static java.util.Collections.addAll;
+import static org.hibernate.boot.model.naming.DatabaseIdentifier.toIdentifier;
+import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
+import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.internal.util.StringHelper.splitTrimmingTokens;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+
 public abstract class AbstractInformationExtractorImpl implements InformationExtractor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractInformationExtractorImpl.class );
 
 	private final String[] tableTypes;
 
-	private String[] extraPhysicalTableTypes;
+	private final String[] extraPhysicalTableTypes;
 
 	private final ExtractionContext extractionContext;
 
@@ -68,8 +67,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	public AbstractInformationExtractorImpl(ExtractionContext extractionContext) {
 		this.extractionContext = extractionContext;
 
-		ConfigurationService configService = extractionContext.getServiceRegistry()
-				.getService( ConfigurationService.class );
+		final ConfigurationService configService =
+				extractionContext.getServiceRegistry().requireService( ConfigurationService.class );
 
 		useJdbcMetadataDefaultsSetting = configService.getSetting(
 				"hibernate.temp.use_jdbc_metadata_defaults",
@@ -86,50 +85,53 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 						""
 				)
 		);
-		final List<String> physicalTableTypesList = new ArrayList<>();
-		if ( ! StringHelper.isBlank( extraPhysicalTableTypesConfig ) ) {
-			Collections.addAll(
-					physicalTableTypesList,
-					StringHelper.splitTrimmingTokens(
-							",;",
-							extraPhysicalTableTypesConfig,
-							false
-					)
-			);
-		}
 		final Dialect dialect = extractionContext.getJdbcEnvironment().getDialect();
-		dialect.augmentPhysicalTableTypes( physicalTableTypesList );
-		this.extraPhysicalTableTypes = physicalTableTypesList.toArray( new String[0] );
+		this.extraPhysicalTableTypes = getPhysicalTableTypes( extraPhysicalTableTypesConfig, dialect );
+		this.tableTypes = getTableTypes( configService, dialect );
+	}
 
+	private String[] getPhysicalTableTypes(String extraPhysicalTableTypesConfig, Dialect dialect) {
+		final List<String> physicalTableTypesList = new ArrayList<>();
+		if ( !isBlank( extraPhysicalTableTypesConfig ) ) {
+			addAll( physicalTableTypesList, splitTrimmingTokens( ",;", extraPhysicalTableTypesConfig, false ) );
+		}
+		dialect.augmentPhysicalTableTypes( physicalTableTypesList );
+		return physicalTableTypesList.toArray( EMPTY_STRINGS );
+	}
+
+	private String[] getTableTypes(ConfigurationService configService, Dialect dialect) {
 		final List<String> tableTypesList = new ArrayList<>();
 		tableTypesList.add( "TABLE" );
 		tableTypesList.add( "VIEW" );
-		if ( ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, configService.getSettings() ) ) {
-			if ( dialect instanceof DB2Dialect ) {
+		if ( getBoolean( AvailableSettings.ENABLE_SYNONYMS, configService.getSettings() ) ) {
+			if ( dialect instanceof DB2Dialect ) { //TODO: should not use Dialect types directly!
 				tableTypesList.add( "ALIAS" );
 			}
 			tableTypesList.add( "SYNONYM" );
 		}
-		Collections.addAll( tableTypesList, extraPhysicalTableTypes );
+		addAll( tableTypesList, extraPhysicalTableTypes );
 		dialect.augmentRecognizedTableTypes( tableTypesList );
-
-		this.tableTypes = tableTypesList.toArray( new String[0] );
+		return tableTypesList.toArray( EMPTY_STRINGS );
 	}
 
-	protected IdentifierHelper identifierHelper() {
-		return extractionContext.getJdbcEnvironment().getIdentifierHelper();
+	private IdentifierHelper getIdentifierHelper() {
+		return getJdbcEnvironment().getIdentifierHelper();
 	}
 
 	protected JDBCException convertSQLException(SQLException sqlException, String message) {
-		return extractionContext.getJdbcEnvironment().getSqlExceptionHelper().convert( sqlException, message );
+		return getJdbcEnvironment().getSqlExceptionHelper().convert( sqlException, message );
 	}
 
 	protected String toMetaDataObjectName(Identifier identifier) {
-		return extractionContext.getJdbcEnvironment().getIdentifierHelper().toMetaDataObjectName( identifier );
+		return getIdentifierHelper().toMetaDataObjectName( identifier );
 	}
 
 	protected ExtractionContext getExtractionContext() {
 		return extractionContext;
+	}
+
+	protected JdbcEnvironment getJdbcEnvironment() {
+		return extractionContext.getJdbcEnvironment();
 	}
 
 	// The following methods purposely return the column labels that are defined by
@@ -225,20 +227,16 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	public boolean catalogExists(Identifier catalog) {
 		try {
 			return processCatalogsResultSet( resultSet -> {
-
 				while ( resultSet.next() ) {
 					final String existingCatalogName = resultSet.getString( getResultSetCatalogLabel() );
-
 					// todo : hmm.. case sensitive or insensitive match...
 					// for now, match any case...
-
 					if ( catalog.getText().equalsIgnoreCase( existingCatalogName ) ) {
 						return true;
 					}
 				}
-
 				return false;
-			});
+			} );
 		}
 		catch (SQLException sqlException) {
 			throw convertSQLException( sqlException, "Unable to query ResultSet for existing catalogs" );
@@ -280,13 +278,17 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	protected abstract <T> T processSchemaResultSet(
 			String catalog,
 			String schemaPattern,
-			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException;
+			ExtractionContext.ResultSetProcessor<T> processor)
+					throws SQLException;
 
 	@Override
 	public boolean schemaExists(Identifier catalog, Identifier schema) {
-		final String catalogFilter = determineCatalogFilter( catalog );
-		final String schemaFilter = determineSchemaFilter( schema );
-
+		final String catalogFilter =
+				getIdentifierHelper()
+						.toMetaDataCatalogName( catalog == null ? extractionContext.getDefaultCatalog() : catalog );
+		final String schemaFilter =
+				getIdentifierHelper()
+						.toMetaDataSchemaName( schema == null ? extractionContext.getDefaultSchema() : schema );
 		try {
 			return processSchemaResultSet(
 					catalogFilter,
@@ -316,31 +318,11 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		}
 	}
 
-	protected String determineCatalogFilter(Identifier catalog) {
-		Identifier identifierToUse = catalog;
-		if ( identifierToUse == null ) {
-			identifierToUse = extractionContext.getDefaultCatalog();
-		}
-
-		return extractionContext.getJdbcEnvironment().getIdentifierHelper().toMetaDataCatalogName( identifierToUse );
-	}
-
-	protected String determineSchemaFilter(Identifier schema) {
-		Identifier identifierToUse = schema;
-		if ( identifierToUse == null ) {
-			identifierToUse = extractionContext.getDefaultSchema();
-		}
-
-		return extractionContext.getJdbcEnvironment().getIdentifierHelper().toMetaDataSchemaName( identifierToUse );
-	}
-
 	private TableInformation extractTableInformation(ResultSet resultSet) throws SQLException {
-		final QualifiedTableName tableName = extractTableName( resultSet );
-
 		return new TableInformationImpl(
 				this,
-				identifierHelper(),
-				tableName,
+				getIdentifierHelper(),
+				extractTableName( resultSet ),
 				isPhysicalTableType( resultSet.getString( getResultSetTableTypeLabel() ) ),
 				resultSet.getString( getResultSetRemarksLabel() )
 		);
@@ -360,33 +342,24 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			//		2) look in default namespace
 			//		3) look in all namespaces - multiple hits is considered an error
 
-			TableInformation tableInfo;
-
 			// 1) look in current namespace
-			final JdbcEnvironment jdbcEnvironment = extractionContext.getJdbcEnvironment();
-			final Identifier currentSchema = getCurrentSchema( jdbcEnvironment );
-			final Identifier currentCatalog = getCurrentCatalog( jdbcEnvironment );
-			if ( currentCatalog != null
-					|| currentSchema != null ) {
-				tableInfo = locateTableInNamespace(
-						currentCatalog,
-						currentSchema,
-						tableName
-				);
-
+			final Identifier currentSchema = getCurrentSchema();
+			final Identifier currentCatalog = getCurrentCatalog();
+			if ( currentCatalog != null || currentSchema != null ) {
+				final TableInformation tableInfo =
+						locateTableInNamespace( currentCatalog, currentSchema, tableName );
 				if ( tableInfo != null ) {
 					return tableInfo;
 				}
 			}
 
 			// 2) look in default namespace
-			if ( extractionContext.getDefaultCatalog() != null || extractionContext.getDefaultSchema() != null ) {
-				tableInfo = locateTableInNamespace(
-						extractionContext.getDefaultCatalog(),
-						extractionContext.getDefaultSchema(),
-						tableName
-				);
-
+			final Identifier defaultCatalog = extractionContext.getDefaultCatalog();
+			final Identifier defaultSchema = extractionContext.getDefaultSchema();
+			if ( defaultCatalog != null
+					|| defaultSchema != null ) {
+				final TableInformation tableInfo =
+						locateTableInNamespace( defaultCatalog, defaultSchema, tableName );
 				if ( tableInfo != null ) {
 					return tableInfo;
 				}
@@ -394,19 +367,12 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 
 			// 3) look in all namespaces
 			try {
-				final String tableNameFilter = toMetaDataObjectName( tableName );
-
 				return processTableResultSet(
 						null,
 						null,
-						tableNameFilter,
+						toMetaDataObjectName( tableName ),
 						tableTypes,
-						resultSet -> extractTableInformation(
-								null,
-								null,
-								tableName,
-								resultSet
-						)
+						resultSet -> extractTableInformation( null, null, tableName, resultSet )
 				);
 			}
 			catch (SQLException sqlException) {
@@ -415,49 +381,50 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		}
 	}
 
-	private Identifier getCurrentSchema(JdbcEnvironment jdbcEnvironment) {
-		if ( jdbcEnvironment.getNameQualifierSupport() == NameQualifierSupport.CATALOG ) {
+	private Identifier getCurrentSchema() {
+		if ( getNameQualifierSupport() == NameQualifierSupport.CATALOG ) {
 			return null;
 		}
 		if ( currentSchema != null ) {
 			return currentSchema;
 		}
-		final Identifier schema = jdbcEnvironment.getCurrentSchema();
+		final Identifier schema = getJdbcEnvironment().getCurrentSchema();
 		if ( schema != null ) {
 			currentSchema = schema;
 		}
 		if ( !useJdbcMetadataDefaultsSetting ) {
 			try {
-				currentSchema = extractionContext.getJdbcEnvironment()
-						.getIdentifierHelper()
+				currentSchema = getIdentifierHelper()
 						.toIdentifier( extractionContext.getJdbcConnection().getSchema() );
 			}
-			catch (SQLException ignore) {
-				LOG.sqlWarning( ignore.getErrorCode(), ignore.getSQLState() );
+			catch (SQLException sqle) {
+				LOG.sqlWarning( sqle.getErrorCode(), sqle.getSQLState() );
+			}
+			catch (AbstractMethodError ignore) {
+				// jConnect and jTDS report that they "support" schemas, but they don't really
 			}
 		}
 		return currentSchema;
 	}
 
-	private Identifier getCurrentCatalog(JdbcEnvironment jdbcEnvironment) {
-		if ( jdbcEnvironment.getNameQualifierSupport() == NameQualifierSupport.SCHEMA ) {
+	private Identifier getCurrentCatalog() {
+		if ( getNameQualifierSupport() == NameQualifierSupport.SCHEMA ) {
 			return null;
 		}
 		if ( currentCatalog != null ) {
 			return currentCatalog;
 		}
-		final Identifier catalog = jdbcEnvironment.getCurrentCatalog();
+		final Identifier catalog = getJdbcEnvironment().getCurrentCatalog();
 		if ( catalog != null ) {
 			currentCatalog = catalog;
 		}
 		if ( !useJdbcMetadataDefaultsSetting ) {
 			try {
-				currentCatalog = extractionContext.getJdbcEnvironment()
-						.getIdentifierHelper()
+				currentCatalog = getIdentifierHelper()
 						.toIdentifier( extractionContext.getJdbcConnection().getCatalog() );
 			}
-			catch (SQLException ignore) {
-				LOG.sqlWarning( ignore.getErrorCode(), ignore.getSQLState() );
+			catch (SQLException sqle) {
+				LOG.sqlWarning( sqle.getErrorCode(), sqle.getSQLState() );
 			}
 		}
 		return currentCatalog;
@@ -475,8 +442,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			try {
 				currentCatalogFilter = extractionContext.getJdbcConnection().getCatalog();
 			}
-			catch (SQLException ignore) {
-				LOG.sqlWarning( ignore.getErrorCode(), ignore.getSQLState() );
+			catch (SQLException sqle) {
+				LOG.sqlWarning( sqle.getErrorCode(), sqle.getSQLState() );
 			}
 		}
 		return currentCatalogFilter;
@@ -495,8 +462,11 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			try {
 				currentSchemaFilter = extractionContext.getJdbcConnection().getSchema();
 			}
-			catch (SQLException ignore) {
-				LOG.sqlWarning( ignore.getErrorCode(), ignore.getSQLState() );
+			catch (SQLException sqle) {
+				LOG.sqlWarning( sqle.getErrorCode(), sqle.getSQLState() );
+			}
+			catch (AbstractMethodError ignore) {
+				// jConnect and jTDS report that they "support" schemas, but they don't really
 			}
 		}
 		return currentSchemaFilter;
@@ -508,12 +478,12 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		final String catalogFilter;
 		final String schemaFilter;
 
-		final JdbcEnvironment jdbcEnvironment = extractionContext.getJdbcEnvironment();
-		final NameQualifierSupport nameQualifierSupport = jdbcEnvironment.getNameQualifierSupport();
+		final NameQualifierSupport nameQualifierSupport = getNameQualifierSupport();
+
 		if ( nameQualifierSupport.supportsCatalogs() ) {
 			if ( catalog == null ) {
 				// look in the current namespace
-				final String currentCatalogFilter = getCurrentCatalogFilter(jdbcEnvironment);
+				final String currentCatalogFilter = getCurrentCatalogFilter( getJdbcEnvironment() );
 				if ( currentCatalogFilter != null ) {
 					catalogFilter = currentCatalogFilter;
 				}
@@ -523,7 +493,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 						catalogFilter = toMetaDataObjectName( extractionContext.getDefaultCatalog() );
 					}
 					else {
-						catalogFilter = "";
+						catalogFilter = null;
 					}
 				}
 			}
@@ -538,7 +508,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		if ( nameQualifierSupport.supportsSchemas() ) {
 			if ( schema == null ) {
 				// 1) look in current namespace
-				final String currentSchemaFilter = getCurrentSchemaFilter( jdbcEnvironment );
+				final String currentSchemaFilter = getCurrentSchemaFilter( getJdbcEnvironment() );
 				if ( currentSchemaFilter != null ) {
 					schemaFilter = currentSchemaFilter;
 				}
@@ -548,7 +518,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 						schemaFilter = toMetaDataObjectName( extractionContext.getDefaultSchema() );
 					}
 					else {
-						schemaFilter = "";
+						schemaFilter = null;
 					}
 				}
 			}
@@ -567,7 +537,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 					"%",
 					tableTypes,
 					resultSet -> {
-						final NameSpaceTablesInformation tablesInformation = extractNameSpaceTablesInformation( resultSet );
+						final NameSpaceTablesInformation tablesInformation =
+								extractNameSpaceTablesInformation( resultSet );
 						populateTablesWithColumns( catalogFilter, schemaFilter, tablesInformation );
 						return tablesInformation;
 					} );
@@ -633,7 +604,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			String schemaPattern,
 			String tableNamePattern,
 			String columnNamePattern,
-			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException;
+			ExtractionContext.ResultSetProcessor<T> processor)
+					throws SQLException;
 
 	private void populateTablesWithColumns(
 			String catalogFilter,
@@ -654,7 +626,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 								currentTable = tables.getTableInformation( currentTableName );
 							}
 							if ( currentTable != null ) {
-								addExtractedColumnInformation( currentTable, resultSet );
+								currentTable.addColumn( columnInformation( currentTable, resultSet ) );
 							}
 						}
 						return null;
@@ -662,32 +634,31 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			);
 		}
 		catch (SQLException e) {
-			throw convertSQLException(
-					e,
-					"Error accessing tables metadata"
-			);
+			throw convertSQLException( e, "Error accessing tables metadata" );
 		}
 	}
 
-	protected void addExtractedColumnInformation(TableInformation tableInformation, ResultSet resultSet)
+	/*
+	 * Hibernate Reactive overrides this
+	 */
+	protected ColumnInformationImpl columnInformation(TableInformation tableInformation, ResultSet resultSet)
 			throws SQLException {
-		final ColumnInformation columnInformation = new ColumnInformationImpl(
+		return new ColumnInformationImpl(
 				tableInformation,
-				DatabaseIdentifier.toIdentifier( resultSet.getString( getResultSetColumnNameLabel() ) ),
+				toIdentifier( resultSet.getString( getResultSetColumnNameLabel() ) ),
 				resultSet.getInt( getResultSetSqlTypeCodeLabel() ),
 				new StringTokenizer( resultSet.getString( getResultSetTypeNameLabel() ), "()" ).nextToken(),
 				resultSet.getInt( getResultSetColumnSizeLabel() ),
 				resultSet.getInt( getResultSetDecimalDigitsLabel() ),
 				interpretTruthValue( resultSet.getString( getResultSetIsNullableLabel() ) )
 		);
-		tableInformation.addColumn( columnInformation );
 	}
 
-	private NameSpaceTablesInformation extractNameSpaceTablesInformation(ResultSet resultSet) throws SQLException {
-		NameSpaceTablesInformation tables = new NameSpaceTablesInformation(identifierHelper());
+	private NameSpaceTablesInformation extractNameSpaceTablesInformation(ResultSet resultSet)
+			throws SQLException {
+		final NameSpaceTablesInformation tables = new NameSpaceTablesInformation( getIdentifierHelper() );
 		while ( resultSet.next() ) {
-			final TableInformation tableInformation = extractTableInformation( resultSet );
-			tables.addTableInformation( tableInformation );
+			tables.addTableInformation( extractTableInformation( resultSet ) );
 		}
 		return tables;
 	}
@@ -741,8 +712,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			String schemaPattern,
 			String tableNamePattern,
 			String[] types,
-			ExtractionContext.ResultSetProcessor<T> processor
-	) throws SQLException;
+			ExtractionContext.ResultSetProcessor<T> processor)
+					throws SQLException;
 
 	private TableInformation locateTableInNamespace(
 			Identifier catalog,
@@ -754,15 +725,16 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		final String catalogFilter;
 		final String schemaFilter;
 
-		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsCatalogs() ) {
+		final NameQualifierSupport nameQualifierSupport = getNameQualifierSupport();
+
+		if ( nameQualifierSupport.supportsCatalogs() ) {
 			if ( catalog == null ) {
-				String defaultCatalog = "";
-				if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsCatalogs() ) {
-					try {
-						defaultCatalog = extractionContext.getJdbcConnection().getCatalog();
-					}
-					catch (SQLException ignore) {
-					}
+				String defaultCatalog;
+				try {
+					defaultCatalog = extractionContext.getJdbcConnection().getCatalog();
+				}
+				catch (SQLException ignore) {
+					defaultCatalog = "";
 				}
 				catalogToUse = null;
 				catalogFilter = defaultCatalog;
@@ -777,7 +749,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			catalogFilter = null;
 		}
 
-		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsSchemas() ) {
+		if ( nameQualifierSupport.supportsSchemas() ) {
 			if ( schema == null ) {
 				schemaToUse = null;
 				schemaFilter = "";
@@ -800,12 +772,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 					schemaFilter,
 					tableNameFilter,
 					tableTypes,
-					resultSet -> extractTableInformation(
-							catalogToUse,
-							schemaToUse,
-							tableName,
-							resultSet
-					)
+					resultSet -> extractTableInformation( catalogToUse, schemaToUse, tableName, resultSet )
 			);
 
 		}
@@ -814,31 +781,32 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		}
 	}
 
+	private NameQualifierSupport getNameQualifierSupport() {
+		return getJdbcEnvironment().getNameQualifierSupport();
+	}
+
 	private TableInformation extractTableInformation(
 			Identifier catalog,
 			Identifier schema,
 			Identifier tableName,
-			ResultSet resultSet) throws SQLException {
+			ResultSet resultSet)
+					throws SQLException {
 
 		boolean found = false;
 		TableInformation tableInformation = null;
-
 		while ( resultSet.next() ) {
-
-			if ( tableName.equals( Identifier.toIdentifier(
-					resultSet.getString( getResultSetTableNameLabel() ),
-					tableName.isQuoted()
-			) ) ) {
+			final Identifier identifier =
+					toIdentifier( resultSet.getString( getResultSetTableNameLabel() ),
+							tableName.isQuoted() );
+			if ( tableName.equals( identifier ) ) {
 				if ( found ) {
 					LOG.multipleTablesFound( tableName.render() );
-					final String catalogName = catalog == null ? "" : catalog.render();
-					final String schemaName = schema == null ? "" : schema.render();
 					throw new SchemaExtractionException(
 							String.format(
 									Locale.ENGLISH,
 									"More than one table found in namespace (%s, %s) : %s",
-									catalogName,
-									schemaName,
+									catalog == null ? "" : catalog.render(),
+									schema == null ? "" : schema.render(),
 									tableName.render()
 							)
 					);
@@ -879,20 +847,15 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		final QualifiedTableName tableName = tableInformation.getName();
 		final Identifier catalog = tableName.getCatalogName();
 		final Identifier schema = tableName.getSchemaName();
-
-		final String catalogFilter = catalog == null ? "" : catalog.getText();
-		final String schemaFilter = schema == null ? "" : schema.getText();
-
 		try {
 			processColumnsResultSet(
-					catalogFilter,
-					schemaFilter,
+					catalog == null ? "" : catalog.getText(),
+					schema == null ? "" : schema.getText(),
 					tableName.getTableName().getText(),
 					"%",
 					resultSet -> {
-
 						while ( resultSet.next() ) {
-							addExtractedColumnInformation( tableInformation, resultSet );
+							tableInformation.addColumn( columnInformation( tableInformation, resultSet ) );
 						}
 						return null;
 					}
@@ -900,32 +863,23 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 
 		}
 		catch (SQLException e) {
-			throw convertSQLException(
-					e,
-					"Error accessing tables metadata"
-			);
+			throw convertSQLException( e, "Error accessing tables metadata" );
 		}
 	}
 
-	protected TruthValue interpretNullable(int nullable) {
-		switch ( nullable ) {
-			case ResultSetMetaData.columnNullable:
-				return TruthValue.TRUE;
-			case ResultSetMetaData.columnNoNulls:
-				return TruthValue.FALSE;
-			default:
-				return TruthValue.UNKNOWN;
-		}
-	}
-
-	private TruthValue interpretTruthValue(String nullable) {
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected Boolean interpretTruthValue(String nullable) {
 		if ( "yes".equalsIgnoreCase( nullable ) ) {
-			return TruthValue.TRUE;
+			return Boolean.TRUE;
 		}
 		else if ( "no".equalsIgnoreCase( nullable ) ) {
-			return TruthValue.FALSE;
+			return Boolean.FALSE;
 		}
-		return TruthValue.UNKNOWN;
+		else {
+			return null;
+		}
 	}
 
 	// This method is not currently used.
@@ -933,48 +887,31 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			String catalogFilter,
 			String schemaFilter,
 			Identifier tableName,
-			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException;
+			ExtractionContext.ResultSetProcessor<T> processor)
+					throws SQLException;
 
 	@Override
 	public PrimaryKeyInformation getPrimaryKey(TableInformationImpl tableInformation) {
 		final QualifiedTableName tableName = tableInformation.getName();
 		final Identifier catalog = tableName.getCatalogName();
 		final Identifier schema = tableName.getSchemaName();
-
-		final String catalogFilter;
-		final String schemaFilter;
-
-		if ( catalog == null ) {
-			catalogFilter = "";
-		}
-		else {
-			catalogFilter = catalog.getText();
-		}
-
-		if ( schema == null ) {
-			schemaFilter = "";
-		}
-		else {
-			schemaFilter = schema.getText();
-		}
-
 		try {
 			return processPrimaryKeysResultSet(
-					catalogFilter,
-					schemaFilter,
+					catalog == null ? "" : catalog.getText(),
+					schema == null ? "" : schema.getText(),
 					tableInformation.getName().getTableName(),
 					resultSet -> extractPrimaryKeyInformation( tableInformation, resultSet )
 			);
 		}
 		catch (SQLException e) {
-			throw convertSQLException( e, "Error while reading primary key meta data for " + tableInformation.getName().toString() );
+			throw convertSQLException( e,
+					"Error while reading primary key meta data for "
+							+ tableInformation.getName() );
 		}
 	}
 
-	private PrimaryKeyInformation extractPrimaryKeyInformation(
-			TableInformation tableInformation,
-			ResultSet resultSet
-	) throws SQLException {
+	private PrimaryKeyInformation extractPrimaryKeyInformation(TableInformation tableInformation, ResultSet resultSet)
+			throws SQLException {
 
 		final List<ColumnInformation> pkColumns = new ArrayList<>();
 		boolean firstPass = true;
@@ -982,34 +919,27 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 
 		while ( resultSet.next() ) {
 			final String currentPkName = resultSet.getString( getResultSetPrimaryKeyNameLabel() );
-			final Identifier currentPkIdentifier = currentPkName == null
-					? null
-					: DatabaseIdentifier.toIdentifier( currentPkName );
+			final Identifier currentPkIdentifier =
+					currentPkName == null ? null : toIdentifier( currentPkName );
 			if ( firstPass ) {
 				pkIdentifier = currentPkIdentifier;
 				firstPass = false;
 			}
 			else {
 				if ( !Objects.equals( pkIdentifier, currentPkIdentifier ) ) {
-					throw new SchemaExtractionException(
-							String.format(
-									"Encountered primary keys differing name on table %s",
-									tableInformation.getName().toString()
-							)
-					);
+					throw new SchemaExtractionException( "Encountered primary keys differing name on table "
+							+ tableInformation.getName().toString() );
 				}
 			}
 
 			final int columnPosition = resultSet.getInt( getResultSetColumnPositionColumn() );
-
 			final int index = columnPosition - 1;
 			// Fill up the array list with nulls up to the desired index, because some JDBC drivers don't return results ordered by column position
 			while ( pkColumns.size() <= index ) {
 				pkColumns.add( null );
 			}
-			final Identifier columnIdentifier = DatabaseIdentifier.toIdentifier(
-					resultSet.getString( getResultSetColumnNameLabel() )
-			);
+			final Identifier columnIdentifier =
+					toIdentifier( resultSet.getString( getResultSetColumnNameLabel() ) );
 			pkColumns.set( index, tableInformation.getColumn( columnIdentifier ) );
 		}
 		if ( firstPass ) {
@@ -1023,7 +953,6 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 					throw new SchemaExtractionException( "Primary Key information was missing for KEY_SEQ = " + ( i+1) );
 				}
 			}
-
 			// build the return
 			return new PrimaryKeyInformationImpl( pkIdentifier, pkColumns );
 		}
@@ -1104,66 +1033,49 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			String table,
 			boolean unique,
 			boolean approximate,
-			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException;
+			ExtractionContext.ResultSetProcessor<T> processor)
+					throws SQLException;
 
 	@Override
 	public Iterable<IndexInformation> getIndexes(TableInformation tableInformation) {
-		final Map<Identifier, IndexInformationImpl.Builder> builders = new HashMap<>();
 		final QualifiedTableName tableName = tableInformation.getName();
 		final Identifier catalog = tableName.getCatalogName();
 		final Identifier schema = tableName.getSchemaName();
 
-		final String catalogFilter;
-		final String schemaFilter;
-
-		if ( catalog == null ) {
-			catalogFilter = "";
-		}
-		else {
-			catalogFilter = catalog.getText();
-		}
-
-		if ( schema == null ) {
-			schemaFilter = "";
-		}
-		else {
-			schemaFilter = schema.getText();
-		}
-
+		final Map<Identifier, IndexInformationImpl.Builder> builders = new HashMap<>();
 		try {
 			processIndexInfoResultSet(
-					catalogFilter,
-					schemaFilter,
+					catalog == null ? "" : catalog.getText(),
+					schema == null ? "" : schema.getText(),
 					tableName.getTableName().getText(),
 					false,        // DO NOT limit to just unique
 					true,        // DO require up-to-date results
 					resultSet -> {
 						while ( resultSet.next() ) {
-							if ( resultSet.getShort( getResultSetIndexTypeLabel() ) == DatabaseMetaData.tableIndexStatistic ) {
-								continue;
+							if ( resultSet.getShort( getResultSetIndexTypeLabel() )
+									!= DatabaseMetaData.tableIndexStatistic ) {
+								final Identifier indexIdentifier =
+										toIdentifier( resultSet.getString( getResultSetIndexNameLabel() ) );
+								IndexInformationImpl.Builder builder = builders.get( indexIdentifier );
+								if ( builder == null ) {
+									builder = IndexInformationImpl.builder( indexIdentifier );
+									builders.put( indexIdentifier, builder );
+								}
+
+								final Identifier columnIdentifier =
+										toIdentifier( resultSet.getString( getResultSetColumnNameLabel() ) );
+								final ColumnInformation columnInformation =
+										tableInformation.getColumn( columnIdentifier );
+								if ( columnInformation == null ) {
+									// See HHH-10191: this may happen when dealing with Oracle/PostgreSQL function indexes
+									LOG.logCannotLocateIndexColumnInformation(
+											columnIdentifier.getText(),
+											indexIdentifier.getText()
+									);
+								}
+								builder.addColumn( columnInformation );
 							}
 
-							final Identifier indexIdentifier = DatabaseIdentifier.toIdentifier(
-									resultSet.getString( getResultSetIndexNameLabel() )
-							);
-							IndexInformationImpl.Builder builder = builders.get( indexIdentifier );
-							if ( builder == null ) {
-								builder = IndexInformationImpl.builder( indexIdentifier );
-								builders.put( indexIdentifier, builder );
-							}
-
-							final Identifier columnIdentifier = DatabaseIdentifier.toIdentifier(
-									resultSet.getString( getResultSetColumnNameLabel() )
-							);
-							final ColumnInformation columnInformation = tableInformation.getColumn( columnIdentifier );
-							if ( columnInformation == null ) {
-								// See HHH-10191: this may happen when dealing with Oracle/PostgreSQL function indexes
-								LOG.logCannotLocateIndexColumnInformation(
-										columnIdentifier.getText(),
-										indexIdentifier.getText()
-								);
-							}
-							builder.addColumn( columnInformation );
 						}
 						return null;
 					}
@@ -1171,10 +1083,9 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 
 		}
 		catch (SQLException e) {
-			throw convertSQLException(
-					e,
-					"Error accessing index information: " + tableInformation.getName().toString()
-			);
+			throw convertSQLException( e,
+					"Error accessing index information: "
+							+ tableInformation.getName() );
 		}
 
 		final List<IndexInformation> indexes = new ArrayList<>();
@@ -1255,86 +1166,132 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			String catalog,
 			String schema,
 			String table,
-			ExtractionContext.ResultSetProcessor<T> processor
-	) throws SQLException;
+			ExtractionContext.ResultSetProcessor<T> processor)
+					throws SQLException;
+
+	/**
+	 * Must do the following:
+	 * <ol>
+	 *     <li>
+	 *         obtain a {@link ResultSet} containing a row for each foreign key
+	 *         column making up a foreign key for any existing
+	 *         foreignCatalog/foreignSchema/foreignTable combination as specified by
+	 *         parameters described below.
+	 *         The {@link ResultSet} must contain the following, consistent
+	 *         with the corresponding columns returned by {@link DatabaseMetaData#getCrossReference}:
+	 *         <ul>
+	 *             <li>
+	 *                 column label {@link #getResultSetForeignKeyLabel} -
+	 *                 foreign key name (may be null)
+	 *             </li>
+	 *             <li>
+	 *                 column label {@link #getResultSetPrimaryKeyCatalogLabel} -
+	 *                 primary key table catalog being imported (may be null)
+	 *             </li>
+	 *             <li>
+	 *                 column label {@link #getResultSetPrimaryKeySchemaLabel} -
+	 *                 primary key table schema being imported (may be null)
+	 *             </li>
+	 *             <li>
+	 *                 column label {@link #getResultSetPrimaryKeyTableLabel} -
+	 *                 primary key table name being imported
+	 *             </li>
+	 *             <li>
+	 *                 column label {@link #getResultSetForeignKeyColumnNameLabel} -
+	 *                 foreign key column name
+	 *             </li>
+	 *             <li>
+	 *                 column label {@link #getResultSetPrimaryKeyColumnNameLabel} -
+	 *                 primary key column name being imported
+	 *             </li>
+	 *         </ul>
+	 *         The ResultSet must be ordered by the primary key
+	 *         foreignCatalog/foreignSchema/foreignTable and column position within the key.
+	 *     </li>
+	 *     <li> execute {@code processor.process( resultSet )};</li>
+	 *     <li>
+	 *         release resources whether {@code processor.process( resultSet )}
+	 *         executes successfully or not.
+	 *     </li>
+	 * </ol>
+	 * <p>
+	 * The {@code parentCatalog}, {@code parentSchema}, {@code parentTable},
+	 * {@code foreignCatalog}, {@code foreignSchema}, {@code foreignTable}
+	 * parameters are as specified by {@link DatabaseMetaData#getCrossReference(
+	 * String, String, String, String, String, String)}
+	 * and are copied here:
+	 *
+	 * @param parentCatalog a catalog name; must match the catalog name
+	 * as it is stored in the database; "" retrieves those without a
+	 * catalog; {@code null} means drop catalog name from the selection criteria
+	 * @param parentSchema a schema name; must match the schema name as
+	 * it is stored in the database; "" retrieves those without a schema;
+	 * {@code null} means drop schema name from the selection criteria
+	 * @param parentTable the name of the table that exports the key; must match
+	 * the table name as it is stored in the database
+	 * @param foreignCatalog a catalog name; must match the catalog name as
+	 * it is stored in the database; "" retrieves those without a
+	 * catalog; {@code null} means drop catalog name from the selection criteria
+	 * @param foreignSchema a schema name; must match the schema name as it
+	 * is stored in the database; "" retrieves those without a schema;
+	 * {@code null} means drop schema name from the selection criteria
+	 * @param foreignTable the name of the table that imports the key; must match
+	 * the table name as it is stored in the database
+	 * @param processor - the provided ResultSetProcessor.
+	 * @param <T> - defined by {@code processor}
+	 * @return - defined by {@code processor}
+	 * @throws SQLException - if a database error occurs
+	 * @see #processImportedKeysResultSet(String, String, String,
+	 * ExtractionContext.ResultSetProcessor)
+	 */
+	protected abstract <T> T processCrossReferenceResultSet(
+			String parentCatalog,
+			String parentSchema,
+			String parentTable,
+			String foreignCatalog,
+			String foreignSchema,
+			String foreignTable,
+			ExtractionContext.ResultSetProcessor<T> processor)
+					throws SQLException;
+
 
 	@Override
 	public Iterable<ForeignKeyInformation> getForeignKeys(TableInformation tableInformation) {
-		final Map<Identifier, ForeignKeyBuilder> fkBuilders = new HashMap<>();
 		final QualifiedTableName tableName = tableInformation.getName();
 		final Identifier catalog = tableName.getCatalogName();
 		final Identifier schema = tableName.getSchemaName();
 
-		final String catalogFilter;
-		final String schemaFilter;
+		final String catalogFilter = catalog == null ? "" : catalog.getText();
+		final String schemaFilter = schema == null ? "" : schema.getText();
 
-		if ( catalog == null ) {
-			catalogFilter = "";
-		}
-		else {
-			catalogFilter = catalog.getText();
-		}
-
-		if ( schema == null ) {
-			schemaFilter = "";
-		}
-		else {
-			schemaFilter = schema.getText();
-		}
-
+		final Map<Identifier, ForeignKeyBuilder> fkBuilders = new HashMap<>();
 		try {
-			processImportedKeysResultSet(
-					catalogFilter,
-					schemaFilter,
-					tableInformation.getName().getTableName().getText(),
+			final String table = tableInformation.getName().getTableName().getText();
+			processImportedKeysResultSet( catalogFilter, schemaFilter, table,
 					resultSet -> {
-						// todo : need to account for getCrossReference() as well...
-
-						while ( resultSet.next() ) {
-							// IMPL NOTE : The builder is mainly used to collect the column reference mappings
-							final Identifier fkIdentifier = DatabaseIdentifier.toIdentifier(
-									resultSet.getString( getResultSetForeignKeyLabel() )
-							);
-							ForeignKeyBuilder fkBuilder = fkBuilders.get( fkIdentifier );
-							if ( fkBuilder == null ) {
-								fkBuilder = generateForeignKeyBuilder( fkIdentifier );
-								fkBuilders.put( fkIdentifier, fkBuilder );
-							}
-
-							final QualifiedTableName incomingPkTableName = extractPrimaryKeyTableName( resultSet );
-
-							final TableInformation pkTableInformation = extractionContext.getDatabaseObjectAccess()
-									.locateTableInformation( incomingPkTableName );
-
-							if ( pkTableInformation == null ) {
-								// the assumption here is that we have not seen this table already based on fully-qualified name
-								// during previous step of building all table metadata so most likely this is
-								// not a match based solely on schema/catalog and that another row in this result set
-								// should match.
-								continue;
-							}
-
-							final Identifier fkColumnIdentifier = DatabaseIdentifier.toIdentifier(
-									resultSet.getString( getResultSetForeignKeyColumnNameLabel() )
-							);
-							final Identifier pkColumnIdentifier = DatabaseIdentifier.toIdentifier(
-									resultSet.getString( getResultSetPrimaryKeyColumnNameLabel() )
-							);
-
-							fkBuilder.addColumnMapping(
-									tableInformation.getColumn( fkColumnIdentifier ),
-									pkTableInformation.getColumn( pkColumnIdentifier )
-							);
-						}
+						process( tableInformation, resultSet, fkBuilders );
 						return null;
-					}
-			);
+					} );
+			final Dialect dialect = getJdbcEnvironment().getDialect();
+			if ( dialect.useCrossReferenceForeignKeys() ) {
+				processCrossReferenceResultSet(
+						null,
+						null,
+						dialect.getCrossReferenceParentTableFilter(),
+						catalogFilter,
+						schemaFilter,
+						table,
+						resultSet -> {
+							process( tableInformation, resultSet, fkBuilders );
+							return null;
+						}
+				);
+			}
 		}
 		catch (SQLException e) {
-			throw convertSQLException(
-					e,
-					"Error accessing column metadata: " + tableInformation.getName().toString()
-			);
+			throw convertSQLException( e,
+					"Error accessing column metadata: "
+							+ tableInformation.getName() );
 		}
 
 		final List<ForeignKeyInformation> fks = new ArrayList<>();
@@ -1343,6 +1300,40 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			fks.add( fk );
 		}
 		return fks;
+	}
+
+	private void process(
+			TableInformation tableInformation,
+			ResultSet resultSet,
+			Map<Identifier, ForeignKeyBuilder> fkBuilders)
+					throws SQLException {
+		while ( resultSet.next() ) {
+			// IMPL NOTE : The builder is mainly used to collect the column reference mappings
+			final Identifier fkIdentifier = toIdentifier( resultSet.getString( getResultSetForeignKeyLabel() ) );
+			ForeignKeyBuilder fkBuilder = fkBuilders.get( fkIdentifier );
+			if ( fkBuilder == null ) {
+				fkBuilder = generateForeignKeyBuilder( fkIdentifier );
+				fkBuilders.put( fkIdentifier, fkBuilder );
+			}
+
+			final TableInformation pkTableInformation = extractionContext.getDatabaseObjectAccess()
+					.locateTableInformation( extractPrimaryKeyTableName( resultSet ) );
+			if ( pkTableInformation != null ) {
+				// the assumption here is that we have not seen this table already based on fully-qualified name
+				// during previous step of building all table metadata so most likely this is
+				// not a match based solely on schema/catalog and that another row in this result set
+				// should match.
+				final Identifier fkColumnIdentifier =
+						toIdentifier( resultSet.getString( getResultSetForeignKeyColumnNameLabel() ) );
+				final Identifier pkColumnIdentifier =
+						toIdentifier( resultSet.getString( getResultSetPrimaryKeyColumnNameLabel() ) );
+				fkBuilder.addColumnMapping(
+						tableInformation.getColumn( fkColumnIdentifier ),
+						pkTableInformation.getColumn( pkColumnIdentifier )
+				);
+			}
+
+		}
 	}
 
 	private ForeignKeyBuilder generateForeignKeyBuilder(Identifier fkIdentifier) {
@@ -1382,27 +1373,18 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	}
 
 	private QualifiedTableName extractPrimaryKeyTableName(ResultSet resultSet) throws SQLException {
-		final String incomingCatalogName = resultSet.getString( getResultSetPrimaryKeyCatalogLabel() );
-		final String incomingSchemaName = resultSet.getString( getResultSetPrimaryKeySchemaLabel() );
-		final String incomingTableName = resultSet.getString( getResultSetPrimaryKeyTableLabel() );
-
-		final DatabaseIdentifier catalog = DatabaseIdentifier.toIdentifier( incomingCatalogName );
-		final DatabaseIdentifier schema = DatabaseIdentifier.toIdentifier( incomingSchemaName );
-		final DatabaseIdentifier table = DatabaseIdentifier.toIdentifier( incomingTableName );
-
-		return new QualifiedTableName( catalog, schema, table );
+		return new QualifiedTableName(
+				toIdentifier( resultSet.getString( getResultSetPrimaryKeyCatalogLabel() ) ),
+				toIdentifier( resultSet.getString( getResultSetPrimaryKeySchemaLabel() ) ),
+				toIdentifier( resultSet.getString( getResultSetPrimaryKeyTableLabel() ) ) );
 	}
 
 	private QualifiedTableName extractTableName(ResultSet resultSet) throws SQLException {
-		final String incomingCatalogName = resultSet.getString( getResultSetCatalogLabel() );
-		final String incomingSchemaName = resultSet.getString( getResultSetSchemaLabel() );
-		final String incomingTableName = resultSet.getString( getResultSetTableNameLabel() );
-
-		final DatabaseIdentifier catalog = DatabaseIdentifier.toIdentifier( incomingCatalogName );
-		final DatabaseIdentifier schema = DatabaseIdentifier.toIdentifier( incomingSchemaName );
-		final DatabaseIdentifier table = DatabaseIdentifier.toIdentifier( incomingTableName );
-
-		return new QualifiedTableName( catalog, schema, table );
+		return new QualifiedTableName(
+				toIdentifier( resultSet.getString( getResultSetCatalogLabel() ) ),
+				toIdentifier( resultSet.getString( getResultSetSchemaLabel() ) ),
+				toIdentifier( resultSet.getString( getResultSetTableNameLabel() ) )
+		);
 	}
 
 }

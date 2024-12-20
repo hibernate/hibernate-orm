@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
@@ -12,9 +10,8 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
+import org.hibernate.sql.results.graph.InitializerParent;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 
 public class NonAggregatedIdentifierMappingFetch extends EmbeddableFetchImpl {
 	public NonAggregatedIdentifierMappingFetch(
@@ -32,10 +29,7 @@ public class NonAggregatedIdentifierMappingFetch extends EmbeddableFetchImpl {
 	}
 
 	@Override
-	protected Initializer buildEmbeddableFetchInitializer(
-			FetchParentAccess parentAccess,
-			EmbeddableResultGraphNode embeddableFetch,
-			AssemblerCreationState creationState) {
-		return new NonAggregatedIdentifierMappingFetchInitializer( parentAccess, this, creationState );
+	public EmbeddableInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
+		return new NonAggregatedIdentifierMappingInitializer( this, parent, creationState, false );
 	}
 }

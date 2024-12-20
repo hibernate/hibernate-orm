@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -25,7 +23,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -165,9 +162,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public Object instantiate() {
-		return entityPersister.getRepresentationStrategy()
-				.getInstantiator()
-				.instantiate( sessionFactory );
+		return entityPersister.getRepresentationStrategy().getInstantiator().instantiate();
 	}
 
 	@Override
@@ -178,12 +173,6 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	@Override
 	public MappingType getMappedType() {
 		return getJdbcMapping()::getJavaTypeDescriptor;
-	}
-
-	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		consumer.accept( offset, this );
-		return getJdbcTypeCount();
 	}
 
 	@Override
@@ -231,7 +220,9 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				entityPersister.getIdentifierMapping().getSingleJdbcMapping(),
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -358,6 +349,11 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
+	public Integer getTemporalPrecision() {
+		return null;
+	}
+
+	@Override
 	public Integer getScale() {
 		return scale;
 	}
@@ -420,10 +416,13 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 				fetchParent,
 				fetchablePath,
 				this,
+				getJdbcMapping().getValueConverter(),
 				FetchTiming.IMMEDIATE,
+				true,
 				creationState,
 				// if the expression type is different that the expected type coerce the value
-				selectionType != null && selectionType.getSingleJdbcMapping().getJdbcJavaType() != getJdbcMapping().getJdbcJavaType()
+				selectionType != null && selectionType.getSingleJdbcMapping().getJdbcJavaType() != getJdbcMapping().getJdbcJavaType(),
+				!sqlSelection.isVirtual()
 		);
 	}
 

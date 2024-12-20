@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.where.annotations;
 
 import java.util.ArrayList;
@@ -6,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.annotations.SQLRestriction;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
@@ -29,7 +33,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				EagerManyToOne3Test.Child.class,
 				EagerManyToOne3Test.Parent.class
 		})
-@TestForIssue(jiraKey = "HHH-15902")
+@JiraKey(value = "HHH-15902")
 public class EagerManyToOne3Test {
 
 	@AfterEach

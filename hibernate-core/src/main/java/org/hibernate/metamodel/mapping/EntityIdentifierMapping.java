@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
@@ -10,10 +8,12 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.MergeContext;
 
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
+import org.hibernate.sql.results.graph.Fetchable;
 
 
 /**
@@ -23,7 +23,7 @@ import jakarta.persistence.IdClass;
  * @see EmbeddedId
  * @see Nature
  */
-public interface EntityIdentifierMapping extends ValuedModelPart {
+public interface EntityIdentifierMapping extends ValuedModelPart, Fetchable {
 
 	String ID_ROLE_NAME = "{id}";
 	String LEGACY_ID_NAME = "id";
@@ -69,6 +69,15 @@ public interface EntityIdentifierMapping extends ValuedModelPart {
 	Object getIdentifier(Object entity);
 
 	/**
+	 * Extract the identifier from an instance of the entity
+	 *
+	 * It's supposed to be use during the merging process
+	 */
+	default Object getIdentifier(Object entity, MergeContext mergeContext){
+		return getIdentifier( entity );
+	}
+
+	/**
 	 * Return the identifier of the persistent or transient object, or throw
 	 * an exception if the instance is "unsaved"
 	 * <p>
@@ -101,10 +110,9 @@ public interface EntityIdentifierMapping extends ValuedModelPart {
 			// deeper checks...
 			final String entityName = findContainingEntityMapping().getEntityName();
 			if ( ForeignKeys.isTransient( entityName, entity, Boolean.FALSE, session ) ) {
-				throw new TransientObjectException(
-						"object references an unsaved transient instance - save the transient instance before flushing: " +
-								(entityName == null ? session.guessEntityName( entity ) : entityName)
-				);
+				throw new TransientObjectException( "object references an unsaved transient instance of '"
+						+ (entityName == null ? session.guessEntityName( entity ) : entityName)
+						+ "' save the transient instance before flushing" );
 			}
 			id = getIdentifier( entity );
 		}

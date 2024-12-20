@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
@@ -14,6 +12,9 @@ import java.util.Objects;
 import org.hibernate.SessionEventListener;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 
 /**
  * @author Steve Ebersole
@@ -21,34 +22,47 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
 	private final SessionEventListener listener;
 	private final ConnectionProvider connectionProvider;
+	private final SharedSessionContractImplementor session;
 
 	public NonContextualJdbcConnectionAccess(
 			SessionEventListener listener,
-			ConnectionProvider connectionProvider) {
+			ConnectionProvider connectionProvider,
+			SharedSessionContractImplementor session) {
 		Objects.requireNonNull( listener );
 		Objects.requireNonNull( connectionProvider );
 		this.listener = listener;
 		this.connectionProvider = connectionProvider;
+		this.session = session;
 	}
 
 	@Override
 	public Connection obtainConnection() throws SQLException {
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent jdbcConnectionAcquisitionEvent = eventMonitor.beginJdbcConnectionAcquisitionEvent();
 		try {
 			listener.jdbcConnectionAcquisitionStart();
 			return connectionProvider.getConnection();
 		}
 		finally {
+			eventMonitor.completeJdbcConnectionAcquisitionEvent(
+					jdbcConnectionAcquisitionEvent,
+					session,
+					null
+			);
 			listener.jdbcConnectionAcquisitionEnd();
 		}
 	}
 
 	@Override
 	public void releaseConnection(Connection connection) throws SQLException {
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent jdbcConnectionReleaseEvent = eventMonitor.beginJdbcConnectionReleaseEvent();
 		try {
 			listener.jdbcConnectionReleaseStart();
 			connectionProvider.closeConnection( connection );
 		}
 		finally {
+			eventMonitor.completeJdbcConnectionReleaseEvent( jdbcConnectionReleaseEvent, session, null );
 			listener.jdbcConnectionReleaseEnd();
 		}
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
@@ -84,13 +82,12 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 
 	@Override
 	public void setLockMode(LockMode lockMode) {
-		switch ( lockMode ) {
-			case NONE:
-			case READ:
-				setCompressedValue( LOCK_MODE, lockMode );
-				break;
-			default:
-				throw new UnsupportedLockAttemptException( "Lock mode not supported" );
+		if ( lockMode.greaterThan(LockMode.READ) ) {
+			throw new UnsupportedLockAttemptException( "Lock mode "
+					+ lockMode + " not supported for read-only entity" );
+		}
+		else {
+			setCompressedValue( LOCK_MODE, lockMode );
 		}
 	}
 

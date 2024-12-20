@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph;
 
@@ -17,7 +15,6 @@ import org.hibernate.sql.results.ResultsLogger;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.Logging.AST_LOGGER;
-import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.Logging.TRACE_ENABLED;
 
 /**
  * Printer for DomainResult graphs
@@ -32,8 +29,6 @@ public class DomainResultGraphPrinter {
 	interface Logging {
 		String LOGGER_NAME = ResultsLogger.LOGGER_NAME + ".graph.AST";
 		Logger AST_LOGGER = Logger.getLogger( LOGGER_NAME );
-		boolean DEBUG_ENABLED = AST_LOGGER.isDebugEnabled();
-		boolean TRACE_ENABLED = AST_LOGGER.isTraceEnabled();
 	}
 
 	public static void logDomainResultGraph(List<DomainResult<?>> domainResults) {
@@ -41,7 +36,7 @@ public class DomainResultGraphPrinter {
 	}
 
 	public static void logDomainResultGraph(String header, List<DomainResult<?>> domainResults) {
-		if ( ! Logging.DEBUG_ENABLED ) {
+		if ( !AST_LOGGER.isDebugEnabled() ) {
 			return;
 		}
 
@@ -50,7 +45,7 @@ public class DomainResultGraphPrinter {
 	}
 
 	private final StringBuilder buffer;
-	private final Stack<FetchParent> fetchParentStack = new StandardStack<>( FetchParent.class );
+	private final Stack<FetchParent> fetchParentStack = new StandardStack<>();
 
 	private DomainResultGraphPrinter(String header) {
 		buffer = new StringBuilder( header + ":" + System.lineSeparator() );
@@ -69,7 +64,7 @@ public class DomainResultGraphPrinter {
 
 		AST_LOGGER.debug( buffer.toString() );
 
-		if ( TRACE_ENABLED ) {
+		if ( AST_LOGGER.isTraceEnabled() ) {
 			AST_LOGGER.tracef( new Exception(), "Stack trace calling DomainResultGraphPrinter" );
 		}
 	}

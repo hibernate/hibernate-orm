@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast;
 
@@ -22,6 +20,7 @@ import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Duration;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
+import org.hibernate.sql.ast.tree.expression.EmbeddableTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
 import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
@@ -29,6 +28,7 @@ import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.expression.NestedColumnReference;
 import org.hibernate.sql.ast.tree.expression.Over;
 import org.hibernate.sql.ast.tree.expression.Overflow;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -39,6 +39,7 @@ import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -127,6 +128,8 @@ public interface SqlAstWalker {
 
 	void visitColumnReference(ColumnReference columnReference);
 
+	void visitNestedColumnReference(NestedColumnReference nestedColumnReference);
+
 	void visitAggregateColumnWriteExpression(AggregateColumnWriteExpression aggregateColumnWriteExpression);
 
 	void visitExtractUnit(ExtractUnit extractUnit);
@@ -163,6 +166,8 @@ public interface SqlAstWalker {
 
 	void visitEntityTypeLiteral(EntityTypeLiteral expression);
 
+	void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral expression);
+
 	void visitTuple(SqlTuple tuple);
 
 	void visitCollation(Collation collation);
@@ -172,6 +177,8 @@ public interface SqlAstWalker {
 	void visitJdbcLiteral(JdbcLiteral<?> jdbcLiteral);
 
 	void visitQueryLiteral(QueryLiteral<?> queryLiteral);
+
+	<N extends Number> void visitUnparsedNumericLiteral(UnparsedNumericLiteral<N> literal);
 
 	void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression);
 

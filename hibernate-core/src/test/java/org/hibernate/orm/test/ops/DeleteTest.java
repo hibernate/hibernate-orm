@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.ops;
 
@@ -28,7 +26,7 @@ public class DeleteTest extends AbstractOperationTestCase {
 					VersionedEntity p = new VersionedEntity( "root", "root" );
 					p.getChildren().add( c );
 					c.setParent( p );
-					session.save( p );
+					session.persist( p );
 				}
 		);
 
@@ -37,7 +35,7 @@ public class DeleteTest extends AbstractOperationTestCase {
 		scope.inTransaction(
 				session -> {
 					VersionedEntity loadedParent = session.get( VersionedEntity.class, "root" );
-					session.delete( loadedParent );
+					session.remove( loadedParent );
 				}
 		);
 
@@ -58,7 +56,7 @@ public class DeleteTest extends AbstractOperationTestCase {
 
 		scope.inTransaction(
 				session ->
-						session.delete( node )
+						session.remove( node )
 		);
 
 		assertUpdateCount( 0, scope );
@@ -83,7 +81,7 @@ public class DeleteTest extends AbstractOperationTestCase {
 		scope.inTransaction(
 				session -> {
 					Node parent = session.get( Node.class, "parent" );
-					session.delete( parent );
+					session.remove( parent );
 				}
 		);
 

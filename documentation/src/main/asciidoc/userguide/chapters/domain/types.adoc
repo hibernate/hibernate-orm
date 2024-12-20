@@ -29,7 +29,7 @@ To help understand the type categorizations, let's look at a simple table and do
 include::{extrasdir}/mapping-types-basic-example.sql[]
 ----
 
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-mapping}/basic/TypeCategoryTest.java[tags=mapping-types-basic-example]
 ----

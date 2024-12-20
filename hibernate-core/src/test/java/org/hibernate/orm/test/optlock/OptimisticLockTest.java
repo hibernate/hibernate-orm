@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.optlock;
 
@@ -15,6 +13,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -25,6 +24,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.testing.orm.junit.DialectContext.getDialect;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -84,7 +84,7 @@ public class OptimisticLockTest {
 					document.setSummary( "Very boring book about persistence" );
 					document.setText( "blah blah yada yada yada" );
 					document.setPubDate( new PublicationDate( 2004 ) );
-					session.save( entityName, document );
+					session.persist( entityName, document );
 					return document;
 				}
 		);
@@ -115,8 +115,8 @@ public class OptimisticLockTest {
 
 		scope.inTransaction(
 				session -> {
-					Document document = (Document) session.load( entityName, doc.getId() );
-					session.delete( entityName, document );
+					Document document = (Document) session.getReference( entityName, doc.getId() );
+					session.remove( document );
 				}
 		);
 	}
@@ -130,7 +130,7 @@ public class OptimisticLockTest {
 					document.setSummary( "Very boring book about persistence" );
 					document.setText( "blah blah yada yada yada" );
 					document.setPubDate( new PublicationDate( 2004 ) );
-					session.save( entityName, document );
+					session.persist( entityName, document );
 					session.flush();
 					document.setSummary( "A modern classic" );
 					session.flush();
@@ -153,7 +153,7 @@ public class OptimisticLockTest {
 					);
 
 					try {
-						mainSession.delete( document );
+						mainSession.remove( document );
 						mainSession.flush();
 						fail( "expecting opt lock failure" );
 					}
@@ -170,8 +170,8 @@ public class OptimisticLockTest {
 
 		scope.inTransaction(
 				session -> {
-					Document document = (Document) session.load( entityName, doc.getId() );
-					session.delete( entityName, document );
+					Document document = (Document) session.getReference( entityName, doc.getId() );
+					session.remove( document );
 				}
 		);
 	}
@@ -191,8 +191,9 @@ public class OptimisticLockTest {
 					"40001" ) ) {
 				// CockroachDB always runs in SERIALIZABLE isolation, and uses SQL state 40001 to indicate
 				// serialization failure.
-			}
-			else {
+			} else if (dialect instanceof MariaDBDialect && getDialect().getVersion().isAfter( 11, 6, 2 )) {
+				// Mariadb snapshot_isolation throws error
+			} else {
 				throw e;
 			}
 		}
@@ -202,4 +203,3 @@ public class OptimisticLockTest {
 	}
 
 }
-

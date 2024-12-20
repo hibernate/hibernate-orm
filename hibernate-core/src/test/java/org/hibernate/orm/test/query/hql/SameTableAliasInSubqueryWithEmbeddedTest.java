@@ -1,13 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -29,7 +29,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.TypedQuery;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
@@ -128,7 +127,7 @@ public class SameTableAliasInSubqueryWithEmbeddedTest {
 		private String value;
 
 		public PrimaryKey() {
-			value = randomUUID().toString();
+			value = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
 		}
 
 		public String getValue() {

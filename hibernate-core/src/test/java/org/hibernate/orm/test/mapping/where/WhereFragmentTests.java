@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.where;
 
 import java.util.Map;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.Where;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -27,15 +24,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.internal.util.collections.CollectionHelper.toSettingsMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests for {@link Where} handling.
- *
  * @implNote Requires H2 simply because we need hard-coded schema export.  The schema is simple and would
  * probably work on a larger number of databases; but there should really be nothing database specific in
  * these tests.
@@ -65,14 +59,8 @@ public class WhereFragmentTests {
 	 * Loads a User, fetching their detail and skills using an entity-graph
 	 */
 	public User findUserByIdUsingEntityGraph(Integer id, SessionFactoryScope factoryScope) {
-		return factoryScope.fromTransaction( (session) -> {
-			final Map<String, Object> properties = toSettingsMap(
-					SpecHints.HINT_SPEC_FETCH_GRAPH,
-					session.getEntityGraph("user-entity-graph")
-			);
-
-			return session.find(User.class, id, properties);
-		} );
+		return factoryScope.fromTransaction( (session) -> session.find( User.class, id,
+				Map.of( SpecHints.HINT_SPEC_FETCH_GRAPH, session.getEntityGraph("user-entity-graph") ) ) );
 	}
 
 	/**

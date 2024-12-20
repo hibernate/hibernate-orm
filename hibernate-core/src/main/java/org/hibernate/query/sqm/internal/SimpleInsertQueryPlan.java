@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
 
@@ -22,9 +20,8 @@ import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.ast.tree.MutationStatement;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 
@@ -36,8 +33,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 	private final DomainParameterXref domainParameterXref;
 	private Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions;
 
-	private JdbcOperationQueryInsert jdbcInsert;
-	private FromClauseAccess tableGroupAccess;
+	private JdbcOperationQueryMutation jdbcInsert;
 	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
 
 	public SimpleInsertQueryPlan(
@@ -47,12 +43,11 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 		this.domainParameterXref = domainParameterXref;
 	}
 
-	private SqlAstTranslator<JdbcOperationQueryInsert> createInsertTranslator(DomainQueryExecutionContext executionContext) {
+	private SqlAstTranslator<? extends JdbcOperationQueryMutation> createInsertTranslator(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
-		final SqmTranslation<InsertStatement> sqmInterpretation =
-				factory.getQueryEngine().getSqmTranslatorFactory()
-						.createInsertTranslator(
+		final SqmTranslation<? extends MutationStatement> sqmInterpretation = factory.getQueryEngine().getSqmTranslatorFactory()
+				.createMutationTranslator(
 								sqmInsert,
 								executionContext.getQueryOptions(),
 								domainParameterXref,
@@ -61,8 +56,6 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 								factory
 						)
 						.translate();
-
-		tableGroupAccess = sqmInterpretation.getFromClauseAccess();
 
 		this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
 				domainParameterXref,
@@ -74,7 +67,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 		return factory.getJdbcServices()
 				.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildInsertTranslator( factory, sqmInterpretation.getSqlAst() );
+				.buildMutationTranslator( factory, sqmInterpretation.getSqlAst() );
 	}
 
 	@Override
@@ -83,7 +76,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 		final JdbcServices jdbcServices = factory.getJdbcServices();
-		SqlAstTranslator<JdbcOperationQueryInsert> insertTranslator = null;
+		SqlAstTranslator<? extends JdbcOperationQueryMutation> insertTranslator = null;
 		if ( jdbcInsert == null ) {
 			insertTranslator = createInsertTranslator( executionContext );
 		}
@@ -92,8 +85,6 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 				executionContext.getQueryParameterBindings(),
 				domainParameterXref,
 				jdbcParamsXref,
-				factory.getRuntimeMetamodels().getMappingMetamodel(),
-				tableGroupAccess::findTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {

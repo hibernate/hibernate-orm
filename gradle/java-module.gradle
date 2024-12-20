@@ -14,26 +14,28 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-		classpath 'de.thetaphi:forbiddenapis:3.2'
+		classpath buildscriptLibs.forbiddenapis
 	}
 }
 
 import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
 import org.apache.tools.ant.filters.ReplaceTokens
 
-apply from: rootProject.file( 'gradle/module.gradle' )
-apply from: rootProject.file( 'gradle/libraries.gradle' )
-apply from: rootProject.file( 'gradle/databases.gradle' )
-
-apply plugin: 'org.hibernate.orm.database-service'
-
 apply plugin: 'java-library'
+
+apply from: rootProject.file( 'gradle/module.gradle' )
+apply from: rootProject.file( 'gradle/databases.gradle' )
+apply from: rootProject.file( 'gradle/javadoc.gradle' )
+
 apply plugin: 'biz.aQute.bnd.builder'
 apply plugin: 'org.hibernate.orm.database-service'
+apply plugin: 'org.hibernate.orm.build.java-module'
 
 apply plugin: 'org.checkerframework'
+apply plugin: 'de.thetaphi.forbiddenapis'
+apply plugin: 'com.diffplug.spotless'
 
-apply plugin: 'checkstyle'
+apply plugin: "jacoco"
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
 
@@ -55,17 +57,35 @@ if ( !project.description ) {
 	project.description = "The Hibernate ORM $project.name module"
 }
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Reproducible Builds
+
+// https://docs.gradle.org/current/userguide/working_with_files.html#sec:reproducible_archives
+// Configure archive tasks to produce reproducible archives:
+tasks.withType(AbstractArchiveTask).configureEach {
+	preserveFileTimestamps = false
+	reproducibleFileOrder = true
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Configurations and Dependencies
 
+configurations.configureEach {
+	resolutionStrategy.eachDependency { details ->
+		//Force the "byte buddy agent" version to match the Byte Buddy version
+		// we use, as Mockito might pull in a mismatched version transitively
+		if (details.requested.group == "net.bytebuddy" && details.requested.name == 'byte-buddy-agent') {
+			details.useVersion libs.versions.byteBuddy.get()
+		}
+	}
+}
 
 dependencies {
 	implementation libs.logging
 
 	compileOnly libs.loggingAnnotations
 	// Used for compiling some Oracle specific JdbcTypes
-	compileOnly dbLibs.oracle
+	compileOnly jdbcLibs.oracle
 
 	// JUnit dependencies made up of:
 	// 		* JUnit 5
@@ -78,42 +98,49 @@ dependencies {
 	testImplementation testLibs.junit4Engine
 	testImplementation testLibs.assertjCore
 
-	testImplementation testLibs.byteman
-
 	testRuntimeOnly testLibs.log4j2
 	testRuntimeOnly libs.byteBuddy
 
 	//Databases
-	testRuntimeOnly dbLibs.h2
-	testRuntimeOnly dbLibs.derby
-	testRuntimeOnly dbLibs.hsqldb
-	testRuntimeOnly dbLibs.postgresql
-	testRuntimeOnly dbLibs.mssql
-	testRuntimeOnly dbLibs.informix
-	testRuntimeOnly dbLibs.cockroachdb
-	testRuntimeOnly dbLibs.oracle
-	testRuntimeOnly dbLibs.oracleXml
-	testRuntimeOnly dbLibs.oracleXmlParser
-	testRuntimeOnly dbLibs.sybase
+	testRuntimeOnly jdbcLibs.h2
+	testRuntimeOnly jdbcLibs.derby
+	testRuntimeOnly jdbcLibs.derbyTools
+	testRuntimeOnly jdbcLibs.hsqldb
+	testRuntimeOnly jdbcLibs.postgresql
+	testRuntimeOnly jdbcLibs.mssql
+	testRuntimeOnly jdbcLibs.informix
+	testRuntimeOnly jdbcLibs.cockroachdb
+	testRuntimeOnly jdbcLibs.sybase
 	testRuntimeOnly rootProject.fileTree(dir: 'drivers', include: '*.jar')
 
 	// Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
 	// This is due to the "no split-packages" requirement of Java 9+
 
 	if ( db.startsWith( 'db2' ) ) {
-		testRuntimeOnly dbLibs.db2
+		testRuntimeOnly jdbcLibs.db2
 	}
 	else if ( db.startsWith( 'hana' ) ) {
-		testRuntimeOnly dbLibs.hana
+		testRuntimeOnly jdbcLibs.hana
 	}
 	else if ( db.startsWith( 'mysql' ) || db.startsWith( 'tidb' ) ) {
-		testRuntimeOnly dbLibs.mysql
+		testRuntimeOnly jdbcLibs.mysql
 	}
 	else if ( db.startsWith( 'mariadb' ) ) {
-		testRuntimeOnly dbLibs.mariadb
+		testRuntimeOnly jdbcLibs.mariadb
 	}
 	else if ( db.startsWith( 'firebird' ) ) {
-		testRuntimeOnly dbLibs.firebird
+		testRuntimeOnly jdbcLibs.firebird
+	}
+	else if ( db.startsWith( 'oracle' ) ) {
+		testRuntimeOnly jdbcLibs.oracle
+		testRuntimeOnly jdbcLibs.oracleXml
+		testRuntimeOnly jdbcLibs.oracleXmlParser
+	}
+	else if ( db.startsWith( 'altibase' ) ) {
+		testRuntimeOnly jdbcLibs.altibase
+	}
+	else if ( db.startsWith( 'informix' ) ) {
+		testRuntimeOnly jdbcLibs.informix
 	}
 
 	annotationProcessor libs.loggingProcessor
@@ -153,64 +180,19 @@ artifacts {
 tasks.withType( JavaCompile ) {
 	options.encoding = 'UTF-8'
 	options.warnings false
-//	javaCompileTask.options.compilerArgs += [
+	options.fork = true
+	options.forkOptions.memoryMaximumSize = '896m'
+
+	options.compilerArgs += [
+			// disable adding @Generated annotation in the logger impls to make
+			// the logging annotation processor create the same sources each time.
+			"-Aorg.jboss.logging.tools.addGeneratedAnnotation=false"
 //			"-nowarn",
 //			"-encoding", "UTF-8"
-//	]
+	]
 }
 
-if ( !gradle.ext.javaToolchainEnabled ) {
-	tasks.compileJava.configure {
-		sourceCompatibility = JavaVersion.toVersion( gradle.ext.javaVersions.main.release )
-		targetCompatibility = JavaVersion.toVersion( gradle.ext.javaVersions.main.release )
-	}
-	tasks.compileTestJava.configure {
-		sourceCompatibility = JavaVersion.toVersion( gradle.ext.javaVersions.test.release )
-		targetCompatibility = JavaVersion.toVersion( gradle.ext.javaVersions.test.release )
-	}
-}
-else {
-	// Configure generated bytecode
-	// "sourceCompatibility" is not supported with toolchains. We have to work around that limitation.
-	tasks.compileJava.configure {
-		options.release = gradle.ext.javaVersions.main.release.asInt()
-		// Needs add-opens because of https://github.com/gradle/gradle/issues/15538
-		options.forkOptions.jvmArgs.addAll( ["--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED"] )
-	}
-	tasks.compileTestJava.configure {
-		options.release = gradle.ext.javaVersions.test.release.asInt()
-		// Needs add-opens because of https://github.com/gradle/gradle/issues/15538
-		options.forkOptions.jvmArgs.addAll( ["--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED"] )
-	}
-
-	// Configure version of Java tools
-	java {
-		toolchain {
-			languageVersion = gradle.ext.javaVersions.main.compiler
-		}
-	}
-	tasks.compileTestJava {
-		javaCompiler = javaToolchains.compilerFor {
-			languageVersion = gradle.ext.javaVersions.test.compiler
-		}
-	}
-
-	// Configure JVM Options
-	// Display version of Java tools
-	tasks.withType( JavaCompile ).configureEach {
-		options.forkOptions.jvmArgs.addAll( getProperty( 'toolchain.compiler.jvmargs' ).toString().split( ' ' ) )
-		doFirst {
-			logger.lifecycle "Compiling with '${javaCompiler.get().metadata.installationPath}'"
-		}
-	}
-	tasks.withType( Javadoc ).configureEach {
-		options.setJFlags( getProperty( 'toolchain.javadoc.jvmargs' ).toString().split( ' ' ).toList().findAll( { !it.isEmpty() } ) )
-		doFirst {
-			logger.lifecycle "Generating javadoc with '${javadocTool.get().metadata.installationPath}'"
-		}
-	}
-}
-
+tasks.compileJava.dependsOn spotlessApply
 
 task compile(dependsOn: [compileJava, processResources, compileTestJava, processTestResources] )
 
@@ -230,26 +212,6 @@ if ( toolsJar.exists() ) {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Testing
-
-if ( gradle.ext.javaToolchainEnabled ) {
-	tasks.test {
-		// Configure version of Java tools
-		javaLauncher = javaToolchains.launcherFor {
-			languageVersion = gradle.ext.javaVersions.test.launcher
-		}
-
-		// Configure JVM Options
-		jvmArgs( getProperty( 'toolchain.launcher.jvmargs' ).toString().split( ' ' ) )
-		if ( project.hasProperty( 'test.jdk.launcher.args' ) ) {
-			jvmArgs( project.getProperty( 'test.jdk.launcher.args' ).toString().split( ' ' ) )
-		}
-
-		// Display version of Java tools
-		doFirst {
-			logger.lifecycle "Testing with '${javaLauncher.get().metadata.installationPath}'"
-		}
-	}
-}
 class HeapDumpPathProvider implements CommandLineArgumentProvider {
 	@OutputDirectory
 	Provider<Directory> path
@@ -300,13 +262,6 @@ tasks.withType( Test.class ).each { test ->
 sourceSets {
 	test {
 		resources {
-			// add `src/test/java` as a test-resources dir
-			configure( srcDir('src/test/java') ) {
-				filter {
-					include '**/*.properties'
-					include '**/*.xml'
-				}
-			}
 			configure( srcDir('src/test/resources') ) {
 				filter {
 					include '*.properties'
@@ -324,6 +279,7 @@ processTestResources {
 	duplicatesStrategy DuplicatesStrategy.INCLUDE
 	inputs.property( "db", db )
 	inputs.property( "dbHost", dbHost )
+	inputs.file( rootProject.file( "gradle/databases.gradle" ) )
 	doLast {
 		copy {
 			from( sourceSets.test.java.srcDirs ) {
@@ -355,27 +311,13 @@ test {
 	jvmArgs '-XX:+StartAttachListener'
 }
 
-// Enable the experimental features of ByteBuddy with JDK 19+
-test {
-	// We need to test the *launcher* version,
-	// because some tests will use Mockito (and thus Bytebuddy) to mock/spy
-	// classes that are part of the JDK,
-	// and those classes always have bytecode matching the version of the launcher.
-	// So for example, when using a JDK19 launcher and compiling tests with --release 17,
-	// Bytebuddy will still encounter classes with Java 19 bytecode.
-	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 19 ) {
-		logger.warn( "The version of Java bytecode that will be tested is not supported by Bytebuddy by default. " +
-				 " Setting 'net.bytebuddy.experimental=true'." )
-		systemProperty 'net.bytebuddy.experimental', true
-	}
-}
-
 test {
 	if ( project.findProperty( 'log-test-progress' )?.toString()?.toBoolean() ) {
 		// Log a statement for each test.
 		// Used in the Travis build so that Travis doesn't end up panicking because there's no output for a long time.
 		testLogging {
 			events "passed", "skipped", "failed"
+			exceptionFormat = 'full'
 		}
 	}
 }
@@ -455,7 +397,12 @@ task sourcesJar(type: Jar) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Javadoc
 
-apply from: rootProject.file( 'gradle/javadoc.gradle' )
+tasks.named( "javadoc", Javadoc ) {
+	configure( options ) {
+		windowTitle = "Hibernate Javadocs ($project.name)"
+		docTitle = "Hibernate Javadocs ($project.name : $project.version)"
+	}
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // IDE
@@ -498,24 +445,96 @@ tasks.copyResourcesToIntelliJOutFolder.mustRunAfter processTestResources
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Report configs
 
-checkstyle {
-	it.sourceSets = [ project.sourceSets.main ]
-	configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
-	showViolations = false
+tasks.register('enforceRules') {
+	doLast {
+		def illegalImport = ~/^import (sun|java.awt|org.slf4j)/
+		def missingNewline = ~/^\s*}\s*(else|catch|finally)/
+		def lowerEll = ~/\b\d+l\b/
+		def equals = ~/boolean +equals\((@?\w+ )*Object \w+\)/
+		def hashCode = ~/int +hashCode\(\)/
+		def errors = 0
+		def tree = fileTree("src/main/java/")
+		tree.include "**/*.java"
+		tree.each { file ->
+			def lineNum = 0
+			def shortName = file.path.substring(rootDir.path.length())
+			def equalsMinusHashcode = 0
+			file.eachLine { line ->
+				lineNum++
+				if (line =~ illegalImport) {
+					errors++
+					logger.error("Illegal import in ${shortName}\n${lineNum}: ${line}")
+				}
+				if (line =~ missingNewline) {
+					errors++
+					logger.error("Missing newline in ${shortName}\n${lineNum}: ${line}")
+				}
+				if (line =~ lowerEll) {
+					errors++
+					logger.error("Lowercase long literal in ${shortName}\n${lineNum}: ${line}")
+				}
+				if (!line.startsWith("//")) { //ignore commented-out code
+					if (line =~ equals) {
+						equalsMinusHashcode ++
+					}
+					if (line =~ hashCode) {
+						equalsMinusHashcode --
+					}
+				}
+			}
+			if (equalsMinusHashcode>0) {
+				errors++
+				logger.error("Equals with missing hash code in ${shortName}")
+			}
+			if (equalsMinusHashcode<0) {
+				errors++
+				logger.error("Hash code with missing equals in ${shortName}")
+			}
+		}
+		if ( errors>0 ) {
+			throw new GradleException("Code rules were violated ($errors problems)")
+		}
+	}
 }
 
-// exclude generated java sources - by explicitly setting the base source dir
-tasks.checkstyleMain.source = 'src/main/java'
-tasks.checkstyleMain
-		.exclude('org/hibernate/jpamodelgen/util/NullnessUtil.java')
-		.exclude('org/hibernate/internal/util/NullnessUtil.java')
+spotless {
+	//Don't fail during the check: rather than enforcing guidelines, we use this plugin to fix mistakes automatically.
+	enforceCheck false
+	java {
+		targetExclude( "**/target/**/*.java" )
+		licenseHeaderFile rootProject.file( 'spotless.license.java' )
+		removeUnusedImports()
+		indentWithTabs( 4 )
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+}
 
-// define a second checkstyle task for checking non-fatal violations
-task nonFatalCheckstyle(type:Checkstyle) {
-	source = project.sourceSets.main.java
-	classpath = project.configurations.checkstyle
-	showViolations = false
-	configFile = rootProject.file( 'shared/config/checkstyle/checkstyle-non-fatal.xml' )
+tasks.check.dependsOn enforceRules
+
+tasks.register( "ciCheck" ) {
+	// Task used by CI builds
+	group "verification"
+	description "Checks for CI environments"
+	dependsOn tasks.check
+}
+
+gradle.taskGraph.whenReady {
+	if ( it.hasTask( tasks.ciCheck ) ) {
+		// These are already enforced by the formatChecks task
+		tasks.spotlessApply.enabled = false
+		tasks.spotlessJavaApply.enabled = false
+		tasks.enforceRules.enabled = false
+	}
+}
+
+tasks.register( "formatChecks" ) {
+	// Only runs static code analysis, doesn't require compilation
+	group "verification"
+	description "Code style and formatting checks"
+
+	dependsOn tasks.spotlessCheck
+	dependsOn tasks.enforceRules
 }
 
 class CompilerStubsArgumentProvider implements CommandLineArgumentProvider {
@@ -535,55 +554,38 @@ tasks.withType(JavaCompile).configureEach { task ->
     // working directory and prevents from using a relative path to locate a project file.
     // Using a CommandLineArgumentProvider allows build cache hits when the build cache is relocated.
     task.options.compilerArgumentProviders.add(new CompilerStubsArgumentProvider(stubsDir: new File(project.rootDir, "checkerstubs")))
+
+	if (System.getProperty('APT_DEBUG', 'false') == 'true') {
+		task.options.forkOptions.jvmArgs += ['-Xdebug', '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=9099']
+	}
 }
 
 checkerFramework {
+	excludeTests = true
 	checkers = [
 			'org.checkerframework.checker.nullness.NullnessChecker'
 	]
 	extraJavacArgs = [
             '-AsuppressWarnings=initialization',
             // stubs is passed directly through options.compilerArgumentProviders
-            '-AonlyDefs=^org\\.hibernate\\.(jdbc|exception|integrator|jpamodelgen|service|spi|pretty|property\\.access|stat|engine\\.(config|jndi|profile|transaction)|(action|context|bytecode)\\.spi)\\.'
+            '-AonlyDefs=^org\\.hibernate\\.(jdbc|exception|integrator|processor|service|spi|pretty|property\\.access|stat|engine\\.(config|jndi|profile|spi|transaction)|(action|context|bytecode)\\.spi)\\.'
 	]
 }
 
+tasks.forbiddenApisMain {
+	// unfortunately we currently have many uses of default Locale implicitly (~370)
+	// which need to be fixed before we can enable the "unsafe" check
+	//bundledSignatures += ["jdk-system-out", "jdk-non-portable", "jdk-unsafe-${jdkVersions.baseline}"]
+	bundledSignatures += ["jdk-system-out", "jdk-non-portable"]
 
-task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
-	bundledSignatures += 'jdk-system-out'
-	suppressAnnotations += ['org.hibernate.internal.build.AllowSysOut', 'org.hibernate.internal.build.AllowPrintStacktrace']
+	suppressAnnotations += [
+			"org.hibernate.internal.build.AllowSysOut",
+			"org.hibernate.internal.build.AllowPrintStacktrace",
+			"org.hibernate.internal.build.AllowNonPortable"
+	]
 }
 
-task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
-	bundledSignatures += "jdk-unsafe-${gradle.ext.baselineJavaVersion}".toString()
-
-	// unfortunately we currently have many uses of default Locale implicitly (~370) which need to be fixed
-	// before we can fully enabled this check
-	//
-	// No idea how findbugs was missing these b4
-	ignoreFailures = true
+tasks.forbiddenApisTest {
+	enabled = false
 }
 
-task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) {
-	bundledSignatures += 'jdk-non-portable'
-}
-
-task forbiddenApis {
-	description 'Grouping task for all defined forbidden-apis tasks'
-}
-
-project.tasks.withType( CheckForbiddenApis ) {
-	outputs.upToDateWhen { true }
-
-	classesDirs = project.sourceSets.main.output
-	classpath = configurations.runtimeClasspath + configurations.compileClasspath
-	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
-
-	// This slows down the checks a little, but is necessary to avoid the gradle daemon holding on
-	// to class definitions loaded previously - even possibly in a previous build.
-	disableClassloadingCache = true
-
-	tasks.forbiddenApis.finalizedBy it
-}
-
-project.tasks.check.finalizedBy tasks.forbiddenApis

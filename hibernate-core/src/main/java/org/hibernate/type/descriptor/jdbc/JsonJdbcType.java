@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
@@ -83,11 +81,7 @@ public class JsonJdbcType implements AggregateJdbcType {
 					options
 			);
 		}
-		return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().fromString(
-				string,
-				javaType,
-				options
-		);
+		return options.getJsonFormatMapper().fromString( string, javaType, options );
 	}
 
 	@Override
@@ -106,11 +100,7 @@ public class JsonJdbcType implements AggregateJdbcType {
 		if ( embeddableMappingType != null ) {
 			return JsonHelper.toString( embeddableMappingType, value, options );
 		}
-		return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().toString(
-				value,
-				javaType,
-				options
-		);
+		return options.getJsonFormatMapper().toString( value, javaType, options );
 	}
 
 	@Override

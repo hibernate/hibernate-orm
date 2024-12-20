@@ -1,24 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.ops;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
-import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -27,12 +20,20 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -106,7 +107,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		scope.inTransaction(
 				session ->
-						session.delete( person )
+						session.remove( person )
 		);
 	}
 
@@ -136,8 +137,8 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		scope.inTransaction(
 				session -> {
-					session.delete( a );
-					session.delete( person );
+					session.remove( a );
+					session.remove( person );
 				}
 		);
 	}
@@ -307,7 +308,7 @@ public class MergeTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked", "UnusedAssignment", "UnusedDeclaration" })
+	@SuppressWarnings({"unchecked", "unused"})
 	public void testNoExtraUpdatesOnPersistentMergeVersionedWithCollection(SessionFactoryScope scope) {
 		VersionedEntity parent = new VersionedEntity( "parent", "parent" );
 		VersionedEntity child = new VersionedEntity( "child", "child" );
@@ -334,7 +335,7 @@ public class MergeTest extends AbstractOperationTestCase {
 					VersionedEntity persistentChild = (VersionedEntity) persistentParent.getChildren()
 							.iterator()
 							.next();
-					return (VersionedEntity) session.merge( persistentParent ); // <-- This merge leads to failure
+					return session.merge( persistentParent ); // <-- This merge leads to failure
 				}
 		);
 
@@ -377,10 +378,10 @@ public class MergeTest extends AbstractOperationTestCase {
 
 					try {
 						// control operation...
-						session.saveOrUpdate( new VersionedEntity( "test", "test-3" ) );
-						fail( "saveOrUpdate() should fail here" );
+						session.persist( new VersionedEntity( "test", "test-3" ) );
+						fail( "persist should fail here" );
 					}
-					catch (NonUniqueObjectException expected) {
+					catch (EntityExistsException expected) {
 						// expected behavior
 					}
 				}
@@ -399,10 +400,10 @@ public class MergeTest extends AbstractOperationTestCase {
 
 					try {
 						// control operation...
-						session.saveOrUpdate( new TimestampedEntity( "test", "test-3" ) );
-						fail( "saveOrUpdate() should fail here" );
+						session.persist( new TimestampedEntity( "test", "test-3" ) );
+						fail( "persist should fail here" );
 					}
-					catch (NonUniqueObjectException expected) {
+					catch (EntityExistsException expected) {
 						// expected behavior
 					}
 				}
@@ -460,12 +461,12 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		scope.inTransaction(
 				session -> {
-					session.delete( grandchild );
-					session.delete( grandchild2 );
-					session.delete( grandchild3 );
-					session.delete( child );
-					session.delete( child2 );
-					session.delete( root );
+					session.remove( grandchild );
+					session.remove( grandchild2 );
+					session.remove( grandchild3 );
+					session.remove( child );
+					session.remove( child2 );
+					session.remove( root );
 				}
 		);
 	}
@@ -731,7 +732,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 	@Test
 	@SuppressWarnings("unchecked")
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testRecursiveMergeTransient(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -764,12 +765,15 @@ public class MergeTest extends AbstractOperationTestCase {
 					session.getTransaction().begin();
 					Employer otherJboss;
 					otherJboss = session.get( Employer.class, jboss.getId() );
-					session.delete( otherJboss );
+					session.remove( otherJboss );
 					session.getTransaction().commit();
 					session.clear();
 					jboss.setVers( 1 );
 					session.getTransaction().begin();
-					session.merge( jboss );
+					assertThrows(
+							OptimisticLockException.class,
+							() -> session.merge( jboss )
+					);
 				}
 		);
 
@@ -778,7 +782,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 	@SuppressWarnings("unchecked")
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testMergeManyToManyWithCollectionDeference(SessionFactoryScope scope) {
 		// setup base data...
 		Competition competition = new Competition();
@@ -815,7 +819,7 @@ public class MergeTest extends AbstractOperationTestCase {
 				session -> {
 					Competition c = session.get( Competition.class, competition.getId() );
 					assertThat( c.getCompetitors().size(), is( 2 ) );
-					session.delete( c );
+					session.remove( c );
 				}
 		);
 
@@ -840,11 +844,10 @@ public class MergeTest extends AbstractOperationTestCase {
 					session.createQuery( "delete from Competition" ).executeUpdate();
 
 					for ( Employer employer : (List<Employer>) session.createQuery( "from Employer" ).list() ) {
-						session.delete( employer );
+						session.remove( employer );
 					}
 				}
 		);
 
 	}
 }
-

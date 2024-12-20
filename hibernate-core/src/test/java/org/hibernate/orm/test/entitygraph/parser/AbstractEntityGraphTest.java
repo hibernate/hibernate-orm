@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph.parser;
 
@@ -69,7 +67,7 @@ public abstract class AbstractEntityGraphTest extends BaseEntityManagerFunctiona
 		else {
 			Assert.assertNotNull( attrs );
 			Assert.assertTrue( names.length <= attrs.size() );
-	
+
 			for ( String name : names ) {
 				AttributeNode<?> node = null;
 				for ( AttributeNode<?> candidate : attrs ) {
@@ -104,4 +102,3 @@ public abstract class AbstractEntityGraphTest extends BaseEntityManagerFunctiona
 	}
 
 }
-

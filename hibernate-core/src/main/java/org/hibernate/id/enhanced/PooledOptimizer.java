@@ -1,14 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.hibernate.HibernateException;
 import org.hibernate.id.IntegralDataTypeHolder;
@@ -32,6 +33,7 @@ import org.jboss.logging.Logger;
  */
 public class PooledOptimizer extends AbstractOptimizer implements InitialValueAwareOptimizer {
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			PooledOptimizer.class.getName()
 	);
@@ -65,36 +67,46 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 
 
 	@Override
-	public synchronized Serializable generate(AccessCallback callback) {
-		final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
+	public Serializable generate(AccessCallback callback) {
+		lock.lock();
+		try {
+			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
 
-		if ( generationState.hiValue == null ) {
-			generationState.hiValue = callback.getNextValue();
-			// unfortunately not really safe to normalize this
-			// to 1 as an initial value like we do for the others
-			// because we would not be able to control this if
-			// we are using a sequence...
-			if ( generationState.hiValue.lt( 1 ) ) {
-				log.pooledOptimizerReportedInitialValue( generationState.hiValue );
+			if ( generationState.hiValue == null ) {
+				generationState.hiValue = callback.getNextValue();
+				// unfortunately not really safe to normalize this
+				// to 1 as an initial value like we do for the others
+				// because we would not be able to control this if
+				// we are using a sequence...
+				if ( generationState.hiValue.lt( 1 ) ) {
+					log.pooledOptimizerReportedInitialValue( generationState.hiValue );
+				}
+				// the call to obtain next-value just gave us the initialValue
+				if ( ( initialValue == -1
+						&& generationState.hiValue.lt( incrementSize ) )
+						|| generationState.hiValue.eq( initialValue ) ) {
+					generationState.value = generationState.hiValue.copy();
+				}
+				else {
+					generationState.value = generationState.hiValue.copy().subtract( incrementSize - 1 );
+				}
 			}
-			// the call to obtain next-value just gave us the initialValue
-			if ( ( initialValue == -1
-					&& generationState.hiValue.lt( incrementSize ) )
-					|| generationState.hiValue.eq( initialValue ) ) {
-				generationState.value = generationState.hiValue.copy();
-			}
-			else {
+			else if ( generationState.value.gt( generationState.hiValue ) ) {
+				generationState.hiValue = callback.getNextValue();
 				generationState.value = generationState.hiValue.copy().subtract( incrementSize - 1 );
 			}
-		}
-		else if ( generationState.value.gt( generationState.hiValue ) ) {
-			generationState.hiValue = callback.getNextValue();
-			generationState.value = generationState.hiValue.copy().subtract( incrementSize - 1 );
-		}
 
-		return generationState.value.makeValueThenIncrement();
+			return generationState.value.makeValueThenIncrement();
+		}
+		finally {
+			lock.unlock();
+		}
 	}
 
+	/**
+	 * Use a lock instead of the monitor lock to avoid pinning when using virtual threads.
+	 */
+	private final Lock lock = new ReentrantLock();
 	private GenerationState noTenantState;
 	private Map<String,GenerationState> tenantSpecificState;
 

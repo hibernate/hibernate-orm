@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.relational.internal;
 
@@ -11,10 +9,13 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.tool.schema.Action;
+import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import jakarta.persistence.SchemaValidationException;
 
 /**
  * Implementation of {@link SchemaManager}, backed by a {@link SessionFactoryImplementor}
@@ -88,4 +89,28 @@ public class SchemaManagerImpl implements SchemaManager {
 		);
 	}
 
+	@Override
+	public void create(boolean createSchemas) {
+		exportMappedObjects( createSchemas );
+	}
+
+	@Override
+	public void drop(boolean dropSchemas) {
+		dropMappedObjects( dropSchemas );
+	}
+
+	@Override
+	public void validate() throws SchemaValidationException {
+		try {
+			validateMappedObjects();
+		}
+		catch ( SchemaManagementException sme ) {
+			throw new SchemaValidationException( sme.getMessage(), sme );
+		}
+	}
+
+	@Override
+	public void truncate() {
+		truncateMappedObjects();
+	}
 }

@@ -1,20 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.FunctionTableReference;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
@@ -53,28 +47,16 @@ public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 	}
 
 	@Override
-	protected boolean renderPrimaryTableReference(TableGroup tableGroup, LockMode lockMode) {
-		if ( shouldInlineCte( tableGroup ) ) {
-			inlineCteTableGroup( tableGroup, lockMode );
-			return false;
-		}
-		final TableReference tableReference = tableGroup.getPrimaryTableReference();
-		if ( tableReference instanceof NamedTableReference ) {
-			return renderNamedTableReference( (NamedTableReference) tableReference, lockMode );
-		}
+	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
 		// DB2 z/OS we need the "table" qualifier for table valued functions or lateral sub-queries
 		append( "table " );
-		tableReference.accept( this );
-		return false;
+		super.visitQueryPartTableReference( tableReference );
 	}
 
 	@Override
-	public void visitFunctionTableReference(FunctionTableReference tableReference) {
-		// For the table qualifier we need parenthesis on DB2 z/OS
-		append( OPEN_PARENTHESIS );
-		tableReference.getFunctionExpression().accept( this );
-		append( CLOSE_PARENTHESIS );
-		renderDerivedTableReference( tableReference );
+	protected String getNewTableChangeModifier() {
+		// On DB2 zOS, `final` also sees the trigger data
+		return "final";
 	}
 
 	@Override

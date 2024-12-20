@@ -1,14 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.spi;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.Wrapped;
 
@@ -22,12 +22,14 @@ import org.hibernate.service.spi.Wrapped;
  * An application usually implements its own custom {@code MultiTenantConnectionProvider}
  * by subclassing {@link AbstractMultiTenantConnectionProvider}.
  *
+ * @param <T> The tenant identifier type
+ *
  * @author Steve Ebersole
  *
  * @see AbstractMultiTenantConnectionProvider
  * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_CONNECTION_PROVIDER
  */
-public interface MultiTenantConnectionProvider extends Service, Wrapped {
+public interface MultiTenantConnectionProvider<T> extends Service, Wrapped {
 	/**
 	 * Allows access to the database metadata of the underlying database(s) in situations
 	 * where we do not have a tenant id (like startup processing, for example).
@@ -57,7 +59,7 @@ public interface MultiTenantConnectionProvider extends Service, Wrapped {
 	 * @throws SQLException Indicates a problem opening a connection
 	 * @throws org.hibernate.HibernateException Indicates a problem otherwise obtaining a connection.
 	 */
-	Connection getConnection(String tenantIdentifier) throws SQLException;
+	Connection getConnection(T tenantIdentifier) throws SQLException;
 
 	/**
 	 * Release a connection from Hibernate use.
@@ -68,7 +70,7 @@ public interface MultiTenantConnectionProvider extends Service, Wrapped {
 	 * @throws SQLException Indicates a problem closing the connection
 	 * @throws org.hibernate.HibernateException Indicates a problem otherwise releasing a connection.
 	 */
-	void releaseConnection(String tenantIdentifier, Connection connection) throws SQLException;
+	void releaseConnection(T tenantIdentifier, Connection connection) throws SQLException;
 
 	/**
 	 * Does this connection provider support aggressive release of JDBC connections and later
@@ -87,4 +89,9 @@ public interface MultiTenantConnectionProvider extends Service, Wrapped {
 	 * @return {@code true} if aggressive releasing is supported; {@code false} otherwise.
 	 */
 	boolean supportsAggressiveRelease();
+
+	default DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return new DatabaseConnectionInfoImpl( dialect );
+	}
+
 }

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.notfound;
 
 import java.io.Serializable;
@@ -20,7 +24,7 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -36,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Gail Badner
  */
-@TestForIssue(jiraKey = "HHH-12436")
+@JiraKey(value = "HHH-12436")
 @DomainModel(
 		annotatedClasses = {
 				OptionalEagerNotFoundTest.PersonManyToOneJoinIgnore.class,
@@ -500,7 +504,7 @@ public class OptionalEagerNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne
+		@OneToOne(cascade = CascadeType.PERSIST)
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
 		@Fetch(FetchMode.JOIN)
@@ -531,7 +535,7 @@ public class OptionalEagerNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne
+		@OneToOne(cascade = CascadeType.PERSIST)
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
 		@Fetch(FetchMode.SELECT)
@@ -562,7 +566,7 @@ public class OptionalEagerNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne
+		@OneToOne(cascade = CascadeType.PERSIST)
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(name = "fk", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
@@ -593,7 +597,7 @@ public class OptionalEagerNotFoundTest {
 		@Id
 		private Long id;
 
-		@OneToOne
+		@OneToOne(cascade = CascadeType.PERSIST)
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(name = "fk", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))

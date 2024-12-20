@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.serialization;
 
@@ -19,7 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -35,7 +33,7 @@ import org.junit.jupiter.api.Test;
 public class EntityManagerDeserializationTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11555")
+	@JiraKey(value = "HHH-11555")
 	public void deserializedEntityManagerPersistenceExceptionManagementTest(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {

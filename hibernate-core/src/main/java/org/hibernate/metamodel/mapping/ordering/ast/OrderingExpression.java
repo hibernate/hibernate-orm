@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
@@ -51,25 +49,22 @@ public interface OrderingExpression extends Node {
 			sortExpression = expression;
 		}
 		else {
-			final QueryEngine queryEngine = creationState.getCreationContext()
-					.getSessionFactory()
-					.getQueryEngine();
-			final SqmToSqlAstConverter converter;
-			if ( creationState instanceof SqmToSqlAstConverter ) {
-				converter = (SqmToSqlAstConverter) creationState;
-			}
-			else {
-				converter = new FakeSqmToSqlAstConverter( creationState );
-			}
-			sortExpression = queryEngine
-					.getSqmFunctionRegistry()
-					.findFunctionDescriptor( "collate" )
-					.generateSqmExpression(
-							new SqmSelfRenderingExpression<>( walker -> expression, null, null ),
-							null,
-							queryEngine
-					)
-					.convertToSqlAst( converter );
+			final QueryEngine queryEngine =
+					creationState.getCreationContext().getSessionFactory()
+							.getQueryEngine();
+			final SqmToSqlAstConverter converter =
+					creationState instanceof SqmToSqlAstConverter sqmToSqlAstConverter
+							? sqmToSqlAstConverter
+							: new FakeSqmToSqlAstConverter(creationState);
+			sortExpression =
+					queryEngine.getSqmFunctionRegistry()
+							.findFunctionDescriptor( "collate" )
+							.generateSqmExpression(
+									new SqmSelfRenderingExpression<>( walker -> expression, null, null ),
+									null,
+									queryEngine
+							)
+							.convertToSqlAst( converter );
 		}
 		return sortExpression;
 	}

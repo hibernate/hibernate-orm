@@ -7,21 +7,21 @@
 
 description = 'Hibernate\'s entity version (audit/history) support'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
 apply plugin: 'org.hibernate.matrix-test'
-apply plugin: 'org.hibernate.orm.build.properties'
 
 dependencies {
     api project( ':hibernate-core' )
 
+    implementation libs.hibernateModels
     implementation jakartaLibs.jaxbApi
     implementation jakartaLibs.jaxb
-    implementation libs.hcann
     implementation libs.jandex
+    implementation libs.hibernateModels
 
     compileOnly libs.ant
 
-    annotationProcessor project( ':hibernate-jpamodelgen' )
+    annotationProcessor project( ':hibernate-processor' )
     compileOnly jakartaLibs.annotation
 
     testImplementation project( ':hibernate-testing' )
@@ -52,6 +52,13 @@ configurations {
     }
 }
 
+tasks.withType( Test.class ).each { test ->
+    if ( project.db == "h2" || project.db == "hsqldb" ) {
+        // Parallel test runs when running with in-memory databases
+        test.maxParallelForks = Runtime.runtime.availableProcessors().intdiv( 2 ) ?: 1
+    }
+}
+
 sourcesJar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
@@ -70,12 +77,4 @@ tasks."matrix_mariadb" {
     beforeTest { descriptor ->
         println "Starting test: " + descriptor
     }
-}
-
-task collectConfigProperties { task ->
-    description 'Collect config properties'
-
-    tasks.generateConfigsProperties.javadocsBaseLink = 'https://docs.jboss.org/hibernate/orm/' + rootProject.ormVersion.family + '/javadocs/'
-
-    dependsOn tasks.generateConfigsProperties
 }

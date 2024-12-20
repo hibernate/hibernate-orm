@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
@@ -22,7 +23,6 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
-import org.hibernate.cfg.Environment;
 import org.hibernate.orm.tooling.gradle.HibernateOrmSpec;
 
 import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDefaultBytecodeProvider;
@@ -41,6 +41,9 @@ public class EnhancementHelper {
 		final File classesDir = classesDirectory.getAsFile();
 
 		final EnhancementSpec enhancementDsl = ormDsl.getEnhancement();
+
+		List<String> classesToEnhance = enhancementDsl.getClassNames().get();
+
 		if ( !enhancementDsl.getEnableLazyInitialization().get() ) {
 			project.getLogger().warn( "The 'enableLazyInitialization' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
 		}
@@ -49,17 +52,42 @@ public class EnhancementHelper {
 		}
 		final Enhancer enhancer = generateEnhancer( classLoader, ormDsl );
 
-		walk( classesDir, classesDir, enhancer, project );
+		discoverTypes( classesDir, classesDir, enhancer, project );
+		doEnhancement( classesDir, classesDir, enhancer, project, classesToEnhance );
 	}
 
-	private static void walk(File classesDir, File dir, Enhancer enhancer, Project project) {
+	private static void discoverTypes(File classesDir, File dir, Enhancer enhancer, Project project) {
 		for ( File subLocation : dir.listFiles() ) {
 			if ( subLocation.isDirectory() ) {
-				walk( classesDir, subLocation, enhancer, project );
+				discoverTypes( classesDir, subLocation, enhancer, project );
 			}
 			else if ( subLocation.isFile() && subLocation.getName().endsWith( ".class" ) ) {
 				final String className = determineClassName( classesDir, subLocation );
 				final long lastModified = subLocation.lastModified();
+
+				discoverTypes( subLocation, className, enhancer, project );
+
+				final boolean timestampReset = subLocation.setLastModified( lastModified );
+				if ( !timestampReset ) {
+					project.getLogger().debug( "`{}`.setLastModified failed", project.relativePath( subLocation ) );
+				}
+
+			}
+		}
+	}
+
+	private static void doEnhancement(File classesDir, File dir, Enhancer enhancer, Project project, List<String> classesToEnhance) {
+		for ( File subLocation : dir.listFiles() ) {
+			if ( subLocation.isDirectory() ) {
+				doEnhancement( classesDir, subLocation, enhancer, project, classesToEnhance );
+			}
+			else if ( subLocation.isFile() && subLocation.getName().endsWith( ".class" ) ) {
+				final String className = determineClassName( classesDir, subLocation );
+				final long lastModified = subLocation.lastModified();
+
+				if(! (classesToEnhance.size()==0 || classesToEnhance.contains(className))) {
+					continue;
+				}
 
 				enhance( subLocation, className, enhancer, project );
 
@@ -69,6 +97,20 @@ public class EnhancementHelper {
 				}
 
 			}
+		}
+	}
+
+	private static void discoverTypes(
+			File javaClassFile,
+			String className,
+			Enhancer enhancer,
+			Project project) {
+		try {
+			enhancer.discoverTypes( className, Files.readAllBytes( javaClassFile.toPath() ) );
+			project.getLogger().info( "Successfully discovered types for class : " + className );
+		}
+		catch (Exception e) {
+			throw new GradleException( "Unable to discover types for class : " + className, e );
 		}
 	}
 

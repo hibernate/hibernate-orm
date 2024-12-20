@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.converter.internal;
 
@@ -83,7 +81,7 @@ public class ArrayConverter<T, S, E, F> implements BasicValueConverter<T, S> {
 	}
 
 	private S convertFrom(E[] domainArray, Class<F> elementClass) {
-		 //TODO: the following implementation only handles conversion between non-primitive arrays!
+		//TODO: the following implementation only handles conversion between non-primitive arrays!
 		//noinspection unchecked
 		final F[] relationalArray = (F[]) Array.newInstance( elementClass, domainArray.length );
 		for ( int i = 0; i < domainArray.length; i++ ) {

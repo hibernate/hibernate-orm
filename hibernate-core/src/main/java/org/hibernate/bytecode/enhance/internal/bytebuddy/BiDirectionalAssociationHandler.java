@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
@@ -350,7 +348,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 									Opcodes.INVOKEVIRTUAL,
 									entity.getInternalName(),
 									EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + field.getName(),
-									Type.getMethodDescriptor( Type.getType( field.getDescriptor() ) ),
+									Type.getMethodDescriptor( Type.getType( field.asDefined().getDescriptor() ) ),
 									false
 							);
 						}

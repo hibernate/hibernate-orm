@@ -1,32 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
- */
-
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Inc.
- *
- * This copyrighted material is made available to anyone wishing to use, modify,
- * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this distribution; if not, write to:
- * Free Software Foundation, Inc.
- * 51 Franklin Street, Fifth Floor
- * Boston, MA  02110-1301  USA
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.util.jpa;
 
@@ -43,15 +17,18 @@ import javax.sql.DataSource;
 
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
+import static java.lang.Thread.currentThread;
+
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
 public class PersistenceUnitInfoPropertiesWrapper implements PersistenceUnitInfo {
-	private Properties properties;
+	private final Properties properties;
 
 	public PersistenceUnitInfoPropertiesWrapper() {
+		properties = new Properties();
 	}
 
 	public PersistenceUnitInfoPropertiesWrapper(Properties properties) {
@@ -66,6 +43,17 @@ public class PersistenceUnitInfoPropertiesWrapper implements PersistenceUnitInfo
 		return HibernatePersistenceProvider.class.getName();
 	}
 
+	@Override
+	public String getScopeAnnotationName() {
+		return null;
+	}
+
+	@Override
+	public List<String> getQualifierAnnotationNames() {
+		return List.of();
+	}
+
+	@SuppressWarnings("removal")
 	public PersistenceUnitTransactionType getTransactionType() {
 		return null;
 	}
@@ -107,9 +95,6 @@ public class PersistenceUnitInfoPropertiesWrapper implements PersistenceUnitInfo
 	}
 
 	public Properties getProperties() {
-		if ( properties == null ) {
-			properties = new Properties();
-		}
 		return properties;
 	}
 
@@ -118,13 +103,13 @@ public class PersistenceUnitInfoPropertiesWrapper implements PersistenceUnitInfo
 	}
 
 	public ClassLoader getClassLoader() {
-		return Thread.currentThread().getContextClassLoader();
+		return currentThread().getContextClassLoader();
 	}
 
 	public void addTransformer(ClassTransformer transformer) {
 	}
 
 	public ClassLoader getNewTempClassLoader() {
-		return Thread.currentThread().getContextClassLoader();
+		return null;
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
@@ -19,8 +17,8 @@ package org.hibernate.metamodel.mapping;
  */
 public interface DiscriminatorValueDetails {
 	/**
-     * The discriminator value
-     */
+	 * The discriminator value
+	 */
 	Object getValue();
 
 	/**
@@ -32,6 +30,6 @@ public interface DiscriminatorValueDetails {
 
 	/**
 	 * Form of {@link #getIndicatedEntityName()} returning the matched {@link EntityMappingType}
-     */
+	 */
 	EntityMappingType getIndicatedEntity();
 }

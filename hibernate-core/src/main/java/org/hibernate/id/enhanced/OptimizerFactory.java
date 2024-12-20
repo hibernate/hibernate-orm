@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.util.Properties;
 
@@ -23,23 +22,10 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  */
 public class OptimizerFactory {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			OptimizerFactory.class.getName()
 	);
-
-	/**
-	 * Does the given optimizer name represent a pooled strategy?
-	 *
-	 * @param optimizerName The name of the optimizer
-	 *
-	 * @return {@code true} indicates the optimizer is a pooled strategy.
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated(since = "6.3")
-	public static boolean isPooledOptimizer(String optimizerName) {
-		return StandardOptimizerDescriptor.fromExternalName( optimizerName ).isPooled();
-	}
 
 	private static final Class<?>[] CTOR_SIG = new Class[] { Class.class, int.class };
 

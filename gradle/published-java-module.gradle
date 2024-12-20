@@ -24,96 +24,67 @@ dependencies {
 	javadocSources sourceSets.main.allJava
 }
 
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Publishing
-
 java {
+	// Configure the Java "software component" to include javadoc and sources jars in addition to the classes jar.
+	// Ultimately, this component is what makes up the publication for this project.
 	withJavadocJar()
 	withSourcesJar()
 }
 
-publishing {
-	publications {
-		// main publication
-		publishedArtifacts {
-			from components.java
-		}
 
-		// relocation for the published artifacts based on the old groupId
-		relocationPom( MavenPublication ) {
-			pom {
-				name = project.name + ' - relocation'
-				groupId = 'org.hibernate'
-				artifactId = project.name
-				version = project.version
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Publishing
 
-				description = project.description
-				url = 'https://hibernate.org/orm'
-
-				organization {
-					name = 'Hibernate.org'
-					url = 'https://hibernate.org'
-				}
-
-				licenses {
-					license {
-						name = 'GNU Library General Public License v2.1 or later'
-						url = 'https://www.opensource.org/licenses/LGPL-2.1'
-						comments = 'See discussion at https://hibernate.org/community/license/ for more details.'
-						distribution = 'repo'
-					}
-				}
-
-				scm {
-					url = 'https://github.com/hibernate/hibernate-orm'
-					connection = 'scm:git:https://github.com/hibernate/hibernate-orm.git'
-					developerConnection = 'scm:git:git@github.com:hibernate/hibernate-orm.git'
-				}
-
-				developers {
-					developer {
-						id = 'hibernate-team'
-						name = 'The Hibernate Development Team'
-						organization = 'Hibernate.org'
-						organizationUrl = 'https://hibernate.org'
-					}
-				}
-
-				issueManagement {
-					system = 'jira'
-					url = 'https://hibernate.atlassian.net/browse/HHH'
-				}
-
-				distributionManagement {
-					relocation {
-						groupId = 'org.hibernate.orm'
-						artifactId = project.name
-						version = project.version
-					}
-				}
-			}
-		}
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+publishingExtension.publications {
+	// main publication
+	publishedArtifacts {
+		// Add the Java component to the main publication
+		from components.java
 	}
 }
 
 
-var signingKey = resolveSigningKey()
-var signingPassword = findSigningProperty( "signingPassword" )
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Signing
 
-signing {
-	useInMemoryPgpKeys( signingKey, signingPassword )
+def signingKey = resolveSigningKey()
+def signingPassphrase = resolveSigningPassphrase()
 
-	sign publishing.publications.publishedArtifacts
+var signingExtension = project.getExtensions().getByType(SigningExtension) as SigningExtension
+signingExtension.sign publishingExtension.publications.publishedArtifacts
+signingExtension.useInMemoryPgpKeys(signingKey, signingPassphrase)
+
+gradle.taskGraph.whenReady { TaskExecutionGraph graph ->
+	boolean wasPublishingRequested = false
+
+	graph.allTasks.each {task ->
+		if ( task instanceof PublishToMavenRepository ) {
+			wasPublishingRequested = true
+		}
+	}
+
+	if ( wasPublishingRequested ) {
+		def ossrhUser = System.getenv().get( "ORG_GRADLE_PROJECT_sonatypeUsername" )
+		def ossrhPass = System.getenv().get( "ORG_GRADLE_PROJECT_sonatypePassword" )
+		if ( ossrhUser == null || ossrhPass == null ) {
+			throw new RuntimeException( "Cannot perform publishing to OSSRH without credentials." )
+		}
+		logger.lifecycle "Publishing {} : {} : {}", project.group, project.name, project.version
+		signingExtension.required = true
+	}
+	else if ( signingKey == null || signingPassphrase == null ) {
+		tasks.withType( Sign ).each { t-> t.enabled = false }
+	}
 }
 
-String resolveSigningKey() {
-	var key = findSigningProperty( "signingKey" )
+static String resolveSigningKey() {
+	var key = System.getenv().get( "SIGNING_GPG_PRIVATE_KEY" )
 	if ( key != null ) {
 		return key
 	}
 
-	var keyFile = findSigningProperty( "signingKeyFile" )
+	var keyFile = System.getenv().get( "SIGNING_GPG_PRIVATE_KEY_PATH" )
 	if ( keyFile != null ) {
 		return new File( keyFile ).text
 	}
@@ -121,114 +92,15 @@ String resolveSigningKey() {
 	return null
 }
 
-String findSigningProperty(String propName) {
-	if ( System.getProperty( propName ) != null ) {
-		logger.debug "Found `{}` as a system property", propName
-		return System.getProperty(propName )
-	}
-	else if ( System.getenv().get( propName ) != null ) {
-		logger.debug "Found `{}` as an env-var property", propName
-		return System.getenv().get( propName )
-	}
-	else if ( project.hasProperty( propName ) ) {
-		logger.debug "Found `{}` as a project property", propName
-		return project.hasProperty( propName )
-	}
-	else {
-		logger.debug "Did not find `{}`", propName
-		return null
-	}
-}
-
-
-var signingTask = project.tasks.getByName( "signPublishedArtifactsPublication" ) as Sign
-var signingExtension = project.getExtensions().getByType(SigningExtension) as SigningExtension
-
-task sign {
-	dependsOn "signPublications"
-}
-
-task signPublications { t ->
-	tasks.withType( Sign ).all { s ->
-		t.dependsOn s
-	}
-}
-
-signingTask.doFirst {
-	if ( signingKey == null || signingPassword == null ) {
-		throw new GradleException(
-				"Cannot perform signing without GPG details.  Please set the `signingKey` and `signingKeyFile` properties"
-		)
-	}
-}
-
-
-boolean wasSigningExplicitlyRequested() {
-	// check whether signing task was explicitly requested when running the build
-	//
-	// NOTE: due to https://discuss.gradle.org/t/how-to-tell-if-a-task-was-explicitly-asked-for-on-the-command-line/42853/3
-	// we cannot definitively know whether the task was requested.  Gradle really just does not expose this information.
-	// so we make a convention - we check the "start parameters" object to see which task-names were requested;
-	// the problem is that these are the raw names directly from the command line.  e.g. it is perfectly legal to
-	// say `gradlew signPubArtPub` in place of `gradlew signPublishedArtifactsPublication` - Gradle will simply
-	// "expand" the name it finds.  However, it does not make that available.
-	//
-	// so the convention is that we will check for the following task names
-	//
-	// for each of:
-	//		1. `sign`
-	//		2. `signPublications`
-	//		3. `signPublishedArtifactsPublication`
-	//
-	// and we check both forms:
-	//		1. "${taskName}"
-	//		2. project.path + ":${taskName}"
-	//
-	// we need to check both again because of the "start parameters" discussion
-
-	def signingTaskNames = ["sign", "signPublications", "signPublishedArtifactsPublication"]
-
-	for ( String taskName : signingTaskNames ) {
-		if ( gradle.startParameter.taskNames.contains( taskName )
-				|| gradle.startParameter.taskNames.contains( "${project.path}:${taskName}" ) ) {
-			return true
-		}
-	}
-
-	return false
-}
-
-if ( wasSigningExplicitlyRequested() ) {
-	// signing was explicitly requested
-	signingExtension.required = true
-}
-else {
-	gradle.taskGraph.whenReady { graph ->
-		if ( graph.hasTask( signingTask ) ) {
-			// signing is scheduled to happen.
-			//
-			// we know, from above if-check, that it was not explicitly requested -
-			// so it is triggered via task dependency. make sure we want it to happen
-			var publishingTask = project.tasks.getByName( "publishPublishedArtifactsPublicationToSonatypeRepository" ) as PublishToMavenRepository
-			if ( graph.hasTask( publishingTask ) ) {
-				// we are publishing to Sonatype OSSRH - we need the signing to happen
-				signingExtension.required = true
-			}
-			else {
-				// signing was not explicitly requested and we are not publishing to OSSRH,
-				// so do not sign.
-				signingTask.enabled = false
-			}
-		}
-
-	}
+static String resolveSigningPassphrase() {
+	return System.getenv().get( "SIGNING_GPG_PASSPHRASE" )
 }
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Release / publishing tasks
 
-task ciBuild {
+tasks.register('ciBuild') {
 	dependsOn test, tasks.publishToSonatype
 }
 
@@ -237,7 +109,6 @@ tasks.release.dependsOn tasks.test, tasks.publishToSonatype
 tasks.preVerifyRelease.dependsOn build
 tasks.preVerifyRelease.dependsOn generateMetadataFileForPublishedArtifactsPublication
 tasks.preVerifyRelease.dependsOn generatePomFileForPublishedArtifactsPublication
-tasks.preVerifyRelease.dependsOn generatePomFileForRelocationPomPublication
 
 tasks.publishToSonatype.mustRunAfter test
 
@@ -245,7 +116,7 @@ tasks.publishToSonatype.mustRunAfter test
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Ancillary tasks
 
-task showPublications {
+tasks.register('showPublications') {
 	doFirst {
 		project.publishing.publications.each { publication ->
 			println "Publication (${publication.name}): ${publication.groupId}:${publication.artifactId}:${publication.version}"

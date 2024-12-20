@@ -13,10 +13,10 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
-@Library('hibernate-jenkins-pipeline-helpers@1.5') _
+@Library('hibernate-jenkins-pipeline-helpers') _
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
-@Field final String DEFAULT_JDK_VERSION = '11'
+@Field final String DEFAULT_JDK_VERSION = '17'
 @Field final String DEFAULT_JDK_TOOL = "OpenJDK ${DEFAULT_JDK_VERSION} Latest"
 @Field final String NODE_PATTERN_BASE = 'Worker&&Containers'
 @Field List<BuildEnvironment> environments
@@ -27,21 +27,17 @@ helper.runWithNotification {
 stage('Configure') {
 	this.environments = [
 		// Minimum supported versions
-		new BuildEnvironment( dbName: 'h2_1_4' ),
 		new BuildEnvironment( dbName: 'hsqldb_2_6' ),
-		new BuildEnvironment( dbName: 'derby_10_14' ),
-		new BuildEnvironment( dbName: 'mysql_5_7' ),
-		new BuildEnvironment( dbName: 'mariadb_10_3' ),
-		new BuildEnvironment( dbName: 'postgresql_10' ),
-		new BuildEnvironment( dbName: 'edb_10' ),
-		new BuildEnvironment( dbName: 'oracle_11_2' ),
+		new BuildEnvironment( dbName: 'mysql_8_0' ),
+		new BuildEnvironment( dbName: 'mariadb_10_5' ),
+		new BuildEnvironment( dbName: 'postgresql_12' ),
+		new BuildEnvironment( dbName: 'edb_12' ),
 		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
 		new BuildEnvironment( dbName: 'mssql_2017' ), // Unfortunately there is no SQL Server 2008 image, so we have to test with 2017
 // 		new BuildEnvironment( dbName: 'sybase_16' ), // There only is a Sybase ASE 16 image, so no pint in testing that nightly
+		new BuildEnvironment( dbName: 'sybase_jconn' ),
 		// Long running databases
 		new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true ),
-		new BuildEnvironment( dbName: 'cockroachdb_21_2', node: 'cockroachdb', longRunning: true ),
-		new BuildEnvironment( dbName: 'cockroachdb_23_1', node: 'cockroachdb', longRunning: true ),
 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true )
 	];
 
@@ -69,9 +65,9 @@ stage('Configure') {
 
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
-  print "INFO: Build skipped due to trigger being Branch Indexing"
-  currentBuild.result = 'ABORTED'
-  return
+  	print "INFO: Build skipped due to trigger being Branch Indexing"
+	currentBuild.result = 'NOT_BUILT'
+  	return
 }
 
 stage('Build') {
@@ -106,114 +102,53 @@ stage('Build') {
 					stage('Checkout') {
 						checkout scm
 					}
-					try {
+					tryFinally({
 						stage('Start database') {
 							switch (buildEnv.dbName) {
-								case "h2_1_4":
-									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
-										" -Pgradle.libs.versions.h2=1.4.197 -Pgradle.libs.versions.h2gis=1.5.0"
-									break;
 								case "hsqldb_2_6":
 									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
 										" -Pgradle.libs.versions.hsqldb=2.6.1"
 									break;
-								case "derby_10_14":
-									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
-										" -Pgradle.libs.versions.derby=10.14.2.0"
-									break;
-								case "mysql":
+								case "mysql_8_0":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
 										docker.image('mysql:8.0.31').pull()
 									}
-									sh "./docker_db.sh mysql"
+									sh "./docker_db.sh mysql_8_0"
 									state[buildEnv.tag]['containerName'] = "mysql"
 									break;
-								case "mysql_5_7":
+								case "mariadb_10_5":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mysql:5.7.40').pull()
+										docker.image('mariadb:10.5.25').pull()
 									}
-									sh "./docker_db.sh mysql_5_7"
-									state[buildEnv.tag]['containerName'] = "mysql"
-									break;
-								case "mariadb":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mariadb:10.9.3').pull()
-									}
-									sh "./docker_db.sh mariadb"
+									sh "./docker_db.sh mariadb_10_5"
 									state[buildEnv.tag]['containerName'] = "mariadb"
 									break;
-								case "mariadb_10_3":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mariadb:10.3.36').pull()
-									}
-									sh "./docker_db.sh mariadb_10_3"
-									state[buildEnv.tag]['containerName'] = "mariadb"
-									break;
-								case "postgresql":
+								case "postgresql_12":
 									// use the postgis image to enable the PGSQL GIS (spatial) extension
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('postgis/postgis:15-3.3').pull()
+										docker.image('postgis/postgis:12-3.4').pull()
 									}
-									sh "./docker_db.sh postgresql"
+									sh "./docker_db.sh postgresql_12"
 									state[buildEnv.tag]['containerName'] = "postgres"
 									break;
-								case "postgresql_10":
-									// use the postgis image to enable the PGSQL GIS (spatial) extension
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('postgis/postgis:10-2.5').pull()
-									}
-									sh "./docker_db.sh postgresql_10"
-									state[buildEnv.tag]['containerName'] = "postgres"
-									break;
-								case "edb":
-									docker.image('quay.io/enterprisedb/edb-postgres-advanced:15.2-3.3-postgis').pull()
-									sh "./docker_db.sh edb"
+								case "edb_12":
+									docker.image('quay.io/enterprisedb/edb-postgres-advanced:12.16-3.3-postgis').pull()
+									sh "./docker_db.sh edb_12"
 									state[buildEnv.tag]['containerName'] = "edb"
-									break;
-								case "edb_10":
-									docker.image('quay.io/enterprisedb/edb-postgres-advanced:10.22').pull()
-									sh "./docker_db.sh edb_10"
-									state[buildEnv.tag]['containerName'] = "edb"
-									break;
-								case "oracle":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('gvenzl/oracle-xe:21.3.0-full').pull()
-									}
-									sh "./docker_db.sh oracle"
-									state[buildEnv.tag]['containerName'] = "oracle"
-									break;
-								case "oracle_11_2":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('gvenzl/oracle-xe:11.2.0.2-full').pull()
-									}
-									sh "./docker_db.sh oracle_11"
-									state[buildEnv.tag]['containerName'] = "oracle"
-									break;
-								case "db2":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('ibmcom/db2:11.5.7.0').pull()
-									}
-									sh "./docker_db.sh db2"
-									state[buildEnv.tag]['containerName'] = "db2"
 									break;
 								case "db2_10_5":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('ibmoms/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b').pull()
+									docker.withRegistry('https://quay.io', 'hibernate.quay.io') {
+										docker.image('hibernate/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b').pull()
 									}
 									sh "./docker_db.sh db2_10_5"
 									state[buildEnv.tag]['containerName'] = "db2"
-									break;
-								case "mssql":
-									docker.image('mcr.microsoft.com/mssql/server@sha256:f54a84b8a802afdfa91a954e8ddfcec9973447ce8efec519adf593b54d49bedf').pull()
-									sh "./docker_db.sh mssql"
-									state[buildEnv.tag]['containerName'] = "mssql"
 									break;
 								case "mssql_2017":
 									docker.image('mcr.microsoft.com/mssql/server@sha256:7d194c54e34cb63bca083542369485c8f4141596805611e84d8c8bab2339eede').pull()
 									sh "./docker_db.sh mssql_2017"
 									state[buildEnv.tag]['containerName'] = "mssql"
 									break;
-								case "sybase":
+								case "sybase_jconn":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
 										docker.image('nguoianphu/docker-sybase').pull()
 									}
@@ -222,60 +157,109 @@ stage('Build') {
 									break;
 								case "cockroachdb":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('cockroachdb/cockroach:v22.2.2').pull()
+										docker.image('cockroachdb/cockroach:v23.1.12').pull()
 									}
 									sh "./docker_db.sh cockroachdb"
-									state[buildEnv.tag]['containerName'] = "cockroach"
-									break;
-								case "cockroachdb_22_1":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('cockroachdb/cockroach:v22.1.13').pull()
-									}
-									sh "./docker_db.sh cockroachdb_22_1"
-									state[buildEnv.tag]['containerName'] = "cockroach"
-									break;
-								case "cockroachdb_23_1":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('cockroachdb/cockroach-unstable:v23.1.0-rc.1').pull()
-									}
-									sh "./docker_db.sh cockroachdb_23_1"
 									state[buildEnv.tag]['containerName'] = "cockroach"
 									break;
 							}
 						}
 						stage('Test') {
-							String cmd = "./ci/build.sh ${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
+							String args = "${buildEnv.additionalOptions ?: ''} ${state[buildEnv.tag]['additionalOptions'] ?: ''}"
 							withEnv(["RDBMS=${buildEnv.dbName}"]) {
-								try {
+								tryFinally({
 									if (buildEnv.dbLockableResource == null) {
-										timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
-											sh cmd
+										withCredentials([file(credentialsId: 'sybase-jconnect-driver', variable: 'jconnect_driver')]) {
+											sh 'cp -f $jconnect_driver ./drivers/jconn4.jar'
+											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
+												ciBuild buildEnv, args
+											}
 										}
 									}
 									else {
 										lock(label: buildEnv.dbLockableResource, quantity: 1, variable: 'LOCKED_RESOURCE') {
 											if ( buildEnv.dbLockResourceAsHost ) {
-												cmd += " -DdbHost=${LOCKED_RESOURCE}"
+												args += " -DdbHost=${LOCKED_RESOURCE}"
 											}
 											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
-												sh cmd
+												ciBuild buildEnv, args
 											}
 										}
 									}
-								}
-								finally {
+								}, { // Finally
 									junit '**/target/test-results/test/*.xml,**/target/test-results/testKitTest/*.xml'
-								}
+								})
 							}
 						}
-					}
-					finally {
+					}, { // Finally
 						if ( state[buildEnv.tag]['containerName'] != null ) {
 							sh "docker rm -f ${state[buildEnv.tag]['containerName']}"
 						}
 						// Skip this for PRs
 						if ( !env.CHANGE_ID && buildEnv.notificationRecipients != null ) {
 							handleNotifications(currentBuild, buildEnv)
+						}
+					})
+				}
+			}
+		})
+	}
+	// Don't run additional checks when this is a PR
+	if ( !helper.scmSource.pullRequest ) {
+		executions.put('Reproducible build check', {
+			runBuildOnNode(NODE_PATTERN_BASE) {
+				def javaHome = tool(name: DEFAULT_JDK_TOOL, type: 'jdk')
+				// Use withEnv instead of setting env directly, as that is global!
+				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md
+				withEnv(["JAVA_HOME=${javaHome}", "PATH+JAVA=${javaHome}/bin"]) {
+					stage('Checkout') {
+						checkout scm
+					}
+					stage('Test') {
+						withGradle {
+							def tempDir = pwd(tmp: true)
+							def repo1 = tempDir + '/repo1'
+							def repo2 = tempDir + '/repo2'
+							// build Hibernate ORM two times without any cache and "publish" the resulting artifacts to different maven repositories
+							// so that we can compare them afterwards:
+							sh "./gradlew --no-daemon clean publishToMavenLocal --no-build-cache -Dmaven.repo.local=${repo1}"
+							sh "./gradlew --no-daemon clean publishToMavenLocal --no-build-cache -Dmaven.repo.local=${repo2}"
+
+							sh "sh ci/compare-build-results.sh ${repo1} ${repo2}"
+							sh "cat .buildcompare"
+						}
+					}
+				}
+			}
+		})
+		executions.put('Strict JAXP configuration', {
+			runBuildOnNode(NODE_PATTERN_BASE) {
+				// we want to test with JDK 23 where the strict settings were introduced
+				def testJavaHome = tool(name: "OpenJDK 23 Latest", type: 'jdk')
+				def javaHome = tool(name: DEFAULT_JDK_TOOL, type: 'jdk')
+				// Use withEnv instead of setting env directly, as that is global!
+				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md
+				withEnv(["JAVA_HOME=${javaHome}", "PATH+JAVA=${javaHome}/bin"]) {
+					stage('Checkout') {
+						checkout scm
+					}
+					stage('Test') {
+						withGradle {
+							def tempDir = pwd(tmp: true)
+							def jaxpStrictProperties = tempDir + '/jaxp-strict.properties'
+							def jaxpStrictTemplate = testJavaHome + '/conf/jaxp-strict.properties.template'
+
+							echo 'Copy strict JAXP configuration properties.'
+							sh "cp $jaxpStrictTemplate $jaxpStrictProperties"
+
+							// explicitly calling toString here to prevent Jenkins failures like:
+							//  > Scripts not permitted to use method groovy.lang.GroovyObject invokeMethod java.lang.String java.lang.Object (org.codehaus.groovy.runtime.GStringImpl positive)
+							String args = ("-Ptest.jdk.version=23 -Porg.gradle.java.installations.paths=${javaHome},${testJavaHome}"
+								+ " -Ptest.jdk.launcher.args=\"-Djava.xml.config.file=${jaxpStrictProperties}\"").toString()
+
+							timeout( [time: 60, unit: 'MINUTES'] ) {
+								ciBuild(args)
+							}
 						}
 					}
 				}
@@ -307,18 +291,37 @@ class BuildEnvironment {
 void runBuildOnNode(String label, Closure body) {
 	node( label ) {
 		pruneDockerContainers()
-        try {
-			body()
-        }
-        finally {
-        	// If this is a PR, we clean the workspace at the end
-        	if ( env.CHANGE_BRANCH != null ) {
-        		cleanWs()
-        	}
-        	pruneDockerContainers()
-        }
+    tryFinally(body, {
+      // If this is a PR, we clean the workspace at the end
+      if ( env.CHANGE_BRANCH != null ) {
+        cleanWs()
+      }
+      pruneDockerContainers()
+    })
 	}
 }
+
+void ciBuild(buildEnv, String args) {
+  // On untrusted nodes, we use the same access key as for PRs:
+  // it has limited access, essentially it can only push build scans.
+  def develocityCredentialsId = buildEnv.node ? 'ge.hibernate.org-access-key-pr' : 'ge.hibernate.org-access-key'
+
+  ciBuild(develocityCredentialsId, args)
+}
+
+void ciBuild(String args) {
+  ciBuild('ge.hibernate.org-access-key-pr', args)
+}
+
+void ciBuild(String develocityCredentialsId, String args) {
+  withCredentials([string(credentialsId: develocityCredentialsId,
+      variable: 'DEVELOCITY_ACCESS_KEY')]) {
+    withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
+      sh "./ci/build.sh $args"
+    }
+  }
+}
+
 void pruneDockerContainers() {
 	if ( !sh( script: 'command -v docker || true', returnStdout: true ).trim().isEmpty() ) {
 		sh 'docker container prune -f || true'
@@ -391,4 +394,34 @@ String getParallelResult( RunWrapper build, String parallelBranchName ) {
     	return null;
     }
     return branch.status.result
+}
+
+// try-finally construct that properly suppresses exceptions thrown in the finally block.
+def tryFinally(Closure main, Closure ... finallies) {
+	def mainFailure = null
+	try {
+		main()
+	}
+	catch (Throwable t) {
+		mainFailure = t
+		throw t
+	}
+	finally {
+		finallies.each {it ->
+			try {
+				it()
+			}
+			catch (Throwable t) {
+				if ( mainFailure ) {
+					mainFailure.addSuppressed( t )
+				}
+				else {
+					mainFailure = t
+				}
+			}
+		}
+	}
+	if ( mainFailure ) { // We may reach here if only the "finally" failed
+		throw mainFailure
+	}
 }

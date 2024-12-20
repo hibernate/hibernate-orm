@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.convert.internal;
 
@@ -14,13 +12,11 @@ import java.util.List;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.boot.internal.ClassmateContext;
-import org.hibernate.boot.model.internal.HCANNHelper;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
+import org.hibernate.models.spi.MemberDetails;
 
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.ResolvedTypeWithMembers;
@@ -37,24 +33,21 @@ public class ConverterHelper {
 		return GenericsHelper.extractParameterizedType( base );
 	}
 
-	public static ResolvedType resolveAttributeType(XProperty xProperty, MetadataBuildingContext context) {
-		return resolveMember( xProperty, context ).getType();
+	public static ResolvedType resolveAttributeType(MemberDetails memberDetails, MetadataBuildingContext context) {
+		return resolveMember( memberDetails, context ).getType();
 	}
 
-	public static ResolvedMember<? extends Member> resolveMember(XProperty xProperty, MetadataBuildingContext buildingContext) {
+	public static ResolvedMember<? extends Member> resolveMember(MemberDetails memberDetails, MetadataBuildingContext buildingContext) {
 		final ClassmateContext classmateContext = buildingContext.getBootstrapContext().getClassmateContext();
-		final ReflectionManager reflectionManager = buildingContext.getBootstrapContext().getReflectionManager();
 
-		final ResolvedType declaringClassType = classmateContext.getTypeResolver().resolve(
-				reflectionManager.toClass( xProperty.getDeclaringClass() )
-		);
+		final ResolvedType declaringClassType = classmateContext.getTypeResolver().resolve( memberDetails.getDeclaringType().toJavaClass() );
 		final ResolvedTypeWithMembers declaringClassWithMembers = classmateContext.getMemberResolver().resolve(
 				declaringClassType,
 				null,
 				null
 		);
 
-		final Member member = toMember( xProperty );
+		final Member member = memberDetails.toJavaMember();
 		if ( member instanceof Method ) {
 			for ( ResolvedMethod resolvedMember : declaringClassWithMembers.getMemberMethods() ) {
 				if ( resolvedMember.getName().equals( member.getName() ) ) {
@@ -70,24 +63,12 @@ public class ConverterHelper {
 			}
 		}
 		else {
-			throw new HibernateException( "Unexpected java.lang.reflect.Member type from org.hibernate.annotations.common.reflection.java.JavaXMember : " + member );
+			throw new HibernateException( "Unexpected java.lang.reflect.Member type from org.hibernate.models.spi.MemberDetails : " + member );
 		}
 
 		throw new HibernateException(
 				"Could not locate resolved type information for attribute [" + member.getName() + "] from Classmate"
 		);
-	}
-
-	public static Member toMember(XProperty xProperty) {
-		try {
-			return HCANNHelper.getUnderlyingMember( xProperty );
-		}
-		catch (Exception e) {
-			throw new HibernateException(
-					"Could not resolve member signature from XProperty reference",
-					e
-			);
-		}
 	}
 
 	public static List<ResolvedType> resolveConverterClassParamTypes(
@@ -125,6 +106,14 @@ public class ConverterHelper {
 		if ( erasedCheckType.isPrimitive() ) {
 			erasedCheckType = PrimitiveWrapperHelper.getDescriptorByPrimitiveType( erasedCheckType ).getWrapperClass();
 		}
+		else if ( erasedCheckType.isArray() ) {
+			// converterDefinedType have type parameters if it extends super generic class
+			// but checkType doesn't have any type parameters
+			// comparing erased type is enough
+			// see https://hibernate.atlassian.net/browse/HHH-18012
+			return converterDefinedType.getErasedType() == erasedCheckType;
+		}
+
 		if ( !converterDefinedType.getErasedType().isAssignableFrom( erasedCheckType ) ) {
 			return false;
 		}

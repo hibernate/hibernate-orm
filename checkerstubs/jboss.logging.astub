@@ -7,3 +7,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public interface BasicLogger {
     void tracef(String format, @Nullable Object param1, @Nullable Object param2);
 }
+
+public interface Logger {
+    void tracev(String format, @Nullable Object param1);
+}

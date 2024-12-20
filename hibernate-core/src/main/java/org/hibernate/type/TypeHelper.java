@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -191,11 +189,17 @@ public class TypeHelper {
 			}
 			else {
 				final Type type = types[i];
-				if ( type.isComponentType() ) {
-					final CompositeType compositeType = (CompositeType) type;
-					// need to extract the component values and check for subtype replacements...
-					final Object[] objects =
-							replaceCompositeAssociations(
+				// AnyType is both a CompositeType and an AssociationType
+				// but here we want to treat it as an association
+				if ( type instanceof EntityType || type instanceof CollectionType || type instanceof AnyType ) {
+					copied[i] = types[i].replace( currentOriginal, target[i], session, owner, copyCache, foreignKeyDirection );
+				}
+				else {
+					if ( type instanceof ComponentType ) {
+						final ComponentType compositeType = (ComponentType) type;
+						if ( target[i] != null ) {
+							// need to extract the component values and check for subtype replacements...
+							final Object[] objects = replaceCompositeAssociations(
 									session,
 									copyCache,
 									foreignKeyDirection,
@@ -203,16 +207,10 @@ public class TypeHelper {
 									currentOriginal,
 									compositeType
 							);
-					if ( target[i] != null ) {
-						target[i] = compositeType.replacePropertyValues( target[i], objects, session );
+							target[i] = compositeType.replacePropertyValues( target[i], objects, session );
+						}
 					}
 					copied[i] = target[i];
-				}
-				else if ( !type.isAssociationType() ) {
-					copied[i] = target[i];
-				}
-				else {
-					copied[i] = types[i].replace( currentOriginal, target[i], session, owner, copyCache, foreignKeyDirection );
 				}
 			}
 		}
@@ -224,7 +222,7 @@ public class TypeHelper {
 			Map<Object, Object> copyCache,
 			ForeignKeyDirection foreignKeyDirection,
 			Object target, Object currentOriginal,
-			CompositeType compositeType) {
+			ComponentType compositeType) {
 		final Type[] subtypes = compositeType.getSubtypes();
 		return replaceAssociations(
 				currentOriginal == null

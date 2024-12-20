@@ -1,20 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ExpectedException;
@@ -27,8 +24,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static java.util.Collections.singletonMap;
 import static org.hamcrest.Matchers.is;
-import static org.hibernate.internal.util.collections.CollectionHelper.toMap;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -40,7 +37,7 @@ import static org.junit.Assert.assertThat;
 @SessionFactory
 public class LegacyParameterTests {
 	@Test
-	@TestForIssue( jiraKey = "HHH-9154" )
+	@JiraKey( value = "HHH-9154" )
 	public void testClassAsParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
@@ -54,39 +51,31 @@ public class LegacyParameterTests {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7705")
+	@JiraKey(value = "HHH-7705")
 	public void testSetPropertiesMapWithNullValues(SessionFactoryScope scope) {
 
 		scope.inTransaction(
 				(s) -> {
-					Map<String,String> parameters = toMap( "nickName", null );
-
 					Query<Human> q = s.createQuery(
 							"from Human h where h.nickName = :nickName or (h.nickName is null and :nickName is null)",
 							Human.class
 					);
-					q.setProperties( (parameters) );
+					q.setProperties( singletonMap( "nickName", null ) );
 					assertThat( q.list().size(), is( 0 ) );
 
 					Human human1 = new Human();
 					human1.setId( 2L );
 					human1.setNickName( null );
-					s.save( human1 );
+					s.persist( human1 );
 
-					parameters = new HashMap<>();
-
-					parameters.put( "nickName", null );
 					q = s.createQuery( "from Human h where h.nickName = :nickName or (h.nickName is null and :nickName is null)", Human.class );
-					q.setProperties( (parameters) );
+					q.setProperties( singletonMap( "nickName", null ) );
 					assertThat( q.list().size(), is( 1 ) );
 					Human found = q.list().get( 0 );
 					assertThat( found.getId(), is( human1.getId() ) );
 
-					parameters = new HashMap<>();
-					parameters.put( "nickName", "nick" );
-
 					q = s.createQuery( "from Human h where h.nickName = :nickName or (h.nickName is null and :nickName is null)", Human.class );
-					q.setProperties( (parameters) );
+					q.setProperties( singletonMap( "nickName", "nick" ) );
 					assertThat( q.list().size(), is( 1 ) );
 					found = q.list().get( 0 );
 					assertThat( found.getId(), is( 1L ) );
@@ -95,12 +84,10 @@ public class LegacyParameterTests {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10796")
+	@JiraKey(value = "HHH-10796")
 	public void testSetPropertiesMapNotContainingAllTheParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
-					Map<String,String> parameters = toMap( "nickNames", "nick" );
-
 					List<Integer> intValues = new ArrayList<>();
 					intValues.add( 1 );
 					//noinspection unchecked
@@ -108,14 +95,14 @@ public class LegacyParameterTests {
 							"from Human h where h.nickName in (:nickNames) and h.intValue in (:intValues)"
 					);
 					q.setParameterList( "intValues" , intValues);
-					q.setProperties( (parameters) );
+					q.setProperties( Map.of( "nickNames", "nick" ) );
 					assertThat( q.list().size(), is( 1 ) );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9154" )
+	@JiraKey( value = "HHH-9154" )
 	public void testObjectAsParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
@@ -128,7 +115,7 @@ public class LegacyParameterTests {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13310")
+	@JiraKey(value = "HHH-13310")
 	public void testGetParameterListValue(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -142,7 +129,7 @@ public class LegacyParameterTests {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13310")
+	@JiraKey(value = "HHH-13310")
 	public void testGetParameterListValueAfterParameterExpansion(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -158,7 +145,7 @@ public class LegacyParameterTests {
 
 	@Test
 	@ExpectedException( IllegalStateException.class )
-	@TestForIssue(jiraKey = "HHH-13310")
+	@JiraKey(value = "HHH-13310")
 	public void testGetNotBoundParameterListValue(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -169,7 +156,7 @@ public class LegacyParameterTests {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13310")
+	@JiraKey(value = "HHH-13310")
 	public void testGetPositionalParameterListValue(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -185,7 +172,7 @@ public class LegacyParameterTests {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13310")
+	@JiraKey(value = "HHH-13310")
 	public void testGetPositionalParameterValue(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -201,7 +188,7 @@ public class LegacyParameterTests {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13310")
+	@JiraKey(value = "HHH-13310")
 	public void testGetParameterByPositionListValueAfterParameterExpansion(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -217,7 +204,7 @@ public class LegacyParameterTests {
 
 	@Test
 	@ExpectedException( IllegalStateException.class )
-	@TestForIssue(jiraKey = "HHH-13310")
+	@JiraKey(value = "HHH-13310")
 	public void testGetPositionalNotBoundParameterListValue(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -235,7 +222,7 @@ public class LegacyParameterTests {
 					human.setId( 1L );
 					human.setNickName( "nick" );
 					human.setIntValue( 1 );
-					s.save( human );
+					s.persist( human );
 				}
 		);
 	}

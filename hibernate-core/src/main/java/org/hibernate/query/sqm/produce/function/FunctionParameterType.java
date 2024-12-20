@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.produce.function;
 
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 
 /**
  * A mini-"type system" for HQL function parameters.
@@ -51,6 +49,10 @@ public enum FunctionParameterType {
 	 */
 	BOOLEAN,
 	/**
+	 * @see org.hibernate.type.SqlTypes#isBinaryType(int)
+	 */
+	BINARY,
+	/**
 	 * Indicates a parameter that accepts any type
 	 */
 	ANY,
@@ -85,7 +87,41 @@ public enum FunctionParameterType {
 	STRING_OR_CLOB,
 	/**
 	 * Indicates that the argument should be a spatial type
-	 * @see org.hibernate.type.SqlTypes#isSpatialType(int) 
+	 * @see org.hibernate.type.SqlTypes#isSpatialType(int)
 	 */
-	SPATIAL
+	SPATIAL,
+	/**
+	 * Indicates that the argument should be a JSON type
+	 * @see org.hibernate.type.SqlTypes#isJsonType(int)
+	 * @since 7.0
+	 */
+	JSON,
+	/**
+	 * Indicates that the argument should be a JSON or String type
+	 * @see org.hibernate.type.SqlTypes#isImplicitJsonType(int)
+	 * @since 7.0
+	 */
+	IMPLICIT_JSON,
+	/**
+	 * Indicates that the argument should be an ENUM type
+	 * @see org.hibernate.type.SqlTypes#isEnumType(int)
+	 * @since 7.0
+	 */
+	ENUM,
+	/**
+	 * Indicates that the argument should be a XML type
+	 * @see org.hibernate.type.SqlTypes#isXmlType(int)
+	 * @since 7.0
+	 */
+	XML,
+	/**
+	 * Indicates that the argument should be a XML or String type
+	 * @see org.hibernate.type.SqlTypes#isImplicitXmlType(int)
+	 * @since 7.0
+	 */
+	IMPLICIT_XML,
+	/**
+	 * Indicates a parameter that accepts any type, except untyped expressions like {@code null} literals
+	 */
+	NO_UNTYPED
 }

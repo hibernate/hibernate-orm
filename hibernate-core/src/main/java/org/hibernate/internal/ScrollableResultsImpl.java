@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
@@ -13,6 +11,7 @@ import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.spi.LoadContexts;
 import org.hibernate.sql.results.spi.RowReader;
 
 /**
@@ -124,21 +123,24 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 		}
 
 		final PersistenceContext persistenceContext = getPersistenceContext().getPersistenceContext();
-
+		final LoadContexts loadContexts = persistenceContext.getLoadContexts();
+		loadContexts.register( getJdbcValuesSourceProcessingState() );
 		persistenceContext.beforeLoad();
 		try {
-			currentRow = getRowReader().readRow(
-					getRowProcessingState(),
-					getProcessingOptions()
-			);
+			try {
+				currentRow = getRowReader().readRow( getRowProcessingState() );
 
-			getRowProcessingState().finishRowProcessing();
-			getJdbcValuesSourceProcessingState().finishUp();
+				getRowProcessingState().finishRowProcessing( true );
+				getJdbcValuesSourceProcessingState().finishUp( false );
+			}
+			finally {
+				persistenceContext.afterLoad();
+			}
+			persistenceContext.initializeNonLazyCollections();
 		}
 		finally {
-			persistenceContext.afterLoad();
+			loadContexts.deregister( getJdbcValuesSourceProcessingState() );
 		}
-		persistenceContext.initializeNonLazyCollections();
 
 		afterScrollOperation();
 	}

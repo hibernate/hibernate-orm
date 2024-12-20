@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.refresh;
 
 import java.io.Serializable;
@@ -9,6 +13,7 @@ import java.util.Set;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
@@ -27,6 +32,7 @@ import jakarta.persistence.Table;
 				RefreshTest.RealmEntity.class,
 				RefreshTest.RealmAttributeEntity.class,
 				RefreshTest.ComponentEntity.class,
+				RefreshTest.SimpleEntity.class
 		}
 )
 @SessionFactory
@@ -72,6 +78,33 @@ public class RefreshTest {
 					}
 				}
 		);
+	}
+
+	@Test
+	public void testRefreshWithNullId(SessionFactoryScope scope) {
+		Assertions.assertThrows(
+				IllegalArgumentException.class,
+				() -> {
+					scope.inTransaction(
+							session -> {
+								SimpleEntity se = new SimpleEntity();
+								se.setName( "a" );
+								session.refresh( se );
+							}
+					);
+				}
+		);
+	}
+
+	@Entity(name= "SimpleEntity" )
+	public static class SimpleEntity {
+		@Id
+		Long id;
+		String name;
+
+		public void setName(String name) {
+			this.name = name;
+		}
 	}
 
 	@Table(name="REALM")
@@ -175,7 +208,7 @@ public class RefreshTest {
 	public static class RealmAttributeEntity {
 
 		@Id
-		@ManyToOne(fetch= FetchType.LAZY)
+		@ManyToOne(fetch= FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@JoinColumn(name = "REALM_ID")
 		protected RealmEntity realm;
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.cid;
 
@@ -16,7 +14,7 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -148,14 +146,14 @@ public class CompositeIdTest {
 					//FIXME mke it work in unambigious cases
 					//		assertNotNull(c.id.parent.id);
 					//		assertEquals(p.id.getFirstName(), c.id.parent.id.getFirstName());
-					session.delete( c );
-					session.delete( c.id.parent );
+					session.remove( c );
+					session.remove( c.id.parent );
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10476")
+	@JiraKey(value = "HHH-10476")
 	public void testManyToOneInCompositePkInPC(SessionFactoryScope scope) {
 		ParentPk ppk = new ParentPk();
 		ChildPk cpk = new ChildPk();
@@ -231,8 +229,8 @@ public class CompositeIdTest {
 					//FIXME mke it work in unambigious cases
 //		assertNotNull(c.id.parent.id);
 //		assertEquals(p.id.getFirstName(), c.id.parent.id.getFirstName());
-					session.delete( c );
-					session.delete( c.id.parent );
+					session.remove( c );
+					session.remove( c.id.parent );
 				}
 		);
 	}
@@ -262,9 +260,9 @@ public class CompositeIdTest {
 					assertEquals( channel.id, mag.id.channel.id );
 					assertNotNull( mag.id.presenter );
 					assertEquals( pres.name, mag.id.presenter.name );
-					session.delete( mag );
-					session.delete( mag.id.channel );
-					session.delete( mag.id.presenter );
+					session.remove( mag );
+					session.remove( mag.id.channel );
+					session.remove( mag.id.presenter );
 				}
 		);
 	}
@@ -295,7 +293,7 @@ public class CompositeIdTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10476")
+	@JiraKey(value = "HHH-10476")
 	public void testManyToOneInCompositeIdClassInPC(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -329,7 +327,7 @@ public class CompositeIdTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10476")
+	@JiraKey(value = "HHH-10476")
 	public void testGetWithUpdatedDetachedEntityInCompositeID(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -367,7 +365,7 @@ public class CompositeIdTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10476")
+	@JiraKey(value = "HHH-10476")
 	public void testGetWithDetachedEntityInCompositeIDWithManagedCopy(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -423,9 +421,9 @@ public class CompositeIdTest {
 					assertNotNull( program.id.presenter );
 					assertNotNull( program.text );
 					assertEquals( pres.name, program.id.presenter.name );
-					session.delete( program );
-					session.delete( program.id.channel );
-					session.delete( program.id.presenter );
+					session.remove( program );
+					session.remove( program.id.channel );
+					session.remove( program.id.presenter );
 				}
 		);
 	}
@@ -454,9 +452,9 @@ public class CompositeIdTest {
 					assertNotNull( program.presenter );
 					assertNotNull( program.text );
 					assertEquals( pres.name, program.presenter.name );
-					session.delete( program );
-					session.delete( program.channel );
-					session.delete( program.presenter );
+					session.remove( program );
+					session.remove( program.channel );
+					session.remove( program.presenter );
 				}
 		);
 	}

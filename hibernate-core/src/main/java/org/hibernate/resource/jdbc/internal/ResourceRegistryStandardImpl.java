@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc.internal;
 
@@ -20,19 +18,19 @@ import org.hibernate.JDBCException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.jdbc.ResourceRegistry;
-import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 
 /**
- * Helps to track statements and resultsets which need being closed.
+ * Helps to track {@link Statement}s and {@link ResultSet}s which need to be closed.
  * This class is not threadsafe.
  * <p>
- * Note regarding performance: we had evidence that allocating Iterators
+ * Note regarding performance: we had evidence that allocating {@code Iterator}s
  * to implement the cleanup on each element recursively was the dominant
- * resource cost, so we decided using "forEach" and lambdas in this case.
- * However the forEach/lambda combination is able to dodge allocating
- * Iterators on HashMap and ArrayList, but not on HashSet (at least on JDK8 and 11).
- * Therefore some types which should ideally be modelled as a Set have
- * been implemented using HashMap.
+ * resource cost, so we decided to use "for each" and lambdas in this case.
+ * However, the "for each"/lambda combination is able to dodge allocating
+ * {@code Iterator}s on {@code HashMap} and {@code ArrayList}, but not on {@code HashSet} (at least on JDK8 and 11).
+ * Therefore some types which should ideally be modelled as a {@code Set} have
+ * been implemented using {@code HashMap}.
  *
  * @author Steve Ebersole
  * @author Sanne Grinovero
@@ -49,7 +47,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	//but in this case the overhead of HashSet is not negligible.
 	private static final HashMap<ResultSet,Object> EMPTY = new HashMap<>( 1, 0.2f );
 
-	private final JdbcObserver jdbcObserver;
+	private final JdbcEventHandler jdbcEventHandler;
 
 	private final HashMap<Statement, HashMap<ResultSet,Object>> xref = new HashMap<>();
 	private HashMap<ResultSet,Object> unassociatedResultSets;
@@ -64,17 +62,17 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		this( null );
 	}
 
-	public ResourceRegistryStandardImpl(JdbcObserver jdbcObserver) {
-		this.jdbcObserver = jdbcObserver;
+	public ResourceRegistryStandardImpl(JdbcEventHandler jdbcEventHandler) {
+		this.jdbcEventHandler = jdbcEventHandler;
 	}
 
 	@Override
 	public boolean hasRegisteredResources() {
 		return hasRegistered( xref )
-				|| hasRegistered( unassociatedResultSets )
-				|| hasRegistered( blobs )
-				|| hasRegistered( clobs )
-				|| hasRegistered( nclobs );
+			|| hasRegistered( unassociatedResultSets )
+			|| hasRegistered( blobs )
+			|| hasRegistered( clobs )
+			|| hasRegistered( nclobs );
 	}
 
 	@Override
@@ -182,8 +180,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	public static void close(Statement statement) {
+	private static void close(Statement statement) {
 		log.tracef( "Closing prepared statement [%s]", statement );
 
 		try {
@@ -245,7 +242,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 		else {
 			if ( unassociatedResultSets == null ) {
-				this.unassociatedResultSets = new HashMap<ResultSet,Object>();
+				this.unassociatedResultSets = new HashMap<>();
 			}
 			unassociatedResultSets.put( resultSet, PRESENT );
 		}
@@ -328,8 +325,8 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void releaseResources() {
 		log.trace( "Releasing JDBC resources" );
 
-		if ( jdbcObserver != null ) {
-			jdbcObserver.jdbcReleaseRegistryResourcesStart();
+		if ( jdbcEventHandler != null ) {
+			jdbcEventHandler.jdbcReleaseRegistryResourcesStart();
 		}
 
 		xref.forEach( ResourceRegistryStandardImpl::releaseXref );
@@ -372,6 +369,10 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 				}
 			} );
 			nclobs = null;
+		}
+
+		if ( jdbcEventHandler != null ) {
+			jdbcEventHandler.jdbcReleaseRegistryResourcesEnd();
 		}
 	}
 

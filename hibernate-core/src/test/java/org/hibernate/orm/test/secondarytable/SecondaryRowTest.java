@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.secondarytable;
 
 import java.time.Instant;
@@ -82,7 +86,7 @@ public class SecondaryRowTest {
 
 	private static void verifySecondaryRows(String table, int expectedCount, SessionImplementor session) {
 		final String sql = "select count(1) from " + table;
-		final int count = session.createNativeQuery( sql, Integer.class ).getSingleResult();
+		final int count = (int) session.createNativeQuery( sql, Integer.class ).getSingleResult();
 		assertThat( count ).isEqualTo( expectedCount );
 	}
 }

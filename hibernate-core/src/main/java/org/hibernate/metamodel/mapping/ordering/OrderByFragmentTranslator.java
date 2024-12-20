@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.ordering;
 
@@ -26,8 +24,8 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
  * with an order set or map.
  *
  * @author Steve Ebersole
+ *
  * @see jakarta.persistence.OrderBy
- * @see org.hibernate.annotations.OrderBy
  */
 public class OrderByFragmentTranslator {
 	private static final Logger LOG = Logger.getLogger( OrderByFragmentTranslator.class.getName() );

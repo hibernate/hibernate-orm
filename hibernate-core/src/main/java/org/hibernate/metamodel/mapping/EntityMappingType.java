@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
@@ -15,8 +13,9 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.Filter;
+import org.hibernate.Incubating;
 import org.hibernate.Internal;
-import org.hibernate.boot.jaxb.mapping.JaxbEntity;
+import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -56,14 +55,15 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
  * @author Steve Ebersole
  */
 public interface EntityMappingType
-		extends ManagedMappingType, EntityValuedModelPart, Loadable, Restrictable, Discriminable {
+		extends ManagedMappingType, EntityValuedModelPart, Loadable, Restrictable, Discriminable,
+		SoftDeletableModelPart {
 
 	/**
 	 * The entity name.
 	 * <p/>
 	 * For most entities, this will be the fully-qualified name
 	 * of the entity class.  The alternative is an explicit
-	 * {@linkplain JaxbEntity#getName() entity-name} which takes precedence if provided
+	 * {@linkplain org.hibernate.boot.jaxb.mapping.spi.JaxbEntity#getName() entity-name} which takes precedence if provided
 	 *
 	 * @apiNote Different from {@link Entity#name()}, which is just a glorified
 	 * SQM "import" name
@@ -102,6 +102,11 @@ public interface EntityMappingType
 	@Override
 	default JavaType<?> getJavaType() {
 		return getMappedJavaType();
+	}
+
+	@Override
+	default EntityMappingType asEntityMappingType() {
+		return this;
 	}
 
 	@Override
@@ -225,7 +230,10 @@ public interface EntityMappingType
 
 	/**
 	 * Is this class explicit polymorphism only?
+	 *
+	 * @deprecated No longer supported
 	 */
+	@Deprecated
 	boolean isExplicitPolymorphism();
 
 	/**
@@ -236,7 +244,6 @@ public interface EntityMappingType
 	default String getDiscriminatorSQLValue() {
 		return getDiscriminatorValue().toString();
 	}
-
 
 	default EntityMappingType getRootEntityDescriptor() {
 		final EntityMappingType superMappingType = getSuperMappingType();
@@ -274,37 +281,6 @@ public interface EntityMappingType
 	default void pruneForSubclasses(TableGroup tableGroup, Map<String, EntityNameUse> entityNameUses) {
 	}
 
-	/**
-	 * Adapts the table group and its table reference as well as table reference joins
-	 * in a way such that unnecessary tables or joins are omitted if possible,
-	 * based on the given treated entity names.
-	 *
-	 * The goal is to e.g. remove join inheritance "branches" or union selects that are impossible.
-	 *
-	 * Consider the following example:
-	 * <code>
-	 *     class BaseEntity {}
-	 *     class Sub1 extends BaseEntity {}
-	 *     class Sub1Sub1 extends Sub1 {}
-	 *     class Sub1Sub2 extends Sub1 {}
-	 *     class Sub2 extends BaseEntity {}
-	 *     class Sub2Sub1 extends Sub2 {}
-	 *     class Sub2Sub2 extends Sub2 {}
-	 * </code>
-	 *
-	 * If the <code>treatedEntityNames</code> only contains <code>Sub1</code> or any of its subtypes,
-	 * this means that <code>Sub2</code> and all subtypes are impossible,
-	 * thus the joins/selects for these types shall be omitted in the given table group.
-	 *
-	 * @param tableGroup The table group to prune subclass tables for
-	 * @param treatedEntityNames The entity names for which path usages were registered
-	 * @deprecated Use {@link #pruneForSubclasses(TableGroup, Map)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	default void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
-	}
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Special model parts - identifier, discriminator, etc
 
@@ -315,10 +291,44 @@ public interface EntityMappingType
 	EntityIdentifierMapping getIdentifierMapping();
 
 	/**
+	 * Mapping details for the entity's identifier.  This is shared across all
+	 * entity mappings within an inheritance hierarchy.
+	 */
+	default EntityIdentifierMapping getIdentifierMappingForJoin() {
+		return getIdentifierMapping();
+	}
+
+	/**
 	 * Mapping details for the entity's discriminator.  This is shared across all
 	 * entity mappings within an inheritance hierarchy.
 	 */
 	EntityDiscriminatorMapping getDiscriminatorMapping();
+
+	/**
+	 * Returns {@code true} if this entity type's hierarchy is configured to return
+	 * {@linkplain ConcreteProxy concrete-typed} proxies.
+	 *
+	 * @see ConcreteProxy
+	 * @since 6.6
+	 */
+	@Incubating
+	default boolean isConcreteProxy() {
+		return false;
+	}
+
+	/**
+	 * If this entity is configured to return {@linkplain ConcreteProxy concrete-typed}
+	 * proxies, this method queries the entity table(s) do determine the concrete entity type
+	 * associated with the provided id and returns its persister. Otherwise, this method
+	 * simply returns this entity persister.
+	 *
+	 * @see #isConcreteProxy()
+	 * @since 6.6
+	 */
+	@Incubating
+	default EntityMappingType resolveConcreteProxyTypeForId(Object id, SharedSessionContractImplementor session) {
+		return this;
+	}
 
 	/**
 	 * Mapping details for the entity's version when using the
@@ -350,6 +360,18 @@ public interface EntityMappingType
 	 * The mapping for the row-id of the entity, if one is defined.
 	 */
 	EntityRowIdMapping getRowIdMapping();
+
+	/**
+	 * Mapping for soft-delete support, or {@code null} if soft-delete not defined
+	 */
+	default SoftDeleteMapping getSoftDeleteMapping() {
+		return null;
+	}
+
+	@Override
+	default TableDetails getSoftDeleteTableDetails() {
+		return getIdentifierTableDetails();
+	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -419,11 +441,8 @@ public interface EntityMappingType
 	/**
 	 * Visit the mappings, but limited to just attributes defined
 	 * in the targetType or its super-type(s) if any.
-	 *
-	 * @apiNote Passing {@code null} indicates that subclasses should be included.  This
-	 * matches legacy non-TREAT behavior and meets the need for EntityGraph processing
 	 */
-	default void visitAttributeMappings(Consumer<? super AttributeMapping> action, EntityMappingType targetType) {
+	default void visitAttributeMappings(Consumer<? super AttributeMapping> action) {
 		getAttributeMappings().forEach( action );
 	}
 
@@ -442,6 +461,10 @@ public interface EntityMappingType
 	}
 
 	void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer);
+
+	default String getImportedName() {
+		return getEntityPersister().getImportedName();
+	}
 
 	interface ConstraintOrderedTableConsumer {
 		void consume(String tableExpression, Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier);
@@ -501,8 +524,8 @@ public interface EntityMappingType
 	// Loadable
 
 	@Override
-	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
-		return getEntityPersister().isAffectedByEnabledFilters( influencers );
+	default boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+		return getEntityPersister().isAffectedByEnabledFilters( influencers, onlyApplyForLoadByKeyFilters );
 	}
 
 	@Override
@@ -604,8 +627,16 @@ public interface EntityMappingType
 			TableGroup tableGroup,
 			boolean useQualifier,
 			Map<String, Filter> enabledFilters,
+			boolean onlyApplyLoadByKeyFilters,
 			SqlAstCreationState creationState) {
-		getEntityPersister().applyFilterRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, creationState );
+		getEntityPersister().applyFilterRestrictions(
+				predicateConsumer,
+				tableGroup,
+				useQualifier,
+				enabledFilters,
+				onlyApplyLoadByKeyFilters,
+				creationState
+		);
 	}
 
 	@Override
@@ -614,9 +645,23 @@ public interface EntityMappingType
 			TableGroup tableGroup,
 			boolean useQualifier,
 			Map<String, Filter> enabledFilters,
+			boolean onlyApplyLoadByKeyFilters,
 			Set<String> treatAsDeclarations,
 			SqlAstCreationState creationState) {
-		getEntityPersister().applyBaseRestrictions( predicateConsumer, tableGroup, useQualifier, enabledFilters, treatAsDeclarations, creationState );
+		getEntityPersister().applyBaseRestrictions(
+				predicateConsumer,
+				tableGroup,
+				useQualifier,
+				enabledFilters,
+				onlyApplyLoadByKeyFilters,
+				treatAsDeclarations,
+				creationState
+		);
+	}
+
+	@Override
+	default boolean hasWhereRestrictions() {
+		return getEntityPersister().hasWhereRestrictions();
 	}
 
 	@Override

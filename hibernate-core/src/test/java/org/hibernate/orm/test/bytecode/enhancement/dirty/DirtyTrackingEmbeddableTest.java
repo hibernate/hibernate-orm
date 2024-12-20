@@ -1,59 +1,72 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.dirty;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 @JiraKey( "HHH-16774" )
-@RunWith( BytecodeEnhancerRunner.class )
+@JiraKey( "HHH-16952" )
+@BytecodeEnhanced
 public class DirtyTrackingEmbeddableTest {
 
-    @Test
-    public void test() {
-        SimpleEntity entity = new SimpleEntity();
-        Address address = new Address();
-        entity.address = address;
-        EnhancerTestUtils.clearDirtyTracking( entity );
+	@Test
+	public void test() {
+		SimpleEntity entity = new SimpleEntity();
+		Address1 address1 = new Address1();
+		entity.address1 = address1;
+		Address2 address2 = new Address2();
+		entity.address2 = address2;
+		EnhancerTestUtils.clearDirtyTracking( entity );
 
-        // testing composite object
-        address.city = "Arendal";
-        EnhancerTestUtils.checkDirtyTracking( entity, "address" );
-        EnhancerTestUtils.clearDirtyTracking( entity );
-    }
+		// testing composite object
+		address1.city = "Arendal";
+		address2.city = "Arendal";
+		EnhancerTestUtils.checkDirtyTracking( entity, "address1", "address2" );
+		EnhancerTestUtils.clearDirtyTracking( entity );
+	}
 
-    // --- //
+	// --- //
 
-    @Embeddable
-    private static class Address {
-        String street1;
-        String street2;
-        String city;
-        String state;
-        String zip;
-        String phone;
-    }
+	@Embeddable
+	private static class Address1 {
+		String street1;
+		String street2;
+		String city;
+		String state;
+		String zip;
+		String phone;
+	}
 
-    @Entity
-    private static class SimpleEntity {
+	private static class Address2 {
+		String street1;
+		String street2;
+		String city;
+		String state;
+		String zip;
+		String phone;
+	}
 
-        @Id
-        Long id;
+	@Entity
+	private static class SimpleEntity {
 
-        String name;
+		@Id
+		Long id;
 
-        Address address;
+		String name;
 
-    }
+		Address1 address1;
+		@Embedded
+		Address2 address2;
+
+	}
 }

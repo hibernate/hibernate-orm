@@ -27,7 +27,7 @@
  *     </li>
  * </ol>
  *
- * @apiNote The API defined in this package replaced the now-deprecated interface
- *          {@link org.hibernate.cfg.NamingStrategy} from older versions of Hibernate.
+ * @apiNote The API defined in this package replaced the now-removed interface
+ *          {@code org.hibernate.cfg.NamingStrategy} from older versions of Hibernate.
  */
 package org.hibernate.boot.model.naming;

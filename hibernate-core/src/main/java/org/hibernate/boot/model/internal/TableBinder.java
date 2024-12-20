@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
-import java.util.ArrayList;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.hibernate.AnnotationException;
@@ -23,6 +21,8 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.mapping.Any;
+import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -43,12 +43,11 @@ import org.jboss.logging.Logger;
 import jakarta.persistence.Index;
 import jakarta.persistence.UniqueConstraint;
 
-import static java.util.Collections.emptyList;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
-import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.internal.util.StringHelper.nullIfBlank;
 import static org.hibernate.internal.util.StringHelper.unquote;
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
@@ -57,7 +56,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  * @author Emmanuel Bernard
  */
 public class TableBinder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, TableBinder.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, TableBinder.class.getName() );
 
 	private MetadataBuildingContext buildingContext;
 
@@ -65,7 +64,6 @@ public class TableBinder {
 	private String catalog;
 	private String name;
 	private boolean isAbstract;
-	private List<UniqueConstraintHolder> uniqueConstraints;
 	private String ownerEntityTable;
 	private String associatedEntityTable;
 	private String propertyName;
@@ -76,7 +74,9 @@ public class TableBinder {
 	private String associatedEntity;
 	private String associatedJpaEntity;
 	private boolean isJPA2ElementCollection;
-	private List<JPAIndexHolder> jpaIndexHolders;
+	private UniqueConstraint[] uniqueConstraints;
+	private Index[] indexes;
+	private String options;
 
 	public void setBuildingContext(MetadataBuildingContext buildingContext) {
 		this.buildingContext = buildingContext;
@@ -103,11 +103,15 @@ public class TableBinder {
 	}
 
 	public void setUniqueConstraints(UniqueConstraint[] uniqueConstraints) {
-		this.uniqueConstraints = TableBinder.buildUniqueConstraintHolders( uniqueConstraints );
+		this.uniqueConstraints = uniqueConstraints;
 	}
 
-	public void setJpaIndex(Index[] jpaIndex){
-		this.jpaIndexHolders = buildJpaIndexHolder( jpaIndex );
+	public void setJpaIndex(Index[] indexes){
+		this.indexes = indexes;
+	}
+
+	public void setOptions(String options) {
+		this.options = options;
 	}
 
 	public void setJPA2ElementCollection(boolean isJPA2ElementCollection) {
@@ -193,7 +197,7 @@ public class TableBinder {
 					);
 				}
 				else {
-					name =  namingStrategy.determineJoinTableName(
+					name = namingStrategy.determineJoinTableName(
 							new ImplicitJoinTableNameSource() {
 								private final EntityNaming owningEntityNaming = new EntityNaming() {
 									@Override
@@ -292,7 +296,8 @@ public class TableBinder {
 						: namingStrategyHelper.determineImplicitName( buildingContext ),
 				isAbstract,
 				uniqueConstraints,
-				jpaIndexHolders,
+				indexes,
+				options,
 				buildingContext,
 				null,
 				null
@@ -314,7 +319,7 @@ public class TableBinder {
 
 		final Identifier logicalName;
 		if ( isJPA2ElementCollection ) {
-			logicalName	= buildingContext.getBuildingOptions().getImplicitNamingStrategy().determineCollectionTableName(
+			logicalName = buildingContext.getBuildingOptions().getImplicitNamingStrategy().determineCollectionTableName(
 					new ImplicitCollectionTableNameSource() {
 						private final EntityNaming owningEntityNaming = new EntityNaming() {
 							@Override
@@ -434,7 +439,7 @@ public class TableBinder {
 			String catalog,
 			Identifier logicalName,
 			boolean isAbstract,
-			List<UniqueConstraintHolder> uniqueConstraints,
+			UniqueConstraint[] uniqueConstraints,
 			MetadataBuildingContext buildingContext) {
 		return buildAndFillTable(
 				schema,
@@ -442,6 +447,7 @@ public class TableBinder {
 				logicalName,
 				isAbstract,
 				uniqueConstraints,
+				null,
 				null,
 				buildingContext,
 				null,
@@ -454,7 +460,7 @@ public class TableBinder {
 			String catalog,
 			Identifier logicalName,
 			boolean isAbstract,
-			List<UniqueConstraintHolder> uniqueConstraints,
+			UniqueConstraint[] uniqueConstraints,
 			MetadataBuildingContext buildingContext,
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
@@ -464,6 +470,7 @@ public class TableBinder {
 				logicalName,
 				isAbstract,
 				uniqueConstraints,
+				null,
 				null,
 				buildingContext,
 				subselect,
@@ -476,19 +483,52 @@ public class TableBinder {
 			String catalog,
 			Identifier logicalName,
 			boolean isAbstract,
-			List<UniqueConstraintHolder> uniqueConstraints,
-			List<JPAIndexHolder> jpaIndexHolders,
+			UniqueConstraint[] uniqueConstraints,
+			Index[] indexes,
+			String options,
 			MetadataBuildingContext buildingContext,
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
-		schema = nullIfEmpty( schema );
-		catalog = nullIfEmpty( catalog );
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 
-		InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+		final Table table = addTable(
+				nullIfBlank( schema ),
+				nullIfBlank( catalog ),
+				logicalName,
+				isAbstract,
+				buildingContext,
+				subselect,
+				denormalizedSuperTableXref,
+				metadataCollector
+		);
 
-		final Table table;
+		if ( uniqueConstraints != null ) {
+			new IndexBinder( buildingContext ).bindUniqueConstraints( table, uniqueConstraints );
+		}
+
+		if ( indexes != null ) {
+			new IndexBinder( buildingContext ).bindIndexes( table, indexes );
+		}
+
+		if ( options != null ) {
+			table.setOptions( options );
+		}
+		metadataCollector.addTableNameBinding( logicalName, table );
+
+		return table;
+	}
+
+	private static Table addTable(
+			String schema,
+			String catalog,
+			Identifier logicalName,
+			boolean isAbstract,
+			MetadataBuildingContext buildingContext,
+			String subselect,
+			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref,
+			InFlightMetadataCollector metadataCollector) {
 		if ( denormalizedSuperTableXref != null ) {
-			table = metadataCollector.addDenormalizedTable(
+			return metadataCollector.addDenormalizedTable(
 					schema,
 					catalog,
 					logicalName.render(),
@@ -499,7 +539,7 @@ public class TableBinder {
 			);
 		}
 		else {
-			table = metadataCollector.addTable(
+			return metadataCollector.addTable(
 					schema,
 					catalog,
 					logicalName.render(),
@@ -508,18 +548,6 @@ public class TableBinder {
 					buildingContext
 			);
 		}
-
-		if ( isNotEmpty( uniqueConstraints ) ) {
-			metadataCollector.addUniqueConstraintHolders( table, uniqueConstraints );
-		}
-
-		if ( isNotEmpty( jpaIndexHolders ) ) {
-			metadataCollector.addJpaIndexHolders( table, jpaIndexHolders );
-		}
-
-		metadataCollector.addTableNameBinding( logicalName, table );
-
-		return table;
 	}
 
 	public static void bindForeignKey(
@@ -561,7 +589,7 @@ public class TableBinder {
 		}
 		value.createForeignKey( referencedEntity, joinColumns );
 		if ( unique ) {
-			value.createUniqueKey();
+			value.createUniqueKey( buildingContext );
 		}
 	}
 
@@ -676,7 +704,7 @@ public class TableBinder {
 					catch (MappingException ignore) {
 					}
 				}
-				if ( referencedColumn == null ) {
+				if ( referencedColumn == null || columns == null ) {
 					throw me;
 				}
 			}
@@ -736,13 +764,35 @@ public class TableBinder {
 			PersistentClass referencedEntity,
 			AnnotatedJoinColumns joinColumns,
 			SimpleValue value) {
-		final List<Column> idColumns = referencedEntity instanceof JoinedSubclass
-				? referencedEntity.getKey().getColumns()
-				: referencedEntity.getIdentifier().getColumns();
-		for ( Column column: idColumns ) {
+		final KeyValue keyValue = referencedEntity instanceof JoinedSubclass
+				? referencedEntity.getKey()
+				: referencedEntity.getIdentifier();
+		final List<Column> idColumns = keyValue.getColumns();
+		for ( int i = 0; i < idColumns.size(); i++ ) {
+			final Column column = idColumns.get(i);
 			final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
-			firstColumn.linkValueUsingDefaultColumnNaming( column, referencedEntity, value);
+			firstColumn.linkValueUsingDefaultColumnNaming( i, column, referencedEntity, value );
 			firstColumn.overrideFromReferencedColumnIfNecessary( column );
+			final Column createdColumn = firstColumn.getMappingColumn();
+			if ( createdColumn != null ) {
+				final String logicalColumnName = createdColumn.getQuotedName();
+				if ( logicalColumnName != null && joinColumns.hasMapsId() ) {
+					final Value idValue = joinColumns.resolveMapsId().getValue();
+					final Column idColumn = idValue.getColumns().get(i);
+					// infer the names of the primary key column
+					// from the join column of the association
+					// as (sorta) required by the JPA spec
+					if ( !idColumn.getQuotedName().equals(logicalColumnName) ) {
+						idColumn.setName( logicalColumnName );
+						idValue.getTable().columnRenamed( idColumn);
+					}
+				}
+			}
+		}
+		if ( keyValue instanceof Component
+				&& ( (Component) keyValue ).isSorted()
+				&& value instanceof DependantValue ) {
+			( (DependantValue) value ).setSorted( true );
 		}
 	}
 
@@ -769,6 +819,9 @@ public class TableBinder {
 			}
 			return element.getColumns();
 		}
+		else if (value instanceof Any) {
+			return ( (Any) value ).getKeyDescriptor().getColumns();
+		}
 		else {
 			return value.getColumns();
 		}
@@ -781,8 +834,21 @@ public class TableBinder {
 			SimpleValue simpleValue) {
 		final List<Column> valueColumns = value.getColumns();
 		final List<AnnotatedJoinColumn> columns = joinColumns.getJoinColumns();
+		final boolean mapsId = joinColumns.hasMapsId();
+		final List<Column> idColumns = mapsId ? joinColumns.resolveMapsId().getColumns() : null;
 		for ( int i = 0; i < columns.size(); i++ ) {
 			final AnnotatedJoinColumn joinColumn = columns.get(i);
+			if ( mapsId ) {
+				// infer the names of the primary key column
+				// from the join column of the association
+				// as (sorta) required by the JPA spec
+				final Column column = idColumns.get(i);
+				final String logicalColumnName = joinColumn.getLogicalColumnName();
+				if ( logicalColumnName != null ) {
+					column.setName( logicalColumnName );
+					simpleValue.getTable().columnRenamed( column);
+				}
+			}
 			final Column synthCol = valueColumns.get(i);
 			if ( joinColumn.isNameDeferred() ) {
 				//this has to be the default value
@@ -795,47 +861,36 @@ public class TableBinder {
 		}
 	}
 
-	public static void addIndexes(Table table, org.hibernate.annotations.Index[] indexes, MetadataBuildingContext context) {
-		for ( org.hibernate.annotations.Index index : indexes ) {
-			//no need to handle inSecondPass here since it is only called from EntityBinder
-			context.getMetadataCollector().addSecondPass(
-					new IndexOrUniqueKeySecondPass( table, index.name(), index.columnNames(), context )
-			);
-		}
+	static void addJpaIndexes(Table table, Index[] indexes, MetadataBuildingContext context) {
+		new IndexBinder( context ).bindIndexes( table, indexes );
 	}
 
-	public static void addIndexes(Table table, Index[] indexes, MetadataBuildingContext context) {
-		context.getMetadataCollector().addJpaIndexHolders( table, buildJpaIndexHolder( indexes ) );
-	}
-
-	public static List<JPAIndexHolder> buildJpaIndexHolder(Index[] indexes) {
-		List<JPAIndexHolder> holders = new ArrayList<>( indexes.length );
-		for ( Index index : indexes ) {
-			holders.add( new JPAIndexHolder( index ) );
-		}
-		return holders;
-	}
-
-	/**
-	 * Build a list of {@link UniqueConstraintHolder} instances given a list of
-	 * {@link UniqueConstraint} annotations.
-	 *
-	 * @param annotations The {@link UniqueConstraint} annotations.
-	 *
-	 * @return The built {@link UniqueConstraintHolder} instances.
-	 */
-	public static List<UniqueConstraintHolder> buildUniqueConstraintHolders(UniqueConstraint[] annotations) {
-		List<UniqueConstraintHolder> result;
-		if ( annotations == null || annotations.length == 0 ) {
-			result = emptyList();
-		}
-		else {
-			result = arrayList( annotations.length );
-			for ( UniqueConstraint uc : annotations ) {
-				result.add( new UniqueConstraintHolder().setName( uc.name(), !uc.name().isEmpty() ).setColumns( uc.columnNames() ) );
+	static void addTableCheck(
+			Table table,
+			jakarta.persistence.CheckConstraint[] checkConstraintAnnotationUsages) {
+		if ( isNotEmpty( checkConstraintAnnotationUsages ) ) {
+			for ( jakarta.persistence.CheckConstraint checkConstraintAnnotationUsage : checkConstraintAnnotationUsages ) {
+				table.addCheck(
+						new CheckConstraint(
+								checkConstraintAnnotationUsage.name(),
+								checkConstraintAnnotationUsage.constraint(),
+								checkConstraintAnnotationUsage.options()
+						)
+				);
 			}
 		}
-		return result;
+	}
+
+	static void addTableComment(Table table, String comment) {
+		if ( isNotBlank( comment ) ) {
+			table.setComment( comment );
+		}
+	}
+
+	static void addTableOptions(Table table, String options) {
+		if ( isNotBlank( options ) ) {
+			table.setOptions( options );
+		}
 	}
 
 	public void setDefaultName(

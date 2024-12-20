@@ -1,17 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast;
 
+import java.util.List;
 import java.util.Set;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -22,6 +24,20 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker {
 
 	SessionFactoryImplementor getSessionFactory();
+
+	/**
+	 * Returns the literal value of the given expression, inlining a parameter value if necessary.
+	 * @since 7.0
+	 */
+	<X> X getLiteralValue(Expression expression);
+
+	/**
+	 * Renders a named set returning function.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	void renderNamedSetReturningFunction(String functionName, List<? extends SqlAstNode> sqlAstArguments, AnonymousTupleTableGroupProducer tupleType, String tableIdentifierVariable, SqlAstNodeRenderingMode argumentRenderingMode);
 
 	/**
 	 * Renders the given SQL AST node with the given rendering mode.
@@ -41,8 +57,8 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	Stack<Clause> getCurrentClauseStack();
 
 	/**
-	 * Not the best spot for this.  Its the table names collected while walking the SQL AST.
-	 * Its ok here because the translator is consider a one-time-use.  It just needs to be called
+	 * Not the best spot for this.  Returns the table names collected while walking the SQL AST.
+	 * It's ok here because the translator is consider a one-time-use.  It just needs to be called
 	 * after translation.
 	 *
 	 * A better option is probably to have "translation" objects that expose the affected table-names.

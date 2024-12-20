@@ -1,17 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
-
 package org.hibernate.boot.model;
 
 import org.hibernate.service.JavaServiceLoadable;
@@ -52,8 +42,8 @@ public interface FunctionContributor {
 	 * The range 0-500 is reserved for Hibernate, range 500-1000 for libraries and
 	 * 1000-Integer.MAX_VALUE for user-defined FunctionContributors.
 	 * <p>
-	 * Contributions from higher precedence contributors (higher numbers) effectively override 
-	 * contributions from lower precedence.  E.g. if a contributor with precedence 1000 contributes a 
+	 * Contributions from higher precedence contributors (higher numbers) effectively override
+	 * contributions from lower precedence.  E.g. if a contributor with precedence 1000 contributes a
 	 * function named {@code "max"}, that will override Hibernate's standard function of that name.
 	 *
 	 * @return the ordinal for this FunctionContributor

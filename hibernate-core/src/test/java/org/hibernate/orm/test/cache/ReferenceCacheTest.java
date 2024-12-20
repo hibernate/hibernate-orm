@@ -1,27 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache;
-
-import jakarta.persistence.Cacheable;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.Proxy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.entity.EntityPersister;
 
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -33,8 +29,8 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		configuration.setProperty( AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES, "true" );
-		configuration.setProperty( AvailableSettings.USE_QUERY_CACHE, "true" );
+		configuration.setProperty( AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES, true );
+		configuration.setProperty( AvailableSettings.USE_QUERY_CACHE, true );
 	}
 
 	@Override
@@ -54,7 +50,7 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 		// save a reference in one session
 		Session s = openSession();
 		s.beginTransaction();
-		s.save( myReferenceData );
+		s.persist( myReferenceData );
 		s.getTransaction().commit();
 		s.close();
 
@@ -62,7 +58,7 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 //		MyReferenceData loaded = (MyReferenceData) s.get( MyReferenceData.class, 1 );
-		MyReferenceData loaded = (MyReferenceData) s.load( MyReferenceData.class, 1 );
+		MyReferenceData loaded = (MyReferenceData) s.getReference( MyReferenceData.class, 1 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -82,7 +78,7 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 		// cleanup
 		s = openSession();
 		s.beginTransaction();
-		s.delete( myReferenceData );
+		s.remove( myReferenceData );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -91,8 +87,7 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 	@Immutable
 	@Cacheable
 	@Cache( usage = CacheConcurrencyStrategy.READ_ONLY )
-	@Proxy( lazy = false )
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public static class MyReferenceData {
 		@Id
 		private Integer id;

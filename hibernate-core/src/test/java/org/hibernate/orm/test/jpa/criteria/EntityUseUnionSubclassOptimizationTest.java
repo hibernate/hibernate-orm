@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria;
 
@@ -145,7 +143,7 @@ public class EntityUseUnionSubclassOptimizationTest {
 									"select id, null as nr, name, null as seats, null as architectName, null as doors, null as familyName, 4 as clazz_ from Vehicle" +
 									") t1_0 " +
 									"where " +
-									"t1_0.clazz_!=2",
+									"t1_0.clazz_<>2",
 							sqlStatementInterceptor.getSqlQueries().get( 0 )
 					);
 				}

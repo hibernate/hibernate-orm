@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -11,9 +9,9 @@ import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies the base value for the {@link jakarta.persistence.OrderColumn
- * order column} of a persistent list or array, that is, the order column
- * value of the first element of the list or array.
+ * Specifies the base value for the {@linkplain jakarta.persistence.OrderColumn
+ * order column} of a persistent list or array, that is, the order column value
+ * of the first element of the list or array.
  * <ul>
  * <li>When a row is read from the database, this base value is subtracted
  *     from the order column value to determine an index in the list or array.

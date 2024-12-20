@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.identifier;
 
@@ -15,9 +13,7 @@ import org.junit.Test;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 
 import static jakarta.persistence.GenerationType.SEQUENCE;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -82,7 +78,7 @@ public class SequenceGeneratorAnnotationNameTest extends BaseEntityManagerFuncti
 		public void setName(String name) {
 			this.name = name;
 		}
-		
+
 	//tag::identifiers-generators-sequence-mapping-example[]
 	}
 	//end::identifiers-generators-sequence-mapping-example[]

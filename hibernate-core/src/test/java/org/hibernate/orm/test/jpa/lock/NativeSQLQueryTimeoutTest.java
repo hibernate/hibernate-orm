@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.lock;
 
@@ -14,7 +12,7 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;
 
@@ -28,7 +26,7 @@ import static org.junit.Assert.fail;
  */
 @RequiresDialect(PostgreSQLDialect.class)
 @SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41335")
-@TestForIssue( jiraKey = "HHH-13493")
+@JiraKey( value = "HHH-13493")
 public class NativeSQLQueryTimeoutTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected void addConfigOptions(Map options) {
@@ -40,9 +38,9 @@ public class NativeSQLQueryTimeoutTest extends BaseEntityManagerFunctionalTestCa
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			try {
 				entityManager.createNativeQuery(
-                    "select 1 " +
+					"select 1 " +
 					"from pg_sleep(2) "
-                )
+				)
 				.getResultList();
 
 				fail("Should have thrown lock timeout exception!");

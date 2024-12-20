@@ -1,17 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.insert;
 
-import java.util.Collections;
+import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.id.PostInsertIdentityPersister;
-import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.TableInsert;
 import org.hibernate.sql.model.ast.builder.AbstractTableInsertBuilder;
 import org.hibernate.sql.model.internal.TableInsertStandard;
@@ -20,26 +18,29 @@ import org.hibernate.sql.model.internal.TableInsertStandard;
  * @author Steve Ebersole
  */
 public class TableInsertReturningBuilder extends AbstractTableInsertBuilder {
+	private final List<ColumnReference> generatedColumns;
+
 	public TableInsertReturningBuilder(
-			PostInsertIdentityPersister mutationTarget,
+			EntityPersister mutationTarget,
+			MutatingTableReference tableReference,
+			List<ColumnReference> generatedColumns,
 			SessionFactoryImplementor sessionFactory) {
-		super( mutationTarget, mutationTarget.getIdentifierTableMapping(), sessionFactory );
+		super( mutationTarget, tableReference, sessionFactory );
+		this.generatedColumns = generatedColumns;
 	}
 
 	@Override
-	protected PostInsertIdentityPersister getMutationTarget() {
-		return (PostInsertIdentityPersister) super.getMutationTarget();
+	protected EntityPersister getMutationTarget() {
+		return (EntityPersister) super.getMutationTarget();
 	}
 
 	@Override
 	public TableInsert buildMutation() {
-		final BasicEntityIdentifierMapping identifierMapping =
-				(BasicEntityIdentifierMapping) getMutationTarget().getIdentifierMapping();
 		return new TableInsertStandard(
 				getMutatingTable(),
 				getMutationTarget(),
 				combine( getValueBindingList(), getKeyBindingList(), getLobValueBindingList() ),
-				Collections.singletonList( new ColumnReference( getMutatingTable(), identifierMapping ) ),
+				generatedColumns,
 				getParameters()
 		);
 	}

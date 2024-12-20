@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cut;
 
@@ -15,7 +13,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -109,7 +107,7 @@ public class CompositeUserTypeTest {
 					session.persist( f );
 					session.flush();
 					// Test value conversion during insert
-					BigDecimal amountViaSql = session.createNativeQuery(
+					BigDecimal amountViaSql = (BigDecimal) session.createNativeQuery(
 									"select amount_millions from MutualFund", BigDecimal.class )
 							.uniqueResult();
 					assertEquals( AMOUNT_MILLIONS.doubleValue(), amountViaSql.doubleValue(), 0.01d );
@@ -213,7 +211,7 @@ public class CompositeUserTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5946")
+	@JiraKey(value = "HHH-5946")
 	public void testNotEqualOperator(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -259,7 +257,7 @@ public class CompositeUserTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5946")
+	@JiraKey(value = "HHH-5946")
 	public void testLessThanOperator(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -272,7 +270,7 @@ public class CompositeUserTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5946")
+	@JiraKey(value = "HHH-5946")
 	public void testLessOrEqualOperator(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -284,7 +282,7 @@ public class CompositeUserTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5946")
+	@JiraKey(value = "HHH-5946")
 	public void testGreaterThanOperator(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -296,7 +294,7 @@ public class CompositeUserTypeTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-5946")
+	@JiraKey(value = "HHH-5946")
 	public void testGreaterOrEqualOperator(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

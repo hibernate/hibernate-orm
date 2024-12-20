@@ -1,22 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
+
+import org.hibernate.Incubating;
+import org.hibernate.MappingException;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
+import org.hibernate.type.AnyType;
+import org.hibernate.type.MappingContext;
+import org.hibernate.type.Type;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
-
-import org.hibernate.MappingException;
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.type.AnyType;
-import org.hibernate.type.Type;
 
 /**
  * A mapping model object representing a {@linkplain org.hibernate.annotations.Any polymorphic association}
@@ -35,6 +35,7 @@ public class Any extends SimpleValue {
 
 	// common
 	private Map<Object,String> metaValueToEntityNameMap;
+	private ImplicitDiscriminatorStrategy implicitValueStrategy;
 	private boolean lazy = true;
 
 	private AnyType resolvedType;
@@ -74,6 +75,7 @@ public class Any extends SimpleValue {
 		this.metaValueToEntityNameMap = original.metaValueToEntityNameMap == null
 				? null
 				: new HashMap<>(original.metaValueToEntityNameMap);
+		this.implicitValueStrategy = original.implicitValueStrategy;
 		this.lazy = original.lazy;
 	}
 
@@ -107,6 +109,10 @@ public class Any extends SimpleValue {
 
 	public BasicValue getDiscriminatorDescriptor() {
 		return discriminatorDescriptor;
+	}
+
+	public BasicValue getKeyDescriptor() {
+		return keyDescriptor;
 	}
 
 	public MetaValue getMetaMapping() {
@@ -148,6 +154,7 @@ public class Any extends SimpleValue {
 					discriminatorType,
 					identifierType,
 					metaValueToEntityNameMap,
+					implicitValueStrategy,
 					isLazy(),
 					getBuildingContext()
 			);
@@ -213,6 +220,19 @@ public class Any extends SimpleValue {
 		this.metaValueToEntityNameMap = metaValueToEntityNameMap;
 	}
 
+	/**
+	 * Set the strategy for dealing with discriminator mappings which are not explicitly defined by
+	 * {@linkplain org.hibernate.annotations.AnyDiscriminatorValue}.
+	 *
+	 * @apiNote {@code null} indicates to not allow implicit mappings.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	public void setImplicitDiscriminatorValueStrategy(ImplicitDiscriminatorStrategy implicitValueStrategy) {
+		this.implicitValueStrategy = implicitValueStrategy;
+	}
+
 	public boolean isLazy() {
 		return lazy;
 	}
@@ -221,10 +241,12 @@ public class Any extends SimpleValue {
 		this.lazy = lazy;
 	}
 
+	@Override
 	public void setTypeUsingReflection(String className, String propertyName)
 		throws MappingException {
 	}
 
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
@@ -236,32 +258,40 @@ public class Any extends SimpleValue {
 
 	public boolean isSame(Any other) {
 		return super.isSame( other )
-				&& Objects.equals( keyMapping.getTypeName(), other.keyMapping.getTypeName() )
-				&& Objects.equals( metaMapping.getTypeName(), other.keyMapping.getTypeName() )
+				&& Objects.equals( getTypeNameOrNull( keyMapping ), getTypeNameOrNull( other.keyMapping ) )
+				&& Objects.equals( getTypeNameOrNull( metaMapping ), getTypeNameOrNull( other.metaMapping ) )
 				&& Objects.equals( metaValueToEntityNameMap, other.metaValueToEntityNameMap )
 				&& lazy == other.lazy;
 	}
 
-	public boolean isValid(Mapping mapping) throws MappingException {
+	private String getTypeNameOrNull(SimpleValue simpleValue) {
+		return simpleValue != null ? simpleValue.getTypeName() : null;
+	}
+
+	@Override
+	public boolean isValid(MappingContext mappingContext) throws MappingException {
 		if ( discriminatorDescriptor != null ) {
-			return discriminatorDescriptor.isValid( mapping ) && keyDescriptor.isValid( mapping );
+			return discriminatorDescriptor.isValid( mappingContext ) && keyDescriptor.isValid( mappingContext );
 		}
-		return metaMapping.isValid( mapping ) && keyMapping.isValid( mapping );
+		return metaMapping.isValid( mappingContext ) && keyMapping.isValid( mappingContext );
 	}
 
 	private static String columnName(Column column, MetadataBuildingContext buildingContext) {
 		final JdbcServices jdbcServices = buildingContext
 				.getBootstrapContext()
 				.getServiceRegistry()
-				.getService( JdbcServices.class );
-
-		return column.getQuotedName( jdbcServices .getDialect() );
+				.requireService( JdbcServices.class );
+		return column.getQuotedName( jdbcServices.getDialect() );
 	}
 
 	public void setDiscriminator(BasicValue discriminatorDescriptor) {
 		this.discriminatorDescriptor = discriminatorDescriptor;
 		if ( discriminatorDescriptor.getColumn() instanceof Column ) {
-			justAddColumn( (Column) discriminatorDescriptor.getColumn() );
+			justAddColumn(
+					(Column) discriminatorDescriptor.getColumn(),
+					discriminatorDescriptor.isColumnInsertable( 0 ),
+					discriminatorDescriptor.isColumnUpdateable( 0 )
+			);
 		}
 		else {
 			justAddFormula( (Formula) discriminatorDescriptor.getColumn() );
@@ -278,13 +308,20 @@ public class Any extends SimpleValue {
 	public void setKey(BasicValue keyDescriptor) {
 		this.keyDescriptor = keyDescriptor;
 		if ( keyDescriptor.getColumn() instanceof Column ) {
-			justAddColumn( (Column) keyDescriptor.getColumn() );
+			justAddColumn(
+					(Column) keyDescriptor.getColumn(),
+					keyDescriptor.isColumnInsertable( 0 ),
+					keyDescriptor.isColumnUpdateable( 0 )
+			);
 		}
 		else {
 			justAddFormula( (Formula) keyDescriptor.getColumn() );
 		}
 	}
 
+	/**
+	 * The discriminator {@linkplain Value}
+	 */
 	public static class MetaValue extends SimpleValue {
 		private String typeName;
 		private String columnName;
@@ -376,9 +413,9 @@ public class Any extends SimpleValue {
 		}
 
 		@Override
-		public boolean isValid(Mapping mapping) {
+		public boolean isValid(MappingContext mappingContext) {
 			return columnName != null
-					&& getType().getColumnSpan( mapping ) == 1;
+				&& getType().getColumnSpan( mappingContext ) == 1;
 		}
 	}
 
@@ -447,12 +484,6 @@ public class Any extends SimpleValue {
 			super.addFormula( formula );
 
 			selectableConsumer.accept( formula );
-		}
-
-		@Override
-		public boolean isValid(Mapping mapping) throws MappingException {
-			// check
-			return super.isValid( mapping );
 		}
 	}
 }

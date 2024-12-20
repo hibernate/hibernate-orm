@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.named;
 
@@ -19,6 +17,8 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
+import jakarta.persistence.TypedQueryReference;
+
 /**
  * Repository for references to named things related to queries. This includes:
  * <ul>
@@ -31,20 +31,22 @@ import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 @Incubating
 public interface NamedObjectRepository {
 
+	<R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType);
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named SQM Memento
 
-	NamedSqmQueryMemento getSqmQueryMemento(String queryName);
-	void visitSqmQueryMementos(Consumer<NamedSqmQueryMemento> action);
-	void registerSqmQueryMemento(String name, NamedSqmQueryMemento descriptor);
+	NamedSqmQueryMemento<?> getSqmQueryMemento(String queryName);
+	void visitSqmQueryMementos(Consumer<NamedSqmQueryMemento<?>> action);
+	void registerSqmQueryMemento(String name, NamedSqmQueryMemento<?> descriptor);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named NativeQuery Memento
 
-	NamedNativeQueryMemento getNativeQueryMemento(String queryName);
-	void visitNativeQueryMementos(Consumer<NamedNativeQueryMemento> action);
-	void registerNativeQueryMemento(String name, NamedNativeQueryMemento descriptor);
+	NamedNativeQueryMemento<?> getNativeQueryMemento(String queryName);
+	void visitNativeQueryMementos(Consumer<NamedNativeQueryMemento<?>> action);
+	void registerNativeQueryMemento(String name, NamedNativeQueryMemento<?> descriptor);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

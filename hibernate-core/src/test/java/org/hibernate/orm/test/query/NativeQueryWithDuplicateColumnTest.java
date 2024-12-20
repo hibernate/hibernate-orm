@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
 
@@ -11,7 +9,7 @@ import java.util.List;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -40,7 +38,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		}
 )
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-15608")
+@JiraKey(value = "HHH-15608")
 public class NativeQueryWithDuplicateColumnTest {
 
 	@BeforeEach
@@ -121,18 +119,18 @@ public class NativeQueryWithDuplicateColumnTest {
 	public static class Book {
 		@Id
 		@GeneratedValue
-		@Column(name = "BOOK_ID")
+		@Column(name = "book_id")
 		private Long id;
 
 		@ManyToOne(targetEntity = Publisher.class, fetch = FetchType.LAZY)
-		@JoinColumn(name = "PUBLISHER_FK")
+		@JoinColumn(name = "publisher_fk")
 		private Publisher publisher;
 
-		@Column(name = "PUBLISHER_FK", nullable = false, insertable = false, updatable = false)
+		@Column(name = "publisher_fk", nullable = false, insertable = false, updatable = false)
 		@Access(AccessType.FIELD)
 		private Long publisherFk;
 
-		@Column(name = "TITLE")
+		@Column(name = "title")
 		private String title;
 
 		public Book() {

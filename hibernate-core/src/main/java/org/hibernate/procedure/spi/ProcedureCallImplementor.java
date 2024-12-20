@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.spi;
 
@@ -15,6 +13,8 @@ import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.type.BasicTypeReference;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.ParameterMode;
@@ -77,6 +77,15 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 
 	@Override
 	ProcedureCallImplementor<R> setFlushMode(FlushModeType flushMode);
+
+	@Override
+	ProcedureCallImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+
+	@Override
+	ProcedureCallImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+
+	@Override
+	ProcedureCallImplementor<R> setTimeout(Integer timeout);
 
 	@Override
 	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class type, ParameterMode mode);

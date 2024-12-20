@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemavalidation;
 
@@ -15,10 +13,11 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialects;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -87,7 +86,7 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	public void testSynonymUsingIndividuallySchemaValidator() {
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
@@ -107,11 +106,11 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12406")
+	@JiraKey(value = "HHH-12406")
 	public void testSynonymUsingDefaultStrategySchemaValidator() {
 		// Hibernate should use JdbcMetadaAccessStrategy.INDIVIDUALLY when
 		// AvailableSettings.ENABLE_SYNONYMS is true.
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
 				.build();
 		try {
@@ -127,12 +126,14 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12406")
+	@JiraKey(value = "HHH-12406")
 	public void testSynonymUsingGroupedSchemaValidator() {
 		// Hibernate should use JdbcMetadaAccessStrategy.INDIVIDUALLY when
 		// AvailableSettings.ENABLE_SYNONYMS is true,
 		// even if JdbcMetadaAccessStrategy.GROUPED is specified.
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
+				// Reset the connection provider to avoid rebuilding the shared connection pool for this single test
+				.applySetting( AvailableSettings.CONNECTION_PROVIDER, "" )
 				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,

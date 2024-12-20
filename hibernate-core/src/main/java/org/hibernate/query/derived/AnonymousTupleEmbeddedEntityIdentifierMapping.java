@@ -1,29 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.derived;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.sql.ast.spi.SqlSelection;
 
 import jakarta.persistence.metamodel.Attribute;
 
@@ -38,7 +31,7 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 
 	public AnonymousTupleEmbeddedEntityIdentifierMapping(
 			SqmExpressible<?> sqmExpressible,
-			List<SqlSelection> sqlSelections,
+			SqlTypedMapping[] sqlTypedMappings,
 			int selectionIndex,
 			String selectionExpression,
 			Set<String> compatibleTableExpressions,
@@ -47,7 +40,7 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 			CompositeIdentifierMapping delegate) {
 		super(
 				sqmExpressible,
-				sqlSelections,
+				sqlTypedMappings,
 				selectionIndex,
 				selectionExpression,
 				compatibleTableExpressions,
@@ -76,6 +69,11 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 	}
 
 	@Override
+	public Object getIdentifier(Object entity, MergeContext mergeContext) {
+		return delegate.getIdentifier( entity, mergeContext );
+	}
+
+	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 		delegate.setIdentifier( entity, id, session );
 	}
@@ -88,6 +86,11 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 	@Override
 	public PropertyAccess getPropertyAccess() {
 		return ((SingleAttributeIdentifierMapping) delegate).getPropertyAccess();
+	}
+
+	@Override
+	public EmbeddableMappingType getPartMappingType() {
+		return this;
 	}
 
 	@Override
@@ -115,8 +118,4 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 		return this;
 	}
 
-	@Override
-	public EmbeddableMappingType getPartMappingType() {
-		return (EmbeddableMappingType) super.getPartMappingType();
-	}
 }

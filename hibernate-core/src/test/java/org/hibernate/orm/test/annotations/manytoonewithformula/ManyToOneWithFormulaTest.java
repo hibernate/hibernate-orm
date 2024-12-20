@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.manytoonewithformula;
 
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -23,30 +22,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Sharath Reddy
  */
-@DomainModel( annotatedClasses = {
-		Menu.class,
-		FoodItem.class,
-		Company.class,
-		Person.class,
-		Message.class,
-		Language.class,
-		Contract.class,
-		ContractId.class,
-		Model.class,
-		ModelId.class,
-		Manufacturer.class,
-		ManufacturerId.class,
-		Product.class,
-		ProductSqlServer.class
-} )
-@SessionFactory
+@SuppressWarnings("JUnitMalformedDeclaration")
 public class ManyToOneWithFormulaTest {
 	@Test
+	@DomainModel( annotatedClasses = { Menu.class, FoodItem.class } )
+	@SessionFactory
 	public void testManyToOneFromNonPk(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			Menu menu = new Menu();
 			menu.setOrderNbr( "123" );
-			menu.setDefault( "F" );
+			menu.setIsDefault( "F" );
 			session.persist( menu );
 			FoodItem foodItem = new FoodItem();
 			foodItem.setItem( "Mouse" );
@@ -64,6 +49,8 @@ public class ManyToOneWithFormulaTest {
 	}
 
 	@Test
+	@DomainModel( annotatedClasses = { Company.class, Person.class } )
+	@SessionFactory
 	public void testManyToOneFromPk(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			Company company = new Company();
@@ -86,6 +73,8 @@ public class ManyToOneWithFormulaTest {
 	}
 
 	@Test
+	@DomainModel( annotatedClasses = { Message.class, Language.class } )
+	@SessionFactory
 	@SkipForDialect( dialectClass = HSQLDialect.class, reason = "The used join conditions does not work in HSQLDB. See HHH-4497" )
 	public void testManyToOneToPkWithOnlyFormula(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
@@ -111,11 +100,21 @@ public class ManyToOneWithFormulaTest {
 	}
 
 	@Test
+	@DomainModel( annotatedClasses = {
+			Contract.class,
+			ContractId.class,
+			Model.class,
+			ModelId.class,
+			Manufacturer.class,
+			ManufacturerId.class,
+	} )
+	@SessionFactory
 	public void testReferencedColumnNameBelongsToEmbeddedIdOfReferencedEntity(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {		Integer companyCode = 10;
+		scope.inTransaction( (session) -> {
+			Integer companyCode = 10;
 			Integer mfgCode = 100;
 			String contractNumber = "NSAR97841";
-			ContractId contractId = new ContractId(companyCode, 12457l, 1);
+			ContractId contractId = new ContractId(companyCode, 12457L, 1);
 
 			Manufacturer manufacturer = new Manufacturer(new ManufacturerId(
 					companyCode, mfgCode), "FORD");
@@ -147,8 +146,11 @@ public class ManyToOneWithFormulaTest {
 	}
 
 	@Test
+	@DomainModel( annotatedClasses = Product.class )
+	@SessionFactory
 	@SkipForDialect( dialectClass =HSQLDialect.class, reason = "The used join conditions does not work in HSQLDB. See HHH-4497." )
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "Oracle do not support 'substring' function" )
+	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = " Altibase char type returns with trailing spaces")
 	public void testManyToOneFromNonPkToNonPk(SessionFactoryScope scope) {
 		// also tests usage of the stand-alone @JoinFormula annotation
 		// (i.e. not wrapped within @JoinColumnsOrFormulas)
@@ -180,12 +182,14 @@ public class ManyToOneWithFormulaTest {
 
 			session.getTransaction().markRollbackOnly();
 		} );
-    }
+	}
 
-    @Test
+	@Test
+	@DomainModel( annotatedClasses = ProductSqlServer.class )
+	@SessionFactory
 	@RequiresDialect( SQLServerDialect.class )
-    public void testManyToOneFromNonPkToNonPkSqlServer(SessionFactoryScope scope) {
-        // also tests usage of the stand-alone @JoinFormula annotation
+	public void testManyToOneFromNonPkToNonPkSqlServer(SessionFactoryScope scope) {
+		// also tests usage of the stand-alone @JoinFormula annotation
 		// (i.e. not wrapped within @JoinColumnsOrFormulas)
 
 		scope.inTransaction( (session) -> {
@@ -215,6 +219,6 @@ public class ManyToOneWithFormulaTest {
 
 			session.getTransaction().markRollbackOnly();
 		} );
-    }
+	}
 
 }

@@ -1,18 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.HHH_10708;
 
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -25,110 +23,111 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@TestForIssue( jiraKey = "HHH-10708" )
-@RunWith( BytecodeEnhancerRunner.class )
-public class UnexpectedDeleteTest3 extends BaseCoreFunctionalTestCase {
+@JiraKey("HHH-10708")
+@DomainModel(
+		annotatedClasses = {
+				UnexpectedDeleteTest3.Parent.class, UnexpectedDeleteTest3.Child.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class UnexpectedDeleteTest3 {
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class[]{Parent.class, Child.class};
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Child child = new Child();
+			child.setId( 2L );
+			s.persist( child );
 
-    @Before
-    public void prepare() {
-        doInHibernate( this::sessionFactory, s -> {
-            Child child = new Child();
-            child.setId( 2L );
-            s.save( child );
+			Parent parent = new Parent();
+			parent.setId( 1L );
+			parent.setNames( Collections.singleton( "name" ) );
+			parent.addChild( child );
 
-            Parent parent = new Parent();
-            parent.setId( 1L );
-            parent.setNames( Collections.singleton( "name" ) );
-            parent.addChild( child );
+			s.persist( parent );
+		} );
+	}
 
-            s.save( parent );
-        } );
-    }
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			Parent parent = s.get( Parent.class, 1L );
 
-    @Test
-    public void test() {
-        doInHibernate( this::sessionFactory, s -> {
-            Parent parent = s.get( Parent.class, 1L );
-           
-            Child child = new Child();
-            child.setId( 1L );
-            s.save( child );
-            parent.addChild( child );
+			Child child = new Child();
+			child.setId( 1L );
+			s.persist( child );
+			parent.addChild( child );
 
-            // We need to leave at least one attribute unfetchd
-            //parent.getNames().size();
-            s.save( parent );
-        } );
+			// We need to leave at least one attribute unfetchd
+			//parent.getNames().size();
+			s.persist( parent );
+		} );
 
-        doInHibernate( this::sessionFactory, s -> {
-            Parent application = s.get( Parent.class, 1L );
-            Assert.assertEquals( "Loaded Children collection has unexpected size", 2, application.getChildren().size() );
-        } );
-    }
+		scope.inTransaction( s -> {
+			Parent application = s.get( Parent.class, 1L );
+			assertEquals( 2, application.getChildren().size(), "Loaded Children collection has unexpected size" );
+		} );
+	}
 
-    // --- //
+	// --- //
 
-    @Entity
-    @Table( name = "CHILD" )
-    private static class Child {
+	@Entity
+	@Table( name = "CHILD" )
+	static class Child {
 
-        Long id;
+		Long id;
 
-        @Id
-        @Column( name = "id", unique = true, nullable = false )
-        Long getId() {
-            return id;
-        }
+		@Id
+		@Column( name = "id", unique = true, nullable = false )
+		Long getId() {
+			return id;
+		}
 
-        void setId(Long id) {
-            this.id = id;
-        }
-    }
+		void setId(Long id) {
+			this.id = id;
+		}
+	}
 
-    @Entity
-    @Table( name = "PARENT" )
-    private static class Parent {
+	@Entity
+	@Table( name = "PARENT" )
+	static class Parent {
 
-        Long id;
-        Set<String> names;
-        Set<Child> children;
+		Long id;
+		Set<String> names;
+		Set<Child> children;
 
-        @Id
-        @Column( name = "id", unique = true, nullable = false )
-        Long getId() {
-            return id;
-        }
+		@Id
+		@Column( name = "id", unique = true, nullable = false )
+		Long getId() {
+			return id;
+		}
 
-        void setId(Long id) {
-            this.id = id;
-        }
+		void setId(Long id) {
+			this.id = id;
+		}
 
-        @ElementCollection
-        Set<String> getNames() {
-            return Collections.unmodifiableSet( names );
-        }
+		@ElementCollection
+		Set<String> getNames() {
+			return Collections.unmodifiableSet( names );
+		}
 
-        void setNames(Set<String> secrets) {
-            this.names = secrets;
-        }
+		void setNames(Set<String> secrets) {
+			this.names = secrets;
+		}
 
-        @ManyToMany( fetch = FetchType.LAZY, targetEntity = Child.class )
-        Set<Child> getChildren() {
-            return Collections.unmodifiableSet( children );
-        }
+		@ManyToMany( fetch = FetchType.LAZY, targetEntity = Child.class )
+		Set<Child> getChildren() {
+			return Collections.unmodifiableSet( children );
+		}
 
-        void addChild(Child child) {
-            if (children == null) {
-                children = new HashSet<>();
-            }
-            children.add( child );
-        }
-    }
+		void addChild(Child child) {
+			if (children == null) {
+				children = new HashSet<>();
+			}
+			children.add( child );
+		}
+	}
 }

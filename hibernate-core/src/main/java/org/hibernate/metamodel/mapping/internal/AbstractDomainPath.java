@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -12,6 +10,7 @@ import java.util.List;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ordering.ast.DomainPath;
@@ -32,6 +31,7 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
@@ -61,8 +61,8 @@ public abstract class AbstractDomainPath implements DomainPath {
 			TableGroup tableGroup,
 			String modelPartName,
 			SqlAstCreationState creationState) {
-		if ( referenceModelPart instanceof BasicValuedModelPart ) {
-			final BasicValuedModelPart selection = (BasicValuedModelPart) referenceModelPart;
+		final BasicValuedModelPart selection = referenceModelPart.asBasicValuedModelPart();
+		if ( selection != null ) {
 			final TableReference tableReference = tableGroup.resolveTableReference(
 					null,
 					selection,
@@ -104,7 +104,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			}
 			else {
 				ModelPart subPart = embeddableValuedModelPart.findSubPart( modelPartName, null );
-				assert subPart instanceof BasicValuedModelPart;
+				assert subPart.asBasicValuedModelPart() != null;
 				return resolve( subPart, ast, tableGroup, modelPartName, creationState );
 			}
 		}
@@ -144,9 +144,10 @@ public abstract class AbstractDomainPath implements DomainPath {
 			SortDirection sortOrder,
 			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
-		if ( referenceModelPart instanceof BasicValuedModelPart ) {
+		final BasicValuedModelPart basicPart = referenceModelPart.asBasicValuedModelPart();
+		if ( basicPart != null ) {
 			addSortSpecification(
-					(BasicValuedModelPart) referenceModelPart,
+					basicPart,
 					ast,
 					tableGroup,
 					collation,
@@ -161,19 +162,8 @@ public abstract class AbstractDomainPath implements DomainPath {
 				subPart = ( (EntityValuedModelPart) referenceModelPart ).getEntityMappingType().getIdentifierMapping();
 			}
 			else {
-				subPart = ( (EntityValuedModelPart) referenceModelPart ).findSubPart( modelPartName );
-				if ( subPart == null && referenceModelPart instanceof ToOneAttributeMapping ) {
-					// this is the case of sort by to-one attribute inside an embedded item,
-					// at this stage the foreign key descriptor should have been set on the attribute mapping,
-					// so we can generate a sub part valid for the order-by generation
-					ToOneAttributeMapping toOneAttribute = (ToOneAttributeMapping) referenceModelPart;
-					String foreignKeyModelPart = toOneAttribute.getAttributeName() + "."
-							+ toOneAttribute.getTargetKeyPropertyName();
-
-					if ( modelPartName.equals( foreignKeyModelPart ) ) {
-						subPart = toOneAttribute.findSubPart( toOneAttribute.getTargetKeyPropertyName() );
-					}
-				}
+				// Default to using the foreign key of an entity valued model part
+				subPart = ( (EntityValuedModelPart) referenceModelPart ).findSubPart( ForeignKeyDescriptor.PART_NAME );
 			}
 			apply(
 					subPart,
@@ -231,9 +221,8 @@ public abstract class AbstractDomainPath implements DomainPath {
 		}
 		else {
 			ModelPart subPart = embeddableValuedModelPart.findSubPart( modelPartName, null );
-			assert subPart instanceof BasicValuedModelPart;
 			addSortSpecification(
-					(BasicValuedModelPart) subPart,
+					castNonNull( subPart.asBasicValuedModelPart() ),
 					ast,
 					tableGroup,
 					collation,
@@ -290,7 +279,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 				collation,
 				creationState
 		);
-		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
+		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence.getJpaValue() ) );
 	}
 
 	private static boolean selectClauseDoesNotContainOrderExpression(Expression expression, SelectClause selectClause) {

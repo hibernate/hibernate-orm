@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.procedure;
 
@@ -27,7 +25,7 @@ import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -131,7 +129,7 @@ public class MySQLStoredProcedureTest {
 					person1.setNickName( "JD" );
 					person1.setAddress( "Earth" );
 					person1.setCreatedOn( Timestamp.from( LocalDateTime.of( 2000, 1, 1, 0, 0, 0 )
-																  .toInstant( ZoneOffset.UTC ) ) );
+																.toInstant( ZoneOffset.UTC ) ) );
 
 					em.persist( person1 );
 
@@ -349,7 +347,7 @@ public class MySQLStoredProcedureTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12905")
+	@JiraKey(value = "HHH-12905")
 	public void testStoredProcedureNullParameter(EntityManagerFactoryScope scope) {
 
 		scope.inTransaction( entityManager -> {
@@ -378,7 +376,7 @@ public class MySQLStoredProcedureTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12905")
+	@JiraKey(value = "HHH-12905")
 	public void testStoredProcedureNullParameterHibernateWithoutEnablePassingNulls(EntityManagerFactoryScope scope) {
 
 		scope.inTransaction( entityManager -> {

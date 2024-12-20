@@ -1,12 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id;
 
 import java.io.Serializable;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
@@ -14,8 +14,7 @@ import jakarta.persistence.ManyToOne;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -24,7 +23,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12251" )
+@JiraKey( value = "HHH-12251" )
 public class IdClassManyToOneCascadeTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -36,7 +35,6 @@ public class IdClassManyToOneCascadeTest extends BaseEntityManagerFunctionalTest
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-12251")
 	public void testMergeCascadesToManyToOne() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -47,9 +45,9 @@ public class IdClassManyToOneCascadeTest extends BaseEntityManagerFunctionalTest
 			someEntity.setId( 23L );
 			someEntity.setReferencedEntity( referencedEntity );
 
-			entityManager.merge( someEntity );
+			SomeEntity merged = entityManager.merge(someEntity);
 
-			assertTrue( entityManager.contains( referencedEntity ) );
+			assertTrue( entityManager.contains( merged.getReferencedEntity() ) );
 		} );
 	}
 
@@ -78,7 +76,7 @@ public class IdClassManyToOneCascadeTest extends BaseEntityManagerFunctionalTest
 		private long id;
 
 		@Id
-		@ManyToOne
+		@ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 		private ReferencedEntity referencedEntity;
 
 		public ReferencedEntity getReferencedEntity() {

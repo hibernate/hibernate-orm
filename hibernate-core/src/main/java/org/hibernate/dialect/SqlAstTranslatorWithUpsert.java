@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -50,7 +48,7 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 		);
 	}
 
-	private void renderUpsertStatement(OptionalTableUpdate optionalTableUpdate) {
+	protected void renderUpsertStatement(OptionalTableUpdate optionalTableUpdate) {
 		// template:
 		//
 		// merge into [table] as t
@@ -191,8 +189,9 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 
 	protected void renderMergeUpdate(OptionalTableUpdate optionalTableUpdate) {
 		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
+		final List<ColumnValueBinding> optimisticLockBindings = optionalTableUpdate.getOptimisticLockBindings();
 
-		appendSql( " when matched then update set " );
+		appendSql( "when matched then update set " );
 		for ( int i = 0; i < valueBindings.size(); i++ ) {
 			final ColumnValueBinding binding = valueBindings.get( i );
 			if ( i > 0 ) {
@@ -201,6 +200,22 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 			binding.getColumnReference().appendColumnForWrite( this, "t" );
 			appendSql( "=" );
 			binding.getColumnReference().appendColumnForWrite( this, "s" );
+		}
+		renderMatchedWhere( optimisticLockBindings );
+	}
+
+	private void renderMatchedWhere(List<ColumnValueBinding> optimisticLockBindings) {
+		if ( !optimisticLockBindings.isEmpty() ) {
+			appendSql( " where " );
+			for (int i = 0; i < optimisticLockBindings.size(); i++) {
+				final ColumnValueBinding binding = optimisticLockBindings.get( i );
+				if ( i>0 ) {
+					appendSql(" and ");
+				}
+				binding.getColumnReference().appendColumnForWrite( this, "t" );
+				appendSql("=");
+				binding.getValueExpression().accept( this );
+			}
 		}
 	}
 }

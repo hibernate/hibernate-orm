@@ -1,13 +1,13 @@
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
-@Library('hibernate-jenkins-pipeline-helpers@1.5') _
+@Library('hibernate-jenkins-pipeline-helpers') _
 
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
-  print "INFO: Build skipped due to trigger being Branch Indexing"
-  currentBuild.result = 'ABORTED'
-  return
+  	print "INFO: Build skipped due to trigger being Branch Indexing"
+	currentBuild.result = 'NOT_BUILT'
+  	return
 }
 
 pipeline {
@@ -15,7 +15,7 @@ pipeline {
         label 'Fedora'
     }
     tools {
-        jdk 'OpenJDK 11 Latest'
+        jdk 'OpenJDK 17 Latest'
     }
     options {
   		rateLimitBuilds(throttle: [count: 1, durationName: 'hour', userBoost: true])
@@ -30,22 +30,20 @@ pipeline {
 		}
 		stage('Publish') {
 			steps {
-				withCredentials([
-					usernamePassword(credentialsId: 'ossrh.sonatype.org', usernameVariable: 'hibernatePublishUsername', passwordVariable: 'hibernatePublishPassword'),
-					usernamePassword(credentialsId: 'plugins.gradle.org', usernameVariable: 'hibernatePluginPortalUsername', passwordVariable: 'hibernatePluginPortalPassword'),
-					string(credentialsId: 'ge.hibernate.org-access-key', variable: 'GRADLE_ENTERPRISE_ACCESS_KEY'),
-					string(credentialsId: 'release.gpg.passphrase', variable: 'SIGNING_PASS'),
-					file(credentialsId: 'release.gpg.private-key', variable: 'SIGNING_KEYRING')
-				]) {
-					sh '''./gradlew clean publish \
-						-PhibernatePublishUsername=$hibernatePublishUsername \
-						-PhibernatePublishPassword=$hibernatePublishPassword \
-						-Pgradle.publish.key=$hibernatePluginPortalUsername \
-						-Pgradle.publish.secret=$hibernatePluginPortalPassword \
-						--no-scan \
-						-DsigningPassword=$SIGNING_PASS \
-						-DsigningKeyFile=$SIGNING_KEYRING \
-					'''
+                withCredentials([
+                    // https://github.com/gradle-nexus/publish-plugin#publishing-to-maven-central-via-sonatype-ossrh
+                    usernamePassword(credentialsId: 'ossrh.sonatype.org', passwordVariable: 'ORG_GRADLE_PROJECT_sonatypePassword', usernameVariable: 'ORG_GRADLE_PROJECT_sonatypeUsername'),
+                    // https://docs.gradle.org/current/userguide/publishing_gradle_plugins.html#account_setup
+                    usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'GRADLE_PUBLISH_SECRET', usernameVariable: 'GRADLE_PUBLISH_KEY'),
+                    file(credentialsId: 'release.gpg.private-key', variable: 'SIGNING_GPG_PRIVATE_KEY_PATH'),
+                    string(credentialsId: 'release.gpg.passphrase', variable: 'SIGNING_GPG_PASSPHRASE'),
+                    gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default')
+                ]) {
+					withEnv([
+							"DISABLE_REMOTE_GRADLE_CACHE=true"
+					]) {
+						sh './gradlew clean publish -x test --no-scan --no-daemon --no-build-cache --stacktrace -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com'
+					}
 				}
 			}
         }

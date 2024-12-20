@@ -1,23 +1,24 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.stateless.insert;
 
+import org.hibernate.cfg.MappingSettings;
+
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author mukhanov@gmail.com
  */
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/stateless/insert/Mappings.hbm.xml"
-)
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"))
+@DomainModel(xmlMappings = "org/hibernate/orm/test/stateless/insert/Mappings.hbm.xml")
 @SessionFactory
 public class StatelessSessionInsertTest {
 
@@ -30,7 +31,7 @@ public class StatelessSessionInsertTest {
 					msg.setId( messageId );
 					msg.setContent( "message_content" );
 					msg.setSubject( "message_subject" );
-					session.save( msg );
+					session.persist( msg );
 				}
 		);
 

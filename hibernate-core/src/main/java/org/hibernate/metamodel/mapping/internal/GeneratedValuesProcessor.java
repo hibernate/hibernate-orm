@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -17,16 +15,20 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.loader.ast.internal.NoCallbackExecutionContext;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 
 import static org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic.FILTER;
 
@@ -34,13 +36,17 @@ import static org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic.F
  * Responsible for retrieving {@linkplain OnExecutionGenerator database-generated}
  * attribute values after an {@code insert} or {@code update} statement is executed.
  * <p>
- * Note that this class has responsibility for regular attributes of the entity. The
- * primary key / id attribute is handled separately, being the responsibility of an
- * instance of {@link org.hibernate.id.insert.InsertGeneratedIdentifierDelegate}.
+ * The values might have been retrieved early by an instance of {@link GeneratedValuesMutationDelegate},
+ * which case the {@link GeneratedValues generatedValues} parameter of {@link #processGeneratedValues}
+ * will already contain the values we need and this processor handles only the
+ * {@link #setEntityAttributes setting of entity attributes}.
+ * <p>
+ * Note that the primary key / id attribute is always handled by the delegate.
  *
  * @see OnExecutionGenerator
  *
  * @author Steve Ebersole
+ * @author Marco Belladelli
  */
 @Incubating
 public class GeneratedValuesProcessor {
@@ -49,24 +55,23 @@ public class GeneratedValuesProcessor {
 	private final List<AttributeMapping> generatedValuesToSelect;
 	private final JdbcParametersList jdbcParameters;
 
-	private final EntityMappingType entityDescriptor;
-	private final SessionFactoryImplementor sessionFactory;
+	private final EntityPersister entityDescriptor;
 
 	public GeneratedValuesProcessor(
-			EntityMappingType entityDescriptor,
+			EntityPersister entityDescriptor,
+			List<AttributeMapping> generatedAttributes,
 			EventType timing,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
-		this.sessionFactory = sessionFactory;
 
-		generatedValuesToSelect = getGeneratedAttributes( entityDescriptor, timing );
-		if ( generatedValuesToSelect.isEmpty() ) {
+		generatedValuesToSelect = generatedAttributes;
+		if ( generatedValuesToSelect.isEmpty() || !needsSubsequentSelect( timing, generatedAttributes ) ) {
 			selectStatement = null;
 			jdbcSelect = null;
-			this.jdbcParameters = JdbcParametersList.empty();
+			jdbcParameters = null;
 		}
 		else {
-			JdbcParametersList.Builder builder = JdbcParametersList.newBuilder();
+			final JdbcParametersList.Builder builder = JdbcParametersList.newBuilder();
 
 			selectStatement = LoaderSelectBuilder.createSelect(
 					entityDescriptor,
@@ -82,7 +87,30 @@ public class GeneratedValuesProcessor {
 			jdbcSelect = sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
 							.buildSelectTranslator( sessionFactory, selectStatement )
 							.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
-			this.jdbcParameters = builder.build();
+			jdbcParameters = builder.build();
+		}
+	}
+
+	private boolean needsSubsequentSelect(EventType timing, List<AttributeMapping> generatedAttributes) {
+		if ( timing == EventType.INSERT ) {
+			return entityDescriptor.getInsertDelegate() == null
+					|| !entityDescriptor.getInsertDelegate().supportsArbitraryValues()
+					// Check if we need to select more properties than what is processed by the identity delegate.
+					// This can happen for on-execution generated values on non-identifier tables
+					|| generatedAttributes.size() > numberOfGeneratedNonIdentifierProperties( timing );
+		}
+		else {
+			return entityDescriptor.getUpdateDelegate() == null;
+		}
+	}
+
+	private int numberOfGeneratedNonIdentifierProperties(EventType timing) {
+		if ( timing == EventType.INSERT) {
+			return entityDescriptor.getInsertGeneratedProperties().size()
+					- ( entityDescriptor.isIdentifierAssignedByInsert() ? 1 : 0 );
+		}
+		else {
+			return 0;
 		}
 	}
 
@@ -91,7 +119,7 @@ public class GeneratedValuesProcessor {
 	 *
 	 * @return a list of {@link AttributeMapping}s.
 	 */
-	private static List<AttributeMapping> getGeneratedAttributes(EntityMappingType entityDescriptor, EventType timing) {
+	public static List<AttributeMapping> getGeneratedAttributes(EntityMappingType entityDescriptor, EventType timing) {
 		// todo (6.0): For now, we rely on the entity metamodel as composite attributes report
 		//             GenerationTiming.NEVER even if they have attributes that would need generation
 		final Generator[] generators = entityDescriptor.getEntityPersister().getEntityMetamodel().getGenerators();
@@ -110,18 +138,46 @@ public class GeneratedValuesProcessor {
 	/**
 	 * Obtain the generated values, and populate the snapshot and the fields of the entity instance.
 	 */
-	public void processGeneratedValues(Object entity, Object id, Object[] state, SharedSessionContractImplementor session) {
-		if ( selectStatement != null ) {
-			final List<Object[]> results = executeSelect( id, session );
-			assert results.size() == 1;
-			setEntityAttributes( entity, state, results.get(0) );
+	public void processGeneratedValues(
+			Object entity,
+			Object id,
+			Object[] state,
+			GeneratedValues generatedValues,
+			SharedSessionContractImplementor session) {
+		if ( hasActualGeneratedValuesToSelect( session, entity ) ) {
+			if ( selectStatement != null ) {
+				final List<Object[]> results = executeSelect( id, session );
+				assert results.size() == 1;
+				setEntityAttributes( entity, state, results.get( 0 ) );
+			}
+			else if ( generatedValues != null ) {
+				// can be null when an update action resulted in a no-op (e.g. only changes to unowned association)
+				final List<Object> results = generatedValues.getGeneratedValues( generatedValuesToSelect );
+				setEntityAttributes( entity, state, results.toArray( new Object[0] ) );
+			}
 		}
+	}
+
+	private boolean hasActualGeneratedValuesToSelect(SharedSessionContractImplementor session, Object entity) {
+		for ( AttributeMapping attributeMapping : generatedValuesToSelect ) {
+			if ( attributeMapping.getGenerator().generatedOnExecution( entity, session ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private List<Object[]> executeSelect(Object id, SharedSessionContractImplementor session) {
 		final JdbcParameterBindings jdbcParamBindings = getJdbcParameterBindings( id, session );
-		return session.getFactory().getJdbcServices().getJdbcSelectExecutor()
-				.list( jdbcSelect, jdbcParamBindings, new NoCallbackExecutionContext(session), (row) -> row, FILTER );
+		return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+				jdbcSelect,
+				jdbcParamBindings,
+				new NoCallbackExecutionContext( session ),
+				RowTransformerArrayImpl.instance(),
+				null,
+				FILTER,
+				1
+		);
 	}
 
 	private JdbcParameterBindings getJdbcParameterBindings(Object id, SharedSessionContractImplementor session) {
@@ -161,7 +217,7 @@ public class GeneratedValuesProcessor {
 		return entityDescriptor;
 	}
 
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
+	public JdbcOperationQuerySelect getJdbcSelect() {
+		return jdbcSelect;
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.aggregate;
 
@@ -12,17 +10,20 @@ import org.hibernate.Incubating;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A set of operations providing support for aggregate column types
- * in a certain {@link Dialect SQL dialect}.
+ * in a certain {@linkplain Dialect SQL dialect}.
  *
  * @since 6.2
  */
@@ -37,41 +38,111 @@ public interface AggregateSupport {
 	 * @param template The custom read expression template of the column
 	 * @param placeholder The placeholder to replace with the actual read expression
 	 * @param aggregateParentReadExpression The expression to the aggregate column, which contains the column
+	 * @param columnExpression The column within the aggregate type, for which to return the read expression
+	 * @param aggregateColumn The type information for the aggregate column
 	 * @param column The column within the aggregate type, for which to return the read expression
-	 * @param aggregateColumnType The type information for the aggregate column
-	 * @param columnType The type information for the column within the aggregate type
+	 */
+	default String aggregateComponentCustomReadExpression(
+			String template,
+			String placeholder,
+			String aggregateParentReadExpression,
+			String columnExpression,
+			AggregateColumn aggregateColumn,
+			Column column) {
+		final int sqlTypeCode = aggregateColumn.getType().getJdbcType().getDefaultSqlTypeCode();
+		return aggregateComponentCustomReadExpression(
+				template,
+				placeholder,
+				aggregateParentReadExpression,
+				columnExpression,
+				// We need to know what array this is STRUCT_ARRAY/JSON_ARRAY/XML_ARRAY,
+				// which we can easily get from the type code of the aggregate column
+				sqlTypeCode == SqlTypes.ARRAY ? aggregateColumn.getTypeCode() : sqlTypeCode,
+				new SqlTypedMappingImpl(
+						column.getTypeName(),
+						column.getLength(),
+						column.getPrecision(),
+						column.getScale(),
+						column.getTemporalPrecision(),
+						column.getType()
+				),
+				aggregateColumn.getComponent().getMetadata().getTypeConfiguration()
+		);
+	}
+
+	/**
+	 * Returns the custom read expression to use for {@code column}.
+	 * Replaces the given {@code placeholder} in the given {@code template}
+	 * by the custom read expression to use for {@code column}.
+	 *
+	 * @param template The custom read expression template of the column
+	 * @param placeholder The placeholder to replace with the actual read expression
+	 * @param aggregateParentReadExpression The expression to the aggregate column, which contains the column
+	 * @param columnExpression The column within the aggregate type, for which to return the read expression
+	 * @param aggregateColumnTypeCode The SQL type code of the aggregate column
+	 * @param column The column within the aggregate type, for which to return the read expression
+	 * @param typeConfiguration The type configuration
+	 * @since 7.0
 	 */
 	String aggregateComponentCustomReadExpression(
 			String template,
 			String placeholder,
 			String aggregateParentReadExpression,
-			String column,
-			ColumnTypeInformation aggregateColumnType,
-			ColumnTypeInformation columnType);
+			String columnExpression,
+			int aggregateColumnTypeCode,
+			SqlTypedMapping column,
+			TypeConfiguration typeConfiguration);
 
 	/**
 	 * Returns the assignment expression to use for {@code column},
 	 * which is part of the aggregate type of {@code aggregatePath}.
 	 *
 	 * @param aggregateParentAssignmentExpression The expression to the aggregate column, which contains the column
+	 * @param columnExpression The column within the aggregate type, for which to return the assignment expression
+	 * @param aggregateColumn The type information for the aggregate column
 	 * @param column The column within the aggregate type, for which to return the assignment expression
-	 * @param aggregateColumnType The type information for the aggregate column
-	 * @param columnType The type information for the column within the aggregate type
+	 */
+	default String aggregateComponentAssignmentExpression(
+			String aggregateParentAssignmentExpression,
+			String columnExpression,
+			AggregateColumn aggregateColumn,
+			Column column) {
+		final int sqlTypeCode = aggregateColumn.getType().getJdbcType().getDefaultSqlTypeCode();
+		return aggregateComponentAssignmentExpression(
+				aggregateParentAssignmentExpression,
+				columnExpression,
+				// We need to know what array this is STRUCT_ARRAY/JSON_ARRAY/XML_ARRAY,
+				// which we can easily get from the type code of the aggregate column
+				sqlTypeCode == SqlTypes.ARRAY ? aggregateColumn.getTypeCode() : sqlTypeCode,
+				column
+		);
+	}
+
+	/**
+	 * Returns the assignment expression to use for {@code column},
+	 * which is part of the aggregate type of {@code aggregatePath}.
+	 *
+	 * @param aggregateParentAssignmentExpression The expression to the aggregate column, which contains the column
+	 * @param columnExpression The column within the aggregate type, for which to return the assignment expression
+	 * @param aggregateColumnTypeCode The SQL type code of the aggregate column
+	 * @param column The column within the aggregate type, for which to return the assignment expression
+	 *
+	 * @since 7.0
 	 */
 	String aggregateComponentAssignmentExpression(
 			String aggregateParentAssignmentExpression,
-			String column,
-			ColumnTypeInformation aggregateColumnType,
-			ColumnTypeInformation columnType);
+			String columnExpression,
+			int aggregateColumnTypeCode,
+			Column column);
 
 	/**
 	 * Returns the custom write expression to use for an aggregate column
 	 * of the given column type, containing the given aggregated columns.
 	 *
-	 * @param aggregateColumnType The type information for the aggregate column
+	 * @param aggregateColumn The type information for the aggregate column
 	 * @param aggregatedColumns The columns of the aggregate type
 	 */
-	String aggregateCustomWriteExpression(ColumnTypeInformation aggregateColumnType, List<Column> aggregatedColumns);
+	String aggregateCustomWriteExpression(AggregateColumn aggregateColumn, List<Column> aggregatedColumns);
 
 	/**
 	 * Whether {@link #aggregateCustomWriteExpressionRenderer(SelectableMapping, SelectableMapping[], TypeConfiguration)} is needed
@@ -132,7 +203,7 @@ public interface AggregateSupport {
 	List<AuxiliaryDatabaseObject> aggregateAuxiliaryDatabaseObjects(
 			Namespace namespace,
 			String aggregatePath,
-			ColumnTypeInformation aggregateColumnType,
+			AggregateColumn aggregateColumn,
 			List<Column> aggregatedColumns);
 
 	/**

@@ -1,5 +1,0 @@
-== List of all available configuration properties
-
-include::../../../../target/config-properties/hibernate-core.asciidoc[opts=optional]
-include::../../../../target/config-properties/hibernate-envers.asciidoc[opts=optional]
-include::../../../../target/config-properties/hibernate-jcache.asciidoc[opts=optional]

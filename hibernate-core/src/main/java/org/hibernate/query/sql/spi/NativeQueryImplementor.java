@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sql.spi;
 
@@ -14,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -25,7 +24,7 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NameableQuery;
-import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.transform.ResultTransformer;
 
@@ -61,7 +60,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	}
 
 	@Override
-	NamedNativeQueryMemento toMemento(String name);
+	NamedNativeQueryMemento<?> toMemento(String name);
 
 	@Override
 	NativeQueryImplementor<R> addScalar(String columnAlias);
@@ -148,10 +147,13 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	@Override
 	NativeQueryImplementor<R> setHint(String hintName, Object value);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQueryImplementor<R> setHibernateFlushMode(FlushMode flushMode);
 
 	@Override
+	NativeQueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
+
+	@Override @Deprecated(since = "7")
 	NativeQueryImplementor<R> setFlushMode(FlushModeType flushMode);
 
 	@Override
@@ -319,4 +321,3 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 
 	void addResultTypeClass(Class<?> resultClass);
 }
-

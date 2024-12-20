@@ -1,12 +1,22 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.batch;
 
 
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.RollbackException;
+import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.TransactionSerializationException;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -24,6 +34,9 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.hibernate.testing.orm.junit.DialectContext.getDialect;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @DomainModel(
 		annotatedClasses = {
@@ -34,17 +47,16 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @ServiceRegistry(
 		settings = @Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "2")
 )
-@TestForIssue(jiraKey = "HHH-16394")
 public class BatchUpdateAndVersionTest {
 
 	@Test
+	@JiraKey(value = "HHH-16394")
 	public void testUpdate(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 		scope.inTransaction(
 				session -> {
 					EntityA entityA1 = new EntityA( 1 );
-
 					EntityA entityA2 = new EntityA( 2 );
-
 					EntityA ownerA2 = new EntityA( 3 );
 
 					session.persist( ownerA2 );
@@ -78,6 +90,66 @@ public class BatchUpdateAndVersionTest {
 					assertThat( ownerA2.getOwners().size() ).isEqualTo( 0 );
 				}
 		);
+	}
+
+	@Test
+	public void testFailedUpdate(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.inTransaction(
+				session -> {
+					EntityA entityA1 = new EntityA( 1 );
+					EntityA entityA2 = new EntityA( 2 );
+					EntityA ownerA2 = new EntityA( 3 );
+					session.persist( ownerA2 );
+					session.persist( entityA1 );
+					session.persist( entityA2 );
+				}
+		);
+
+		try {
+			scope.inTransaction(
+					session1 -> {
+						EntityA entityA1_1 = session1.get( EntityA.class, 1 );
+						assertThat( entityA1_1.getVersion() ).isEqualTo( 0 );
+						assertThat( entityA1_1.getPropertyA() ).isEqualTo( 0 );
+
+						EntityA entityA2_1 = session1.get( EntityA.class, 2 );
+						assertThat( entityA2_1.getVersion() ).isEqualTo( 0 );
+						assertThat( entityA2_1.getPropertyA() ).isEqualTo( 0 );
+
+						scope.inTransaction(
+								session2 -> {
+									EntityA entityA1_2 = session2.get( EntityA.class, 1 );
+									assertThat( entityA1_2.getVersion() ).isEqualTo( 0 );
+									assertThat( entityA1_2.getPropertyA() ).isEqualTo( 0 );
+
+									EntityA entityA2_2 = session2.get( EntityA.class, 2 );
+									assertThat( entityA2_2.getVersion() ).isEqualTo( 0 );
+									assertThat( entityA2_2.getPropertyA() ).isEqualTo( 0 );
+
+									entityA1_2.setPropertyA( 5 );
+									entityA2_2.setPropertyA( 5 );
+								}
+						);
+
+						entityA1_1.setPropertyA( 3 );
+						entityA2_1.setPropertyA( 3 );
+					}
+			);
+			fail();
+		}
+		catch (OptimisticLockException ole) {
+			if (getDialect() instanceof MariaDBDialect && getDialect().getVersion().isAfter( 11, 6, 2 )) {
+				// if @@innodb_snapshot_isolation is set, database throw an exception if record is not available anymore
+				assertTrue( ole.getCause() instanceof LockAcquisitionException );
+			} else {
+				assertTrue( ole.getCause() instanceof StaleObjectStateException );
+			}
+		}
+		//CockroachDB errors with a Serialization Exception
+		catch (RollbackException rbe) {
+			assertTrue( rbe.getCause() instanceof TransactionSerializationException );
+		}
 	}
 
 	@Entity(name = "EntityA")

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
 
@@ -46,6 +44,15 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	 * @return query root corresponding to the given cte
 	 */
 	<X> JpaRoot<X> from(JpaCteCriteria<X> cte);
+
+	/**
+	 * Create and add a query root corresponding to the given set-returning function,
+	 * forming a cartesian product with any existing roots.
+	 *
+	 * @param function the set-returning function
+	 * @return query root corresponding to the given function
+	 */
+	<X> JpaFunctionRoot<X> from(JpaSetReturningFunction<X> function);
 
 	@Override
 	JpaSelectCriteria<T> distinct(boolean distinct);

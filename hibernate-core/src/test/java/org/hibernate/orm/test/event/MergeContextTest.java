@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event;
 
@@ -54,22 +52,22 @@ public class MergeContextTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-    public void testMergeToManagedEntityFillFollowedByInvertMapping() {
+	public void testMergeToManagedEntityFillFollowedByInvertMapping() {
 		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
 
-        Object mergeEntity = new Simple( 1 );
-        Object managedEntity = new Simple( 2 );
-        
-        cache.put(mergeEntity, managedEntity);
+		Object mergeEntity = new Simple( 1 );
+		Object managedEntity = new Simple( 2 );
+
+		cache.put(mergeEntity, managedEntity);
 
 		checkCacheConsistency( cache, 1 );
 
 		assertTrue( cache.containsKey( mergeEntity ) );
-        assertFalse( cache.containsKey( managedEntity ) );
+		assertFalse( cache.containsKey( managedEntity ) );
 		assertTrue( cache.containsValue( managedEntity ) );
 
 		assertTrue( cache.invertMap().containsKey( managedEntity ) );
-        assertFalse( cache.invertMap().containsKey( mergeEntity ) );
+		assertFalse( cache.invertMap().containsKey( mergeEntity ) );
 		assertTrue( cache.invertMap().containsValue( mergeEntity ) );
 
 		cache.clear();
@@ -77,73 +75,73 @@ public class MergeContextTest extends BaseCoreFunctionalTestCase {
 		checkCacheConsistency( cache, 0 );
 
 		assertFalse(cache.containsKey(mergeEntity));
-        assertFalse(cache.invertMap().containsKey(managedEntity));
+		assertFalse(cache.invertMap().containsKey(managedEntity));
 	}
 
 	@Test
-    public void testMergeToManagedEntityFillFollowedByInvert() {
+	public void testMergeToManagedEntityFillFollowedByInvert() {
 		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
 
-        Object mergeEntity = new Simple( 1 );
-        Object managedEntity = new Simple( 2 );
-        
-        cache.put(mergeEntity, managedEntity);
+		Object mergeEntity = new Simple( 1 );
+		Object managedEntity = new Simple( 2 );
+
+		cache.put(mergeEntity, managedEntity);
 
 		checkCacheConsistency( cache, 1 );
 
 		assertTrue(cache.containsKey(mergeEntity));
-        assertFalse( cache.containsKey( managedEntity ) );
-        
-        assertTrue( cache.invertMap().containsKey( managedEntity ) );
-        assertFalse( cache.invertMap().containsKey( mergeEntity ) );
-    }
+		assertFalse( cache.containsKey( managedEntity ) );
+
+		assertTrue( cache.invertMap().containsKey( managedEntity ) );
+		assertFalse( cache.invertMap().containsKey( mergeEntity ) );
+	}
 
 	@Test
-    public void testMergeToManagedEntityFillFollowedByInvertUsingPutAll() {
+	public void testMergeToManagedEntityFillFollowedByInvertUsingPutAll() {
 		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
 
-        Map<Object,Object> input = new HashMap<Object,Object>();
-        Object mergeEntity1 = new Simple( 1 );
+		Map<Object,Object> input = new HashMap<Object,Object>();
+		Object mergeEntity1 = new Simple( 1 );
 		//
-        Object managedEntity1 = 1;
-        input.put(mergeEntity1, managedEntity1);
-        Object mergeEntity2 = new Simple( 3 );
-        Object managedEntity2 = 2;
-        input.put(mergeEntity2, managedEntity2);
-        cache.putAll(input);
+		Object managedEntity1 = 1;
+		input.put(mergeEntity1, managedEntity1);
+		Object mergeEntity2 = new Simple( 3 );
+		Object managedEntity2 = 2;
+		input.put(mergeEntity2, managedEntity2);
+		cache.putAll(input);
 
 		checkCacheConsistency( cache, 2 );
 
 		assertTrue(cache.containsKey(mergeEntity1));
-        assertFalse(cache.containsKey(managedEntity1));
-        assertTrue(cache.containsKey(mergeEntity2));
-        assertFalse(cache.containsKey(managedEntity2));
+		assertFalse(cache.containsKey(managedEntity1));
+		assertTrue(cache.containsKey(mergeEntity2));
+		assertFalse(cache.containsKey(managedEntity2));
 
-        assertTrue(cache.invertMap().containsKey(managedEntity1));
-        assertFalse(cache.invertMap().containsKey(mergeEntity1));
+		assertTrue(cache.invertMap().containsKey(managedEntity1));
+		assertFalse(cache.invertMap().containsKey(mergeEntity1));
 
-        assertTrue(cache.invertMap().containsKey(managedEntity2));
-        assertFalse(cache.invertMap().containsKey(mergeEntity2));
-    }
+		assertTrue(cache.invertMap().containsKey(managedEntity2));
+		assertFalse(cache.invertMap().containsKey(mergeEntity2));
+	}
 
 	@Test
-    public void testMergeToManagedEntityFillFollowedByInvertUsingPutWithSetOperatedOnArg() {
+	public void testMergeToManagedEntityFillFollowedByInvertUsingPutWithSetOperatedOnArg() {
 		MergeContext cache = new MergeContext( session, new DoNothingEntityCopyObserver() );
 
-        Object mergeEntity = new Simple( 1 );
-        Object managedEntity = new Simple( 2 );
-        
-        cache.put(mergeEntity, managedEntity, true);
+		Object mergeEntity = new Simple( 1 );
+		Object managedEntity = new Simple( 2 );
+
+		cache.put(mergeEntity, managedEntity, true);
 
 		checkCacheConsistency( cache, 1 );
 
 		assertTrue(cache.containsKey(mergeEntity));
-        assertFalse( cache.containsKey( managedEntity ) );
+		assertFalse( cache.containsKey( managedEntity ) );
 
-        assertTrue( cache.invertMap().containsKey( managedEntity ) );
-        assertFalse( cache.invertMap().containsKey( mergeEntity ) );
-        
-        cache.clear();
+		assertTrue( cache.invertMap().containsKey( managedEntity ) );
+		assertFalse( cache.invertMap().containsKey( mergeEntity ) );
+
+		cache.clear();
 
 		checkCacheConsistency( cache, 0 );
 
@@ -153,8 +151,8 @@ public class MergeContextTest extends BaseCoreFunctionalTestCase {
 		checkCacheConsistency( cache, 1 );
 
 		assertTrue(cache.containsKey(mergeEntity));
-        assertFalse(cache.containsKey(managedEntity));
-    }
+		assertFalse(cache.containsKey(managedEntity));
+	}
 
 	@Test
 	public void testMergeToManagedEntityFillFollowedByIterateEntrySet() {

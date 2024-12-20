@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql;
 
@@ -16,12 +14,11 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedNativeQuery;
 
-import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -31,7 +28,7 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -70,17 +67,17 @@ public class CollectionLoaderTest extends BaseEntityManagerFunctionalTestCase {
 			session.doWork(connection -> {
 				try(Statement statement = connection.createStatement();) {
 					statement.executeUpdate(String.format( "ALTER TABLE person %s valid %s",
-														   getDialect().getAddColumnString(),
+														getDialect().getAddColumnString(),
 							ddlTypeRegistry.getTypeName( Types.BOOLEAN, getDialect())));
 					statement.executeUpdate(String.format( "ALTER TABLE Person_phones %s valid %s",
-														   getDialect().getAddColumnString(),
+														getDialect().getAddColumnString(),
 							ddlTypeRegistry.getTypeName( Types.BOOLEAN, getDialect())));
 				}
 			});
 		});
 	}
 
-	@Test @TestForIssue(jiraKey = "HHH-10557")
+	@Test @JiraKey(value = "HHH-10557")
 	public void test_HHH10557() {
 
 		Person _person = doInJPA(this::entityManagerFactory, entityManager -> {
@@ -114,20 +111,7 @@ public class CollectionLoaderTest extends BaseEntityManagerFunctionalTestCase {
 	@SQLInsert(sql = "INSERT INTO person (name, id, valid) VALUES (?, ?, true) ", check = COUNT)
 	@SQLUpdate(sql = "UPDATE person SET name = ? where id = ? ")
 	@SQLDelete(sql = "UPDATE person SET valid = false WHERE id = ? ")
-	@Loader(namedQuery = "find_valid_person")
-	@NamedNativeQuery(
-		name = "find_valid_person",
-		query = "SELECT id, name " +
-				"FROM person " +
-				"WHERE id = ? and valid = true",
-		resultClass = Person.class
-	)
-	@NamedNativeQuery(
-		name = "find_valid_phones",
-		query = "SELECT phones " +
-				"FROM Person_phones " +
-				"WHERE person_id = ? and valid = true "
-	)
+	@SQLSelect(sql = "SELECT id, name FROM person WHERE id = ? and valid = true")
 	public static class Person {
 
 		@Id
@@ -139,7 +123,7 @@ public class CollectionLoaderTest extends BaseEntityManagerFunctionalTestCase {
 		@ElementCollection
 		@SQLInsert(sql = "INSERT INTO person_phones (person_id, phones, valid) VALUES (?, ?, true) ")
 		@SQLDeleteAll(sql = "UPDATE person_phones SET valid = false WHERE person_id = ?")
-		@Loader(namedQuery = "find_valid_phones")
+		@SQLSelect(sql = "SELECT phones FROM Person_phones WHERE person_id = ? and valid = true")
 		private List<String> phones = new ArrayList<>();
 
 		public Long getId() {

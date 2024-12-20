@@ -1,28 +1,31 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 
 public class PropertyPreloadedData implements PropertyData {
 	private final AccessType defaultAccess;
 
 	private final String propertyName;
 
-	private final XClass returnedClass;
+	private final TypeDetails returnedClass;
 
-	public PropertyPreloadedData(AccessType defaultAccess, String propertyName, XClass returnedClass) {
+	public PropertyPreloadedData(AccessType defaultAccess, String propertyName, TypeDetails returnedClass) {
 		this.defaultAccess = defaultAccess;
 		this.propertyName = propertyName;
 		this.returnedClass = returnedClass;
+	}
+
+	PropertyPreloadedData() {
+		this( null, null, null );
 	}
 
 	@Override
@@ -36,12 +39,17 @@ public class PropertyPreloadedData implements PropertyData {
 	}
 
 	@Override
-	public XClass getClassOrElement() throws MappingException {
-		return getPropertyClass();
+	public TypeDetails getClassOrElementType() throws MappingException {
+		return getPropertyType();
 	}
 
 	@Override
-	public XClass getPropertyClass() throws MappingException {
+	public ClassDetails getClassOrPluralElement() throws MappingException {
+		return getPropertyType().determineRawClass();
+	}
+
+	@Override
+	public TypeDetails getPropertyType() throws MappingException {
 		return returnedClass;
 	}
 
@@ -56,12 +64,12 @@ public class PropertyPreloadedData implements PropertyData {
 	}
 
 	@Override
-	public XProperty getProperty() {
+	public MemberDetails getAttributeMember() {
 		return null; //instead of UnsupportedOperationException
 	}
 
 	@Override
-	public XClass getDeclaringClass() {
+	public ClassDetails getDeclaringClass() {
 		//Preloaded properties are artificial wrapper for collection element accesses
 		//and idClass creation, ignore.
 		return null;

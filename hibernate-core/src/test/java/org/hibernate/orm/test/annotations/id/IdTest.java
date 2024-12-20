@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.id;
 
@@ -62,7 +60,7 @@ public class IdTest {
 					Hotel hotel = new Hotel();
 					hotel.setId( 12L );
 					hotel.setName( "California" );
-					session.saveOrUpdate( hotel );
+					session.merge( hotel );
 				}
 		);
 
@@ -81,7 +79,7 @@ public class IdTest {
 		scope.inTransaction(
 				session -> {
 					savedHotel.setName( "Hotel du nord" );
-					session.saveOrUpdate( savedHotel );
+					session.merge( savedHotel );
 				}
 		);
 
@@ -90,7 +88,7 @@ public class IdTest {
 					Hotel hotel = session.get( Hotel.class, 12L );
 					assertNotNull( hotel );
 					assertEquals( "Hotel du nord", hotel.getName() );
-					session.delete( hotel );
+					session.remove( hotel );
 				}
 		);
 	}
@@ -114,8 +112,8 @@ public class IdTest {
 					Furniture furFromDb = session.get( Furniture.class, fur.getId() );
 					assertNotNull( systemFromDb );
 					assertNotNull( furFromDb );
-					session.delete( systemFromDb );
-					session.delete( furFromDb );
+					session.remove( systemFromDb );
+					session.remove( furFromDb );
 				}
 		);
 	}
@@ -132,7 +130,7 @@ public class IdTest {
 					session.persist( monkey );
 					session.flush();
 					assertNotNull( monkey.getId() );
-					session.delete( monkey );
+					session.remove( monkey );
 				}
 		);
 	}
@@ -157,9 +155,9 @@ public class IdTest {
 
 		scope.inTransaction(
 				session -> {
-					session.delete( session.get( Ball.class, 1 ) );
-					session.delete( session.get( Dog.class, 1 ) );
-					session.delete( session.get( Computer.class, 1L ) );
+					session.remove( session.get( Ball.class, 1 ) );
+					session.remove( session.get( Dog.class, 1 ) );
+					session.remove( session.get( Computer.class, 1L ) );
 				}
 		);
 	}
@@ -176,7 +174,7 @@ public class IdTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( session.get( Shoe.class, b.getId() ) )
+						session.remove( session.get( Shoe.class, b.getId() ) )
 		);
 	}
 
@@ -192,7 +190,7 @@ public class IdTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( session.get( Store.class, b.getId() ) )
+						session.remove( session.get( Store.class, b.getId() ) )
 
 		);
 	}
@@ -209,7 +207,7 @@ public class IdTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( session.get( Department.class, b.getId() ) )
+						session.remove( session.get( Department.class, b.getId() ) )
 		);
 	}
 
@@ -227,7 +225,7 @@ public class IdTest {
 				session -> {
 					Home reloadedHome = session.get( Home.class, h.getId() );
 					assertEquals( h.getId(), reloadedHome.getId() );
-					session.delete( reloadedHome );
+					session.remove( reloadedHome );
 				}
 		);
 	}
@@ -246,7 +244,7 @@ public class IdTest {
 				session -> {
 					Home reloadedHome = session.get( Home.class, h.getId() );
 					assertEquals( h.getId(), reloadedHome.getId() );
-					session.delete( reloadedHome );
+					session.remove( reloadedHome );
 				}
 		);
 	}
@@ -262,7 +260,7 @@ public class IdTest {
 					session.beginTransaction();
 					christmasTree = session.get( FirTree.class, christmasTree.getId() );
 					assertNotNull( christmasTree );
-					session.delete( christmasTree );
+					session.remove( christmasTree );
 				}
 		);
 	}
@@ -301,7 +299,7 @@ public class IdTest {
 					// reattach by saveOrUpdate
 					session.beginTransaction();
 					fb.setClub( "Bimbo FC SA" );
-					session.saveOrUpdate( fb );
+					session.merge( fb );
 					session.getTransaction().commit();
 
 					// clean up
@@ -310,8 +308,8 @@ public class IdTest {
 					fpk = new FootballerPk( "David", "Beckam" );
 					fb = session.get( Footballer.class, fpk );
 					assertEquals( "Bimbo FC SA", fb.getClub() );
-					session.delete( fb );
-					session.delete( keeper );
+					session.remove( fb );
+					session.remove( keeper );
 				}
 		);
 	}
@@ -321,8 +319,8 @@ public class IdTest {
 		Column idCol = (Column) scope.getMetadataImplementor().getEntityBinding( Ball.class.getName() )
 				.getIdentifierProperty()
 				.getValue()
-				.getColumnIterator()
-				.next();
+				.getSelectables()
+				.get( 0 );
 		assertEquals( "ball_id", idCol.getName() );
 	}
 

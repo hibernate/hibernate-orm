@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.basic;
 
@@ -22,7 +20,6 @@ import org.hibernate.orm.test.jpa.metamodel.CreditCard_;
 import org.hibernate.orm.test.jpa.metamodel.Customer_;
 import org.hibernate.orm.test.jpa.metamodel.Order;
 import org.hibernate.orm.test.jpa.metamodel.Order_;
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 
@@ -31,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -78,7 +76,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		em.createQuery( orderCriteria ).getResultList();
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.size() == 3 );
+		assertEquals( 3, orders.size() );
 		em.getTransaction().commit();
 		em.close();
 	}
@@ -95,7 +93,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		em.createQuery( orderCriteria ).getResultList();
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.size() == 3 );
+		assertEquals( 3, orders.size() );
 		em.getTransaction().commit();
 		em.close();
 	}
@@ -231,7 +229,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		orderCriteria.where( p );
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.size() == 1 );
+		assertEquals( 1, orders.size() );
 		em.getTransaction().commit();
 		em.close();
 	}
@@ -254,13 +252,13 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		orderCriteria.where( p );
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.size() == 0 );
+		assertTrue( orders.isEmpty() );
 		em.getTransaction().commit();
 		em.close();
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-5803" )
+	@JiraKey( value = "HHH-5803" )
 	@SkipForDialect( dialectClass = CockroachDialect.class, reason = "https://github.com/cockroachdb/cockroach/issues/41943")
 	public void testQuotientConversion() {
 		EntityManager em = getOrCreateEntityManager();
@@ -280,7 +278,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		orderCriteria.where( p );
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.size() == 0 );
+		assertTrue( orders.isEmpty() );
 		em.getTransaction().commit();
 		em.close();
 	}
@@ -311,7 +309,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8901" )
+	@JiraKey( value = "HHH-8901" )
 	public void testEmptyInPredicate() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -322,6 +320,38 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
 		assertTrue( orders.isEmpty() );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@JiraKey( value = "HHH-17804" )
+	public void testEmptyInPredicate2() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
+		Root<Order> orderRoot = orderCriteria.from( Order.class );
+		orderCriteria.select( orderRoot );
+		orderCriteria.where( builder.in( orderRoot.get("id") ) );
+
+		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
+		assertTrue( orders.isEmpty() );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@JiraKey( value = "HHH-17804" )
+	public void testEmptyInPredicate3() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
+		Root<Order> orderRoot = orderCriteria.from( Order.class );
+		orderCriteria.select( orderRoot );
+		orderCriteria.where( builder.in( orderRoot.get("id") ).not() );
+
+		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
+		assertFalse( orders.isEmpty() );
 		em.getTransaction().commit();
 		em.close();
 	}

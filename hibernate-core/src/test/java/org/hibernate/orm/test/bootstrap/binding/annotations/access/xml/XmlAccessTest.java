@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.access.xml;
 
@@ -21,11 +19,12 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.GetterMethodImpl;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AccessType;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test verifying that it is possible to configure the access type via xml configuration.
@@ -168,6 +167,7 @@ public class XmlAccessTest {
 		for ( Class<?> clazz : classesUnderTest ) {
 			cfg.addAnnotatedClass( clazz );
 		}
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		for ( String configFile : configFiles ) {
 			try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( configFile )) {
 				cfg.addInputStream( is );
@@ -191,16 +191,14 @@ public class XmlAccessTest {
 		final Getter accessGetter = attributeMapping.getPropertyAccess().getGetter();
 
 		if ( AccessType.FIELD.equals( accessType ) ) {
-			assertTrue(
-					accessGetter instanceof GetterFieldImpl,
-					"Field access was expected."
-			);
+			assertThat( accessGetter )
+					.withFailMessage( "FIELD access was expected." )
+					.isInstanceOf( GetterFieldImpl.class );
 		}
 		else {
-			assertTrue(
-					accessGetter instanceof GetterMethodImpl,
-					"Property access was expected."
-			);
+			assertThat( accessGetter )
+					.withFailMessage( "PROPERTY (method) access was expected." )
+					.isInstanceOf( GetterMethodImpl.class );
 		}
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
@@ -13,6 +11,7 @@ import java.util.Date;
 import java.util.Map;
 
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.ParameterMetadata;
@@ -151,6 +150,9 @@ public interface SqmQuery extends CommonQueryContract {
 	@Override
 	SqmQuery setProperties(@SuppressWarnings("rawtypes") Map bean);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmQuery setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	SqmQuery setQueryFlushMode(QueryFlushMode queryFlushMode);
 }

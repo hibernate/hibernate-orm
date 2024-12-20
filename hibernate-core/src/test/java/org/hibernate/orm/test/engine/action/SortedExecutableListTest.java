@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.engine.action;
 
@@ -39,7 +37,7 @@ public class SortedExecutableListTest {
 	private static class AnExecutable implements ComparableExecutable {
 
 		private final int n;
-		private Serializable[] spaces;
+		private String[] spaces;
 		private transient boolean afterDeserializeCalled;
 
 		public AnExecutable(int n, String... spaces) {
@@ -73,7 +71,7 @@ public class SortedExecutableListTest {
 		}
 
 		@Override
-		public Serializable[] getPropertySpaces() {
+		public String[] getPropertySpaces() {
 			return spaces;
 		}
 
@@ -145,7 +143,7 @@ public class SortedExecutableListTest {
 		assertThat( actionList ).element( 0 ).isSameAs( action1 );
 		assertThat( actionList ).element( 1 ).isSameAs( action3 );
 	}
-	
+
 	@Test
 	public void testClear() {
 		assertThat( actionList ).isEmpty();
@@ -160,7 +158,7 @@ public class SortedExecutableListTest {
 
 		assertThat( actionList ).isEmpty();
 	}
-	
+
 	@Test
 	public void testIterator() {
 		actionList.add( action1 );
@@ -248,7 +246,7 @@ public class SortedExecutableListTest {
 		assertThat( actionList ).element( 2 ).isSameAs( action3 );
 		assertThat( actionList ).element( 3 ).isSameAs( action4 );
 	}
-	
+
 	@Test
 	public void testSerializeDeserialize() throws IOException, ClassNotFoundException {
 		actionList.add( action4 );

@@ -1,28 +1,23 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tuple;
 
+import java.util.EnumSet;
 import java.util.Locale;
 
-import org.hibernate.AssertionFailure;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.generator.EventType;
 
 /**
- * Represents the timing of {@link ValueGeneration value generation} that occurs
- * in the Java program, or in the database.
+ * Represents the {@linkplain #getEventTypes timing} of value generation.
  *
  * @author Steve Ebersole
  *
- * @see ValueGeneration
- *
  * @deprecated Replaced by {@link EventType} as id-generation has been
  * redefined using the new broader {@linkplain org.hibernate.generator generation}
- * approach.
+ * approach.  For 7.0, this is kept around to support {@code hbm.xml} mappings and
+ * will be removed in 8.0 once we finally drop {@code hbm.xml} support.
  */
 @Deprecated(since = "6.2", forRemoval = true)
 public enum GenerationTiming {
@@ -57,48 +52,32 @@ public enum GenerationTiming {
 	}
 
 	public boolean includes(GenerationTiming timing) {
-		switch (this) {
-			case NEVER:
-				return timing == NEVER;
-			case INSERT:
-				return timing.includesInsert();
-			case UPDATE:
-				return timing.includesUpdate();
-			case ALWAYS:
-				return true;
-			default:
-				throw new AssertionFailure("unknown timing");
-		}
+		return switch (this) {
+			case NEVER -> timing == NEVER;
+			case INSERT -> timing.includesInsert();
+			case UPDATE -> timing.includesUpdate();
+			case ALWAYS -> true;
+		};
 	}
 
 	public static GenerationTiming parseFromName(String name) {
-		switch ( name.toLowerCase(Locale.ROOT) ) {
-			case "insert":
-				return INSERT;
-			case "update":
-				return UPDATE;
-			case "always":
-				return ALWAYS;
-			default:
-				return NEVER;
-		}
+		return switch (name.toLowerCase(Locale.ROOT)) {
+			case "insert" -> INSERT;
+			case "update" -> UPDATE;
+			case "always" -> ALWAYS;
+			default -> NEVER;
+		};
 	}
 
 	/**
-	 * @return the equivalent instance of {@link GenerationTime}
+	 * Return the equivalent set of {@linkplain EventType event types}
 	 */
-	public GenerationTime getEquivalent() {
-		switch (this) {
-			case ALWAYS:
-				return GenerationTime.ALWAYS;
-			case INSERT:
-				return GenerationTime.INSERT;
-			case UPDATE:
-				return GenerationTime.UPDATE;
-			case NEVER:
-				return GenerationTime.NEVER;
-			default:
-				throw new AssertionFailure("unknown timing");
-		}
+	public EnumSet<EventType> getEventTypes() {
+		return switch ( this ) {
+			case ALWAYS -> EnumSet.allOf( EventType.class );
+			case INSERT -> EnumSet.of( EventType.INSERT );
+			case UPDATE -> EnumSet.of( EventType.UPDATE );
+			case NEVER -> null;
+		};
 	}
 }

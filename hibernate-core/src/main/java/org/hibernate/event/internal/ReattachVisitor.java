@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
@@ -12,9 +10,11 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.pretty.MessageHelper;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
+
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * Abstract superclass of visitors that reattach collections.
@@ -56,7 +56,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 */
 	@Override
 	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
-		Type[] types = componentType.getSubtypes();
+		final Type[] types = componentType.getSubtypes();
 		if ( component == null ) {
 			processValues( new Object[types.length], types );
 		}
@@ -78,10 +78,8 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	void removeCollection(CollectionPersister role, Object collectionKey, EventSource source)
 			throws HibernateException {
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Collection dereferenced while transient {0}",
-					MessageHelper.collectionInfoString( role, ownerIdentifier, source.getFactory() )
-			);
+			LOG.trace( "Collection dereferenced while transient "
+						+ collectionInfoString( role, ownerIdentifier, source.getFactory() ) );
 		}
 		source.getActionQueue().addAction( new CollectionRemoveAction( owner, role, collectionKey, false, source ) );
 	}
@@ -97,12 +95,11 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * @return The value from the owner that identifies the grouping into the collection
 	 */
 	final Object extractCollectionKeyFromOwner(CollectionPersister role) {
-		if ( role.getCollectionType().useLHSPrimaryKey() ) {
+		final CollectionType collectionType = role.getCollectionType();
+		if ( collectionType.useLHSPrimaryKey() ) {
 			return ownerIdentifier;
 		}
-		return role.getOwnerEntityPersister().getPropertyValue(
-				owner,
-				role.getCollectionType().getLHSPropertyName()
-		);
+		return role.getOwnerEntityPersister()
+				.getPropertyValue( owner, collectionType.getLHSPropertyName() );
 	}
 }

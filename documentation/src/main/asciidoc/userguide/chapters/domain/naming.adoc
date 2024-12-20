@@ -15,22 +15,6 @@ Hibernate looks at this as 2-stage process:
 * Second is the resolving of this logical name to a physical name which is defined
 	by the <<PhysicalNamingStrategy>> contract.
 
-
-[NOTE]
-.Historical NamingStrategy contract
-====
-Historically Hibernate defined just a single `org.hibernate.cfg.NamingStrategy`.  That singular
-NamingStrategy contract actually combined the separate concerns that are now modeled individually
-as ImplicitNamingStrategy and PhysicalNamingStrategy.
-
-Also, the NamingStrategy contract was often not flexible enough to properly apply a given naming
-"rule", either because the API lacked the information to decide or because the API was honestly
-not well defined as it grew.
-
-Due to these limitations, `org.hibernate.cfg.NamingStrategy` has been deprecated
-in favor of ImplicitNamingStrategy and PhysicalNamingStrategy.
-====
-
 At the core, the idea behind each naming strategy is to minimize the amount of
 repetitive information a developer must provide for mapping a domain model.
 

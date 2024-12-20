@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor;
 
@@ -19,49 +17,46 @@ public interface JdbcBindingLogging {
 
 	Logger LOGGER = Logger.getLogger( NAME );
 
-	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
-	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
-
 	static void logBinding(int jdbcPosition, int typeCode, Object value) {
-		assert TRACE_ENABLED;
-
-		LOGGER.tracef(
-				"binding parameter (%s:%s) <- [%s]",
-				jdbcPosition,
-				JdbcTypeNameMapper.getTypeName( typeCode ),
-				value
-		);
+		if ( LOGGER.isTraceEnabled() ) {
+			LOGGER.tracef(
+					"binding parameter (%s:%s) <- [%s]",
+					jdbcPosition,
+					JdbcTypeNameMapper.getTypeName( typeCode ),
+					value
+			);
+		}
 	}
 
 	static void logNullBinding(int jdbcPosition, int typeCode) {
-		assert TRACE_ENABLED;
-
-		LOGGER.tracef(
-				"binding parameter (%s:%s) <- [null]",
-				jdbcPosition,
-				JdbcTypeNameMapper.getTypeName( typeCode )
-		);
+		if ( LOGGER.isTraceEnabled() ) {
+			LOGGER.tracef(
+					"binding parameter (%s:%s) <- [null]",
+					jdbcPosition,
+					JdbcTypeNameMapper.getTypeName( typeCode )
+			);
+		}
 	}
 
 	static void logBinding(String callableParameterName, int typeCode, Object value) {
-		assert TRACE_ENABLED;
-
-		LOGGER.tracef(
-				"binding parameter (%s:%s) <- [%s]",
-				callableParameterName,
-				JdbcTypeNameMapper.getTypeName( typeCode ),
-				value
-		);
+		if ( LOGGER.isTraceEnabled() ) {
+			LOGGER.tracef(
+					"binding parameter (%s:%s) <- [%s]",
+					callableParameterName,
+					JdbcTypeNameMapper.getTypeName( typeCode ),
+					value
+			);
+		}
 	}
 
 	static void logNullBinding(String callableParameterName, int typeCode) {
-		assert TRACE_ENABLED;
-
-		LOGGER.tracef(
-				"binding parameter (%s:%s) <- [null]",
-				callableParameterName,
-				JdbcTypeNameMapper.getTypeName( typeCode )
-		);
+		if ( LOGGER.isTraceEnabled() ) {
+			LOGGER.tracef(
+					"binding parameter (%s:%s) <- [null]",
+					callableParameterName,
+					JdbcTypeNameMapper.getTypeName( typeCode )
+			);
+		}
 	}
 
 }

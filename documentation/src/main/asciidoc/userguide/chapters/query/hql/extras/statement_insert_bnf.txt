@@ -1,5 +1,5 @@
 insertStatement
-    : "INSERT" "INTO"? targetEntity targetFields (queryExpression | valuesList)
+    : "INSERT" "INTO"? targetEntity targetFields (queryExpression | valuesList) conflictClause?
 
 targetEntity
 	: entityName variable?
@@ -12,3 +12,14 @@ valuesList
 
 values
 	: "(" expression ("," expression)* ")"
+
+conflictClause
+	: "on conflict" conflictTarget? conflictAction
+
+conflictTarget
+	: "on constraint" identifier
+	| "(" simplePath ("," simplePath)* ")";
+
+conflictAction
+	: "do nothing"
+	| "do update" setClause whereClause?

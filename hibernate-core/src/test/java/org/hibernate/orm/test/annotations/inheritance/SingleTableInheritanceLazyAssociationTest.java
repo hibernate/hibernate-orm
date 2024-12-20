@@ -1,8 +1,14 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.inheritance;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.Hibernate;
+
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
@@ -24,6 +30,8 @@ import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 @Jpa(
 		annotatedClasses = {
@@ -36,7 +44,7 @@ import jakarta.persistence.Version;
 				SingleTableInheritanceLazyAssociationTest.Message.class,
 		}
 )
-@TestForIssue(jiraKey = "HHH-15969")
+@JiraKey(value = "HHH-15969")
 public class SingleTableInheritanceLazyAssociationTest {
 
 	@BeforeAll
@@ -69,7 +77,12 @@ public class SingleTableInheritanceLazyAssociationTest {
 
 					for ( Message message : resultList ) {
 						Address address = message.getAddress();
+						assertThat( Hibernate.isInitialized( address ) ).isFalse();
 						address.getId();
+						assertThat( Hibernate.isInitialized( address ) ).isTrue();
+						User user = address.getUser();
+						assertThat( Hibernate.isInitialized( user ) ).isTrue();
+						assertThat( Hibernate.isInitialized( user.getAddress() ) ).isTrue();
 					}
 				}
 		);
@@ -205,6 +218,8 @@ public class SingleTableInheritanceLazyAssociationTest {
 		public String getId() {
 			return this.userId;
 		}
+
+		public abstract Address getAddress();
 	}
 
 	@Entity(name = "UserA")
@@ -220,6 +235,11 @@ public class SingleTableInheritanceLazyAssociationTest {
 
 		public UserA(String userId) {
 			super( userId );
+		}
+
+		@Override
+		public AddressA getAddress() {
+			return addressA;
 		}
 
 		public void setAddressA(AddressA addressA) {
@@ -240,6 +260,11 @@ public class SingleTableInheritanceLazyAssociationTest {
 
 		public UserB(String userId) {
 			super( userId );
+		}
+
+		@Override
+		public AddressB getAddress() {
+			return addressB;
 		}
 
 		public void setAddressB(AddressB addressB) {

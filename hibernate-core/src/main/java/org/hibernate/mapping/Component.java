@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -11,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -19,9 +16,9 @@ import java.util.Set;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.Remove;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
+import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -29,36 +26,47 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
+import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGenerationException;
-import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.metamodel.mapping.DiscriminatorConverter;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
+import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorConverter;
+import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.persister.entity.DiscriminatorHelper;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.UserComponentType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.CompositeUserType;
 
+import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
+import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
 /**
  * A mapping model object that represents an {@linkplain jakarta.persistence.Embeddable embeddable class}.
  *
- * @apiNote The name of this class is historical and unfortunate. An embeddable class holds a "component"
- *          of the state of an entity. It has absolutely nothing to do with modularity in software engineering.
+ * @apiNote The name of this class is historical and unfortunate. It reflects modeling a *composition*
+ *          of state. It has absolutely nothing to do with modularity in software engineering.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -71,10 +79,16 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private PersistentClass owner;
 	private boolean dynamic;
 	private boolean isKey;
-	private Boolean isGeneric;
+	private transient Boolean isGeneric;
 	private String roleName;
+	private MappedSuperclass mappedSuperclass;
+	private Value discriminator;
+	private transient DiscriminatorType<?> discriminatorType;
+	private Map<Object, String> discriminatorValues;
+	private Map<String, String> subclassToSuperclass;
 
 	private final ArrayList<Property> properties = new ArrayList<>();
+	private Map<Property, String> propertyDeclaringClasses;
 	private int[] originalPropertyOrder = ArrayHelper.EMPTY_INT_ARRAY;
 	private Map<String,MetaAttribute> metaAttributes;
 
@@ -83,18 +97,14 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private String[] instantiatorPropertyNames;
 
 	// cache the status of the type
-	private volatile CompositeType type;
+	private transient volatile CompositeType type;
 
 	private AggregateColumn aggregateColumn;
 	private AggregateColumn parentAggregateColumn;
-	private String structName;
+	private QualifiedName structName;
 	private String[] structColumnNames;
-	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
-	private transient List<Selectable> cachedSelectables;
-	// lazily computed based on 'properties' field: invalidate by setting to null when properties are modified
-	private transient List<Column> cachedColumns;
-
-	private transient Generator builtIdentifierGenerator;
+	private transient Class<?> componentClass;
+	private transient Boolean simpleRecord;
 
 	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
@@ -122,8 +132,10 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private Component(Component original) {
 		super( original );
 		this.properties.addAll( original.properties );
-		this.originalPropertyOrder = original.originalPropertyOrder.clone();
+		this.originalPropertyOrder = original.originalPropertyOrder == null ? null : original.originalPropertyOrder.clone();
+		this.propertyDeclaringClasses = original.propertyDeclaringClasses;
 		this.componentClassName = original.componentClassName;
+		this.componentClass = original.componentClass;
 		this.embedded = original.embedded;
 		this.parentProperty = original.parentProperty;
 		this.owner = original.owner;
@@ -132,6 +144,9 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.metaAttributes = original.metaAttributes == null ? null : new HashMap<>( original.metaAttributes );
 		this.isKey = original.isKey;
 		this.roleName = original.roleName;
+		this.discriminator = original.discriminator;
+		this.discriminatorValues = original.discriminatorValues;
+		this.subclassToSuperclass = original.subclassToSuperclass;
 		this.customInstantiator = original.customInstantiator;
 		this.type = original.type;
 	}
@@ -145,23 +160,29 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		return properties.size();
 	}
 
-	@Deprecated @Remove
-	public Iterator<Property> getPropertyIterator() {
-		return properties.iterator();
-	}
-
 	public List<Property> getProperties() {
 		return properties;
 	}
 
-	public void addProperty(Property p) {
+	public void addProperty(Property p, ClassDetails declaringClass) {
 		properties.add( p );
-		propertiesListModified();
+		if ( isPolymorphic() && declaringClass != null ) {
+			if ( propertyDeclaringClasses == null ) {
+				propertyDeclaringClasses = new HashMap<>();
+			}
+			propertyDeclaringClasses.put( p, declaringClass.getName() );
+		}
 	}
 
-	private void propertiesListModified() {
-		this.cachedSelectables = null;
-		this.cachedColumns = null;
+	public void addProperty(Property p) {
+		addProperty( p, null );
+	}
+
+	public String getPropertyDeclaringClass(Property p) {
+		if ( propertyDeclaringClasses != null ) {
+			return propertyDeclaringClasses.get( p );
+		}
+		return null;
 	}
 
 	@Override
@@ -170,42 +191,27 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
-	public int getColumnSpan() {
-		return getSelectables().size();
-	}
-
-	@Override @Deprecated @SuppressWarnings("deprecation")
-	public Iterator<Selectable> getColumnIterator() {
-		@SuppressWarnings("unchecked")
-		Iterator<Selectable>[] iters = new Iterator[ getPropertySpan() ];
-		int i = 0;
-		for ( Property property : getProperties() ) {
-			iters[i++] = property.getColumnIterator();
-		}
-		return new JoinedIterator<>( iters );
-	}
-
-	@Override
 	public List<Selectable> getSelectables() {
-		if ( cachedSelectables == null ) {
-			cachedSelectables = properties.stream()
-					.flatMap( p -> p.getSelectables().stream() )
-					.collect( toList() );
+		final List<Selectable> selectables = new ArrayList<>( properties.size() + 2 );
+		for ( Property property : properties ) {
+			selectables.addAll( property.getSelectables() );
 		}
-		return cachedSelectables;
+		if ( discriminator != null ) {
+			selectables.addAll( discriminator.getSelectables() );
+		}
+		return unmodifiableList( selectables );
 	}
 
 	@Override
 	public List<Column> getColumns() {
-		if ( cachedColumns != null ) {
-			return cachedColumns;
+		final List<Column> columns = new ArrayList<>( properties.size() + 2 );
+		for ( Property property : properties ) {
+			columns.addAll( property.getValue().getColumns() );
 		}
-		else {
-			this.cachedColumns = properties.stream()
-					.flatMap( p -> p.getValue().getColumns().stream() )
-					.collect( toList() );
-			return cachedColumns;
+		if ( discriminator != null ) {
+			columns.addAll( discriminator.getColumns() );
 		}
+		return unmodifiableList( columns );
 	}
 
 	public boolean isEmbedded() {
@@ -221,6 +227,11 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		notifyPropertiesAboutAggregateColumn( aggregateColumn, this );
 	}
 
+	@Override
+	public int getColumnSpan() {
+		return getSelectables().size();
+	}
+
 	public List<Column> getAggregatedColumns() {
 		final List<Column> aggregatedColumns = new ArrayList<>( getPropertySpan() );
 		collectAggregatedColumns( aggregatedColumns, this );
@@ -229,9 +240,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	private void collectAggregatedColumns(List<Column> aggregatedColumns, Component component) {
 		for ( Property property : component.getProperties() ) {
-			final Value value = property.getValue();
-			if ( value instanceof Component ) {
-				final Component subComponent = (Component) value;
+			if ( property.getValue() instanceof Component subComponent ) {
 				final AggregateColumn subAggregate = subComponent.getAggregateColumn();
 				if ( subAggregate != null ) {
 					aggregatedColumns.add( subAggregate );
@@ -241,8 +250,11 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 				}
 			}
 			else {
-				aggregatedColumns.addAll( value.getColumns() );
+				aggregatedColumns.addAll( property.getValue().getColumns() );
 			}
+		}
+		if ( component.isPolymorphic() ) {
+			aggregatedColumns.addAll( component.getDiscriminator().getColumns() );
 		}
 	}
 
@@ -251,19 +263,21 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 			// Let the BasicValue of every sub-column know about the aggregate,
 			// which is needed in type resolution
 			final Value value = property.getValue();
-			if ( value instanceof BasicValue ) {
-				assert ( (BasicValue) value ).getResolution() == null;
-				( (BasicValue) value ).setAggregateColumn( aggregateColumn );
+			if ( value instanceof BasicValue basicValue ) {
+				assert basicValue.getResolution() == null;
+				basicValue.setAggregateColumn( aggregateColumn );
 			}
-			else if ( value instanceof Component ) {
-				final Component subComponent = (Component) value;
+			else if ( value instanceof Component subComponent ) {
 				if ( subComponent.getAggregateColumn() == null ) {
 					subComponent.notifyPropertiesAboutAggregateColumn( aggregateColumn, subComponent );
 				}
 				else {
-					( (Component) value ).setParentAggregateColumn( aggregateColumn );
+					subComponent.setParentAggregateColumn( aggregateColumn );
 				}
 			}
+		}
+		if ( component.isPolymorphic() ) {
+			( (BasicValue) component.getDiscriminator() ).setAggregateColumn( aggregateColumn );
 		}
 	}
 
@@ -275,55 +289,42 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.parentAggregateColumn = parentAggregateColumn;
 	}
 
-	public String getStructName() {
+	public QualifiedName getStructName() {
 		return structName;
 	}
 
-	public void setStructName(String structName) {
+	public void setStructName(QualifiedName structName) {
 		this.structName = structName;
 	}
 
-	protected void checkColumnDuplication() throws MappingException {
-		checkPropertyColumnDuplication( new HashSet<>(), getProperties() );
-	}
-	protected void checkColumnDuplication(java.util.Set<String> distinctColumns, Value value)
-			throws MappingException {
-		if ( value != null ) {
-			for ( Selectable columnOrFormula : value.getSelectables() ) {
-				if ( !columnOrFormula.isFormula() ) {
-					final Column col = (Column) columnOrFormula;
-					if ( !distinctColumns.add( col.getName() ) ) {
-						throw new MappingException(
-								"Column '" + col.getName()
-										+ "' is duplicated in mapping for component '" + getRoleName()
-										+ "' (use '@Column(insertable=false, updatable=false)' when mapping multiple properties to the same column)"
+	@Override
+	public void checkColumnDuplication(Set<String> distinctColumns, String owner) {
+		if ( aggregateColumn == null ) {
+			if ( isPolymorphic() ) {
+				// We can allow different subtypes reusing the same columns
+				// since only one subtype can exist at one time
+				final Map<String, Set<String>> distinctColumnsByClass = new HashMap<>();
+				for ( Property prop : properties ) {
+					if ( prop.isUpdateable() || prop.isInsertable() ) {
+						final String declaringClass = propertyDeclaringClasses.get( prop );
+						final Set<String> set = distinctColumnsByClass.computeIfAbsent(
+								declaringClass,
+								k -> new HashSet<>( distinctColumns )
 						);
+						prop.getValue().checkColumnDuplication( set, owner );
 					}
 				}
-			}
-		}
-	}
-
-	protected void checkPropertyColumnDuplication(Set<String> distinctColumns, List<Property> properties)
-			throws MappingException {
-		for ( Property prop : properties ) {
-			Value value = prop.getValue();
-			if ( value instanceof Component ) {
-				Component component = (Component) value;
-				AggregateColumn aggregateColumn = component.getAggregateColumn();
-				if ( aggregateColumn == null ) {
-					checkPropertyColumnDuplication( distinctColumns, component.getProperties() );
-				}
-				else {
-					component.checkColumnDuplication();
-					checkColumnDuplication( distinctColumns, aggregateColumn.getValue() );
+				for ( Set<String> columns : distinctColumnsByClass.values() ) {
+					distinctColumns.addAll( columns );
 				}
 			}
 			else {
-				if ( prop.isUpdateable() || prop.isInsertable() ) {
-					checkColumnDuplication( distinctColumns, value);
-				}
+				checkPropertyColumnDuplication( distinctColumns, getProperties(), owner );
 			}
+		}
+		else {
+			checkPropertyColumnDuplication( new HashSet<>(), getProperties(), "component '" + getRoleName() + "'" );
+			aggregateColumn.getValue().checkColumnDuplication( distinctColumns, owner );
 		}
 	}
 
@@ -332,21 +333,24 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	public Class<?> getComponentClass() throws MappingException {
-		if ( componentClassName == null ) {
-			return null;
-		}
-		else {
-			final ClassLoaderService classLoaderService = getMetadata()
-					.getMetadataBuildingOptions()
-					.getServiceRegistry()
-					.getService( ClassLoaderService.class );
-			try {
-				return classLoaderService.classForName( componentClassName );
+		Class<?> result = componentClass;
+		if ( result == null ) {
+			if ( componentClassName == null ) {
+				return null;
 			}
-			catch (ClassLoadingException e) {
-				throw new MappingException("component class not found: " + componentClassName, e);
+			else {
+				try {
+					result = componentClass = getMetadata()
+							.getMetadataBuildingOptions()
+							.getServiceRegistry()
+							.requireService( ClassLoaderService.class ).classForName( componentClassName );
+				}
+				catch (ClassLoadingException e) {
+					throw new MappingException( "component class not found: " + componentClassName, e );
+				}
 			}
 		}
+		return result;
 	}
 
 	public PersistentClass getOwner() {
@@ -359,6 +363,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public void setComponentClassName(String componentClass) {
 		this.componentClassName = componentClass;
+		this.componentClass = null;
+		this.simpleRecord = null;
 	}
 
 	public void setEmbedded(boolean embedded) {
@@ -385,7 +391,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		final BootstrapContext bootstrapContext = getBuildingContext().getBootstrapContext();
 		final Class<CompositeUserType<?>> customTypeClass =
 				bootstrapContext.getClassLoaderAccess().classForName( component.getTypeName() );
-		return getBuildingContext().getBuildingOptions().disallowExtensionsInCdi()
+		return !getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
 				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( customTypeClass )
 				: bootstrapContext.getServiceRegistry().requireService( ManagedBeanRegistry.class )
 				.getBean( customTypeClass ).getBeanInstance();
@@ -470,16 +476,23 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	@Override
 	public boolean[] getColumnInsertability() {
-		final boolean[] result = new boolean[ getColumnSpan() ];
+		final boolean[] result = new boolean[getColumnSpan()];
 		int i = 0;
 		for ( Property prop : getProperties() ) {
-			final boolean[] chunk = prop.getValue().getColumnInsertability();
-			if ( prop.isInsertable() ) {
-				System.arraycopy( chunk, 0, result, i, chunk.length );
-			}
-			i += chunk.length;
+			i += copyFlags( prop.getValue().getColumnInsertability(), result, i, prop.isInsertable() );
 		}
+		if ( isPolymorphic() ) {
+			i += copyFlags( getDiscriminator().getColumnInsertability(), result, i, true );
+		}
+		assert i == getColumnSpan();
 		return result;
+	}
+
+	private static int copyFlags(boolean[] chunk, boolean[] result, int i, boolean doCopy) {
+		if ( doCopy ) {
+			System.arraycopy( chunk, 0, result, i, chunk.length );
+		}
+		return chunk.length;
 	}
 
 	@Override
@@ -495,15 +508,15 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	@Override
 	public boolean[] getColumnUpdateability() {
-		boolean[] result = new boolean[ getColumnSpan() ];
-		int i=0;
+		boolean[] result = new boolean[getColumnSpan()];
+		int i = 0;
 		for ( Property prop : getProperties() ) {
-			boolean[] chunk = prop.getValue().getColumnUpdateability();
-			if ( prop.isUpdateable() ) {
-				System.arraycopy(chunk, 0, result, i, chunk.length);
-			}
-			i+=chunk.length;
+			i += copyFlags( prop.getValue().getColumnUpdateability(), result, i, prop.isUpdateable() );
 		}
+		if ( isPolymorphic() ) {
+			i += copyFlags( getDiscriminator().getColumnUpdateability(), result, i, true );
+		}
+		assert i == getColumnSpan();
 		return result;
 	}
 
@@ -523,10 +536,6 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public void setKey(boolean isKey) {
 		this.isKey = isKey;
-	}
-
-	public boolean hasPojoRepresentation() {
-		return componentClassName!=null;
 	}
 
 	/**
@@ -550,6 +559,13 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		throw new MappingException("component: " + componentClassName + " property not found: " + propertyName);
 	}
 
+	public boolean matchesAllProperties(String... propertyNames) {
+		return properties.size() == propertyNames.length &&
+				new HashSet<>(properties.stream().map(Property::getName)
+						.collect(toList()))
+						.containsAll(List.of(propertyNames));
+	}
+
 	public boolean hasProperty(String propertyName) {
 		for ( Property prop : properties ) {
 			if ( prop.getName().equals(propertyName) ) {
@@ -567,72 +583,132 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.roleName = roleName;
 	}
 
+	public MappedSuperclass getMappedSuperclass() {
+		return mappedSuperclass;
+	}
+
+	public void setMappedSuperclass(MappedSuperclass mappedSuperclass) {
+		this.mappedSuperclass = mappedSuperclass;
+	}
+
+	public Value getDiscriminator() {
+		return discriminator;
+	}
+
+	public void setDiscriminator(Value discriminator) {
+		this.discriminator = discriminator;
+	}
+
+	public DiscriminatorType<?> getDiscriminatorType() {
+		DiscriminatorType<?> type = discriminatorType;
+		if ( type == null ) {
+			type = discriminatorType = buildDiscriminatorType();
+		}
+		return type;
+	}
+
+	private DiscriminatorType<?> buildDiscriminatorType() {
+		return getBuildingContext().getMetadataCollector().resolveEmbeddableDiscriminatorType( getComponentClass(), () -> {
+			final JavaTypeRegistry javaTypeRegistry = getTypeConfiguration().getJavaTypeRegistry();
+			final JavaType<String> domainJavaType = javaTypeRegistry.resolveDescriptor( Class.class );
+			final BasicType<?> discriminatorType = DiscriminatorHelper.getDiscriminatorType( this );
+			final DiscriminatorConverter<String, ?> converter = EmbeddableDiscriminatorConverter.fromValueMappings(
+					qualify( getComponentClassName(), DISCRIMINATOR_ROLE_NAME ),
+					domainJavaType,
+					discriminatorType,
+					getDiscriminatorValues(),
+					getServiceRegistry()
+			);
+			return new DiscriminatorTypeImpl<>( discriminatorType, converter );
+		} );
+	}
+
+	public boolean isPolymorphic() {
+		return discriminator != null;
+	}
+
+	public Map<Object, String> getDiscriminatorValues() {
+		return discriminatorValues;
+	}
+
+	public void setDiscriminatorValues(Map<Object, String> discriminatorValues) {
+		this.discriminatorValues = discriminatorValues;
+	}
+
+	public String getSuperclass(String subclass) {
+		return subclassToSuperclass.get( subclass );
+	}
+
+	public void setSubclassToSuperclass(Map<String, String> subclassToSuperclass) {
+		this.subclassToSuperclass = subclassToSuperclass;
+	}
+
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + '(' + componentClassName + ')';
 	}
 
 	@Override
-	public Generator createGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			RootClass rootClass) throws MappingException {
-		if ( builtIdentifierGenerator == null ) {
-			builtIdentifierGenerator = buildIdentifierGenerator(
-					identifierGeneratorFactory,
-					dialect,
-					rootClass
-			);
-		}
-		return builtIdentifierGenerator;
+	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property, GeneratorSettings defaults) {
+		return getCustomIdGeneratorCreator().isAssigned()
+				? buildIdentifierGenerator( dialect, rootClass, defaults )
+				: super.createGenerator( dialect, rootClass, property, defaults );
 	}
 
-	private Generator buildIdentifierGenerator(
-			IdentifierGeneratorFactory identifierGeneratorFactory,
-			Dialect dialect,
-			RootClass rootClass) throws MappingException {
-		final boolean hasCustomGenerator = ! DEFAULT_ID_GEN_STRATEGY.equals( getIdentifierGeneratorStrategy() );
-		if ( hasCustomGenerator ) {
-			return super.createGenerator( identifierGeneratorFactory, dialect, rootClass );
-		}
-
-		final Class<?> entityClass = rootClass.getMappedClass();
-		final Class<?> attributeDeclarer; // what class is the declarer of the composite pk attributes
-		// IMPL NOTE : See the javadoc discussion on CompositeNestedGeneratedValueGenerator wrt the
-		//		various scenarios for which we need to account here
-		if ( rootClass.getIdentifierMapper() != null ) {
-			// we have the @IdClass / <composite-id mapped="true"/> case
-			attributeDeclarer = resolveComponentClass();
-		}
-		else if ( rootClass.getIdentifierProperty() != null ) {
-			// we have the "@EmbeddedId" / <composite-id name="idName"/> case
-			attributeDeclarer = resolveComponentClass();
-		}
-		else {
-			// we have the "straight up" embedded (again the Hibernate term) component identifier
-			attributeDeclarer = entityClass;
-		}
-
-		final CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator =
-				new StandardGenerationContextLocator( rootClass.getEntityName() );
-		final CompositeNestedGeneratedValueGenerator generator = new CompositeNestedGeneratedValueGenerator( locator );
-
-		for ( Property property : getProperties() ) {
+	private Generator buildIdentifierGenerator(Dialect dialect, RootClass rootClass, GeneratorSettings defaults) {
+		final CompositeNestedGeneratedValueGenerator generator =
+				new CompositeNestedGeneratedValueGenerator(
+						new StandardGenerationContextLocator( rootClass.getEntityName() ),
+						getType()
+				);
+		final List<Property> properties = getProperties();
+		for ( int i = 0; i < properties.size(); i++ ) {
+			final Property property = properties.get( i );
 			if ( property.getValue().isSimpleValue() ) {
 				final SimpleValue value = (SimpleValue) property.getValue();
-
-				if ( !DEFAULT_ID_GEN_STRATEGY.equals( value.getIdentifierGeneratorStrategy() ) ) {
-					// skip any 'assigned' generators, they would have been handled by
-					// the StandardGenerationContextLocator
-					Generator subgenerator = value.createGenerator( identifierGeneratorFactory, dialect, rootClass );
-					generator.addGeneratedValuePlan( new ValueGenerationPlan(
-							subgenerator,
-							injector( property, attributeDeclarer ) )
-					);
+				if ( !value.getCustomIdGeneratorCreator().isAssigned() ) {
+					// skip any 'assigned' generators, they would have been
+					// handled by the StandardGenerationContextLocator
+					if ( value.createGenerator( dialect, rootClass, property, defaults )
+							instanceof BeforeExecutionGenerator beforeExecutionGenerator ) {
+						generator.addGeneratedValuePlan( new ValueGenerationPlan(
+								beforeExecutionGenerator,
+								getType().isMutable()
+										? injector( property, getAttributeDeclarer( rootClass ) )
+										: null,
+								i
+						) );
+					}
+					else {
+						throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );
+					}
 				}
 			}
 		}
 		return generator;
+	}
+
+	/**
+	 * Return the class that declares the composite pk attributes,
+	 * which might be an {@code @IdClass}, an {@code @EmbeddedId},
+	 * of the entity class itself.
+	 */
+	private Class<?> getAttributeDeclarer(RootClass rootClass) {
+		// See the javadoc discussion on CompositeNestedGeneratedValueGenerator
+		// for the various scenarios we need to account for here
+		if ( rootClass.getIdentifierMapper() != null ) {
+			// we have the @IdClass / <composite-id mapped="true"/> case
+			return resolveComponentClass();
+		}
+		else if ( rootClass.getIdentifierProperty() != null ) {
+			// we have the "@EmbeddedId" / <composite-id name="idName"/> case
+			return resolveComponentClass();
+		}
+		else {
+			// we have the "straight up" embedded (again the Hibernate term)
+			// component identifier: the entity class itself is the id class
+			return rootClass.getMappedClass();
+		}
 	}
 
 	private Setter injector(Property property, Class<?> attributeDeclarer) {
@@ -659,6 +735,10 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		return propertyNames;
 	}
 
+	public void clearProperties() {
+		properties.clear();
+	}
+
 	public static class StandardGenerationContextLocator
 			implements CompositeNestedGeneratedValueGenerator.GenerationContextLocator {
 		private final String entityName;
@@ -674,20 +754,30 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	public static class ValueGenerationPlan implements CompositeNestedGeneratedValueGenerator.GenerationPlan {
-		private final Generator subgenerator;
+		private final BeforeExecutionGenerator generator;
 		private final Setter injector;
+		private final int propertyIndex;
 
-		public ValueGenerationPlan(Generator subgenerator, Setter injector) {
-			this.subgenerator = subgenerator;
+		public ValueGenerationPlan(BeforeExecutionGenerator generator, Setter injector, int propertyIndex) {
+			this.generator = generator;
 			this.injector = injector;
+			this.propertyIndex = propertyIndex;
 		}
 
 		@Override
-		public void execute(SharedSessionContractImplementor session, Object incomingObject, Object injectionContext) {
-			if ( !subgenerator.generatedOnExecution() ) {
-				final Object generatedId = ( (BeforeExecutionGenerator) subgenerator)
-						.generate( session, incomingObject, null, INSERT );
-				injector.set( injectionContext, generatedId );
+		public Setter getInjector() {
+			return injector;
+		}
+
+		@Override
+		public int getPropertyIndex() {
+			return propertyIndex;
+		}
+
+		@Override
+		public Object execute(SharedSessionContractImplementor session, Object incomingObject) {
+			if ( generator.generatedBeforeExecution( incomingObject, session ) ) {
+				return generator.generate( session, incomingObject, null, INSERT );
 			}
 			else {
 				throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );
@@ -696,15 +786,15 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		@Override
 		public void registerExportables(Database database) {
-			if ( subgenerator instanceof ExportableProducer ) {
-				( (ExportableProducer) subgenerator).registerExportables( database );
+			if ( generator instanceof ExportableProducer exportableProducer ) {
+				exportableProducer.registerExportables( database );
 			}
 		}
 
 		@Override
 		public void initialize(SqlStringGenerationContext context) {
-			if ( subgenerator instanceof IdentifierGenerator ) {
-				( (IdentifierGenerator) subgenerator).initialize( context );
+			if ( generator instanceof Configurable configurable ) {
+				configurable.initialize( context );
 			}
 		}
 	}
@@ -715,8 +805,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
-	public boolean isValid(Mapping mapping) throws MappingException {
-		if ( !super.isValid( mapping ) ) {
+	public boolean isValid(MappingContext mappingContext) throws MappingException {
+		if ( !super.isValid( mappingContext ) ) {
 			return false;
 		}
 		if ( instantiatorPropertyNames != null ) {
@@ -794,30 +884,36 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 				}
 			}
 		}
-		propertiesListModified();
 		return this.originalPropertyOrder = originalPropertyOrder;
 	}
 
-	private boolean isSimpleRecord() {
-		// A simple record is given, when the properties match the order of the record component names
-		final Class<?> componentClass = resolveComponentClass();
-		if ( customInstantiator != null ) {
-			return false;
-		}
-		if ( componentClass == null || !ReflectHelper.isRecord( componentClass ) ) {
-			return false;
-		}
-		final String[] recordComponentNames = ReflectHelper.getRecordComponentNames( componentClass );
-		if ( recordComponentNames.length != properties.size() ) {
-			return false;
-		}
-		for ( int i = 0; i < recordComponentNames.length; i++ ) {
-			if ( !recordComponentNames[i].equals( properties.get( i ).getName() ) ) {
-				return false;
-			}
-		}
+	public void setSimpleRecord(boolean simpleRecord) {
+		this.simpleRecord = simpleRecord;
+	}
 
-		return true;
+	public boolean isSimpleRecord() {
+		Boolean simple = simpleRecord;
+		if ( simple == null ) {
+			// A simple record is given, when the properties match the order of the record component names
+			final Class<?> componentClass = resolveComponentClass();
+			if ( customInstantiator != null ) {
+				return simpleRecord = false;
+			}
+			if ( componentClass == null || !ReflectHelper.isRecord( componentClass ) ) {
+				return simpleRecord = false;
+			}
+			final String[] recordComponentNames = ReflectHelper.getRecordComponentNames( componentClass );
+			if ( recordComponentNames.length != properties.size() ) {
+				return simpleRecord = false;
+			}
+			for ( int i = 0; i < recordComponentNames.length; i++ ) {
+				if ( !recordComponentNames[i].equals( properties.get( i ).getName() ) ) {
+					return simpleRecord = false;
+				}
+			}
+			simple = simpleRecord = true;
+		}
+		return simple;
 	}
 
 	public Class<? extends EmbeddableInstantiator> getCustomInstantiator() {
@@ -851,7 +947,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public boolean isGeneric() {
 		if ( isGeneric == null ) {
-			isGeneric = getComponentClassName() != null && getComponentClass().getTypeParameters().length != 0;
+			isGeneric = getComponentClassName() != null
+					&& getComponentClass().getTypeParameters().length > 0;
 		}
 		return isGeneric;
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.jpa;
 
@@ -13,6 +11,8 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Base support for {@link JpaSelection} impls.
  *
@@ -21,8 +21,8 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 public abstract class AbstractJpaSelection<T>
 		extends AbstractJpaTupleElement<T>
 		implements SqmSelectableNode<T>, JpaSelection<T> {
-	protected AbstractJpaSelection(SqmExpressible<? extends T> sqmExpressible, NodeBuilder criteriaBuilder) {
-		super(sqmExpressible, criteriaBuilder );
+	protected AbstractJpaSelection(@Nullable SqmExpressible<? super T> sqmExpressible, NodeBuilder criteriaBuilder) {
+		super( sqmExpressible, criteriaBuilder );
 	}
 
 	@Override

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.mapping.quote;
 
 import jakarta.persistence.Column;
@@ -38,7 +42,7 @@ public class ColumnQuoteTest {
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Product product = new Product( testProductId, fieldWithHibernateQuotingValue, fieldWithJpaQuotingValue );
-			session.save( product );
+			session.persist( product );
 		} );
 		scope.getSessionFactory().getQueryEngine().getInterpretationCache().close();
 	}

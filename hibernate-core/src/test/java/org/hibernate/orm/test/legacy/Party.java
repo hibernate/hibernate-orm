@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.legacy;
 
@@ -12,34 +10,34 @@ package org.hibernate.orm.test.legacy;
  */
 public class Party {
 
-   String id;
-   String name;
-   String address;
+String id;
+String name;
+String address;
 
 
-  String getId() {
-    return id;
-  }
+String getId() {
+	return id;
+}
 
-  void  setId(String newValue) {
-    id = newValue;
-  }
+void  setId(String newValue) {
+	id = newValue;
+}
 
-  String getName() {
-    return name;
-  }
+String getName() {
+	return name;
+}
 
-  void  setName(String newValue) {
-    name = newValue;
-  }
+void  setName(String newValue) {
+	name = newValue;
+}
 
-  String getAddress() {
-    return address;
-  }
+String getAddress() {
+	return address;
+}
 
-  void  setAddress(String newValue) {
-    address = newValue;
-  }
+void  setAddress(String newValue) {
+	address = newValue;
+}
 
 
 }

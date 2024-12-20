@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.generics;
 
 import java.math.BigDecimal;
@@ -6,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +31,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				WildcardsTest.BalanceUsage.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-15624")
+@JiraKey(value = "HHH-15624")
 public class WildcardsTest {
 
 	@BeforeEach

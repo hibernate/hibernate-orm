@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -11,22 +9,29 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.sqm.BinaryArithmeticOperator;
+import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
+import org.hibernate.sql.ast.tree.from.FunctionTableReference;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 
@@ -39,6 +44,55 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	public HSQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
+		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
+			// Render plain insert statement and possibly run into unique constraint violation
+			super.visitInsertStatementOnly( statement );
+		}
+		else {
+			visitInsertStatementEmulateMerge( statement );
+		}
+	}
+
+	@Override
+	protected void visitUpdateStatementOnly(UpdateStatement statement) {
+		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
+			visitUpdateStatementEmulateMerge( statement );
+		}
+		else {
+			super.visitUpdateStatementOnly( statement );
+		}
+	}
+
+	@Override
+	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
+		super.renderDmlTargetTableExpression( tableReference );
+		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
+		if ( tableReference instanceof FunctionTableReference && tableReference.isLateral() ) {
+			// No need for a lateral keyword for functions
+			tableReference.accept( this );
+		}
+		else {
+			super.renderDerivedTableReference( tableReference );
+		}
+	}
+
+	@Override
+	protected void visitConflictClause(ConflictClause conflictClause) {
+		if ( conflictClause != null ) {
+			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
+			}
+		}
 	}
 
 	@Override
@@ -108,8 +162,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	protected void visitAnsiCaseSearchedExpression(
 			CaseSearchedExpression expression,
 			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( expression )
-				|| areAllResultsPlainParametersOrLiterals( expression ) ) {
+		if ( areAllResultsPlainParametersOrStringLiterals( expression ) ) {
 			final List<CaseSearchedExpression.WhenFragment> whenFragments = expression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
 			super.visitAnsiCaseSearchedExpression(
@@ -133,8 +186,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	protected void visitAnsiCaseSimpleExpression(
 			CaseSimpleExpression expression,
 			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( expression )
-				|| areAllResultsPlainParametersOrLiterals( expression ) ) {
+		if ( areAllResultsPlainParametersOrStringLiterals( expression ) ) {
 			final List<CaseSimpleExpression.WhenFragment> whenFragments = expression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
 			super.visitAnsiCaseSimpleExpression(
@@ -154,11 +206,11 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		}
 	}
 
-	protected boolean areAllResultsPlainParametersOrLiterals(CaseSearchedExpression caseSearchedExpression) {
+	protected boolean areAllResultsPlainParametersOrStringLiterals(CaseSearchedExpression caseSearchedExpression) {
 		final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
 		final Expression firstResult = whenFragments.get( 0 ).getResult();
 		if ( isParameter( firstResult ) && getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT
-				|| isLiteral( firstResult ) ) {
+				|| isStringLiteral( firstResult ) ) {
 			for ( int i = 1; i < whenFragments.size(); i++ ) {
 				final Expression result = whenFragments.get( i ).getResult();
 				if ( isParameter( result ) ) {
@@ -166,7 +218,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 						return false;
 					}
 				}
-				else if ( !isLiteral( result ) ) {
+				else if ( !isStringLiteral( result ) ) {
 					return false;
 				}
 			}
@@ -175,11 +227,11 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		return false;
 	}
 
-	protected boolean areAllResultsPlainParametersOrLiterals(CaseSimpleExpression caseSimpleExpression) {
+	protected boolean areAllResultsPlainParametersOrStringLiterals(CaseSimpleExpression caseSimpleExpression) {
 		final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
 		final Expression firstResult = whenFragments.get( 0 ).getResult();
 		if ( isParameter( firstResult ) && getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT
-				|| isLiteral( firstResult ) ) {
+				|| isStringLiteral( firstResult ) ) {
 			for ( int i = 1; i < whenFragments.size(); i++ ) {
 				final Expression result = whenFragments.get( i ).getResult();
 				if ( isParameter( result ) ) {
@@ -187,11 +239,18 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 						return false;
 					}
 				}
-				else if ( !isLiteral( result ) ) {
+				else if ( !isStringLiteral( result ) ) {
 					return false;
 				}
 			}
 			return true;
+		}
+		return false;
+	}
+
+	private boolean isStringLiteral( Expression expression ) {
+		if ( expression instanceof Literal ) {
+			return ( (Literal) expression ).getJdbcMapping().getJdbcType().isStringLike();
 		}
 		return false;
 	}
@@ -214,7 +273,12 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	@Override
 	protected void renderSelectExpression(Expression expression) {
-		renderSelectExpressionWithCastedOrInlinedPlainParameters( expression );
+		if ( isInSubquery() && expression instanceof Literal ) {
+			renderCasted( expression );
+		}
+		else {
+			renderSelectExpressionWithCastedOrInlinedPlainParameters( expression );
+		}
 	}
 
 	@Override
@@ -225,6 +289,22 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
 	}
 
+	@Override
+	public void visitRelationalPredicate(ComparisonPredicate comparisonPredicate) {
+		if ( isParameter( comparisonPredicate.getLeftHandExpression() )
+				&& isParameter( comparisonPredicate.getRightHandExpression() ) ) {
+			// HSQLDB doesn't like comparing two parameters with each other
+			withParameterRenderingMode(
+					SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
+					() -> super.visitRelationalPredicate( comparisonPredicate )
+			);
+		}
+		else {
+			super.visitRelationalPredicate( comparisonPredicate );
+		}
+	}
+
+	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
 		if ( lhsExpressionType == null || lhsExpressionType.getJdbcTypeCount() != 1 ) {
@@ -283,38 +363,13 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		return false;
 	}
 
-	@Override
-	protected String getFromDual() {
-		return " from (values(0))";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return getFromDual();
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return true;
 	}
 
 	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		final BinaryArithmeticOperator operator = arithmeticExpression.getOperator();
-		if ( operator == BinaryArithmeticOperator.MODULO ) {
-			append( "mod" );
-			appendSql( OPEN_PARENTHESIS );
-			arithmeticExpression.getLeftHandOperand().accept( this );
-			appendSql( ',' );
-			arithmeticExpression.getRightHandOperand().accept( this );
-			appendSql( CLOSE_PARENTHESIS );
-		}
-		else {
-			appendSql( OPEN_PARENTHESIS );
-			render( arithmeticExpression.getLeftHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-			appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-			render( arithmeticExpression.getRightHandOperand(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-			appendSql( CLOSE_PARENTHESIS );
-		}
+	protected void visitArithmeticOperand(Expression expression) {
+		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 	}
 
 }

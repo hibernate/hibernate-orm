@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
+import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -36,7 +35,12 @@ public class EmbeddedSqmPathSource<J>
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		return (SqmPathSource<?>) getSqmPathType().findAttribute( name );
+		final SqmPathSource<?> subPathSource = getSqmPathType().findSubPathSource( name );
+		if ( subPathSource != null ) {
+			return subPathSource;
+		}
+
+		return null;
 	}
 
 	@Override
@@ -47,7 +51,9 @@ public class EmbeddedSqmPathSource<J>
 	@Override
 	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
 		return new SqmEmbeddedValuedSimplePath<>(
-				PathHelper.append( lhs, this, intermediatePathSource ),
+				pathModel instanceof SqmJoinable<?, ?>
+						? ( (SqmJoinable<?, ?>) pathModel ).createNavigablePath( lhs, null )
+						: PathHelper.append( lhs, this, intermediatePathSource ),
 				pathModel,
 				lhs,
 				lhs.nodeBuilder()

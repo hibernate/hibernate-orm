@@ -21,7 +21,7 @@ Session session = entityManager.unwrap(Session.class);
 ====
 
 An instance of `Session` (or of `EntityManager`) is a _stateful session_.
-It mediates the interaction between your program and the database via a operations on a _persistence context_.
+It mediates the interaction between your program and the database via operations on a _persistence context_.
 
 In this chapter, we're not going to talk much about `StatelessSession`.
 We'll come back to <<stateless-sessions,this very useful API>> when we talk about performance.
@@ -37,7 +37,7 @@ Stateful sessions certainly have their advantages, but they're more difficult to
 ====
 
 [[persistence-contexts]]
-=== Persistence Contexts
+=== Persistence contexts
 
 A persistence context is a sort of cache; we sometimes call it the "first-level cache", to distinguish it from the <<second-level-cache,second-level cache>>.
 For every entity instance read from the database within the scope of a persistence context, and for every new entity made persistent within the scope of the persistence context, the context holds a unique mapping from the identifier of the entity instance to the instance itself.
@@ -172,7 +172,19 @@ finally {
 }
 ----
 
-Using Hibernate's native APIs we might write something really similar,
+But this code is extremely tedious, so there's a cleaner option:
+
+[source,java]
+----
+entityManagerFactory.runInTransaction(entityManager -> {
+    // do the work
+    ...
+});
+----
+
+When we need to return a value from within the anonymous function, we use `callInTransaction()` instead of `runInTransaction()`.
+
+Using Hibernate's native APIs we can write something very similar:
 // [source,java]
 // ----
 // Session session = sessionFactory.openSession();
@@ -191,8 +203,6 @@ Using Hibernate's native APIs we might write something really similar,
 //     session.close();
 // }
 // ----
-but since this sort of code is extremely tedious, we have a much nicer option:
-
 [source,java]
 ----
 sessionFactory.inTransaction(session -> {
@@ -206,6 +216,22 @@ sessionFactory.inTransaction(session -> {
 In a container environment, the container itself is usually responsible for managing transactions.
 In Java EE or Quarkus, you'll probably indicate the boundaries of the transaction using the `@Transactional` annotation.
 ****
+
+The `EntityTransaction` interface provides a standard way to set the transaction timeout:
+
+[source,java]
+----
+entityManager.getTransaction().setTimeout(30); // 30 seconds
+----
+
+`EntityTransaction` also provides a way to set the transaction to rollback-only mode:
+
+[source,java]
+----
+entityManager.getTransaction().setRollbackOnly();
+----
+
+A transaction in rollback-only mode will be rolled back when it completes.
 
 [[persistence-operations]]
 === Operations on the persistence context
@@ -238,7 +264,7 @@ Notice that `persist()` and `remove()` have no immediate effect on the database,
 Also notice that there's no `update()` operation for a stateful session.
 Modifications are automatically detected when the session is <<flush,flushed>>.
 
-On the other hand, the following operations all result in immediate access to the database:
+On the other hand, except for `getReference()`, the following operations all result in immediate access to the database:
 
 .Methods for reading and locking data
 [%breakable,cols="30,~"]
@@ -249,6 +275,8 @@ On the other hand, the following operations all result in immediate access to th
 | Obtain a persistent object given its type and its id
 | `find(Class,Object,LockModeType)`
 | Obtain a persistent object given its type and its id, requesting the given <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock mode>>
+| `find(EntityGraph,Object)`
+| Obtain a persistent object given its id and an `EntityGraph` specifying its type and associations which should be eagerly fetched
 | `getReference(Class,id)`
 | Obtain a reference to a persistent object given its type and its id, without actually loading its state from the database
 | `getReference(Object)`
@@ -257,7 +285,7 @@ On the other hand, the following operations all result in immediate access to th
 | Refresh the persistent state of an object using a new SQL `select` to retrieve its current state from the database
 | `refresh(Object,LockModeType)`
 | Refresh the persistent state of an object using a new SQL `select` to retrieve its current state from the database, requesting the given <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock mode>>
-| `lock(Object, LockModeType)`
+| `lock(Object,LockModeType)`
 | Obtain an <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock>> on a persistent object
 |===
 
@@ -272,6 +300,54 @@ Therefore, a session is considered to be unusable after any of its methods throw
 The persistence context is fragile.
 If you receive an exception from Hibernate, you should immediately close and discard the current session. Open a new session if you need to, but throw the bad one away first.
 ====
+
+[CAUTION]
+====
+Some of these operations require slightly more care than others.
+When you call `detach()`, `clear()`, `flush()`, or `refresh()`, you've already strayed from the narrow path.
+You didn't stray far--and you probably had a good reason for going there--but you're in territory where Hibernate just has to assume you know what you're doing.
+If you start to feel that this terrain is bogging you down, consider using a <<stateless-sessions,stateless session>>.
+====
+
+Four of these operations accept _options_, allowing influence over their behavior.
+
+[%breakable,cols="50,~"]
+|===
+| Method name and parameters | Effect
+
+| `find(Class,Object,FindOption...)`
+| Obtain a persistent object given its type and its id, using the specified options
+| `find(EntityGraph,Object,FindOption...)`
+| Obtain a persistent object given its id and an `EntityGraph` specifying its type and associations which should be eagerly fetched, using the specified options
+| `refresh(Object,LockModeType,RefreshOption...)`
+| Refresh the persistent state of an object using a new SQL `select` to retrieve its current state from the database, requesting the given <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock mode>>, using the specified options
+| `lock(Object,LockModeType,LockOption...)`
+| Obtain an <<optimistic-and-pessimistic-locking,optimistic or pessimistic lock>> on a persistent object, using the specified options
+|===
+
+For example, JPA provides the `Timeout` class which is a `FindOption`, a `RefreshOption`, and a `LockOption`.
+
+[source,java]
+----
+var book = entityManger.find(Book.class, isbn, Timeout.ms(100), CacheStoreMode.BYPASS);
+----
+
+Finally, the Hibernate `Session` offers the following method, which is capable of efficiently loading multiple entity instances in parallel:
+
+[%breakable,cols="50,~"]
+|===
+| Method name and parameters | Effect
+
+| `findMultiple(Class,List<Object>,FindOption...)`
+| Obtain a list of persistent objects given their type and their ids, using the specified options
+|===
+
+The following code results in a single SQL `select` statement:
+
+[source,java]
+----
+List<Book> books = session.findMultiple(Book.class, bookIds);
+----
 
 Each of the operations we've seen so far affects a single entity instance passed as an argument.
 But there's a way to set things up so that an operation will propagate to associated entities.
@@ -323,8 +399,14 @@ Now for the gotchas:
 
 1. Hibernate will only do this for an entity which is currently associated with a persistence context.
    Once the session ends, and the persistence context is cleaned up, the proxy is no longer fetchable, and instead its methods throw the hated `LazyInitializationException`.
-2. A round trip to the database to fetch the state of a single entity instance is just about _the least efficient_ way to access data.
+2. For a polymorphic association, Hibernate does not know the concrete type of the referenced entity when the proxy is instantiated, and so operations like `instanceof` and typecasts do not work correctly when applied to a proxy.
+3. A round trip to the database to fetch the state of a single entity instance is just about _the least efficient_ way to access data.
    It almost inevitably leads to the infamous _N+1 selects_ problem we'll discuss later when we talk about how to <<association-fetching,optimize association fetching>>.
+
+[TIP]
+====
+The link:{doc-javadoc-url}org/hibernate/annotations/ConcreteProxy.html[`@ConcreteProxy`] annotation solves gotcha 2, but at the cost of performance (extra joins), and so its use is not generally recommended, except in very special circumstances.
+====
 
 [TIP]
 // .Strive to avoid triggering lazy fetching
@@ -367,8 +449,25 @@ Hibernate has a slightly easier way to do it:
 boolean authorsFetched = Hibernate.isInitialized(book.getAuthors());
 ----
 
-But the static methods of the `Hibernate` class let us do a lot more, and it's worth getting a bit familiar them.
+Similarly, `PersistenceUnitUtil.load()` force-fetches a proxy or collection:
 
+[source,java]
+----
+Book book = session.find(Book.class, bookId);  // fetch just the Book, leaving authors unfetched
+entityManagerFactory.getPersistenceUnitUtil().load(book.getAuthors());
+----
+
+Again, `Hibernate.initialize()` is slightly more convenient:
+
+[source,java]
+----
+Book book = session.find(Book.class, bookId);  // fetch just the Book, leaving authors unfetched
+Hibernate.initialize(book.getAuthors());  // fetch the Authors
+----
+
+On the other hand, the above code is very inefficient, requiring two trips to the database to obtain data that could in principle be retrieved with just one query.
+
+The static methods of the link:{doc-javadoc-url}org/hibernate/Hibernate.html[`Hibernate`] class let us do a lot more, and it's worth getting a bit familiar with them.
 Of particular interest are the operations which let us work with unfetched collections without fetching their state from the database.
 For example, consider this code:
 
@@ -381,18 +480,8 @@ boolean isByAuthor = Hibernate.contains(book.getAuthors(), authorRef); // no fet
 
 This code fragment leaves both the set `book.authors` and the proxy `authorRef` unfetched.
 
-Finally, `Hibernate.initialize()` is a convenience method that force-fetches a proxy or collection:
-
-[source,java]
-----
-Book book = session.find(Book.class, bookId);  // fetch just the Book, leaving authors unfetched
-Hibernate.initialize(book.getAuthors());  // fetch the Authors
-----
-
-But of course, this code is very inefficient, requiring two trips to the database to obtain data that could in principle be retrieved with just one query.
-
 It's clear from the discussion above that we need a way to request that an association be _eagerly_ fetched using a database `join`, thus protecting ourselves from the infamous N+1 selects.
-One way to do that is by passing an `EntityGraph` to `find()`.
+One way to do this is by passing an `EntityGraph` to `find()`.
 
 [[entity-graph]]
 === Entity graphs and eager fetching
@@ -400,24 +489,20 @@ One way to do that is by passing an `EntityGraph` to `find()`.
 When an association is mapped `fetch=LAZY`, it won't, by default, be fetched when we call the `find()` method.
 We may request that an association be fetched eagerly (immediately) by passing an `EntityGraph` to `find()`.
 
-The JPA-standard API for this is a bit unwieldy:
-
 [source,java]
 ----
 var graph = entityManager.createEntityGraph(Book.class);
 graph.addSubgraph(Book_.publisher);
-Book book = entityManager.find(Book.class, bookId, Map.of(SpecHints.HINT_SPEC_FETCH_GRAPH, graph));
+Book book = entityManager.find(graph, bookId);
 ----
 
-This is untypesafe and unnecessarily verbose.
-Hibernate has a better way:
-
-[source,java]
-----
-var graph = session.createEntityGraph(Book.class);
-graph.addSubgraph(Book_.publisher);
-Book book = session.byId(Book.class).withFetchGraph(graph).load(bookId);
-----
+//
+// [source,java]
+// ----
+// var graph = session.createEntityGraph(Book.class);
+// graph.addSubgraph(Book_.publisher);
+// Book book = session.byId(Book.class).withFetchGraph(graph).load(bookId);
+// ----
 
 This code adds a `left outer join` to our SQL query, fetching the associated `Publisher` along with the `Book`.
 
@@ -428,15 +513,22 @@ We may even attach additional nodes to our `EntityGraph`:
 var graph = session.createEntityGraph(Book.class);
 graph.addSubgraph(Book_.publisher);
 graph.addPluralSubgraph(Book_.authors).addSubgraph(Author_.person);
-Book book = session.byId(Book.class).withFetchGraph(graph).load(bookId);
-
+Book book = entityManager.find(graph, bookId);
 ----
+
+// [source,java]
+// ----
+// var graph = session.createEntityGraph(Book.class);
+// graph.addSubgraph(Book_.publisher);
+// graph.addPluralSubgraph(Book_.authors).addSubgraph(Author_.person);
+// Book book = session.byId(Book.class).withFetchGraph(graph).load(bookId);
+// ----
 
 This results in a SQL query with _four_ ``left outer join``s.
 
 [NOTE]
 ====
-In the code examples above, The classes `Book_` and `Author_` are generated by the <<metamodel-generator,JPA Metamodel Generator>> we saw earlier.
+In the code examples above, The classes `Book_` and `Author_` are generated by <<metamodel-generator,Hibernate Processor>>, as we saw earlier.
 They let us refer to attributes of our model in a completely type-safe way.
 We'll use them again, below, when we talk about <<criteria-queries>>.
 ====
@@ -447,8 +539,13 @@ JPA specifies that any given `EntityGraph` may be interpreted in two different w
   Any association not belonging to the entity graph is proxied and loaded lazily only if required.
 - A _load graph_ specifies that the associations in the entity graph are to be fetched in addition to the associations mapped `fetch=EAGER`.
 
+An `EntityGraph` passed directly to `find()` is always interpreted as a load graph.
+
+[TIP]
+====
 You're right, the names make no sense.
 But don't worry, if you take our advice, and map your associations `fetch=LAZY`, there's no difference between a "fetch" graph and a "load" graph, so the names don't matter.
+====
 
 [NOTE]
 ====
@@ -461,11 +558,56 @@ But the annotation-based API is so verbose that it's just not worth using.
 
 From time to time, a _flush_ operation is triggered, and the session synchronizes dirty state held in memory—that is, modifications to the state of entities associated with the persistence context—with persistent state held in the database. Of course, it does this by executing SQL `INSERT`, `UPDATE`, and `DELETE` statements.
 
-By default, a flush is triggered when:
+By default, a flush is triggered:
 
-- the current transaction commits, for example, when `Transacion.commit()` is called,
+- when the current transaction commits, for example, when `Transaction.commit()` is called,
 - before execution of a query whose result would be affected by the synchronization of dirty state held in memory, or
 - when the program directly calls `flush()`.
+
+In the following code, the flush occurs when the transaction commits:
+
+[source,java]
+----
+session.getTransaction().begin();
+session.persist(author);
+var books =
+        // new Author does not affect results of query for Books
+        session.createSelectionQuery("from Book")
+                // no need to flush
+                .getResultList();
+// flush occurs here, just before transaction commits
+session.getTransaction().commit();
+----
+
+But in this code, the flush occurs when the query is executed:
+
+[source,java]
+----
+session.getTransaction().begin();
+session.persist(book);
+var books =
+        // new Book would affect results of query for Books
+        session.createSelectionQuery("from Book")
+                // flush occurs here, just before query is executed
+                .getResultList();
+// changes were already flushed to database, nothing to flush
+session.getTransaction().commit();
+----
+
+It's always possible to call `flush()` explicitly:
+
+[source,java]
+----
+session.getTransaction().begin();
+session.persist(author);
+session.flush(); // explicit flush
+var books =
+        session.createSelectionQuery("from Book")
+                // nothing to flush
+                .getResultList();
+// nothing to flush
+session.getTransaction().commit();
+----
 
 [NOTE]
 // .SQL execution happens asynchronously
@@ -481,7 +623,7 @@ For example, to disable flushes that occur before query execution, call:
 entityManager.setFlushMode(FlushModeType.COMMIT);
 ----
 
-Hibernate allows greater control over the flush mode than JPA:
+Hibernate allows greater control over the link:{doc-javadoc-url}org/hibernate/FlushMode.html[flush mode] than JPA:
 
 [source,java]
 ----
@@ -489,6 +631,21 @@ session.setHibernateFlushMode(FlushMode.MANUAL);
 ----
 
 Since flushing is a somewhat expensive operation (the session must dirty-check every entity in the persistence context), setting the flush mode to `COMMIT` can occasionally be a useful optimization.
+But take care--in this mode, queries might return stale data:
+
+[source,java]
+----
+session.getTransaction().begin();
+session.setFlushMode(FlushModeType.COMMIT); // disable AUTO-flush
+session.persist(book);
+var books =
+        // flushing on query execution disabled
+        session.createSelectionQuery("from Book")
+                // no flush, query returns stale results
+                .getResultList();
+// flush occurs here, just before transaction commits
+session.getTransaction().commit();
+----
 
 .Flush modes
 [%breakable,cols="15,15,~"]
@@ -503,16 +660,23 @@ Since flushing is a somewhat expensive operation (the session must dirty-check e
 
 A second way to reduce the cost of flushing is to load entities in _read-only_ mode:
 
-- `Session.setDefaultReadOnly(false)` specifies that all entities loaded by a given session should be loaded in read-only mode by default,
-- `SelectionQuery.setReadOnly(false)` specifies that every entity returned by a given query should be loaded in read-only mode, and
-- `Session.setReadOnly(Object, false)` specifies that a given entity already loaded by the session should be switched to read-only mode.
+- `Session.setDefaultReadOnly(true)` specifies that all entities loaded by a given session should be loaded in read-only mode by default,
+- `SelectionQuery.setReadOnly(true)` specifies that every entity returned by a given query should be loaded in read-only mode, and
+- `Session.setReadOnly(Object, true)` specifies that a given entity already loaded by the session should be switched to read-only mode.
 
-It's not necessary to dirty-check on entity instance in read-only mode.
+Hibernate's `ReadOnlyMode` is a custom `FindOption`:
+
+[source,java]
+----
+var book = entityManager.find(Book.class, isbn, ReadOnlyMode.READ_ONLY);
+----
+
+It's not necessary to dirty-check an entity instance in read-only mode.
 
 [[queries]]
 === Queries
 
-:hql: {userGuideBase}#query-language
+:hql: {doc-user-guide-url}#query-language
 
 Hibernate features three complementary ways to write queries:
 
@@ -523,10 +687,10 @@ Hibernate features three complementary ways to write queries:
 [[hql-queries]]
 === HQL queries
 
-:hql: {userGuideBase}#query-language
+:hql: {doc-user-guide-url}#query-language
 
-A full discussion of the query language would require just as much text as the rest of this Introduction.
-Fortunately, HQL is already described in exhaustive (and exhausting) detail in _A guide to Hibernate Query Language 6_.
+A full discussion of the query language would require almost as much text as the rest of this Introduction.
+Fortunately, HQL is already described in exhaustive (and exhausting) detail in {doc-query-language-url}[_A Guide to Hibernate Query Language_].
 It doesn't make sense to repeat that information here.
 // The query language is discussed in great detail below in <<query-language>>.
 
@@ -567,7 +731,7 @@ List<Book> matchingBooks =
             .getResultList();
 ----
 
-The only difference between `createSelectionQuery()` and `createQuery()` is that `createSelectionQuery()` throw an exception if passed an `insert`, `delete`, or `update`.
+The only difference between `createSelectionQuery()` and `createQuery()` is that `createSelectionQuery()` throws an exception if passed an `insert`, `delete`, or `update`.
 
 In the query above, `:titleSearchPattern` is called a _named parameter_.
 We may also identify parameters by a number.
@@ -643,7 +807,7 @@ Of course, we could construct a HQL query by string concatenation, but this is a
 
 .HQL is implemented in terms of criteria objects
 ****
-Actually, in Hibernate 6, every HQL query is compiled to a criteria query before being translated to SQL.
+Actually, since Hibernate 6, every HQL query is compiled to a criteria query before being translated to SQL.
 This ensures that the semantics of HQL and criteria queries are identical.
 ****
 
@@ -655,7 +819,7 @@ Using the JPA-standard APIs, this would be a `CriteriaBuilder`, and we get it fr
 CriteriaBuilder builder = entityManagerFactory.getCriteriaBuilder();
 ----
 
-But if we have a `SessionFactory`, we get something much better, a `HibernateCriteriaBuilder`:
+But if we have a `SessionFactory`, we get something much better, a link:{doc-javadoc-url}org/hibernate/query/criteria/HibernateCriteriaBuilder.html[`HibernateCriteriaBuilder`]:
 
 [source,java]
 ----
@@ -703,12 +867,12 @@ query.select(book).where(where)
     .orderBy(builder.asc(book.get(Book_.title)));
 ----
 
-Here, as before, the classes `Book_` and `Author_` are generated by Hibernate's <<metamodel-generator,JPA Metamodel Generator>>.
+Here, as before, the classes `Book_` and `Author_` are generated by <<metamodel-generator,Hibernate Processor>>.
 
 [NOTE]
 // .Injection attacks and criteria queries
 ====
-Notice that we did not bother treating `titlePattern` and `namePattern` as parameters.
+Notice that we didn't bother treating `titlePattern` and `namePattern` as parameters.
 That's safe because, by default, Hibernate automatically and transparently treats strings passed to the `CriteriaBuilder` as JDBC parameters.
 ====
 
@@ -720,7 +884,7 @@ Execution of a criteria query works almost exactly like execution of HQL.
 | Kind | `Session` method | `EntityManager` method | `Query` execution method
 
 | Selection | `createSelectionQuery(CriteriaQuery)` | `createQuery(CriteriaQuery)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
-| Mutation | `createMutationQuery(CriteriaUpdate)` or `createQuery(CriteriaDelete)` | `createQuery(CriteriaUpdate)` or `createQuery(CriteriaDelte)` | `executeUpdate()`
+| Mutation | `createMutationQuery(CriteriaUpdate)` or `createMutationQuery(CriteriaDelete)` | `createQuery(CriteriaUpdate)` or `createQuery(CriteriaDelte)` | `executeUpdate()`
 |===
 
 For example:
@@ -762,13 +926,13 @@ We do.
 [[criteria-definition]]
 === A more comfortable way to write criteria queries
 
-Actually, what makes the JPA criteria API less ergonomic that it should be is the need to call all operations of the `CriteriaBuilder` as instance methods, instead of having them as `static` functions.
-The reason it works this way is that each JPA providor has its own implementation of `CriteriaBuilder`.
+Actually, what makes the JPA criteria API less ergonomic than it should be is the need to call all operations of the `CriteriaBuilder` as instance methods, instead of having them as `static` functions.
+The reason it works this way is that each JPA provider has its own implementation of `CriteriaBuilder`.
 
 // [%unbreakable]
 // [TIP]
 // ====
-Hibernate 6.3 introduces the helper class `CriteriaDefinition` to reduce the verbosity of criteria queries.
+Hibernate 6.3 introduces the helper class link:{doc-javadoc-url}org/hibernate/query/criteria/CriteriaDefinition.html[`CriteriaDefinition`] to reduce the verbosity of criteria queries.
 Our example looks like this:
 
 [source,java]
@@ -813,10 +977,12 @@ For the most simple cases, Hibernate can infer the shape of the result set:
 ----
 Book book =
         session.createNativeQuery("select * from Books where isbn = ?1", Book.class)
+            .setParameter(1, isbn)
             .getSingleResult();
 
 String title =
         session.createNativeQuery("select title from Books where isbn = ?1", String.class)
+            .setParameter(1, isbn)
             .getSingleResult();
 ----
 
@@ -831,20 +997,20 @@ So if there are any unflushed changes to ``Book``s, this query might return stal
 [source,java]
 ----
 List<Book> books =
-        session.createNativeQuery("select * from Books")
-            .getResultList()
+        session.createNativeQuery("select * from Books", Book.class)
+            .getResultList();
 ----
 
 There's two ways to ensure the persistence context is flushed before this query is executed.
 
-Either, we could simply force a flush by set the flush mode to `ALWAYS`:
+Either, we could simply force a flush by calling `flush()` or by setting the flush mode to `ALWAYS`:
 
 [source,java]
 ----
 List<Book> books =
-        session.createNativeQuery("select * from Books")
+        session.createNativeQuery("select * from Books", Book.class)
             .setHibernateFlushMode(ALWAYS)
-            .getResultList()
+            .getResultList();
 ----
 
 Or, alternatively, we could tell Hibernate which modified state affects the results of the query:
@@ -852,9 +1018,9 @@ Or, alternatively, we could tell Hibernate which modified state affects the resu
 [source,java]
 ----
 List<Book> books =
-        session.createNativeQuery("select * from Books")
+        session.createNativeQuery("select * from Books", Book.class)
             .addSynchronizedEntityClass(Book.class)
-            .getResultList()
+            .getResultList();
 ----
 
 [TIP]
@@ -886,7 +1052,7 @@ For example, this:
 [source,java]
 ----
 List<Book> books =
-        session.createSelectionQuery("from Book where title like ?1 order by title")
+        session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
             .setParameter(1, titlePattern)
             .setMaxResults(MAX_RESULTS)
             .getResultList();
@@ -896,8 +1062,9 @@ is simpler than:
 
 [source,java]
 ----
+// a worse way to do pagination
 List<Book> books =
-        session.createSelectionQuery("from Book where title like ?1 order by title fetch first ?2 rows only")
+        session.createSelectionQuery("from Book where title like ?1 order by title fetch first ?2 rows only", Book.class)
             .setParameter(1, titlePattern)
             .setParameter(2, MAX_RESULTS)
             .getResultList();
@@ -908,10 +1075,22 @@ Hibernate's `SelectionQuery` has a slightly different way to paginate the query 
 [source,java]
 ----
 List<Book> books =
-        session.createSelectionQuery("from Book where title like ?1 order by title")
+        session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
             .setParameter(1, titlePattern)
             .setPage(Page.first(MAX_RESULTS))
             .getResultList();
+----
+
+The `getResultCount()` method is useful for displaying the number of pages of results:
+
+[source,java]
+----
+SelectionQuery<Book> query =
+        session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
+            .setParameter(1, titlePattern);
+long results = query.getResultCount();
+long pages = results / MAX_RESULTS + (results % MAX_RESULTS == 0 ? 0 : 1);
+List<Book> books = query.setMaxResults(MAX_RESULTS).getResultList();
 ----
 
 A closely-related issue is ordering.
@@ -921,9 +1100,9 @@ So, as an alternative to the HQL `order by` clause, `SelectionQuery` offers the 
 [source,java]
 ----
 List<Book> books =
-        session.createSelectionQuery("from Book where title like ?1")
+        session.createSelectionQuery("from Book where title like ?1", Book.class)
             .setParameter(1, titlePattern)
-            .setOrder(List.of(Order.asc(Book._title), Order.asc(Book._isbn)))
+            .setOrder(List.of(Order.asc(Book_.title), Order.asc(Book_.isbn)))
             .setMaxResults(MAX_RESULTS)
             .getResultList();
 ----
@@ -939,7 +1118,46 @@ Unfortunately, there's no way to do this using JPA's `TypedQuery` interface.
 | `setFirstResult()` | Set an offset on the results returned by a query | &#10004;
 | `setPage()` | Set the limit and offset by specifying a `Page` object | &#10006;
 | `setOrder()` | Specify how the query results should be ordered | &#10006;
+| `getResultCount()` | Determine how many results the query would return in the absence of any limit or offset | &#10006;
 |===
+
+The approach to pagination we've just seen is sometimes called _offset-based pagination_.
+Since Hibernate 6.5, there's an alternative approach, which offers some advantages, though it's a little more difficult to use.
+
+[[key-based-pagination]]
+=== Key-based pagination
+
+_Key-based pagination_ aims to reduce the likelihood of missed or duplicate results when data is modified between page requests.
+It's most easily illustrated with an example:
+
+[source,java]
+----
+String QUERY = "from Book where publicationDate > :minDate";
+
+// obtain the first page of results
+KeyedResultList<Book> first =
+        session.createSelectionQuery(QUERY, Book.class)
+                .setParameter("minDate", minDate)
+                .getKeyedResultList(Page.first(25)
+                        .keyedBy(Order.asc(Book_.isbn)));
+List<Book> firstPage = first.getResultList();
+...
+
+if (!firstPage.isLastPage()) {
+    // obtain the second page of results
+    KeyedResultList<Book> second =
+            session.createSelectionQuery(QUERY, Book.class)
+                    .setParameter("minDate", minDate))
+                    .getKeyedResultList(firstPage.getNextPage());
+    List<Book> secondPage = second.getResultList();
+    ...
+}
+----
+
+The "key" in key-based pagination refers to a unique key of the result set which determines a total order on the query results.
+In this example, `Book.isbn` is the key.
+
+Since this code is a little bit fiddly, key-based pagination works best with <<key-based-paging,generated query or finder methods>>.
 
 [[projection-lists]]
 === Representing projection lists
@@ -997,7 +1215,7 @@ var bookIsbn = book.get(Book_.isbn);
 var bookPrice = book.get(Book_.price);
 query.select(builder.tuple(bookTitle, bookIsbn, bookPrice));
 var resultList = session.createSelectionQuery(query).getResultList();
-for (var result: resultList) {
+for (var result : resultList) {
     String title = result.get(bookTitle);
     String isbn = result.get(bookIsbn);
     BigDecimal price = result.get(bookPrice);
@@ -1016,8 +1234,8 @@ We can place the `@NamedQuery` annotation on any class, even on an entity class.
 
 [source,java]
 ----
-@NamedQuery(name="10BooksByTitle",
-            query="from Book where title like :titlePattern order by title fetch first 10 rows only")
+@NamedQuery(name = "10BooksByTitle",
+            query = "from Book where title like :titlePattern order by title fetch first 10 rows only")
 class BookQueries {}
 ----
 
@@ -1046,8 +1264,8 @@ There's much less advantage to using `@NamedNativeQuery`, because there is very 
 |===
 | Kind | `Session` method | `EntityManager` method | `Query` execution method
 
-| Selection | `createNamedSelectionQuery(String,Class)` | `createNamedQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
-| Mutation | `createNamedMutationQuery(String)` | `createNamedQuery(String)` | `executeUpdate()`
+| Selection | `createNamedSelectionQuery(String,Class)` | `createNamedQuery(TypedQueryReference)`, `createNamedQuery(String,Class)` | `getResultList()`, `getSingleResult()`, `getSingleResultOrNull()`
+| Mutation | `createNamedMutationQuery(String)` | `createNamedQuery(TypedQueryReference)`, `createNamedQuery(String)` | `executeUpdate()`
 |===
 
 We execute our named query like this:
@@ -1055,12 +1273,12 @@ We execute our named query like this:
 [source,java]
 ----
 List<Book> books =
-        entityManager.createNamedQuery(BookQueries_.QUERY_10_BOOKS_BY_TITLE)
+        entityManager.createQuery(BookQueries_._10BooksByTitle_)
             .setParameter("titlePattern", titlePattern)
             .getResultList()
 ----
 
-Here, `BookQueries_.QUERY_10_BOOKS_BY_TITLE` is a constant with value `"10BooksByTitle"`, generated by the Metamodel Generator.
+Here, `BookQueries_.\_10BooksByTitle_` is an element of the JPA static metamodel of type `TypedQueryReference<Book>`, generated by Hibernate Processor.
 
 Note that the code which executes the named query is not aware of whether the query was written in HQL or in native SQL, making it slightly easier to change and optimize the query later.
 
@@ -1070,7 +1288,7 @@ Note that the code which executes the named query is not aware of whether the qu
 
 It's nice to have our queries checked at startup time.
 It's even better to have them checked at compile time.
-Back in <<generated-query-methods>>, we mentioned that the Metamodel Generator can do that for us, and we presented that as a reason to use `@NamedQuery`.
+In <<organizing-persistence>>, we mentioned that the Hibernate Processor can do that for us, with the help of the `@CheckHQL` annotation, and we presented that as a reason to use `@NamedQuery`.
 
 But actually, Hibernate has a separate <<query-validator,Query Validator>> capable of performing compile-time validation of HQL query strings that occur as arguments to `createQuery()` and friends.
 If we use the Query Validator, there's not much advantage to the use of named queries.
@@ -1083,9 +1301,9 @@ We can do almost anything via HQL, criteria, or native SQL queries.
 But when we already know the identifier of the entity we need, a query can feel like overkill.
 And queries don't make efficient use of the <<second-level-cache,second level cache>>.
 
-We met the <<persistence-operations,`find()`>> method earlier.
-It's the most basic way to perform a _lookup_ by id.
-But as we also <<entity-graph,already saw>>, it can't quite do everything.
+We met the `find()` and `findMultiple()` methods <<persistence-operations,earlier>>.
+These are the most basic ways to perform a _lookup_ by id.
+But they can't quite do everything.
 Therefore, Hibernate has some APIs that streamline certain more complicated lookups:
 
 .Operations for lookup by id
@@ -1096,6 +1314,11 @@ Therefore, Hibernate has some APIs that streamline certain more complicated look
 | `byId()` | Lets us specify association fetching via an `EntityGraph`, as we saw; also lets us specify some additional options, including how the lookup <<second-level-cache-management,interacts with the second level cache>>, and whether the entity should be loaded in read-only mode
 | `byMultipleIds()` | Lets us load a _batch_ of ids at the same time
 |===
+
+[WARNING]
+====
+Since the introduction of `FindOption` in JPA 3.2, `byId()` is now much less useful.
+====
 
 Batch loading is very useful when we need to retrieve multiple instances of the same entity class by id:
 
@@ -1137,13 +1360,27 @@ Book book =
             .load();
 ----
 
-Notice that this code fragment is completely typesafe, again thanks to the <<metamodel-generator,Metamodel Generator>>.
+Notice that this code fragment is completely typesafe, again thanks to <<metamodel-generator,Hibernate Processor>>.
 
 [[jdbc]]
 === Interacting directly with JDBC
 
 From time to time we run into the need to write some code that calls JDBC directly.
-Unfortunately, JPA offers no good way to do this, but the Hibernate `Session` does.
+The `EntityManager` now offers a convenient way to do this:
+
+[source,java]
+----
+entityManager.runWithConnection((Connection connection) -> {
+    try (var callable = connection.prepareCall("{call myproc(?)}")) {
+        callable.setLong(1, argument);
+        callable.execute();
+    }
+});
+----
+
+To return a value, use `callWithConnection()` instead of `runWithConnection()`.
+
+The Hibernate `Session` has an older, slightly simpler API:
 
 [source,java]
 ----
@@ -1155,14 +1392,65 @@ session.doWork(connection -> {
 });
 ----
 
-The `Connection` passed to the work is the same connection being used by the session, and so any work performed using that connection occurs in the same transaction context.
-
 If the work returns a value, use `doReturningWork()` instead of `doWork()`.
+
+The `Connection` passed to the work is the same connection being used by the session, and so any work performed using that connection occurs in the same transaction context.
 
 [TIP]
 ====
 In a container environment where transactions and database connections are managed by the container, this might not be the easiest way to obtain the JDBC connection.
 ====
+
+[[callbacks]]
+=== Lifecycle callbacks and entity listeners
+
+The annotations `@PrePersist`, `@PreRemove`, `@PreUpdate`, `@PostPersist`, `@PostRemove`, `@PostUpdate`, and `@PostLoad` allow an entity to respond to persistence lifecycle operations and maintain its transient internal state.
+For example:
+
+[source,java]
+----
+@Entity
+class Order {
+    ...
+    transient double total;
+
+    @PostLoad
+    void computeTotal() {
+        total = items.stream().mapToDouble(i -> i.price * i.quantity).sum();
+    }
+
+    ...
+}
+----
+
+If we need to interact with technical objects, we can place the lifecycle callback on a separate class, called an _entity listener_.
+The `@EntityListeners` annotation specifies the listeners for a given entity class:
+
+[source,java]
+----
+@Entity
+@EntityListeners(OrderEvents.class)
+class Order { ... }
+----
+
+An entity listener may inject CDI beans:
+
+[source,java]
+----
+// entity listener class
+class OrderEvents {
+    @Inject
+    Event<NewOrder> newOrderEvent;
+
+    @PostPersist
+    void newOrder(Order order) {
+        // send a CDI event
+        newOrderEvent.fire(new NewOrder(order));
+    }
+}
+----
+A single entity listener class may even be a generic listener that receives lifecycle callbacks for multiple different entity classes.
+
 
 [[advice]]
 === What to do when things go wrong

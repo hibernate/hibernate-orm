@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
 
@@ -17,7 +15,6 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
@@ -27,7 +24,7 @@ import org.hibernate.service.spi.ServiceContributor;
 import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService;
 import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService.JavaServiceDescriptor;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
@@ -195,17 +192,12 @@ public class ServiceRegistryExtension
 			ssrb.applySetting( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 			ssrb.applySetting( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 			ssrb.applySetting( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
-			if ( !ssrb.getSettings().containsKey( Environment.CONNECTION_PROVIDER ) ) {
-				ssrb.applySetting(
-						AvailableSettings.CONNECTION_PROVIDER,
-						SharedDriverManagerConnectionProviderImpl.getInstance()
-				);
-			}
 
 			if ( ssrAnnRef.isPresent() ) {
 				final ServiceRegistry serviceRegistryAnn = ssrAnnRef.get();
 				configureServices( serviceRegistryAnn, ssrb );
 			}
+			ServiceRegistryUtil.applySettings( ssrb.getSettings() );
 
 			return ssrb.build();
 		}
@@ -338,11 +330,12 @@ public class ServiceRegistryExtension
 
 		private StandardServiceRegistry createRegistry() {
 			BootstrapServiceRegistryBuilder bsrb = new BootstrapServiceRegistryBuilder().enableAutoClose();
+			bsrb.applyClassLoader( Thread.currentThread().getContextClassLoader() );
 			ssrProducer.prepareBootstrapRegistryBuilder(bsrb);
 
 			final org.hibernate.boot.registry.BootstrapServiceRegistry bsr = bsrProducer.produceServiceRegistry( bsrb );
 			try {
-				final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder( bsr );
+				final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder( bsr );
 				// we will close it ourselves explicitly.
 				ssrb.disableAutoClose();
 

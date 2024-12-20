@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.lock;
 
@@ -19,7 +17,7 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
 
@@ -77,7 +75,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8756" )
+	@JiraKey( value = "HHH-8756" )
 	public void testNoneLockModeForNonSelectQueryAllowed() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -291,7 +289,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-9419")
+	@JiraKey(value = "HHH-9419")
 	public void testNoVersionCheckAfterRemove() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -383,7 +381,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11376")
+	@JiraKey(value = "HHH-11376")
 	@RequiresDialect( SQLServerDialect.class )
 	public void testCriteriaWithPessimisticLock() {
 		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {

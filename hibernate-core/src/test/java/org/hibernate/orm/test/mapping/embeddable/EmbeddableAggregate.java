@@ -1,14 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.embeddable;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.Clob;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
@@ -25,6 +22,7 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
+import org.hibernate.Length;
 import org.hibernate.annotations.JdbcTypeCode;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -58,7 +56,7 @@ public class EmbeddableAggregate {
 	private int theInt;
 	private double theDouble;
 	private URL theUrl;
-	private Clob theClob;
+	private String theClob;
 	private byte[] theBinary;
 	private Date theDate;
 	private Date theTime;
@@ -121,11 +119,12 @@ public class EmbeddableAggregate {
 		this.theUrl = theUrl;
 	}
 
-	public Clob getTheClob() {
+	@Column(length = Length.LONG32)
+	public String getTheClob() {
 		return theClob;
 	}
 
-	public void setTheClob(Clob theClob) {
+	public void setTheClob(String theClob) {
 		this.theClob = theClob;
 	}
 
@@ -301,6 +300,7 @@ public class EmbeddableAggregate {
 		Assertions.assertEquals( a1.theStringBoolean, a2.theStringBoolean );
 		Assertions.assertEquals( a1.theString, a2.theString );
 		Assertions.assertEquals( a1.theInteger, a2.theInteger );
+		Assertions.assertEquals( a1.theUrl, a2.theUrl );
 		Assertions.assertEquals( a1.theClob, a2.theClob );
 		assertArrayEquals( a1.theBinary, a2.theBinary );
 		Assertions.assertEquals( a1.theDate, a2.theDate );
@@ -353,10 +353,11 @@ public class EmbeddableAggregate {
 		catch (MalformedURLException e) {
 			throw new RuntimeException( e );
 		}
+		aggregate.theClob = "Abc";
 		aggregate.theBinary = new byte[] { 1 };
 		aggregate.theDate = new java.sql.Date( 2000 - 1900, 0, 1 );
 		aggregate.theTime = new Time( 1, 0, 0 );
-		aggregate.theTimestamp = new Timestamp( 2000 - 1900, 0, 1, 1, 0, 0, 1000 );
+		aggregate.theTimestamp = new Timestamp( 2000 - 1900, 0, 1, 1, 0, 0, 3000000 ); // Use 3 millis to allow representation on Sybase
 		aggregate.theInstant = LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ).toInstant( ZoneOffset.UTC );
 		aggregate.theUuid = UUID.fromString( "53886a8a-7082-4879-b430-25cb94415be8" );
 		aggregate.gender = EntityOfBasics.Gender.FEMALE;
@@ -385,6 +386,11 @@ public class EmbeddableAggregate {
 		aggregate.theUuid = UUID.fromString( "53886a8a-7082-4879-b430-25cb94415be8" );
 		aggregate.theLocalDateTime = LocalDateTime.of( 2022, 12, 1, 1, 0, 0 );
 		return aggregate;
+	}
+
+	@Override
+	public int hashCode() {
+		return 1;
 	}
 
 	@Override

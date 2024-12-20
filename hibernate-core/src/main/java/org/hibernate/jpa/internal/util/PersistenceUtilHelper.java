@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.internal.util;
 
@@ -11,7 +9,6 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,14 +23,12 @@ import org.hibernate.collection.spi.LazyInitializable;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.securitymanager.SystemSecurityManager;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
 import static jakarta.persistence.spi.LoadState.LOADED;
 import static jakarta.persistence.spi.LoadState.NOT_LOADED;
 import static jakarta.persistence.spi.LoadState.UNKNOWN;
-import static java.security.AccessController.doPrivileged;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
@@ -353,22 +348,19 @@ public final class PersistenceUtilHelper {
 		}
 
 		private AttributeAccess buildAttributeAccess(final String attributeName) {
-			final PrivilegedAction<AttributeAccess> action = () -> {
-				for ( Class<?> clazz : classHierarchy ) {
-					try {
-						return new FieldAttributeAccess( clazz.getDeclaredField( attributeName ) );
-					}
-					catch ( NoSuchFieldException e ) {
-						final Method method = getMethod( clazz, attributeName );
-						if ( method != null ) {
-							return new MethodAttributeAccess( attributeName, method );
-						}
+			for ( Class<?> clazz : classHierarchy ) {
+				try {
+					return new FieldAttributeAccess( clazz.getDeclaredField( attributeName ) );
+				}
+				catch ( NoSuchFieldException e ) {
+					final Method method = getMethod( clazz, attributeName );
+					if ( method != null ) {
+						return new MethodAttributeAccess( attributeName, method );
 					}
 				}
-				//we could not find any match
-				return new NoSuchAttributeAccess( specifiedClass, attributeName );
-			};
-			return SystemSecurityManager.isSecurityManagerEnabled() ? doPrivileged( action ) : action.run();
+			}
+			//we could not find any match
+			return new NoSuchAttributeAccess( specifiedClass, attributeName );
 		}
 	}
 

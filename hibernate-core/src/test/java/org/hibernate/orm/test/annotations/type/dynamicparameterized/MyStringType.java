@@ -1,25 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Inc.
- *
- * This copyrighted material is made available to anyone wishing to use, modify,
- * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this distribution; if not, write to:
- * Free Software Foundation, Inc.
- * 51 Franklin Street, Fifth Floor
- * Boston, MA  02110-1301  USA
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.type.dynamicparameterized;
 
@@ -30,8 +11,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 
-import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 
@@ -42,6 +23,7 @@ import org.junit.Assert;
  * makes it easier to verify that valid parameter values are being passed into {@link #setParameterValues(Properties)}.
  *
  * @author Daniel Gredler
+ * @author Yanming Zhou
  */
 public class MyStringType implements UserType<String>, DynamicParameterizedType {
 
@@ -74,9 +56,9 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 
 		String entity = params.getProperty( DynamicParameterizedType.ENTITY );
 		String propertyName = params.getProperty( DynamicParameterizedType.PROPERTY );
-		XProperty xproperty = (XProperty) params.get( DynamicParameterizedType.XPROPERTY );
+		FieldDetails xproperty = (FieldDetails) params.get( DynamicParameterizedType.XPROPERTY );
 		Assert.assertEquals( propertyName, xproperty.getName() );
-		Assert.assertEquals( entity, xproperty.getDeclaringClass().getName() );
+		Assert.assertEquals( entity, xproperty.getDeclaringType().getName() );
 		Assert.assertEquals( String.class.getName(), xproperty.getType().getName() );
 
 		String tableName = propertyName.toUpperCase().split( "_" )[0];
@@ -85,6 +67,7 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 		Assert.assertEquals( 1, parameterType.getColumns().length );
 		Assert.assertEquals( columnName, parameterType.getColumns()[0] );
 		Assert.assertEquals( String.class, parameterType.getReturnedClass() );
+		Assert.assertEquals( String.class, parameterType.getReturnedJavaType() );
 		Assert.assertEquals( tableName, parameterType.getTable() );
 
 		String value = tableName + "." + columnName;
@@ -96,12 +79,14 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, String value, int index, SharedSessionContractImplementor session) throws SQLException {
+	public void nullSafeSet(PreparedStatement st, String value, int index, WrapperOptions options)
+			throws SQLException {
 		st.setString( index, this.value );
 	}
 
 	@Override
-	public String nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public String nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+			throws SQLException {
 		return rs.getString( position );
 	}
 
@@ -117,7 +102,7 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 
 	@Override
 	public boolean equals(String x, String y) {
-		return ( x == null && y == null ) || ( x != null && y != null && x.equals( y ) );
+		return ( x == null && y == null ) || ( x != null && x.equals( y ) );
 	}
 
 	@Override

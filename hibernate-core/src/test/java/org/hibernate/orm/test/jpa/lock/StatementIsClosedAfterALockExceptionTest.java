@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.lock;
 
@@ -12,13 +10,14 @@ import java.util.HashMap;
 import java.util.Map;
 import jakarta.persistence.LockModeType;
 import org.hibernate.Session;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Before;
@@ -34,6 +33,7 @@ import static org.junit.Assert.fail;
  */
 @RequiresDialectFeature({DialectChecks.SupportsLockTimeouts.class})
 @SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+@SkipForDialect(value = AltibaseDialect.class, comment = "Altibase does not close Statement after lock timeout")
 public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER = new PreparedStatementSpyConnectionProvider();
@@ -68,7 +68,7 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 	}
 
 	@Test(timeout = 1000 * 30) //30 seconds
-	@TestForIssue(jiraKey = "HHH-11617")
+	@JiraKey(value = "HHH-11617")
 	public void testStatementIsClosed() {
 
 		TransactionUtil.doInJPA( this::entityManagerFactory, em1 -> {
@@ -83,30 +83,31 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 			);
 
 			TransactionUtil.doInJPA( this::entityManagerFactory, em2 -> {
-				TransactionUtil.setJdbcTimeout( em2.unwrap( Session.class ) );
-				try {
-					em2.find( Lock.class, lockId, LockModeType.PESSIMISTIC_WRITE, properties );
-					fail( "Exception should be thrown" );
-				}
-				catch (Exception lte) {
-					if( !ExceptionUtil.isSqlLockTimeout( lte )) {
-						fail("Should have thrown a Lock timeout exception");
-					}
-				}
-				finally {
+				TransactionUtil.withJdbcTimeout( em2.unwrap( Session.class ), () -> {
 					try {
-						for ( PreparedStatement statement : CONNECTION_PROVIDER.getPreparedStatements() ) {
-							assertThat(
-								"A SQL Statement was not closed : " + statement.toString(),
-								statement.isClosed(),
-								is( true )
-							);
+						em2.find( Lock.class, lockId, LockModeType.PESSIMISTIC_WRITE, properties );
+						fail( "Exception should be thrown" );
+					}
+					catch (Exception lte) {
+						if( !ExceptionUtil.isSqlLockTimeout( lte )) {
+							fail("Should have thrown a Lock timeout exception");
 						}
 					}
-					catch (SQLException e) {
-						fail( e.getMessage() );
+					finally {
+						try {
+							for ( PreparedStatement statement : CONNECTION_PROVIDER.getPreparedStatements() ) {
+								assertThat(
+										"A SQL Statement was not closed : " + statement.toString(),
+										statement.isClosed(),
+										is( true )
+								);
+							}
+						}
+						catch (SQLException e) {
+							fail( e.getMessage() );
+						}
 					}
-				}
+				} );
 			} );
 
 		} );

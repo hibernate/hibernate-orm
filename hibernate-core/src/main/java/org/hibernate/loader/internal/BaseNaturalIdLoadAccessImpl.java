@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.internal;
 
@@ -14,7 +12,13 @@ import org.hibernate.HibernateException;
 import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.LockOptions;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.engine.spi.*;
+import org.hibernate.engine.spi.EffectiveEntityGraph;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -141,13 +145,14 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		final Collection<?> cachedPkResolutions =
 				persistenceContext.getNaturalIdResolutions()
 						.getCachedPkResolutions( entityPersister() );
+		final boolean loggerDebugEnabled = LoaderLogging.LOADER_LOGGER.isDebugEnabled();
 		for ( Object pk : cachedPkResolutions ) {
 			final EntityKey entityKey = context.getSession().generateEntityKey( pk, entityPersister() );
 			final Object entity = persistenceContext.getEntity( entityKey );
 			final EntityEntry entry = persistenceContext.getEntry( entity );
 
 			if ( entry == null ) {
-				if ( LoaderLogging.DEBUG_ENABLED ) {
+				if ( loggerDebugEnabled ) {
 					LoaderLogging.LOADER_LOGGER.debugf(
 							"Cached natural-id/pk resolution linked to null EntityEntry in persistence context : %s#%s",
 							entityDescriptor.getEntityName(),

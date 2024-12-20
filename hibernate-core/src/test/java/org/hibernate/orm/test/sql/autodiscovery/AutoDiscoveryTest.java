@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.autodiscovery;
 
@@ -17,11 +15,13 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -52,8 +52,8 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 	public void testAutoDiscoveryWithDuplicateColumnLabels() {
 		Session session = openSession();
 		session.beginTransaction();
-		session.save( new User( "steve" ) );
-		session.save( new User( "stliu" ) );
+		session.persist( new User( "steve" ) );
+		session.persist( new User( "stliu" ) );
 		session.getTransaction().commit();
 		session.close();
 
@@ -93,9 +93,9 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 		User u = new User( "steve" );
 		Group g = new Group( "developer" );
 		Membership m = new Membership( u, g );
-		session.save( u );
-		session.save( g );
-		session.save( m );
+		session.persist( u );
+		session.persist( g );
+		session.persist( m );
 		session.getTransaction().commit();
 		session.close();
 
@@ -105,9 +105,9 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 		Object[] row = (Object[]) result.get( 0 );
 		Assert.assertEquals( "steve", row[0] );
 		Assert.assertEquals( "developer", row[1] );
-		session.delete( m );
-		session.delete( u );
-		session.delete( g );
+		session.remove( m );
+		session.remove( u );
+		session.remove( g );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -130,8 +130,8 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 							Assert.assertFalse( "bad dialect.getColumnAliasExtractor impl", column1Alias.equals( column2Alias ) );
 						}
 						finally {
-                            sessionImplementor.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, ps );
-                            sessionImplementor.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
+							sessionImplementor.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, ps );
+							sessionImplementor.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
 						}
 					}
 				}
@@ -142,6 +142,7 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey( "HHH-16697" )
+	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase sum(39.74) returns Float" )
 	public void testAggregateQueryAutoDiscovery() {
 		Session session = openSession();
 		session.beginTransaction();

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.lob;
 
@@ -12,7 +10,7 @@ import org.hibernate.Session;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -22,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-2680" )
+@JiraKey( value = "HHH-2680" )
 @RequiresDialectFeature( {DialectChecks.SupportsExpectedLobUsagePattern.class, DialectChecks.SupportsLobValueChangePropagation.class} ) // Skip for Sybase. HHH-6807
 public class LobMergeTest extends BaseCoreFunctionalTestCase {
 	private static final int LOB_SIZE = 10000;
@@ -46,7 +44,7 @@ public class LobMergeTest extends BaseCoreFunctionalTestCase {
 
 		LobHolder entity = new LobHolder();
 		entity.setBlobLocator( s.getLobHelper().createBlob( original ) );
-		s.save( entity );
+		s.persist( entity );
 		s.getTransaction().commit();
 		s.close();
 
@@ -66,7 +64,7 @@ public class LobMergeTest extends BaseCoreFunctionalTestCase {
 				"blob contents did not match after merge",
 				Arrays.equals( updated, BlobLocatorTest.extractData( entity.getBlobLocator() ) )
 		);
-		s.delete( entity );
+		s.remove( entity );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -81,7 +79,7 @@ public class LobMergeTest extends BaseCoreFunctionalTestCase {
 
 		LobHolder entity = new LobHolder();
 		entity.setClobLocator( s.getLobHelper().createClob( original ) );
-		s.save( entity );
+		s.persist( entity );
 		s.getTransaction().commit();
 		s.close();
 
@@ -103,7 +101,7 @@ public class LobMergeTest extends BaseCoreFunctionalTestCase {
 				updated,
 				ClobLocatorTest.extractData( entity.getClobLocator() )
 		);
-		s.delete( entity );
+		s.remove( entity );
 		s.getTransaction().commit();
 		s.close();
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.jta;
 
@@ -18,7 +16,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.onetomany.SetRefEdEntity;
 import org.hibernate.orm.test.envers.entities.onetomany.SetRefIngEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.junit.Test;
@@ -28,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue( jiraKey = "HHH-11570")
+@JiraKey( value = "HHH-11570")
 public class OneToManyJtaSessionClosedBeforeCommitTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer entityId;
 

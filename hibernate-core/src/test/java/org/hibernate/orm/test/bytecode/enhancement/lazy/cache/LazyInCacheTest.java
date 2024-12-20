@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.cache;
 
@@ -14,15 +12,16 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.usertype.UserTypeLegacyBridge;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
@@ -33,98 +32,100 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Luis Barreiro
  */
-@RunWith( BytecodeEnhancerRunner.class )
-public class LazyInCacheTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+			LazyInCacheTest.Order.class, LazyInCacheTest.Product.class, LazyInCacheTest.Tag.class
+		}
+)
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
+				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class LazyInCacheTest {
 
-    private Long orderId;
+	private Long orderId;
 
-    @Override
-    public Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{Order.class, Product.class, Tag.class};
-    }
 
-    @Override
-    protected void configure(Configuration configuration) {
-        configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-        configuration.setProperty( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
-    }
+	@BeforeEach
+	public void prepare(SessionFactoryScope scope) {
+		Order order = new Order();
+		Product product = new Product();
+		order.products.add( product );
+		order.data = "some data".getBytes( Charset.defaultCharset() );
 
-    @Before
-    public void prepare() {
-        Order order = new Order();
-        Product product = new Product();
-        order.products.add( product );
-        order.data = "some data".getBytes( Charset.defaultCharset() );
+		scope.inTransaction( em -> {
+			em.persist( product );
+			em.persist( order );
+		} );
 
-        doInJPA( this::sessionFactory, em -> {
-            em.persist( product );
-            em.persist( order );
-        } );
+		orderId = order.id;
+	}
 
-        orderId = order.id;
-    }
+	@Test
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			Order order = em.find( Order.class, orderId );
+			assertEquals( 1, order.products.size() );
+		} );
+	}
 
-    @Test
-    public void test() {
-        doInJPA( this::sessionFactory, em -> {
-            Order order = em.find( Order.class, orderId );
-            Assert.assertEquals( 1, order.products.size() );
-        } );
-    }
+	// --- //
 
-    // --- //
+	@Entity(name = "Order")
+	@Table( name = "ORDER_TABLE" )
+	@Cache( usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE )
+	static class Order {
 
-    @Entity(name = "Order")
-    @Table( name = "ORDER_TABLE" )
-    @Cache( usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE )
-    private static class Order {
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		@OneToMany
+		List<Product> products = new ArrayList<>();
 
-        @OneToMany
-        List<Product> products = new ArrayList<>();
+		@OneToMany
+		List<Tag> tags = new ArrayList<>();
 
-        @OneToMany
-        List<Tag> tags = new ArrayList<>();
-
-        @Basic( fetch = FetchType.LAZY )
-        @Type( BinaryCustomType.class )
+		@Basic( fetch = FetchType.LAZY )
+		@Type( BinaryCustomType.class )
 //        @JdbcTypeCode(Types.LONGVARBINARY)
-        byte[] data;
-    }
+		byte[] data;
+	}
 
-    @Entity(name = "Product")
-    @Table( name = "PRODUCT" )
-    private static class Product {
+	@Entity(name = "Product")
+	@Table( name = "PRODUCT" )
+	static class Product {
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        String name;
-    }
+		String name;
+	}
 
-    @Entity(name = "Tag")
-    @Table( name = "TAG" )
-    private static class Tag {
+	@Entity(name = "Tag")
+	@Table( name = "TAG" )
+	static class Tag {
 
-        @Id
-        @GeneratedValue( strategy = GenerationType.AUTO )
-        Long id;
+		@Id
+		@GeneratedValue( strategy = GenerationType.AUTO )
+		Long id;
 
-        String name;
-    }
+		String name;
+	}
 
-    public static class BinaryCustomType extends UserTypeLegacyBridge {
-        public BinaryCustomType() {
-            super( "binary" );
-        }
-    }
+	public static class BinaryCustomType extends UserTypeLegacyBridge {
+		public BinaryCustomType() {
+			super( "binary" );
+		}
+	}
 }

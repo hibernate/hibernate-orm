@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.fetchprofiles;
 
@@ -16,16 +14,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 
 import org.hibernate.LazyInitializationException;
-import org.hibernate.Session;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.metamodel.CollectionClassification;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
 import org.junit.Test;
 
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
@@ -33,7 +28,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-@TestForIssue( jiraKey = "HHH-12297")
+@JiraKey( value = "HHH-12297")
 public class CollectionLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 
 	// NOTE
@@ -50,8 +45,8 @@ public class CollectionLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCa
 	private final String P_2 = "p_2";
 
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
+		cfg.setProperty( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG );
 	}
 
 	@Test

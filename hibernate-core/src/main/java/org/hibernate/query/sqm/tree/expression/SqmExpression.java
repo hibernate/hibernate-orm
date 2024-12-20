@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
@@ -11,6 +9,8 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.function.Consumer;
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.Internal;
 import org.hibernate.query.ReturnableType;
@@ -40,7 +40,7 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	 * Can change as a result of calls to {@link #applyInferableType}
 	 */
 	@Override
-	SqmExpressible<T> getNodeType();
+	@Nullable SqmExpressible<T> getNodeType();
 
 	/**
 	 * Used to apply type information based on the expression's usage
@@ -51,15 +51,11 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	 * an implicit cast)
 	 */
 	@Internal
-	void applyInferableType(SqmExpressible<?> type);
+	void applyInferableType(@Nullable SqmExpressible<?> type);
 
 	@Override
 	default void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
 		jpaSelectionConsumer.accept( this );
-	}
-
-	default Integer getTupleLength() {
-		return 1;
 	}
 
 	@Override
@@ -93,10 +89,10 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	SqmPredicate isNotNull();
 
 	@Override
-	SqmPredicate equalTo(Expression<T> that);
+	SqmPredicate equalTo(Expression<?> value);
 
 	@Override
-	SqmPredicate equalTo(T that);
+	SqmPredicate equalTo(Object value);
 
 	@Override
 	SqmPredicate in(Object... values);
@@ -128,4 +124,14 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 					);
 	}
 
+	@Override
+	default <X> SqmExpression<X> cast(Class<X> type) {
+		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type ) );
+	}
+
+	@Override
+	Predicate notEqualTo(Expression<?> value);
+
+	@Override
+	Predicate notEqualTo(Object value);
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
 
@@ -20,9 +18,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -59,6 +57,7 @@ public class EnumType<T extends Enum<T>>
 
 	private Class<T> enumClass;
 
+	private boolean isOrdinal;
 	private JdbcType jdbcType;
 	private EnumJavaType<T> enumJavaType;
 
@@ -115,7 +114,7 @@ public class EnumType<T extends Enum<T>>
 		if ( parameters.containsKey( ENUM ) ) {
 			final String enumClassName = (String) parameters.get( ENUM );
 			try {
-				enumClass = ReflectHelper.classForName( enumClassName, this.getClass() ).asSubclass( Enum.class );
+				enumClass = (Class<T>) ReflectHelper.classForName( enumClassName, this.getClass() ).asSubclass( Enum.class );
 			}
 			catch ( ClassNotFoundException exception ) {
 				throw new HibernateException("Enum class not found: " + enumClassName, exception);
@@ -131,6 +130,10 @@ public class EnumType<T extends Enum<T>>
 		if ( parameters.containsKey( TYPE ) ) {
 			int jdbcTypeCode = Integer.parseInt( (String) parameters.get( TYPE ) );
 			jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( jdbcTypeCode );
+			isOrdinal = jdbcType.isInteger()
+					// Both, ENUM and NAMED_ENUM are treated like ordinal with respect to the ordering
+					|| jdbcType.getDefaultSqlTypeCode() == SqlTypes.ENUM
+					|| jdbcType.getDefaultSqlTypeCode() == SqlTypes.NAMED_ENUM;
 		}
 		else {
 			final LocalJdbcTypeIndicators indicators;
@@ -151,6 +154,7 @@ public class EnumType<T extends Enum<T>>
 				);
 			}
 			jdbcType = descriptor.getRecommendedJdbcType( indicators );
+			isOrdinal = indicators.getEnumeratedType() != STRING;
 		}
 
 		if ( LOG.isDebugEnabled() ) {
@@ -215,9 +219,10 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public T nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+			throws SQLException {
 		verifyConfigured();
-		return jdbcType.getExtractor( enumJavaType ).extract( rs, position, session );
+		return jdbcType.getExtractor( enumJavaType ).extract( rs, position, options );
 	}
 
 	private void verifyConfigured() {
@@ -227,9 +232,10 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, T value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, T value, int index, WrapperOptions options)
+			throws SQLException {
 		verifyConfigured();
-		jdbcType.getBinder( enumJavaType ).bind( st, value, index, session );
+		jdbcType.getBinder( enumJavaType ).bind( st, value, index, options );
 	}
 
 	@Override
@@ -290,12 +296,12 @@ public class EnumType<T extends Enum<T>>
 	@Override @SuppressWarnings("unchecked")
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		verifyConfigured();
-		return enumJavaType.toString( (T) value );
+		return enumJavaType.extractLoggableRepresentation( (T) value );
 	}
 
 	public boolean isOrdinal() {
 		verifyConfigured();
-		return jdbcType.isInteger();
+		return isOrdinal;
 	}
 
 	private class LocalJdbcTypeIndicators implements JdbcTypeIndicators {

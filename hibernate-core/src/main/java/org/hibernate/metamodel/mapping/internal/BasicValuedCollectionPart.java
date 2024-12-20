@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -17,6 +15,7 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -64,6 +63,11 @@ public class BasicValuedCollectionPart
 	@Override
 	public Nature getNature() {
 		return nature;
+	}
+
+	@Override
+	public PluralAttributeMapping getCollectionAttribute() {
+		return collectionDescriptor.getAttributeMapping();
 	}
 
 	@Override
@@ -132,6 +136,11 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
+	public Integer getTemporalPrecision() {
+		return selectableMapping.getTemporalPrecision();
+	}
+
+	@Override
 	public Integer getScale() {
 		return selectableMapping.getScale();
 	}
@@ -163,7 +172,9 @@ public class BasicValuedCollectionPart
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				selectableMapping.getJdbcMapping(),
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -251,7 +262,7 @@ public class BasicValuedCollectionPart
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		if ( ResultsLogger.DEBUG_ENABLED ) {
+		if ( ResultsLogger.RESULTS_LOGGER.isDebugEnabled() ) {
 			ResultsLogger.RESULTS_LOGGER.debugf(
 					"Generating Fetch for collection-part : `%s` -> `%s`",
 					collectionDescriptor.getRole(),
@@ -275,7 +286,8 @@ public class BasicValuedCollectionPart
 				fetchablePath,
 				this,
 				FetchTiming.IMMEDIATE,
-				creationState
+				creationState,
+				!sqlSelection.isVirtual()
 		);
 	}
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.classloading.internal;
 
@@ -10,22 +8,18 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.net.URL;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.hibernate.Internal;
+import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -41,7 +35,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	private static final String CLASS_PATH_SCHEME = "classpath://";
 
-	private final ConcurrentMap<Class, AggregatedServiceLoader<?>> serviceLoaders = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Class<?>, AggregatedServiceLoader<?>> serviceLoaders = new ConcurrentHashMap<>();
 	private volatile AggregatedClassLoader aggregatedClassLoader;
 
 	/**
@@ -83,34 +77,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		orderedClassLoaderSet.add( ClassLoaderServiceImpl.class.getClassLoader() );
 
 		// now build the aggregated class loader...
-		this.aggregatedClassLoader = AccessController.doPrivileged( new PrivilegedAction<AggregatedClassLoader>() {
-			public AggregatedClassLoader run() {
-				return new AggregatedClassLoader( orderedClassLoaderSet, lookupPrecedence );
-			}
-		} );
-	}
-
-	/**
-	 * No longer used/supported!
-	 *
-	 * @param configValues The config values
-	 *
-	 * @return The built service
-	 *
-	 * @deprecated No longer used/supported!
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	@Internal
-	public static ClassLoaderServiceImpl fromConfigSettings(Map configValues) {
-		final List<ClassLoader> providedClassLoaders = new ArrayList<>();
-
-		final Collection<ClassLoader> classLoaders = (Collection<ClassLoader>) configValues.get( AvailableSettings.CLASSLOADERS );
-		if ( classLoaders != null ) {
-			providedClassLoaders.addAll( classLoaders );
-		}
-
-		return new ClassLoaderServiceImpl( providedClassLoaders,TcclLookupPrecedence.AFTER );
+		this.aggregatedClassLoader = new AggregatedClassLoader( orderedClassLoaderSet, lookupPrecedence );
 	}
 
 	@Override
@@ -119,10 +86,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		try {
 			return (Class<T>) Class.forName( className, true, getAggregatedClassLoader() );
 		}
-		catch (Exception e) {
-			throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
-		}
-		catch (LinkageError e) {
+		catch (Exception | LinkageError e) {
 			throw new ClassLoadingException( "Unable to load class [" + className + "]", e );
 		}
 	}
@@ -243,7 +207,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T generateProxy(InvocationHandler handler, Class... interfaces) {
+	public <T> T generateProxy(InvocationHandler handler, Class<?>... interfaces) {
 		return (T) Proxy.newProxyInstance(
 				getAggregatedClassLoader(),
 				interfaces,
@@ -254,15 +218,15 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	@Override
 	public Package packageForNameOrNull(String packageName) {
 		try {
-			Class<?> aClass = Class.forName( packageName + ".package-info", true, getAggregatedClassLoader() );
-			return aClass == null ? null : aClass.getPackage();
+			return Class.forName( packageName + ".package-info", true, getAggregatedClassLoader() )
+					.getPackage();
 		}
 		catch (ClassNotFoundException e) {
 			log.packageNotFound( packageName );
 			return null;
 		}
 		catch (LinkageError e) {
-			log.warn( "LinkageError while attempting to load Package named " + packageName, e );
+			log.linkageError( packageName, e );
 			return null;
 		}
 	}
@@ -275,7 +239,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	private AggregatedClassLoader getAggregatedClassLoader() {
 		final AggregatedClassLoader aggregated = this.aggregatedClassLoader;
 		if ( aggregated == null ) {
-			throw log.usingStoppedClassLoaderService();
+			throw new HibernateException( "The ClassLoaderService cannot be reused (this instance was stopped already)" );
 		}
 		return aggregated;
 	}

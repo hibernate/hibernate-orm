@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
 
@@ -88,10 +86,14 @@ public class JtaTransactionAdapterUserTransactionImpl implements JtaTransactionA
 	@Override
 	public TransactionStatus getStatus() {
 		try {
-			return StatusTranslator.translate( userTransaction.getStatus() );
+			final TransactionStatus status = StatusTranslator.translate( userTransaction.getStatus() );
+			if ( status == null ) {
+				throw new TransactionException( "UserTransaction reported transaction status as unknown" );
+			}
+			return status;
 		}
 		catch (SystemException e) {
-			throw new TransactionException( "JTA TransactionManager#getStatus failed", e );
+			throw new TransactionException( "JTA UserTransaction#getStatus failed", e );
 		}
 	}
 

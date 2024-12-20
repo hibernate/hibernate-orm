@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.bag;
 
@@ -16,7 +14,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.annotations.processing.Exclude;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -36,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 @SessionFactory
+@Exclude
 public class PersistentBagContainsTest {
 
 	/**
@@ -44,7 +44,7 @@ public class PersistentBagContainsTest {
 	 * managed and detached entities.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-5409")
+	@JiraKey(value = "HHH-5409")
 	public void testContains(SessionFactoryScope scope) {
 		Order _order = scope.fromTransaction( session -> {
 			Order order = new Order();
@@ -78,7 +78,7 @@ public class PersistentBagContainsTest {
 
 		scope.inTransaction( session -> {
 			Order order = session.find( Order.class, _order.getId() );
-			session.delete( order );
+			session.remove( order );
 		} );
 	}
 

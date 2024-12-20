@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.pretty;
 
@@ -227,7 +225,7 @@ public final class MessageHelper {
 
 
 	// collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	
+
 	/**
 	 * Generate an info message string relating to a particular managed
 	 * collection.  Attempts to intelligently handle property-refs issues
@@ -244,7 +242,7 @@ public final class MessageHelper {
 			@Nullable PersistentCollection<?> collection,
 			Object collectionKey,
 			SharedSessionContractImplementor session ) {
-		
+
 		StringBuilder s = new StringBuilder();
 		s.append( '[' );
 		if ( persister == null ) {
@@ -253,13 +251,13 @@ public final class MessageHelper {
 		else {
 			s.append( persister.getRole() );
 			s.append( '#' );
-			
+
 			Type ownerIdentifierType = persister.getOwnerEntityPersister()
 					.getIdentifierType();
 			Object ownerKey;
 			// TODO: Is it redundant to attempt to use the collectionKey,
 			// or is always using the owner id sufficient?
-			if ( collectionKey.getClass().isAssignableFrom( 
+			if ( collectionKey.getClass().isAssignableFrom(
 					ownerIdentifierType.getReturnedClass() ) ) {
 				ownerKey = collectionKey;
 			}
@@ -268,7 +266,7 @@ public final class MessageHelper {
 				EntityEntry entry = collectionOwner == null ? null : session.getPersistenceContextInternal().getEntry(collectionOwner);
 				ownerKey = entry == null ? null : entry.getId();
 			}
-			s.append( ownerIdentifierType.toLoggableString( 
+			s.append( ownerIdentifierType.toLoggableString(
 					ownerKey, session.getFactory() ) );
 		}
 		s.append( ']' );
@@ -342,7 +340,7 @@ public final class MessageHelper {
 
 		return s.toString();
 	}
-	
+
 	private static void addIdToCollectionInfoString(
 			CollectionPersister persister,
 			Object id,
@@ -357,7 +355,7 @@ public final class MessageHelper {
 		// may not be the owner key.
 		Type ownerIdentifierType = persister.getOwnerEntityPersister()
 				.getIdentifierType();
-		if ( id.getClass().isAssignableFrom( 
+		if ( id.getClass().isAssignableFrom(
 				ownerIdentifierType.getReturnedClass() ) ) {
 			s.append( ownerIdentifierType.toLoggableString( id, factory ) );
 		}

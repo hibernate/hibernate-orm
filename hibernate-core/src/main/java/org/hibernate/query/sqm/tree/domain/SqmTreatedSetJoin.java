@@ -1,41 +1,51 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> implements SqmTreatedPath<T,S> {
+public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> implements SqmTreatedAttributeJoin<O,T,S> {
 	private final SqmSetJoin<O,T> wrappedPath;
-	private final EntityDomainType<S> treatTarget;
+	private final TreatableDomainType<S> treatTarget;
 
 	public SqmTreatedSetJoin(
 			SqmSetJoin<O, T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			TreatableDomainType<S> treatTarget,
 			String alias) {
+		this( wrappedPath, treatTarget, alias, false );
+	}
+
+	public SqmTreatedSetJoin(
+				SqmSetJoin<O, T> wrappedPath,
+				TreatableDomainType<S> treatTarget,
+				String alias,
+				boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
-				wrappedPath.getNavigablePath().treatAs(
-						treatTarget.getHibernateEntityName(),
-						alias
-				),
+				wrappedPath.getNavigablePath()
+						.append( CollectionPart.Nature.ELEMENT.getName() )
+						.treatAs( treatTarget.getTypeName(), alias ),
 				(SetPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
-				wrappedPath.isFetched(),
+				fetched,
 				wrappedPath.nodeBuilder()
 		);
 		this.treatTarget = treatTarget;
@@ -45,8 +55,9 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 	private SqmTreatedSetJoin(
 			NavigablePath navigablePath,
 			SqmSetJoin<O, T> wrappedPath,
-			EntityDomainType<S> treatTarget,
-			String alias) {
+			TreatableDomainType<S> treatTarget,
+			String alias,
+			boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
@@ -54,7 +65,7 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 				(SetPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
-				wrappedPath.isFetched(),
+				fetched,
 				wrappedPath.nodeBuilder()
 		);
 		this.treatTarget = treatTarget;
@@ -73,7 +84,8 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget,
-						getExplicitAlias()
+						getExplicitAlias(),
+						isFetched()
 				)
 		);
 		copyTo( path, context );
@@ -86,7 +98,7 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 	}
 
 	@Override
-	public EntityDomainType<S> getTreatTarget() {
+	public TreatableDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
@@ -96,13 +108,13 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 	}
 
 	@Override
-	public EntityDomainType<S> getReferencedPathSource() {
+	public TreatableDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
 	@Override
-	public SqmAttributeJoin<O, S> makeCopy(SqmCreationProcessingState creationProcessingState) {
-		return new SqmTreatedSetJoin<>( wrappedPath, treatTarget, getAlias() );
+	public SqmPathSource<?> getResolvedModel() {
+		return treatTarget;
 	}
 
 	@Override
@@ -110,7 +122,27 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 		sb.append( "treat(" );
 		wrappedPath.appendHqlString( sb );
 		sb.append( " as " );
-		sb.append( treatTarget.getName() );
+		sb.append( treatTarget.getTypeName() );
 		sb.append( ')' );
+	}
+
+	@Override
+	public SqmTreatedSetJoin<O, T, S> on(JpaExpression<Boolean> restriction) {
+		return (SqmTreatedSetJoin<O, T, S>) super.on( restriction );
+	}
+
+	@Override
+	public SqmTreatedSetJoin<O, T, S> on(Expression<Boolean> restriction) {
+		return (SqmTreatedSetJoin<O, T, S>) super.on( restriction );
+	}
+
+	@Override
+	public SqmTreatedSetJoin<O, T, S> on(JpaPredicate... restrictions) {
+		return (SqmTreatedSetJoin<O, T, S>) super.on( restrictions );
+	}
+
+	@Override
+	public SqmTreatedSetJoin<O, T, S> on(Predicate... restrictions) {
+		return (SqmTreatedSetJoin<O, T, S>) super.on( restrictions );
 	}
 }

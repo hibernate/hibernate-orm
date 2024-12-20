@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.Types;
 
 import org.hibernate.LockMode;
@@ -31,9 +30,9 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -81,6 +80,7 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  */
 public class RDMSOS2200Dialect extends Dialect {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			RDMSOS2200Dialect.class.getName()
 	);
@@ -90,8 +90,6 @@ public class RDMSOS2200Dialect extends Dialect {
 	 */
 	public RDMSOS2200Dialect() {
 		super( SimpleDatabaseVersion.ZERO_VERSION );
-		// Display the dialect version.
-		LOG.rdmsOs2200Dialect();
 	}
 
 	public RDMSOS2200Dialect(DialectResolutionInfo info) {
@@ -394,7 +392,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
+	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
 		// RDMS has no known variation of a "SELECT ... FOR UPDATE" syntax...
 		switch (lockMode) {
 			case PESSIMISTIC_FORCE_INCREMENT:
@@ -431,7 +429,17 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
-		return AbstractTransactSQLDialect.replaceLtrimRtrim( specification, character);
+	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
+		return AbstractTransactSQLDialect.replaceLtrimRtrim( specification, isWhitespace );
+	}
+
+	@Override
+	public String getDual() {
+		return "rdms.rdms_dummy";
+	}
+
+	@Override
+	public String getFromDualForSelectOnly() {
+		return " from " + getDual() + " where key_col=1";
 	}
 }

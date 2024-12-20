@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.internal;
 
@@ -50,20 +48,8 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 			CallableStatement callableStatement,
 			boolean shouldUseJdbcNamedParameters,
 			SharedSessionContractImplementor session) {
-
-		final boolean useNamed = shouldUseJdbcNamedParameters
-				&& parameterName != null;
-
-		// todo (6.0) : we should just ask BasicValuedExpressibleType for the JdbcValueExtractor...
-
-
 		try {
-			if ( useNamed ) {
-				return ormType.extract( callableStatement, parameterName, session );
-			}
-			else {
-				return ormType.extract( callableStatement, parameterPosition, session );
-			}
+			return ormType.extract( callableStatement, parameterPosition, session );
 		}
 		catch (SQLException e) {
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(

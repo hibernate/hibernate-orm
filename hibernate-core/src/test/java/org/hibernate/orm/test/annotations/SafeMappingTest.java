@@ -1,17 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations;
 
 import org.junit.Test;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.models.AccessTypeDeterminationException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
@@ -23,7 +20,7 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 public class SafeMappingTest {
-    @Test
+	@Test
 	public void testDeclarativeMix() {
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( IncorrectEntity.class );
@@ -35,7 +32,7 @@ public class SafeMappingTest {
 			sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 			fail( "Entity wo id should fail" );
 		}
-		catch (AnnotationException e) {
+		catch (AnnotationException | AccessTypeDeterminationException e) {
 			//success
 		}
 		finally {

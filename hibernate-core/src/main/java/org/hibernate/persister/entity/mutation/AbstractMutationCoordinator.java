@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity.mutation;
 
@@ -19,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.ModelMutationLogging;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -28,30 +26,32 @@ import org.hibernate.sql.model.ast.MutationGroup;
 import org.hibernate.sql.model.ast.TableMutation;
 import org.hibernate.sql.model.ast.builder.ColumnValuesTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
 import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 
 /**
  * Base support for coordinating mutations against an entity
  *
- * @implNote Split simply to help minimize the size of {@link AbstractEntityPersister}
+ * @implNote Split simply to help minimize the size of
+ *           {@link org.hibernate.persister.entity.AbstractEntityPersister}
  *
  * @author Steve Ebersole
  */
 @Internal
 public abstract class AbstractMutationCoordinator {
-	protected final AbstractEntityPersister entityPersister;
+	protected final EntityPersister entityPersister;
 	protected final SessionFactoryImplementor factory;
 	protected final MutationExecutorService mutationExecutorService;
 	protected final Dialect dialect;
 
-	public AbstractMutationCoordinator(AbstractEntityPersister entityPersister, SessionFactoryImplementor factory) {
+	public AbstractMutationCoordinator(EntityPersister entityPersister, SessionFactoryImplementor factory) {
 		this.entityPersister = entityPersister;
 		this.factory = factory;
 		dialect = factory.getJdbcServices().getDialect();
 		this.mutationExecutorService = factory.getServiceRegistry().getService( MutationExecutorService.class );
 	}
 
-	protected AbstractEntityPersister entityPersister() {
+	protected EntityPersister entityPersister() {
 		return entityPersister;
 	}
 
@@ -65,6 +65,7 @@ public abstract class AbstractMutationCoordinator {
 
 	protected BatchKeyAccess resolveBatchKeyAccess(boolean dynamicUpdate, SharedSessionContractImplementor session) {
 		if ( !dynamicUpdate
+				&& !entityPersister().optimisticLockStyle().isAllOrDirty()
 				&& session.getTransactionCoordinator() != null
 				&& session.getTransactionCoordinator().isTransactionActive() ) {
 			return this::getBatchKey;
@@ -81,8 +82,7 @@ public abstract class AbstractMutationCoordinator {
 			case 0:
 				return MutationOperationGroupFactory.noOperations( mutationGroup );
 			case 1: {
-				final MutationOperation operation = mutationGroup.getSingleTableMutation()
-						.createMutationOperation( valuesAnalysis, factory() );
+				final MutationOperation operation = createOperation( valuesAnalysis, mutationGroup.getSingleTableMutation() );
 				return operation == null
 						? MutationOperationGroupFactory.noOperations( mutationGroup )
 						: MutationOperationGroupFactory.singleOperation( mutationGroup, operation );
@@ -92,7 +92,7 @@ public abstract class AbstractMutationCoordinator {
 				int outputIndex = 0;
 				int skipped = 0;
 				for ( int i = 0; i < mutationGroup.getNumberOfTableMutations(); i++ ) {
-					final TableMutation tableMutation = mutationGroup.getTableMutation( i );
+					final TableMutation<?> tableMutation = mutationGroup.getTableMutation( i );
 					final MutationOperation operation = tableMutation.createMutationOperation( valuesAnalysis, factory );
 					if ( operation != null ) {
 						operations[outputIndex++] = operation;
@@ -115,7 +115,14 @@ public abstract class AbstractMutationCoordinator {
 		}
 	}
 
-	void handleValueGeneration(
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected MutationOperation createOperation(ValuesAnalysis valuesAnalysis, TableMutation<?> singleTableMutation) {
+		return singleTableMutation.createMutationOperation( valuesAnalysis, factory() );
+	}
+
+	protected void handleValueGeneration(
 			AttributeMapping attributeMapping,
 			MutationGroupBuilder mutationGroupBuilder,
 			OnExecutionGenerator generator) {
@@ -128,7 +135,8 @@ public abstract class AbstractMutationCoordinator {
 			tableUpdateBuilder.addValueColumn(
 					mapping.getSelectionExpression(),
 					writePropertyValue ? "?" : columnValues[j],
-					mapping.getJdbcMapping()
+					mapping.getJdbcMapping(),
+					mapping.isLob()
 			);
 		} );
 	}
@@ -137,7 +145,7 @@ public abstract class AbstractMutationCoordinator {
 			Object[] loadedState,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
-		final AbstractEntityPersister persister = entityPersister();
+		final EntityPersister persister = entityPersister();
 		if ( persister.hasPartitionedSelectionMapping() ) {
 			final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
 			final int size = attributeMappings.size();
@@ -162,6 +170,53 @@ public abstract class AbstractMutationCoordinator {
 					);
 				}
 			}
+		}
+	}
+
+	protected static boolean needsRowId(EntityPersister entityPersister, EntityTableMapping tableMapping) {
+		return entityPersister.getRowIdMapping() != null && tableMapping.isIdentifierTable();
+	}
+
+	protected static void applyKeyRestriction(
+			Object rowId,
+			EntityPersister entityPersister,
+			RestrictedTableMutationBuilder<?, ?> tableMutationBuilder,
+			EntityTableMapping tableMapping) {
+		if ( rowId != null && needsRowId( entityPersister, tableMapping ) ) {
+			tableMutationBuilder.addKeyRestrictionLeniently( entityPersister.getRowIdMapping() );
+		}
+		else {
+			tableMutationBuilder.addKeyRestrictions( tableMapping.getKeyMapping() );
+		}
+	}
+
+	protected void breakDownKeyJdbcValues(
+			Object id,
+			Object rowId,
+			SharedSessionContractImplementor session,
+			JdbcValueBindings jdbcValueBindings,
+			EntityTableMapping tableMapping) {
+		if ( rowId != null && needsRowId( entityPersister(), tableMapping ) ) {
+			jdbcValueBindings.bindValue(
+					rowId,
+					tableMapping.getTableName(),
+					entityPersister().getRowIdMapping().getRowIdName(),
+					ParameterUsage.RESTRICT
+			);
+		}
+		else {
+			tableMapping.getKeyMapping().breakDownKeyJdbcValues(
+					id,
+					(jdbcValue, columnMapping) -> {
+						jdbcValueBindings.bindValue(
+								jdbcValue,
+								tableMapping.getTableName(),
+								columnMapping.getColumnName(),
+								ParameterUsage.RESTRICT
+						);
+					},
+					session
+			);
 		}
 	}
 }

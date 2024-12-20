@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -10,10 +8,11 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -22,6 +21,7 @@ import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.internal.TableInsertStandard;
 
 /**
  * A SQL AST translator for Informix.
@@ -35,12 +35,30 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
+	public void visitSelectClause(SelectClause selectClause) {
+		getClauseStack().push( Clause.SELECT );
+
+		try {
+			appendSql( "select " );
+			visitSqlSelections( selectClause );
+			renderVirtualSelections( selectClause );
+		}
+		finally {
+			getClauseStack().pop();
+		}
+
+	}
+
+	@Override
 	protected void visitSqlSelections(SelectClause selectClause) {
 		if ( supportsSkipFirstClause() ) {
 			renderSkipFirstClause( (QuerySpec) getQueryPartStack().getCurrent() );
 		}
 		else {
 			renderFirstClause( (QuerySpec) getQueryPartStack().getCurrent() );
+		}
+		if ( selectClause.isDistinct() ) {
+			appendSql( "distinct " );
 		}
 		super.visitSqlSelections( selectClause );
 	}
@@ -134,13 +152,21 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected String getFromDual() {
-		return " from (select 0 from systables where tabid=1) dual";
+	protected void renderNull(Literal literal) {
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.NO_UNTYPED ) {
+			renderCasted( literal );
+		}
+		else {
+			int sqlType = literal.getExpressionType().getSingleJdbcMapping().getJdbcType().getJdbcTypeCode();
+			String nullString = getDialect().getSelectClauseNullString( sqlType, getSessionFactory().getTypeConfiguration() );
+			appendSql( nullString );
+		}
 	}
 
 	@Override
-	protected String getFromDualForSelectOnly() {
-		return getFromDual();
+	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
+		renderIntoIntoAndTable( tableInsert );
+		appendSql( "values (0)" );
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {

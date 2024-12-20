@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
@@ -52,9 +50,20 @@ public interface MultiIdentifierLoadAccess<T> {
 	MultiIdentifierLoadAccess<T> with(CacheMode cacheMode);
 
 	/**
+	 * Specify whether the entities should be loaded in read-only mode.
+	 *
+	 * @see Session#setDefaultReadOnly(boolean)
+	 *
+	 * @since 7.0
+	 */
+	MultiIdentifierLoadAccess<T> withReadOnly(boolean readOnly);
+
+	/**
 	 * Override the associations fetched by default by specifying
 	 * the complete list of associations to be fetched as an
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
+	 *
+	 * @since 6.3
 	 */
 	default MultiIdentifierLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.FETCH );
@@ -64,6 +73,8 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * Augment the associations fetched by default by specifying a
 	 * list of additional associations to be fetched as an
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
+	 *
+	 * @since 6.3
 	 */
 	default MultiIdentifierLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
@@ -85,6 +96,30 @@ public interface MultiIdentifierLoadAccess<T> {
 	MultiIdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
 
 	/**
+	 * Customize the associations fetched by specifying a
+	 * {@linkplain org.hibernate.annotations.FetchProfile fetch profile}
+	 * that should be enabled during this operation.
+	 * <p>
+	 * This allows the {@linkplain Session#isFetchProfileEnabled(String)
+	 * session-level fetch profiles} to be temporarily overridden.
+	 *
+	 * @since 7.0
+	 */
+	MultiIdentifierLoadAccess<T> enableFetchProfile(String profileName);
+
+	/**
+	 * Customize the associations fetched by specifying a
+	 * {@linkplain org.hibernate.annotations.FetchProfile fetch profile}
+	 * that should be disabled during this operation.
+	 * <p>
+	 * This allows the {@linkplain Session#isFetchProfileEnabled(String)
+	 * session-level fetch profiles} to be temporarily overridden.
+	 *
+	 * @since 7.0
+	 */
+	MultiIdentifierLoadAccess<T> disableFetchProfile(String profileName);
+
+	/**
 	 * Specify a batch size, that is, how many entities should be
 	 * fetched in each request to the database.
 	 * <ul>
@@ -97,6 +132,18 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * <p>
 	 * If an explicit batch size is set manually, care should be taken
 	 * to not exceed the capabilities of the underlying database.
+	 * <p>
+	 * The performance impact of setting a batch size depends on whether
+	 * a SQL array may be used to pass the list of identifiers to the
+	 * database:
+	 * <ul>
+	 * <li>for databases which support standard SQL arrays, a smaller
+	 *     batch size might be extremely inefficient compared to a very
+	 *     large batch size or no batching at all, but
+	 * <li>on the other hand, for databases with no SQL array type, a
+	 *     large batch size results in long SQL statements with many JDBC
+	 *     parameters.
+	 * </ul>
 	 * <p>
 	 * A batch size is considered a hint.
 	 *
@@ -122,8 +169,8 @@ public interface MultiIdentifierLoadAccess<T> {
 
 	/**
 	 * Should {@link #multiLoad} return entity instances that have been
-	 * {@link Session#remove(Object) marked for removal} in the current
-	 * session, but not yet {@code delete}d in the database?
+	 * {@linkplain Session#remove(Object) marked for removal} in the
+	 * current session, but not yet {@code delete}d in the database?
 	 * <p>
 	 * By default, instances marked for removal are replaced by null in
 	 * the returned list of entities when {@link #enableOrderedReturn}

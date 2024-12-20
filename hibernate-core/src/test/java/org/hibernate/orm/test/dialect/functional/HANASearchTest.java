@@ -1,18 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.functional;
 
 import java.sql.PreparedStatement;
 
 import org.hibernate.Transaction;
-import org.hibernate.dialect.HANAColumnStoreDialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -31,15 +29,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests the correctness of the SAP HANA fulltext-search functions.
- * 
+ *
  * @author Jonathan Bregler
  */
 @DomainModel(
 		annotatedClasses = { HANASearchTest.SearchEntity.class }
 )
 @SessionFactory(exportSchema = false)
-@RequiresDialect(HANAColumnStoreDialect.class)
-@SkipForDialect(dialectClass = HANAColumnStoreDialect.class, majorVersion = 4)
+@RequiresDialect(HANADialect.class)
+@SkipForDialect(dialectClass = HANADialect.class, majorVersion = 4)
 public class HANASearchTest {
 
 	private static final String ENTITY_NAME = "SearchEntity";
@@ -50,7 +48,7 @@ public class HANASearchTest {
 				session -> session.doWork(
 						connection -> {
 							try (PreparedStatement ps = connection.prepareStatement( "CREATE COLUMN TABLE " + ENTITY_NAME
-																							 + " (key INTEGER, t TEXT, c NVARCHAR(255), PRIMARY KEY (key))" )) {
+																							+ " (key INTEGER, t TEXT, c NVARCHAR(255), PRIMARY KEY (key))" )) {
 								ps.execute();
 							}
 							try (PreparedStatement ps = connection
@@ -86,7 +84,7 @@ public class HANASearchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13021")
+	@JiraKey(value = "HHH-13021")
 	public void testTextType(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -99,7 +97,7 @@ public class HANASearchTest {
 					session.flush();
 
 					Query<Object[]> legacyQuery = session.createQuery( "select b, snippets(t), highlighted(t), score() from "
-																		 + ENTITY_NAME + " b where contains(b.t, 'text')", Object[].class );
+																		+ ENTITY_NAME + " b where contains(b.t, 'text')", Object[].class );
 
 					Object[] result = legacyQuery.getSingleResult();
 					SearchEntity retrievedEntity = (SearchEntity) result[0];
@@ -118,7 +116,7 @@ public class HANASearchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13021")
+	@JiraKey(value = "HHH-13021")
 	public void testTextTypeFalse(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -131,7 +129,7 @@ public class HANASearchTest {
 					session.flush();
 
 					Query<Object[]> legacyQuery = session.createQuery( "select b, snippets(t), highlighted(t), score() from " + ENTITY_NAME
-																		 + " b where not contains(b.t, 'string')", Object[].class );
+																		+ " b where not contains(b.t, 'string')", Object[].class );
 
 					Object[] result = legacyQuery.getSingleResult();
 					SearchEntity retrievedEntity = (SearchEntity) result[0];
@@ -150,7 +148,7 @@ public class HANASearchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13021")
+	@JiraKey(value = "HHH-13021")
 	public void testCharType(SessionFactoryScope scope) throws Exception {
 		scope.inSession(
 				session -> {
@@ -187,7 +185,7 @@ public class HANASearchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13021")
+	@JiraKey(value = "HHH-13021")
 	public void testCharTypeComplexQuery(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
@@ -224,7 +222,7 @@ public class HANASearchTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13021")
+	@JiraKey(value = "HHH-13021")
 	public void testFuzzy(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
@@ -241,7 +239,7 @@ public class HANASearchTest {
 					session.beginTransaction();
 
 					Query<Object[]> legacyQuery = session.createQuery( "select b, snippets(c), highlighted(c), score() from " + ENTITY_NAME
-																		 + " b where contains(b.c, 'string', FUZZY(0.7))", Object[].class );
+																		+ " b where contains(b.c, 'string', FUZZY(0.7))", Object[].class );
 
 					Object[] result = legacyQuery.getSingleResult();
 					SearchEntity retrievedEntity = (SearchEntity) result[0];

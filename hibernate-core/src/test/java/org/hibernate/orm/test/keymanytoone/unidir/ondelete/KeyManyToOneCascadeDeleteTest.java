@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.keymanytoone.unidir.ondelete;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -27,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class KeyManyToOneCascadeDeleteTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-7807")
+	@JiraKey(value = "HHH-7807")
 	public void testComponentCascadeRemoval(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
@@ -38,9 +36,9 @@ public class KeyManyToOneCascadeDeleteTest {
 					order2.setItem( "printer" );
 					session.getTransaction().begin();
 					try {
-						session.save( customer );
-						session.save( order1 );
-						session.save( order2 );
+						session.persist( customer );
+						session.persist( order1 );
+						session.persist( order2 );
 						session.getTransaction().commit();
 					}
 					catch (Exception e) {
@@ -54,7 +52,7 @@ public class KeyManyToOneCascadeDeleteTest {
 					session.getTransaction().begin();
 					try {
 						customer = session.get( Customer.class, customer.getId() );
-						session.delete( customer );
+						session.remove( customer );
 						session.getTransaction().commit();
 					}
 					catch (Exception e) {

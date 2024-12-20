@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.cascade;
 
@@ -13,7 +11,7 @@ import org.hibernate.LazyInitializationException;
 import org.hibernate.Session;
 import org.hibernate.stat.SessionStatistics;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -67,7 +65,7 @@ public class PersistOnLazyCollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11916")
+	@JiraKey(value = "HHH-11916")
 	public void testPersistOnAlreadyPersistentEntityWithUninitializedLazyCollection(SessionFactoryScope scope) {
 
 		final Invoice _invoice = scope.fromTransaction( session -> createInvoiceWithTwoInvoiceLines( session ) );
@@ -97,7 +95,7 @@ public class PersistOnLazyCollectionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11916")
+	@JiraKey(value = "HHH-11916")
 	public void testPersistOnNewEntityRelatedToAlreadyPersistentEntityWithUninitializedLazyCollection(
 			SessionFactoryScope scope) {
 		final Invoice _invoice = scope.fromTransaction( session -> createInvoiceWithTwoInvoiceLines( session ) );
@@ -108,8 +106,8 @@ public class PersistOnLazyCollectionTest {
 			// load invoice, invoiceLines should not be loaded
 			Invoice invoice = session.get( Invoice.class, _invoice.getId() );
 			assertEquals( 1,
-						  stats.getEntityCount(),
-						  "Invoice lines should not be initialized while loading the invoice, because of the lazy association."
+						stats.getEntityCount(),
+						"Invoice lines should not be initialized while loading the invoice, because of the lazy association."
 			);
 
 			Receipt receipt = new Receipt( RECEIPT_A );

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.constraint;
 
@@ -19,7 +17,7 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.Table;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -40,7 +38,7 @@ public class ForeignKeyNoConstraintTest extends BaseNonConfigCoreFunctionalTestC
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12975")
+	@JiraKey(value = "HHH-12975")
 	public void testPrimaryKeyJoinColumnForeignKeyNoConstraint() {
 		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
 			for ( Table table : namespace.getTables() ) {
@@ -52,7 +50,7 @@ public class ForeignKeyNoConstraintTest extends BaseNonConfigCoreFunctionalTestC
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12975")
+	@JiraKey(value = "HHH-12975")
 	public void testMapsIdJoinColumnForeignKeyNoConstraint() {
 		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
 			for ( Table table : namespace.getTables() ) {

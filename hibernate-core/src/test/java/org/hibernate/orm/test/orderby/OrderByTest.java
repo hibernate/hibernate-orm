@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.orderby;
 
 import java.util.ArrayList;
@@ -18,7 +22,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -98,7 +102,7 @@ public class OrderByTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14351")
+	@JiraKey(value = "HHH-14351")
 	public void testOrderBySqlNode(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -112,7 +116,7 @@ public class OrderByTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15885")
+	@JiraKey( value = "HHH-15885")
 	public void testOrderBy(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {

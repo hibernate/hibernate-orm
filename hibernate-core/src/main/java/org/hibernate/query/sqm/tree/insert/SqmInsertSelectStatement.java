@@ -1,16 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.insert;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.hibernate.Incubating;
+import org.hibernate.query.criteria.JpaConflictClause;
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -20,9 +20,21 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Path;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * @author Steve Ebersole
@@ -57,8 +69,9 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 			Map<String, SqmCteStatement<?>> cteStatements,
 			SqmRoot<T> target,
 			List<SqmPath<?>> insertionTargetPaths,
+			SqmConflictClause<T> conflictClause,
 			SqmQueryPart<?> selectQueryPart) {
-		super( builder, querySource, parameters, cteStatements, target, insertionTargetPaths );
+		super( builder, querySource, parameters, cteStatements, target, insertionTargetPaths, conflictClause );
 		this.selectQueryPart = selectQueryPart;
 	}
 
@@ -72,14 +85,34 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 				this,
 				new SqmInsertSelectStatement<>(
 						nodeBuilder(),
-						getQuerySource(),
+						context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
 						copyParameters( context ),
 						copyCteStatements( context ),
 						getTarget().copy( context ),
 						copyInsertionTargetPaths( context ),
+						getConflictClause() == null ? null : getConflictClause().copy( context ),
 						selectQueryPart.copy( context )
 				)
 		);
+	}
+
+	@Override
+	public void validate(@Nullable String hql) {
+		final List<SqmPath<?>> insertionTargetPaths = getInsertionTargetPaths();
+		final List<SqmSelectableNode<?>> selections = getSelectQueryPart()
+				.getFirstQuerySpec()
+				.getSelectClause()
+				.getSelectionItems();
+		verifyInsertTypesMatch( insertionTargetPaths, selections );
+		getSelectQueryPart().validateQueryStructureAndFetchOwners();
+	}
+
+	@Override
+	public SqmInsertSelectStatement<T> select(CriteriaQuery<Tuple> criteriaQuery) {
+		final SqmSelectStatement<Tuple> selectStatement = (SqmSelectStatement<Tuple>) criteriaQuery;
+		putAllCtes( selectStatement );
+		setSelectQueryPart( selectStatement.getQueryPart() );
+		return this;
 	}
 
 	public SqmQueryPart<?> getSelectQueryPart() {
@@ -96,9 +129,45 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
+	public <U> Subquery<U> subquery(EntityType<U> type) {
+		throw new UnsupportedOperationException( "INSERT cannot be basis for subquery" );
+	}
+
+	@Override
 	public JpaPredicate getRestriction() {
 		// insert has no predicate
 		return null;
+	}
+
+	@Override
+	public Set<ParameterExpression<?>> getParameters() {
+		// At this level, the number of parameters may still be growing as
+		// nodes are added to the Criteria - so we re-calculate this every
+		// time.
+		//
+		// for a "finalized" set of parameters, use `#resolveParameters` instead
+		assert getQuerySource() == SqmQuerySource.CRITERIA;
+		return getSqmParameters().stream()
+				.filter( parameterExpression -> !( parameterExpression instanceof ValueBindJpaCriteriaParameter ) )
+				.collect( Collectors.toSet() );
+	}
+
+	@Override
+	public SqmInsertSelectStatement<T> setInsertionTargetPaths(Path<?>... insertionTargetPaths) {
+		super.setInsertionTargetPaths( insertionTargetPaths );
+		return this;
+	}
+
+	@Override
+	public SqmInsertSelectStatement<T> setInsertionTargetPaths(List<? extends Path<?>> insertionTargetPaths) {
+		super.setInsertionTargetPaths( insertionTargetPaths );
+		return this;
+	}
+
+	@Override
+	public SqmInsertSelectStatement<T> onConflict(JpaConflictClause<T> conflictClause) {
+		super.onConflict( conflictClause );
+		return this;
 	}
 
 	@Override
@@ -106,5 +175,9 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 		super.appendHqlString( sb );
 		sb.append( ' ' );
 		selectQueryPart.appendHqlString( sb );
+		final SqmConflictClause conflictClause = getConflictClause();
+		if ( conflictClause != null ) {
+			conflictClause.appendHqlString( sb );
+		}
 	}
 }

@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Glarch.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.orm.test.legacy;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -13,11 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.PrePersist;
 import org.hibernate.CallbackException;
-import org.hibernate.Session;
-import org.hibernate.classic.Lifecycle;
 
-public class Glarch extends Super implements GlarchProxy, Lifecycle, Named, Serializable {
+public class Glarch extends Super implements GlarchProxy, Named, Serializable {
 
 	private int version;
 	private GlarchProxy next;
@@ -101,33 +96,13 @@ public class Glarch extends Super implements GlarchProxy, Lifecycle, Named, Seri
 		this.proxySet = proxySet;
 	}
 
-	public boolean onDelete(Session s) throws CallbackException {
-		return NO_VETO;
-	}
-
-	public void onLoad(Session s, Object id) {
-		if ( ! ( ( (String) id ).length()==32 ) ) throw new RuntimeException("id problem");
-	}
-
-	public boolean onSave(Session s) throws CallbackException {
+	@PrePersist
+	public void onSave() throws CallbackException {
 		dynaBean = new HashMap();
 		dynaBean.put("foo", "foo");
 		dynaBean.put("bar", new Integer(66));
 		immutable="never changes!";
-		return NO_VETO;
 	}
-
-	public boolean onUpdate(Session s) throws CallbackException {
-		return NO_VETO;
-	}
-
-	/*public Currency getCurrency() {
-		return currency;
-	}
-
-	public void setCurrency(Currency currency) {
-		this.currency = currency;
-	}*/
 
 	/**
 	 * Returns the dynaBean.
@@ -198,10 +173,3 @@ public class Glarch extends Super implements GlarchProxy, Lifecycle, Named, Seri
 	}
 
 }
-
-
-
-
-
-
-

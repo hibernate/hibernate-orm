@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.dirty;
 
@@ -25,52 +23,46 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Christian Beikov
  */
-@TestForIssue(jiraKey = "HHH-14360")
-@RunWith(BytecodeEnhancerRunner.class)
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class DirtyTrackingPersistTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	public Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { HotherEntity.class, Hentity.class };
-	}
-
-	@Override
-	protected void configureSessionFactoryBuilder(SessionFactoryBuilder sfb) {
-		super.configureSessionFactoryBuilder( sfb );
-		sfb.applyCollectionsInDefaultFetchGroup( true );
-	}
+@JiraKey("HHH-14360")
+@DomainModel(
+		annotatedClasses = {
+				DirtyTrackingPersistTest.HotherEntity.class, DirtyTrackingPersistTest.Hentity.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+public class DirtyTrackingPersistTest {
 
 	@Test
-	public void test() {
-		assertTrue( sessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
+	public void test(SessionFactoryScope scope) {
+		assertTrue( scope.getSessionFactory().getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled() );
 
 		Hentity hentity = new Hentity();
 		HotherEntity hotherEntity = new HotherEntity();
 		hentity.setLineItems( new ArrayList<>( Collections.singletonList( hotherEntity ) ) );
 		hentity.setNextRevUNs( new ArrayList<>( Collections.singletonList( "something" ) ) );
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			session.persist( hentity );
 		} );
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			hentity.bumpNumber();
-			session.saveOrUpdate( hentity );
+			session.merge( hentity );
 		} );
 	}
 

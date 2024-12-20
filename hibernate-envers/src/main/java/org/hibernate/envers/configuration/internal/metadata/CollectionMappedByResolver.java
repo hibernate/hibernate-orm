@@ -1,12 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import java.util.Iterator;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -14,7 +12,6 @@ import java.util.Objects;
 import org.hibernate.envers.boot.EnversMappingException;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.EnversMessageLogger;
-import org.hibernate.envers.internal.tools.Tools;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
@@ -35,6 +32,7 @@ import org.jboss.logging.Logger;
 public class CollectionMappedByResolver {
 
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			EnversMessageLogger.class,
 			CollectionMappedByResolver.class.getName()
 	);
@@ -105,10 +103,8 @@ public class CollectionMappedByResolver {
 	}
 
 	private static String searchMappedBy(PersistentClass referencedClass, Collection collectionValue) {
-		final Iterator<Property> assocClassProps = referencedClass.getPropertyIterator();
-		while ( assocClassProps.hasNext() ) {
-			final Property property = assocClassProps.next();
-
+		final List<Property> assocClassProps = referencedClass.getProperties();
+		for ( Property property : assocClassProps ) {
 			final List<Selectable> assocClassSelectables = property.getValue().getSelectables();
 			final List<Selectable> collectionKeySelectables = collectionValue.getKey().getSelectables();
 			if ( Objects.equals( assocClassSelectables, collectionKeySelectables ) ) {
@@ -203,5 +199,5 @@ public class CollectionMappedByResolver {
 		public Table getTable() {
 			return table;
 		}
-	}    
+	}
 }

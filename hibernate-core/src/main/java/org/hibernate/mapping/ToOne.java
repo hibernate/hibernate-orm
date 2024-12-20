@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
@@ -12,9 +10,9 @@ import org.hibernate.boot.model.internal.AnnotatedJoinColumn;
 import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.MappingContext;
 
 import java.util.Objects;
 
@@ -53,10 +51,12 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 		this.referenceToPrimaryKey = original.referenceToPrimaryKey;
 	}
 
+	@Override
 	public FetchMode getFetchMode() {
 		return fetchMode;
 	}
 
+	@Override
 	public void setFetchMode(FetchMode fetchMode) {
 		this.fetchMode=fetchMode;
 	}
@@ -90,19 +90,16 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 	@Override
 	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
 		if ( referencedEntityName == null ) {
-			final ClassLoaderService cls = getMetadata().getMetadataBuildingOptions()
-					.getServiceRegistry()
-					.getService( ClassLoaderService.class );
+			final ClassLoaderService cls =
+					getMetadata().getMetadataBuildingOptions().getServiceRegistry()
+							.requireService( ClassLoaderService.class );
 			referencedEntityName = ReflectHelper.reflectedPropertyClass( className, propertyName, cls ).getName();
 		}
 	}
 
+	@Override
 	public boolean isTypeSpecified() {
 		return referencedEntityName!=null;
-	}
-	
-	public Object accept(ValueVisitor visitor) {
-		return visitor.accept(this);
 	}
 
 	@Override
@@ -116,17 +113,20 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 			&& Objects.equals( referencedEntityName, other.referencedEntityName );
 	}
 
-	public boolean isValid(Mapping mapping) throws MappingException {
-		if (referencedEntityName==null) {
+	@Override
+	public boolean isValid(MappingContext mappingContext) throws MappingException {
+		if ( referencedEntityName==null ) {
 			throw new MappingException("association must specify the referenced entity");
 		}
-		return super.isValid( mapping );
+		return super.isValid( mappingContext );
 	}
 
+	@Override
 	public boolean isLazy() {
 		return lazy;
 	}
-	
+
+	@Override
 	public void setLazy(boolean lazy) {
 		this.lazy = lazy;
 	}
@@ -175,8 +175,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 			final Value value = referencedPropertyName == null
 					? entityBinding.getIdentifier()
 					: entityBinding.getRecursiveProperty( referencedPropertyName ).getValue();
-			if ( value instanceof Component ) {
-				final Component component = (Component) value;
+			if ( value instanceof Component component ) {
 				final int[] originalPropertyOrder = component.sortProperties();
 				if ( !sorted ) {
 					if ( originalPropertyOrder != null ) {
@@ -201,15 +200,15 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 			if ( isConstrained() ) {
 				final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
 				final Object owner = findReferencedColumnOwner( referencedEntity, firstColumn, getBuildingContext() );
-				if ( owner instanceof Join ) {
+				if ( owner instanceof Join join ) {
 					// Here we handle the case of a foreign key that refers to the
 					// primary key of a secondary table of the referenced entity
-					final Join join = (Join) owner;
 					final ForeignKey foreignKey = getTable().createForeignKey(
 							getForeignKeyName(),
 							getConstraintColumns(),
 							referencedEntity.getEntityName(),
 							getForeignKeyDefinition(),
+							getForeignKeyOptions(),
 							join.getKey().getColumns()
 					);
 					foreignKey.setOnDeleteAction( getOnDeleteAction() );

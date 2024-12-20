@@ -1,0 +1,32 @@
+<!--
+ ~ Hibernate, Relational Persistence for Idiomatic Java
+ ~
+ ~ SPDX-License-Identifier: Apache-2.0
+ ~ Copyright: Red Hat Inc. and Hibernate Authors
+ -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="7.0">
+    <entity name="EntityWithoutTenantId" metadata-complete="true">
+        <attributes>
+            <id name="id">
+                <target>Long</target>
+            </id>
+        </attributes>
+    </entity>
+
+
+    <entity name="EntityWithTenantId" metadata-complete="true">
+
+        <tenant-id name="tenantId" fetch="EAGER" optional="true">
+            <column name="TENANT_ID" insertable="false"/>
+            <target>String</target>
+        </tenant-id>
+
+        <attributes>
+            <id name="id">
+                <target>Integer</target>
+            </id>
+        </attributes>
+    </entity>
+
+
+</entity-mappings>

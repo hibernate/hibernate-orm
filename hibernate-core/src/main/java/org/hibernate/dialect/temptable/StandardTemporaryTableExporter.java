@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.temptable;
 
@@ -10,6 +8,7 @@ import java.util.function.Function;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
  * @author Steve Ebersole
@@ -101,8 +100,11 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			SharedSessionContractImplementor session) {
 		if ( idTable.getSessionUidColumn() != null ) {
+			final ParameterMarkerStrategy parameterMarkerStrategy = session.getSessionFactory()
+					.getFastSessionServices().parameterMarkerStrategy;
 			return getTruncateTableCommand() + " " + idTable.getQualifiedTableName()
-					+ " where " + idTable.getSessionUidColumn().getColumnName() + " = ?";
+					+ " where " + idTable.getSessionUidColumn().getColumnName() + " = "
+					+ parameterMarkerStrategy.createMarker( 1, null );
 		}
 		else {
 			return getTruncateTableCommand() + " " + idTable.getQualifiedTableName();

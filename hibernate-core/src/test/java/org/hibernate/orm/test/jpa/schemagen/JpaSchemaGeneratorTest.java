@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.schemagen;
 
@@ -17,7 +15,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.Assert;
@@ -46,7 +44,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8271")
+	@JiraKey(value = "HHH-8271")
 	public void testSqlLoadScriptSourceClasspath() {
 		Map<Object, Object> settings = buildSettings();
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
@@ -56,7 +54,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8271")
+	@JiraKey(value = "HHH-8271")
 	public void testSqlLoadScriptSourceUrl() {
 		Map<Object, Object> settings = buildSettings();
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
@@ -65,7 +63,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8271")
+	@JiraKey(value = "HHH-8271")
 	public void testSqlCreateScriptSourceClasspath() {
 		Map<Object, Object> settings = buildSettings();
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
@@ -75,7 +73,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8271")
+	@JiraKey(value = "HHH-8271")
 	public void testSqlCreateScriptSourceUrl() {
 		Map<Object, Object> settings = buildSettings();
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, "create-drop" );
@@ -86,7 +84,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8271")
+	@JiraKey(value = "HHH-8271")
 	public void testSqlDropScriptSourceClasspath() {
 		Map<Object, Object> settings = buildSettings();
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DROP_SOURCE, "metadata-then-script" );
@@ -96,7 +94,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8271")
+	@JiraKey(value = "HHH-8271")
 	public void testSqlDropScriptSourceUrl() {
 		Map<Object, Object> settings = buildSettings();
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DROP_SOURCE, "metadata-then-script" );

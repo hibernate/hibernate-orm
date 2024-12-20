@@ -1,18 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
 
-import java.util.function.BiFunction;
-
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.ResultSetMappingSqlSelection;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -41,7 +35,6 @@ public class ScalarDomainResultBuilder<T> implements ResultBuilder {
 	public DomainResult<T> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
 		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState()
 				.getSqlExpressionResolver();
@@ -69,7 +62,10 @@ public class ScalarDomainResultBuilder<T> implements ResultBuilder {
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				null,
-				( (BasicType<?>) sqlSelection.getExpressionType() )
+				(BasicType<?>) sqlSelection.getExpressionType(),
+				null,
+				false,
+				false
 		);
 	}
 

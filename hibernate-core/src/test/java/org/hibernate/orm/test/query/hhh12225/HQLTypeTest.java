@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hhh12225;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -18,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 
-@TestForIssue(jiraKey = "HHH-12225")
+@JiraKey(value = "HHH-12225")
 @DomainModel(
 		xmlMappings = {
 				"org/hibernate/orm/test/query/hhh12225/Contract.hbm.xml",
@@ -61,10 +59,10 @@ public class HQLTypeTest {
 				Vehicle vehicle2 = new Vehicle();
 				vehicle2.setContract( vehicleTrackContract );
 
-				session.save( vehicle1 );
-				session.save( vehicle2 );
-				session.save( vehicleContract );
-				session.save( vehicleTrackContract );
+				session.persist( vehicle1 );
+				session.persist( vehicle2 );
+				session.persist( vehicleContract );
+				session.persist( vehicleTrackContract );
 				if ( i == 0 ) {
 					firstCotract = vehicleContract;
 				}

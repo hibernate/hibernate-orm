@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.beanvalidation;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Set;
@@ -30,6 +29,7 @@ import org.jboss.logging.Logger;
  */
 public class BeanValidationIntegrator implements Integrator {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			BeanValidationIntegrator.class.getName()
 	);
@@ -89,8 +89,8 @@ public class BeanValidationIntegrator implements Integrator {
 			Metadata metadata,
 			BootstrapContext bootstrapContext,
 			SessionFactoryImplementor sessionFactory) {
-		ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
-		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
+		final ServiceRegistryImplementor serviceRegistry = sessionFactory.getServiceRegistry();
+		final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
 		// IMPL NOTE : see the comments on ActivationContext.getValidationModes() as to why this is multi-valued...
 		Object modeSetting = cfgService.getSettings().get( JAKARTA_MODE_PROPERTY );
 		if ( modeSetting == null ) {
@@ -105,7 +105,7 @@ public class BeanValidationIntegrator implements Integrator {
 			return;
 		}
 
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 
 		// see if the Bean Validation API is available on the classpath
 		if ( isBeanValidationApiAvailable( classLoaderService ) ) {

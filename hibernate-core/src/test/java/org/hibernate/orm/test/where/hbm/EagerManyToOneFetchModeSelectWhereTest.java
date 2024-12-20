@@ -1,18 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.where.hbm;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -28,11 +24,6 @@ import static org.junit.Assert.assertSame;
 public class EagerManyToOneFetchModeSelectWhereTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		settings.put( AvailableSettings.CREATE_EMPTY_COMPOSITES_ENABLED, true );
-	}
-
-	@Override
 	protected String getBaseForMappings() {
 		return "org/hibernate/orm/test/";
 	}
@@ -43,7 +34,7 @@ public class EagerManyToOneFetchModeSelectWhereTest extends BaseNonConfigCoreFun
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-12104" )
+	@JiraKey( value = "HHH-12104" )
 	public void testAssociatedWhereClause() {
 		Product product = new Product();
 		Category category = new Category();
@@ -99,9 +90,8 @@ public class EagerManyToOneFetchModeSelectWhereTest extends BaseNonConfigCoreFun
 					Product p = session.get( Product.class, product.id );
 					assertNotNull( p );
 					assertNull( p.category );
-					assertNull( p.containedCategory.category );
-					assertEquals( 1, p.containedCategories.size() );
-					assertNull( p.containedCategories.iterator().next().category );
+					assertNull( p.containedCategory );
+					assertEquals( 0, p.containedCategories.size() );
 				}
 		);
 	}

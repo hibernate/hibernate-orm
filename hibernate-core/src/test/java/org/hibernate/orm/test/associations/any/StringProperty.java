@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.associations.any;
 
@@ -17,43 +15,43 @@ import jakarta.persistence.Table;
 @Table(name="string_property")
 public class StringProperty implements Property<String> {
 
-    @Id
-    private Long id;
+	@Id
+	private Long id;
 
-    @Column(name = "`name`")
-    private String name;
+	@Column(name = "`name`")
+	private String name;
 
-    @Column(name = "`value`")
-    private String value;
+	@Column(name = "`value`")
+	private String value;
 
-    @Override
-    public String getName() {
-        return name;
-    }
+	@Override
+	public String getName() {
+		return name;
+	}
 
-    @Override
-    public String getValue() {
-        return value;
-    }
+	@Override
+	public String getValue() {
+		return value;
+	}
 
-    //Getters and setters omitted for brevity
+	//Getters and setters omitted for brevity
 //end::associations-any-property-example[]
 
-    public Long getId() {
-        return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public void setValue(String value) {
-        this.value = value;
-    }
+	public void setValue(String value) {
+		this.value = value;
+	}
 //tag::associations-any-property-example[]
 }
 //end::associations-any-property-example[]

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spi;
 
@@ -30,16 +28,9 @@ public class TreatedNavigablePath extends NavigablePath {
 				"#" + entityTypeName,
 				alias,
 				"treat(" + parent + " as " + entityTypeName + ")",
-				TreatedNavigablePath::calculateTreatedFullPath,
 				1
 		);
 		assert !( parent instanceof TreatedNavigablePath );
-	}
-
-	protected static String calculateTreatedFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias) {
-		return alias == null
-				? "treat(" + parent + " as " + localName + ")"
-				: "treat(" + parent + " as " + localName + ")(" + alias + ")";
 	}
 
 	@Override

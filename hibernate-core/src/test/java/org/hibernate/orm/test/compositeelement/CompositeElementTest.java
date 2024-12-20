@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.compositeelement;
 
@@ -41,7 +39,7 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 	protected void afterMetadataBuilt(Metadata metadata) {
 		Collection children = metadata.getCollectionBinding( Parent.class.getName() + ".children" );
 		Component childComponents = ( Component ) children.getElement();
-		Formula f = ( Formula ) childComponents.getProperty( "bioLength" ).getValue().getColumnIterator().next();
+		Formula f = ( Formula ) childComponents.getProperty( "bioLength" ).getValue().getSelectables().get( 0 );
 
 //		SQLFunction lengthFunction = metadata.getDatabase().getJdbcEnvironment().getDialect().getFunctions().get( "length" );
 //		if ( lengthFunction != null ) {
@@ -59,7 +57,7 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 		Parent p = new Parent( "Parent" );
 		p.getChildren().add( c );
 		c.setParent( p );
-		s.save( p );
+		s.persist( p );
 		s.flush();
 
 		p.getChildren().remove( c );
@@ -86,7 +84,7 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( p );
+		s.remove( p );
 		t.commit();
 		s.close();
 	}
@@ -99,7 +97,7 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 			Parent p = new Parent( "Parent" );
 			p.getChildren().add( c );
 			c.setParent( p );
-			s.save( p );
+			s.persist( p );
 			s.flush();
 
 			// Oracle returns BigDecimaal while other dialects return Integer;
@@ -126,7 +124,7 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 			c = (Child) p.getChildren().iterator().next();
 			assertEquals( 1, c.getPosition() );
 
-			p = (Parent) s.createQuery( "from Parent p join p.children c where c.position = 1" ).uniqueResult();
+			p = s.createQuery( "from Parent p join p.children c where c.position = 1", Parent.class ).uniqueResult();
 			c = (Child) p.getChildren().iterator().next();
 			assertEquals( 1, c.getPosition() );
 
@@ -136,9 +134,8 @@ public class CompositeElementTest extends BaseNonConfigCoreFunctionalTestCase {
 					"select child_position from ParentChild c where c.name='Child One'" )
 					.uniqueResult() );
 			assertEquals( 1, sqlValue.intValue() );
-			s.delete( p );
+			s.remove( p );
 		} );
 	}
 
 }
-

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.jpa.graphs;
 
 import java.util.Arrays;
@@ -18,7 +22,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -38,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Yaroslav Prokipchyn
  * @author Nathan Xu
  */
-@TestForIssue( jiraKey = "HHH-14212" )
+@JiraKey( value = "HHH-14212" )
 @Jpa(annotatedClasses = {
 		FetchGraphTest.LedgerRecord.class,
 		FetchGraphTest.LedgerRecordItem.class,
@@ -190,4 +194,3 @@ public class FetchGraphTest {
 		String name;
 	}
 }
-

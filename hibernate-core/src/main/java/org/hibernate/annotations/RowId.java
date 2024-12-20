@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -14,7 +12,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Specifies that a {@code rowid}-like column or pseudo-column should be
- * used as the row locator in SQL {@code update} statements for an entity,
+ * used as the row locator in CRUD operations for an entity,
  * instead of the primary key of the table.
  * <p>
  * If the {@linkplain org.hibernate.dialect.Dialect SQL dialect} does

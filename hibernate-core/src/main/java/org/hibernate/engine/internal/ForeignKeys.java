@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
@@ -13,16 +12,18 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.AnyType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
+import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Algorithms related to foreign key constraint transparency
@@ -88,77 +89,83 @@ public final class ForeignKeys {
 		 * @return {@code null} if the argument is an unsaved entity; otherwise return the argument.
 		 */
 		private Object nullifyTransientReferences(final Object value, final String propertyName, final Type type) {
-			final Object returnedValue;
-			if ( value == null ) {
-				returnedValue = null;
-			}
-			else if ( type.isEntityType() ) {
-				final EntityType entityType = (EntityType) type;
-				if ( entityType.isOneToOne() ) {
-					returnedValue = value;
-				}
-				else {
-					// If value is lazy, it may need to be initialized to
-					// determine if the value is nullifiable.
-					final Object possiblyInitializedValue = initializeIfNecessary( value, propertyName, entityType );
-					if ( possiblyInitializedValue == null ) {
-						// The uninitialized value was initialized to null
-						returnedValue = null;
-					}
-					else {
-						// If the value is not nullifiable, make sure that the
-						// possibly initialized value is returned.
-						returnedValue = isNullifiable( entityType.getAssociatedEntityName(), possiblyInitializedValue )
-								? null
-								: possiblyInitializedValue;
-					}
-				}
-			}
-			else if ( type.isAnyType() ) {
-				returnedValue = isNullifiable( null, value ) ? null : value;
-			}
-			else if ( type.isComponentType() ) {
-				final CompositeType compositeType = (CompositeType) type;
-				final Object[] subvalues = compositeType.getPropertyValues( value, session );
-				final Type[] subtypes = compositeType.getSubtypes();
-				final String[] subPropertyNames = compositeType.getPropertyNames();
-				boolean substitute = false;
-				for ( int i = 0; i < subvalues.length; i++ ) {
-					final Object replacement = nullifyTransientReferences(
-							subvalues[i],
-							StringHelper.qualify( propertyName, subPropertyNames[i] ),
-							subtypes[i]
-					);
-					if ( replacement != subvalues[i] ) {
-						substitute = true;
-						subvalues[i] = replacement;
-					}
-				}
-				if ( substitute ) {
-					// todo : need to account for entity mode on the CompositeType interface :(
-					compositeType.setPropertyValues( value, subvalues );
-				}
-				returnedValue = value;
-			}
-			else {
-				returnedValue = value;
-			}
+			final Object returnedValue = nullifyTransient(value, propertyName, type);
 			// value != returnedValue if either:
 			// 1) returnedValue was nullified (set to null);
 			// or 2) returnedValue was initialized, but not nullified.
 			// When bytecode-enhancement is used for dirty-checking, the change should
-			// only be tracked when returnedValue was nullified (1)).
+			// only be tracked when returnedValue was nullified (1).
 			if ( value != returnedValue && returnedValue == null ) {
 				processIfSelfDirtinessTracker( self, SelfDirtinessTracker::$$_hibernate_trackChange, propertyName );
 			}
 			return returnedValue;
 		}
 
+		private Object nullifyTransient(Object value, String propertyName, Type type) {
+			if ( value == null ) {
+				return null;
+			}
+			else if ( type instanceof EntityType ) {
+				return nullifyEntityType( value, propertyName, (EntityType) type );
+			}
+			else if ( type instanceof AnyType ) {
+				return isNullifiable( null, value) ? null : value;
+			}
+			else if ( type instanceof ComponentType ) {
+				return nullifyCompositeType( value, propertyName, (ComponentType) type );
+			}
+			else {
+				return value;
+			}
+		}
+
+		private Object nullifyCompositeType(Object value, String propertyName, ComponentType compositeType) {
+			final Object[] subvalues = compositeType.getPropertyValues(value, session );
+			final Type[] subtypes = compositeType.getSubtypes();
+			final String[] subPropertyNames = compositeType.getPropertyNames();
+			boolean substitute = false;
+			for ( int i = 0; i < subvalues.length; i++ ) {
+				final Object replacement = nullifyTransientReferences(
+						subvalues[i],
+						qualify( propertyName, subPropertyNames[i] ),
+						subtypes[i]
+				);
+				if ( replacement != subvalues[i] ) {
+					substitute = true;
+					subvalues[i] = replacement;
+				}
+			}
+			if ( substitute ) {
+				// todo : need to account for entity mode on the CompositeType interface :(
+				compositeType.setPropertyValues( value, subvalues );
+			}
+			return value;
+		}
+
+		private Object nullifyEntityType(Object value, String propertyName, EntityType entityType) {
+			if ( entityType.isOneToOne() ) {
+				return value;
+			}
+			else {
+				// If value is lazy, it may need to be initialized to
+				// determine if the value is nullifiable.
+				final Object possiblyInitializedValue = initializeIfNecessary(value, propertyName, entityType );
+				if ( possiblyInitializedValue == null ) {
+					// The uninitialized value was initialized to null
+					return null;
+				}
+				else {
+					// If the value is not nullifiable, make sure that the
+					// possibly initialized value is returned.
+					return isNullifiable(entityType.getAssociatedEntityName(), possiblyInitializedValue)
+							? null
+							: possiblyInitializedValue;
+				}
+			}
+		}
+
 		private Object initializeIfNecessary(final Object value, final String propertyName, final Type type) {
-			if ( isDelete
-					&& value == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					&& type.isEntityType()
-					&& !session.getPersistenceContextInternal().isNullifiableEntityKeysEmpty() ) {
+			if ( initializationIsNecessary( value,  type ) ) {
 				// IMPLEMENTATION NOTE: If cascade-remove was mapped for the attribute,
 				// then value should have been initialized previously, when the remove operation was
 				// cascaded to the property (because CascadingAction.DELETE.performOnLazyProperty()
@@ -170,16 +177,24 @@ public final class ForeignKeys {
 				// the property is not nullified, then a constraint violation will result.
 				// The only way to find out if the associated entity is nullifiable is
 				// to initialize it.
-				// TODO: there may be ways to fine-tune when initialization is necessary
-				//       (e.g., only initialize when the associated entity type is a
-				//       superclass or the same as the entity type of a nullifiable entity).
-				//       It is unclear if a more complicated check would impact performance
-				//       more than just initializing the associated entity.
-				return ( (LazyPropertyInitializer) persister ).initializeLazyProperty( propertyName, self, session );
+				return ( (LazyPropertyInitializer) persister )
+						.initializeLazyProperty( propertyName, self, session );
 			}
 			else {
 				return value;
 			}
+		}
+
+		private boolean initializationIsNecessary(Object value, Type type) {
+			// TODO: there may be ways to fine-tune when initialization is necessary
+			//       (e.g., only initialize when the associated entity type is a
+			//       superclass or the same as the entity type of a nullifiable entity).
+			//       It is unclear if a more complicated check would impact performance
+			//       more than just initializing the associated entity.
+			return isDelete
+				&& value == UNFETCHED_PROPERTY
+				&& type instanceof EntityType
+				&& !session.getPersistenceContextInternal().isNullifiableEntityKeysEmpty();
 		}
 
 		/**
@@ -191,21 +206,20 @@ public final class ForeignKeys {
 		 */
 		private boolean isNullifiable(final String entityName, Object object)
 				throws HibernateException {
-			if ( object == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+			if ( object == UNFETCHED_PROPERTY ) {
 				// this is the best we can do...
 				return false;
 			}
 
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-
-			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+			final LazyInitializer lazyInitializer = extractLazyInitializer( object );
 			if ( lazyInitializer != null ) {
 				// if it's an uninitialized proxy it can only be
 				// transient if we did an unloaded-delete on the
 				// proxy itself, in which case there is no entry
 				// for it, but its key has already been registered
 				// as nullifiable
-				Object entity = lazyInitializer.getImplementation( session );
+				final Object entity = lazyInitializer.getImplementation( session );
 				if ( entity == null ) {
 					// an unloaded proxy might be scheduled for deletion
 					return persistenceContext.containsDeletedUnloadedEntityKey(
@@ -227,7 +241,7 @@ public final class ForeignKeys {
 			// case we definitely need to nullify
 			if ( object == self ) {
 				return isEarlyInsert
-					|| isDelete && session.getFactory().getJdbcServices().getDialect().hasSelfReferentialForeignKeyBug();
+					|| isDelete && hasSelfReferentialForeignKeyBug();
 			}
 
 			// See if the entity is already bound to this session, if not look at the
@@ -239,6 +253,11 @@ public final class ForeignKeys {
 			return entityEntry == null
 					? isTransient( entityName, object, null, session )
 					: entityEntry.isNullifiable( isEarlyInsert, session );
+		}
+
+		private boolean hasSelfReferentialForeignKeyBug() {
+			return session.getFactory().getJdbcServices().getDialect()
+					.hasSelfReferentialForeignKeyBug();
 		}
 	}
 
@@ -255,7 +274,8 @@ public final class ForeignKeys {
 	 *
 	 * @return {@code true} if the given entity is not transient (meaning it is either detached/persistent)
 	 */
-	public static boolean isNotTransient(String entityName, Object entity, Boolean assumed, SharedSessionContractImplementor session) {
+	public static boolean isNotTransient(
+			String entityName, Object entity, Boolean assumed, SharedSessionContractImplementor session) {
 		return isHibernateProxy( entity )
 			|| session.getPersistenceContextInternal().isEntryFor( entity )
 			// todo : shouldn't assumed be reversed here?
@@ -275,37 +295,38 @@ public final class ForeignKeys {
 	 *
 	 * @return {@code true} if the given entity is transient (unsaved)
 	 */
-	public static boolean isTransient(String entityName, Object entity, Boolean assumed, SharedSessionContractImplementor session) {
-		if ( entity == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+	public static boolean isTransient(
+			String entityName, Object entity, @Nullable Boolean assumed, SharedSessionContractImplementor session) {
+		if ( entity == UNFETCHED_PROPERTY ) {
 			// an unfetched association can only point to
 			// an entity that already exists in the db
 			return false;
 		}
 
 		// let the interceptor inspect the instance to decide
-		Boolean isUnsaved = session.getInterceptor().isTransient( entity );
-		if ( isUnsaved != null ) {
-			return isUnsaved;
+		final Boolean isUnsavedAccordingToInterceptor = session.getInterceptor().isTransient( entity );
+		if ( isUnsavedAccordingToInterceptor != null ) {
+			return isUnsavedAccordingToInterceptor;
 		}
 
 		// let the persister inspect the instance to decide
 		final EntityPersister persister = session.getEntityPersister( entityName, entity );
-		isUnsaved = persister.isTransient( entity, session );
-		if ( isUnsaved != null ) {
-			return isUnsaved;
+		final Boolean isUnsavedAccordingToPersister = persister.isTransient( entity, session );
+		if ( isUnsavedAccordingToPersister != null ) {
+			return isUnsavedAccordingToPersister;
 		}
 
-		// we use the assumed value, if there is one, to avoid hitting
-		// the database
+		// we use the assumed value, if there is one, to
+		// avoid hitting the database
 		if ( assumed != null ) {
 			return assumed;
 		}
 
-		// hit the database, after checking the session cache for a snapshot
-		final Object[] snapshot = session.getPersistenceContextInternal().getDatabaseSnapshot(
-				persister.getIdentifier( entity, session ),
-				persister
-		);
+		// hit the database, after checking the session
+		// cache for a snapshot
+		final Object[] snapshot =
+				session.getPersistenceContextInternal()
+						.getDatabaseSnapshot( persister.getIdentifier( entity, session ), persister );
 		return snapshot == null;
 	}
 
@@ -313,10 +334,11 @@ public final class ForeignKeys {
 	 * Return the identifier of the persistent or transient object, or throw
 	 * an exception if the instance is "unsaved"
 	 * <p>
-	 * Used by OneToOneType and ManyToOneType to determine what id value should
+	 * Used by {@link org.hibernate.type.OneToOneType} and
+	 * {@link org.hibernate.type.ManyToOneType} to determine what id value should
 	 * be used for an object that may or may not be associated with the session.
 	 * This does a "best guess" using any/all info available to use (not just the
-	 * EntityEntry).
+	 * {@link EntityEntry}).
 	 *
 	 * @param entityName The name of the entity
 	 * @param object The entity instance
@@ -334,20 +356,40 @@ public final class ForeignKeys {
 			return null;
 		}
 		else {
-			Object id = session.getContextEntityIdentifier( object );
+			final Object id = session.getContextEntityIdentifier( object );
 			if ( id == null ) {
-				// context-entity-identifier returns null explicitly if the entity
-				// is not associated with the persistence context; so make some
-				// deeper checks...
-				if ( isTransient( entityName, object, Boolean.FALSE, session ) ) {
-					throw new TransientObjectException(
-							"object references an unsaved transient instance - save the transient instance before flushing: " +
-									(entityName == null ? session.guessEntityName( object ) : entityName)
-					);
-				}
-				id = session.getEntityPersister( entityName, object ).getIdentifier( object, session );
+				// context-entity-identifier always returns null if the
+				// entity is not associated with the persistence context;
+				// so make some deeper checks...
+				throwIfTransient( entityName, object, session );
+				return session.getEntityPersister( entityName, object ).getIdentifier( object, session );
 			}
-			return id;
+			else {
+				return id;
+			}
+		}
+	}
+
+	public static Object getEntityIdentifier(
+			final String entityName,
+			final Object object,
+			final SharedSessionContractImplementor session) {
+		if ( object == null ) {
+			return null;
+		}
+		else {
+			final Object id = session.getContextEntityIdentifier( object );
+			return id == null
+					? session.getEntityPersister( entityName, object ).getIdentifier( object, session )
+					: id;
+		}
+	}
+
+	private static void throwIfTransient(String entityName, Object object, SharedSessionContractImplementor session) {
+		if ( isTransient( entityName, object, Boolean.FALSE, session ) ) {
+			throw new TransientObjectException( "Entity references an unsaved transient instance of '"
+					+ (entityName == null ? session.guessEntityName(object) : entityName)
+					+ "' (make the transient instance persistent before flushing)" );
 		}
 	}
 
@@ -402,10 +444,9 @@ public final class ForeignKeys {
 			SharedSessionContractImplementor session,
 			NonNullableTransientDependencies nonNullableTransientEntities) {
 		if ( value == null ) {
-			return;
+			// do nothing
 		}
-
-		if ( type.isEntityType() ) {
+		else if ( type instanceof EntityType ) {
 			final EntityType entityType = (EntityType) type;
 			if ( !isNullable
 					&& !entityType.isOneToOne()
@@ -413,13 +454,13 @@ public final class ForeignKeys {
 				nonNullableTransientEntities.add( propertyName, value );
 			}
 		}
-		else if ( type.isAnyType() ) {
+		else if ( type instanceof AnyType ) {
 			if ( !isNullable && nullifier.isNullifiable( null, value ) ) {
 				nonNullableTransientEntities.add( propertyName, value );
 			}
 		}
-		else if ( type.isComponentType() ) {
-			final CompositeType compositeType = (CompositeType) type;
+		else if ( type instanceof ComponentType ) {
+			final ComponentType compositeType = (ComponentType) type;
 			final boolean[] subValueNullability = compositeType.getPropertyNullability();
 			if ( subValueNullability != null ) {
 				final String[] subPropertyNames = compositeType.getPropertyNames();

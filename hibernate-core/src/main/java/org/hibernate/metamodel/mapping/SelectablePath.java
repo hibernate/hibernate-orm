@@ -1,17 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Objects;
 
 import org.hibernate.Incubating;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.spi.DotIdentifierSequence;
 
 /**
@@ -41,7 +38,7 @@ public class SelectablePath implements Serializable, DotIdentifierSequence {
 		if ( path == null || path.isEmpty() ) {
 			return null;
 		}
-		final String[] parts = path.split( "\\." );
+		final String[] parts = StringHelper.split( ".", path );
 		SelectablePath selectablePath = new SelectablePath( parts[0] );
 		for ( int i = 1; i < parts.length; i++ ) {
 			selectablePath = selectablePath.append( parts[i] );

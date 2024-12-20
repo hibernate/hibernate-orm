@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -18,11 +16,11 @@ import org.hibernate.metamodel.mapping.NonTransientException;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.internal.EntityPersisterConcurrentMap;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 
 import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
-import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_TRACE_ENABLED;
 
 /**
  * @author Steve Ebersole
@@ -35,15 +33,18 @@ public class MappingModelCreationProcess {
 	 */
 	public static void process(
 			EntityPersisterConcurrentMap entityPersisterMap,
+			Map<String, CollectionPersister> collectionPersisterMap,
 			RuntimeModelCreationContext creationContext) {
 		final MappingModelCreationProcess process = new MappingModelCreationProcess(
 				entityPersisterMap,
+				collectionPersisterMap,
 				creationContext
 		);
 		process.execute();
 	}
 
 	private final EntityPersisterConcurrentMap entityPersisterMap;
+	private final Map<String, CollectionPersister> collectionPersisterMap;
 	private final RuntimeModelCreationContext creationContext;
 
 	private String currentlyProcessingRole;
@@ -51,8 +52,10 @@ public class MappingModelCreationProcess {
 
 	private MappingModelCreationProcess(
 			EntityPersisterConcurrentMap entityPersisterMap,
+			Map<String, CollectionPersister> collectionPersisterMap,
 			RuntimeModelCreationContext creationContext) {
 		this.entityPersisterMap = entityPersisterMap;
+		this.collectionPersisterMap = collectionPersisterMap;
 		this.creationContext = creationContext;
 	}
 
@@ -83,6 +86,12 @@ public class MappingModelCreationProcess {
 
 			if ( entityPersister instanceof InFlightEntityMappingType ) {
 				( (InFlightEntityMappingType) entityPersister ).prepareMappingModel( this );
+			}
+		}
+
+		for ( CollectionPersister collectionPersister : collectionPersisterMap.values() ) {
+			if ( collectionPersister instanceof InFlightCollectionMapping ) {
+				((InFlightCollectionMapping) collectionPersister).prepareMappingModel( this );
 			}
 		}
 
@@ -122,7 +131,7 @@ public class MappingModelCreationProcess {
 					exceptions.put( callbackEntry, e );
 
 					final String format = "Mapping-model creation encountered (possibly) transient error : %s";
-					if ( MAPPING_MODEL_CREATION_TRACE_ENABLED ) {
+					if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isTraceEnabled() ) {
 						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.tracef( e, format, e );
 					}
 					else {

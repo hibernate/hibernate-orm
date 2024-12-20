@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.schematools;
 
 import java.io.Serializable;
@@ -37,6 +41,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -81,7 +86,7 @@ public class PrimaryKeyColumnOrderTest extends BaseSessionFactoryFunctionalTest 
 
 	@Test
 	public void getPrimaryKey() throws Exception {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
 						JdbcMetadaAccessStrategy.GROUPED
@@ -103,8 +108,8 @@ public class PrimaryKeyColumnOrderTest extends BaseSessionFactoryFunctionalTest 
 			List<String> pkColumnNames = new ArrayList<>();
 			primaryKey.getColumns().forEach( columnInformation -> {
 				pkColumnNames.add( columnInformation.getColumnIdentifier()
-										   .getCanonicalName()
-										   .toLowerCase( Locale.ROOT ) );
+										.getCanonicalName()
+										.toLowerCase( Locale.ROOT ) );
 			} );
 
 			assertThat( pkColumnNames.size() ).isEqualTo( 2 );

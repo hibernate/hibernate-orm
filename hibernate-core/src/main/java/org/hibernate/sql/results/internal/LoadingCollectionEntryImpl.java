@@ -1,13 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.collection.spi.PersistentCollection;
@@ -25,14 +24,14 @@ import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
  */
 public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 	private final CollectionPersister collectionDescriptor;
-	private final CollectionInitializer initializer;
+	private final CollectionInitializer<?> initializer;
 	private final Object key;
 	private final PersistentCollection<?> collectionInstance;
 	private final List<Object> loadingState = new ArrayList<>();
 
 	public LoadingCollectionEntryImpl(
 			CollectionPersister collectionDescriptor,
-			CollectionInitializer initializer,
+			CollectionInitializer<?> initializer,
 			Object key,
 			PersistentCollection<?> collectionInstance) {
 		this.collectionDescriptor = collectionDescriptor;
@@ -51,7 +50,7 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 	/**
 	 * Access to the initializer that is responsible for initializing this collection
 	 */
-	@Override public CollectionInitializer getInitializer() {
+	@Override public CollectionInitializer<?> getInitializer() {
 		return initializer;
 	}
 
@@ -68,6 +67,11 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 		loadingEntryConsumer.accept( loadingState );
 	}
 
+	@Override
+	public <T> void load(T arg1, BiConsumer<T, List<Object>> loadingEntryConsumer) {
+		loadingEntryConsumer.accept( arg1, loadingState );
+	}
+
 	@Override public void finishLoading(ExecutionContext executionContext) {
 		collectionInstance.injectLoadedState(
 				getCollectionDescriptor().getAttributeMapping(),
@@ -76,7 +80,7 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 
 		final boolean hasNoQueuedAdds = collectionInstance.endRead();
 		final SharedSessionContractImplementor session = executionContext.getSession();
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final CollectionPersister collectionDescriptor = getCollectionDescriptor();
 
 		ResultsHelper.finalizeCollectionLoading(

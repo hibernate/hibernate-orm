@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
@@ -232,7 +230,7 @@ public class FromClause implements SqlAstNode {
 					if ( navigablePath.equals( tg.getNavigablePath() ) ) {
 						return tg;
 					}
-					if ( tg instanceof OneToManyTableGroup && navigablePath.getParent().equals( tg.getNavigablePath() ) ) {
+					if ( tg instanceof OneToManyTableGroup && tg.getNavigablePath().equals( navigablePath.getParent() ) ) {
 						return ( (OneToManyTableGroup) tg ).getTableGroup( CollectionPart.Nature.fromName( navigablePath.getLocalName() ) );
 					}
 					return null;
@@ -264,7 +262,7 @@ public class FromClause implements SqlAstNode {
 	private boolean hasJoins(List<TableGroupJoin> tableGroupJoins) {
 		for ( TableGroupJoin tableGroupJoin : tableGroupJoins ) {
 			final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
-			if ( joinedGroup instanceof VirtualTableGroup ) {
+			if ( joinedGroup.isVirtual() ) {
 				if ( hasJoins( joinedGroup.getTableGroupJoins() ) ) {
 					return true;
 				}

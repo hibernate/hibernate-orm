@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -10,6 +8,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToOneType;
+
+import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 
 /**
  * ColumnAndFormulaSource implementation handling many-to-one attribute mappings.
@@ -57,7 +57,7 @@ public class ManyToOneAttributeColumnsAndFormulasSource extends RelationalValueS
 
 	@Override
 	public Set<String> getIndexConstraintNames() {
-		return CommaSeparatedStringHelper.split( manyToOneMapping.getIndex() );
+		return Set.of( splitAtCommas( manyToOneMapping.getIndex() ) );
 	}
 
 	@Override
@@ -67,6 +67,6 @@ public class ManyToOneAttributeColumnsAndFormulasSource extends RelationalValueS
 
 	@Override
 	public Set<String> getUniqueKeyConstraintNames() {
-		return CommaSeparatedStringHelper.split( manyToOneMapping.getUniqueKey() );
+		return Set.of( splitAtCommas( manyToOneMapping.getUniqueKey() ) );
 	}
 }

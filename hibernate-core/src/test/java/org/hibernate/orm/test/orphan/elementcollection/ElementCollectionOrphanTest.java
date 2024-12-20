@@ -1,15 +1,19 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.orphan.elementcollection;
 
 import java.util.Collections;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-@TestForIssue(jiraKey = "HHH-14597")
+@JiraKey(value = "HHH-14597")
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/orphan/elementcollection/student.hbm.xml"
 )
@@ -34,7 +38,7 @@ public class ElementCollectionOrphanTest {
 					EnrollableClass aClass = new EnrollableClass();
 					aClass.setId( "123" );
 					aClass.setName( "Math" );
-					session.save( aClass );
+					session.persist( aClass );
 
 					Student aStudent = new Student();
 					aStudent.setId( "s1" );
@@ -51,7 +55,7 @@ public class ElementCollectionOrphanTest {
 					enrClass.setClassStartTime( 130 );
 					enrClass.setSeat( seat );
 					aStudent.setEnrolledClasses( Collections.singleton( enrClass ) );
-					session.save( aStudent );
+					session.persist( aStudent );
 				}
 		);
 	}

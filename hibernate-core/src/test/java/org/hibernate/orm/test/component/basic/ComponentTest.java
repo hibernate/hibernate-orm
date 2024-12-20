@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.component.basic;
 
@@ -23,9 +21,9 @@ import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
@@ -60,7 +58,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 		PersistentClass user = metadata.getEntityBinding( User.class.getName() );
 		org.hibernate.mapping.Property personProperty = user.getProperty( "person" );
 		Component component = ( Component ) personProperty.getValue();
-		Formula f = ( Formula ) component.getProperty( "yob" ).getValue().getColumnIterator().next();
+		Formula f = ( Formula ) component.getProperty( "yob" ).getValue().getSelectables().get( 0 );
 
 		String pattern = metadata.getDatabase().getJdbcEnvironment().getDialect().extractPattern( TemporalUnit.YEAR );
 		String formula = pattern.replace( "?1", "YEAR" ).replace( "?2", "dob" );
@@ -88,13 +86,13 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 				s -> {
 					User u = s.get(User.class, "gavin");
 					assertEquals( u.getPerson().getName(), "Gavin King" );
-					s.delete(u);
+					s.remove(u);
 				}
 		);
 
 		assertEquals( 1, sessionFactory().getStatistics().getEntityDeleteCount() );
 	}
-	
+
 
 	@Test
 	public void testComponent() {
@@ -123,13 +121,13 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( u.getPerson().getAddress(), "Phipps Place" );
 					assertEquals( u.getPerson().getPreviousAddress(), "Karbarook Ave" );
 					assertEquals( u.getPassword(), "$ecret" );
-					s.delete(u);
+					s.remove(u);
 				}
 		);
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-2366" )
+	@JiraKey( value = "HHH-2366" )
 	public void testComponentStateChangeAndDirtiness() {
 		inTransaction(
 				s -> {
@@ -144,7 +142,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 					u.getPerson().setAddress( "Cedar Park" );
 					s.flush();
 					assertEquals( intialUpdateCount + 1, sessionFactory().getStatistics().getEntityUpdateCount() );
-					s.delete( u );
+					s.remove( u );
 				}
 		);
 	}
@@ -158,13 +156,13 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 					emp.setPerson( new Person() );
 					emp.getPerson().setName( "steve" );
 					emp.getPerson().setDob( new Date() );
-					s.save( emp );
+					s.persist( emp );
 
 					s.createQuery( "from Employee e where e.person = :p and 1 = 1 and 2=2" ).setParameter( "p", emp.getPerson() ).list();
 					s.createQuery( "from Employee e where :p = e.person" ).setParameter( "p", emp.getPerson() ).list();
 					s.createQuery( "from Employee e where e.person = ('', '', current_timestamp, 0.0, 'steve', '', 0)" ).list();
 
-					s.delete( emp );
+					s.remove( emp );
 				}
 		);
 	}
@@ -184,9 +182,9 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 					emp.setPerson( new Person() );
 					emp.getPerson().setName( "steve" );
 					emp.getPerson().setDob( new Date() );
-					s.save( emp );
+					s.persist( emp );
 					s.createQuery( "from Employee e where e.person = (current_timestamp, 'steve')" ).list();
-					s.delete( emp );
+					s.remove( emp );
 				}
 		);
 	}
@@ -214,7 +212,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 				}
 		);
 	}
-	
+
 	@Test
 	public void testCustomColumnReadAndWrite() {
 		inTransaction(
@@ -264,11 +262,11 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 							( (Number)s.createNativeQuery("select height_centimeters from T_USER where T_USER.userName='steve'").uniqueResult() )
 									.doubleValue();
 					assertEquals(2.54d, heightViaSql, 0.01d);
-					s.delete(u);
+					s.remove(u);
 				}
 		);
 	}
-	
+
 	@Test
 	public void testNamedQuery() {
 		inTransaction(
@@ -390,7 +388,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 		assertNull(dr.getOptionalComponent());
 
 		inTransaction(
-				s -> s.delete( emp6 )
+				s -> s.remove( emp6 )
 		);
 	}
 }

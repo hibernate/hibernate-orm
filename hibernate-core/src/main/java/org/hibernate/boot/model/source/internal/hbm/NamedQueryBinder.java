@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
@@ -20,7 +18,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.boot.model.internal.QueryBinder;
 import org.hibernate.boot.query.ImplicitHbmResultSetMappingDescriptorBuilder;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
-import org.hibernate.boot.query.NamedNativeQueryDefinitionBuilder;
+import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.internal.log.DeprecationLogger;
 
@@ -49,15 +47,16 @@ public class NamedQueryBinder {
 			String prefix) {
 		final String registrationName = prefix + namedQueryBinding.getName();
 
-		final NamedHqlQueryDefinition.Builder queryBuilder = new NamedHqlQueryDefinition.Builder( registrationName )
-				.setComment( namedQueryBinding.getComment() )
-				.setCacheable( namedQueryBinding.isCacheable() )
-				.setCacheMode( namedQueryBinding.getCacheMode() )
-				.setCacheRegion( namedQueryBinding.getCacheRegion() )
-				.setTimeout( namedQueryBinding.getTimeout() )
-				.setReadOnly( namedQueryBinding.isReadOnly() )
-				.setFlushMode( namedQueryBinding.getFlushMode() )
-				.setFetchSize( namedQueryBinding.getFetchSize() );
+		final NamedHqlQueryDefinition.Builder<?> queryBuilder =
+				new NamedHqlQueryDefinition.Builder<>( registrationName )
+						.setComment( namedQueryBinding.getComment() )
+						.setCacheable( namedQueryBinding.isCacheable() )
+						.setCacheMode( namedQueryBinding.getCacheMode() )
+						.setCacheRegion( namedQueryBinding.getCacheRegion() )
+						.setTimeout( namedQueryBinding.getTimeout() )
+						.setReadOnly( namedQueryBinding.isReadOnly() )
+						.setFlushMode( namedQueryBinding.getFlushMode() )
+						.setFetchSize( namedQueryBinding.getFetchSize() );
 
 		boolean foundQuery = false;
 
@@ -111,16 +110,17 @@ public class NamedQueryBinder {
 
 		final String registrationName = prefix + namedQueryBinding.getName();
 
-		final NamedNativeQueryDefinitionBuilder builder = new NamedNativeQueryDefinitionBuilder( registrationName )
-				.setComment( namedQueryBinding.getComment() )
-				.setCacheable( namedQueryBinding.isCacheable() )
-				.setCacheMode( namedQueryBinding.getCacheMode() )
-				.setCacheRegion( namedQueryBinding.getCacheRegion() )
-				.setTimeout( namedQueryBinding.getTimeout() )
-				.setReadOnly( namedQueryBinding.isReadOnly() )
-				.setFlushMode( namedQueryBinding.getFlushMode() )
-				.setFetchSize( namedQueryBinding.getFetchSize() )
-				.setResultSetMappingName( namedQueryBinding.getResultsetRef() );
+		final NamedNativeQueryDefinition.Builder<?> builder =
+				new NamedNativeQueryDefinition.Builder<>( registrationName )
+						.setComment( namedQueryBinding.getComment() )
+						.setCacheable( namedQueryBinding.isCacheable() )
+						.setCacheMode( namedQueryBinding.getCacheMode() )
+						.setCacheRegion( namedQueryBinding.getCacheRegion() )
+						.setTimeout( namedQueryBinding.getTimeout() )
+						.setReadOnly( namedQueryBinding.isReadOnly() )
+						.setFlushMode( namedQueryBinding.getFlushMode() )
+						.setFetchSize( namedQueryBinding.getFetchSize() )
+						.setResultSetMappingName( namedQueryBinding.getResultsetRef() );
 
 		final ImplicitHbmResultSetMappingDescriptorBuilder implicitResultSetMappingBuilder =
 				new ImplicitHbmResultSetMappingDescriptorBuilder( registrationName, context );
@@ -197,7 +197,7 @@ public class NamedQueryBinder {
 
 	private static boolean processNamedQueryContentItem(
 			Object content,
-			NamedNativeQueryDefinitionBuilder queryBuilder,
+			NamedNativeQueryDefinition.Builder<?> queryBuilder,
 			ImplicitHbmResultSetMappingDescriptorBuilder implicitResultSetMappingBuilder,
 			JaxbHbmNamedNativeQueryType namedQueryBinding,
 			HbmLocalMetadataBuildingContext context) {
@@ -224,12 +224,10 @@ public class NamedQueryBinder {
 			);
 		}
 
-		if ( content instanceof JaxbHbmQueryParamType ) {
-			final JaxbHbmQueryParamType paramTypeBinding = (JaxbHbmQueryParamType) content;
+		if ( content instanceof JaxbHbmQueryParamType paramTypeBinding ) {
 			queryBuilder.addParameterTypeHint( paramTypeBinding.getName(), paramTypeBinding.getType() );
 		}
-		else if ( content instanceof JaxbHbmSynchronizeType ) {
-			final JaxbHbmSynchronizeType synchronizedSpace = (JaxbHbmSynchronizeType) content;
+		else if ( content instanceof JaxbHbmSynchronizeType synchronizedSpace ) {
 			queryBuilder.addSynchronizedQuerySpace( synchronizedSpace.getTable() );
 		}
 		else if ( content instanceof JaxbHbmNativeQueryScalarReturnType ) {

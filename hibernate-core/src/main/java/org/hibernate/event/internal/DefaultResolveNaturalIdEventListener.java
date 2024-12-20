@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
@@ -14,7 +12,6 @@ import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -28,9 +25,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * @author Eric Dalquist
  * @author Steve Ebersole
  */
-public class DefaultResolveNaturalIdEventListener
-		extends AbstractLockUpgradeEventListener
-		implements ResolveNaturalIdEventListener {
+public class DefaultResolveNaturalIdEventListener implements ResolveNaturalIdEventListener {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultResolveNaturalIdEventListener.class );
 
@@ -53,34 +48,22 @@ public class DefaultResolveNaturalIdEventListener
 		final EntityPersister persister = event.getEntityPersister();
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Attempting to resolve: {0}#{1}",
-					infoString( persister ),
-					event.getNaturalIdValues()
-			);
+			LOG.trace( "Attempting to resolve: " + infoString( persister ) + "#" + event.getNaturalIdValues() );
 		}
 
 		final Object entityId = resolveFromCache( event );
 		if ( entityId != null ) {
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Resolved object in cache: {0}#{1}",
-						infoString( persister ),
-						event.getNaturalIdValues()
-				);
+				LOG.trace( "Resolved object in cache: " + infoString( persister ) + "#" + event.getNaturalIdValues() );
 			}
 			return entityId;
 		}
-
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Object not resolved in any cache: {0}#{1}",
-					infoString( persister ),
-					event.getNaturalIdValues()
-			);
+		else {
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Object not resolved in any cache: "+ infoString( persister ) + "#" + event.getNaturalIdValues() );
+			}
+			return loadFromDatasource( event );
 		}
-
-		return loadFromDatasource( event );
 	}
 
 	/**
@@ -106,7 +89,7 @@ public class DefaultResolveNaturalIdEventListener
 	protected Object loadFromDatasource(ResolveNaturalIdEvent event) {
 		final EventSource session = event.getSession();
 		final EntityPersister entityPersister = event.getEntityPersister();
-		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final StatisticsImplementor statistics = event.getFactory().getStatistics();
 		final boolean statisticsEnabled = statistics.isStatisticsEnabled();
 		final long startTime = statisticsEnabled ? System.nanoTime() : 0;
 

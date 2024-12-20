@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -18,7 +16,6 @@ import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -33,6 +30,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -47,6 +45,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	private final String table;
 	private final String column;
 	private final DiscriminatedAssociationModelPart anyPart;
+	private final String customReadExpression;
+	private final String customWriteExpression;
 	private final String columnDefinition;
 	private final Long length;
 	private final Integer precision;
@@ -62,6 +62,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			DiscriminatedAssociationModelPart anyPart,
 			String table,
 			String column,
+			String customReadExpression,
+			String customWriteExpression,
 			String columnDefinition,
 			Long length,
 			Integer precision,
@@ -75,6 +77,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		this.table = table;
 		this.column = column;
 		this.anyPart = anyPart;
+		this.customReadExpression = customReadExpression;
+		this.customWriteExpression = customWriteExpression;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
 		this.precision = precision;
@@ -123,12 +127,12 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 
 	@Override
 	public String getCustomReadExpression() {
-		return null;
+		return customReadExpression;
 	}
 
 	@Override
 	public String getCustomWriteExpression() {
-		return null;
+		return customWriteExpression;
 	}
 
 	@Override
@@ -149,6 +153,11 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	@Override
 	public Integer getScale() {
 		return scale;
+	}
+
+	@Override
+	public Integer getTemporalPrecision() {
+		return null;
 	}
 
 	@Override
@@ -236,7 +245,8 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState
+				creationState,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -248,12 +258,6 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	@Override
 	public FetchTiming getTiming() {
 		return FetchTiming.IMMEDIATE;
-	}
-
-	@Override
-	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		consumer.accept( offset, this );
-		return getJdbcTypeCount();
 	}
 
 	@Override
@@ -322,8 +326,15 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		// todo (6.2) : how is this correct?
-		return anyPart.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
+		return new BasicResult<>(
+				sqlSelection.getValuesArrayPosition(),
+				resultVariable,
+				jdbcMapping,
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
+		);
 	}
 
 	@Override
@@ -331,8 +342,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		// todo (6.2) : how is this correct?
-		anyPart.applySqlSelections( navigablePath, tableGroup, creationState );
+		resolveSqlSelection( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
@@ -341,7 +351,27 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		// todo (6.2) : how is this correct?
-		anyPart.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
+		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, creationState ), getJdbcMapping() );
+	}
+
+	private SqlSelection resolveSqlSelection(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		final TableReference tableReference = tableGroup.resolveTableReference(
+				navigablePath,
+				this,
+				getContainingTableExpression()
+		);
+		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
+		return expressionResolver.resolveSqlSelection(
+				expressionResolver.resolveSqlExpression(
+						tableReference,
+						this
+				),
+				jdbcMapping.getJdbcJavaType(),
+				null,
+				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+		);
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type.contributor.usertype;
 
@@ -14,7 +12,7 @@ import java.sql.Types;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 import org.jboss.logging.Logger;
@@ -26,88 +24,89 @@ public class StringWrapperUserType implements UserType<StringWrapper> {
 
 	public static final StringWrapperUserType INSTANCE = new StringWrapperUserType();
 
-    private static final Logger log = Logger.getLogger( StringWrapperUserType.class );
+	private static final Logger log = Logger.getLogger( StringWrapperUserType.class );
 
-    @Override
-    public int getSqlType() {
-        return Types.VARCHAR;
-    }
+	@Override
+	public int getSqlType() {
+		return Types.VARCHAR;
+	}
 
-    @Override
-    public Class<StringWrapper> returnedClass() {
-        return StringWrapper.class;
-    }
+	@Override
+	public Class<StringWrapper> returnedClass() {
+		return StringWrapper.class;
+	}
 
-    @Override
-    public boolean equals(StringWrapper x, StringWrapper y)
+	@Override
+	public boolean equals(StringWrapper x, StringWrapper y)
 			throws HibernateException {
-        return Objects.equals( x, y );
-    }
+		return Objects.equals( x, y );
+	}
 
-    @Override
-    public int hashCode(StringWrapper x)
+	@Override
+	public int hashCode(StringWrapper x)
 			throws HibernateException {
-        return Objects.hashCode( x );
-    }
+		return Objects.hashCode( x );
+	}
 
-    @Override
-    public StringWrapper nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
-        String columnValue = (String) rs.getObject( position );
-        log.debugv( "Result set column {0} value is {1}", position, columnValue );
-        return columnValue == null ? null : fromString( columnValue );
-    }
+	@Override
+	public StringWrapper nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+			throws SQLException {
+		String columnValue = (String) rs.getObject( position );
+		log.debugv( "Result set column {0} value is {1}", position, columnValue );
+		return columnValue == null ? null : fromString( columnValue );
+	}
 
-    @Override
-    public void nullSafeSet(
-            PreparedStatement st, StringWrapper value, int index, SharedSessionContractImplementor session)
-            throws HibernateException, SQLException {
-        if ( value == null ) {
-            log.debugv("Binding null to parameter {0} ",index);
-            st.setNull( index, Types.VARCHAR );
-        }
-        else {
-            String stringValue = toString( value );
-            log.debugv("Binding {0} to parameter {1} ", stringValue, index);
-            st.setString( index, stringValue );
-        }
-    }
-    public String toString(StringWrapper value) {
-        return value.getValue();
-    }
+	@Override
+	public void nullSafeSet(
+			PreparedStatement st, StringWrapper value, int index, WrapperOptions options)
+			throws SQLException {
+		if ( value == null ) {
+			log.debugv("Binding null to parameter {0} ",index);
+			st.setNull( index, Types.VARCHAR );
+		}
+		else {
+			String stringValue = toString( value );
+			log.debugv("Binding {0} to parameter {1} ", stringValue, index);
+			st.setString( index, stringValue );
+		}
+	}
+	public String toString(StringWrapper value) {
+		return value.getValue();
+	}
 
-    public StringWrapper fromString(String string) {
-        if ( string == null || string.isEmpty() ) {
-            return null;
-        }
-        return new StringWrapper( string );
-    }
+	public StringWrapper fromString(String string) {
+		if ( string == null || string.isEmpty() ) {
+			return null;
+		}
+		return new StringWrapper( string );
+	}
 
-    @Override
-    public StringWrapper deepCopy(StringWrapper value)
+	@Override
+	public StringWrapper deepCopy(StringWrapper value)
 			throws HibernateException {
-        return value;
-    }
+		return value;
+	}
 
-    @Override
-    public boolean isMutable() {
-        return false;
-    }
+	@Override
+	public boolean isMutable() {
+		return false;
+	}
 
-    @Override
-    public Serializable disassemble(StringWrapper value)
+	@Override
+	public Serializable disassemble(StringWrapper value)
 			throws HibernateException {
-        return deepCopy( value );
-    }
+		return value == null ? null : value.getValue().getBytes();
+	}
 
-    @Override
-    public StringWrapper assemble(Serializable cached, Object owner)
+	@Override
+	public StringWrapper assemble(Serializable cached, Object owner)
 			throws HibernateException {
-        return deepCopy( (StringWrapper) cached );
-    }
+		return new StringWrapper( new String( (byte[]) cached ) );
+	}
 
-    @Override
-    public StringWrapper replace(StringWrapper original, StringWrapper target, Object owner)
+	@Override
+	public StringWrapper replace(StringWrapper original, StringWrapper target, Object owner)
 			throws HibernateException {
-        return deepCopy( original );
-    }
+		return deepCopy( original );
+	}
 }

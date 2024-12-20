@@ -1,18 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemamanager;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import org.hibernate.dialect.OracleDialect;
+import jakarta.persistence.SchemaValidationException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.tool.schema.spi.SchemaManagementException;
+
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -20,10 +16,13 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_SCHEMA;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,8 +35,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 @DomainModel(annotatedClasses = {SchemaManagerExplicitSchemaTest.Book.class, SchemaManagerExplicitSchemaTest.Author.class})
 @SessionFactory(exportSchema = false)
 @ServiceRegistry(settings = @Setting(name = DEFAULT_SCHEMA, value = "schema_manager_test"))
-@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle tests run in the DBO schema")
-@RequiresDialectFeature(feature= DialectFeatureChecks.SupportsTruncateTable.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTruncateTable.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class)
 public class SchemaManagerExplicitSchemaTest {
 
 	@BeforeEach
@@ -65,6 +64,13 @@ public class SchemaManagerExplicitSchemaTest {
 		catch (SchemaManagementException e) {
 			assertTrue( e.getMessage().contains("ForTesting") );
 		}
+		try {
+			factory.getSchemaManager().validate();
+			fail();
+		}
+		catch (SchemaValidationException e) {
+			assertTrue( e.getMessage().contains("ForTesting") );
+		}
 	}
 
 	@Entity(name="BookForTesting")
@@ -85,4 +91,3 @@ public class SchemaManagerExplicitSchemaTest {
 		public Book favoriteBook;
 	}
 }
-

@@ -1,15 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.internal;
 
-import java.io.InputStream;
 import java.io.Reader;
-import java.sql.Blob;
-import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
@@ -17,7 +12,6 @@ import java.sql.SQLException;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.NonContextualLobCreator;
 
 /**
  * {@linkplain LobCreator} implementation using {@linkplain Connection#createBlob},
@@ -33,8 +27,8 @@ public class StandardLobCreator extends BlobAndClobCreator {
 	 */
 	public static final LobCreationContext.Callback<NClob> CREATE_NCLOB_CALLBACK = Connection::createNClob;
 
-	public StandardLobCreator(LobCreationContext lobCreationContext) {
-		super( lobCreationContext );
+	StandardLobCreator(LobCreationContext lobCreationContext, boolean useConnectionToCreateLob) {
+		super( lobCreationContext, useConnectionToCreateLob );
 	}
 
 	/**

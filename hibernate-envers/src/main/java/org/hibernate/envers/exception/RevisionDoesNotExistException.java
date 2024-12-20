@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.exception;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -19,12 +18,14 @@ public class RevisionDoesNotExistException extends AuditException {
 	private final Number revision;
 	private final Date date;
 	private final LocalDateTime localDateTime;
+	private final Instant instant;
 
 	public RevisionDoesNotExistException(Number revision) {
 		super( "Revision " + revision + " does not exist." );
 		this.revision = revision;
 		this.date = null;
 		this.localDateTime = null;
+		this.instant = null;
 	}
 
 	public RevisionDoesNotExistException(Date date) {
@@ -32,6 +33,7 @@ public class RevisionDoesNotExistException extends AuditException {
 		this.date = date;
 		this.revision = null;
 		this.localDateTime = null;
+		this.instant = null;
 	}
 
 	public RevisionDoesNotExistException(LocalDateTime localDateTime) {
@@ -39,6 +41,15 @@ public class RevisionDoesNotExistException extends AuditException {
 		this.localDateTime = localDateTime;
 		this.revision = null;
 		this.date = null;
+		this.instant = null;
+	}
+
+	public RevisionDoesNotExistException(Instant instant) {
+		super( "There is no revision before or at " + instant + "." );
+		this.instant = instant;
+		this.revision = null;
+		this.date = null;
+		this.localDateTime = null;
 	}
 
 	public Number getRevision() {
@@ -52,4 +63,9 @@ public class RevisionDoesNotExistException extends AuditException {
 	public LocalDateTime getLocalDateTime() {
 		return localDateTime;
 	}
+
+	public Instant getInstant() {
+		return instant;
+	}
+
 }

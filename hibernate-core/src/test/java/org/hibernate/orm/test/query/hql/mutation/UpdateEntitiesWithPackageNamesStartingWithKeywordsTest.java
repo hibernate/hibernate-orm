@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql.mutation;
 
@@ -15,13 +13,13 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10953")
+@JiraKey(value = "HHH-10953")
 public class UpdateEntitiesWithPackageNamesStartingWithKeywordsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -36,7 +34,7 @@ public class UpdateEntitiesWithPackageNamesStartingWithKeywordsTest extends Base
 
 			session.getTransaction().begin();
 			try {
-				session.save( entity );
+				session.persist( entity );
 				session.getTransaction().commit();
 			}
 			catch (Exception e) {
@@ -85,7 +83,7 @@ public class UpdateEntitiesWithPackageNamesStartingWithKeywordsTest extends Base
 
 			session.getTransaction().begin();
 			try {
-				session.save( entity );
+				session.persist( entity );
 				session.getTransaction().commit();
 			}
 			catch (Exception e) {

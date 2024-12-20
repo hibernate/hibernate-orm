@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.functional;
 
@@ -17,10 +15,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceException;
 
 import org.hibernate.Session;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.Query;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -28,10 +26,10 @@ import org.junit.Test;
  * Tests the correctness of the parameter hibernate.dialect.hana.use_legacy_boolean_type which controls the mapping of
  * boolean types to be either TINYINT (parameter is set to true) or BOOLEAN (default behavior or parameter is set to
  * false)
- * 
+ *
  * @author Jonathan Bregler
  */
-@RequiresDialect(value = { AbstractHANADialect.class })
+@RequiresDialect(HANADialect.class)
 public class HANABooleanTest extends BaseCoreFunctionalTestCase {
 
 	private static final String ENTITY_NAME = "BooleanEntity";
@@ -76,7 +74,7 @@ public class HANABooleanTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12132")
+	@JiraKey(value = "HHH-12132")
 	public void testBooleanType() throws Exception {
 		rebuildSessionFactory( configuration -> {
 			configuration.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", Boolean.FALSE.toString() );
@@ -106,7 +104,7 @@ public class HANABooleanTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12132")
+	@JiraKey(value = "HHH-12132")
 	public void testBooleanTypeDefaultBehavior() throws Exception {
 		rebuildSessionFactory();
 
@@ -134,7 +132,7 @@ public class HANABooleanTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test(expected = PersistenceException.class)
-	@TestForIssue(jiraKey = "HHH-12132")
+	@JiraKey(value = "HHH-12132")
 	public void testLegacyBooleanType() throws Exception {
 		rebuildSessionFactory( configuration -> {
 			configuration.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", Boolean.FALSE.toString() );
@@ -160,7 +158,7 @@ public class HANABooleanTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12132")
+	@JiraKey(value = "HHH-12132")
 	public void testLegacyBooleanTypeLegacyBehavior() throws Exception {
 		rebuildSessionFactory( configuration -> {
 			configuration.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", Boolean.TRUE.toString() );
@@ -190,7 +188,7 @@ public class HANABooleanTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test(expected = PersistenceException.class)
-	@TestForIssue(jiraKey = "HHH-12132")
+	@JiraKey(value = "HHH-12132")
 	public void testBooleanTypeLegacyBehavior() throws Exception {
 		rebuildSessionFactory( configuration -> {
 			configuration.setProperty( "hibernate.dialect.hana.use_legacy_boolean_type", Boolean.TRUE.toString() );

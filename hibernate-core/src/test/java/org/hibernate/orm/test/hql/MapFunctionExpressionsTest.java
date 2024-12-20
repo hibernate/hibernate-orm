@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
 
@@ -57,10 +55,10 @@ public class MapFunctionExpressionsTest extends BaseNonConfigCoreFunctionalTestC
 		Session s = openSession();
 		s.getTransaction().begin();
 
-		s.delete( s.get( Contact.class, 1 ) );
+		s.remove( s.get( Contact.class, 1 ) );
 
-		s.delete( s.get( Address.class, 1 ) );
-		s.delete( s.get( AddressType.class, 1 ) );
+		s.remove( s.get( Address.class, 1 ) );
+		s.remove( s.get( AddressType.class, 1 ) );
 
 		s.getTransaction().commit();
 		s.close();

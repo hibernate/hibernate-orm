@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -32,6 +30,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * // call native SQL functions
  * &#64;Formula("upper(substring(middle_name from 0 for 1))")
  * Character middleInitial;
+ * </pre>
+ * <p>
+ * By default, the fields of an entity are not updated with the results of evaluating
+ * the formula after an {@code insert} or {@code update}. The {@link Generated @Generated}
+ * annotation may be used to specify that this should happen:
+ * <pre>
+ * &#64;Generated  // evaluate the formula after an insert
+ * &#64;Formula("sub_total * (1.0 + tax)")
+ * BigDecimal totalWithTax;
  * </pre>
  * <p>
  * For an entity with {@linkplain jakarta.persistence.SecondaryTable secondary tables},

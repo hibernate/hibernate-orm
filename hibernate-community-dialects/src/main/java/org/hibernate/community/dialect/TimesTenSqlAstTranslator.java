@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -59,23 +57,16 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	@Override
 	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
-		if ( tableGroupJoin.getJoinType() == SqlAstJoinType.CROSS ) {
-			appendSql( ", " );
-		}
-		else {
-			appendSql( WHITESPACE );
+		appendSql( WHITESPACE );
+		if ( tableGroupJoin.getJoinType() != SqlAstJoinType.CROSS ) {
+			// No support for cross joins, so we emulate it with an inner join and always true on condition
 			appendSql( tableGroupJoin.getJoinType().getText() );
-			appendSql( "join " );
 		}
+		appendSql( "join " );
 
 		final Predicate predicate;
 		if ( tableGroupJoin.getPredicate() == null ) {
-			if ( tableGroupJoin.getJoinType() == SqlAstJoinType.CROSS ) {
-				predicate = null;
-			}
-			else {
-				predicate = new BooleanExpressionPredicate( new QueryLiteral<>( true, getBooleanType() ) );
-			}
+			predicate = new BooleanExpressionPredicate( new QueryLiteral<>( true, getBooleanType() ) );
 		}
 		else {
 			predicate = tableGroupJoin.getPredicate();

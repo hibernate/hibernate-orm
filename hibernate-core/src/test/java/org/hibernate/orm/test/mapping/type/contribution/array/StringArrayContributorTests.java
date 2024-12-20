@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.type.contribution.array;
 
@@ -48,9 +46,9 @@ public class StringArrayContributorTests {
 	public void simpleTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			// save one with tags
-			session.save( new Post( 1, "with tags", "tag1", "tag2" ) );
+			session.persist( new Post( 1, "with tags", "tag1", "tag2" ) );
 			// and one without (null)
-			session.save( new Post( 2, "no tags" ) );
+			session.persist( new Post( 2, "no tags" ) );
 		} );
 
 		scope.inTransaction( (session) -> {

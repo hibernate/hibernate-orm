@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
@@ -13,16 +11,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.internal.ClassmateContext;
-import org.hibernate.boot.jaxb.mapping.JaxbConverter;
-import org.hibernate.boot.jaxb.mapping.JaxbEntity;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityListener;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityListeners;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
-import org.hibernate.boot.jaxb.mapping.JaxbMappedSuperclass;
-import org.hibernate.boot.jaxb.mapping.JaxbPersistenceUnitDefaults;
-import org.hibernate.boot.jaxb.mapping.JaxbPersistenceUnitMetadata;
-import org.hibernate.boot.jaxb.mapping.ManagedType;
+import org.hibernate.boot.spi.ClassmateContext;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbConverterImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbManagedType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterRegistry;
@@ -31,10 +29,12 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 
 import jakarta.persistence.AccessType;
 import jakarta.persistence.AttributeConverter;
+
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
  * A helper for consuming orm.xml mappings.
@@ -49,10 +49,10 @@ public class XMLContext implements Serializable {
 	private final ClassmateContext classmateContext;
 
 	private Default globalDefaults;
-	private final Map<String, ManagedType> managedTypeOverride = new HashMap<>();
-	private final Map<String, JaxbEntityListener> entityListenerOverride = new HashMap<>();
+	private final Map<String, JaxbManagedType> managedTypeOverride = new HashMap<>();
+	private final Map<String, JaxbEntityListenerImpl> entityListenerOverride = new HashMap<>();
 	private final Map<String, Default> defaultsOverride = new HashMap<>();
-	private final List<JaxbEntityMappings> defaultElements = new ArrayList<>();
+	private final List<JaxbEntityMappingsImpl> defaultElements = new ArrayList<>();
 	private final List<String> defaultEntityListeners = new ArrayList<>();
 	private boolean hasContext = false;
 
@@ -68,13 +68,13 @@ public class XMLContext implements Serializable {
 	/**
 	 * Add the JAXB binding to this context and return the list of added class names.
 	 */
-	public List<String> addDocument(JaxbEntityMappings entityMappings) {
+	public List<String> addDocument(JaxbEntityMappingsImpl entityMappings) {
 		hasContext = true;
 
 		final List<String> addedClasses = new ArrayList<>();
 
 		//global defaults
-		final JaxbPersistenceUnitMetadata metadata = entityMappings.getPersistenceUnitMetadata();
+		final JaxbPersistenceUnitMetadataImpl metadata = entityMappings.getPersistenceUnitMetadata();
 		if ( metadata != null ) {
 			if ( globalDefaults == null ) {
 				globalDefaults = new Default();
@@ -84,14 +84,14 @@ public class XMLContext implements Serializable {
 								: null
 				);
 
-				final JaxbPersistenceUnitDefaults defaultElement = metadata.getPersistenceUnitDefaults();
+				final JaxbPersistenceUnitDefaultsImpl defaultElement = metadata.getPersistenceUnitDefaults();
 				if ( defaultElement != null ) {
 					globalDefaults.setSchema( defaultElement.getSchema() );
 					globalDefaults.setCatalog( defaultElement.getCatalog() );
 					globalDefaults.setAccess( defaultElement.getAccess() );
 					globalDefaults.setCascadePersist( defaultElement.getCascadePersist() != null ? Boolean.TRUE : null );
 					globalDefaults.setDelimitedIdentifiers( defaultElement.getDelimitedIdentifiers() != null ? Boolean.TRUE : null );
-					defaultEntityListeners.addAll( addEntityListenerClasses( defaultElement.getEntityListeners(), null, addedClasses ) );
+					defaultEntityListeners.addAll( addEntityListenerClasses( defaultElement.getEntityListenerContainer(), null, addedClasses ) );
 				}
 			}
 			else {
@@ -119,8 +119,8 @@ public class XMLContext implements Serializable {
 		return addedClasses;
 	}
 
-	private void addClass(List<? extends ManagedType> managedTypes, String packageName, Default defaults, List<String> addedClasses) {
-		for (ManagedType element : managedTypes) {
+	private void addClass(List<? extends JaxbManagedType> managedTypes, String packageName, Default defaults, List<String> addedClasses) {
+		for ( JaxbManagedType element : managedTypes) {
 			String className = buildSafeClassName( element.getClazz(), packageName );
 			if ( managedTypeOverride.containsKey( className ) ) {
 				//maybe switch it to warn?
@@ -140,20 +140,20 @@ public class XMLContext implements Serializable {
 			defaultsOverride.put( className, mergedDefaults );
 
 			LOG.debugf( "Adding XML overriding information for %s", className );
-			if ( element instanceof JaxbEntity ) {
-				addEntityListenerClasses( ( (JaxbEntity) element ).getEntityListeners(), packageName, addedClasses );
+			if ( element instanceof JaxbEntityImpl ) {
+				addEntityListenerClasses( ( (JaxbEntityImpl) element ).getEntityListenerContainer(), packageName, addedClasses );
 			}
-			else if ( element instanceof JaxbMappedSuperclass ) {
-				addEntityListenerClasses( ( (JaxbMappedSuperclass) element ).getEntityListeners(), packageName, addedClasses );
+			else if ( element instanceof JaxbMappedSuperclassImpl ) {
+				addEntityListenerClasses( ( (JaxbMappedSuperclassImpl) element ).getEntityListenerContainer(), packageName, addedClasses );
 			}
 		}
 	}
 
-	private List<String> addEntityListenerClasses(JaxbEntityListeners listeners, String packageName, List<String> addedClasses) {
+	private List<String> addEntityListenerClasses(JaxbEntityListenerContainerImpl listeners, String packageName, List<String> addedClasses) {
 		List<String> localAddedClasses = new ArrayList<>();
 		if ( listeners != null ) {
-			List<JaxbEntityListener> elements = listeners.getEntityListener();
-			for ( JaxbEntityListener listener : elements ) {
+			List<JaxbEntityListenerImpl> elements = listeners.getEntityListeners();
+			for ( JaxbEntityListenerImpl listener : elements ) {
 				String listenerClassName = buildSafeClassName( listener.getClazz(), packageName );
 				if ( entityListenerOverride.containsKey( listenerClassName ) ) {
 					LOG.duplicateListener( listenerClassName );
@@ -168,8 +168,8 @@ public class XMLContext implements Serializable {
 		return localAddedClasses;
 	}
 
-	private void setLocalAttributeConverterDefinitions(List<JaxbConverter> converterElements, String packageName) {
-		for ( JaxbConverter converterElement : converterElements ) {
+	private void setLocalAttributeConverterDefinitions(List<JaxbConverterImpl> converterElements, String packageName) {
+		for ( JaxbConverterImpl converterElement : converterElements ) {
 			final String className = converterElement.getClazz();
 			final boolean autoApply = Boolean.TRUE.equals( converterElement.isAutoApply() );
 
@@ -191,10 +191,9 @@ public class XMLContext implements Serializable {
 	}
 
 	public static String buildSafeClassName(String className, String defaultPackageName) {
-		if ( className.indexOf( '.' ) < 0 && StringHelper.isNotEmpty( defaultPackageName ) ) {
-			className = StringHelper.qualify( defaultPackageName, className );
-		}
-		return className;
+		return className.indexOf( '.' ) < 0 && isNotEmpty( defaultPackageName )
+				? qualify( defaultPackageName, className )
+				: className;
 	}
 
 	public static String buildSafeClassName(String className, Default defaults) {
@@ -217,15 +216,15 @@ public class XMLContext implements Serializable {
 		return xmlDefault;
 	}
 
-	public ManagedType getManagedTypeOverride(String className) {
+	public JaxbManagedType getManagedTypeOverride(String className) {
 		return managedTypeOverride.get( className );
 	}
 
-	public JaxbEntityListener getEntityListenerOverride(String className) {
+	public JaxbEntityListenerImpl getEntityListenerOverride(String className) {
 		return entityListenerOverride.get( className );
 	}
 
-	public List<JaxbEntityMappings> getAllDocuments() {
+	public List<JaxbEntityMappingsImpl> getAllDocuments() {
 		return defaultElements;
 	}
 

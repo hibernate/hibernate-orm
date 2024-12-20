@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
@@ -32,6 +30,7 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
@@ -40,7 +39,7 @@ import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.SourceType;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromUrl;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputNonExistentImpl;
@@ -95,13 +94,14 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	}
 
 	public SchemaCreatorImpl(ServiceRegistry serviceRegistry, SchemaFilter schemaFilter) {
-		SchemaManagementTool smt = serviceRegistry.getService( SchemaManagementTool.class );
-		if ( !(smt instanceof HibernateSchemaManagementTool) ) {
-			smt = new HibernateSchemaManagementTool();
-			( (HibernateSchemaManagementTool) smt ).injectServices( (ServiceRegistryImplementor) serviceRegistry );
+		if ( serviceRegistry.getService( SchemaManagementTool.class )
+				instanceof HibernateSchemaManagementTool schemaManagementTool ) {
+			tool = schemaManagementTool;
 		}
-
-		this.tool = (HibernateSchemaManagementTool) smt;
+		else {
+			tool = new HibernateSchemaManagementTool();
+			tool.injectServices( (ServiceRegistryImplementor) serviceRegistry );
+		}
 		this.schemaFilter = schemaFilter;
 	}
 
@@ -230,15 +230,16 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		final SqlStringGenerationContext context = createSqlStringGenerationContext(options, metadata);
 		final Set<String> exportIdentifiers = setOfSize(50);
 
-		createSchemasAndCatalogs(metadata, options, dialect, formatter, context, targets);
+		createSchemasAndCatalogs(metadata, options, schemaFilter, dialect, formatter, context, targets);
 		// next, create all "before table" auxiliary objects
 		createAuxiliaryObjectsBeforeTables(metadata, options, dialect, formatter, context, exportIdentifiers, targets);
 		// next, create all UDTs
-		createUserDefinedTypes(metadata, options, dialect, formatter, context, targets);
+		createUserDefinedTypes(metadata, options, schemaFilter, dialect, formatter, context, targets);
 		// then, create all schema objects (tables, sequences, constraints, etc) in each schema
 		createSequencesTablesConstraints(
 				metadata,
 				options,
+				schemaFilter,
 				contributableInclusionMatcher,
 				dialect,
 				formatter,
@@ -247,7 +248,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				targets
 		);
 		// foreign keys must be created after all tables of all namespaces for cross-namespace constraints (see HHH-10420)
-		createForeignKeys( metadata, options, contributableInclusionMatcher, dialect, formatter, context, targets );
+		createForeignKeys( metadata, options, schemaFilter, contributableInclusionMatcher, dialect, formatter, context, targets );
 		// next, create all "after table" auxiliary objects
 		createAuxiliaryObjectsAfterTables( metadata, options, dialect, formatter, context, exportIdentifiers, targets );
 		// and finally add all init commands
@@ -287,6 +288,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	private static void createForeignKeys(
 			Metadata metadata,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			ContributableMatcher contributableInclusionMatcher,
 			Dialect dialect,
 			Formatter formatter,
@@ -294,9 +296,9 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			GenerationTarget[] targets) {
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
 			// foreign keys must be created after unique keys for numerous DBs (see HHH-8390)
-			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+			if ( schemaFilter.includeNamespace( namespace ) ) {
 				for ( Table table : namespace.getTables() ) {
-					if ( options.getSchemaFilter().includeTable( table )
+					if ( schemaFilter.includeTable( table )
 							&& contributableInclusionMatcher.matches( table ) ) {
 						// foreign keys
 						for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
@@ -316,6 +318,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	private static void createSequencesTablesConstraints(
 			Metadata metadata,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			ContributableMatcher contributableInclusionMatcher,
 			Dialect dialect,
 			Formatter formatter,
@@ -323,11 +326,12 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			Set<String> exportIdentifiers,
 			GenerationTarget[] targets) {
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+			if ( schemaFilter.includeNamespace( namespace ) ) {
 				// sequences
 				createSequences(
 						metadata,
 						options,
+						schemaFilter,
 						contributableInclusionMatcher,
 						dialect,
 						formatter,
@@ -340,6 +344,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				createTables(
 						metadata,
 						options,
+						schemaFilter,
 						contributableInclusionMatcher,
 						dialect,
 						formatter,
@@ -351,6 +356,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				createTableConstraints(
 						metadata,
 						options,
+						schemaFilter,
 						contributableInclusionMatcher,
 						dialect,
 						formatter,
@@ -366,6 +372,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	private static void createTableConstraints(
 			Metadata metadata,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			ContributableMatcher contributableInclusionMatcher,
 			Dialect dialect,
 			Formatter formatter,
@@ -375,7 +382,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			Namespace namespace) {
 		for ( Table table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
-					&& options.getSchemaFilter().includeTable( table )
+					&& schemaFilter.includeTable( table )
 					&& contributableInclusionMatcher.matches( table ) ) {
 				// indexes
 				for ( Index index : table.getIndexes().values() ) {
@@ -404,6 +411,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	private static void createTables(
 			Metadata metadata,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			ContributableMatcher contributableInclusionMatcher,
 			Dialect dialect,
 			Formatter formatter,
@@ -414,7 +422,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		for ( Table table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
 					&& !table.isView()
-					&& options.getSchemaFilter().includeTable( table )
+					&& schemaFilter.includeTable( table )
 					&& contributableInclusionMatcher.matches( table ) ) {
 				checkExportIdentifier( table, exportIdentifiers );
 				applySqlStrings(
@@ -428,7 +436,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		for ( Table table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
 					&& table.isView()
-					&& options.getSchemaFilter().includeTable( table )
+					&& schemaFilter.includeTable( table )
 					&& contributableInclusionMatcher.matches( table ) ) {
 				checkExportIdentifier( table, exportIdentifiers );
 				applySqlStrings(
@@ -444,6 +452,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	private static void createSequences(
 			Metadata metadata,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			ContributableMatcher contributableInclusionMatcher,
 			Dialect dialect,
 			Formatter formatter,
@@ -452,7 +461,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			GenerationTarget[] targets,
 			Namespace namespace) {
 		for ( Sequence sequence : namespace.getSequences() ) {
-			if ( options.getSchemaFilter().includeSequence( sequence )
+			if ( schemaFilter.includeSequence( sequence )
 					&& contributableInclusionMatcher.matches( sequence ) ) {
 				checkExportIdentifier( sequence, exportIdentifiers);
 				applySqlStrings(
@@ -488,15 +497,16 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		}
 	}
 
-	private static void createUserDefinedTypes(
+	static void createUserDefinedTypes(
 			Metadata metadata,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			Dialect dialect,
 			Formatter formatter,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
 		for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-			if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+			if ( schemaFilter.includeNamespace( namespace ) ) {
 				for ( UserDefinedType userDefinedType : namespace.getDependencyOrderedUserDefinedTypes() ) {
 					applySqlStrings(
 							dialect.getUserDefinedTypeExporter()
@@ -513,6 +523,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	private static void createSchemasAndCatalogs(
 			Metadata metadata,
 			ExecutionOptions options,
+			SchemaFilter schemaFilter,
 			Dialect dialect,
 			Formatter formatter,
 			SqlStringGenerationContext context,
@@ -523,7 +534,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
 			Set<Identifier> exportedCatalogs = new HashSet<>();
 			for ( Namespace namespace : metadata.getDatabase().getNamespaces() ) {
-				if ( options.getSchemaFilter().includeNamespace( namespace ) ) {
+				if ( schemaFilter.includeNamespace( namespace ) ) {
 					Namespace.Name logicalName = namespace.getName();
 					Namespace.Name physicalName = namespace.getPhysicalName();
 
@@ -655,8 +666,8 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			String defaultImportFile,
 			GenerationTarget[] targets) {
 		final String[] importFiles =
-				getString( HBM2DDL_IMPORT_FILES, options.getConfigurationValues(), defaultImportFile )
-						.split( "," );
+				StringHelper.split( ",",
+						getString( HBM2DDL_IMPORT_FILES, options.getConfigurationValues(), defaultImportFile ) );
 		final String charsetName = getCharsetName( options );
 		final ClassLoaderService classLoaderService = getClassLoaderService();
 		for ( String currentFile : importFiles ) {
@@ -719,9 +730,12 @@ public class SchemaCreatorImpl implements SchemaCreator {
 	public List<String> generateCreationCommands(Metadata metadata, final boolean manageNamespaces) {
 		final JournalingGenerationTarget target = new JournalingGenerationTarget();
 
-		final ServiceRegistry serviceRegistry = ( (MetadataImplementor) metadata ).getMetadataBuildingOptions()
-				.getServiceRegistry();
-		final Dialect dialect = serviceRegistry.getService( JdbcEnvironment.class ).getDialect();
+		final MetadataImplementor metadataImplementor = (MetadataImplementor) metadata;
+		final Dialect dialect =
+				metadataImplementor.getMetadataBuildingOptions()
+						.getServiceRegistry()
+						.requireService( JdbcEnvironment.class )
+						.getDialect();
 
 		final ExecutionOptions options = new ExecutionOptions() {
 			@Override
@@ -737,11 +751,6 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			@Override
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerHaltImpl.INSTANCE;
-			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return schemaFilter;
 			}
 		};
 
@@ -764,7 +773,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 		doCreation(
 				metadata,
 				serviceRegistry,
-				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
+				serviceRegistry.requireService( ConfigurationService.class ).getSettings(),
 				manageNamespaces,
 				targets
 		);
@@ -782,7 +791,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 			GenerationTarget... targets) {
 		doCreation(
 				metadata,
-				serviceRegistry.getService( JdbcEnvironment.class ).getDialect(),
+				serviceRegistry.requireService( JdbcEnvironment.class ).getDialect(),
 				new ExecutionOptions() {
 					@Override
 					public boolean shouldManageNamespaces() {
@@ -797,11 +806,6 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					@Override
 					public ExceptionHandler getExceptionHandler() {
 						return ExceptionHandlerLoggedImpl.INSTANCE;
-					}
-
-					@Override
-					public SchemaFilter getSchemaFilter() {
-						return schemaFilter;
 					}
 				},
 				(contributed) -> true,

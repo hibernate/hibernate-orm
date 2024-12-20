@@ -1,17 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.orm.test.hql;
 
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -40,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ManyToOneJoinReuseTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15648")
+	@JiraKey(value = "HHH-15648")
 	public void fetchAndImplicitPath(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
@@ -64,7 +61,7 @@ public class ManyToOneJoinReuseTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15645")
+	@JiraKey(value = "HHH-15645")
 	public void joinAndImplicitPath(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		scope.inTransaction(
@@ -78,7 +75,7 @@ public class ManyToOneJoinReuseTest {
 					query.where(
 							cb.and(
 									root.get( "book" ).isNotNull(),
-									join.isNotNull()
+									cb.fk( root.get( "book" ) ).isNotNull()
 							)
 					);
 

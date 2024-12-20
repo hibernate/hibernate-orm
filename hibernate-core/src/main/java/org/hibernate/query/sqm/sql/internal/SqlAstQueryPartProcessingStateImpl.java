@@ -1,19 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql.internal;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
@@ -22,6 +17,8 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
@@ -33,11 +30,10 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class SqlAstQueryPartProcessingStateImpl
-		extends SqlAstProcessingStateImpl
+		extends AbstractSqlAstQueryNodeProcessingStateImpl
 		implements SqlAstQueryPartProcessingState {
 
 	private final QueryPart queryPart;
-	private final Map<SqmFrom<?, ?>, Boolean> sqmFromRegistrations = new HashMap<>();
 	private final boolean deduplicateSelectionItems;
 	private FetchParent nestingFetchParent;
 
@@ -78,32 +74,13 @@ public class SqlAstQueryPartProcessingStateImpl
 	}
 
 	@Override
-	public void registerTreatedFrom(SqmFrom<?, ?> sqmFrom) {
-		sqmFromRegistrations.put( sqmFrom, null );
+	public FromClause getFromClause() {
+		return queryPart.getLastQuerySpec().getFromClause();
 	}
 
 	@Override
-	public void registerFromUsage(SqmFrom<?, ?> sqmFrom, boolean downgradeTreatUses) {
-		if ( !( sqmFrom instanceof SqmTreatedPath<?, ?> ) ) {
-			if ( !sqmFromRegistrations.containsKey( sqmFrom ) ) {
-				final SqlAstProcessingState parentState = getParentState();
-				if ( parentState instanceof SqlAstQueryPartProcessingState ) {
-					( (SqlAstQueryPartProcessingState) parentState ).registerFromUsage( sqmFrom, downgradeTreatUses );
-				}
-			}
-			else {
-				// If downgrading was once forcibly disabled, don't overwrite that anymore
-				final Boolean currentValue = sqmFromRegistrations.get( sqmFrom );
-				if ( currentValue != Boolean.FALSE ) {
-					sqmFromRegistrations.put( sqmFrom, downgradeTreatUses );
-				}
-			}
-		}
-	}
-
-	@Override
-	public Map<SqmFrom<?, ?>, Boolean> getFromRegistrations() {
-		return sqmFromRegistrations;
+	public void applyPredicate(Predicate predicate) {
+		queryPart.getLastQuerySpec().applyPredicate( predicate );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -126,13 +103,16 @@ public class SqlAstQueryPartProcessingStateImpl
 			else {
 				throw new IllegalArgumentException( "Illegal expression passed for nested fetching: " + expression );
 			}
-			return expression.createSqlSelection(
-					-1,
-					nestingFetchParent.getReferencedMappingType().getSelectableIndex( selectableName ),
-					javaType,
-					true,
-					typeConfiguration
-			);
+			final int selectableIndex = nestingFetchParent.getReferencedMappingType().getSelectableIndex( selectableName );
+			if ( selectableIndex != -1 ) {
+				return expression.createSqlSelection(
+						-1,
+						selectableIndex,
+						javaType,
+						true,
+						typeConfiguration
+				);
+			}
 		}
 		final Map<Expression, Object> selectionMap;
 		if ( deduplicateSelectionItems ) {

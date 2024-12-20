@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.BitSet;
 
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
@@ -17,26 +14,27 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchList;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Steve Ebersole
  */
-public class EagerCollectionFetch extends CollectionFetch implements FetchParent {
-	private final DomainResult<?> collectionKeyResult;
+public class EagerCollectionFetch extends CollectionFetch {
+	private final PluralTableGroup collectionTableGroup;
+	private final @Nullable DomainResult<?> collectionKeyResult;
 	private final DomainResult<?> collectionValueKeyResult;
 
 	private final Fetch elementFetch;
@@ -50,9 +48,11 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
 			TableGroup collectionTableGroup,
+			boolean needsCollectionKeyResult,
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		super( fetchedPath, fetchedAttribute, fetchParent );
+		this.collectionTableGroup = (PluralTableGroup) collectionTableGroup;
 
 		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
 		final NavigablePath parentPath = fetchedPath.getParent();
@@ -93,12 +93,17 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 		final ForeignKeyDescriptor keyDescriptor = fetchedAttribute.getKeyDescriptor();
 		// The collection key must be fetched from the side of the declaring type of the attribute
 		// So that this is guaranteed to be not-null
-		collectionKeyResult = keyDescriptor.createTargetDomainResult(
-				fetchedPath,
-				parentTableGroup,
-				fetchParent,
-				creationState
-		);
+		if ( needsCollectionKeyResult ) {
+			collectionKeyResult = keyDescriptor.createTargetDomainResult(
+					fetchedPath,
+					parentTableGroup,
+					fetchParent,
+					creationState
+			);
+		}
+		else {
+			collectionKeyResult = null;
+		}
 		// The collection is always the target side
 		collectionValueKeyResult = keyDescriptor.createKeyDomainResult(
 				fetchedPath,
@@ -140,27 +145,23 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 	}
 
 	@Override
-	public DomainResultAssembler<?> createAssembler(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
-		final CollectionInitializer initializer = (CollectionInitializer) creationState.resolveInitializer(
+	public NavigablePath resolveNavigablePath(Fetchable fetchable) {
+		// Only CollectionPart is possible here
+		return getNavigablePath().append( fetchable.getFetchableName() );
+	}
+
+	@Override
+	public CollectionInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
+		return initializerProducer.produceInitializer(
 				getNavigablePath(),
-				getReferencedModePart(),
-				() -> {
-					final DomainResultAssembler<?> collectionKeyAssembler = collectionKeyResult.createResultAssembler( null, creationState );
-					final DomainResultAssembler<?> collectionValueKeyAssembler = collectionValueKeyResult.createResultAssembler( null, creationState );
-
-					return initializerProducer.produceInitializer(
-							getNavigablePath(),
-							getFetchedMapping(),
-							parentAccess,
-							null,
-							collectionKeyAssembler,
-							collectionValueKeyAssembler,
-							creationState
-					);
-				}
+				getFetchedMapping(),
+				parent,
+				null,
+				collectionKeyResult,
+				collectionValueKeyResult,
+				false,
+				creationState
 		);
-
-		return new EagerCollectionAssembler( getFetchedMapping(), initializer );
 	}
 
 	@Override
@@ -171,16 +172,6 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 	@Override
 	public boolean hasTableGroup() {
 		return true;
-	}
-
-	@Override
-	public FetchableContainer getReferencedMappingContainer() {
-		return getFetchedMapping();
-	}
-
-	@Override
-	public PluralAttributeMapping getReferencedMappingType() {
-		return getFetchedMapping();
 	}
 
 	@Override
@@ -217,7 +208,30 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 	}
 
 	@Override
+	public int getCollectionFetchesCount() {
+		return 1 + super.getCollectionFetchesCount();
+	}
+
+	@Override
 	public JavaType<?> getResultJavaType() {
 		return getFetchedMapping().getJavaType();
+	}
+
+	@Override
+	public FetchParent asFetchParent() {
+		return this;
+	}
+
+	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		if ( collectionKeyResult != null ) {
+			collectionKeyResult.collectValueIndexesToCache( valueIndexes );
+		}
+		if ( !getFetchedMapping().getCollectionDescriptor().useShallowQueryCacheLayout() ) {
+			collectionValueKeyResult.collectValueIndexesToCache( valueIndexes );
+			for ( Fetch fetch : fetches ) {
+				fetch.collectValueIndexesToCache( valueIndexes );
+			}
+		}
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.internal;
 
@@ -71,8 +69,16 @@ public class BasicFormatterImpl implements Formatter {
 
 			while ( tokens.hasMoreTokens() ) {
 				token = tokens.nextToken();
-				lcToken = token.toLowerCase(Locale.ROOT);
 
+				if ( "-".equals(token) && result.toString().endsWith("-") ) {
+					do {
+						result.append( token );
+						token = tokens.nextToken();
+					}
+					while ( !"\n".equals( token ) && tokens.hasMoreTokens() );
+				}
+
+				lcToken = token.toLowerCase(Locale.ROOT);
 				switch (lcToken) {
 
 					case "'":
@@ -278,6 +284,7 @@ public class BasicFormatterImpl implements Formatter {
 
 		private void endCase() {
 			afterBeginBeforeEnd = false;
+			decrementIndent();
 			decrementIndent();
 			logical();
 		}

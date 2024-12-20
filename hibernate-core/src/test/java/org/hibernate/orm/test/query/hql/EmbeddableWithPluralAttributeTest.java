@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query.hql;
 
 import java.util.ArrayList;
@@ -42,7 +46,7 @@ public class EmbeddableWithPluralAttributeTest {
 					B b = B.buildB();
 					a.b = b;
 
-					session.save( a );
+					session.persist( a );
 				}
 		);
 	}

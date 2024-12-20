@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.version;
 
@@ -14,7 +12,7 @@ import jakarta.persistence.Version;
 
 import org.hibernate.Session;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -24,7 +22,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-10026" )
+@JiraKey( value = "HHH-10026" )
 public class InstantVersionTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -36,7 +34,7 @@ public class InstantVersionTest extends BaseNonConfigCoreFunctionalTestCase {
 		Session session = openSession();
 		session.getTransaction().begin();
 		TheEntity e = new TheEntity( 1 );
-		session.save( e );
+		session.persist( e );
 		session.getTransaction().commit();
 		session.close();
 
@@ -50,7 +48,7 @@ public class InstantVersionTest extends BaseNonConfigCoreFunctionalTestCase {
 		session = openSession();
 		session.getTransaction().begin();
 		e = session.byId( TheEntity.class ).load( 1 );
-		session.delete( e );
+		session.remove( e );
 		session.getTransaction().commit();
 		session.close();
 	}

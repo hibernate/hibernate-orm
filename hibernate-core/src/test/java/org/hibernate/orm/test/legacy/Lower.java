@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Lower.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.orm.test.legacy;
 import java.util.List;
 import java.util.Set;
@@ -26,7 +22,7 @@ public class Lower extends Top {
 	public int getIntprop() {
 		return intprop;
 	}
-	
+
 	/**
 	 * Sets the intprop.
 	 * @param intprop The intprop to set
@@ -34,7 +30,7 @@ public class Lower extends Top {
 	public void setIntprop(int intprop) {
 		this.intprop = intprop;
 	}
-	
+
 	/**
 	 * Returns the foo.
 	 * @return String
@@ -42,7 +38,7 @@ public class Lower extends Top {
 	public String getFoo() {
 		return foo;
 	}
-	
+
 	/**
 	 * Sets the foo.
 	 * @param foo The foo to set
@@ -50,7 +46,7 @@ public class Lower extends Top {
 	public void setFoo(String foo) {
 		this.foo = foo;
 	}
-	
+
 	/**
 	 * Returns the set.
 	 * @return Set
@@ -58,7 +54,7 @@ public class Lower extends Top {
 	public Set getSet() {
 		return set;
 	}
-	
+
 	/**
 	 * Sets the set.
 	 * @param set The set to set
@@ -66,7 +62,7 @@ public class Lower extends Top {
 	public void setSet(Set set) {
 		this.set = set;
 	}
-	
+
 	/**
 	 * Returns the another.
 	 * @return Simple
@@ -74,7 +70,7 @@ public class Lower extends Top {
 	public Top getAnother() {
 		return another;
 	}
-	
+
 	/**
 	 * Returns the yetanother.
 	 * @return LessSimple
@@ -82,7 +78,7 @@ public class Lower extends Top {
 	public Lower getYetanother() {
 		return yetanother;
 	}
-	
+
 	/**
 	 * Sets the another.
 	 * @param another The another to set
@@ -90,7 +86,7 @@ public class Lower extends Top {
 	public void setAnother(Top another) {
 		this.another = another;
 	}
-	
+
 	/**
 	 * Sets the yetanother.
 	 * @param yetanother The yetanother to set
@@ -98,7 +94,7 @@ public class Lower extends Top {
 	public void setYetanother(Lower yetanother) {
 		this.yetanother = yetanother;
 	}
-	
+
 	/**
 	 * Returns the bag.
 	 * @return List
@@ -106,7 +102,7 @@ public class Lower extends Top {
 	public List getBag() {
 		return bag;
 	}
-	
+
 	/**
 	 * Sets the bag.
 	 * @param bag The bag to set
@@ -114,7 +110,7 @@ public class Lower extends Top {
 	public void setBag(List bag) {
 		this.bag = bag;
 	}
-	
+
 	/**
 	 * Returns the mypo.
 	 * @return Po
@@ -122,7 +118,7 @@ public class Lower extends Top {
 	public Po getMypo() {
 		return mypo;
 	}
-	
+
 	/**
 	 * Sets the mypo.
 	 * @param mypo The mypo to set
@@ -130,11 +126,5 @@ public class Lower extends Top {
 	public void setMypo(Po mypo) {
 		this.mypo = mypo;
 	}
-	
+
 }
-
-
-
-
-
-

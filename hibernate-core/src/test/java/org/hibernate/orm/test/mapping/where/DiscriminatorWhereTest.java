@@ -1,19 +1,19 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.where;
 
 import java.util.Set;
 
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.community.dialect.AltibaseDialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.DiscriminatorColumn;
@@ -33,6 +33,7 @@ import jakarta.persistence.Table;
 })
 @SessionFactory
 @JiraKey( "https://hibernate.atlassian.net/browse/HHH-14977" )
+@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
 public class DiscriminatorWhereTest {
 	@Test
 	public void testAddDiscriminatedEntityToCollectionWithWhere(SessionFactoryScope scope) {

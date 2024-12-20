@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.spi;
 
 import java.io.InvalidObjectException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -19,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Date;
@@ -31,13 +31,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
-import org.hibernate.annotations.common.reflection.java.generics.ParameterizedTypeImpl;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BasicTypeRegistration;
@@ -49,6 +49,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -58,12 +59,13 @@ import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.QueryParameterJavaObjectType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -74,10 +76,12 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.internal.ParameterizedTypeImpl;
 
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.query.sqm.internal.TypecheckUtil.isNumberArray;
 
 /**
  * Each instance defines a set of {@linkplain Type types} available in a given
@@ -125,12 +129,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private final transient Map<Integer, Set<String>> jdbcToHibernateTypeContributionMap = new HashMap<>();
 
 	public TypeConfiguration() {
-		this.scope = new Scope( this );
-
-		this.javaTypeRegistry = new JavaTypeRegistry( this );
-		this.jdbcTypeRegistry = new JdbcTypeRegistry( this );
-		this.ddlTypeRegistry = new DdlTypeRegistry( this );
-		this.basicTypeRegistry = new BasicTypeRegistry( this );
+		scope = new Scope( this );
+		javaTypeRegistry = new JavaTypeRegistry( this );
+		jdbcTypeRegistry = new JdbcTypeRegistry( this );
+		ddlTypeRegistry = new DdlTypeRegistry( this );
+		basicTypeRegistry = new BasicTypeRegistry( this );
 		StandardBasicTypes.prime( this );
 	}
 
@@ -272,9 +275,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	@Override
 	public void sessionFactoryClosed(SessionFactory factory) {
 		log.tracef( "Handling #sessionFactoryClosed from [%s] for TypeConfiguration", factory );
-
 		scope.unsetSessionFactory( factory );
-
 		// todo (6.0) : finish this
 		//		release Database, descriptor Maps, etc... things that are only
 		// 		valid while the TypeConfiguration is scoped to SessionFactory
@@ -282,7 +283,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	public void addBasicTypeRegistrationContributions(List<BasicTypeRegistration> contributions) {
 		for ( BasicTypeRegistration basicTypeRegistration : contributions ) {
-			BasicType<?> basicType = basicTypeRegistration.getBasicType();
+			final BasicType<?> basicType = basicTypeRegistration.getBasicType();
 
 			basicTypeRegistry.register(
 					basicType,
@@ -320,7 +321,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * <p>
 	 * The type names are not case-sensitive.
 	 */
-	public BasicValuedMapping resolveCastTargetType(String name) {
+	public BasicType<?> resolveCastTargetType(String name) {
 		switch ( name.toLowerCase() ) {
 			case "string": return getBasicTypeForJavaType( String.class );
 			case "character": return getBasicTypeForJavaType( Character.class );
@@ -349,16 +350,20 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			case "truefalse": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.TRUE_FALSE.getName() );
 			case "yesno": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.YES_NO.getName() );
 			case "numericboolean": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.NUMERIC_BOOLEAN.getName() );
+			case "json": return basicTypeRegistry.resolve( Object.class, SqlTypes.JSON );
+			case "xml": return basicTypeRegistry.resolve( Object.class, SqlTypes.SQLXML );
+			//really not sure about this one - it works well for casting from binary
+			//to UUID, but people will want to use it to cast from varchar, and that
+			//won't work at all without some special casing in the Dialects
+//			case "uuid": return getBasicTypeForJavaType( UUID.class );
 			default: {
-				final BasicType<Object> registeredBasicType = basicTypeRegistry.getRegisteredType( name );
+				final BasicType<?> registeredBasicType = basicTypeRegistry.getRegisteredType( name );
 				if ( registeredBasicType != null ) {
 					return registeredBasicType;
 				}
 
 				try {
-					final Class<?> javaTypeClass =
-							scope.getServiceRegistry().getService( ClassLoaderService.class )
-									.classForName( name );
+					final Class<?> javaTypeClass = getClassLoaderService().classForName( name );
 					final JavaType<?> jtd = javaTypeRegistry.resolveDescriptor( javaTypeClass );
 					final JdbcType jdbcType = jtd.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() );
 					return basicTypeRegistry.resolve( jtd, jdbcType );
@@ -415,6 +420,20 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 
 		@Override
+		public boolean isPreferJavaTimeJdbcTypesEnabled() {
+			return sessionFactory == null
+					? metadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled()
+					: sessionFactory.getSessionFactoryOptions().isPreferJavaTimeJdbcTypesEnabled();
+		}
+
+		@Override
+		public boolean isPreferNativeEnumTypesEnabled() {
+			return sessionFactory == null
+					? metadataBuildingContext.isPreferNativeEnumTypesEnabled()
+					: sessionFactory.getSessionFactoryOptions().isPreferNativeEnumTypesEnabled();
+		}
+
+		@Override
 		public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 			return sessionFactory == null
 					? metadataBuildingContext.getBuildingOptions().getDefaultTimeZoneStorage()
@@ -463,6 +482,25 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					: sessionFactory.getJdbcServices().getDialect();
 		}
 
+		@Override
+		public boolean preferJdbcDatetimeTypes() {
+			return sessionFactory != null
+				&& sessionFactory.getSessionFactoryOptions().isPreferJdbcDatetimeTypesInNativeQueriesEnabled();
+		}
+
+		@Override
+		public boolean isXmlFormatMapperLegacyFormatEnabled() {
+			if ( metadataBuildingContext != null ) {
+				return metadataBuildingContext.getBuildingOptions().isXmlFormatMapperLegacyFormatEnabled();
+			}
+			else if ( sessionFactory != null ) {
+				return sessionFactory.getSessionFactoryOptions().isXmlFormatMapperLegacyFormatEnabled();
+			}
+			else {
+				return false;
+			}
+		}
+
 		private Scope(TypeConfiguration typeConfiguration) {
 			this.typeConfiguration = typeConfiguration;
 		}
@@ -481,7 +519,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			else if ( sessionFactory != null ) {
 				return sessionFactory.getServiceRegistry();
 			}
-			return null;
+			else {
+				throw new AssertionFailure( "No service registry available" );
+			}
 		}
 
 		private JpaCompliance getJpaCompliance() {
@@ -494,10 +534,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return null;
 		}
 
-		private void setMetadataBuildingContext(MetadataBuildingContext metadataBuildingContext) {
-			this.metadataBuildingContext = metadataBuildingContext;
-			if ( metadataBuildingContext != null ) {
-				this.allowExtensionsInCdi = metadataBuildingContext.getBuildingOptions().disallowExtensionsInCdi();
+		private void setMetadataBuildingContext(MetadataBuildingContext context) {
+			metadataBuildingContext = context;
+			if ( context != null ) {
+				allowExtensionsInCdi = context.getBuildingOptions().isAllowExtensionsInCdi();
 			}
 		}
 
@@ -506,18 +546,15 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				if ( sessionFactoryName == null && sessionFactoryUuid == null ) {
 					throw new HibernateException( "TypeConfiguration was not yet scoped to SessionFactory" );
 				}
-				sessionFactory = SessionFactoryRegistry.INSTANCE.findSessionFactory(
-						sessionFactoryUuid,
-						sessionFactoryName
-				);
+				sessionFactory =
+						SessionFactoryRegistry.INSTANCE
+								.findSessionFactory( sessionFactoryUuid, sessionFactoryName );
 				if ( sessionFactory == null ) {
 					throw new HibernateException(
 							"Could not find a SessionFactory [uuid=" + sessionFactoryUuid + ",name=" + sessionFactoryName + "]"
 					);
 				}
-
 			}
-
 			return sessionFactory;
 		}
 
@@ -527,47 +564,47 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		 * @param factory The {@link SessionFactory} to which the {@link TypeConfiguration} is being bound
 		 */
 		private void setSessionFactory(SessionFactoryImplementor factory) {
-			if ( this.sessionFactory != null ) {
-				log.scopingTypesToSessionFactoryAfterAlreadyScoped( this.sessionFactory, factory );
+			if ( sessionFactory != null ) {
+				log.scopingTypesToSessionFactoryAfterAlreadyScoped( sessionFactory, factory );
 			}
 			else {
-				this.sessionFactoryUuid = factory.getUuid();
-				this.sessionFactoryName = getFactoryName( factory );
+				sessionFactoryUuid = factory.getUuid();
+				sessionFactoryName = getFactoryName( factory );
 			}
-			this.sessionFactory = factory;
+			sessionFactory = factory;
 		}
 
 		private static String getFactoryName(SessionFactoryImplementor factory) {
 			final String factoryName = factory.getSessionFactoryOptions().getSessionFactoryName();
 			if ( factoryName == null ) {
-				final CfgXmlAccessService cfgXmlAccessService = factory.getServiceRegistry()
-						.getService( CfgXmlAccessService.class );
-				if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
-					return cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
-				}
+				final CfgXmlAccessService cfgXmlAccessService =
+						factory.getServiceRegistry().requireService( CfgXmlAccessService.class );
+				return cfgXmlAccessService.getAggregatedConfig() == null ? null
+						: cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
 			}
-			return factoryName;
+			else {
+				return factoryName;
+			}
 		}
 
 		private void unsetSessionFactory(SessionFactory factory) {
 			log.debugf( "Un-scoping TypeConfiguration [%s] from SessionFactory [%s]", this, factory );
-			this.sessionFactory = null;
+			sessionFactory = null;
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Custom serialization hook
 
+		@Serial
 		private Object readResolve() throws InvalidObjectException {
 			if ( sessionFactory == null ) {
 				if ( sessionFactoryName != null || sessionFactoryUuid != null ) {
-					sessionFactory = SessionFactoryRegistry.INSTANCE.findSessionFactory(
-							sessionFactoryUuid,
-							sessionFactoryName
-					);
-
+					sessionFactory =
+							SessionFactoryRegistry.INSTANCE
+									.findSessionFactory( sessionFactoryUuid, sessionFactoryName );
 					if ( sessionFactory == null ) {
-						throw new HibernateException(
-								"Could not find a SessionFactory [uuid=" + sessionFactoryUuid + ",name=" + sessionFactoryName + "]"
+						throw new HibernateException( "Could not find a SessionFactory [uuid="
+								+ sessionFactoryUuid + ",name=" + sessionFactoryName + "]"
 						);
 					}
 				}
@@ -591,10 +628,17 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	public SqmExpressible<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
 		final SqmExpressible<?>[] components = new SqmExpressible<?>[typedNodes.size()];
 		for ( int i = 0; i < typedNodes.size(); i++ ) {
-			final SqmExpressible<?> sqmExpressible = typedNodes.get( i ).getNodeType();
-			components[i] = sqmExpressible != null
-					? sqmExpressible
-					: getBasicTypeForJavaType( Object.class );
+			SqmTypedNode<?> tupleElement = typedNodes.get(i);
+			final SqmExpressible<?> sqmExpressible = tupleElement.getNodeType();
+			// keep null value for Named Parameters
+			if ( tupleElement instanceof SqmParameter<?> && sqmExpressible == null ) {
+				components[i] = QueryParameterJavaObjectType.INSTANCE;
+			}
+			else {
+				components[i] = sqmExpressible != null
+						? sqmExpressible
+						: getBasicTypeForJavaType( Object.class );
+			}
 		}
 		return arrayTuples.computeIfAbsent(
 				new ArrayCacheKey( components ),
@@ -611,7 +655,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 		@Override
 		public boolean equals(Object o) {
-			return Arrays.equals( components, ((ArrayCacheKey) o).components );
+			return o instanceof ArrayCacheKey key
+				&& Arrays.equals( components, key.components );
 		}
 
 		@Override
@@ -653,9 +698,15 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			}
 		}
 		else if ( isDuration( secondType ) ) {
-			// it's either addition/subtraction of durations
+			// if firstType is not known, and operator is
+			// addition/subtraction, then this can be
+			// either addition/subtraction of duration
+			// to/from temporal or addition/subtraction of
+			// durations in this case we shall return null;
+			// otherwise, it's either addition/subtraction of durations
 			// or prefix scalar multiplication of a duration
-			return secondType;
+//			return secondType;
+			return firstType == null ? null : secondType;
 		}
 		else if ( firstType==null && getSqlTemporalType( secondType ) != null ) {
 			// subtraction of a date or timestamp from a
@@ -663,16 +714,24 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return getBasicTypeRegistry().getRegisteredType( Duration.class );
 		}
 
-		if ( secondType == null || firstType != null
-				&& firstType.getExpressibleJavaType().isWider( secondType.getExpressibleJavaType() ) ) {
-			return firstType;
+		if ( firstType != null && ( secondType == null
+				|| firstType.getRelationalJavaType().isWider( secondType.getRelationalJavaType() ) ) ) {
+			return resolveBasicArithmeticType( firstType );
 		}
-		return secondType;
+		return secondType != null ? resolveBasicArithmeticType( secondType ) : null;
+	}
+
+	private BasicType<?> resolveBasicArithmeticType(SqmExpressible<?> expressible) {
+		if ( isNumberArray( expressible ) ) {
+			return (BasicType<?>) expressible.getSqmType();
+		}
+		// Use the relational java type to account for possible converters
+		return getBasicTypeForJavaType( expressible.getRelationalJavaType().getJavaTypeClass() );
 	}
 
 	private static boolean matchesJavaType(SqmExpressible<?> type, Class<?> javaType) {
 		assert javaType != null;
-		return type != null && javaType.isAssignableFrom( type.getExpressibleJavaType().getJavaTypeClass() );
+		return type != null && javaType.isAssignableFrom( type.getRelationalJavaType().getJavaTypeClass() );
 	}
 
 
@@ -692,28 +751,46 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			//noinspection unchecked
 			return (BasicType<J>) existing;
 		}
-
-		final BasicType<J> registeredType = basicTypeRegistry.getRegisteredType( javaType );
-		if ( registeredType != null ) {
-			basicTypeByJavaType.put( javaType, registeredType );
-			return registeredType;
+		else {
+			final BasicType<J> registeredType = basicTypeRegistry.getRegisteredType( javaType );
+			if ( registeredType != null ) {
+				basicTypeByJavaType.put( javaType, registeredType );
+				return registeredType;
+			}
+			else {
+				return null;
+			}
 		}
-
-		return null;
 	}
 
 	public <J> BasicType<J> standardBasicTypeForJavaType(Class<J> javaType) {
 		if ( javaType == null ) {
 			return null;
 		}
+		else {
+			return standardBasicTypeForJavaType(
+					javaType,
+					javaTypeDescriptor -> new BasicTypeImpl<>(
+							javaTypeDescriptor,
+							javaTypeDescriptor.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() )
+					)
+			);
+		}
+	}
 
-		return standardBasicTypeForJavaType(
-				javaType,
-				javaTypeDescriptor -> new BasicTypeImpl<>(
-						javaTypeDescriptor,
-						javaTypeDescriptor.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() )
-				)
-		);
+	public BasicType<?> standardBasicTypeForJavaType(Type javaType) {
+		if ( javaType == null ) {
+			return null;
+		}
+		else {
+			return standardBasicTypeForJavaType(
+					javaType,
+					javaTypeDescriptor -> new BasicTypeImpl<>(
+							javaTypeDescriptor,
+							javaTypeDescriptor.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() )
+					)
+			);
+		}
 	}
 
 	public <J> BasicType<J> standardBasicTypeForJavaType(
@@ -737,54 +814,73 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					if ( registeredType != null ) {
 						return registeredType;
 					}
-
-					// otherwise, apply the creator
-					return creator.apply( javaTypeRegistry.resolveDescriptor( javaType ) );
+					else {
+						// otherwise, apply the creator
+						return creator.apply( javaTypeRegistry.resolveDescriptor( javaType ) );
+					}
 				}
 		);
 	}
 
+	@SuppressWarnings("deprecation")
 	public TemporalType getSqlTemporalType(SqmExpressible<?> type) {
 		if ( type == null ) {
 			return null;
 		}
-		return getSqlTemporalType( type.getExpressibleJavaType().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
+		return getSqlTemporalType( type.getRelationalJavaType().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
 	}
 
+	@SuppressWarnings("deprecation")
 	public static TemporalType getSqlTemporalType(JdbcMapping jdbcMapping) {
 		return getSqlTemporalType( jdbcMapping.getJdbcType() );
 	}
 
+	@SuppressWarnings("deprecation")
 	public static TemporalType getSqlTemporalType(JdbcMappingContainer jdbcMappings) {
 		assert jdbcMappings.getJdbcTypeCount() == 1;
 		return getSqlTemporalType( jdbcMappings.getSingleJdbcMapping().getJdbcType() );
 	}
 
+	@SuppressWarnings("deprecation")
 	public static TemporalType getSqlTemporalType(MappingModelExpressible<?> type) {
-		if ( type instanceof BasicValuedMapping ) {
-			return getSqlTemporalType( ( (BasicValuedMapping) type ).getJdbcMapping().getJdbcType() );
+		if ( type instanceof BasicValuedMapping basicValuedMapping ) {
+			return getSqlTemporalType( basicValuedMapping.getJdbcMapping().getJdbcType() );
 		}
-		return null;
+		else if ( type instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+			// Handle the special embeddables for emulated offset/timezone handling
+			final Class<?> javaTypeClass = embeddableValuedModelPart.getJavaType().getJavaTypeClass();
+			if ( javaTypeClass == OffsetDateTime.class
+					|| javaTypeClass == ZonedDateTime.class ) {
+				return TemporalType.TIMESTAMP;
+			}
+			else if ( javaTypeClass == OffsetTime.class ) {
+				return TemporalType.TIME;
+			}
+			else {
+				return null;
+			}
+		}
+		else {
+			return null;
+		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public static TemporalType getSqlTemporalType(JdbcType descriptor) {
 		return getSqlTemporalType( descriptor.getDefaultSqlTypeCode() );
 	}
 
+	@SuppressWarnings("deprecation")
 	protected static TemporalType getSqlTemporalType(int jdbcTypeCode) {
-		switch ( jdbcTypeCode ) {
-			case SqlTypes.TIMESTAMP:
-			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
-			case SqlTypes.TIMESTAMP_UTC:
-				return TemporalType.TIMESTAMP;
-			case SqlTypes.TIME:
-			case SqlTypes.TIME_WITH_TIMEZONE:
-			case SqlTypes.TIME_UTC:
-				return TemporalType.TIME;
-			case SqlTypes.DATE:
-				return TemporalType.DATE;
-		}
-		return null;
+		return switch ( jdbcTypeCode ) {
+			case SqlTypes.TIMESTAMP, SqlTypes.TIMESTAMP_WITH_TIMEZONE, SqlTypes.TIMESTAMP_UTC
+					-> TemporalType.TIMESTAMP;
+			case SqlTypes.TIME, SqlTypes.TIME_WITH_TIMEZONE, SqlTypes.TIME_UTC
+					-> TemporalType.TIME;
+			case SqlTypes.DATE
+					-> TemporalType.DATE;
+			default -> null;
+		};
 	}
 
 	public static IntervalType getSqlIntervalType(JdbcMappingContainer jdbcMappings) {
@@ -797,11 +893,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	protected static IntervalType getSqlIntervalType(int jdbcTypeCode) {
-		switch ( jdbcTypeCode ) {
-			case SqlTypes.INTERVAL_SECOND:
-				return IntervalType.SECOND;
-		}
-		return null;
+		return jdbcTypeCode == SqlTypes.INTERVAL_SECOND ? IntervalType.SECOND : null;
 	}
 
 	public static boolean isJdbcTemporalType(SqmExpressible<?> type) {
@@ -814,14 +906,16 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	@Internal @SuppressWarnings("unchecked")
 	public <J> MutabilityPlan<J> createMutabilityPlan(Class<? extends MutabilityPlan<?>> planClass) {
-		if ( scope.allowExtensionsInCdi ) {
-			//noinspection rawtypes
-			return (MutabilityPlan) FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( planClass );
-		}
+		return !scope.allowExtensionsInCdi
+				? (MutabilityPlan<J>) FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( planClass )
+				: (MutabilityPlan<J>) getManagedBeanRegistry().getBean( planClass ).getBeanInstance();
+	}
 
-		final ManagedBean<? extends MutabilityPlan<?>> planBean = scope.getServiceRegistry()
-						.getService( ManagedBeanRegistry.class )
-						.getBean( planClass );
-		return (MutabilityPlan<J>) planBean.getBeanInstance();
+	private ClassLoaderService getClassLoaderService() {
+		return scope.getServiceRegistry().requireService( ClassLoaderService.class );
+	}
+
+	private ManagedBeanRegistry getManagedBeanRegistry() {
+		return scope.getServiceRegistry().requireService( ManagedBeanRegistry.class );
 	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.tools;
 
@@ -13,14 +11,14 @@ import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue(jiraKey = "HHH-7106")
+@JiraKey(value = "HHH-7106")
 public class SchemaExportTest extends BaseEnversFunctionalTestCase {
 	private Integer id = null;
 
@@ -36,7 +34,7 @@ public class SchemaExportTest extends BaseEnversFunctionalTestCase {
 		Session session = getSession();
 		session.getTransaction().begin();
 		StrTestEntity entity = new StrTestEntity( "data" );
-		session.save( entity );
+		session.persist( entity );
 		session.getTransaction().commit();
 
 		id = entity.getId();

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
 
@@ -25,12 +23,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -45,6 +41,8 @@ import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.KeyedPage;
+import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Order;
 import org.hibernate.query.OutputableType;
 import org.hibernate.query.Query;
@@ -82,6 +80,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
@@ -92,6 +92,9 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.TransactionRequiredException;
 
+import static java.lang.Boolean.parseBoolean;
+import static java.util.Collections.emptyList;
+import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION;
 import static org.hibernate.procedure.internal.NamedCallableQueryMementoImpl.ParameterMementoImpl.fromRegistration;
 import static org.hibernate.query.results.ResultSetMapping.resolveResultSetMapping;
@@ -159,9 +162,9 @@ public class ProcedureCallImpl<R>
 
 		this.synchronizedQuerySpaces = new HashSet<>();
 
-		final String mappingId = procedureName + ":" + StringHelper.join( ",", resultClasses );
+		final String mappingId = procedureName + ":" + join( ",", resultClasses );
 
-		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( mappingId, session.getSessionFactory() );
+		this.resultSetMapping = resolveResultSetMapping( mappingId, session.getSessionFactory() );
 
 		Util.resolveResultSetMappingClasses(
 				resultClasses,
@@ -193,8 +196,8 @@ public class ProcedureCallImpl<R>
 
 		this.synchronizedQuerySpaces = new HashSet<>();
 
-		final String mappingId = procedureName + ":" + StringHelper.join( ",", resultSetMappingNames );
-		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( mappingId, session.getSessionFactory() );
+		final String mappingId = procedureName + ":" + join( ",", resultSetMappingNames );
+		this.resultSetMapping = resolveResultSetMapping( mappingId, session.getSessionFactory() );
 
 		Util.resolveResultSetMappingNames(
 				resultSetMappingNames,
@@ -220,7 +223,7 @@ public class ProcedureCallImpl<R>
 
 		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
 
-		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( memento.getRegistrationName(), session.getSessionFactory() );
+		this.resultSetMapping = resolveResultSetMapping( memento.getRegistrationName(), session.getSessionFactory() );
 
 		Util.resolveResultSetMappings(
 				memento.getResultSetMappingNames(),
@@ -252,15 +255,15 @@ public class ProcedureCallImpl<R>
 
 		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
 
-		final String mappingId = procedureName + ":" + StringHelper.join( ",", resultTypes );
-		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( mappingId, session.getSessionFactory() );
+		final String mappingId = procedureName + ":" + join( ",", resultTypes );
+		this.resultSetMapping = resolveResultSetMapping( mappingId, session.getSessionFactory() );
 
 		Util.resolveResultSetMappings(
 				null,
 				resultTypes,
 				resultSetMapping,
 				synchronizedQuerySpaces::add,
-				() -> getSession().getFactory()
+				getSession()::getFactory
 		);
 
 		applyOptions( memento );
@@ -279,8 +282,8 @@ public class ProcedureCallImpl<R>
 
 		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
 
-		final String mappingId = procedureName + ":" + StringHelper.join( ",", resultSetMappingNames );
-		this.resultSetMapping = ResultSetMapping.resolveResultSetMapping( mappingId, session.getSessionFactory() );
+		final String mappingId = procedureName + ":" + join( ",", resultSetMappingNames );
+		this.resultSetMapping = resolveResultSetMapping( mappingId, session.getSessionFactory() );
 
 		Util.resolveResultSetMappings(
 				resultSetMappingNames,
@@ -298,7 +301,7 @@ public class ProcedureCallImpl<R>
 
 		if ( memento.getHints() != null ) {
 			final Object callableFunction = memento.getHints().get( HINT_CALLABLE_FUNCTION );
-			if ( callableFunction != null && Boolean.parseBoolean( callableFunction.toString() ) ) {
+			if ( callableFunction != null && parseBoolean( callableFunction.toString() ) ) {
 				applyCallableFunctionHint();
 			}
 		}
@@ -309,13 +312,19 @@ public class ProcedureCallImpl<R>
 		resultSetMapping.visitResultBuilders(
 				(index, resultBuilder) -> resultTypes.add( resultBuilder.getJavaType() )
 		);
-		final TypeConfiguration typeConfiguration = getSessionFactory().getTypeConfiguration();
-		final BasicType<?> type;
-		if ( resultTypes.size() != 1 || ( type = typeConfiguration.getBasicTypeForJavaType( resultTypes.get( 0 ) ) ) == null ) {
-			markAsFunctionCall( Types.REF_CURSOR );
+		if ( resultTypes.size() == 1 ) {
+			final BasicType<?> type =
+					getSessionFactory().getTypeConfiguration()
+							.getBasicTypeForJavaType( resultTypes.get(0) );
+			if ( type != null ) {
+				markAsFunctionCall( type );
+			}
+			else {
+				markAsFunctionCallRefRefCursor();
+			}
 		}
 		else {
-			markAsFunctionCall( type );
+			markAsFunctionCallRefRefCursor();
 		}
 	}
 
@@ -359,6 +368,10 @@ public class ProcedureCallImpl<R>
 		return this;
 	}
 
+	private void markAsFunctionCallRefRefCursor() {
+		functionReturn = new FunctionReturnImpl<>( this, Types.REF_CURSOR );
+	}
+
 	@Override
 	public ProcedureCallImpl<R> markAsFunctionCall(Class<?> resultType) {
 		final TypeConfiguration typeConfiguration = getSessionFactory().getTypeConfiguration();
@@ -366,7 +379,8 @@ public class ProcedureCallImpl<R>
 		if ( basicType == null ) {
 			throw new IllegalArgumentException( "Could not resolve a BasicType for the java type: " + resultType.getName() );
 		}
-		return markAsFunctionCall( basicType );
+		markAsFunctionCall( basicType );
+		return this;
 	}
 
 	@Override
@@ -377,10 +391,11 @@ public class ProcedureCallImpl<R>
 		if ( basicType == null ) {
 			throw new IllegalArgumentException( "Could not resolve a BasicType for the java type: " + typeReference.getName() );
 		}
-		return markAsFunctionCall( basicType );
+		markAsFunctionCall( basicType );
+		return this;
 	}
 
-	private ProcedureCallImpl<R> markAsFunctionCall(BasicType<?> basicType) {
+	private void markAsFunctionCall(BasicType<?> basicType) {
 		if ( resultSetMapping.getNumberOfResultBuilders() == 0 ) {
 			// Function returns might not be represented as callable parameters,
 			// but we still want to convert the result to the requested java type if possible
@@ -390,7 +405,6 @@ public class ProcedureCallImpl<R>
 		}
 		//noinspection unchecked
 		functionReturn = new FunctionReturnImpl<>( this, (OutputableType<R>) basicType );
-		return this;
 	}
 
 	@Override
@@ -398,12 +412,8 @@ public class ProcedureCallImpl<R>
 		return paramBindings;
 	}
 
-	public SessionFactoryImplementor getSessionFactory() {
-		return getSession().getFactory();
-	}
-
 	@Override
-	public Query<R> setOrder(List<Order<? super R>> orderList) {
+	public Query<R> setOrder(List<? extends Order<? super R>> orderList) {
 		throw new UnsupportedOperationException("Ordering not supported for stored procedure calls");
 	}
 
@@ -650,10 +660,11 @@ public class ProcedureCallImpl<R>
 		}
 
 		LOG.debugf( "Preparing procedure call : %s", call);
+		final String sqlString = call.getSqlString();
 		final CallableStatement statement = (CallableStatement) getSession()
 				.getJdbcCoordinator()
 				.getStatementPreparer()
-				.prepareStatement( call.getSqlString(), true );
+				.prepareStatement( sqlString, true );
 		try {
 			// Register the parameter mode and type
 			callableStatementSupport.registerParameters(
@@ -719,7 +730,8 @@ public class ProcedureCallImpl<R>
 				this,
 				parameterRegistrations,
 				refCursorExtractors.toArray( new JdbcCallRefCursorExtractor[0] ),
-				statement
+				statement,
+				sqlString
 		);
 
 	}
@@ -795,7 +807,7 @@ public class ProcedureCallImpl<R>
 				isCacheable(),
 				getCacheRegion(),
 				getCacheMode(),
-				getHibernateFlushMode(),
+				getQueryOptions().getFlushMode(),
 				isReadOnly(),
 				getTimeout(),
 				getFetchSize(),
@@ -808,7 +820,7 @@ public class ProcedureCallImpl<R>
 			ProcedureParameterMetadataImpl parameterMetadata) {
 		if ( parameterMetadata.getParameterStrategy() == ParameterStrategy.UNKNOWN ) {
 			// none...
-			return Collections.emptyList();
+			return emptyList();
 		}
 
 		final List<NamedCallableQueryMemento.ParameterMemento> mementos = new ArrayList<>();
@@ -916,8 +928,8 @@ public class ProcedureCallImpl<R>
 			if ( rtn == null ) {
 				return -1;
 			}
-			else if ( rtn instanceof UpdateCountOutput ) {
-				return ( (UpdateCountOutput) rtn ).getUpdateCount();
+			else if ( rtn instanceof UpdateCountOutput updateCount ) {
+				return updateCount.getUpdateCount();
 			}
 			else {
 				return -1;
@@ -938,12 +950,12 @@ public class ProcedureCallImpl<R>
 	@Override
 	protected List<R> doList() {
 		if ( getMaxResults() == 0 ) {
-			return Collections.emptyList();
+			return emptyList();
 		}
 		try {
 			final Output rtn = outputs().getCurrent();
 			if ( !(rtn instanceof ResultSetOutput) ) {
-				throw new IllegalStateException( "Current CallableStatement ou was not a ResultSet, but getResultList was called" );
+				throw new IllegalStateException( "Current CallableStatement was not a ResultSet, but getResultList was called" );
 			}
 
 			//noinspection unchecked
@@ -965,13 +977,23 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	public long getResultCount() {
+		throw new UnsupportedOperationException( "getResultCount() not implemented for ProcedureCall/StoredProcedureQuery" );
+	}
+
+	@Override
+	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> page) {
+		throw new UnsupportedOperationException("getKeyedResultList() not implemented for ProcedureCall/StoredProcedureQuery");
+	}
+
+	@Override
 	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
-		throw new UnsupportedOperationException( "Query#scroll is not valid for ProcedureCall/StoredProcedureQuery" );
+		throw new UnsupportedOperationException( "scroll() is not implemented for ProcedureCall/StoredProcedureQuery" );
 	}
 
 	@Override
 	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
-		throw new UnsupportedOperationException( "Query#scroll is not valid for ProcedureCall/StoredProcedureQuery" );
+		throw new UnsupportedOperationException( "scroll() is not implemented for ProcedureCall/StoredProcedureQuery" );
 	}
 
 	@Override
@@ -1088,6 +1110,15 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	public ProcedureCallImplementor<R> setTimeout(Integer timeout) {
+		if ( timeout == null ) {
+			timeout = -1;
+		}
+		super.setTimeout( (int) timeout );
+		return this;
+	}
+
+	@Override
 	public LockModeType getLockMode() {
 		// the JPA spec requires IllegalStateException here, even
 		// though it's logically an UnsupportedOperationException
@@ -1102,7 +1133,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	public ProcedureCallImplementor<R> setHint(String hintName, Object value) {
 		if ( HINT_CALLABLE_FUNCTION.equals( hintName ) ) {
-			if ( value != null && Boolean.parseBoolean( value.toString() ) ) {
+			if ( value != null && parseBoolean( value.toString() ) ) {
 				applyCallableFunctionHint();
 			}
 		}
@@ -1223,8 +1254,22 @@ public class ProcedureCallImpl<R>
 		return getResultList().stream();
 	}
 
+	@Override
+	public Stream<R> stream() {
+		return getResultStream();
+	}
+
 	public ResultSetMapping getResultSetMapping() {
 		return resultSetMapping;
 	}
 
+	@Override
+	public ProcedureCallImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		return (ProcedureCallImplementor<R>) super.setCacheRetrieveMode( cacheRetrieveMode );
+	}
+
+	@Override
+	public ProcedureCallImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		return (ProcedureCallImplementor<R>) super.setCacheStoreMode( cacheStoreMode );
+	}
 }

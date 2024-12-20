@@ -1,16 +1,19 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.batch;
 
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -49,7 +52,7 @@ import static org.junit.Assert.assertTrue;
 @SessionFactory(
 		useCollectingStatementInspector = true
 )
-@TestForIssue(jiraKey = "HHH-15921")
+@JiraKey(value = "HHH-15921")
 public class BatchAndClassIdTest {
 
 	@BeforeAll

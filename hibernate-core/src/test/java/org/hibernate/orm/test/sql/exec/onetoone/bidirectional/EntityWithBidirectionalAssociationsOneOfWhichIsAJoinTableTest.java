@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.exec.onetoone.bidirectional;
 
@@ -60,9 +58,9 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 					Female daughter = new Female( 3, parent );
 					daughter.setName( "Fab" );
 
-					session.save( parent );
-					session.save( son );
-					session.save( daughter );
+					session.persist( parent );
+					session.persist( son );
+					session.persist( daughter );
 				} );
 	}
 
@@ -177,7 +175,7 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 							.setParameter( "id", 1 )
 							.getSingleResult();
 					statementInspector.assertExecutedCount( 2 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 2 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 3 );
 					Male son = parent.getSon();
 					assertThat( son, CoreMatchers.notNullValue() );

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.temporal;
 
@@ -12,12 +10,11 @@ import java.util.Date;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.query.Query;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -37,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Gail Badner
  */
 @RequiresDialect(value = MySQLDialect.class)
-@TestForIssue(jiraKey = "HHH-8401")
+@JiraKey(value = "HHH-8401")
 @DomainModel(
 		annotatedClasses = MySQLTimestampPropertyTest.Entity.class
 )
@@ -87,7 +84,7 @@ public class MySQLTimestampPropertyTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( eQueriedWithTimestamp )
+						session.remove( eQueriedWithTimestamp )
 		);
 	}
 
@@ -134,7 +131,7 @@ public class MySQLTimestampPropertyTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( eQueriedWithTimestamp )
+						session.remove( eQueriedWithTimestamp )
 		);
 	}
 
@@ -181,7 +178,7 @@ public class MySQLTimestampPropertyTest {
 
 		scope.inTransaction(
 				session ->
-						session.delete( eQueriedWithTimestamp )
+						session.remove( eQueriedWithTimestamp )
 		);
 	}
 
@@ -195,12 +192,12 @@ public class MySQLTimestampPropertyTest {
 		private Date ts;
 
 		@Temporal(value = TemporalType.TIMESTAMP)
-		@Generated(value = GenerationTime.INSERT)
+		@Generated
 		@ColumnDefault(value = "CURRENT_TIMESTAMP(6)")
 		private Date tsColumnDefault;
 
 		@Temporal(value = TemporalType.TIMESTAMP)
-		@Generated(value = GenerationTime.INSERT)
+		@Generated
 		@Column(columnDefinition = "datetime(6) default NOW(6)")
 		private Date tsColumnDefinition;
 

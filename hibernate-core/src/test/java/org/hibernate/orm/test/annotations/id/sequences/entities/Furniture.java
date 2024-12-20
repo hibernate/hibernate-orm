@@ -1,18 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id: Furniture.java 14760 2008-06-11 07:33:15Z hardy.ferentschik $
 package org.hibernate.orm.test.annotations.id.sequences.entities;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
 
 /**
  * @author Emmanuel Bernard
@@ -23,12 +18,7 @@ public class Furniture {
 
 	@Id
 	@GeneratedValue(generator = "hibseq")
-	@GenericGenerator(name = "hibseq", strategy = "seqhilo",
-			parameters = {
-			@Parameter(name = "max_lo", value = "5"),
-			@Parameter(name = "sequence", value = "heybabyhey")
-					}
-	)
+	@GenericGenerator(name = "hibseq", strategy = "increment")
 	public Integer getId() {
 		return id;
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot;
 
@@ -11,7 +9,6 @@ import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.model.FunctionContributor;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -19,13 +16,11 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.UserType;
 
-import org.jboss.jandex.IndexView;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.SharedCacheMode;
@@ -152,7 +147,7 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	MetadataBuilder applyIndexView(IndexView jandexView);
+	MetadataBuilder applyIndexView(Object jandexView);
 
 	/**
 	 * Specify the options to be used in performing scanning.
@@ -250,7 +245,7 @@ public interface MetadataBuilder {
 
 	/**
 	 * For entities which do not explicitly say, should we force discriminators into
-	 * SQL selects?  The (historical) default is {@code false}
+	 * SQL selects?  The (historical) default is {@code false}.
 	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT}
 	 * setting if using property-based configuration.
@@ -350,27 +345,6 @@ public interface MetadataBuilder {
 	MetadataBuilder applyTempClassLoader(ClassLoader tempClassLoader);
 
 	/**
-	 * Apply a specific ordering to the processing of sources.
-	 * <p>
-	 * Unlike most of the methods of this interface (which deal with multiple
-	 * values internally), this one <em>replaces</em> any source processing
-	 * order that was already set.
-	 * <p>
-	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#ARTIFACT_PROCESSING_ORDER}
-	 * setting if using property-based configuration.
-	 *
-	 * @param sourceTypes The types, in the order they should be processed
-	 *
-	 * @return {@code this} for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#ARTIFACT_PROCESSING_ORDER
-	 *
-	 * @deprecated {@code hbm.xml} mappings are no longer supported, making this irrelevant
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	MetadataBuilder applySourceProcessOrdering(MetadataSourceType... sourceTypes);
-
-	/**
 	 * Apply an explicit {@link FunctionContributor}
 	 * (implicit application via {@link java.util.ServiceLoader} will still happen too)
 	 *
@@ -443,12 +417,6 @@ public interface MetadataBuilder {
 	 * @return {@code this} for method chaining
 	 */
 	MetadataBuilder applyAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply);
-
-	/**
-	 * @deprecated since {@link IdGeneratorStrategyInterpreter} is deprecated
-	 */
-	@Deprecated(since = "6")
-	MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter);
 
 	/**
 	 * Actually build the metamodel

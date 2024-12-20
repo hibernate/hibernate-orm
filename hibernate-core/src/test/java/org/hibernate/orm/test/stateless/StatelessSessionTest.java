@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.stateless;
 
@@ -75,11 +73,11 @@ public class StatelessSessionTest {
 						assertEquals( "Blahs", doc2.getName() );
 						assertEquals( doc.getText(), doc2.getText() );
 
-						ScrollableResults sr = statelessSession.createQuery( "from Document where text is not null" )
-								.scroll( ScrollMode.FORWARD_ONLY );
-						sr.next();
-						doc2 = (Document) sr.get();
-						sr.close();
+						try (ScrollableResults sr = statelessSession.createQuery( "from Document where text is not null" )
+								.scroll( ScrollMode.FORWARD_ONLY )) {
+							sr.next();
+							doc2 = (Document) sr.get();
+						}
 						assertEquals( "Blahs", doc2.getName() );
 						assertEquals( doc.getText(), doc2.getText() );
 
@@ -100,10 +98,10 @@ public class StatelessSessionTest {
 						criteria = criteriaBuilder.createQuery( Document.class );
 						criteria.from( Document.class );
 
-						sr = statelessSession.createQuery( criteria ).scroll( ScrollMode.FORWARD_ONLY );
-						sr.next();
-						doc2 = (Document) sr.get();
-						sr.close();
+						try (ScrollableResults sr = statelessSession.createQuery( criteria ).scroll( ScrollMode.FORWARD_ONLY )) {
+							sr.next();
+							doc2 = (Document) sr.get();
+						}
 						assertEquals( "Blahs", doc2.getName() );
 						assertEquals( doc.getText(), doc2.getText() );
 
@@ -215,4 +213,3 @@ public class StatelessSessionTest {
 		);
 	}
 }
-

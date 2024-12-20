@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.spi;
 
@@ -14,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.graph.GraphSemantic;
@@ -23,10 +22,10 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NameableQuery;
-import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.SqmQuery;
+import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.transform.ResultTransformer;
 
@@ -42,7 +41,7 @@ import jakarta.persistence.TemporalType;
  */
 public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, NameableQuery {
 	@Override
-	NamedQueryMemento toMemento(String name);
+	NamedSqmQueryMemento<R> toMemento(String name);
 
 	@Override
 	ParameterMetadataImplementor getParameterMetadata();
@@ -104,8 +103,11 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 		return setTupleTransformer( transformer ).setResultListTransformer( transformer );
 	}
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmQueryImplementor<R> setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	SqmQueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	@Override
 	SqmQueryImplementor<R> setMaxResults(int maxResult);
@@ -116,7 +118,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	@Override
 	SqmQueryImplementor<R> setHint(String hintName, Object value);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmQueryImplementor<R> setFlushMode(FlushModeType flushMode);
 
 	@Override

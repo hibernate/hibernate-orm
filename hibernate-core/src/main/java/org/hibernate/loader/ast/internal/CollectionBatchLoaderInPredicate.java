@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
 
@@ -16,13 +14,14 @@ import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.countIds;
-import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
 /**
@@ -51,7 +50,7 @@ public class CollectionBatchLoaderInPredicate
 				.getDialect()
 				.getBatchLoadSizingStrategy()
 				.determineOptimalBatchLoadSize( keyColumnCount, domainBatchSize, false );
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.debugf(
 					"Using IN-predicate batch fetching strategy for collection `%s` : %s (%s)",
 					attributeMapping.getNavigableRole().getFullPath(),
@@ -72,6 +71,11 @@ public class CollectionBatchLoaderInPredicate
 				jdbcParametersBuilder::add,
 				sessionFactory
 		);
+
+		final QuerySpec querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
+		final TableGroup tableGroup = querySpec.getFromClause().getRoots().get( 0 );
+		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
+
 		this.jdbcParameters = jdbcParametersBuilder.build();
 		assert this.jdbcParameters.size() == this.sqlBatchSize * this.keyColumnCount;
 
@@ -84,7 +88,8 @@ public class CollectionBatchLoaderInPredicate
 
 	@Override
 	void initializeKeys(Object key, Object[] keysToInitialize, SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+		final boolean loggerDebugEnabled = MULTI_KEY_LOAD_LOGGER.isDebugEnabled();
+		if ( loggerDebugEnabled ) {
 			MULTI_KEY_LOAD_LOGGER.debugf(
 					"Collection keys to batch-fetch initialize (`%s#%s`) %s",
 					getLoadable().getNavigableRole().getFullPath(),
@@ -120,7 +125,7 @@ public class CollectionBatchLoaderInPredicate
 				(key1, relativePosition, absolutePosition) -> {
 				},
 				(startIndex) -> {
-					if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+					if ( loggerDebugEnabled ) {
 						MULTI_KEY_LOAD_LOGGER.debugf(
 								"Processing collection batch-fetch chunk (`%s#%s`) %s - %s",
 								getLoadable().getNavigableRole().getFullPath(),
@@ -131,7 +136,7 @@ public class CollectionBatchLoaderInPredicate
 					}
 				},
 				(startIndex, nonNullElementCount) -> {
-					if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+					if ( loggerDebugEnabled ) {
 						MULTI_KEY_LOAD_LOGGER.debugf(
 								"Finishing collection batch-fetch chunk (`%s#%s`) %s - %s (%s)",
 								getLoadable().getNavigableRole().getFullPath(),

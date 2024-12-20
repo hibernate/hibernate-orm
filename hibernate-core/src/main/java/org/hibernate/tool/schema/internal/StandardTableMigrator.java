@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
 
@@ -18,6 +16,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
+import org.hibernate.tool.schema.spi.TableMigrator;
 import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
@@ -96,7 +95,7 @@ public class StandardTableMigrator implements TableMigrator {
 					final String alterColumn = dialect.getAlterColumnTypeString(
 							column.getQuotedName( dialect ),
 							column.getSqlType(metadata),
-							getColumnDefinition( column, table, metadata, dialect )
+							getColumnDefinition( column, metadata, dialect )
 					);
 					results.add( alterTable + alterColumn );
 				}

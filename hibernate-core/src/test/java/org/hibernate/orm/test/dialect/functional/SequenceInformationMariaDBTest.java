@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.functional;
 
@@ -22,7 +20,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.internal.util.PropertiesHelper;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -37,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12973")
+@JiraKey(value = "HHH-12973")
 @RequiresDialect(value = MariaDBDialect.class)
 @Jpa(
 		annotatedClasses = {
@@ -73,31 +71,31 @@ public class SequenceInformationMariaDBTest {
 			catch (SQLException e) {
 			}
 			statement.execute( "CREATE TABLE `TBL_BOOK` ( " +
-							   "  `ID` int(11) NOT NULL, " +
-							   "  `TITLE` varchar(255) DEFAULT NULL, " +
-							   "   PRIMARY KEY (`ID`) " +
-							   ") ENGINE=InnoDB" );
+							"  `ID` int(11) NOT NULL, " +
+							"  `TITLE` varchar(255) DEFAULT NULL, " +
+							"   PRIMARY KEY (`ID`) " +
+							") ENGINE=InnoDB" );
 
 			statement.execute( "CREATE TABLE `TBL_AUTHOR` ( " +
-									   "  `ID` int(11) NOT NULL, " +
-									   "  `firstName` varchar(255) DEFAULT NULL, " +
-									   "  `lastName` varchar(255) DEFAULT NULL, " +
-									   "   PRIMARY KEY (`ID`) " +
-									   ") ENGINE=InnoDB" );
+									"  `ID` int(11) NOT NULL, " +
+									"  `firstName` varchar(255) DEFAULT NULL, " +
+									"  `lastName` varchar(255) DEFAULT NULL, " +
+									"   PRIMARY KEY (`ID`) " +
+									") ENGINE=InnoDB" );
 
 			statement.execute( "CREATE SEQUENCE book_sequence " +
-							   "  START WITH 1 " +
-							   "  INCREMENT BY 1 " +
-							   "  MAXVALUE 2999999999 " +
-							   "  MINVALUE 0 " +
-							   "  CACHE 10" );
+							"  START WITH 1 " +
+							"  INCREMENT BY 1 " +
+							"  MAXVALUE 2999999999 " +
+							"  MINVALUE 0 " +
+							"  CACHE 10" );
 
 			statement.execute( "CREATE SEQUENCE author_sequence " +
-							   "  START WITH 1 " +
-							   "  INCREMENT BY 1 " +
-							   "  MAXVALUE 2999999999 " +
-							   "  MINVALUE 0 " +
-							   "  CACHE 10" );
+							"  START WITH 1 " +
+							"  INCREMENT BY 1 " +
+							"  MAXVALUE 2999999999 " +
+							"  MINVALUE 0 " +
+							"  CACHE 10" );
 		}
 		catch (SQLException e) {
 			fail(e.getMessage());

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
 
@@ -28,7 +26,4 @@ public interface MultiKeyLoadLogging {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".loader.multi";
 
 	Logger MULTI_KEY_LOAD_LOGGER = Logger.getLogger( LOGGER_NAME );
-
-	boolean MULTI_KEY_LOAD_TRACE_ENABLED = MULTI_KEY_LOAD_LOGGER.isTraceEnabled();
-	boolean MULTI_KEY_LOAD_DEBUG_ENABLED = MULTI_KEY_LOAD_LOGGER.isDebugEnabled();
 }

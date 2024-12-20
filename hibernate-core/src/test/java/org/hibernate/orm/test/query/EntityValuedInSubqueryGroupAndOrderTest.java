@@ -1,15 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
+
+import org.hibernate.dialect.OracleDialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -51,12 +52,29 @@ public class EntityValuedInSubqueryGroupAndOrderTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23, reason = "Oracle 23c bug")
 	public void testInSubqueryGroupBy(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final EntityB result = session.createQuery(
 					"select b from EntityB b " +
 							"where (b.entityA, b.amount) in " +
 							"	(select b2.entityA, max(b2.amount) from EntityB b2 " +
+							"	where b2.entityA.unlisted = false " +
+							"	group by b2.entityA)",
+					EntityB.class
+			).getSingleResult();
+			assertThat( result.getAmount() ).isEqualTo( 2 );
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17231" )
+	public void testInSubqueryGroupByProp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final EntityB result = session.createQuery(
+					"select b from EntityB b " +
+							"where (b.entityA.name, b.amount) in " +
+							"	(select b2.entityA.name, max(b2.amount) from EntityB b2 " +
 							"	where b2.entityA.unlisted = false " +
 							"	group by b2.entityA)",
 					EntityB.class

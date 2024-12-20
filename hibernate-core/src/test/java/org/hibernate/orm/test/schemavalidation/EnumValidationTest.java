@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemavalidation;
 
@@ -27,14 +25,14 @@ import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +48,7 @@ import jakarta.persistence.Id;
 /**
  * Test that an existing tinyint column works even if we switch to smallint type code for enums.
  */
-@TestForIssue(jiraKey = "HHH-15288")
+@JiraKey(value = "HHH-15288")
 @RunWith(Parameterized.class)
 public class EnumValidationTest implements ExecutionOptions {
 	@Parameterized.Parameters
@@ -70,7 +68,7 @@ public class EnumValidationTest implements ExecutionOptions {
 
 	@Before
 	public void beforeTest() {
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
 						jdbcMetadataExtractorStrategy
@@ -178,8 +176,8 @@ public class EnumValidationTest implements ExecutionOptions {
 	}
 
 	@Override
-	public Map getConfigurationValues() {
-		return ssr.getService( ConfigurationService.class ).getSettings();
+	public Map<String,Object> getConfigurationValues() {
+		return ssr.requireService( ConfigurationService.class ).getSettings();
 	}
 
 	@Override
@@ -190,10 +188,5 @@ public class EnumValidationTest implements ExecutionOptions {
 	@Override
 	public ExceptionHandler getExceptionHandler() {
 		return ExceptionHandlerLoggedImpl.INSTANCE;
-	}
-
-	@Override
-	public SchemaFilter getSchemaFilter() {
-		return SchemaFilter.ALL;
 	}
 }

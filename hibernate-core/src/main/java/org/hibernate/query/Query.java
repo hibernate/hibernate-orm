@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
@@ -184,7 +182,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 */
 	@Override
 	default Stream<R> stream() {
-		return getResultStream();
+		return list().stream();
 	}
 
 	/**
@@ -355,11 +353,10 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * Apply the given {@linkplain LockOptions lock options} to this
 	 * query. Alias-specific lock modes in the given lock options are
 	 * merged with any alias-specific lock mode which have already been
-	 * {@linkplain #setAliasSpecificLockMode(String, LockMode) set}. If
-	 * a lock mode has already been specified for an alias that is among
-	 * the aliases in the given lock options, the lock mode specified in
-	 * the given lock options overrides the lock mode that was already
-	 * set.
+	 * {@linkplain #setLockMode(String, LockMode) set}. If a lock mode
+	 * has already been specified for an alias that is among the aliases
+	 * in the given lock options, the lock mode specified in the given
+	 * lock options overrides the lock mode that was already set.
 	 *
 	 * @param lockOptions The lock options to apply to the query.
 	 *
@@ -852,8 +849,11 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariant overrides - CommonQueryContract
 
-	@Override
+	@Override @Deprecated(since = "7")
 	Query<R> setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	Query<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	@Override
 	Query<R> setCacheable(boolean cacheable);
@@ -915,14 +915,14 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	@Override
 	Query<R> disableFetchProfile(String profileName);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	Query<R> setFlushMode(FlushModeType flushMode);
 
 	@Override
 	Query<R> setLockMode(LockModeType lockMode);
 
 	@Override @Incubating
-	Query<R> setOrder(List<Order<? super R>> orderList);
+	Query<R> setOrder(List<? extends Order<? super R>> orderList);
 
 	@Override @Incubating
 	Query<R> setOrder(Order<? super R> order);

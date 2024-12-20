@@ -1,16 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.locking.jpa;
 
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -20,6 +20,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.LockTimeoutException;
@@ -28,7 +29,6 @@ import jakarta.persistence.QueryTimeoutException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 
 /**
  * @author Steve Ebersole
@@ -37,13 +37,17 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 @SessionFactory(useCollectingStatementInspector = true)
 @SkipForDialect(dialectClass = HSQLDialect.class, reason = "Seems HSQLDB doesn't cancel the query if it waits for a lock?!")
 @SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach allows the concurrent access but cancels one or both transactions at the end")
+@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 11, reason = "Timeouts don't work on Oracle 11 when using a driver other than ojdbc6, but we can't test with that driver")
+@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase does not support timeout in statement level")
 public class FollowOnLockingTest {
 
 	@Test
+	@Timeout(value = 2, unit = TimeUnit.MINUTES)
 	public void testQueryLockingWithoutFollowOn(SessionFactoryScope scope) {
 		testQueryLocking( scope, false );
 	}
 	@Test
+	@Timeout(value = 2, unit = TimeUnit.MINUTES)
 	public void testQueryLockingWithFollowOn(SessionFactoryScope scope) {
 		testQueryLocking( scope, true );
 	}

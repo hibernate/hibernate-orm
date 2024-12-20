@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -29,6 +27,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
  * Java {@link Duration} to SQL {@code numeric(21)} here, which
  * can comfortably represent 60 millennia of nanos.
  *
+ * @see org.hibernate.cfg.AvailableSettings#PREFERRED_DURATION_JDBC_TYPE
+ *
  * @author Steve Ebersole
  * @author Gavin King
  */
@@ -48,6 +48,11 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 		return context.getTypeConfiguration()
 				.getJdbcTypeRegistry()
 				.getDescriptor( context.getPreferredSqlTypeCodeForDuration() );
+	}
+
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
 	}
 
 	@Override
@@ -107,12 +112,11 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 			return null;
 		}
 
-		if (value instanceof Duration) {
-			return (Duration) value;
+		if (value instanceof Duration duration) {
+			return duration;
 		}
 
-		if (value instanceof BigDecimal) {
-			final BigDecimal decimal = (BigDecimal) value;
+		if ( value instanceof BigDecimal decimal ) {
 			final BigDecimal[] secondsAndNanos = decimal.divideAndRemainder( BILLION );
 			return Duration.ofSeconds(
 					secondsAndNanos[0].longValueExact(),
@@ -124,17 +128,17 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 			);
 		}
 
-		if (value instanceof Double) {
+		if (value instanceof Double doubleValue) {
 			// PostgreSQL returns a Double for datediff(epoch)
-			return Duration.ofNanos( ( (Double) value ).longValue() );
+			return Duration.ofNanos( doubleValue.longValue() );
 		}
 
-		if (value instanceof Long) {
-			return Duration.ofNanos( (Long) value );
+		if (value instanceof Long longValue) {
+			return Duration.ofNanos( longValue );
 		}
 
-		if (value instanceof String) {
-			return Duration.parse( (String) value );
+		if (value instanceof String string) {
+			return Duration.parse( string );
 		}
 
 		throw unknownWrap( value.getClass() );
@@ -159,8 +163,7 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	@Override
 	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
 		if ( jdbcType.getDdlTypeCode() == SqlTypes.INTERVAL_SECOND ) {
-			// The default scale necessary is 9 i.e. nanosecond resolution
-			return 9;
+			return dialect.getDefaultIntervalSecondScale();
 		}
 		else {
 			// For non-interval types, we use the type numeric(21)

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
 
@@ -36,7 +34,7 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 		this.jdbcContext = jdbcContext;
 
 		try {
-			final JtaPlatform jtaPlatform = jdbcContext.getServiceRegistry().getService( JtaPlatform.class );
+			final JtaPlatform jtaPlatform = jdbcContext.getServiceRegistry().requireService( JtaPlatform.class );
 			log.tracef( "DdlTransactionIsolatorJtaImpl#prepare: JtaPlatform -> %s", jtaPlatform );
 
 			final TransactionManager tm = jtaPlatform.retrieveTransactionManager();
@@ -83,7 +81,7 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 				}
 			}
 			catch (SQLException e) {
-				throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable set JDBC Connection for DDL execution to autocommit" );
+				throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable to set JDBC Connection for DDL execution to autocommit" );
 			}
 		}
 		return jdbcConnection;
@@ -102,7 +100,9 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 
 		if ( suspendedTransaction != null ) {
 			try {
-				jdbcContext.getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().resume( suspendedTransaction );
+				jdbcContext.getServiceRegistry().requireService( JtaPlatform.class )
+						.retrieveTransactionManager()
+						.resume( suspendedTransaction );
 			}
 			catch (Exception e) {
 				throw new HibernateException( "Unable to resume JTA transaction after DDL execution" );

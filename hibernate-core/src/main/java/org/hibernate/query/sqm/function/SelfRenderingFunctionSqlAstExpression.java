@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
@@ -33,6 +31,8 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Representation of a function call in the SQL AST for impls that know how to
  * render themselves.
@@ -42,17 +42,17 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class SelfRenderingFunctionSqlAstExpression
 		implements SelfRenderingExpression, Selectable, SqlExpressible, DomainResultProducer, FunctionExpression {
 	private final String functionName;
-	private final FunctionRenderingSupport renderer;
+	private final FunctionRenderer renderer;
 	private final List<? extends SqlAstNode> sqlAstArguments;
-	private final ReturnableType<?> type;
-	private final JdbcMappingContainer expressible;
+	private final @Nullable ReturnableType<?> type;
+	private final @Nullable JdbcMappingContainer expressible;
 
 	public SelfRenderingFunctionSqlAstExpression(
 			String functionName,
-			FunctionRenderingSupport renderer,
+			FunctionRenderer renderer,
 			List<? extends SqlAstNode> sqlAstArguments,
-			ReturnableType<?> type,
-			JdbcMappingContainer expressible) {
+			@Nullable ReturnableType<?> type,
+			@Nullable JdbcMappingContainer expressible) {
 		this.functionName = functionName;
 		this.renderer = renderer;
 		this.sqlAstArguments = sqlAstArguments;
@@ -78,23 +78,14 @@ public class SelfRenderingFunctionSqlAstExpression
 				: expressible;
 	}
 
-	protected FunctionRenderingSupport getRenderer() {
+	protected FunctionRenderer getFunctionRenderer() {
 		return renderer;
 	}
 
-	@Override
-	public SqlSelection createSqlSelection(
-			int jdbcPosition,
-			int valuesArrayPosition,
-			JavaType javaType,
-			TypeConfiguration typeConfiguration) {
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				this,
-				false
-		);
+	protected @Nullable ReturnableType<?> getType() {
+		return type;
 	}
+
 	@Override
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
@@ -142,7 +133,10 @@ public class SelfRenderingFunctionSqlAstExpression
 						.getValuesArrayPosition(),
 				resultVariable,
 				type == null ? null : type.getExpressibleJavaType(),
-				converter
+				converter,
+				null,
+				false,
+				false
 		);
 	}
 
@@ -151,7 +145,7 @@ public class SelfRenderingFunctionSqlAstExpression
 			SqlAppender sqlAppender,
 			SqlAstTranslator<?> walker,
 			SessionFactoryImplementor sessionFactory) {
-		renderer.render( sqlAppender, sqlAstArguments, walker );
+		renderer.render( sqlAppender, sqlAstArguments, type, walker );
 	}
 
 	@Override

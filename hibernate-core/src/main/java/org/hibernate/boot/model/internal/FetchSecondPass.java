@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
@@ -41,21 +39,22 @@ public class FetchSecondPass implements SecondPass {
 
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
-
-		final FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile( fetch.profile() );
+		final String profileName = fetch.profile();
+		final FetchProfile profile = buildingContext.getMetadataCollector().getFetchProfile( profileName );
 		if ( profile == null ) {
-			throw new AnnotationException( "Property '" + qualify( propertyHolder.getPath(), propertyName )
-					+ "' refers to an unknown fetch profile named '" + fetch.profile() + "'" );
-		}
-		if ( profile.getSource() == ANNOTATIONS ) {
-			profile.addFetch(
-					new FetchProfile.Fetch(
-							propertyHolder.getEntityName(),
-							propertyName,
-							fetch.mode(),
-							fetch.fetch()
-					)
+			throw new AnnotationException(
+					"Property '" + qualify( propertyHolder.getPath(), propertyName )
+							+ "' refers to an unknown fetch profile named '" + profileName + "'"
 			);
+		}
+
+		if ( profile.getSource() == ANNOTATIONS ) {
+			profile.addFetch( new FetchProfile.Fetch(
+					propertyHolder.getEntityName(),
+					propertyName,
+					fetch.mode(),
+					fetch.fetch()
+			) );
 		}
 		// otherwise, it's a fetch profile defined in XML, and it overrides
 		// the annotations, so we simply ignore this annotation completely

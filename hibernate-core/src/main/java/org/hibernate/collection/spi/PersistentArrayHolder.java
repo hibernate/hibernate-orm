@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -94,6 +93,9 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	public Collection getOrphans(Serializable snapshot, String entityName) throws HibernateException {
 		final Object[] sn = (Object[]) snapshot;
 		final Object[] arr = (Object[]) array;
+		if ( arr.length == 0 ) {
+			return Arrays.asList( sn );
+		}
 		final ArrayList result = new ArrayList();
 		Collections.addAll( result, sn );
 		for ( int i=0; i<sn.length; i++ ) {
@@ -125,7 +127,7 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 		attributeMapping.getPropertyAccess().getSetter().set( getOwner(), array );
 	}
 
-	@SuppressWarnings("UnusedDeclaration")
+	@SuppressWarnings("unused")
 	public Object getArray() {
 		return array;
 	}

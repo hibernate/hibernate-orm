@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -39,8 +37,7 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.TrimSpec;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
@@ -61,6 +58,7 @@ import org.hibernate.type.NullType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -142,6 +140,20 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public int resolveSqlTypeLength(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			int displaySize) {
+		// Sybase jconnect driver reports the "actual" precision in the display size
+		return switch (jdbcTypeCode) {
+			case Types.CHAR, Types.VARCHAR, Types.REAL, Types.DOUBLE -> displaySize;
+			default -> super.resolveSqlTypeLength( columnTypeName, jdbcTypeCode, precision, scale, displaySize );
+		};
+	}
+
+	@Override
 	public SqmTranslatorFactory getSqmTranslatorFactory() {
 		return new StandardSqmTranslatorFactory() {
 			@Override
@@ -202,10 +214,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
 			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.CLOB_BINDING );
-
-			// The jTDS driver doesn't support nationalized types
-			jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.CLOB_BINDING );
-			jdbcTypeRegistry.addDescriptor( Types.NVARCHAR, ClobJdbcType.CLOB_BINDING );
+			jdbcTypeRegistry.addDescriptor( Types.NCLOB, NClobJdbcType.NCLOB_BINDING );
 		}
 		else {
 			// jConnect driver only conditionally supports getClob/getNClob depending on a server setting. See
@@ -243,12 +252,17 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public NationalizationSupport getNationalizationSupport() {
 		// At least the jTDS driver doesn't support this
-		return driverKind == SybaseDriverKind.JTDS ? NationalizationSupport.IMPLICIT : super.getNationalizationSupport();
+		return super.getNationalizationSupport();
+	}
+
+	@Override
+	public boolean stripsTrailingSpacesFromChar() {
+		return true;
 	}
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 
@@ -309,7 +323,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getCurrentSchemaCommand() {
-		return "select db_name()";
+		return "select user_name()";
 	}
 
 	@Override
@@ -338,6 +352,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -362,7 +377,12 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Date date,
+			@SuppressWarnings("deprecation")
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
 				appender.appendSql( "convert(date,'" );
@@ -388,6 +408,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
+			@SuppressWarnings("deprecation")
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -413,21 +434,17 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String translateExtractField(TemporalUnit unit) {
-		switch ( unit ) {
-			case WEEK: return "calweekofyear"; //the ISO week number I think
-			default: return super.translateExtractField(unit);
-		}
+		return switch (unit) {
+			case WEEK -> "calweekofyear"; // the ISO week number I think
+			default -> super.translateExtractField(unit);
+		};
 	}
 
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		if ( unit == TemporalUnit.EPOCH ) {
-			return "datediff(second, '1970-01-01 00:00:00', ?2)";
-		}
-		else {
-			//TODO!!
-			return "datepart(?1,?2)";
-		}
+		return unit == TemporalUnit.EPOCH
+				? "datediff(second, '1970-01-01 00:00:00', ?2)"
+				: "datepart(?1,?2)"; //TODO!
 	}
 
 	@Override
@@ -435,22 +452,16 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		return false;
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		//TODO!!
 		return "dateadd(?1,?2,?3)";
 	}
 
-	@Override
+	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		//TODO!!
 		return "datediff(?1,?2,?3)";
-	}
-
-	@Override
-	public String trimPattern(TrimSpec specification, char character) {
-		return super.trimPattern(specification, character)
-				.replace("replace", "str_replace");
 	}
 
 	@Override
@@ -466,7 +477,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
-		// Default to MIXED because the jconn driver doesn't seem to report anything useful
+		// Default to MIXED because the jconnect driver doesn't seem to report anything useful
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		if ( dbMetaData == null ) {
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
@@ -477,9 +488,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
-		// No support for schemas: https://userapps.support.sap.com/sap/support/knowledge/en/2591730
-		// Authorization schemas seem to be something different: https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc36272.1550/html/commands/X48762.htm
-		return NameQualifierSupport.CATALOG;
+		return NameQualifierSupport.BOTH;
 	}
 
 	@Override
@@ -489,9 +498,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
-		return driverKind == SybaseDriverKind.JTDS ?
-				JTDSCallableStatementSupport.INSTANCE :
-				SybaseCallableStatementSupport.INSTANCE;
+		return driverKind == SybaseDriverKind.JTDS
+				? JTDSCallableStatementSupport.INSTANCE
+				: SybaseCallableStatementSupport.INSTANCE;
 	}
 
 	@Override
@@ -515,5 +524,15 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		return driverKind == SybaseDriverKind.JTDS
 				? AbstractTransactSQLIdentityColumnSupport.INSTANCE
 				: SybaseJconnIdentityColumnSupport.INSTANCE;
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
 	}
 }

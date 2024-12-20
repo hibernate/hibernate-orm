@@ -1,16 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.jdbc.spi;
 
 import java.util.List;
 
-import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.LockMode;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.ast.spi.SqlSelection;
 
 /**
@@ -31,7 +29,20 @@ public interface JdbcValuesMapping {
 
 	int getRowSize();
 
+	/**
+	 * Mapping from value index to cache index.
+	 */
+	int[] getValueIndexesToCacheIndexes();
+
+	/**
+	 * The size of the row for caching.
+	 */
+	int getRowToCacheSize();
+
 	List<DomainResult<?>> getDomainResults();
 
-	List<DomainResultAssembler<?>> resolveAssemblers(AssemblerCreationState creationState);
+	JdbcValuesMappingResolution resolveAssemblers(SessionFactoryImplementor sessionFactory);
+
+	LockMode determineDefaultLockMode(String alias, LockMode defaultLockMode);
+
 }

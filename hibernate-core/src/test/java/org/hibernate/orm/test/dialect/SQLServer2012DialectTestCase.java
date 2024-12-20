@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect;
 
@@ -16,7 +14,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -40,7 +38,7 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8768")
+	@JiraKey(value = "HHH-8768")
 	public void testGetLimitStringMaxRowsOnly() {
 		final String input = "select distinct f1 as f53245 from table846752 order by f234, f67 desc";
 		assertEquals(
@@ -50,7 +48,7 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8768")
+	@JiraKey(value = "HHH-8768")
 	public void testGetLimitStringWithOffsetAndMaxRows() {
 		final String input = "select distinct f1 as f53245 from table846752 order by f234, f67 desc";
 		assertEquals(
@@ -60,7 +58,7 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8768")
+	@JiraKey(value = "HHH-8768")
 	public void testGetLimitStringMaxRowsOnlyNoOrderBy() {
 		final String input = "select f1 from table";
 		assertEquals(
@@ -70,7 +68,7 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8768")
+	@JiraKey(value = "HHH-8768")
 	public void testGetLimitStringWithOffsetAndMaxRowsNoOrderBy() {
 		final String input = "select f1 from table";
 		assertEquals(

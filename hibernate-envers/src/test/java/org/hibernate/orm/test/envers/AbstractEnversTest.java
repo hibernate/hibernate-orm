@@ -1,16 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.testing.cleaner.DatabaseCleaner;
 
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
@@ -26,10 +22,6 @@ import org.jboss.logging.Logger;
  */
 @RunWith(EnversRunner.class)
 public abstract class AbstractEnversTest {
-
-	static {
-		DatabaseCleaner.clearSchemas();
-	}
 
 	protected final Logger log = Logger.getLogger( getClass() );
 
@@ -51,9 +43,9 @@ public abstract class AbstractEnversTest {
 		return auditStrategy;
 	}
 
-	protected Column getColumnFromIteratorByName(Iterator<Selectable> iterator, String columnName) {
-		while ( iterator.hasNext() ) {
-			Column column = (Column) iterator.next();
+	protected Column getColumnFromIteratorByName(List<Selectable> selectables, String columnName) {
+		for ( Selectable s : selectables ) {
+			Column column = (Column) s;
 			if ( column.getName().equals( columnName) ) {
 				return column;
 			}

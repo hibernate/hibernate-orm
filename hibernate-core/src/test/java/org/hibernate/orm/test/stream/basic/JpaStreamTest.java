@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.stream.basic;
 
@@ -22,8 +20,9 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -49,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class JpaStreamTest {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11907")
+	@JiraKey(value = "HHH-11907")
 	public void testQueryStream(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			MyEntity e = new MyEntity();
@@ -60,32 +59,41 @@ public class JpaStreamTest {
 
 		scope.inTransaction( session -> {
 			// Test stream query without type.
-			Object result = session.createQuery( "From MyEntity" ).getResultStream().findFirst().orElse( null );
+			Object result;
+			try (Stream stream = session.createQuery( "From MyEntity" ).getResultStream()) {
+				result = stream.findFirst().orElse( null );
+			}
 			assertTyping( MyEntity.class, result );
 
 			// Test stream query with type.
-			result = session.createQuery( "From MyEntity", MyEntity.class )
-					.getResultStream()
-					.findFirst()
-					.orElse( null );
+			try (Stream stream = session.createQuery( "From MyEntity", MyEntity.class ).getResultStream()) {
+				result = stream.findFirst().orElse( null );
+			}
 			assertTyping( MyEntity.class, result );
 
 			// Test stream query using forEach
-			session.createQuery( "From MyEntity", MyEntity.class ).getResultStream().forEach( i -> {
-				assertTyping( MyEntity.class, i );
-			} );
+			try (Stream<MyEntity> stream = session.createQuery( "From MyEntity", MyEntity.class ).getResultStream()) {
+				stream.forEach( i -> {
+					assertTyping( MyEntity.class, i );
+				} );
+			}
 
-			Stream<Object[]> data = session.createQuery( "SELECT me.id, me.name FROM MyEntity me" ).getResultStream();
-			data.forEach( i -> {
-				assertTyping( Integer.class, i[0] );
-				assertTyping( String.class, i[1] );
-			} );
+			try (Stream<Object[]> data = session.createQuery( "SELECT me.id, me.name FROM MyEntity me" )
+					.getResultStream()) {
+				data.forEach( i -> {
+					assertTyping( Integer.class, i[0] );
+					assertTyping( String.class, i[1] );
+				} );
+			}
 		} );
 	}
 
 	@Test
 	@RequiresDialect(H2Dialect.class)
-	@TestForIssue(jiraKey = { "HHH-13872", "HHH-14449" })
+	@JiraKeyGroup( value = {
+			@JiraKey( value = "HHH-13872" ),
+			@JiraKey( value = "HHH-14449" )
+	} )
 	public void testStreamCloseOnTerminalOperation(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.createQuery( "delete from MyEntity" ).executeUpdate();

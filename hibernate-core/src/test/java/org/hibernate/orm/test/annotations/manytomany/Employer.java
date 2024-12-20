@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.manytomany;
 import java.io.Serializable;
 import java.util.Collection;
@@ -44,8 +40,8 @@ public class Employer implements Serializable {
 			joinColumns = {@JoinColumn(name = "EMPLOYER_ID")},
 			inverseJoinColumns = {@JoinColumn(name = "CONTRACTOR_ID")}
 	)
-	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
-	@OrderBy("name desc")	
+	@Cascade({org.hibernate.annotations.CascadeType.PERSIST, org.hibernate.annotations.CascadeType.MERGE})
+	@OrderBy("name desc")
 	public List getContractors() {
 		return contractors;
 	}
@@ -63,7 +59,7 @@ public class Employer implements Serializable {
 			joinColumns = {@JoinColumn(name = "EMPER_ID")},
 			inverseJoinColumns = {@JoinColumn(name = "EMPEE_ID")}
 	)
-	@Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
+	@Cascade({org.hibernate.annotations.CascadeType.PERSIST, org.hibernate.annotations.CascadeType.MERGE})
 	@OrderBy("name asc")
 	public Collection getEmployees() {
 		return employees;

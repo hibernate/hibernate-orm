@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -21,6 +19,7 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ZonedDateTimeComparator;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -50,13 +49,20 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators stdIndicators) {
-		return stdIndicators.getTypeConfiguration().getJdbcTypeRegistry()
-				.getDescriptor( stdIndicators.getDefaultZonedTimestampSqlType() );
+		if ( stdIndicators.isPreferJavaTimeJdbcTypesEnabled() ) {
+			return stdIndicators.getJdbcType( SqlTypes.ZONED_DATE_TIME );
+		}
+		return stdIndicators.getJdbcType( stdIndicators.getDefaultZonedTimestampSqlType() );
 	}
 
 	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
 		return (TemporalJavaType<X>) this;
+	}
+
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
 	}
 
 	@Override
@@ -138,22 +144,19 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 			return null;
 		}
 
-		if (value instanceof ZonedDateTime) {
-			return (ZonedDateTime) value;
+		if (value instanceof ZonedDateTime zonedDateTime) {
+			return zonedDateTime;
 		}
 
-		if (value instanceof OffsetDateTime) {
-			OffsetDateTime offsetDateTime = (OffsetDateTime) value;
+		if (value instanceof OffsetDateTime offsetDateTime) {
 			return offsetDateTime.toZonedDateTime();
 		}
 
-		if (value instanceof Instant) {
-			Instant instant = (Instant) value;
+		if (value instanceof Instant instant) {
 			return instant.atZone( ZoneOffset.UTC );
 		}
 
-		if (value instanceof Timestamp) {
-			final Timestamp ts = (Timestamp) value;
+		if (value instanceof Timestamp timestamp) {
 			/*
 			 * This works around two bugs:
 			 * - HHH-13266 (JDK-8061577): around and before 1900,
@@ -164,25 +167,23 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 			 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
 			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
 			 */
-			if ( ts.getYear() < 5 ) { // Timestamp year 0 is 1900
-				return ts.toLocalDateTime().atZone( ZoneId.systemDefault() );
+			if ( timestamp.getYear() < 5 ) { // Timestamp year 0 is 1900
+				return timestamp.toLocalDateTime().atZone( ZoneId.systemDefault() );
 			}
 			else {
-				return ts.toInstant().atZone( ZoneId.systemDefault() );
+				return timestamp.toInstant().atZone( ZoneId.systemDefault() );
 			}
 		}
 
-		if (value instanceof Date) {
-			final Date date = (Date) value;
+		if (value instanceof Date date) {
 			return ZonedDateTime.ofInstant( date.toInstant(), ZoneId.systemDefault() );
 		}
 
-		if (value instanceof Long) {
-			return ZonedDateTime.ofInstant( Instant.ofEpochMilli( (Long) value ), ZoneId.systemDefault() );
+		if (value instanceof Long longValue) {
+			return ZonedDateTime.ofInstant( Instant.ofEpochMilli( longValue ), ZoneId.systemDefault() );
 		}
 
-		if (value instanceof Calendar) {
-			final Calendar calendar = (Calendar) value;
+		if (value instanceof Calendar calendar) {
 			return ZonedDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() );
 		}
 

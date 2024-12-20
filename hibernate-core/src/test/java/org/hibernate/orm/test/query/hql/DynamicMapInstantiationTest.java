@@ -1,9 +1,13 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -23,13 +27,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 
+import java.lang.invoke.MethodHandles;
+
 @DomainModel(
 		annotatedClasses = {
 				DynamicMapInstantiationTest.Parent.class
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-16061")
+@JiraKey( value = "HHH-16061")
 public class DynamicMapInstantiationTest {
 
 	private Triggerable triggerable;
@@ -37,7 +43,7 @@ public class DynamicMapInstantiationTest {
 	@RegisterExtension
 	public LoggerInspectionExtension logger = LoggerInspectionExtension
 			.builder().setLogger(
-					Logger.getMessageLogger( CoreMessageLogger.class, SqmDynamicInstantiation.class.getName() )
+					Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, SqmDynamicInstantiation.class.getName() )
 			).build();
 
 	@BeforeEach

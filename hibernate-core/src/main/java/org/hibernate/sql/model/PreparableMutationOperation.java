@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model;
 
@@ -57,15 +55,12 @@ public interface PreparableMutationOperation extends MutationOperation {
 			return false;
 		}
 
-		if ( getMutationType() == MutationType.INSERT ) {
-			// we cannot batch inserts which generate id values post-insert (IDENTITY, TRIGGER, etc)
-			if ( getTableDetails().isIdentifierTable()
-					&& getMutationTarget() instanceof EntityMutationTarget
-					&& ( (EntityMutationTarget) getMutationTarget() ).getIdentityInsertDelegate() != null ) {
-				return false;
-			}
-		}
-		else if ( getMutationType() == MutationType.UPDATE ) {
+		// This should already be guaranteed by the batchKey being null
+		assert !getTableDetails().isIdentifierTable() ||
+				!( getMutationTarget() instanceof EntityMutationTarget
+						&& ( (EntityMutationTarget) getMutationTarget() ).getMutationDelegate( getMutationType() ) != null );
+
+		if ( getMutationType() == MutationType.UPDATE ) {
 			// we cannot batch updates against optional tables
 			if ( getTableDetails().isOptional() ) {
 				return false;

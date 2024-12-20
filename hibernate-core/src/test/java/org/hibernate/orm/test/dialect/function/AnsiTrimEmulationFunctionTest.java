@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.function;
 
@@ -17,6 +15,7 @@ import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -33,7 +32,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import org.mockito.Mockito;
@@ -41,65 +39,62 @@ import org.mockito.Mockito;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * TODO : javadoc
+ * Tests correct rendering of trim function emulation for {@link org.hibernate.dialect.AbstractTransactSQLDialect} dialects.
  *
  * @author Christian Beikov
  */
 @ServiceRegistry
 public class AnsiTrimEmulationFunctionTest  {
 	private static final String trimSource = "a.column";
+	private static final String LEADING = "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)+1)";
+	private static final String TRAILING = "substring(?1,1,len(?1+'x')-1-patindex('%[^'+?2+']%',reverse(?1))+1)";
+	private static final String BOTH = "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)-patindex('%[^'+?2+']%',reverse(?1))+2)";
 
-    @Test
+	@Test
+//	@RequiresDialect( SQLServerDialect.class )
 	public void testBasicSqlServerProcessing(ServiceRegistryScope scope) {
 		Dialect dialect = new SQLServerDialect();
 		TrimFunction function = new TrimFunction( dialect, new TypeConfiguration() );
 
 		performBasicSpaceTrimmingTests( dialect, scope.getRegistry(), function );
 
-		final String expectedTrimPrep = "replace(replace(a.column,' ','#%#%'),'-',' ')";
-		final String expectedPostTrimPrefix = "replace(replace(";
-		final String expectedPostTrimSuffix = ",' ','-'),'#%#%',' ')";
-
 		// -> trim(LEADING '-' FROM a.column)
 		String rendered = render( dialect, scope.getRegistry(), function, TrimSpec.LEADING, '-', trimSource );
-		String expected = expectedPostTrimPrefix + "ltrim(" + expectedTrimPrep + ")" + expectedPostTrimSuffix;
+		String expected = LEADING.replace( "?1", trimSource ).replace( "?2", "'-'" );
 		assertEquals( expected, rendered );
 
 		// -> trim(TRAILING '-' FROM a.column)
 		rendered = render( dialect, scope.getRegistry(), function, TrimSpec.TRAILING, '-', trimSource );
-		expected = expectedPostTrimPrefix + "rtrim(" + expectedTrimPrep + ")" + expectedPostTrimSuffix;
+		expected = TRAILING.replace( "?1", trimSource ).replace( "?2", "'-'" );
 		assertEquals( expected, rendered );
 
 		// -> trim(BOTH '-' FROM a.column)
 		rendered = render( dialect, scope.getRegistry(), function, TrimSpec.BOTH, '-', trimSource );
-		expected = expectedPostTrimPrefix + "ltrim(rtrim(" + expectedTrimPrep + "))" + expectedPostTrimSuffix;
+		expected = BOTH.replace( "?1", trimSource ).replace( "?2", "'-'" );
 		assertEquals( expected, rendered );
 	}
 
-    @Test
+	@Test
+//	@RequiresDialect( SybaseDialect.class )
 	public void testBasicSybaseProcessing(ServiceRegistryScope scope) {
 		Dialect dialect = new SybaseDialect();
 		TrimFunction function = new TrimFunction( dialect, new TypeConfiguration() );
 
 		performBasicSpaceTrimmingTests( dialect, scope.getRegistry(), function );
 
-		final String expectedTrimPrep = "str_replace(str_replace(a.column,' ','#%#%'),'-',' ')";
-		final String expectedPostTrimPrefix = "str_replace(str_replace(";
-		final String expectedPostTrimSuffix = ",' ','-'),'#%#%',' ')";
-
 		// -> trim(LEADING '-' FROM a.column)
 		String rendered = render( dialect, scope.getRegistry(), function, TrimSpec.LEADING, '-', trimSource );
-		String expected = expectedPostTrimPrefix + "ltrim(" + expectedTrimPrep + ")" + expectedPostTrimSuffix;
+		String expected = LEADING.replace( "?1", trimSource ).replace( "?2", "'-'" );
 		assertEquals( expected, rendered );
 
 		// -> trim(TRAILING '-' FROM a.column)
 		rendered = render( dialect, scope.getRegistry(), function, TrimSpec.TRAILING, '-', trimSource );
-		expected = expectedPostTrimPrefix + "rtrim(" + expectedTrimPrep + ")" + expectedPostTrimSuffix;
+		expected = TRAILING.replace( "?1", trimSource ).replace( "?2", "'-'" );
 		assertEquals( expected, rendered );
 
 		// -> trim(BOTH '-' FROM a.column)
 		rendered = render( dialect, scope.getRegistry(), function, TrimSpec.BOTH, '-', trimSource );
-		expected = expectedPostTrimPrefix + "ltrim(rtrim(" + expectedTrimPrep + "))" + expectedPostTrimSuffix;
+		expected = BOTH.replace( "?1", trimSource ).replace( "?2", "'-'" );
 		assertEquals( expected, rendered );
 	}
 
@@ -148,7 +143,7 @@ public class AnsiTrimEmulationFunctionTest  {
 				return null;
 			}
 		} );
-    	function.render( walker, sqlAstArguments, walker );
+		function.render( walker, sqlAstArguments, (ReturnableType<?>) null, walker );
 		return walker.getSql();
 	}
 

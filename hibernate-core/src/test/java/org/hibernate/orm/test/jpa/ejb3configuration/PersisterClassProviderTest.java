@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.ejb3configuration;
 
@@ -15,6 +13,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -33,6 +32,8 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -40,7 +41,6 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
@@ -52,21 +52,28 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.orm.test.jpa.SettingsGenerator;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyEntry;
+import org.hibernate.persister.entity.mutation.DeleteCoordinator;
+import org.hibernate.persister.entity.mutation.EntityTableMapping;
+import org.hibernate.persister.entity.mutation.InsertCoordinator;
+import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.spi.PersisterClassResolver;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -75,6 +82,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -91,6 +99,7 @@ public class PersisterClassProviderTest {
 				PersisterClassResolverInitiator.IMPL_NAME, GoofyPersisterClassProvider.class,
 				AvailableSettings.LOADED_CLASSES, Arrays.asList( Bell.class )
 		);
+		ServiceRegistryUtil.applySettings( settings );
 		try {
 			EntityManagerFactory entityManagerFactory = Bootstrap.getEntityManagerFactoryBuilder(
 					new PersistenceUnitDescriptorAdapter(),
@@ -99,7 +108,7 @@ public class PersisterClassProviderTest {
 			entityManagerFactory.close();
 		}
 		catch ( PersistenceException e ) {
-            Assertions.assertNotNull( e.getCause() );
+			Assertions.assertNotNull( e.getCause() );
 			Assertions.assertNotNull( e.getCause().getCause() );
 			Assertions.assertEquals( GoofyException.class, e.getCause().getCause().getClass() );
 
@@ -125,7 +134,7 @@ public class PersisterClassProviderTest {
 				PersistentClass persistentClass,
 				EntityDataAccess entityDataAccessstrategy,
 				NaturalIdDataAccess naturalIdRegionAccessStrategy,
-				PersisterCreationContext creationContext) {
+				RuntimeModelCreationContext creationContext) {
 			throw new GoofyException();
 		}
 
@@ -161,6 +170,11 @@ public class PersisterClassProviderTest {
 
 		@Override
 		public String getEntityName() {
+			return null;
+		}
+
+		@Override
+		public @Nullable String getJpaEntityName() {
 			return null;
 		}
 
@@ -277,8 +291,8 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public Serializable[] getPropertySpaces() {
-			return new Serializable[0];
+		public String[] getPropertySpaces() {
+			return new String[0];
 		}
 
 		@Override
@@ -380,7 +394,7 @@ public class PersisterClassProviderTest {
 			return false;
 		}
 
-        @Override
+		@Override
 		public int[] getNaturalIdentifierProperties() {
 			return new int[0];
 		}
@@ -397,16 +411,16 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-        public boolean hasNaturalIdCache() {
-            return false;
-        }
+		public boolean hasNaturalIdCache() {
+			return false;
+		}
 
-        @Override
-        public NaturalIdDataAccess getNaturalIdCacheAccessStrategy() {
-            return null;
-        }
+		@Override
+		public NaturalIdDataAccess getNaturalIdCacheAccessStrategy() {
+			return null;
+		}
 
-        @Override
+		@Override
 		public IdentifierGenerator getIdentifierGenerator() {
 			return null;
 		}
@@ -440,20 +454,18 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public void insert(Object id, Object[] fields, Object object, SharedSessionContractImplementor session) {
-		}
-
-		@Override
-		public Serializable insert(Object[] fields, Object object, SharedSessionContractImplementor session) {
+		public InsertCoordinator getInsertCoordinator() {
 			return null;
 		}
 
 		@Override
-		public void delete(Object id, Object version, Object object, SharedSessionContractImplementor session) {
+		public UpdateCoordinator getUpdateCoordinator() {
+			return null;
 		}
 
 		@Override
-		public void update(Object id, Object[] fields, int[] dirtyFields, boolean hasDirtyCollection, Object[] oldFields, Object oldVersion, Object object, Object rowId, SharedSessionContractImplementor session) {
+		public DeleteCoordinator getDeleteCoordinator() {
+			return null;
 		}
 
 		@Override
@@ -547,11 +559,6 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public ClassMetadata getClassMetadata() {
-			return null;
-		}
-
-		@Override
 		public boolean isSelectBeforeUpdateRequired() {
 			return false;
 		}
@@ -620,21 +627,16 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public void processInsertGeneratedProperties(Object id, Object entity, Object[] state, SharedSessionContractImplementor session) {
+		public void processInsertGeneratedProperties(Object id, Object entity, Object[] state, GeneratedValues generatedValues, SharedSessionContractImplementor session) {
 		}
 
 		@Override
-		public void processUpdateGeneratedProperties(Object id, Object entity, Object[] state, SharedSessionContractImplementor session) {
+		public void processUpdateGeneratedProperties(Object id, Object entity, Object[] state, GeneratedValues generatedValues, SharedSessionContractImplementor session) {
 		}
 
 		@Override
 		public Class getMappedClass() {
 			return null;
-		}
-
-		@Override
-		public boolean implementsLifecycle() {
-			return false;
 		}
 
 		@Override
@@ -724,8 +726,48 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public boolean useShallowQueryCacheLayout() {
+			return false;
+		}
+
+		@Override
+		public boolean storeDiscriminatorInShallowQueryCacheLayout() {
+			return false;
+		}
+
+		@Override
+		public boolean hasFilterForLoadByKey() {
+			return false;
+		}
+
+		@Override
 		public Iterable<UniqueKeyEntry> uniqueKeyEntries() {
 			return Collections.emptyList();
+		}
+
+		@Override
+		public String getSelectByUniqueKeyString(String propertyName) {
+			return null;
+		}
+
+		@Override
+		public String getSelectByUniqueKeyString(String[] propertyNames, String[] columnNames) {
+			return null;
+		}
+
+		@Override
+		public String[] getRootTableKeyColumnNames() {
+			return new String[0];
+		}
+
+		@Override
+		public String getIdentitySelectString() {
+			return null;
+		}
+
+		@Override
+		public String[] getIdentifierColumnNames() {
+			return new String[0];
 		}
 
 		@Override
@@ -739,7 +781,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+		public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
 			return false;
 		}
 
@@ -806,6 +848,231 @@ public class PersisterClassProviderTest {
 		@Override
 		public JavaType getMappedJavaType() {
 			return null;
+		}
+
+		@Override
+		public EntityMappingType getTargetPart() {
+			return null;
+		}
+
+		@Override
+		public void forEachMutableTable(Consumer<EntityTableMapping> consumer) {
+
+		}
+
+		@Override
+		public void forEachMutableTableReverse(Consumer<EntityTableMapping> consumer) {
+
+		}
+
+		@Override
+		public String getIdentifierTableName() {
+			return null;
+		}
+
+		@Override
+		public EntityTableMapping getIdentifierTableMapping() {
+			return null;
+		}
+
+		@Override
+		public ModelPart getIdentifierDescriptor() {
+			return null;
+		}
+
+		@Override
+		public GeneratedValuesMutationDelegate getInsertDelegate() {
+			return null;
+		}
+
+		@Override
+		public GeneratedValuesMutationDelegate getUpdateDelegate() {
+			return null;
+		}
+
+		@Override
+		public String getTableName() {
+			return "";
+		}
+
+		@Override
+		public String[] getIdentifierAliases(String suffix) {
+			return new String[0];
+		}
+
+		@Override
+		public String getRootTableName() {
+			return "";
+		}
+
+		@Override
+		public String[] getRootTableIdentifierColumnNames() {
+			return new String[0];
+		}
+
+		@Override
+		public String getVersionColumnName() {
+			return "";
+		}
+
+		@Override
+		public String[] getPropertyAliases(String suffix, int i) {
+			return new String[0];
+		}
+
+		@Override
+		public String getDiscriminatorAlias(String suffix) {
+			return "";
+		}
+
+		@Override
+		public String getDiscriminatorColumnName() {
+			return "";
+		}
+
+		@Override
+		public Type getDiscriminatorType() {
+			return null;
+		}
+
+		@Override
+		public boolean hasRowId() {
+			return false;
+		}
+
+		@Override
+		public String[] getSubclassPropertyColumnAliases(String propertyName, String suffix) {
+			return new String[0];
+		}
+
+		@Override
+		public String[] getPropertyColumnNames(String propertyPath) {
+			return new String[0];
+		}
+
+		@Override
+		public String selectFragment(String alias, String suffix) {
+			return "";
+		}
+
+		@Override
+		public DiscriminatorMetadata getTypeDiscriminatorMetadata() {
+			return null;
+		}
+
+		@Override
+		public String[] toColumns(String propertyName) {
+			return new String[0];
+		}
+
+		@Override
+		public boolean[] getNonLazyPropertyUpdateability() {
+			return new boolean[0];
+		}
+
+		@Override
+		public boolean hasMultipleTables() {
+			return false;
+		}
+
+		@Override
+		public String[] getTableNames() {
+			return new String[0];
+		}
+
+		@Override
+		public String getTableName(int j) {
+			return "";
+		}
+
+		@Override
+		public String[] getKeyColumns(int j) {
+			return new String[0];
+		}
+
+		@Override
+		public int getTableSpan() {
+			return 0;
+		}
+
+		@Override
+		public boolean isInverseTable(int j) {
+			return false;
+		}
+
+		@Override
+		public boolean isNullableTable(int j) {
+			return false;
+		}
+
+		@Override
+		public boolean hasDuplicateTables() {
+			return false;
+		}
+
+		@Override
+		public int getSubclassTableSpan() {
+			return 0;
+		}
+
+		@Override
+		public String getSubclassTableName(int j) {
+			return "";
+		}
+
+		@Override
+		public String getTableNameForColumn(String columnName) {
+			return "";
+		}
+
+		@Override
+		public String[] getSubclassPropertyColumnNames(int i) {
+			return new String[0];
+		}
+
+		@Override
+		public int countSubclassProperties() {
+			return 0;
+		}
+
+		@Override
+		public boolean isSharedColumn(String columnExpression) {
+			return false;
+		}
+
+		@Override
+		public String[][] getConstraintOrderedTableKeyColumnClosure() {
+			return new String[0][];
+		}
+
+		@Override
+		public EntityTableMapping[] getTableMappings() {
+			return new EntityTableMapping[0];
+		}
+
+		@Override
+		public String physicalTableNameForMutation(SelectableMapping selectableMapping) {
+			return "";
+		}
+
+		@Override
+		public void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+
+		}
+
+		@Override
+		public void addSoftDeleteToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+
+		}
+
+		@Override
+		public String getAttributeMutationTableName(int i) {
+			return "";
+		}
+
+		@Override
+		public boolean managesColumns(String[] columnNames) {
+			return false;
 		}
 	}
 

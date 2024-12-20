@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql;
 
@@ -21,7 +19,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,17 +65,17 @@ public class SQLSelectTest extends BaseEntityManagerFunctionalTestCase {
 			session.doWork(connection -> {
 				try(Statement statement = connection.createStatement();) {
 					statement.executeUpdate(String.format( "ALTER TABLE person %s valid %s",
-														   getDialect().getAddColumnString(),
+														getDialect().getAddColumnString(),
 							ddlTypeRegistry.getTypeName( Types.BOOLEAN, getDialect())));
 					statement.executeUpdate(String.format( "ALTER TABLE Person_phones %s valid %s",
-														   getDialect().getAddColumnString(),
+														getDialect().getAddColumnString(),
 							ddlTypeRegistry.getTypeName( Types.BOOLEAN, getDialect())));
 				}
 			});
 		});
 	}
 
-	@Test @TestForIssue(jiraKey = "HHH-10557")
+	@Test @JiraKey(value = "HHH-10557")
 	public void test_HHH10557() {
 
 		Person _person = doInJPA(this::entityManagerFactory, entityManager -> {

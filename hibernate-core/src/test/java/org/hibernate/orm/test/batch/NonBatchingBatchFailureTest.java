@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.batch;
 
@@ -14,7 +12,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.spi.SessionImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -30,7 +28,7 @@ import static org.junit.Assert.fail;
  * @author Shawn Clowater
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-7689" )
+@JiraKey( value = "HHH-7689" )
 public class NonBatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -41,9 +39,9 @@ public class NonBatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
 		// explicitly disable batching
-		configuration.setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, "-1" );
+		configuration.setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, -1 );
 		// and disable in-vm nullability checking (so we can force in-db not-null constraint violations)
-		configuration.setProperty( AvailableSettings.CHECK_NULLABILITY, "false" );
+		configuration.setProperty( AvailableSettings.CHECK_NULLABILITY, false );
 	}
 
 	@Test

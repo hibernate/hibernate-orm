@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.revisioninfo;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Locale;
@@ -74,6 +73,18 @@ public class RevisionInfoQueryCreator {
 						timestampValueResolver.getName()
 				)
 		).setParameter( REVISION_NUMBER_FOR_DATE_QUERY_PARAMETER, timestampValueResolver.resolveByValue( localDateTime ) );
+	}
+
+	public Query<?> getRevisionNumberForDateQuery(Session session, Instant instant) {
+		return session.createQuery(
+				String.format(
+						Locale.ENGLISH,
+						REVISION_NUMBER_FOR_DATE_QUERY,
+						revisionInfoIdName,
+						revisionInfoEntityName,
+						timestampValueResolver.getName()
+				)
+		).setParameter( REVISION_NUMBER_FOR_DATE_QUERY_PARAMETER, timestampValueResolver.resolveByValue( instant ) );
 	}
 
 	public Query<?> getRevisionsQuery(Session session, Set<Number> revisions) {

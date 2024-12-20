@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
 
@@ -26,7 +24,6 @@ import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaDropper;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
@@ -38,13 +35,13 @@ import org.junit.Test;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-10605")
+@JiraKey(value = "HHH-10605")
 @RequiresDialect(value = HSQLDialect.class)
 public class SchemaDropTest extends BaseUnitTestCase implements ExecutionOptions, ExceptionHandler {
 	protected ServiceRegistry serviceRegistry;
@@ -103,7 +100,7 @@ public class SchemaDropTest extends BaseUnitTestCase implements ExecutionOptions
 	}
 
 	@Override
-	public Map getConfigurationValues() {
+	public Map<String,Object> getConfigurationValues() {
 		return serviceRegistry.getService( ConfigurationService.class ).getSettings();
 	}
 
@@ -115,11 +112,6 @@ public class SchemaDropTest extends BaseUnitTestCase implements ExecutionOptions
 	@Override
 	public ExceptionHandler getExceptionHandler() {
 		return this;
-	}
-
-	@Override
-	public SchemaFilter getSchemaFilter() {
-		return SchemaFilter.ALL;
 	}
 
 	@Override

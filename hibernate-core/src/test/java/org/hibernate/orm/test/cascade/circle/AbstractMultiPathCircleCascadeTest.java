@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cascade.circle;
 
@@ -47,46 +45,10 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 					return s.merge( entity );
 				}
 			};
-	private static EntityOperation SAVE_OPERATION =
-			new EntityOperation() {
-				@Override
-				public boolean isLegacy() {
-					return true;
-				}
-
-				@Override
-				public Object doEntityOperation(Object entity, Session s) {
-					s.save( entity );
-					return entity;
-				}
-			};
-	private static EntityOperation SAVE_UPDATE_OPERATION =
-			new EntityOperation() {
-				@Override
-				public boolean isLegacy() {
-					return true;
-				}
-
-				@Override
-				public Object doEntityOperation(Object entity, Session s) {
-					s.saveOrUpdate( entity );
-					return entity;
-				}
-			};
 
 	@Test
 	public void testMergeEntityWithNonNullableTransientEntity(SessionFactoryScope scope) {
 		testEntityWithNonNullableTransientEntity( scope, MERGE_OPERATION );
-	}
-
-	@Test
-	public void testSaveEntityWithNonNullableTransientEntity(SessionFactoryScope scope) {
-		testEntityWithNonNullableTransientEntity( scope, SAVE_OPERATION );
-	}
-
-	@Test
-	public void testSaveUpdateEntityWithNonNullableTransientEntity(SessionFactoryScope scope) {
-		testEntityWithNonNullableTransientEntity( scope, SAVE_UPDATE_OPERATION );
 	}
 
 	private void testEntityWithNonNullableTransientEntity(SessionFactoryScope scope, EntityOperation operation) {
@@ -130,16 +92,6 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 		testEntityWithNonNullableEntityNull( scope, MERGE_OPERATION );
 	}
 
-	@Test
-	public void testSaveEntityWithNonNullableEntityNull(SessionFactoryScope scope) {
-		testEntityWithNonNullableEntityNull( scope, SAVE_OPERATION );
-	}
-
-	@Test
-	public void testSaveUpdateEntityWithNonNullableEntityNull(SessionFactoryScope scope) {
-		testEntityWithNonNullableEntityNull( scope, SAVE_UPDATE_OPERATION );
-	}
-
 	private void testEntityWithNonNullableEntityNull(SessionFactoryScope scope, EntityOperation operation) {
 		Route route = getUpdatedDetachedEntity( scope );
 
@@ -173,16 +125,6 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 	@Test
 	public void testMergeEntityWithNonNullablePropSetToNull(SessionFactoryScope scope) {
 		testEntityWithNonNullablePropSetToNull( scope, MERGE_OPERATION );
-	}
-
-	@Test
-	public void testSaveEntityWithNonNullablePropSetToNull(SessionFactoryScope scope) {
-		testEntityWithNonNullablePropSetToNull( scope, SAVE_OPERATION );
-	}
-
-	@Test
-	public void testSaveUpdateEntityWithNonNullablePropSetToNull(SessionFactoryScope scope) {
-		testEntityWithNonNullablePropSetToNull( scope, SAVE_UPDATE_OPERATION );
 	}
 
 	private void testEntityWithNonNullablePropSetToNull(SessionFactoryScope scope, EntityOperation operation) {
@@ -220,12 +162,6 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 		testRoute( scope, MERGE_OPERATION );
 	}
 
-	// skip SAVE_OPERATION since Route is not transient
-	@Test
-	public void testSaveUpdateRoute(SessionFactoryScope scope) {
-		testRoute( scope, SAVE_UPDATE_OPERATION );
-	}
-
 	private void testRoute(SessionFactoryScope scope, EntityOperation operation) {
 
 		Route r = getUpdatedDetachedEntity( scope );
@@ -251,16 +187,6 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 	@Test
 	public void testMergePickupNode(SessionFactoryScope scope) {
 		testPickupNode( scope, MERGE_OPERATION );
-	}
-
-	@Test
-	public void testSavePickupNode(SessionFactoryScope scope) {
-		testPickupNode( scope, SAVE_OPERATION );
-	}
-
-	@Test
-	public void testSaveUpdatePickupNode(SessionFactoryScope scope) {
-		testPickupNode( scope, SAVE_UPDATE_OPERATION );
 	}
 
 	private void testPickupNode(SessionFactoryScope scope, EntityOperation operation) {
@@ -301,16 +227,6 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 	@Test
 	public void testMergeDeliveryNode(SessionFactoryScope scope) {
 		testDeliveryNode( scope, MERGE_OPERATION );
-	}
-
-	@Test
-	public void testSaveDeliveryNode(SessionFactoryScope scope) {
-		testDeliveryNode( scope, SAVE_OPERATION );
-	}
-
-	@Test
-	public void testSaveUpdateDeliveryNode(SessionFactoryScope scope) {
-		testDeliveryNode( scope, SAVE_UPDATE_OPERATION );
 	}
 
 	private void testDeliveryNode(SessionFactoryScope scope, EntityOperation operation) {
@@ -354,16 +270,6 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 		testTour( scope, MERGE_OPERATION );
 	}
 
-	@Test
-	public void testSaveTour(SessionFactoryScope scope) {
-		testTour( scope, SAVE_OPERATION );
-	}
-
-	@Test
-	public void testSaveUpdateTour(SessionFactoryScope scope) {
-		testTour( scope, SAVE_UPDATE_OPERATION );
-	}
-
 	private void testTour(SessionFactoryScope scope, EntityOperation operation) {
 
 		Route r = getUpdatedDetachedEntity( scope );
@@ -389,16 +295,6 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 	@Test
 	public void testMergeTransport(SessionFactoryScope scope) {
 		testTransport( scope, MERGE_OPERATION );
-	}
-
-	@Test
-	public void testSaveTransport(SessionFactoryScope scope) {
-		testTransport( scope, SAVE_OPERATION );
-	}
-
-	@Test
-	public void testSaveUpdateTransport(SessionFactoryScope scope) {
-		testTransport( scope, SAVE_UPDATE_OPERATION );
 	}
 
 	private void testTransport(SessionFactoryScope scope, EntityOperation operation) {
@@ -447,7 +343,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 				session -> {
 					route.setName( "routeA" );
 
-					session.save( route );
+					session.persist( route );
 				}
 		);
 
@@ -562,16 +458,6 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 		testData3Nodes( scope, MERGE_OPERATION );
 	}
 
-	@Test
-	public void testSaveData3Nodes(SessionFactoryScope scope) {
-		testData3Nodes( scope, SAVE_OPERATION );
-	}
-
-	@Test
-	public void testSaveUpdateData3Nodes(SessionFactoryScope scope) {
-		testData3Nodes( scope, SAVE_UPDATE_OPERATION );
-	}
-
 	private void testData3Nodes(SessionFactoryScope scope, EntityOperation operation) {
 
 		Route r = new Route();
@@ -579,7 +465,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 				session -> {
 					r.setName( "routeA" );
 
-					session.save( r );
+					session.persist( r );
 				}
 		);
 

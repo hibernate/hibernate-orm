@@ -1,12 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
-import java.io.Closeable;
 import java.io.Serializable;
 import java.util.List;
 
@@ -23,32 +20,64 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
  *
  * @author Steve Ebersole
  */
-public interface SharedSessionContract extends QueryProducer, Closeable, Serializable {
+public interface SharedSessionContract extends QueryProducer, AutoCloseable, Serializable {
+	/**
+	 * Obtain the tenant identifier associated with this session, as a string.
+	 *
+	 * @return The tenant identifier associated with this session, or {@code null}
+	 *
+	 * @see org.hibernate.context.spi.CurrentTenantIdentifierResolver
+	 * @see SessionBuilder#tenantIdentifier(Object)
+	 */
+	String getTenantIdentifier();
+
 	/**
 	 * Obtain the tenant identifier associated with this session.
 	 *
 	 * @return The tenant identifier associated with this session, or {@code null}
+	 * @since 6.4
+	 *
+	 * @see org.hibernate.context.spi.CurrentTenantIdentifierResolver
+	 * @see SessionBuilder#tenantIdentifier(Object)
 	 */
-	String getTenantIdentifier();
+	Object getTenantIdentifierValue();
+
+	/**
+	 * Get the current {@linkplain CacheMode cache mode} for this session.
+	 *
+	 * @return the current cache mode
+	 */
+	CacheMode getCacheMode();
+
+	/**
+	 * Set the current {@linkplain CacheMode cache mode} for this session.
+	 * <p>
+	 * The cache mode determines the manner in which this session can interact with
+	 * the second level cache.
+	 *
+	 * @param cacheMode the new cache mode
+	 */
+	void setCacheMode(CacheMode cacheMode);
 
 	/**
 	 * End the session by releasing the JDBC connection and cleaning up.
 	 *
 	 * @throws HibernateException Indicates problems cleaning up.
 	 */
+	@Override
 	void close() throws HibernateException;
 
 	/**
 	 * Check if the session is still open.
 	 *
-	 * @return boolean
+	 * @return {@code true} if it is open
 	 */
 	boolean isOpen();
 
 	/**
 	 * Check if the session is currently connected.
 	 *
-	 * @return boolean
+	 * @return {@code true} if it is connected
 	 */
 	boolean isConnected();
 
@@ -57,16 +86,55 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	 * If a new underlying transaction is required, begin the transaction. Otherwise,
 	 * continue the new work in the context of the existing underlying transaction.
 	 *
-	 * @return a {@link Transaction} instance
+	 * @apiNote
+	 * The JPA-standard way to begin a new resource-local transaction is by calling
+	 * {@link #getTransaction getTransaction().begin()}. But it's not always safe to
+	 * execute this idiom.
+	 * <ul>
+	 * <li>JPA doesn't allow an {@link jakarta.persistence.EntityTransaction
+	 * EntityTransaction} to represent a JTA transaction context. Therefore, when
+	 * {@linkplain org.hibernate.jpa.spi.JpaCompliance#isJpaTransactionComplianceEnabled
+	 * strict JPA transaction compliance} is enabled via, for example, setting
+	 * {@value org.hibernate.cfg.JpaComplianceSettings#JPA_TRANSACTION_COMPLIANCE},
+	 * the call to {@code getTransaction()} fails if transactions are managed by JTA.
+	 * <p>
+	 * On the other hand, this method does not fail when JTA transaction management
+	 * is used, not even if strict JPA transaction compliance is enabled.
+	 * <li>Even when resource-local transactions are in use, and even when strict JPA
+	 * transaction compliance is <em>disabled</em>, the call to {@code begin()}
+	 * fails if a transaction is already {@linkplain Transaction#isActive active}.
+	 * <p>
+	 * This method never fails when a transaction is already active. Instead,
+	 * {@code beginTransaction()} simply returns the {@link Transaction} object
+	 * representing the active transaction.
+	 * </ul>
+	 *
+	 * @return an instance of {@link Transaction} representing the new transaction
 	 *
 	 * @see #getTransaction()
+	 * @see Transaction#begin()
 	 */
 	Transaction beginTransaction();
 
 	/**
 	 * Get the {@link Transaction} instance associated with this session.
 	 *
-	 * @return a Transaction instance
+	 * @apiNote
+	 * This method is the JPA-standard way to obtain an instance of
+	 * {@link jakarta.persistence.EntityTransaction EntityTransaction}
+	 * representing a resource-local transaction. But JPA doesn't allow an
+	 * {@code EntityTransaction} to represent a JTA transaction. Therefore, when
+	 * {@linkplain org.hibernate.jpa.spi.JpaCompliance#isJpaTransactionComplianceEnabled
+	 * strict JPA transaction compliance} is enabled via, for example, setting
+	 * {@value org.hibernate.cfg.JpaComplianceSettings#JPA_TRANSACTION_COMPLIANCE},
+	 * this method fails if transactions are managed by JTA.
+	 * <p>
+	 * On the other hand, when JTA transaction management is used, and when
+	 * strict JPA transaction compliance is <em>disabled</em>, this method happily
+	 * returns a {@link Transaction} representing the current JTA transaction context.
+	 *
+	 * @return an instance of {@link Transaction} representing the transaction
+	 *         associated with this session
 	 *
 	 * @see jakarta.persistence.EntityManager#getTransaction()
 	 */
@@ -189,8 +257,8 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 
 	/**
 	 * Set the session-level JDBC batch size. Override the
-	 * {@linkplain org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize() factory-level}
-	 * JDBC batch size controlled by the configuration property
+	 * {@linkplain org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize
+	 * factory-level} JDBC batch size controlled by the configuration property
 	 * {@value org.hibernate.cfg.AvailableSettings#STATEMENT_BATCH_SIZE}.
 	 *
 	 * @param jdbcBatchSize the new session-level JDBC batch size
@@ -223,10 +291,11 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	 * @param work The work to be performed.
 	 *
 	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
+	 *
+	 * @apiNote This method competes with the JPA-defined method
+	 *          {@link jakarta.persistence.EntityManager#runWithConnection}
 	 */
-	default void doWork(Work work) throws HibernateException {
-		throw new UnsupportedOperationException();
-	}
+	void doWork(Work work) throws HibernateException;
 
 	/**
 	 * Perform work using the {@link java.sql.Connection} underlying by this session,
@@ -238,10 +307,11 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	 * @return the result of calling {@link ReturningWork#execute}.
 	 *
 	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
+	 *
+	 * @apiNote This method competes with the JPA-defined method
+	 *          {@link jakarta.persistence.EntityManager#callWithConnection}
 	 */
-	default <T> T doReturningWork(ReturningWork<T> work) throws HibernateException {
-		throw new UnsupportedOperationException();
-	}
+	<T> T doReturningWork(ReturningWork<T> work);
 
 	/**
 	 * Create a new mutable {@link EntityGraph} with only a root node.
@@ -303,6 +373,39 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	 * @since 6.3
 	 */
 	<T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass);
+
+	/**
+	 * Enable the named {@linkplain Filter filter} for this current session.
+	 * <p>
+	 * The returned {@link Filter} object must be used to bind arguments
+	 * to parameters of the filter, and every parameter must be set before
+	 * any other operation of this session is called.
+	 *
+	 * @param filterName the name of the filter to be enabled.
+	 *
+	 * @return the {@link Filter} instance representing the enabled filter.
+	 *
+	 * @throws UnknownFilterException if there is no such filter
+	 *
+	 * @see org.hibernate.annotations.FilterDef
+	 */
+	Filter enableFilter(String filterName);
+
+	/**
+	 * Retrieve a currently enabled {@linkplain Filter filter} by name.
+	 *
+	 * @param filterName the name of the filter to be retrieved.
+	 *
+	 * @return the {@link Filter} instance representing the enabled filter.
+	 */
+	Filter getEnabledFilter(String filterName);
+
+	/**
+	 * Disable the named {@linkplain Filter filter} for the current session.
+	 *
+	 * @param filterName the name of the filter to be disabled.
+	 */
+	void disableFilter(String filterName);
 
 	/**
 	 * The factory which created this session.

@@ -1,14 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
 
 /**
  * Details about an attribute as we process the {@linkplain org.hibernate.mapping boot model}.
@@ -30,12 +29,17 @@ public interface PropertyData {
 	/**
 	 * Returns the returned class itself or the element type if an array
 	 */
-	XClass getClassOrElement() throws MappingException;
+	TypeDetails getClassOrElementType() throws MappingException;
+
+	/**
+	 * Returns the returned class itself or the element type if an array or collection
+	 */
+	ClassDetails getClassOrPluralElement() throws MappingException;
 
 	/**
 	 * Return the class itself
 	 */
-	XClass getPropertyClass() throws MappingException;
+	TypeDetails getPropertyType() throws MappingException;
 
 	/**
 	 * Returns the returned class name itself or the element type if an array
@@ -50,12 +54,12 @@ public interface PropertyData {
 	/**
 	 * Return the Hibernate mapping property
 	 */
-	XProperty getProperty();
+	MemberDetails getAttributeMember();
 
 	/**
 	 * Return the Class the property is declared on
 	 * If the property is declared on a @MappedSuperclass,
 	 * this class will be different than the PersistentClass's class
 	 */
-	XClass getDeclaringClass();
+	ClassDetails getDeclaringClass();
 }

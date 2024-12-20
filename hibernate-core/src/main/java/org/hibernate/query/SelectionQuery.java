@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
@@ -24,7 +22,6 @@ import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
-import org.hibernate.Remove;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -69,6 +66,24 @@ import org.hibernate.graph.GraphSemantic;
  *     {@link #setParameter(int, Object)} allow arguments to be bound to named
  *     and ordinal parameters defined by the query.
  * </ul>
+ * A query which returns multiple results should be executed via
+ * {@link #getResultList()}:
+ * <pre>
+ * List&lt;Book&gt; books =
+ *         session.createSelectionQuery("from Book left join fetch authors where title like :title")
+ *                 .setParameter("title", title)
+ *                 .setMaxResults(50)
+ *                 .getResultList();
+ * </pre>
+ * A query which is expected to return exactly one on result should be executed
+ * via {@link #getSingleResult()}, or, if it might not return a result,
+ * {@link #getSingleResultOrNull()}:
+ * <pre>
+ * Book book =
+ *         session.createSelectionQuery("from Book where isbn = ?1")
+ *                 .setParameter(1, isbn)
+ *                 .getSingleResultOrNull();
+ * </pre>
  * <p>
  * A query may have explicit <em>fetch joins</em>, specified using the syntax
  * {@code join fetch} in HQL, or via {@link jakarta.persistence.criteria.From#fetch}
@@ -80,10 +95,23 @@ import org.hibernate.graph.GraphSemantic;
  * </ul>
  * <p>
  * The special built-in fetch profile named
- * {@value DefaultFetchProfile#HIBERNATE_DEFAULT_PROFILE} adds
- * a fetch join for every {@link jakarta.persistence.FetchType#EAGER eager}
- * {@code @ManyToOne} or {@code @OneToOne} association belonging to an entity
- * returned by the query.
+ * {@value DefaultFetchProfile#HIBERNATE_DEFAULT_PROFILE} adds a fetch join for
+ * every {@link jakarta.persistence.FetchType#EAGER eager} {@code @ManyToOne} or
+ * {@code @OneToOne} association belonging to an entity returned by the query.
+ * <p>
+ * Finally, two alternative approaches to pagination are available:
+ * <ol>
+ * <li>
+ * The operations and {@link #setOrder(List)} and {@link #setPage(Page)}, together
+ * with {@link Order} and {@link Page}, provide a streamlined API for offset-based
+ * pagination, at a slightly higher semantic level than the ancient but dependable
+ * {@link #setFirstResult(int)} and {@link #setMaxResults(int)}.
+ * <li>
+ * On the other hand, {@link KeyedPage} and {@link KeyedResultList}, along with
+ * {@link #getKeyedResultList(KeyedPage)}, provide for <em>key-based pagination</em>,
+ * which can help eliminate missed or duplicate results when data is modified
+ * between page requests.
+ * </ol>
  *
  * @author Steve Ebersole
  */
@@ -140,6 +168,10 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * stream so that resources are freed as soon as possible.
 	 *
 	 * @return The results as a {@link Stream}
+	 *
+	 * @implNote The default implementation defined here simply returns
+	 *           {@link #list()}{@code .stream()}. Concrete implementations
+	 *           may be more efficient.
 	 */
 	default Stream<R> getResultStream() {
 		return stream();
@@ -159,7 +191,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @since 5.2
 	 */
 	default Stream<R> stream() {
-		return getResultStream();
+		return list().stream();
 	}
 
 	/**
@@ -190,6 +222,8 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @return the single result or {@code null} if there is no result to return
 	 *
 	 * @throws jakarta.persistence.NonUniqueResultException if there is more than one matching result
+	 *
+	 * @since 6.0
 	 */
 	R getSingleResultOrNull();
 
@@ -202,6 +236,37 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @throws NonUniqueResultException if there is more than one matching result
 	 */
 	Optional<R> uniqueResultOptional();
+
+	/**
+	 * Determine the size of the query result list that would be
+	 * returned by calling {@link #getResultList()} with no
+	 * {@linkplain #getFirstResult() offset} or
+	 * {@linkplain #getMaxResults() limit} applied to the query.
+	 *
+	 * @return the size of the list that would be returned
+	 *
+	 * @since 6.5
+	 */
+	@Incubating
+	long getResultCount();
+
+	/**
+	 * Execute the query and return the results for the given
+	 * {@linkplain KeyedPage page}, using key-based pagination.
+	 *
+	 * @param page the key-based specification of the page as
+	 *        an instance of {@link KeyedPage}
+	 *
+	 * @return the query results and the key of the next page
+	 *         as an instance of {@link KeyedResultList}
+	 *
+	 * @since 6.5
+	 *
+	 * @see KeyedPage
+	 * @see KeyedResultList
+	 */
+	@Incubating
+	KeyedResultList<R> getKeyedResultList(KeyedPage<R> page);
 
 	SelectionQuery<R> setHint(String hintName, Object value);
 
@@ -246,11 +311,14 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 */
 	SelectionQuery<R> disableFetchProfile(String profileName);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SelectionQuery<R> setFlushMode(FlushModeType flushMode);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SelectionQuery<R> setHibernateFlushMode(FlushMode flushMode);
+
+	@Override
+	SelectionQuery<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	@Override
 	SelectionQuery<R> setTimeout(int timeout);
@@ -357,17 +425,6 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 */
 	SelectionQuery<R> setFirstResult(int startPosition);
 
-//	/**
-//	 * Set the page of results to return.
-//	 *
-//	 * @param pageNumber the page to return, where pages are numbered from zero
-//	 * @param pageSize the number of results per page
-//	 *
-//	 * @since 6.3
-//	 */
-//	@Incubating
-//	SelectionQuery<R> setPage(int pageSize, int pageNumber);
-
 	/**
 	 * Set the {@linkplain Page page} of results to return.
 	 *
@@ -383,14 +440,13 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * the query inherits the {@link CacheMode} of the session from which
 	 * it originates.
 	 * <p>
-	 * The {@link CacheMode} here describes reading-from/writing-to the
-	 * entity/collection caches as we process query results. For caching
-	 * of the actual query results, see {@link #isCacheable()} and
-	 * {@link #getCacheRegion()}
+	 * The {@link CacheMode} here affects the use of entity and collection
+	 * caches as the query result set is processed. For caching of the actual
+	 * query results, use {@link #isCacheable()} and {@link #getCacheRegion()}.
 	 * <p>
 	 * In order for this setting to have any affect, second-level caching
-	 * would have to be enabled and the entities/collections in question
-	 * configured for caching.
+	 * must be enabled and the entities and collections must be eligible
+	 * for storage in the second-level cache.
 	 *
 	 * @see Session#getCacheMode()
 	 */
@@ -412,9 +468,9 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * Set the current {@link CacheMode} in effect for this query.
-	 *
-	 * @implNote Setting it to {@code null} ultimately indicates to use the
-	 *           {@code CacheMode} of the session.
+	 * <p>
+	 * Set it to {@code null} to indicate that the {@code CacheMode}
+	 * of the {@link Session#getCacheMode() session} should be used.
 	 *
 	 * @see #getCacheMode()
 	 * @see Session#setCacheMode(CacheMode)
@@ -534,7 +590,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @since 6.3
 	 */
 	@Incubating
-	SelectionQuery<R> setOrder(List<Order<? super R>> orderList);
+	SelectionQuery<R> setOrder(List<? extends Order<? super R>> orderList);
 
 	/**
 	 * If the result type of this query is an entity class, add a
@@ -548,14 +604,6 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 */
 	@Incubating
 	SelectionQuery<R> setOrder(Order<? super R> order);
-
-	/**
-	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
-	 *
-	 * @deprecated use {@link #setLockMode(String, LockMode)}
-	 */
-	@Deprecated(since = "6.2") @Remove
-	SelectionQuery<R> setAliasSpecificLockMode(String alias, LockMode lockMode);
 
 	/**
 	 * Specifies whether follow-on locking should be applied

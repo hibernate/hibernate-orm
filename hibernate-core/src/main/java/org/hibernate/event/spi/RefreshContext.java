@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
@@ -19,6 +17,10 @@ public interface RefreshContext {
 
 	boolean add(Object entity);
 
+	default boolean isEmpty() {
+		return false;
+	}
+
 	static RefreshContext create() {
 		// use extension to avoid creating
 		// a useless wrapper object
@@ -31,6 +33,11 @@ public interface RefreshContext {
 			@Override
 			public boolean add(Object entity) {
 				return put(entity,entity)==null;
+			}
+
+			@Override
+			public boolean isEmpty() {
+				return size() == 0;
 			}
 		}
 		return new Impl();

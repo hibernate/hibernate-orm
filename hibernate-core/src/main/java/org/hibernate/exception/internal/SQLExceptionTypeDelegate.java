@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.exception.internal;
 
@@ -52,7 +50,7 @@ public class SQLExceptionTypeDelegate extends AbstractSQLExceptionConversionDele
 		}
 		else if ( sqlException instanceof DataTruncation ||
 				sqlException instanceof SQLDataException ) {
-			throw new DataException( message, sqlException, sql );
+			return new DataException( message, sqlException, sql );
 		}
 		else if ( sqlException instanceof SQLIntegrityConstraintViolationException ) {
 			return new ConstraintViolationException(

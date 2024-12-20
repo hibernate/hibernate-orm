@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event.entity;
 
@@ -26,11 +24,10 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -38,7 +35,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-9979")
+@JiraKey( value = "HHH-9979")
 @RequiresDialectFeature( value = DialectChecks.SupportsIdentityColumns.class, jiraKey = "HHH-9918")
 public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunctionalTestCase {
 
@@ -50,7 +47,7 @@ public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunction
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9979")
+	@JiraKey( value = "HHH-9979")
 	@FailureExpected( jiraKey = "HHH-9979")
 	public void testAllPropertiesCopied() {
 		final Order order = new Order();
@@ -71,7 +68,7 @@ public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunction
 
 		s = openSession();
 		s.getTransaction().begin();
-		s.delete( order );
+		s.remove( order );
 		s.getTransaction().commit();
 		s.close();
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.jdbc;
 
@@ -127,7 +125,8 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			ValuesAnalysis incomingValuesAnalysis,
 			SharedSessionContractImplementor session) {
 		final UpdateValuesAnalysis valuesAnalysis = (UpdateValuesAnalysis) incomingValuesAnalysis;
-		if ( !valuesAnalysis.getTablesNeedingUpdate().contains( tableMapping ) ) {
+		if ( !valuesAnalysis.getTablesNeedingUpdate().contains( tableMapping )
+				&& !valuesAnalysis.getTablesNeedingDynamicUpdate().contains( tableMapping ) ) {
 			return;
 		}
 
@@ -264,7 +263,10 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 	}
 
-	private JdbcDeleteMutation createJdbcDelete(SharedSessionContractImplementor session) {
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected JdbcDeleteMutation createJdbcDelete(SharedSessionContractImplementor session) {
 		final TableDelete tableDelete;
 		if ( tableMapping.getDeleteDetails() != null
 				&& tableMapping.getDeleteDetails().getCustomSql() != null ) {
@@ -306,39 +308,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			JdbcValueBindings jdbcValueBindings,
 			SharedSessionContractImplementor session) {
 		MODEL_MUTATION_LOGGER.tracef( "#performUpdate(%s)", tableMapping.getTableName() );
-
-		final TableUpdate<JdbcMutationOperation> tableUpdate;
-		if ( tableMapping.getUpdateDetails() != null
-				&& tableMapping.getUpdateDetails().getCustomSql() != null ) {
-			tableUpdate = new TableUpdateCustomSql(
-					new MutatingTableReference( tableMapping ),
-					mutationTarget,
-					"upsert update for " + mutationTarget.getRolePath(),
-					valueBindings,
-					keyBindings,
-					optimisticLockBindings,
-					parameters
-			);
-		}
-		else {
-			tableUpdate = new TableUpdateStandard(
-					new MutatingTableReference( tableMapping ),
-					mutationTarget,
-					"upsert update for " + mutationTarget.getRolePath(),
-					valueBindings,
-					keyBindings,
-					optimisticLockBindings,
-					parameters
-			);
-		}
-
-		final SqlAstTranslator<JdbcMutationOperation> translator = session
-				.getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildModelMutationTranslator( tableUpdate, session.getFactory() );
-
-		final JdbcMutationOperation jdbcUpdate = translator.translate( null, MutationQueryOptions.INSTANCE );
+		final JdbcMutationOperation jdbcUpdate = createJdbcUpdate( session );
 
 		final PreparedStatementGroupSingleTable statementGroup = new PreparedStatementGroupSingleTable( jdbcUpdate, session );
 		final PreparedStatementDetails statementDetails = statementGroup.resolvePreparedStatementDetails( tableMapping.getTableName() );
@@ -375,6 +345,44 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected JdbcMutationOperation createJdbcUpdate(SharedSessionContractImplementor session) {
+		final TableUpdate<JdbcMutationOperation> tableUpdate;
+		if ( tableMapping.getUpdateDetails() != null
+				&& tableMapping.getUpdateDetails().getCustomSql() != null ) {
+			tableUpdate = new TableUpdateCustomSql(
+					new MutatingTableReference( tableMapping ),
+					mutationTarget,
+					"upsert update for " + mutationTarget.getRolePath(),
+					valueBindings,
+					keyBindings,
+					optimisticLockBindings,
+					parameters
+			);
+		}
+		else {
+			tableUpdate = new TableUpdateStandard(
+					new MutatingTableReference( tableMapping ),
+					mutationTarget,
+					"upsert update for " + mutationTarget.getRolePath(),
+					valueBindings,
+					keyBindings,
+					optimisticLockBindings,
+					parameters
+			);
+		}
+
+		final SqlAstTranslator<JdbcMutationOperation> translator = session
+				.getJdbcServices()
+				.getJdbcEnvironment()
+				.getSqlAstTranslatorFactory()
+				.buildModelMutationTranslator( tableUpdate, session.getFactory() );
+
+		return translator.translate( null, MutationQueryOptions.INSTANCE );
+	}
+
 	private void performInsert(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
 		final JdbcInsertMutation jdbcInsert = createJdbcInsert( session );
 
@@ -385,21 +393,24 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 			final BindingGroup bindingGroup = jdbcValueBindings.getBindingGroup( tableMapping.getTableName() );
 			if ( bindingGroup != null ) {
-				bindingGroup.forEachBinding( (binding) -> {
-					try {
-						binding.getValueBinder().bind(
-								insertStatement,
-								binding.getValue(),
-								binding.getPosition(),
-								session
-						);
-					}
-					catch (SQLException e) {
-						throw session.getJdbcServices().getSqlExceptionHelper().convert(
-								e,
-								"Unable to bind parameter for upsert insert",
-								jdbcInsert.getSqlString()
-						);
+				bindingGroup.forEachBinding( binding -> {
+					// Skip parameter bindings for e.g. optimistic version check
+					if ( binding.getPosition() <= jdbcInsert.getParameterBinders().size() ) {
+						try {
+							binding.getValueBinder().bind(
+									insertStatement,
+									binding.getValue(),
+									binding.getPosition(),
+									session
+							);
+						}
+						catch (SQLException e) {
+							throw session.getJdbcServices().getSqlExceptionHelper().convert(
+									e,
+									"Unable to bind parameter for upsert insert",
+									jdbcInsert.getSqlString()
+							);
+						}
 					}
 				} );
 			}
@@ -412,7 +423,10 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 	}
 
-	private JdbcInsertMutation createJdbcInsert(SharedSessionContractImplementor session) {
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected JdbcInsertMutation createJdbcInsert(SharedSessionContractImplementor session) {
 		final TableInsert tableInsert;
 		if ( tableMapping.getInsertDetails() != null
 				&& tableMapping.getInsertDetails().getCustomSql() != null ) {

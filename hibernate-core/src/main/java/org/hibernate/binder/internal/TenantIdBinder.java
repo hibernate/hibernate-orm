@@ -1,10 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.binder.internal;
+
+import java.util.Collections;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.TenantId;
@@ -54,24 +54,11 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 					new FilterDefinition(
 							FILTER_NAME,
 							"",
-							singletonMap( PARAMETER_NAME, tenantIdType )
-					) {
-						// unfortunately the old APIs only accept String for a tenantId, so parse it
-						@Override
-						public Object processArgument(Object value) {
-							if (value==null) {
-								return null;
-							}
-							else if (value instanceof String) {
-								return getParameterJdbcMapping( PARAMETER_NAME )
-										.getJavaTypeDescriptor()
-										.fromString((String) value);
-							}
-							else {
-								return value;
-							}
-						}
-					}
+							false,
+							true,
+							singletonMap( PARAMETER_NAME, tenantIdType ),
+							Collections.emptyMap()
+					)
 			);
 		}
 		else {
@@ -82,34 +69,34 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 			if ( !parameterJtd.getJavaTypeClass().equals( tenantIdTypeJtd.getJavaTypeClass() ) ) {
 				throw new MappingException(
 						"all @TenantId fields must have the same type: "
-								+ parameterJtd.getJavaType().getTypeName()
+								+ parameterJtd.getTypeName()
 								+ " differs from "
-								+ tenantIdTypeJtd.getJavaType().getTypeName()
+								+ tenantIdTypeJtd.getTypeName()
 				);
 			}
 		}
 		persistentClass.addFilter(
-						FILTER_NAME,
-						columnNameOrFormula(property)
-								+ " = :"
-								+ PARAMETER_NAME,
-						true,
-						emptyMap(),
-						emptyMap()
-				);
+				FILTER_NAME,
+				columnNameOrFormula( property )
+						+ " = :"
+						+ PARAMETER_NAME,
+				true,
+				emptyMap(),
+				emptyMap()
+		);
 
-		property.resetUpdateable(false);
-		property.resetOptional(false);
+		property.resetUpdateable( false );
+		property.resetOptional( false );
 	}
 
 	private String columnNameOrFormula(Property property) {
-		if ( property.getColumnSpan()!=1 ) {
-			throw new MappingException("@TenantId attribute must be mapped to a single column or formula");
+		if ( property.getColumnSpan() != 1 ) {
+			throw new MappingException( "@TenantId attribute must be mapped to a single column or formula" );
 		}
-		Selectable selectable = property.getSelectables().get(0);
+		Selectable selectable = property.getSelectables().get( 0 );
 		return selectable.isFormula()
-				? ((Formula) selectable).getFormula()
-				: ((Column) selectable).getName();
+				? ( (Formula) selectable ).getFormula()
+				: ( (Column) selectable ).getName();
 	}
 
 }

@@ -1,10 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.spatial.dialect.oracle.hhh15669;
 
 
@@ -14,7 +11,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.spatial.HibernateSpatialConfigurationSettings;
 import org.hibernate.spatial.testing.SpatialSessionFactoryAware;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -40,7 +37,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 
-@TestForIssue(jiraKey = "HHH-15669")
+@JiraKey(value = "HHH-15669")
 @DomainModel(annotatedClasses = { Foo.class })
 @RequiresDialect(value = OracleDialect.class)
 @SessionFactory

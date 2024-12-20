@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id;
 
@@ -14,7 +12,7 @@ import jakarta.persistence.SequenceGenerator;
 
 import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -45,7 +43,7 @@ public class SQLServer2012SequenceGeneratorAnnotationTest {
 	 * For this test, the sequence is initialized to 10.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-8814")
+	@JiraKey(value = "HHH-8814")
 	@RequiresDialect(value = SQLServerDialect.class, majorVersion = 11)
 	public void testStartOfSequence(SessionFactoryScope scope) {
 		final Person person = scope.fromTransaction( session -> {

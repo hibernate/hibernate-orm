@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model;
 
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 
 public interface EntityMutationOperationGroup extends MutationOperationGroup {
@@ -22,4 +21,7 @@ public interface EntityMutationOperationGroup extends MutationOperationGroup {
 		return this;
 	}
 
+	default GeneratedValuesMutationDelegate getMutationDelegate() {
+		return getMutationTarget().getMutationDelegate( getMutationType() );
+	}
 }

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -11,7 +9,7 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
+import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -26,7 +24,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Column;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -50,13 +48,15 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 
 	final static DatabaseVersion DB2_LUW_VERSION9 = DatabaseVersion.make( 9, 0);
 
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 7 );
+
 	public DB2zLegacyDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
 		registerKeywords( info );
 	}
 
 	public DB2zLegacyDialect() {
-		this( DatabaseVersion.make( 7 ) );
+		this( DEFAULT_VERSION );
 	}
 
 	public DB2zLegacyDialect(DatabaseVersion version) {
@@ -146,7 +146,7 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return DB2390IdentityColumnSupport.INSTANCE;
+		return DB2zIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override
@@ -237,7 +237,7 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 
 	@Override
 	public String rowId(String rowId) {
-		return rowId.isEmpty() ? "rowid_" : rowId;
+		return rowId == null || rowId.isEmpty() ? "rowid_" : rowId;
 	}
 
 	@Override

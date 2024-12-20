@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
 
@@ -23,19 +21,16 @@ import org.hibernate.internal.SessionFactoryRegistry;
  * @author Gavin King
  */
 class SessionFactoryObserverForRegistration implements SessionFactoryObserver {
-
 	private JndiService jndiService;
-	private boolean registeredInJndi;
 
 	@Override
 	public void sessionFactoryCreated(SessionFactory factory) {
 		final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) factory;
 		jndiService = sessionFactory.getServiceRegistry().getService( JndiService.class );
-		registeredInJndi = sessionFactory.getSessionFactoryOptions().isSessionFactoryNameAlsoJndiName();
 		SessionFactoryRegistry.INSTANCE.addSessionFactory(
 				sessionFactory.getUuid(),
 				sessionFactory.getName(),
-				registeredInJndi,
+				sessionFactory.getJndiName(),
 				sessionFactory,
 				jndiService
 		);
@@ -47,7 +42,7 @@ class SessionFactoryObserverForRegistration implements SessionFactoryObserver {
 		SessionFactoryRegistry.INSTANCE.removeSessionFactory(
 				sessionFactory.getUuid(),
 				sessionFactory.getName(),
-				registeredInJndi,
+				sessionFactory.getJndiName(),
 				jndiService
 		);
 	}

@@ -1,13 +1,9 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import jakarta.persistence.metamodel.Attribute;
-import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -17,12 +13,10 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
+import org.hibernate.query.sqm.TreatException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
-
-import java.util.Set;
 
 /**
  * @author Steve Ebersole
@@ -64,7 +58,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 				this,
 				new SqmEmbeddedValuedSimplePath<>(
 						getNavigablePathCopy( lhsCopy ),
-						getReferencedPathSource(),
+						getModel(),
 						lhsCopy,
 						getExplicitAlias(),
 						nodeBuilder()
@@ -80,23 +74,9 @@ public class SqmEmbeddedValuedSimplePath<T>
 	}
 
 	@Override
-	public Integer getTupleLength() {
-		final EmbeddableDomainType<?> sqmPathType = (EmbeddableDomainType<?>) getReferencedPathSource().getSqmPathType();
-		final Set<? extends SingularAttribute<?, ?>> attributes = sqmPathType.getSingularAttributes();
-		return length(attributes);
-	}
-
-	private int length(Set<? extends SingularAttribute<?, ?>> attributes) {
-		int length = 0;
-		for (Attribute<?, ?> attribute : attributes) {
-			length += get(attribute.getName()).getTupleLength();
-		}
-		return length;
-	}
-
-	@Override
 	public DomainType<T> getSqmType() {
-		return getReferencedPathSource().getSqmType();
+		//noinspection unchecked
+		return (DomainType<T>) getResolvedModel().getSqmType();
 	}
 
 	@Override
@@ -104,7 +84,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPath<?> sqmPath = get( name );
+		final SqmPath<?> sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
@@ -117,17 +97,17 @@ public class SqmEmbeddedValuedSimplePath<T>
 
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) throws PathException {
-		throw new FunctionArgumentException( "Embeddable paths cannot be TREAT-ed" );
+		return getTreatedPath( nodeBuilder().getDomainModel().embeddable( treatJavaType ) );
 	}
 
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		throw new FunctionArgumentException( "Embeddable paths cannot be TREAT-ed" );
+		throw new TreatException( "Embeddable paths cannot be TREAT-ed to an entity type" );
 	}
 
 	@Override
 	public JavaType<T> getExpressibleJavaType() {
-		return getJavaTypeDescriptor();
+		return super.getExpressible().getExpressibleJavaType();
 	}
 
 	@Override
@@ -138,5 +118,10 @@ public class SqmEmbeddedValuedSimplePath<T>
 	@Override
 	public Class<T> getBindableJavaType() {
 		return getJavaType();
+	}
+
+	@Override
+	public JavaType<?> getRelationalJavaType() {
+		return super.getExpressible().getRelationalJavaType();
 	}
 }

@@ -1,20 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.dialect.NullOrdering;
+
+import jakarta.persistence.criteria.Nulls;
 
 /**
  * Enumerates the possibilities for the precedence of null values within
  * query result sets sorted by an {@code ORDER BY} clause.
  *
  * @author Lukasz Antoniak
+ *
+ * @deprecated Use Jakarta Persistence {@linkplain Nulls} instead.
  */
+@Deprecated(since="7")
 public enum NullPrecedence {
 	/**
 	 * Null precedence not specified. Relies on the RDBMS implementation.
@@ -31,40 +33,26 @@ public enum NullPrecedence {
 
 	/**
 	 * Is this null precedence the default for the given sort order and null ordering.
+	 *
+	 * @deprecated No longer called
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	public boolean isDefaultOrdering(SortDirection sortOrder, NullOrdering nullOrdering) {
-		switch (this) {
-			case NONE:
-				return true;
-			case FIRST:
-				switch ( nullOrdering ) {
-					case FIRST:
-						return true;
-					case LAST:
-						return false;
-					case SMALLEST:
-						return sortOrder == SortDirection.ASCENDING;
-					case GREATEST:
-						return sortOrder == SortDirection.DESCENDING;
-					default:
-						throw new AssertionFailure("Unrecognized NullOrdering");
-				}
-			case LAST:
-				switch ( nullOrdering ) {
-					case LAST:
-						return true;
-					case FIRST:
-						return false;
-					case SMALLEST:
-						return sortOrder == SortDirection.DESCENDING;
-					case GREATEST:
-						return sortOrder == SortDirection.ASCENDING;
-					default:
-						throw new AssertionFailure("Unrecognized NullOrdering");
-				}
-			default:
-				throw new AssertionFailure("Unrecognized NullPrecedence");
-		}
+		return switch (this) {
+			case NONE -> true;
+			case FIRST -> switch (nullOrdering) {
+				case FIRST -> true;
+				case LAST -> false;
+				case SMALLEST -> sortOrder == SortDirection.ASCENDING;
+				case GREATEST -> sortOrder == SortDirection.DESCENDING;
+			};
+			case LAST -> switch (nullOrdering) {
+				case LAST -> true;
+				case FIRST -> false;
+				case SMALLEST -> sortOrder == SortDirection.DESCENDING;
+				case GREATEST -> sortOrder == SortDirection.ASCENDING;
+			};
+		};
 	}
 
 	/**
@@ -95,5 +83,22 @@ public enum NullPrecedence {
 	public static NullPrecedence parse(String name, NullPrecedence defaultValue) {
 		final NullPrecedence value = parse( name );
 		return value != null ? value : defaultValue;
+	}
+
+	public Nulls getJpaValue() {
+		return switch (this) {
+			case NONE -> Nulls.NONE;
+			case FIRST -> Nulls.FIRST;
+			case LAST -> Nulls.LAST;
+		};
+	}
+
+	public static NullPrecedence fromJpaValue(Nulls jpaValue) {
+		return switch (jpaValue) {
+			case NONE -> NullPrecedence.NONE;
+			case FIRST -> NullPrecedence.FIRST;
+			case LAST -> NullPrecedence.LAST;
+		};
+
 	}
 }

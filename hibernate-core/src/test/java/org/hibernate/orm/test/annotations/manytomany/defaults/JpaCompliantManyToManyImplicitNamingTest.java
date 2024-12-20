@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.manytomany.defaults;
 
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 /**
@@ -26,7 +24,7 @@ public class JpaCompliantManyToManyImplicitNamingTest extends ManyToManyImplicit
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9390")
+	@JiraKey( value = "HHH-9390")
 	public void testUnidirOwnerPrimaryTableAssocEntityNamePKOverride() {
 		// City.stolenItems; associated entity: Item
 		// City has @Entity with no name configured and @Table(name = "tbl_city")
@@ -45,7 +43,7 @@ public class JpaCompliantManyToManyImplicitNamingTest extends ManyToManyImplicit
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-9390")
+	@JiraKey( value = "HHH-9390")
 	public void testUnidirOwnerEntityNamePrimaryTableOverride() {
 		// Category.clients: associated entity: KnownClient
 		// Category has @Entity(name="CATEGORY") @Table(name="CATEGORY_TAB")

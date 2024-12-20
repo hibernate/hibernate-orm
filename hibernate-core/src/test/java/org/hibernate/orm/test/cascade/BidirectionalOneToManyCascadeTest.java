@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cascade;
 
@@ -41,7 +39,7 @@ public class BidirectionalOneToManyCascadeTest {
 		scope.inTransaction(
 				session -> {
 					List parents = session.createQuery( "from Parent" ).list();
-					parents.forEach( parent -> session.delete( parent ) );
+					parents.forEach( parent -> session.remove( parent ) );
 				}
 		);
 	}
@@ -58,7 +56,7 @@ public class BidirectionalOneToManyCascadeTest {
 					Child child = new Child();
 					child.setParent( parent );
 					parent.setChildren( Collections.singleton( child ) );
-					session.save( parent );
+					session.persist( parent );
 				}
 		);
 
@@ -84,7 +82,7 @@ public class BidirectionalOneToManyCascadeTest {
 					Child child = new Child();
 					child.setParent( parent );
 					parent.setChildren( Collections.singleton( child ) );
-					session.save( child );
+					session.persist( child );
 				}
 		);
 
@@ -111,7 +109,7 @@ public class BidirectionalOneToManyCascadeTest {
 					DeleteOrphanChild child = new DeleteOrphanChild();
 					child.setParent( parent );
 					parent.setDeleteOrphanChildren( Collections.singleton( child ) );
-					session.save( parent );
+					session.persist( parent );
 				}
 		);
 
@@ -137,7 +135,7 @@ public class BidirectionalOneToManyCascadeTest {
 					DeleteOrphanChild child = new DeleteOrphanChild();
 					child.setParent( parent );
 					parent.setDeleteOrphanChildren( Collections.singleton( child ) );
-					session.save( child );
+					session.persist( child );
 				}
 		);
 

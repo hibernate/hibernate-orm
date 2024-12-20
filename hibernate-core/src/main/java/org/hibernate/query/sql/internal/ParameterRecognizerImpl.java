@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sql.internal;
 
@@ -100,7 +98,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			parameterStyle = ParameterStyle.JDBC;
 		}
 		else if ( parameterStyle != ParameterStyle.JDBC ) {
-			throw new IllegalStateException( "Cannot mix parameter styles between JDBC-style, ordinal and named in the same query" );
+			throw new ParameterRecognitionException( "Cannot mix parameter styles between JDBC-style, ordinal and named in the same query" );
 		}
 
 		int implicitPosition = ordinalParameterImplicitPosition++;
@@ -164,7 +162,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			parameterStyle = ParameterStyle.NAMED;
 		}
 		else if ( parameterStyle != ParameterStyle.NAMED ) {
-			throw new IllegalStateException( "Cannot mix parameter styles between JDBC-style, ordinal and named in the same query" );
+			throw new ParameterRecognitionException( "Cannot mix parameter styles between JDBC-style, ordinal and named in the same query" );
 		}
 
 		if ( position < 1 ) {

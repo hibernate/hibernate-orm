@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.lob;
 
@@ -20,27 +18,27 @@ import jakarta.persistence.Lob;
 @Entity
 public class LobEntity {
 	public static final int BLOB_LENGTH = 100000000;
-    private Long id;
+	private Long id;
 
-    @Id
-    @GeneratedValue
-    public Long getId() {
-        return id;
-    }
+	@Id
+	@GeneratedValue
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    @Lob
-    @Column(length = BLOB_LENGTH)
-    private Blob blob;
+	@Lob
+	@Column(length = BLOB_LENGTH)
+	private Blob blob;
 
-    public Blob getBlob() {
-        return blob;
-    }
+	public Blob getBlob() {
+		return blob;
+	}
 
-    public void setBlob(Blob blob) {
-        this.blob = blob;
-    }
+	public void setBlob(Blob blob) {
+		this.blob = blob;
+	}
 }

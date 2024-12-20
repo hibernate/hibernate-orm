@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.logger;
 
@@ -11,7 +9,7 @@ import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.jboss.logging.Logger;
 import org.jboss.logging.Logger.Level;
 import org.junit.Test;
@@ -23,7 +21,7 @@ import org.junit.Test;
  *
  * @author Sanne Grinovero (C) 2015 Red Hat Inc.
  */
-@TestForIssue(jiraKey = "HHH-9658")
+@JiraKey(value = "HHH-9658")
 public class LogDelegationTest {
 
 	private static final Logger LOG = Logger.getLogger( LogDelegationTest.class.getName() );

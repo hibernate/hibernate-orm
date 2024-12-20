@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.derived;
 
@@ -13,10 +11,10 @@ import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.type.BasicType;
 
@@ -37,9 +35,9 @@ public class CteTupleTableGroupProducer extends AnonymousTupleTableGroupProducer
 	public CteTupleTableGroupProducer(
 			SqmCteTable<?> sqmCteTable,
 			String aliasStem,
-			List<SqlSelection> sqlSelections,
+			SqlTypedMapping[] sqlTypedMappings,
 			FromClauseAccess fromClauseAccess) {
-		super( sqmCteTable, aliasStem, sqlSelections, fromClauseAccess );
+		super( sqmCteTable, aliasStem, sqlTypedMappings, fromClauseAccess );
 		final SqmCteStatement<?> cteStatement = sqmCteTable.getCteStatement();
 		final BasicType<String> stringType = cteStatement.nodeBuilder()
 				.getTypeConfiguration()
@@ -73,7 +71,7 @@ public class CteTupleTableGroupProducer extends AnonymousTupleTableGroupProducer
 	}
 
 	public List<CteColumn> determineCteColumns() {
-		final List<CteColumn> columns = new ArrayList<>( getModelParts().size() );
+		final List<CteColumn> columns = new ArrayList<>( getModelParts().size() + 3 );
 		forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
 					columns.add(

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model;
 
@@ -81,16 +79,33 @@ public interface TableMapping extends TableDetails {
 		private final Expectation expectation;
 		private final String customSql;
 		private final boolean callable;
+		private final boolean dynamicMutation;
 
 		public MutationDetails(
 				MutationType mutationType,
 				Expectation expectation,
 				String customSql,
 				boolean callable) {
+			this(
+					mutationType,
+					expectation,
+					customSql,
+					callable,
+					false
+			);
+		}
+
+		public MutationDetails(
+				MutationType mutationType,
+				Expectation expectation,
+				String customSql,
+				boolean callable,
+				boolean dynamicMutation) {
 			this.mutationType = mutationType;
 			this.expectation = expectation;
 			this.customSql = customSql;
 			this.callable = callable;
+			this.dynamicMutation = dynamicMutation;
 		}
 
 		/**
@@ -122,5 +137,10 @@ public interface TableMapping extends TableDetails {
 		public boolean isCallable() {
 			return callable;
 		}
+
+		public boolean isDynamicMutation() {
+			return dynamicMutation;
+		}
 	}
+
 }

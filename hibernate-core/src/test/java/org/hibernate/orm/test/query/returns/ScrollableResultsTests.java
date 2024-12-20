@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.returns;
 
@@ -12,7 +10,7 @@ import jakarta.persistence.TupleElement;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
@@ -58,7 +56,7 @@ public class ScrollableResultsTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA supports only ResultSet.TYPE_FORWARD_ONLY")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA supports only ResultSet.TYPE_FORWARD_ONLY")
 	public void testCursorPositioning(SessionFactoryScope scope) {
 		// create an extra row so we can better test cursor positioning
 		scope.inTransaction(
@@ -68,54 +66,54 @@ public class ScrollableResultsTests {
 		scope.inTransaction(
 				session -> {
 					final QueryImplementor<String> query = session.createQuery( SINGLE_SELECTION_QUERY, String.class );
-					final ScrollableResultsImplementor<String> results = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
+					try (ScrollableResultsImplementor<String> results = query.scroll( ScrollMode.SCROLL_INSENSITIVE )) {
 
-					// try to initially read in reverse - should be false
-					assertThat( results.previous(), is( false ) );
+						// try to initially read in reverse - should be false
+						assertThat( results.previous(), is( false ) );
 
-					// position at the first row
-					assertThat( results.next(), is( true ) );
-					String data = results.get();
-					assertThat( data, is( "other" ) );
+						// position at the first row
+						assertThat( results.next(), is( true ) );
+						String data = results.get();
+						assertThat( data, is( "other" ) );
 
-					// position at the second (last) row
-					assertThat( results.next(), is( true ) );
-					data = results.get();
-					assertThat( data, is( "value" ) );
+						// position at the second (last) row
+						assertThat( results.next(), is( true ) );
+						data = results.get();
+						assertThat( data, is( "value" ) );
 
-					// position after the second (last) row
-					assertThat( results.next(), is( false ) );
+						// position after the second (last) row
+						assertThat( results.next(), is( false ) );
 
-					// position back to the second row
-					assertThat( results.previous(), is( true ) );
-					data = results.get();
-					assertThat( data, is( "value" ) );
+						// position back to the second row
+						assertThat( results.previous(), is( true ) );
+						data = results.get();
+						assertThat( data, is( "value" ) );
 
-					// position back to the first row
-					assertThat( results.previous(), is( true ) );
-					data = results.get();
-					assertThat( data, is( "other" ) );
+						// position back to the first row
+						assertThat( results.previous(), is( true ) );
+						data = results.get();
+						assertThat( data, is( "other" ) );
 
-					// position before the first row
-					assertThat( results.previous(), is( false ) );
-					assertThat( results.previous(), is( false ) );
+						// position before the first row
+						assertThat( results.previous(), is( false ) );
+						assertThat( results.previous(), is( false ) );
 
-					assertThat( results.last(), is( true ) );
-					data = results.get();
-					assertThat( data, is( "value" ) );
+						assertThat( results.last(), is( true ) );
+						data = results.get();
+						assertThat( data, is( "value" ) );
 
-					assertThat( results.first(), is( true ) );
-					data = results.get();
-					assertThat( data, is( "other" ) );
+						assertThat( results.first(), is( true ) );
+						data = results.get();
+						assertThat( data, is( "other" ) );
 
-					assertThat( results.scroll( 1 ), is( true ) );
-					data = results.get();
-					assertThat( data, is( "value" ) );
+						assertThat( results.scroll( 1 ), is( true ) );
+						data = results.get();
+						assertThat( data, is( "value" ) );
 
-					assertThat( results.scroll( -1 ), is( true ) );
-					data = results.get();
-					assertThat( data, is( "other" ) );
-
+						assertThat( results.scroll( -1 ), is( true ) );
+						data = results.get();
+						assertThat( data, is( "other" ) );
+					}
 				}
 		);
 	}
@@ -262,14 +260,14 @@ public class ScrollableResultsTests {
 	}
 
 	private static <R> void verifyScroll(Query<R> query, Consumer<R> validator) {
-		try ( final ScrollableResults<R> results = query.scroll( ScrollMode.FORWARD_ONLY ) ) {
+		try (final ScrollableResults<R> results = query.scroll( ScrollMode.FORWARD_ONLY ) ) {
 			assertThat( results.next(), is( true ) );
 			validator.accept( results.get() );
 		}
 
 		final SessionImplementor session = (SessionImplementor) query.getSession();
 		// HANA supports only ResultSet.TYPE_FORWARD_ONLY
-		if ( !( session.getFactory().getJdbcServices().getDialect() instanceof AbstractHANADialect ) ) {
+		if ( !( session.getFactory().getJdbcServices().getDialect() instanceof HANADialect ) ) {
 			try (final ScrollableResults<R> results = query.scroll( ScrollMode.SCROLL_INSENSITIVE )) {
 				assertThat( results.next(), is( true ) );
 				validator.accept( results.get() );

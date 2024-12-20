@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.hbm2ddl;
 
@@ -73,11 +71,12 @@ public class SchemaUpdate {
 		exceptions.clear();
 		LOG.runningHbm2ddlSchemaUpdate();
 
-		Map<String,Object> config = new HashMap<>( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
+		Map<String,Object> config =
+				new HashMap<>( serviceRegistry.requireService( ConfigurationService.class ).getSettings() );
 		config.put( AvailableSettings.HBM2DDL_DELIMITER, delimiter );
 		config.put( AvailableSettings.FORMAT_SQL, format );
 
-		final SchemaManagementTool tool = serviceRegistry.getService( SchemaManagementTool.class );
+		final SchemaManagementTool tool = serviceRegistry.requireService( SchemaManagementTool.class );
 
 		final ExceptionHandler exceptionHandler = haltOnError
 				? ExceptionHandlerHaltImpl.INSTANCE
@@ -201,7 +200,7 @@ public class SchemaUpdate {
 
 
 		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
-		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
 		if ( parsedArgs.implicitNamingStrategyImplName != null ) {
 			metadataBuilder.applyImplicitNamingStrategy(
 					strategySelector.resolveStrategy(

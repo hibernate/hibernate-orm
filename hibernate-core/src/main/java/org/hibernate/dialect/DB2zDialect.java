@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
@@ -19,7 +17,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Column;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -49,7 +47,7 @@ public class DB2zDialect extends DB2Dialect {
 	final static DatabaseVersion DB2_LUW_VERSION = DB2Dialect.MINIMUM_VERSION;
 
 	public DB2zDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( MINIMUM_VERSION ) );
 		registerKeywords( info );
 	}
 
@@ -93,6 +91,11 @@ public class DB2zDialect extends DB2Dialect {
 	@Override
 	public DatabaseVersion getDB2Version() {
 		return DB2_LUW_VERSION;
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTableName() {
+		return false;
 	}
 
 	@Override
@@ -140,16 +143,6 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsLateral() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsRecursiveCTE() {
 		return true;
 	}
 
@@ -226,7 +219,7 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public String rowId(String rowId) {
-		return rowId.isEmpty() ? "rowid_" : rowId;
+		return rowId == null || rowId.isEmpty() ? "rowid_" : rowId;
 	}
 
 	@Override

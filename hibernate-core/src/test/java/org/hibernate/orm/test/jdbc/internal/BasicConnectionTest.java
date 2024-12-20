@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jdbc.internal;
 
@@ -17,7 +15,7 @@ import java.sql.Statement;
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.jdbc.ResourceRegistry;
@@ -38,9 +36,10 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 		SessionImplementor sessionImpl = (SessionImplementor) session;
 		boolean caught = false;
 		try {
+			String sql = "select count(*) from NON_EXISTENT";
 			PreparedStatement ps = sessionImpl.getJdbcCoordinator().getStatementPreparer()
-					.prepareStatement( "select count(*) from NON_EXISTENT" );
-			sessionImpl.getJdbcCoordinator().getResultSetReturn().execute( ps );
+					.prepareStatement( sql );
+			sessionImpl.getJdbcCoordinator().getResultSetReturn().execute( ps, sql );
 		}
 		catch ( JDBCException ok ) {
 			caught = true;
@@ -113,6 +112,6 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private ResourceRegistry getResourceRegistry(JdbcCoordinator jdbcCoord) {
-        return jdbcCoord.getLogicalConnection().getResourceRegistry();
-    }
+		return jdbcCoord.getLogicalConnection().getResourceRegistry();
+	}
 }

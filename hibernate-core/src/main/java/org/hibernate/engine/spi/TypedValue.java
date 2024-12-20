@@ -1,21 +1,22 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.Serial;
 import java.io.Serializable;
 
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.type.Type;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * An ordered pair of a value and its Hibernate type.
- * 
+ *
  * @see Type
  * @author Gavin King
  */
@@ -28,7 +29,7 @@ public final class TypedValue implements Serializable {
 	public TypedValue(final Type type, final Object value) {
 		this.type = type;
 		this.value = value;
-		initTransients();
+		this.hashcode = hashCode(type, value);
 	}
 
 	public Object getValue() {
@@ -47,7 +48,7 @@ public final class TypedValue implements Serializable {
 		return hashcode.getValue();
 	}
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(@Nullable Object other) {
 		if ( this == other ) {
 			return true;
 		}
@@ -56,16 +57,17 @@ public final class TypedValue implements Serializable {
 		}
 		final TypedValue that = (TypedValue) other;
 		return type.getReturnedClass() == that.type.getReturnedClass()
-				&& type.isEqual( that.value, value );
+			&& type.isEqual( that.value, value );
 	}
 
+	@Serial
 	private void readObject(ObjectInputStream ois)
 			throws ClassNotFoundException, IOException {
 		ois.defaultReadObject();
-		initTransients();
+		this.hashcode = hashCode(type, value);
 	}
 
-	private void initTransients() {
-		this.hashcode = new ValueHolder<>( () -> value == null ? 0 : type.getHashCode( value ) );
+	private static ValueHolder<Integer> hashCode(Type type, Object value) {
+		return new ValueHolder<>( () -> value == null ? 0 : type.getHashCode( value ) );
 	}
 }

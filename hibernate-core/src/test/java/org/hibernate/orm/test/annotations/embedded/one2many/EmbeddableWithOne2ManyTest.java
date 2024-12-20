@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.embedded.one2many;
 
@@ -33,7 +31,7 @@ public class EmbeddableWithOne2ManyTest {
 		// but i cannot do this checking until HHH-4599 is done.
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Person p join p.name.aliases a where a.source = 'FBI'" )
+					session.createQuery( "from Person p join p.name.aliases a where a.source = 'FBI'", Person.class )
 							.list();
 				}
 		);
@@ -53,9 +51,9 @@ public class EmbeddableWithOne2ManyTest {
 		);
 		scope.inTransaction(
 				session -> {
-					Person p = (Person) session.load( Person.class, person.getId() );
-					session.delete( p );
-					List aliases = session.createQuery( "from Alias" ).list();
+					Person p = session.getReference( Person.class, person.getId() );
+					session.remove( p );
+					List<Alias> aliases = session.createQuery( "from Alias", Alias.class ).list();
 					assertEquals( 0, aliases.size() );
 				}
 		);

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.query.criteria;
 
@@ -91,9 +89,9 @@ public class AuditProperty<T> implements AuditProjection {
 		return new SimpleAuditExpression( alias, propertyNameGetter, matchMode.toMatchString( value ), " like " );
 	}
 
-    /**
-     *  Apply an "ilike" constraint
-     */
+	/**
+	 *  Apply an "ilike" constraint
+	 */
 	public AuditCriterion ilike(T value) {
 		return new IlikeAuditExpression( alias, propertyNameGetter, value.toString() );
 	}
@@ -449,7 +447,7 @@ public class AuditProperty<T> implements AuditProjection {
 	public AuditOrder desc() {
 		return new PropertyAuditOrder( alias, propertyNameGetter, false );
 	}
-	
+
 	@Override
 	public Object convertQueryResult(
 			EnversService enversService,
@@ -459,5 +457,5 @@ public class AuditProperty<T> implements AuditProjection {
 			Object value) {
 		return value;
 	}
-	
+
 }

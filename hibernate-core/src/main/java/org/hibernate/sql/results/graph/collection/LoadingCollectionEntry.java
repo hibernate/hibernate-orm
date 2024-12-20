@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.collection;
 
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.collection.spi.PersistentCollection;
@@ -27,7 +26,7 @@ public interface LoadingCollectionEntry {
 	/**
 	 * The initializer responsible for the loading
 	 */
-	CollectionInitializer getInitializer();
+	CollectionInitializer<?> getInitializer();
 
 	/**
 	 * The collection key.
@@ -43,6 +42,13 @@ public interface LoadingCollectionEntry {
 	 * Callback for row loading.  Allows delayed List creation
 	 */
 	void load(Consumer<List<Object>> loadingEntryConsumer);
+
+	/**
+	 * Callback for row loading.  Allows delayed List creation
+	 */
+	default <T> void load(T arg1, BiConsumer<T, List<Object>> loadingEntryConsumer) {
+		load( list -> loadingEntryConsumer.accept( arg1, list ) );
+	}
 
 	/**
 	 * Complete the load

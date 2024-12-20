@@ -1,15 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.context.internal;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serial;
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -60,6 +60,7 @@ import org.jboss.logging.Logger;
  */
 public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			MethodHandles.lookup(),
 			CoreMessageLogger.class,
 			ThreadLocalSessionContext.class.getName()
 	);
@@ -362,6 +363,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 
 		// serialization ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+		@Serial
 		private void writeObject(ObjectOutputStream oos) throws IOException {
 			// if a ThreadLocalSessionContext-bound session happens to get
 			// serialized, to be completely correct, we need to make sure
@@ -372,6 +374,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 			}
 		}
 
+		@Serial
 		private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
 			// on the inverse, it makes sense that if a ThreadLocalSessionContext-
 			// bound session then gets deserialized to go ahead and re-bind it to

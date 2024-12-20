@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
@@ -129,7 +127,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 			if ( expression == windowFunction ) {
 				finalExpression = new SelfRenderingAggregateFunctionSqlAstExpression(
 						"min",
-						(sqlAppender, sqlAstArguments, walker1) -> {
+						(sqlAppender, sqlAstArguments, returnType, walker1) -> {
 							sqlAppender.appendSql( "min(" );
 							sqlAstArguments.get( 0 ).accept( walker1 );
 							sqlAppender.append( ')' );

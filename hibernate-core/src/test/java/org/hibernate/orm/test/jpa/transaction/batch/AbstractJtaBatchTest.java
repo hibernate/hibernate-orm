@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.transaction.batch;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.internal.HEMLogging;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.jpa.boot.spi.ProviderChecker;
 
 import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
@@ -34,7 +32,7 @@ public abstract class AbstractJtaBatchTest extends AbstractBatchingTest {
 
 	@RegisterExtension
 	public LoggerInspectionExtension logger = LoggerInspectionExtension.builder()
-			.setLogger( HEMLogging.messageLogger( ProviderChecker.class.getName() )	)
+			.setLogger( CoreLogging.messageLogger( ProviderChecker.class.getName() )	)
 			.build();
 
 	@BeforeEach

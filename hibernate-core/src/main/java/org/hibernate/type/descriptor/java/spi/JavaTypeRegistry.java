@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java.spi;
 
@@ -10,6 +8,7 @@ import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -110,6 +109,22 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	}
 
 	public <J> JavaType<J> resolveDescriptor(Type javaType) {
+		return resolveDescriptor( javaType, (elementJavaType, typeConfiguration) -> {
+			final MutabilityPlan<J> determinedPlan = RegistryHelper.INSTANCE.determineMutabilityPlan(
+					elementJavaType,
+					typeConfiguration
+			);
+			if ( determinedPlan != null ) {
+				return determinedPlan;
+			}
+
+			return MutableMutabilityPlan.INSTANCE;
+		} );
+	}
+
+	public <J> JavaType<J> resolveDescriptor(
+			Type javaType,
+			BiFunction<Type, TypeConfiguration, MutabilityPlan<?>> mutabilityPlanCreator) {
 		return resolveDescriptor(
 				javaType,
 				() -> {
@@ -131,21 +146,10 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 						elementTypeDescriptor = null;
 					}
 					if ( elementTypeDescriptor == null ) {
+						//noinspection unchecked
 						elementTypeDescriptor = RegistryHelper.INSTANCE.createTypeDescriptor(
 								elementJavaType,
-								() -> {
-									final MutabilityPlan<J> determinedPlan = RegistryHelper.INSTANCE.determineMutabilityPlan(
-											elementJavaType,
-											typeConfiguration
-									);
-									if ( determinedPlan != null ) {
-										return determinedPlan;
-									}
-
-									//noinspection unchecked
-									return (MutabilityPlan<J>) MutableMutabilityPlan.INSTANCE;
-
-								},
+								() -> (MutabilityPlan<J>) mutabilityPlanCreator.apply( elementJavaType, typeConfiguration ),
 								typeConfiguration
 						);
 					}

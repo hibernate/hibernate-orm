@@ -1,24 +1,29 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
-import jakarta.persistence.EnumType;
+import java.util.Set;
 
-import org.hibernate.AssertionFailure;
+import org.hibernate.boot.model.process.internal.EnumeratedValueConverter;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
+import jakarta.persistence.EnumType;
+
 import static jakarta.persistence.EnumType.ORDINAL;
+import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.ENUM;
+import static org.hibernate.type.SqlTypes.NAMED_ENUM;
+import static org.hibernate.type.SqlTypes.ORDINAL_ENUM;
+import static org.hibernate.type.SqlTypes.NAMED_ORDINAL_ENUM;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.SMALLINT;
@@ -31,39 +36,55 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  * @author Steve Ebersole
  */
 public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
+
 	public EnumJavaType(Class<T> type) {
 		super( type, ImmutableMutabilityPlan.instance() );
 	}
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
+		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( sqlType( context ) );
+	}
+
+	private int sqlType(JdbcTypeIndicators context) {
+		final EnumType enumType = context.getEnumeratedType();
+		final boolean preferNativeEnumTypes = context.isPreferNativeEnumTypesEnabled();
 		final JdbcTypeRegistry jdbcTypeRegistry = context.getTypeConfiguration().getJdbcTypeRegistry();
-		final EnumType type = context.getEnumeratedType();
-		int sqlType;
-		switch ( type == null ? ORDINAL : type ) {
+		return switch ( enumType == null ? ORDINAL : enumType ) {
 			case ORDINAL:
-				sqlType = hasManyValues() ? SMALLINT : TINYINT;
-				break;
-			case STRING:
-				if ( jdbcTypeRegistry.hasRegisteredDescriptor( ENUM ) ) {
-					sqlType = ENUM;
+				if ( preferNativeEnumTypes && jdbcTypeRegistry.hasRegisteredDescriptor( ORDINAL_ENUM ) ) {
+					yield ORDINAL_ENUM;
 				}
-				else if ( context.getColumnLength() == 1 ) {
-					sqlType = context.isNationalized() ? NCHAR : CHAR;
+				else if ( preferNativeEnumTypes && jdbcTypeRegistry.hasRegisteredDescriptor( NAMED_ORDINAL_ENUM ) ) {
+					yield NAMED_ORDINAL_ENUM;
 				}
 				else {
-					sqlType = context.isNationalized() ? NVARCHAR : VARCHAR;
+					yield hasManyValues() ? SMALLINT : TINYINT;
 				}
-				break;
-			default:
-				throw new AssertionFailure("unknown EnumType");
-		}
-		return jdbcTypeRegistry.getDescriptor( sqlType );
+			case STRING:
+				if ( jdbcTypeRegistry.hasRegisteredDescriptor( ENUM ) ) {
+					yield ENUM;
+				}
+				else if ( preferNativeEnumTypes && jdbcTypeRegistry.hasRegisteredDescriptor( NAMED_ENUM ) ) {
+					yield NAMED_ENUM;
+				}
+				else if ( context.getColumnLength() == 1 ) {
+					yield context.isNationalized() ? NCHAR : CHAR;
+				}
+				else {
+					yield context.isNationalized() ? NVARCHAR : VARCHAR;
+				}
+		};
 	}
 
 	public boolean hasManyValues() {
 		// a bit arbitrary, but gives us some headroom
-		return getJavaTypeClass().getEnumConstants().length > 128; 
+		return getJavaTypeClass().getEnumConstants().length > 128;
+	}
+
+	@Override
+	public boolean useObjectEqualsHashCode() {
+		return true;
 	}
 
 	@Override
@@ -103,26 +124,27 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		if ( value == null ) {
 			return null;
 		}
-		else if ( value instanceof String ) {
-			return fromName( (String) value );
+		else if ( value instanceof String string ) {
+			return fromName( string );
 		}
-		else if ( value instanceof Long ) {
-			return fromLong( (Long) value );
+		else if ( value instanceof Long longValue ) {
+			return fromLong( longValue );
 		}
-		else if ( value instanceof Integer ) {
-			return fromInteger( (Integer) value );
+		else if ( value instanceof Integer integerValue ) {
+			return fromInteger( integerValue );
 		}
-		else if ( value instanceof Short ) {
-			return fromShort( (Short) value );
+		else if ( value instanceof Short shortValue ) {
+			return fromShort( shortValue );
 		}
-		else if ( value instanceof Byte ) {
-			return fromByte( (Byte) value );
+		else if ( value instanceof Byte byteValue ) {
+			return fromByte( byteValue );
 		}
-		else if ( value instanceof Number ) {
-			return fromLong( ((Number) value).longValue() );
+		else if ( value instanceof Number number ) {
+			return fromLong( number.longValue() );
 		}
-
+		else {
 		return (T) value;
+		}
 	}
 
 	/**
@@ -223,27 +245,21 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 	 * Convert a value of the enum type to its name value
 	 */
 	public String toName(T domainForm) {
-		if ( domainForm == null ) {
-			return null;
-		}
-		return domainForm.name();
+		return domainForm == null ? null : domainForm.name();
 	}
 
 	/**
 	 * Interpret a string value as the named value of the enum type
 	 */
 	public T fromName(String relationalForm) {
-		if ( relationalForm == null ) {
-			return null;
-		}
-		return Enum.valueOf( getJavaTypeClass(), relationalForm.trim() );
+		return relationalForm == null ? null : Enum.valueOf( getJavaTypeClass(), relationalForm.trim() );
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
-		if ( converter != null ) {
-			//TODO: actually convert the enum values to create the check constraint
-			return null;
+	public String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<T, ?> converter, Dialect dialect) {
+		if ( converter != null
+				&& jdbcType.getDefaultSqlTypeCode() != NAMED_ENUM ) {
+			return renderConvertedEnumCheckConstraint( columnName, jdbcType, converter, dialect );
 		}
 		else if ( jdbcType.isInteger() ) {
 			int max = getJavaTypeClass().getEnumConstants().length - 1;
@@ -254,6 +270,38 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		}
 		else {
 			return null;
+		}
+	}
+
+	private String renderConvertedEnumCheckConstraint(
+			String columnName,
+			JdbcType jdbcType,
+			BasicValueConverter<T, ?> converter,
+			Dialect dialect) {
+		final Set<?> valueSet = valueSet( jdbcType, converter );
+		return valueSet == null ? null : dialect.getCheckCondition( columnName, valueSet, jdbcType );
+	}
+
+	private <R> Set<R> valueSet(JdbcType jdbcType, BasicValueConverter<T,R> converter) {
+		// for `@EnumeratedValue` we already have the possible values...
+		if ( converter instanceof EnumeratedValueConverter<T,R> enumeratedValueConverter ) {
+			return enumeratedValueConverter.getRelationalValueSet();
+		}
+		else {
+			if ( !SqlTypes.isIntegral( jdbcType.getJdbcTypeCode() )
+					&& !SqlTypes.isCharacterType( jdbcType.getJdbcTypeCode() ) ) {
+				// we only support adding check constraints for generalized conversions to
+				// INTEGER, SMALLINT, TINYINT, (N)CHAR, (N)VARCHAR, LONG(N)VARCHAR
+				return null;
+			}
+			else {
+				final T[] enumConstants = getJavaTypeClass().getEnumConstants();
+				final Set<R> valueSet = setOfSize( enumConstants.length );
+				for ( T enumConstant : enumConstants ) {
+					valueSet.add( converter.toRelationalValue( enumConstant ) );
+				}
+				return valueSet;
+			}
 		}
 	}
 }

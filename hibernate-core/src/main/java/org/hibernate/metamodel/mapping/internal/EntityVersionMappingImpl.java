@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
@@ -52,12 +50,11 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	private final Long length;
 	private final Integer precision;
 	private final Integer scale;
+	private final Integer temporalPrecision;
 
-	private final BasicType versionBasicType;
+	private final BasicType<?> versionBasicType;
 
 	private final VersionValue unsavedValueStrategy;
-
-	private BasicAttributeMapping attributeMapping;
 
 	public EntityVersionMappingImpl(
 			RootClass bootEntityDescriptor,
@@ -69,14 +66,15 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			Long length,
 			Integer precision,
 			Integer scale,
+			Integer temporalPrecision,
 			BasicType<?> versionBasicType,
-			EntityMappingType declaringType,
-			MappingModelCreationProcess creationProcess) {
+			EntityMappingType declaringType) {
 		this.attributeName = attributeName;
 		this.columnDefinition = columnDefinition;
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
+		this.temporalPrecision = temporalPrecision;
 		this.declaringType = declaringType;
 
 		this.columnTableExpression = columnTableExpression;
@@ -87,11 +85,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		unsavedValueStrategy = UnsavedValueFactory.getUnsavedVersionValue(
 				(KeyValue) bootEntityDescriptor.getVersion().getValue(),
 				(VersionJavaType<?>) versionBasicType.getJavaTypeDescriptor(),
-				length,
-				precision,
-				scale,
-				declaringType
-						.getRepresentationStrategy()
+				declaringType.getRepresentationStrategy()
 						.resolvePropertyAccess( bootEntityDescriptor.getVersion() )
 						.getGetter(),
 				templateInstanceAccess
@@ -179,6 +173,11 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	}
 
 	@Override
+	public Integer getTemporalPrecision() {
+		return temporalPrecision;
+	}
+
+	@Override
 	public MappingType getPartMappingType() {
 		return versionBasicType;
 	}
@@ -255,7 +254,8 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				fetchablePath,
 				this,
 				fetchTiming,
-				creationState
+				creationState,
+				!sqlSelection.isVirtual()
 		);
 	}
 
@@ -271,7 +271,9 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				versionBasicType,
-				navigablePath
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
 		);
 	}
 

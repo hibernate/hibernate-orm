@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.jpa.query;
 
 import java.time.Instant;
@@ -7,7 +11,7 @@ import java.util.List;
 import org.hibernate.orm.test.jpa.Wallet;
 import org.hibernate.orm.test.jpa.Wallet_;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
@@ -29,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 @Jpa(
 		annotatedClasses = { Wallet.class, ReuseCriteriaWithMixedParametersTest.Person.class }
 )
-@TestForIssue(jiraKey = "HHH-15142")
+@JiraKey(value = "HHH-15142")
 public class ReuseCriteriaWithMixedParametersTest {
 
 	@AfterEach
@@ -211,4 +215,3 @@ public class ReuseCriteriaWithMixedParametersTest {
 	}
 
 }
-

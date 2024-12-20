@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graph.spi;
 
@@ -36,10 +34,10 @@ public interface SubGraphImplementor<J> extends SubGraph<J>, GraphImplementor<J>
 	<AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName);
 
 	@Override
-	<AJ> AttributeNodeImplementor<AJ> addAttributeNode(PersistentAttribute<? extends J, AJ> attribute);
+	<AJ> AttributeNodeImplementor<AJ> addAttributeNode(PersistentAttribute<? super J, AJ> attribute);
 
 	@Override
-	default <AJ> SubGraphImplementor<? extends AJ> addKeySubGraph(PersistentAttribute<? extends J, AJ> attribute, Class<? extends AJ> subType)
+	default <AJ> SubGraphImplementor<? extends AJ> addKeySubGraph(PersistentAttribute<? super J, AJ> attribute, Class<? extends AJ> subType)
 			throws CannotContainSubGraphException {
 		return null;
 	}

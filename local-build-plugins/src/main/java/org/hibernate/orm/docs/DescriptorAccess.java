@@ -20,7 +20,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 /**
- * Basically a DAO for the doc pub descriptor
+ * Helper for {@linkplain #loadProject() loading} the project documentation descriptor and
+ * {@linkplain #storeProject storing} it to file.
  *
  * @author Steve Ebersole
  */
@@ -29,17 +30,16 @@ public class DescriptorAccess {
 
 	/**
 	 * Load the descriptor
-	 * @return
 	 */
-	public static ProjectDocumentation loadProject() {
+	public static ProjectDocumentationDescriptor loadProject() {
 		try ( final CloseableHttpClient httpClient = HttpClientBuilder.create().build() ) {
 			final HttpGet request = new HttpGet( DETAILS_URL );
 
 			try ( final CloseableHttpResponse response = httpClient.execute( request ) ) {
 				final HttpEntity responseEntity = response.getEntity();
+				//noinspection resource
 				final Jsonb jsonb = JsonbBuilder.create( new JsonbConfig().withFormatting( true ) );
-				return jsonb.fromJson( responseEntity.getContent(), ProjectDocumentation.class );
-
+				return jsonb.fromJson( responseEntity.getContent(), ProjectDocumentationDescriptor.class );
 			}
 		}
 		catch (IOException e) {
@@ -47,9 +47,13 @@ public class DescriptorAccess {
 		}
 	}
 
-	public static void storeProject(ProjectDocumentation project, File jsonFile) {
+	/**
+	 * Store the descriptor to file
+	 */
+	public static void storeProject(ProjectDocumentationDescriptor project, File jsonFile) {
 		prepareJsonFile( jsonFile );
 
+		//noinspection resource
 		final Jsonb jsonb = JsonbBuilder.create( new JsonbConfig().withFormatting( true ) );
 
 		try ( final FileWriter writer = new FileWriter( jsonFile ) ) {

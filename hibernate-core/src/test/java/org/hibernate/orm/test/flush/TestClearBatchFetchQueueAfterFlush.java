@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.flush;
 
@@ -12,21 +10,21 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 /**
  * Thanks to Jan Hodac and Laurent Almeras for providing test cases for this
  * issue.
- * 
+ *
  * @author Guillaume Smet
  */
-@TestForIssue(jiraKey = "HHH-7821")
+@JiraKey(value = "HHH-7821")
 public class TestClearBatchFetchQueueAfterFlush extends BaseCoreFunctionalTestCase {
 
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.DEFAULT_BATCH_FETCH_SIZE, "10" );
+		cfg.setProperty( Environment.DEFAULT_BATCH_FETCH_SIZE, 10 );
 	}
 
 	@Test
@@ -38,32 +36,32 @@ public class TestClearBatchFetchQueueAfterFlush extends BaseCoreFunctionalTestCa
 		author1.getBooks().add( new Book( "A Man of Parts", author1 ) );
 		author1.getBooks().add( new Book( "Thinks...", author1 ) );
 		author1.getBooks().add( new Book( "Therapy", author1 ) );
-		s.save( author1 );
+		s.persist( author1 );
 
 		Iterator<Book> bookIterator = author1.getBooks().iterator();
 
 		BookStore bookStore1 = new BookStore( "Passages" );
 		bookStore1.getBooks().add( bookIterator.next() );
-		s.save( bookStore1 );
+		s.persist( bookStore1 );
 
 		BookStore bookStore2 = new BookStore( "Librairie du Tramway" );
 		bookStore2.getBooks().add( bookIterator.next() );
-		s.save( bookStore2 );
+		s.persist( bookStore2 );
 
 		BookStore bookStore3 = new BookStore( "Le Bal des Ardents" );
 		bookStore3.getBooks().add( bookIterator.next() );
-		s.save( bookStore3 );
+		s.persist( bookStore3 );
 
 		s.flush();
 		s.getTransaction().commit();
 		s.clear();
 
-		bookStore1 = s.load( BookStore.class, bookStore1.getId() );
-		bookStore2 = s.load( BookStore.class, bookStore2.getId() );
-		bookStore3 = s.load( BookStore.class, bookStore3.getId() );
+		bookStore1 = s.getReference( BookStore.class, bookStore1.getId() );
+		bookStore2 = s.getReference( BookStore.class, bookStore2.getId() );
+		bookStore3 = s.getReference( BookStore.class, bookStore3.getId() );
 
 		s.beginTransaction();
-		s.delete( bookStore2 );
+		s.remove( bookStore2 );
 		s.getTransaction().commit();
 
 		bookStore1.getBooks().size();

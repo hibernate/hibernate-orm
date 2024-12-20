@@ -1,11 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.ast.builder;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -26,19 +25,34 @@ import org.hibernate.sql.model.internal.TableUpdateStandard;
  * @author Steve Ebersole
  */
 public class TableUpdateBuilderStandard<O extends MutationOperation> extends AbstractTableUpdateBuilder<O> {
+	private final String whereFragment;
 
 	public TableUpdateBuilderStandard(
 			MutationTarget<?> mutationTarget,
 			TableMapping tableMapping,
 			SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, tableMapping, sessionFactory );
+		this.whereFragment = null;
 	}
 
 	public TableUpdateBuilderStandard(
 			MutationTarget<?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
+		this( mutationTarget, tableReference, sessionFactory, null );
+	}
+
+	public TableUpdateBuilderStandard(
+			MutationTarget<?> mutationTarget,
+			MutatingTableReference tableReference,
+			SessionFactoryImplementor sessionFactory,
+			String whereFragment) {
 		super( mutationTarget, tableReference, sessionFactory );
+		this.whereFragment = whereFragment;
+	}
+
+	public String getWhereFragment() {
+		return whereFragment;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -76,7 +90,10 @@ public class TableUpdateBuilderStandard<O extends MutationOperation> extends Abs
 				getSqlComment(),
 				valueBindings,
 				getKeyRestrictionBindings(),
-				getOptimisticLockBindings()
+				getOptimisticLockBindings(),
+				whereFragment,
+				null,
+				Collections.emptyList()
 		);
 	}
 }

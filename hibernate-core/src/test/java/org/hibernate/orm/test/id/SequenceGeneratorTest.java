@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id;
 
 import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -31,7 +29,7 @@ public class SequenceGeneratorTest {
 	 * This seems a little trivial, but we need to guarantee that all Dialects start their sequences on a non-0 value.
 	 */
 	@Test
-	@TestForIssue(jiraKey = "HHH-8814")
+	@JiraKey(value = "HHH-8814")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
 	@SkipForDialect(
 			dialectClass = SQLServerDialect.class,

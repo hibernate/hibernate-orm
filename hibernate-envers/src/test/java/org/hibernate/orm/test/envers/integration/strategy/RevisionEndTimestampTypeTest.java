@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.strategy;
 
@@ -22,7 +20,7 @@ import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.type.BasicType;
 import org.junit.Test;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.envers.RequiresAuditStrategy;
 
 /**
@@ -31,27 +29,27 @@ import org.hibernate.testing.envers.RequiresAuditStrategy;
  *
  * @author Chris Cranford
  */
-@TestForIssue( jiraKey = "HHH-6210" )
+@JiraKey( value = "HHH-6210" )
 @RequiresAuditStrategy( value = ValidityAuditStrategy.class, jiraKey = "HHH-6210" )
 public class RevisionEndTimestampTypeTest extends BaseEnversJPAFunctionalTestCase {
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class[] { StrTestEntity.class };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { StrTestEntity.class };
+	}
 
-    @Override
-    protected void addConfigOptions(Map options) {
-        options.put( EnversSettings.AUDIT_STRATEGY_VALIDITY_STORE_REVEND_TIMESTAMP, "true" );
-    }
+	@Override
+	protected void addConfigOptions(Map options) {
+		options.put( EnversSettings.AUDIT_STRATEGY_VALIDITY_STORE_REVEND_TIMESTAMP, "true" );
+	}
 
-    @Test
-    public void testRevisionEndTimestampIsLongType() {
-        // get the entity and verify the revision end timestamp property exists
-        final PersistentClass clazz = metadata().getEntityBinding( StrTestEntity.class.getName() + "_AUD" );
+	@Test
+	public void testRevisionEndTimestampIsLongType() {
+		// get the entity and verify the revision end timestamp property exists
+		final PersistentClass clazz = metadata().getEntityBinding( StrTestEntity.class.getName() + "_AUD" );
 
-        final Property property = clazz.getProperty( "REVEND_TSTMP" );
-        assertTyping( BasicType.class, property.getType() );
-        assertEquals( Timestamp.class, ( (BasicType) property.getType() ).getJavaType() );
-    }
+		final Property property = clazz.getProperty( "REVEND_TSTMP" );
+		assertTyping( BasicType.class, property.getType() );
+		assertEquals( Timestamp.class, ( (BasicType) property.getType() ).getJavaType() );
+	}
 }

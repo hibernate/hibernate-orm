@@ -1,14 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.polymorphic;
 
 import org.hibernate.query.spi.QueryImplementor;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -37,7 +35,7 @@ public class PolymorphicQueriesTest2 {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-15744")
+	@JiraKey( value = "HHH-15744")
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -52,7 +50,7 @@ public class PolymorphicQueriesTest2 {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-15850")
+	@JiraKey(value = "HHH-15850")
 	public void testQueryLike(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			assertEquals( "Fab", session.createQuery(

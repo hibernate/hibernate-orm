@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.pagination;
 
 import java.io.Serializable;
@@ -15,7 +19,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,7 +72,7 @@ public class OraclePaginationTest extends BaseEntityManagerFunctionalTestCase {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12087")
+	@JiraKey(value = "HHH-12087")
 	public void testPagination() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			List<RootEntity> rootEntitiesAllPages = getLimitedRows( entityManager, 0, 10 );

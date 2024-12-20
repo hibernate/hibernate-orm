@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.fetchprofile;
 
@@ -18,8 +16,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,19 +32,19 @@ import static org.junit.Assert.fail;
  *
  * @author Hardy Ferentschik
  */
-@TestForIssue( jiraKey = "HHH-4812" )
+@JiraKey( value = "HHH-4812" )
 public class FetchProfileTest extends BaseUnitTestCase {
 
 	private ServiceRegistry serviceRegistry;
 
 	@Before
-    public void setUp() {
+	public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
 	@After
-    public void tearDown() {
-        if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
+	public void tearDown() {
+		if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
 	}
 
 	@Test
@@ -72,7 +71,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 
 	@Test
 	public void testWrongAssociationName() {
-		final MetadataSources metadataSources = new MetadataSources()
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 				.addAnnotatedClass( Customer2.class )
 				.addAnnotatedClass( Order.class )
 				.addAnnotatedClass( Country.class );
@@ -82,7 +81,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch ( MappingException e ) {
-            log.trace("success");
+			log.trace("success");
 		}
 		finally {
 			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
@@ -94,7 +93,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 
 	@Test
 	public void testWrongClass() {
-		final MetadataSources metadataSources = new MetadataSources()
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 				.addAnnotatedClass( Customer3.class )
 				.addAnnotatedClass( Order.class )
 				.addAnnotatedClass( Country.class );
@@ -104,7 +103,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch ( MappingException e ) {
-            log.trace("success");
+			log.trace("success");
 		}
 		finally {
 			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
@@ -116,7 +115,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 
 	@Test
 	public void testNowSupportedFetchMode() {
-		final MetadataSources metadataSources = new MetadataSources()
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 				.addAnnotatedClass( Customer4.class )
 				.addAnnotatedClass( Order.class )
 				.addAnnotatedClass( Country.class );
@@ -153,7 +152,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 		}
 
 		// now the same with no xml
-		final MetadataSources metadataSources = new MetadataSources()
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 				.addAnnotatedClass( Customer5.class )
 				.addAnnotatedClass( Order.class )
 				.addAnnotatedClass( Country.class );

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.internal;
 
@@ -19,7 +17,6 @@ import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInter
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.NullnessUtil;
 
 import jakarta.persistence.Access;
@@ -152,12 +149,11 @@ public class AccessStrategyHelper {
 			throw new MappingException(
 					String.format(
 							Locale.ROOT,
-							"In trying to locate getter for property [%s], Class [%s] defined " +
-									"both a `get` [%s] and `is` [%s] variant",
-							propertyName,
+							"Class '%s' declares both 'get' [%s] and 'is' [%s] variants of getter for property '%s'",
 							containerClass.getName(),
 							method.toString(),
-							isMethodVariant.toString()
+							isMethodVariant,
+							propertyName
 					)
 			);
 		}

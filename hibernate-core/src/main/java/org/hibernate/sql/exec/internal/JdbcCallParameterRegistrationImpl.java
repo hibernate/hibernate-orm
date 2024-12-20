@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.internal;
 
@@ -101,16 +99,9 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 	private void registerRefCursorParameter(
 			CallableStatement callableStatement,
 			SharedSessionContractImplementor session) {
-		if ( name != null ) {
-			session.getFactory().getServiceRegistry()
-					.getService( RefCursorSupport.class )
-					.registerRefCursorParameter( callableStatement, name );
-		}
-		else {
-			session.getFactory().getServiceRegistry()
-					.getService( RefCursorSupport.class )
-					.registerRefCursorParameter( callableStatement, jdbcParameterPositionStart );
-		}
+		session.getFactory().getServiceRegistry()
+				.requireService( RefCursorSupport.class )
+				.registerRefCursorParameter( callableStatement, jdbcParameterPositionStart );
 
 	}
 
@@ -119,12 +110,7 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 			SharedSessionContractImplementor session) {
 		final JdbcType sqlTypeDescriptor = ormType.getJdbcType();
 		try {
-			if ( name != null ) {
-				sqlTypeDescriptor.registerOutParameter( callableStatement, name );
-			}
-			else {
-				sqlTypeDescriptor.registerOutParameter( callableStatement, jdbcParameterPositionStart );
-			}
+			sqlTypeDescriptor.registerOutParameter( callableStatement, jdbcParameterPositionStart );
 		}
 		catch (SQLException e) {
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(

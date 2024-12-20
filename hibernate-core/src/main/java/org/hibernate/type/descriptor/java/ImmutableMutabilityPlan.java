@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -21,6 +19,14 @@ import org.hibernate.SharedSessionContract;
  * @author Steve Ebersole
  */
 public class ImmutableMutabilityPlan<T> implements MutabilityPlan<T> {
+
+	/**
+	 * Singleton access
+	 *
+	 * @deprecated in favor of {@link #instance()}
+	 */
+	@SuppressWarnings( "rawtypes" )
+	@Deprecated( forRemoval = true )
 	public static final ImmutableMutabilityPlan INSTANCE = new ImmutableMutabilityPlan();
 
 	public static <X> ImmutableMutabilityPlan<X> instance() {

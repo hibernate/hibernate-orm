@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
@@ -11,7 +9,7 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -106,7 +104,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 				collation,
 				creationState
 		);
-		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
+		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence.getJpaValue() ) );
 	}
 
 	TableReference getTableReference(TableGroup tableGroup) {
@@ -119,11 +117,9 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 
 			final MappingType elementMappingType = pluralAttribute.getElementDescriptor().getPartMappingType();
 
-			if ( elementMappingType instanceof AbstractEntityPersister ) {
-				final AbstractEntityPersister abstractEntityPersister = (AbstractEntityPersister) elementMappingType;
-				final int tableNumber = abstractEntityPersister.determineTableNumberForColumn( columnExpression );
-				final String tableName = abstractEntityPersister.getTableName( tableNumber );
-
+			if ( elementMappingType instanceof EntityPersister) {
+				final EntityPersister entityPersister = (EntityPersister) elementMappingType;
+				final String tableName = entityPersister.getTableNameForColumn( columnExpression );
 				return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableName );
 			}
 			else {

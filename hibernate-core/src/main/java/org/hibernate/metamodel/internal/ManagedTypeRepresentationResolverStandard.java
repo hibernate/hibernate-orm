@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
 
@@ -82,13 +80,13 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			final Class<CompositeUserType<?>> userTypeClass = creationContext.getBootstrapContext()
 					.getClassLoaderAccess()
 					.classForName( bootDescriptor.getTypeName() );
-			if ( creationContext.getBootModel().getMetadataBuildingOptions().disallowExtensionsInCdi() ) {
+			if ( !creationContext.getBootModel().getMetadataBuildingOptions().isAllowExtensionsInCdi() ) {
 				compositeUserType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
 			}
 			else {
 				compositeUserType = creationContext.getBootstrapContext()
 						.getServiceRegistry()
-						.getService( ManagedBeanRegistry.class )
+						.requireService( ManagedBeanRegistry.class )
 						.getBean( userTypeClass )
 						.getBeanInstance();
 			}
@@ -99,13 +97,13 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 		final EmbeddableInstantiator customInstantiator;
 		if ( bootDescriptor.getCustomInstantiator() != null ) {
 			final Class<? extends EmbeddableInstantiator> instantiatorClass = bootDescriptor.getCustomInstantiator();
-			if ( creationContext.getBootModel().getMetadataBuildingOptions().disallowExtensionsInCdi() ) {
+			if ( !creationContext.getBootModel().getMetadataBuildingOptions().isAllowExtensionsInCdi() ) {
 				customInstantiator = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( instantiatorClass );
 			}
 			else {
 				customInstantiator = creationContext.getBootstrapContext()
 						.getServiceRegistry()
-						.getService( ManagedBeanRegistry.class )
+						.requireService( ManagedBeanRegistry.class )
 						.getBean( instantiatorClass )
 						.getBeanInstance();
 			}

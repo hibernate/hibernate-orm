@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
@@ -13,36 +11,24 @@ import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.spi.NavigablePath;
 
 /**
+ * A TREAT form of {@linkplain SqmCrossJoin}
+ *
  * @author Steve Ebersole
  */
-public class SqmTreatedCrossJoin<T, S extends T> extends SqmCrossJoin<S> implements SqmTreatedPath<T, S> {
-	private final SqmCrossJoin<T> wrappedPath;
-	private final EntityDomainType<S> treatTarget;
-
-	public SqmTreatedCrossJoin(
-			SqmCrossJoin<T> wrappedPath,
-			EntityDomainType<S> treatTarget,
-			String alias) {
-		//noinspection unchecked
-		super(
-				wrappedPath.getNavigablePath().treatAs( treatTarget.getHibernateEntityName(), alias ),
-				(EntityDomainType<S>) wrappedPath.getReferencedPathSource().getSqmPathType(),
-				alias,
-				wrappedPath.getRoot()
-		);
-		this.wrappedPath = wrappedPath;
-		this.treatTarget = treatTarget;
-	}
+@SuppressWarnings("rawtypes")
+public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin {
+	private final SqmCrossJoin wrappedPath;
+	private final EntityDomainType treatTarget;
 
 	private SqmTreatedCrossJoin(
 			NavigablePath navigablePath,
-			SqmCrossJoin<T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			SqmCrossJoin<?> wrappedPath,
+			EntityDomainType<?> treatTarget,
 			String alias) {
 		//noinspection unchecked
 		super(
 				navigablePath,
-				(EntityDomainType<S>) wrappedPath.getReferencedPathSource().getSqmPathType(),
+				(EntityDomainType) wrappedPath.getReferencedPathSource().getSqmPathType(),
 				alias,
 				wrappedPath.getRoot()
 		);
@@ -51,48 +37,56 @@ public class SqmTreatedCrossJoin<T, S extends T> extends SqmCrossJoin<S> impleme
 	}
 
 	@Override
-	public SqmTreatedCrossJoin<T, S> copy(SqmCopyContext context) {
-		final SqmTreatedCrossJoin<T, S> existing = context.getCopy( this );
+	public SqmTreatedCrossJoin copy(SqmCopyContext context) {
+		final SqmTreatedCrossJoin existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmTreatedCrossJoin<T, S> path = context.registerCopy(
+		final SqmTreatedCrossJoin path = context.registerCopy(
 				this,
-				new SqmTreatedCrossJoin<>(
+				new SqmTreatedCrossJoin(
 						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget,
 						getExplicitAlias()
 				)
 		);
+		//noinspection unchecked
 		copyTo( path, context );
 		return path;
 	}
 
 	@Override
-	public EntityDomainType<S> getTreatTarget() {
+	public EntityDomainType getTreatTarget() {
 		return treatTarget;
 	}
 
 	@Override
-	public EntityDomainType<S> getModel() {
+	public EntityDomainType getModel() {
 		return getTreatTarget();
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
-	public SqmPath<T> getWrappedPath() {
+	public SqmPath getWrappedPath() {
 		return wrappedPath;
 	}
 
+	@SuppressWarnings({ "rawtypes" })
 	@Override
-	public SqmPathSource<S> getNodeType() {
+	public SqmPathSource getNodeType() {
+		return treatTarget;
+	}
+
+	@SuppressWarnings({ "rawtypes" })
+	@Override
+	public EntityDomainType getReferencedPathSource() {
 		return treatTarget;
 	}
 
 	@Override
-	public EntityDomainType<S> getReferencedPathSource() {
-		//noinspection unchecked
-		return (EntityDomainType<S>) wrappedPath.getReferencedPathSource();
+	public SqmPathSource<?> getResolvedModel() {
+		return treatTarget;
 	}
 
 	@Override
@@ -102,5 +96,29 @@ public class SqmTreatedCrossJoin<T, S extends T> extends SqmCrossJoin<S> impleme
 		sb.append( " as " );
 		sb.append( treatTarget.getName() );
 		sb.append( ')' );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public SqmTreatedCrossJoin treatAs(Class treatJavaType, String alias) {
+		return super.treatAs( treatJavaType, alias );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public SqmTreatedCrossJoin treatAs(EntityDomainType treatTarget, String alias) {
+		return super.treatAs( treatTarget, alias );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public SqmTreatedCrossJoin treatAs(Class treatAsType) {
+		return super.treatAs( treatAsType );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public SqmTreatedCrossJoin treatAs(EntityDomainType treatAsType) {
+		return super.treatAs( treatAsType );
 	}
 }

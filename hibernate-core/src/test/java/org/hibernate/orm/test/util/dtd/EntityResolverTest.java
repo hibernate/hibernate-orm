@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.util.dtd;
 
@@ -12,6 +10,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -24,7 +23,7 @@ public class EntityResolverTest extends BaseUnitTestCase {
 		//		<!ENTITY child SYSTEM "classpath://org/hibernate/test/util/dtd/child.xml">
 		// which we are expecting the Hibernate custom entity resolver to be able to resolve
 		// locally via classpath lookup.
-		final MetadataSources metadataSources = new MetadataSources()
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 			.addResource( "org/hibernate/orm/test/util/dtd/Parent.hbm.xml" );
 
 		try {

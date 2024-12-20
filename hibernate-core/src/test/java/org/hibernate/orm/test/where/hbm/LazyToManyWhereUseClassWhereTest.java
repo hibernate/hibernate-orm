@@ -1,20 +1,15 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.where.hbm;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -24,8 +19,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests association collections with AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS = true
- *
  * @author Gail Badner
  */
 public class LazyToManyWhereUseClassWhereTest extends BaseNonConfigCoreFunctionalTestCase {
@@ -40,13 +33,8 @@ public class LazyToManyWhereUseClassWhereTest extends BaseNonConfigCoreFunctiona
 		return new String[] { "where/hbm/LazyToManyWhere.hbm.xml" };
 	}
 
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		settings.put( AvailableSettings.USE_ENTITY_WHERE_CLAUSE_FOR_COLLECTIONS, "true" );
-	}
-
 	@Test
-	@TestForIssue( jiraKey = "HHH-13011" )
+	@JiraKey( "HHH-13011" )
 	public void testAssociatedWhereClause() {
 
 		Product product = new Product();

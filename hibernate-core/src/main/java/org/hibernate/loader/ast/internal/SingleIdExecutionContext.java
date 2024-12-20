@@ -1,20 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
 
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 
 /**
  * @author Steve Ebersole
@@ -75,8 +72,8 @@ class SingleIdExecutionContext extends BaseExecutionContext {
 	}
 
 	@Override
-	public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-		subSelectFetchableKeysHandler.addKey( entityKey, entry );
+	public void registerLoadingEntityHolder(EntityHolder holder) {
+		subSelectFetchableKeysHandler.addKey( holder );
 	}
 
 }

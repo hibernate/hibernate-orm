@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot;
 
@@ -21,7 +19,4 @@ import org.jboss.logging.Logger;
 public interface BootLogging {
 	String NAME = SubSystemLogging.BASE + ".boot";
 	Logger BOOT_LOGGER = Logger.getLogger( NAME );
-
-	boolean DEBUG_ENABLED = BOOT_LOGGER.isDebugEnabled();
-	boolean TRACE_ENABLED = BOOT_LOGGER.isTraceEnabled();
 }

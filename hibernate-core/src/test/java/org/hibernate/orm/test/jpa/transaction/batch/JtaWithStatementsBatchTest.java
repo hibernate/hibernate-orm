@@ -1,16 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.transaction.batch;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
+import org.hibernate.cfg.BatchSettings;
 import org.hibernate.orm.test.jpa.transaction.JtaPlatformSettingProvider;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -32,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-13050")
+@JiraKey(value = "HHH-13050")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @Jpa(
 		annotatedClasses = {
@@ -42,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 		integrationSettings = {
 				@Setting(name = AvailableSettings.JPA_TRANSACTION_TYPE, value = "JTA"),
 				@Setting(name = AvailableSettings.JPA_TRANSACTION_COMPLIANCE, value = "true"),
+				@Setting(name = AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, value = "true"),
 				@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "50")
 		},
 		settingProviders = {
@@ -54,7 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 						provider = JtaPlatformSettingProvider.class
 				),
 				@SettingProvider(
-						settingName = BatchBuilderInitiator.BUILDER,
+						settingName = BatchSettings.BUILDER,
 						provider = AbstractBatchingTest.Batch2BuilderSettingProvider.class
 				)
 		}

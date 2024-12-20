@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
@@ -21,31 +19,40 @@ import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-@RunWith(BytecodeEnhancerRunner.class)
-public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				StatelessQueryScrollingTest.Task.class,
+				StatelessQueryScrollingTest.User.class,
+				StatelessQueryScrollingTest.Resource.class,
+				StatelessQueryScrollingTest.Product.class,
+				StatelessQueryScrollingTest.Producer.class,
+				StatelessQueryScrollingTest.Vendor.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
+public class StatelessQueryScrollingTest {
 
 	@Test
-	public void testDynamicFetchScMapsIdProxyBidirectionalTestroll() {
+	public void testDynamicFetchScMapsIdProxyBidirectionalTestroll(SessionFactoryScope scope) {
 		ScrollableResults scrollableResults = null;
-		final StatelessSession statelessSession = sessionFactory().openStatelessSession();
+		final StatelessSession statelessSession = scope.getSessionFactory().openStatelessSession();
 		try {
 			final Query query = statelessSession.createQuery( "from Task t join fetch t.resource join fetch t.user" );
 			scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
@@ -66,24 +73,14 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 	}
 
 	@Test
-	public void testDynamicFetchCollectionScroll() {
+	public void testDynamicFetchCollectionScroll(SessionFactoryScope scope) {
 		ScrollableResults scrollableResults = null;
-		StatelessSession statelessSession = sessionFactory().openStatelessSession();
+		StatelessSession statelessSession = scope.getSessionFactory().openStatelessSession();
 		statelessSession.beginTransaction();
 
 		try {
 			final Query query = statelessSession.createQuery( "select p from Producer p join fetch p.products" );
-			if ( getDialect() instanceof DB2Dialect || getDialect() instanceof DerbyDialect ) {
-				/*
-					FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
-					but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
-					set type of TYPE_FORWARD_ONLY and db2 does not support it.
-			 	*/
-				scrollableResults = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
-			}
-			else {
-				scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
-			}
+			scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
 			while ( scrollableResults.next() ) {
 				Producer producer = (Producer) scrollableResults.get();
 				assertTrue( Hibernate.isInitialized( producer ) );
@@ -106,9 +103,9 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 	}
 
 
-	@Before
-	public void createTestData() {
-		inTransaction(
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Date now = new Date();
 					User me = new User( "me" );
@@ -116,51 +113,51 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 					Resource yourClock = new Resource( "clock", you );
 					Task task = new Task( me, "clean", yourClock, now ); // :)
 
-					session.save( me );
-					session.save( you );
-					session.save( yourClock );
-					session.save( task );
+					session.persist( me );
+					session.persist( you );
+					session.persist( yourClock );
+					session.persist( task );
 
 					User u3 = new User( "U3" );
 					User u4 = new User( "U4" );
 					Resource it = new Resource( "it", u4 );
 					Task task2 = new Task( u3, "beat", it, now ); // :))
 
-					session.save( u3 );
-					session.save( u4 );
-					session.save( it );
-					session.save( task2 );
+					session.persist( u3 );
+					session.persist( u4 );
+					session.persist( it );
+					session.persist( task2 );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Producer p1 = new Producer( 1, "Acme" );
 					Producer p2 = new Producer( 2, "ABC" );
 
-					session.save( p1 );
-					session.save( p2 );
+					session.persist( p1 );
+					session.persist( p2 );
 
 					Vendor v1 = new Vendor( 1, "v1" );
 					Vendor v2 = new Vendor( 2, "v2" );
 
-					session.save( v1 );
-					session.save( v2 );
+					session.persist( v1 );
+					session.persist( v2 );
 
 					final Product product1 = new Product( 1, "123", v1, p1 );
 					final Product product2 = new Product( 2, "456", v1, p1 );
 					final Product product3 = new Product( 3, "789", v1, p2 );
 
-					session.save( product1 );
-					session.save( product2 );
-					session.save( product3 );
+					session.persist( product1 );
+					session.persist( product2 );
+					session.persist( product3 );
 				}
 		);
 	}
 
-	@After
-	public void deleteTestData() {
-		inTransaction(
+	@AfterEach
+	public void deleteTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					s.createQuery( "delete Task" ).executeUpdate();
 					s.createQuery( "delete Resource" ).executeUpdate();
@@ -172,18 +169,6 @@ public class StatelessQueryScrollingTest extends BaseNonConfigCoreFunctionalTest
 				}
 		);
 	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( Task.class );
-		sources.addAnnotatedClass( User.class );
-		sources.addAnnotatedClass( Resource.class );
-		sources.addAnnotatedClass( Product.class );
-		sources.addAnnotatedClass( Producer.class );
-		sources.addAnnotatedClass( Vendor.class );
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Collection fetch scrolling

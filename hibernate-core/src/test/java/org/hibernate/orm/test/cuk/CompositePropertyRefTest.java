@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cuk;
 
@@ -41,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class CompositePropertyRefTest {
 
 	@Test
-	@SuppressWarnings({ "unchecked", "UnusedAssignment" })
+	@SuppressWarnings({ "unchecked", "unused" })
 	public void testOneToOnePropertyRef(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -53,17 +51,17 @@ public class CompositePropertyRefTest {
 					a.setCountry( "USA" );
 					p.setAddress( a );
 					a.setPerson( p );
-					session.save( p );
+					session.persist( p );
 
 					Person p2 = new Person();
 					p2.setName( "Max" );
 					p2.setUserId( "max" );
-					session.save( p2 );
+					session.persist( p2 );
 					Account act = new Account();
 					act.setType( 'c' );
 					act.setUser( p2 );
 					p2.getAccounts().add( act );
-					session.save( act );
+					session.persist( act );
 					session.flush();
 					session.clear();
 
@@ -96,7 +94,7 @@ public class CompositePropertyRefTest {
 					}
 					session.clear();
 
-					l = session.createQuery( "from Person p left join p.accounts" ).list();
+					l = session.createQuery( "from Person p left join p.accounts", Person.class ).list();
 					for ( int i = 0; i < 2; i++ ) {
 						Person px = (Person) l.get( i );
 						Set accounts = px.getAccounts();
@@ -138,4 +136,3 @@ public class CompositePropertyRefTest {
 	}
 
 }
-

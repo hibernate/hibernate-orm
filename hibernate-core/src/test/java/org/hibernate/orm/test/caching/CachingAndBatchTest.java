@@ -1,10 +1,14 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.caching;
 
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -32,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 				CachingAndBatchTest.MyEntity2.class
 		}
 )
-@TestForIssue( jiraKey = "HHH-16025")
+@JiraKey( value = "HHH-16025")
 public class CachingAndBatchTest {
 
 	@Test

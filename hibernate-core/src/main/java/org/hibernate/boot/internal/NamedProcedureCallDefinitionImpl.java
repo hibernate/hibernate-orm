@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
 
@@ -12,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.MappingException;
@@ -19,13 +18,12 @@ import org.hibernate.boot.model.internal.QueryHintDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.procedure.internal.NamedCallableQueryMementoImpl;
 import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.query.results.ResultSetMappingImpl;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
@@ -53,6 +51,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		this.registeredName = annotation.name();
 		this.procedureName = annotation.procedureName();
 		this.hints = new QueryHintDefinition( registeredName, annotation.hints() ).getHintsMap();
+
 		this.resultClasses = annotation.resultClasses();
 		this.resultSetMappings = annotation.resultSetMappings();
 
@@ -74,6 +73,12 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 	@Override
 	public String getRegistrationName() {
 		return registeredName;
+	}
+
+	@Override
+	public @Nullable String getLocation() {
+		// not kept for now
+		return null;
 	}
 
 	@Override
@@ -129,8 +134,8 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 
 	private ResultSetMapping buildResultSetMapping(String registeredName, SessionFactoryImplementor sessionFactory) {
 		return sessionFactory
-				.getServiceRegistry()
-				.getService( JdbcValuesMappingProducerProvider.class )
+				.getFastSessionServices()
+				.getJdbcValuesMappingProducerProvider()
 				.buildResultSetMapping( registeredName, false, sessionFactory );
 	}
 
@@ -139,12 +144,14 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		private final ParameterDefinition<?>[] parameterDefinitions;
 
 		ParameterDefinitions(StoredProcedureParameter[] parameters) {
-			if ( parameters == null || parameters.length == 0 ) {
+			if ( CollectionHelper.isEmpty( parameters ) ) {
 				parameterStrategy = ParameterStrategy.POSITIONAL;
 				parameterDefinitions = new ParameterDefinition[0];
 			}
 			else {
-				parameterStrategy = StringHelper.isNotEmpty( parameters[0].name() )
+				final StoredProcedureParameter parameterAnn = parameters[0];
+				final boolean firstParameterHasName = StringHelper.isNotEmpty( parameterAnn.name() );
+				parameterStrategy = firstParameterHasName
 						? ParameterStrategy.NAMED
 						: ParameterStrategy.POSITIONAL;
 				parameterDefinitions = new ParameterDefinition[ parameters.length ];
@@ -175,12 +182,12 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		private final ParameterMode parameterMode;
 		private final Class<T> type;
 
-		@SuppressWarnings("unchecked")
 		ParameterDefinition(int position, StoredProcedureParameter annotation) {
 			this.position = position;
 			this.name = normalize( annotation.name() );
 			this.parameterMode = annotation.mode();
-			this.type = annotation.type();
+			//noinspection unchecked
+			this.type = (Class<T>) annotation.type();
 		}
 
 		public ParameterMemento toMemento(SessionFactoryImplementor sessionFactory) {
@@ -202,5 +209,10 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 
 	private static String normalize(String name) {
 		return StringHelper.isNotEmpty( name ) ? name : null;
+	}
+
+	@Override
+	public Map<String, Object> getHints() {
+		return hints;
 	}
 }

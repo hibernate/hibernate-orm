@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.nationalized;
 
@@ -15,16 +13,19 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.TimeZone;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.NonContextualLobCreator;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -36,7 +37,7 @@ public class MaterializedNClobBindTest {
 	);
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11296" )
+	@JiraKey( value = "HHH-11296" )
 	public void testPreparedStatementStreamBinding() throws SQLException {
 		final WrapperOptions wrapperOptions = new MockWrapperOptions( true );
 		binder.bind(
@@ -48,7 +49,7 @@ public class MaterializedNClobBindTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11296" )
+	@JiraKey( value = "HHH-11296" )
 	public void testCallableStatementStreamBinding() throws SQLException {
 		final WrapperOptions wrapperOptions = new MockWrapperOptions( true );
 		binder.bind(
@@ -60,7 +61,7 @@ public class MaterializedNClobBindTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11818")
+	@JiraKey( value = "HHH-11818")
 	public void testPreparedStatementNClobBinding() throws SQLException {
 		final WrapperOptions wrapperOptions = new MockWrapperOptions( false );
 		binder.bind(
@@ -72,7 +73,7 @@ public class MaterializedNClobBindTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11818")
+	@JiraKey( value = "HHH-11818")
 	public void testCallableStatementNClobBinding() throws SQLException {
 		final WrapperOptions wrapperOptions = new MockWrapperOptions( false );
 		binder.bind(
@@ -85,6 +86,7 @@ public class MaterializedNClobBindTest {
 
 	private class MockWrapperOptions implements WrapperOptions {
 		private final boolean useStreamForLobBinding;
+		private final Dialect dialect = new H2Dialect();
 
 		public MockWrapperOptions(boolean useStreamForLobBinding) {
 			this.useStreamForLobBinding = useStreamForLobBinding;
@@ -92,11 +94,6 @@ public class MaterializedNClobBindTest {
 
 		@Override
 		public SharedSessionContractImplementor getSession() {
-			return null;
-		}
-
-		@Override
-		public SessionFactoryImplementor getSessionFactory() {
 			return null;
 		}
 
@@ -117,6 +114,26 @@ public class MaterializedNClobBindTest {
 
 		@Override
 		public TimeZone getJdbcTimeZone() {
+			return null;
+		}
+
+		@Override
+		public Dialect getDialect() {
+			return dialect;
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return null;
+		}
+
+		@Override
+		public FormatMapper getXmlFormatMapper() {
+			return null;
+		}
+
+		@Override
+		public FormatMapper getJsonFormatMapper() {
 			return null;
 		}
 	}
@@ -163,6 +180,9 @@ public class MaterializedNClobBindTest {
 				else {
 					throw new IllegalStateException( "PreparedStatement#setNClob unexpectedly called" );
 				}
+			}
+			else if ( "setNString".equals( methodName ) ) {
+				return null;
 			}
 			else {
 				throw new UnsupportedOperationException( methodName + " is not supported." );

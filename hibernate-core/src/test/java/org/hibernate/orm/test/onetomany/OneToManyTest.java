@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.onetomany;
 
@@ -25,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SessionFactory
 public class OneToManyTest {
 
-	@SuppressWarnings({ "unchecked", "UnusedAssignment" })
+	@SuppressWarnings("unchecked")
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
 	public void testOneToManyLinkTable(SessionFactoryScope scope) {
@@ -37,7 +35,7 @@ public class OneToManyTest {
 					p.setName( "Parent" );
 					p.getChildren().add( c );
 					c.setParent( p );
-					session.save( p );
+					session.persist( p );
 					session.flush();
 
 					p.getChildren().remove( c );
@@ -49,23 +47,26 @@ public class OneToManyTest {
 				}
 		);
 
-		scope.inTransaction(
+		@SuppressWarnings("unused")
+		Child merged = scope.fromTransaction(
 				session -> {
 					c.setParent( null );
-					session.update( c );
+					return session.merge( c );
+
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
-					c.setParent( p );
-					session.update( c );
+					merged.setParent( p );
+					session.merge( merged );
 				}
 		);
 
 
 		scope.inTransaction(
 				session -> {
+					@SuppressWarnings("unused")
 					Child child = (Child) session.createQuery( "from Child" ).uniqueResult();
 					session.createQuery( "from Child c left join fetch c.parent" ).list();
 					session.createQuery( "from Child c inner join fetch c.parent" ).list();

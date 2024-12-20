@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.hhh12973;
 
 import java.io.StringReader;
+import java.lang.invoke.MethodHandles;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -20,7 +19,6 @@ import jakarta.persistence.Table;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -28,11 +26,12 @@ import org.hibernate.id.SequenceMismatchStrategy;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 
@@ -45,13 +44,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-12973")
+@JiraKey(value = "HHH-12973")
 @RequiresDialect(value = PostgreSQLDialect.class)
 public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
 			Logger.getMessageLogger(
+					MethodHandles.lookup(),
 					CoreMessageLogger.class,
 					SequenceStyleGenerator.class.getName()
 			) );
@@ -75,8 +75,7 @@ public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFact
 		assertFalse( triggerable.wasTriggered() );
 
 		//For this test, we need to make sure the DB is created prior to bootstrapping Hibernate
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
-				.build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		SessionFactory sessionFactory = null;
 
@@ -105,6 +104,11 @@ public class PostgreSQLSequenceGeneratorWithSerialTest extends EntityManagerFact
 				DROP_TABLE + ";" + DROP_SEQUENCE
 		) );
 		settings.put( AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY, SequenceMismatchStrategy.FIX );
+	}
+
+	@Override
+	protected boolean exportSchema() {
+		return false;
 	}
 
 	@Override

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.context.spi;
 
@@ -20,19 +18,19 @@ package org.hibernate.context.spi;
  *
  * @author Steve Ebersole
  */
-public interface CurrentTenantIdentifierResolver {
+public interface CurrentTenantIdentifierResolver<T> {
 	/**
 	 * Resolve the current tenant identifier.
-	 * 
+	 *
 	 * @return The current tenant identifier
 	 */
-	String resolveCurrentTenantIdentifier();
+	T resolveCurrentTenantIdentifier();
 
 	/**
 	 * Should we validate that the tenant identifier of a "current sessions" that
 	 * already exists when {@link CurrentSessionContext#currentSession()} is called
 	 * matches the value returned here from {@link #resolveCurrentTenantIdentifier()}?
-	 * 
+	 *
 	 * @return {@code true} indicates that the extra validation will be performed;
 	 *                      {@code false} indicates it will not.
 	 *
@@ -47,7 +45,7 @@ public interface CurrentTenantIdentifierResolver {
 	 *
 	 * @return true is this is root tenant
 	 */
-	default boolean isRoot(String tenantId) {
+	default boolean isRoot(T tenantId) {
 		return false;
 	}
 }

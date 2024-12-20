@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -102,6 +100,10 @@ public @interface Any {
 
 	/**
 	 * Whether the association is optional.
+	 * <p>
+	 * If the discriminator {@link jakarta.persistence.Column Column} or the
+	 * {@link jakarta.persistence.JoinColumn JoinColumn} are not nullable the
+	 * association is always considered non-optional, regardless of this value.
 	 *
 	 * @return {@code false} if the association cannot be null.
 	 */

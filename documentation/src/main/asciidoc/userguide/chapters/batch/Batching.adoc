@@ -46,7 +46,7 @@ Since version 5.2, Hibernate allows overriding the global JDBC batch size given 
 [[batch-session-jdbc-batch-size-example]]
 .Hibernate specific JDBC batch size configuration on a per `Session` basis
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-jdbc-batch-size-example]
 ----
@@ -60,7 +60,7 @@ The following example shows an anti-pattern for batch inserts.
 [[batch-session-batch-example]]
 .Naive way to insert 100 000 entities with Hibernate
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-batch-example]
 ----
@@ -68,11 +68,11 @@ include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-batch-exampl
 
 There are several problems associated with this example:
 
-. Hibernate caches all the newly inserted `Customer` instances in the session-level cache, so, when the transaction ends, 100 000 entities are managed by the persistence context.
+. Hibernate caches all the newly inserted `Person` instances in the session-level cache, so, when the transaction ends, 100 000 entities are managed by the persistence context.
   If the maximum memory allocated to the JVM is rather low, this example could fail with an `OutOfMemoryException`.
   The Java 1.8 JVM allocated either 1/4 of available RAM or 1Gb, which can easily accommodate 100 000 objects on the heap.
 . long-running transactions can deplete a connection pool so other transactions don't get a chance to proceed.
-. JDBC batching is not enabled by default, so every insert statement requires a database roundtrip.
+. JDBC batching is not enabled by default, so every insert statement requires a database round trip.
   To enable JDBC batching, set the `hibernate.jdbc.batch_size` property to an integer between 10 and 50.
 
 [IMPORTANT]
@@ -88,7 +88,7 @@ When you make new objects persistent, employ methods `flush()` and `clear()` to 
 [[batch-session-batch-insert-example]]
 .Flushing and clearing the `Session`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-batch-insert-example]
 ----
@@ -103,7 +103,7 @@ In addition, use method `scroll()` to take advantage of server-side cursors for 
 [[batch-session-scroll-example]]
 .Using `scroll()`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-scroll-example]
 ----
@@ -149,13 +149,13 @@ IMPORTANT: Due to the lack of a first-level cache, stateless sessions are vulner
 [[batch-stateless-session-example]]
 .Using a  `StatelessSession`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-stateless-session-example]
 ----
 ====
 
-The `Customer` instances returned by the query are immediately detached.
+The `Person` instances returned by the query are immediately detached.
 They are never associated with any persistence context.
 
 [NOTE]
@@ -205,7 +205,7 @@ You can use sub-queries in the `WHERE` clause, and the sub-queries themselves ca
 [[batch-bulk-jpql-update-example]]
 .Executing a JPQL `UPDATE`, using the `Query.executeUpdate()`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-jpql-update-example]
 ----
@@ -214,7 +214,7 @@ include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-jpql-update-exa
 [[batch-bulk-hql-update-example]]
 .Executing an HQL `UPDATE`, using the `Query.executeUpdate()`
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-update-example]
 ----
@@ -226,7 +226,7 @@ You can use a versioned update to force Hibernate to reset the version or timest
 [[batch-bulk-hql-update-version-example]]
 .Updating the version of timestamp
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-update-version-example]
 ----
@@ -242,7 +242,7 @@ This feature is only available in HQL since it's not standardized by Jakarta Per
 [[batch-bulk-jpql-delete-example]]
 .A JPQL `DELETE` statement
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-jpql-delete-example]
 ----
@@ -251,7 +251,7 @@ include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-jpql-delete-exa
 [[batch-bulk-hql-delete-example]]
 .An HQL `DELETE` statement
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-delete-example]
 ----
@@ -309,7 +309,7 @@ in which case the seed value defined by the `org.hibernate.type.descriptor.java.
 [[batch-bulk-hql-insert-example]]
 .HQL INSERT statement
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-doc-batch}/BatchTests.java[tags=batch-bulk-hql-insert-example]
 ----
@@ -344,7 +344,7 @@ The `Person` entity is the base class of this entity inheritance model, and is m
 [[batch-bulk-hql-temp-table-base-class-example]]
 .Bulk mutation base class entity
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-bulkid}/AbstractMutationStrategyCompositeIdTest.java[tags=batch-bulk-hql-temp-table-base-class-example]
 ----
@@ -355,7 +355,7 @@ Both the `Doctor` and `Engineer` entity classes extend the `Person` base class:
 [[batch-bulk-hql-temp-table-sub-classes-example]]
 .Bulk mutation subclass entities
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-bulkid}/AbstractMutationStrategyIdTest.java[tags=batch-bulk-hql-temp-table-sub-classes-example]
 ----
@@ -369,7 +369,7 @@ Now, when you try to execute a bulk entity delete query:
 [[batch-bulk-hql-temp-table-delete-query-example]]
 .Bulk mutation delete query example
 ====
-[source, JAVA, indent=0]
+[source, java, indent=0]
 ----
 include::{example-dir-bulkid}/AbstractMutationStrategyCompositeIdTest.java[tags=batch-bulk-hql-temp-table-delete-query-example]
 ----
@@ -386,10 +386,14 @@ The temporary table can be either global or local, depending on the underlying d
 [[batch-bulk-hql-strategies-non-temporary-table]]
 ===== Non-temporary table bulk mutation strategies
 
-When the temporary table strategy can not be used because the database user lacks privilege to create temporary tables,
-the `InlineMutationStrategy` must be used.
+The strategies outlined above depend on the creation of temporary tables, which Hibernate creates on startup if they don't already exist. At present this process is not integrated in the schema management tooling, and this requires that the user have the required permissions to alter the database schema.
 
-To use this strategy, you need to configure the following configuration property:
+If the Hibernate session user lacks these permissions, you will need to either:
+
+ * alter your schema through a different user with more permissions, to add a global temporary table named HTE_<root entity table name>, which contains all columns of all tables involved in the entity hierarchy. +
+This will allow insert, update and delete in HQL for multi-table entities.
+
+* OR configure Hibernate ORM to use the (badly-performing) inline strategy (for _mutations_ only!):
 
 [source,xml]
 ----
@@ -398,7 +402,22 @@ To use this strategy, you need to configure the following configuration property
 />
 ----
 
-Now, when running the previous test case, Hibernate generates the following SQL statements:
+[IMPORTANT]
+====
+We strongly recommend the use of the first option, i.e. manually adding the temporary tables, because the inline strategy is set to be removed in a future release. Also, there is no equivalent strategy for inserts.
+
+Additionally, automatic creation of temporary tables should be deactivated. This is done by setting the
+
+`hibernate.query.mutation_strategy.global_temporary.create_tables` and `hibernate.query.mutation_strategy.global_temporary.drop_tables`
+
+*or*
+
+`hibernate.query.mutation_strategy.persistent.create_tables` and `hibernate.query.mutation_strategy.persistent.drop_tables`
+
+properties (depending on the default strategy for the dialect) to `false`
+====
+
+With the inline strategy, when running the previous test case, Hibernate generates the following SQL statements:
 
 [[batch-bulk-hql-InlineIdsInClauseBulkIdStrategy-delete-query-example]]
 .`InlineIdsInClauseBulkIdStrategy` delete entity query example

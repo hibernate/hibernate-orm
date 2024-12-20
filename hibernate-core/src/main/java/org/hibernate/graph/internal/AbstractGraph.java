@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graph.internal;
 
@@ -11,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 import org.hibernate.graph.AttributeNode;
 import org.hibernate.graph.CannotBecomeEntityGraphException;
@@ -23,6 +22,9 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.query.sqm.SqmPathSource;
+
+import jakarta.persistence.metamodel.Attribute;
 
 import static java.util.Collections.emptyList;
 
@@ -76,7 +78,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 
 		for ( AttributeNodeImplementor<?> attributeNode : other.getAttributeNodeImplementors() ) {
 			final AttributeNodeImplementor<?> localAttributeNode = findAttributeNode(
-					(PersistentAttribute<? extends J,?>) attributeNode.getAttributeDescriptor()
+					(PersistentAttribute<? super J,?>) attributeNode.getAttributeDescriptor()
 			);
 			if ( localAttributeNode != null ) {
 				// keep the local one, but merge in the incoming one
@@ -91,6 +93,41 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// AttributeNode handling
+
+
+	@Override
+	public <Y> AttributeNodeImplementor<Y> getAttributeNode(String attributeName) {
+		if ( attrNodeMap == null ) {
+			return null;
+		}
+		final PersistentAttribute<? super J, ?> attribute = managedType.findAttributeInSuperTypes( attributeName );
+		//noinspection unchecked
+		return (AttributeNodeImplementor<Y>) attrNodeMap.get( attribute );
+	}
+
+	@Override
+	public <Y> AttributeNodeImplementor<Y> getAttributeNode(Attribute<? super J, Y> attribute) {
+		return null;
+	}
+
+	@Override
+	public void visitAttributeNodes(Consumer<AttributeNodeImplementor<?>> consumer) {
+		if ( attrNodeMap != null ) {
+			attrNodeMap.forEach( (attribute, nodeImplementor) -> consumer.accept( nodeImplementor ) );
+		}
+	}
+
+	@Override
+	public List<AttributeNode<?>> getAttributeNodeList() {
+		if ( attrNodeMap == null ) {
+			return emptyList();
+		}
+		else {
+			final List<AttributeNode<?>> result = new ArrayList<>();
+			visitAttributeNodes( result::add );
+			return result;
+		}
+	}
 
 	@Override
 	public AttributeNodeImplementor<?> addAttributeNode(AttributeNodeImplementor<?> incomingAttributeNode) {
@@ -123,13 +160,16 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	@Override
 	@SuppressWarnings("unchecked")
 	public <AJ> AttributeNodeImplementor<AJ> findAttributeNode(String attributeName) {
-		final PersistentAttribute<? super J, ?> attribute = managedType.findAttributeInSuperTypes( attributeName );
-		return attribute == null ? null : findAttributeNode( (PersistentAttribute<? extends J, AJ>) attribute );
+		PersistentAttribute<? super J, ?> attribute = managedType.findAttributeInSuperTypes( attributeName );
+		if ( attribute instanceof SqmPathSource && ( (SqmPathSource<?>) attribute ).isGeneric() ) {
+			attribute = managedType.findConcreteGenericAttribute( attributeName );
+		}
+		return attribute == null ? null : findAttributeNode( (PersistentAttribute<? super J, AJ>) attribute );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <AJ> AttributeNodeImplementor<AJ> findAttributeNode(PersistentAttribute<? extends J, AJ> attribute) {
+	public <AJ> AttributeNodeImplementor<AJ> findAttributeNode(PersistentAttribute<? super J, AJ> attribute) {
 		return attrNodeMap == null ? null : (AttributeNodeImplementor<AJ>) attrNodeMap.get( attribute );
 	}
 
@@ -145,20 +185,55 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public <AJ> AttributeNodeImplementor<AJ> addAttributeNode(String attributeName)
-			throws CannotContainSubGraphException {
+	public <AJ> AttributeNodeImplementor<AJ> addAttributeNode(String attributeName) throws CannotContainSubGraphException {
 		return findOrCreateAttributeNode( attributeName );
 	}
 
 	@Override
-	public <AJ> AttributeNodeImplementor<AJ> addAttributeNode(PersistentAttribute<? extends J, AJ> attribute)
+	public <AJ> AttributeNodeImplementor<AJ> addAttributeNode(PersistentAttribute<? super J, AJ> attribute)
 			throws CannotContainSubGraphException {
 		return findOrCreateAttributeNode( attribute );
 	}
 
 	@Override
+	public <Y> AttributeNodeImplementor<Y> addAttributeNode(Attribute<? super J, Y> attribute) {
+		//noinspection unchecked
+		return (AttributeNodeImplementor<Y>) findOrCreateAttributeNode( (PersistentAttribute<? super J, ?>) attribute );
+	}
+
+	@Override
+	public void addAttributeNodes(String... attributeNames) {
+		for ( int i = 0; i < attributeNames.length; i++ ) {
+			addAttributeNode( attributeNames[i] );
+		}
+	}
+
+	@Override @SafeVarargs
+	public final void addAttributeNodes(Attribute<? super J, ?>... attributes) {
+		for ( int i = 0; i < attributes.length; i++ ) {
+			addAttributeNode( attributes[i] );
+		}
+	}
+
+	@Override
+	public void removeAttributeNode(String attributeName) {
+		final PersistentAttribute<? super J, ?> attribute = managedType.findAttribute( attributeName );
+		attrNodeMap.remove( attribute );
+	}
+
+	@Override
+	public void removeAttributeNode(Attribute<? super J, ?> attribute) {
+		attrNodeMap.remove( (PersistentAttribute<? super J, ?>) attribute );
+	}
+
+	@Override
+	public void removeAttributeNodes(Attribute.PersistentAttributeType nodeTypes) {
+		attrNodeMap.entrySet().removeIf( entry -> entry.getKey().getPersistentAttributeType() == nodeTypes );
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
-	public <AJ> AttributeNodeImplementor<AJ> findOrCreateAttributeNode(PersistentAttribute<? extends J, AJ> attribute) {
+	public <AJ> AttributeNodeImplementor<AJ> findOrCreateAttributeNode(PersistentAttribute<? super J, AJ> attribute) {
 		verifyMutability();
 
 		AttributeNodeImplementor<AJ> attrNode = null;

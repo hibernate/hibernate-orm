@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
@@ -37,7 +35,8 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 		super( session );
 		EnhancementAsProxyLazinessInterceptor interceptor = null;
 		if ( isPersistentAttributeInterceptable( entity ) ) {
-			PersistentAttributeInterceptor attributeInterceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
+			PersistentAttributeInterceptor attributeInterceptor =
+					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 			if ( attributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				interceptor = (EnhancementAsProxyLazinessInterceptor) attributeInterceptor;
 			}
@@ -53,31 +52,25 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
 		if ( collection != null ) {
 			final SessionImplementor session = getSession();
-			final PersistentCollection<?> persistentCollection;
 			if ( type.isArrayType() ) {
-				persistentCollection = session.getPersistenceContextInternal().getCollectionHolder( collection );
-				// if no array holder we found an unwrapped array (this can't occur,
-				// because we now always call wrap() before getting to here)
-				// return (ah==null) ? true : searchForDirtyCollections(ah, type);
-			}
-			else {
-				if ( interceptor != null && !interceptor.isAttributeLoaded( type.getName() ) ) {
-					return null; //NOTE: EARLY EXIT!
-				}
-				else {
-					// if not wrapped yet, it's dirty
-					// (this can't occur, because we now always call wrap() before getting here)
-					// return ( ! (obj instanceof PersistentCollection) )
-					//     ? true : searchForDirtyCollections( (PersistentCollection) obj, type );
-					persistentCollection = (PersistentCollection<?>) collection;
-				}
-			}
+				// if no array holder we found an unwrapped array, it's dirty
+				// (this can't occur, because we now always call wrap() before getting to here)
 
-			if ( persistentCollection.isDirty() ) { //we need to check even if it was not initialized, because of delayed adds!
-				dirty = true;
+				// we need to check even if it was not initialized, because of delayed adds!
+				if ( session.getPersistenceContextInternal().getCollectionHolder( collection ).isDirty() ) {
+					dirty = true;
+				}
+			}
+			else if ( interceptor == null || interceptor.isAttributeLoaded( type.getName() ) ) {
+				// if not wrapped yet, it's dirty
+				// (this can't occur, because we now always call wrap() before getting here)
+
+				// we need to check even if it was not initialized, because of delayed adds!
+				if ( ((PersistentCollection<?>) collection).isDirty() ) {
+					dirty = true;
+				}
 			}
 		}
-
 		return null;
 	}
 

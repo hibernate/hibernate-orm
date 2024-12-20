@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.exec.manytoone;
 
@@ -25,6 +23,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @DomainModel(
 		annotatedClasses = {
@@ -45,15 +44,15 @@ public class EntityWithLazyManyToOneTest {
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			ConcreteEntity entity = new ConcreteEntity();
-			session.save( entity );
+			session.persist( entity );
 
 			LazyAbstractEntityReference reference = new LazyAbstractEntityReference( entity );
-			session.save( reference );
+			session.persist( reference );
 
 			this.abstractEntityReferenceId = reference.getId();
 
 			LazyConcreteEntityReference concreteReference = new LazyConcreteEntityReference( entity );
-			session.save( concreteReference );
+			session.persist( concreteReference );
 
 			this.concreteEntityReferenceId = concreteReference.getId();
 		} );
@@ -137,6 +136,7 @@ public class EntityWithLazyManyToOneTest {
 	}
 
 	@Entity(name = "LazyAbstractEntityReference")
+	@Table(name = "lazy_abstract_ent_ref")
 	@Cacheable
 	public static class LazyAbstractEntityReference {
 
@@ -172,6 +172,7 @@ public class EntityWithLazyManyToOneTest {
 	}
 
 	@Entity(name = "LazyConcreteEntityReference")
+	@Table(name = "lazy_concrete_ent_ref")
 	@Cacheable
 	public static class LazyConcreteEntityReference {
 

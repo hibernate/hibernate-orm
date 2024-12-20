@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
@@ -52,47 +50,85 @@ import jakarta.persistence.TemporalType;
 public interface CommonQueryContract {
 
 	/**
+	 * The {@link QueryFlushMode} in effect for this query.
+	 * <p>
+	 * By default, this is {@link QueryFlushMode#DEFAULT}, and the
+	 * {@link FlushMode} of the owning {@link Session} determines whether
+	 * it is flushed.
+	 *
+	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @since 7.0
+	 */
+	QueryFlushMode getQueryFlushMode();
+
+	/**
+	 * Set the {@link QueryFlushMode} to use for this query.
+	 *
+	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @since 7.0
+	 */
+	CommonQueryContract setQueryFlushMode(QueryFlushMode queryFlushMode);
+
+	/**
 	 * The JPA {@link FlushModeType} in effect for this query.  By default, the
 	 * query inherits the {@link FlushMode} of the {@link Session} from which
 	 * it originates.
 	 *
-	 * @see #getHibernateFlushMode
-	 * @see Session#getHibernateFlushMode
+	 * @see #getQueryFlushMode()
+	 * @see #getHibernateFlushMode()
+	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @deprecated use {@link #getQueryFlushMode()}
 	 */
+	@Deprecated(since = "7")
 	FlushModeType getFlushMode();
 
 	/**
-	 * Set the {@link FlushMode} in to use for this query.
+	 * Set the {@link FlushMode} to use for this query.
+	 * <p>
+	 * Setting this to {@code null} ultimately indicates to use the
+	 * {@link FlushMode} of the session. Use {@link #setHibernateFlushMode}
+	 * passing {@link FlushMode#MANUAL} instead to indicate that no automatic
+	 * flushing should occur.
 	 *
-	 * @implNote Setting to {@code null} ultimately indicates to use the
-	 * FlushMode of the Session.  Use {@link #setHibernateFlushMode} passing
-	 * {@link FlushMode#MANUAL} instead to indicate that no automatic flushing
-	 * should occur
-	 *
+	 * @see #getQueryFlushMode()
 	 * @see #getHibernateFlushMode()
 	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @deprecated use {@link #setQueryFlushMode(QueryFlushMode)}
 	 */
+	@Deprecated(since = "7")
 	CommonQueryContract setFlushMode(FlushModeType flushMode);
 
 	/**
-	 * The {@link FlushMode} in effect for this query.  By default, the query
+	 * The {@link FlushMode} in effect for this query. By default, the query
 	 * inherits the {@code FlushMode} of the {@link Session} from which it
 	 * originates.
 	 *
-	 * @see Session#getHibernateFlushMode
+	 * @see #getQueryFlushMode()
+	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @deprecated use {@link #getQueryFlushMode()}
 	 */
+	@Deprecated(since = "7")
 	FlushMode getHibernateFlushMode();
 
 	/**
 	 * Set the current {@link FlushMode} in effect for this query.
 	 *
 	 * @implNote Setting to {@code null} ultimately indicates to use the
-	 * {@link FlushMode} of the Session.  Use {@link FlushMode#MANUAL}
+	 * {@link FlushMode} of the session. Use {@link FlushMode#MANUAL}
 	 * instead to indicate that no automatic flushing should occur.
 	 *
+	 * @see #getQueryFlushMode()
 	 * @see #getHibernateFlushMode()
 	 * @see Session#getHibernateFlushMode()
+	 *
+	 * @deprecated use {@link #setQueryFlushMode(QueryFlushMode)}
 	 */
+	@Deprecated(since = "7")
 	CommonQueryContract setHibernateFlushMode(FlushMode flushMode);
 
 	/**

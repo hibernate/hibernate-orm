@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.tool.schema.scripts;
 
@@ -28,7 +26,6 @@ import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 import org.hibernate.tool.schema.spi.SchemaCreator;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
@@ -36,9 +33,10 @@ import org.hibernate.tool.schema.spi.SqlScriptException;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +49,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-13673")
+@JiraKey(value = "HHH-13673")
 @RequiresDialect(value = H2Dialect.class,
 		jiraKey = "HHH-6286",
 		comment = "Only running the tests against H2, because the sql statements in the import file are not generic. " +
@@ -64,7 +62,7 @@ public class StatementsWithoutTerminalCharsImportFileTest extends BaseUnitTestCa
 	@Before
 	public void setUp() {
 		// NOTE : the
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.HBM2DDL_AUTO, "none" )
 				.applySetting(
 						Environment.HBM2DDL_IMPORT_FILES,
@@ -106,8 +104,8 @@ public class StatementsWithoutTerminalCharsImportFileTest extends BaseUnitTestCa
 	}
 
 	@Override
-	public Map getConfigurationValues() {
-		return ssr.getService( ConfigurationService.class ).getSettings();
+	public Map<String,Object> getConfigurationValues() {
+		return ssr.requireService( ConfigurationService.class ).getSettings();
 	}
 
 	@Override
@@ -118,11 +116,6 @@ public class StatementsWithoutTerminalCharsImportFileTest extends BaseUnitTestCa
 	@Override
 	public ExceptionHandler getExceptionHandler() {
 		return ExceptionHandlerLoggedImpl.INSTANCE;
-	}
-
-	@Override
-	public SchemaFilter getSchemaFilter() {
-		return SchemaFilter.ALL;
 	}
 
 	private static class SourceDescriptorImpl implements SourceDescriptor {

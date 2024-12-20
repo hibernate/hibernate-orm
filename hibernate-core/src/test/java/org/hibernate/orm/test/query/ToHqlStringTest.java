@@ -1,8 +1,12 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.query;
 
 import org.hibernate.query.spi.SqmQuery;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -19,8 +23,6 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
-import org.hamcrest.CoreMatchers;
-import org.hamcrest.MatcherAssert;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -31,7 +33,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 				ToHqlStringTest.TestEntitySub.class
 		}
 )
-@TestForIssue( jiraKey = "HHH-15389")
+@JiraKey( value = "HHH-15389")
 public class ToHqlStringTest {
 
 	@Test
@@ -93,11 +95,56 @@ public class ToHqlStringTest {
 		);
 	}
 
+	@Test
+	@JiraKey("HHH-16526")
+	public void testCriteriaWithFunctionTakingOneArgument(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+					CriteriaQuery<Object> criteriaQuery = builder.createQuery( Object.class );
+
+					criteriaQuery.from( TestEntity.class );
+					criteriaQuery.where(
+							builder.equal( builder.lower( builder.literal( "Foo" ) ), builder.literal( "foo" ) )
+					);
+
+					TypedQuery<Object> query = entityManager.createQuery( criteriaQuery );
+					String hqlString = ( (SqmQuery) query ).getSqmStatement().toHqlString();
+					assertThat( hqlString, containsString( "where lower('Foo') = 'foo'" ) );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-16526")
+	public void testCriteriaWithFunctionTakingTwoArguments(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+					CriteriaQuery<Object> criteriaQuery = builder.createQuery( Object.class );
+
+					criteriaQuery.from( TestEntity.class );
+					criteriaQuery.where( builder.isTrue(
+							builder.function( "myFunction", Boolean.class, builder.literal( 0 ), builder.literal( 10 ) )
+					) );
+
+					TypedQuery<Object> query = entityManager.createQuery( criteriaQuery );
+					String hqlString = ( (SqmQuery) query ).getSqmStatement().toHqlString();
+					assertThat( hqlString, containsString( "where myFunction(0, 10)" ) );
+				}
+		);
+	}
+
 	public static class TestDto {
 		@Id
 		public Integer id;
 
 		public String name;
+
+		public TestDto(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
 	}
 
 	@Entity(name = "TestEntity")

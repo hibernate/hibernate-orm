@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.domain.gambit;
 
@@ -10,6 +8,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import org.hibernate.annotations.SortComparator;
+import org.hibernate.annotations.SortNatural;
+
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -22,11 +24,6 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.annotations.SortComparator;
-import org.hibernate.annotations.SortNatural;
 
 /**
  * @author Steve Ebersole
@@ -94,11 +91,6 @@ public class EntityOfSets {
 	@ElementCollection
 	@CollectionTable( name = "EntityOfSet_comp1")
 	private Set<SimpleComponent> setOfComponents;
-
-	@ElementCollection
-	@LazyCollection( LazyCollectionOption.EXTRA )
-	@CollectionTable( name = "EntityOfSet_comp2")
-	private Set<SimpleComponent> extraLazySetOfComponents;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Entity associations
@@ -283,25 +275,6 @@ public class EntityOfSets {
 			setOfComponents = new HashSet<>();
 		}
 		setOfComponents.add( value );
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// setOfExtraLazyComponents
-
-	public Set<SimpleComponent> getExtraLazySetOfComponents() {
-		return extraLazySetOfComponents;
-	}
-
-	public void setExtraLazySetOfComponents(Set<SimpleComponent> extraLazySetOfComponents) {
-		this.extraLazySetOfComponents = extraLazySetOfComponents;
-	}
-
-	public void addExtraLazyComponent(SimpleComponent value) {
-		if ( extraLazySetOfComponents == null ) {
-			extraLazySetOfComponents = new HashSet<>();
-		}
-		extraLazySetOfComponents.add( value );
 	}
 
 

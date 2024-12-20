@@ -1,8 +1,12 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.annotations.embeddables;
 
 import java.util.List;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -186,7 +190,7 @@ public class EmbeddableWithGenericAndMappedSuperClassTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-4299")
+	@JiraKey(value = "HHH-4299")
 	public void testGenericEmbeddedAttribute(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

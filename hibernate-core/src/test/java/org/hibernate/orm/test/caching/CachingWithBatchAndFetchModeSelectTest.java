@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.caching;
 
 import java.util.List;
@@ -9,7 +13,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -34,7 +38,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		}
 
 )
-@TestForIssue(jiraKey = "HHH-16230")
+@JiraKey(value = "HHH-16230")
 public class CachingWithBatchAndFetchModeSelectTest {
 
 	public final static String CATEGORY_A_NAME = "A";

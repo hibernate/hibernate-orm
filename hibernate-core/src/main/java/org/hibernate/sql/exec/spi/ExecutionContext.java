@@ -1,20 +1,17 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.spi;
 
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 
 /**
  * A context for execution of SQL statements expressed via
@@ -61,20 +58,20 @@ public interface ExecutionContext {
 		return null;
 	}
 
+	default String getEntityUniqueKeyAttributePath() {
+		return null;
+	}
+
+	default Object getEntityUniqueKey() {
+		return null;
+	}
+
 	default EntityMappingType getRootEntityDescriptor() {
 		return null;
 	}
 
-	/**
-	 * @deprecated use {@link #registerSubselect(EntityKey, LoadingEntityEntry)} instead.
-	 */
-	@Deprecated
-	default void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
+	default void registerLoadingEntityHolder(EntityHolder holder) {
 		// by default do nothing
-	}
-
-	default void registerSubselect(EntityKey entityKey, LoadingEntityEntry entry) {
-		registerLoadingEntityEntry( entityKey, entry );
 	}
 
 	/**

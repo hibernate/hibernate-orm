@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.inheritance.repeatedtable;
 
 import jakarta.persistence.Column;
@@ -17,7 +21,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -32,7 +36,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.hibernate.cfg.AvailableSettings.FORMAT_SQL;
 import static org.hibernate.cfg.AvailableSettings.SHOW_SQL;
 
-@TestForIssue(jiraKey = "HHH-15932")
+@JiraKey(value = "HHH-15932")
 public class AlternativeToRepeatedTableTest extends BaseCoreFunctionalTestCase {
 
 	@Override
@@ -48,8 +52,8 @@ public class AlternativeToRepeatedTableTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure(configuration);
-		configuration.setProperty(SHOW_SQL, Boolean.toString(true));
-		configuration.setProperty(FORMAT_SQL, Boolean.toString(true));
+		configuration.setProperty(SHOW_SQL, true);
+		configuration.setProperty(FORMAT_SQL, true);
 	}
 
 	@Test

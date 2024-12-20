@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc.internal;
 
@@ -25,11 +23,10 @@ public class JdbcLiteralFormatterArray<T> extends BasicJdbcLiteralFormatter<T> {
 
 	@Override
 	public void appendJdbcLiteral(SqlAppender appender, Object value, Dialect dialect, WrapperOptions wrapperOptions) {
-		dialect.appendArrayLiteral(
-				appender,
-				unwrap( value, Object[].class, wrapperOptions ),
-				elementFormatter,
-				wrapperOptions
-		);
+		dialect.appendArrayLiteral( appender, unwrapArray( value, wrapperOptions ), elementFormatter, wrapperOptions );
+	}
+
+	private Object[] unwrapArray(Object value, WrapperOptions wrapperOptions) {
+		return unwrap( value, Object[].class, wrapperOptions );
 	}
 }

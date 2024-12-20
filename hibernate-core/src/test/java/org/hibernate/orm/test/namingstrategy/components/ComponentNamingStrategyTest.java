@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.namingstrategy.components;
 
@@ -20,8 +18,9 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.CollectionClassification;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
@@ -36,7 +35,7 @@ public class ComponentNamingStrategyTest {
 
 	@Test
 	public void testDefaultNamingStrategy() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG )
 				.build();
 
@@ -53,7 +52,7 @@ public class ComponentNamingStrategyTest {
 			Bag value = assertTyping( Bag.class, p.getValue() );
 			SimpleValue elementValue = assertTyping( SimpleValue.class, value.getElement() );
 			assertEquals( 1, elementValue.getColumnSpan() );
-			Column column = assertTyping( Column.class, elementValue.getColumnIterator().next() );
+			Column column = assertTyping( Column.class, elementValue.getSelectables().get( 0 ) );
 			assertEquals( column.getName(), "name" );
 		}
 		finally {
@@ -62,9 +61,9 @@ public class ComponentNamingStrategyTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-6005" )
+	@JiraKey( value = "HHH-6005" )
 	public void testComponentSafeNamingStrategy() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG )
 				.build();
 
@@ -81,7 +80,7 @@ public class ComponentNamingStrategyTest {
 			Bag value = assertTyping( Bag.class, p.getValue() );
 			SimpleValue elementValue = assertTyping(  SimpleValue.class, value.getElement() );
 			assertEquals( 1, elementValue.getColumnSpan() );
-			Column column = assertTyping( Column.class, elementValue.getColumnIterator().next() );
+			Column column = assertTyping( Column.class, elementValue.getSelectables().get( 0 ) );
 			assertEquals( "items_name", column.getName() );
 		}
 		finally {

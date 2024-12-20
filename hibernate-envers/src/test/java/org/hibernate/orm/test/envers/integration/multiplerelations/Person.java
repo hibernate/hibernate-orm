@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.multiplerelations;
 
@@ -34,8 +32,8 @@ public class Person implements Serializable {
 
 	@ManyToMany(cascade = {CascadeType.PERSIST})
 	@JoinTable(name = "PERSON_ADDRESS",
-			   joinColumns = {@JoinColumn(name = "personId", nullable = false)},
-			   inverseJoinColumns = {@JoinColumn(name = "addressId", nullable = false)})
+			joinColumns = {@JoinColumn(name = "personId", nullable = false)},
+			inverseJoinColumns = {@JoinColumn(name = "addressId", nullable = false)})
 	private Set<Address> addresses = new HashSet<Address>();
 
 	@OneToMany(mappedBy = "landlord", cascade = {CascadeType.PERSIST}, orphanRemoval = true)

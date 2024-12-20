@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
@@ -70,6 +68,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Unlike the {@linkplain jakarta.persistence.Id primary identifier}
  * of an entity, a natural id may be {@linkplain #mutable}.
  * <p>
+ * On the other hand, a field or property which forms part of a natural
+ * id may never be null, and so it's a good idea to use {@code @NaturalId}
+ * in conjunction with the Bean Validation {@code @NotNull} annotation
+ * or {@link jakarta.persistence.Basic#optional @Basic(optional=false)}.
+ * <p>
  * The {@link org.hibernate.Session} interface offers several methods
  * that allow an entity instance to be retrieved by its
  * {@linkplain org.hibernate.Session#bySimpleNaturalId(Class) simple}
@@ -78,12 +81,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * NaturalIdCache natural id caching}, then these methods may be able
  * to avoid a database round trip.
  *
- * @author Nicol�s Lichtmaier
+ * @author Nicolás Lichtmaier
  *
  * @see NaturalIdCache
  */
-@Target( { METHOD, FIELD } )
-@Retention( RUNTIME )
+@Target({METHOD, FIELD})
+@Retention(RUNTIME)
 public @interface NaturalId {
 	/**
 	 * Specifies whether the natural id is mutable or immutable.

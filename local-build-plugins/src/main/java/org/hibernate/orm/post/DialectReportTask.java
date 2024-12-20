@@ -17,9 +17,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import javax.inject.Inject;
 
 import org.gradle.api.Project;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
@@ -35,13 +39,29 @@ import org.jboss.jandex.Index;
  * @author Steve Ebersole
  */
 public abstract class DialectReportTask extends AbstractJandexAwareTask {
+	private final Property<RegularFile> reportFile;
+	private final Property<Boolean> generateHeading;
 
-	@Inject
-	public DialectReportTask(IndexManager indexManager, Project project) {
-		super(
-				indexManager,
-				project.getLayout().getBuildDirectory().file( "orm/reports/dialect.adoc" )
-		);
+	public DialectReportTask() {
+		setDescription( "Generates a report of the supported Dialects" );
+		reportFile = getProject().getObjects().fileProperty();
+		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/generated/dialect/dialect.adoc" ) );
+		generateHeading = getProject().getObjects().property( Boolean.class ).convention( true );
+	}
+
+	@OutputFile
+	public Property<RegularFile> getReportFile() {
+		return reportFile;
+	}
+
+	@Input
+	public Property<Boolean> getGenerateHeading() {
+		return generateHeading;
+	}
+
+	@Override
+	protected Provider<RegularFile> getTaskReportFileReference() {
+		return reportFile;
 	}
 
 	@TaskAction
@@ -108,11 +128,14 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 
 	private void writeDialectReportHeader(OutputStreamWriter fileWriter) {
 		try {
-			fileWriter.write( "= Supported Dialects\n\n" );
-			fileWriter.write( "Supported Dialects along with the minimum supported version of the underlying database.\n\n\n" );
+			if ( this.generateHeading.get() ) {
+				fileWriter.write( "= Supported Dialects\n\n" );
+				fileWriter.write(
+						"Supported Dialects along with the minimum supported version of the underlying database.\n\n\n" );
 
-			HibernateVersion ormVersion = (HibernateVersion) getProject().getRootProject().getExtensions().getByName( "ormVersion" );
-			fileWriter.write( "NOTE: Hibernate version " + ormVersion.getFamily() + "\n\n" );
+				HibernateVersion ormVersion = (HibernateVersion) getProject().getRootProject().getExtensions().getByName( "ormVersion" );
+				fileWriter.write( "NOTE: Hibernate version " + ormVersion.getFamily() + "\n\n" );
+			}
 
 			fileWriter.write( "[cols=\"a,a\", options=\"header\"]\n" );
 			fileWriter.write( "|===\n" );

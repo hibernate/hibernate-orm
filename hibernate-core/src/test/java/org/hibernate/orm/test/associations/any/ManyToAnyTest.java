@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.associations.any;
 
@@ -18,63 +16,63 @@ import static org.junit.Assert.assertNotNull;
  */
 public class ManyToAnyTest extends BaseCoreFunctionalTestCase {
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] {
-            IntegerProperty.class,
-            StringProperty.class,
-            PropertyRepository.class
-        };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] {
+			IntegerProperty.class,
+			StringProperty.class,
+			PropertyRepository.class
+		};
+	}
 
-    @Override
-    protected String[] getAnnotatedPackages() {
-        return new String[] {
-            getClass().getPackage().getName()
-        };
-    }
+	@Override
+	protected String[] getAnnotatedPackages() {
+		return new String[] {
+			getClass().getPackage().getName()
+		};
+	}
 
-    @Test
-    public void test() {
+	@Test
+	public void test() {
 
-        doInHibernate(this::sessionFactory, session -> {
-            //tag::associations-many-to-any-persist-example[]
-            IntegerProperty ageProperty = new IntegerProperty();
-            ageProperty.setId(1L);
-            ageProperty.setName("age");
-            ageProperty.setValue(23);
+		doInHibernate(this::sessionFactory, session -> {
+			//tag::associations-many-to-any-persist-example[]
+			IntegerProperty ageProperty = new IntegerProperty();
+			ageProperty.setId(1L);
+			ageProperty.setName("age");
+			ageProperty.setValue(23);
 
-            session.persist(ageProperty);
+			session.persist(ageProperty);
 
-            StringProperty nameProperty = new StringProperty();
-            nameProperty.setId(1L);
-            nameProperty.setName("name");
-            nameProperty.setValue("John Doe");
+			StringProperty nameProperty = new StringProperty();
+			nameProperty.setId(1L);
+			nameProperty.setName("name");
+			nameProperty.setValue("John Doe");
 
-            session.persist(nameProperty);
+			session.persist(nameProperty);
 
-            PropertyRepository propertyRepository = new PropertyRepository();
-            propertyRepository.setId(1L);
+			PropertyRepository propertyRepository = new PropertyRepository();
+			propertyRepository.setId(1L);
 
-            propertyRepository.getProperties().add(ageProperty);
-            propertyRepository.getProperties().add(nameProperty);
+			propertyRepository.getProperties().add(ageProperty);
+			propertyRepository.getProperties().add(nameProperty);
 
-            session.persist(propertyRepository);
-            //end::associations-many-to-any-persist-example[]
-        });
+			session.persist(propertyRepository);
+			//end::associations-many-to-any-persist-example[]
+		});
 
-        doInHibernate(this::sessionFactory, session -> {
-            //tag::associations-many-to-any-query-example[]
-            PropertyRepository propertyRepository = session.get(PropertyRepository.class, 1L);
+		doInHibernate(this::sessionFactory, session -> {
+			//tag::associations-many-to-any-query-example[]
+			PropertyRepository propertyRepository = session.get(PropertyRepository.class, 1L);
 
-            assertEquals(2, propertyRepository.getProperties().size());
+			assertEquals(2, propertyRepository.getProperties().size());
 
-            for(Property property : propertyRepository.getProperties()) {
-                assertNotNull(property.getValue());
-            }
-            //end::associations-many-to-any-query-example[]
-        });
-    }
+			for(Property property : propertyRepository.getProperties()) {
+				assertNotNull(property.getValue());
+			}
+			//end::associations-many-to-any-query-example[]
+		});
+	}
 
 
 }

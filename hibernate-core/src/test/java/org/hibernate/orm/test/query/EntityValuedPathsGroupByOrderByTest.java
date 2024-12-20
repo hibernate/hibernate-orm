@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
 
@@ -119,6 +117,15 @@ public class EntityValuedPathsGroupByOrderByTest {
 		).getSingleResult().get( 1 ) ).isEqualTo( 3L ) );
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18272" )
+	public void testJoinSelectAliasAndGroupByAndOrderBy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createQuery(
+				"select b as secondary, sum(a.amount) from EntityA a join a.secondary b where b.id = 1 group by secondary order by secondary",
+				Tuple.class
+		).getSingleResult().get( 1 ) ).isEqualTo( 3L ) );
+	}
+
 	// Implicit join ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Test
@@ -151,6 +158,63 @@ public class EntityValuedPathsGroupByOrderByTest {
 				"select a.secondary, sum(a.amount) from EntityA a group by a.secondary order by a.secondary",
 				Tuple.class
 		).getSingleResult().get( 1 ) ).isEqualTo( 3L ) );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18272" )
+	public void testImplicitJoinSelectAliasAndGroupByAndOrderBy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createQuery(
+				"select a.secondary as a_secondary, sum(a.amount) from EntityA a where a.secondary.id = 1 group by a_secondary order by a_secondary",
+				Tuple.class
+		).getSingleResult().get( 1 ) ).isEqualTo( 3L ) );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17415" )
+	public void testInSubqueryGroupBy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createQuery(
+				"select a from EntityA a where a.secondary in (select b2 from EntityB b2 group by b2)",
+				Tuple.class
+		).getResultList() ).hasSize( 2 ) );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17415" )
+	public void testInSubqueryGroupByImplicitJoin(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createQuery(
+				"select a from EntityA a where a.secondary in" +
+						" (select a2.secondary from EntityA a2 group by a2.secondary)",
+				Tuple.class
+		).getResultList() ).hasSize( 2 ) );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18862" )
+	public void testSubquerySelectionGroupBy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createQuery(
+				"select (select s.id from EntityB ignore) from EntityA a join a.secondary s group by s.id",
+				Long.class
+		).getSingleResult() ).isEqualTo( 1L ) );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18862" )
+	public void testSubquerySelectionGroupByAndOrderBy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createQuery(
+				"select (select s.id from EntityB ignore) from EntityA a"
+						+ " join a.secondary s group by s.id order by s.id",
+				Long.class
+		).getSingleResult() ).isEqualTo( 1L ) );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18862" )
+	public void testSubquerySelectionGroupByAndOrderByImplicit(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createQuery(
+				"select (select a.secondary.id from EntityB ignore) from EntityA a"
+						+ " group by a.secondary.id order by a.secondary.id",
+				Long.class
+		).getSingleResult() ).isEqualTo( 1L ) );
 	}
 
 	@Entity( name = "EntityA" )

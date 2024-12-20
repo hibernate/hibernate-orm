@@ -1,10 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.resolver;
+
+import java.util.Collections;
+import java.util.Map;
 
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
@@ -20,19 +21,23 @@ public class TestingDialectResolutionInfo implements DialectResolutionInfo {
 	private final int driverMajorVersion;
 	private final int driverMinorVersion;
 
+	private final Map<String, Object> configurationValues;
+
 	TestingDialectResolutionInfo(
 			String databaseName,
 			int databaseMajorVersion,
 			int databaseMinorVersion,
 			String driverName,
 			int driverMajorVersion,
-			int driverMinorVersion) {
+			int driverMinorVersion,
+			Map<String, Object> configurationValues) {
 		this.databaseName = databaseName;
 		this.databaseMajorVersion = databaseMajorVersion;
 		this.databaseMinorVersion = databaseMinorVersion;
 		this.driverName = driverName;
 		this.driverMajorVersion = driverMajorVersion;
 		this.driverMinorVersion = driverMinorVersion;
+		this.configurationValues = configurationValues;
 	}
 
 	public static TestingDialectResolutionInfo forDatabaseInfo(String name) {
@@ -44,11 +49,28 @@ public class TestingDialectResolutionInfo implements DialectResolutionInfo {
 	}
 
 	public static TestingDialectResolutionInfo forDatabaseInfo(String name, int majorVersion, int minorVersion) {
-		return new TestingDialectResolutionInfo( name, majorVersion, minorVersion, null, NO_VERSION, NO_VERSION );
+		return forDatabaseInfo( name, null, majorVersion, minorVersion );
 	}
 
 	public static TestingDialectResolutionInfo forDatabaseInfo(String databaseName, String driverName, int majorVersion, int minorVersion) {
-		return new TestingDialectResolutionInfo( databaseName, majorVersion, minorVersion, driverName, NO_VERSION, NO_VERSION );
+		return forDatabaseInfo( databaseName, driverName, majorVersion, minorVersion, Collections.emptyMap() );
+	}
+
+	public static TestingDialectResolutionInfo forDatabaseInfo(
+			String databaseName,
+			String driverName,
+			int majorVersion,
+			int minorVersion,
+			Map<String, Object> configurationValues) {
+		return new TestingDialectResolutionInfo(
+				databaseName,
+				majorVersion,
+				minorVersion,
+				driverName,
+				NO_VERSION,
+				NO_VERSION,
+				configurationValues
+		);
 	}
 
 	@Override
@@ -105,5 +127,10 @@ public class TestingDialectResolutionInfo implements DialectResolutionInfo {
 	@Override
 	public String toString() {
 		return getMajor() + "." + getMinor();
+	}
+
+	@Override
+	public Map<String, Object> getConfigurationValues() {
+		return configurationValues;
 	}
 }

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.jpa.graphs.mappedbyid;
 
 import org.hibernate.Hibernate;
@@ -12,7 +16,7 @@ import org.hibernate.orm.test.jpa.graphs.Manager;
 import org.hibernate.orm.test.jpa.graphs.Market;
 import org.hibernate.orm.test.jpa.graphs.Student;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -31,11 +35,11 @@ import static org.junit.Assert.*;
 public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase {
 
 	private long companyId;
-	
+
 	private long companyWithFetchProfileId;
-	
+
 	@Test
-	@TestForIssue(jiraKey = "HHH-8776")
+	@JiraKey(value = "HHH-8776")
 	public void testFetchGraphByFind() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
@@ -100,13 +104,13 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8776")
+	@JiraKey(value = "HHH-8776")
 	public void testFetchGraphByFindTakingPrecedenceOverFetchProfile() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
 
 		entityManager.unwrap( Session.class ).enableFetchProfile("company.location");
-		
+
 		EntityGraph<CompanyFetchProfile> entityGraph = entityManager.createEntityGraph( CompanyFetchProfile.class );
 		entityGraph.addAttributeNodes( "markets" );
 
@@ -208,7 +212,7 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 		companyFetchProfile.phoneNumbers.add( "987-654-3210" );
 		entityManager.persist( companyFetchProfile );
 		companyWithFetchProfileId = companyFetchProfile.id;
-		
+
 		entityManager.getTransaction().commit();
 		entityManager.close();
 	}
@@ -217,5 +221,5 @@ public class FetchGraphFindByIdTest extends BaseEntityManagerFunctionalTestCase 
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { Company.class, CompanyFetchProfile.class, Employee.class, Manager.class, Location.class, Course.class, Student.class };
 	}
-	
+
 }

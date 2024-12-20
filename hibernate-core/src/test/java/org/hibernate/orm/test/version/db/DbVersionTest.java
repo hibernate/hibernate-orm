@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.version.db;
 
@@ -76,8 +74,8 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( s.load( User.class, steve.getId() ) );
-		s.delete( s.load( Group.class, admin.getId() ) );
+		s.remove( s.getReference( User.class, steve.getId() ) );
+		s.remove( s.getReference( Group.class, admin.getId() ) );
 		t.commit();
 		s.close();
 	}
@@ -120,8 +118,8 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( s.load( User.class, steve.getId() ) );
-		s.delete( s.load( Permission.class, perm.getId() ) );
+		s.remove( s.getReference( User.class, steve.getId() ) );
+		s.remove( s.getReference( Permission.class, perm.getId() ) );
 		t.commit();
 		s.close();
 	}

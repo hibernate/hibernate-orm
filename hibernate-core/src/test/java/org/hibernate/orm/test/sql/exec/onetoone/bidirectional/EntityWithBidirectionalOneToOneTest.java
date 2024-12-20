@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.exec.onetoone.bidirectional;
 
@@ -59,9 +57,9 @@ public class EntityWithBidirectionalOneToOneTest {
 
 			AdoptedChild adoptedChild = new AdoptedChild( 3, "Fab", mother );
 
-			session.save( mother );
-			session.save( child );
-			session.save( adoptedChild );
+			session.persist( mother );
+			session.persist( child );
+			session.persist( adoptedChild );
 		} );
 	}
 
@@ -135,9 +133,9 @@ public class EntityWithBidirectionalOneToOneTest {
 
 			adoptedChild.setBiologicalMother( mother );
 
-			session.save( mother );
-			session.save( child );
-			session.save( adoptedChild );
+			session.persist( mother );
+			session.persist( child );
+			session.persist( adoptedChild );
 		} );
 
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
@@ -186,11 +184,11 @@ public class EntityWithBidirectionalOneToOneTest {
 
 			Child anotherChild = new Child( 8, "Igor", biologicalMother );
 
-			session.save( mother );
-			session.save( biologicalMother );
-			session.save( child );
-			session.save( adoptedChild );
-			session.save( anotherChild );
+			session.persist( mother );
+			session.persist( biologicalMother );
+			session.persist( child );
+			session.persist( adoptedChild );
+			session.persist( anotherChild );
 		} );
 
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
@@ -288,7 +286,7 @@ public class EntityWithBidirectionalOneToOneTest {
 		scope.inTransaction(
 				session -> {
 					Mother mother = new Mother( 10, "Strange mom" );
-					session.save( mother );
+					session.persist( mother );
 					session.get( AdoptedChild.class, 3 ).setBiologicalMother( mother );
 				}
 		);
@@ -399,11 +397,11 @@ public class EntityWithBidirectionalOneToOneTest {
 
 			Child child3 = new Child( 8, "Carla", biologicalMother );
 
-			session.save( mother );
-			session.save( biologicalMother );
-			session.save( child );
-			session.save( child2 );
-			session.save( child3 );
+			session.persist( mother );
+			session.persist( biologicalMother );
+			session.persist( child );
+			session.persist( child2 );
+			session.persist( child3 );
 		} );
 
 		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();

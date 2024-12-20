@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.join;
 
@@ -38,7 +36,7 @@ import static org.junit.Assert.fail;
 public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
 	public void testDefaultValue() {
-		Join join = metadata().getEntityBinding( Life.class.getName() ).getJoinClosureIterator().next();
+		Join join = metadata().getEntityBinding( Life.class.getName() ).getJoinClosure().get( 0 );
 		assertEquals( "ExtendedLife", join.getTable().getName() );
 		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
 		owner.setName( "LIFE_ID" );
@@ -63,7 +61,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	public void testCompositePK() {
-		Join join = metadata().getEntityBinding( Dog.class.getName() ).getJoinClosureIterator().next();
+		Join join = metadata().getEntityBinding( Dog.class.getName() ).getJoinClosure().get( 0 );
 		assertEquals( "DogThoroughbred", join.getTable().getName() );
 		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
 		owner.setName( "OWNER_NAME" );
@@ -106,7 +104,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		Query q = s.createQuery( "from " + Death.class.getName() );
 		death = (Death) q.uniqueResult();
 		assertEquals( "Well, haven't seen it", death.howDoesItHappen );
-		s.delete( death );
+		s.remove( death );
 		tx.commit();
 		s.close();
 	}
@@ -140,12 +138,12 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 //		crit.createCriteria( "owner" ).add( Restrictions.eq( "name", "kitty" ) );
 //		life = (Life) crit.uniqueResult();
 		assertEquals( "Long long description", life.fullDescription );
-		s.delete( life.owner );
-		s.delete( life );
+		s.remove( life.owner );
+		s.remove( life );
 		tx.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testReferenceColumnWithBacktics() {
 		Session s=openSession();
@@ -154,12 +152,12 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		SysUserOrm u=new SysUserOrm();
 		u.setGroups( new ArrayList<>() );
 		u.getGroups().add( g );
-		s.save( g );
-		s.save( u );
+		s.persist( g );
+		s.persist( u );
 		s.getTransaction().commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testUniqueConstaintOnSecondaryTable() {
 		Cat cat = new Cat();
@@ -198,7 +196,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		s.persist( cat );
 		s.flush();
 		s.clear();
-		
+
 		s.get( Cat.class, cat.getId() );
 		//Find a way to test it, I need to define the secondary table on a subclass
 

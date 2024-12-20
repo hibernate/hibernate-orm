@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
@@ -46,13 +44,12 @@ public abstract class AbstractClassJavaType<T> implements BasicJavaType<T>, Seri
 	 * @param type The Java type.
 	 * @param mutabilityPlan The plan for handling mutability aspects of the java type.
 	 */
-	@SuppressWarnings("unchecked")
 	protected AbstractClassJavaType(Class<? extends T> type, MutabilityPlan<? extends T> mutabilityPlan) {
 		this(
 				type,
 				mutabilityPlan,
 				Comparable.class.isAssignableFrom( type )
-						? (Comparator<T>) ComparableComparator.INSTANCE
+						? ComparableComparator.instance()
 						: null
 		);
 	}

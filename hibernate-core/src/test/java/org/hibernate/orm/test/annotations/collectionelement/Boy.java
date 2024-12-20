@@ -1,11 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
-//$Id$
 package org.hibernate.orm.test.annotations.collectionelement;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -106,7 +102,7 @@ public class Boy {
 		this.preferredNames = preferredNames;
 	}
 
-	@ElementCollection	
+	@ElementCollection
 	@MapKeyColumn(nullable=false)
 	public Map<String, Integer> getScorePerPreferredName() {
 		return scorePerPreferredName;
@@ -154,7 +150,7 @@ public class Boy {
 
 	@ElementCollection
 	@Enumerated(EnumType.STRING)
-    @Column(name = "`characters`")
+	@Column(name = "`characters`")
 	public Set<CharacterTrait> getCharacters() {
 		return characters;
 	}
@@ -184,4 +180,3 @@ public class Boy {
 		this.countryAttitudes = countryAttitudes;
 	}
 }
-

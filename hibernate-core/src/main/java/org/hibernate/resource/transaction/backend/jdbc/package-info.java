@@ -10,7 +10,7 @@
  * "data store" specific notion of a transaction.  In Hibernate ORM uses this
  * correlates to the JDBC notion of a transaction, which (unfortunately) is
  * not modeled by an actual contract.  Instead, JDBC models transaction control
- * via its Connection contract.
+ * via its {@link java.sql.Connection} contract.
  * <p>
  * Here we use
  * {@link org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction}

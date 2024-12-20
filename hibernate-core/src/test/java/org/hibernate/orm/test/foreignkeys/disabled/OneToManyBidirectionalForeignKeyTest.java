@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.foreignkeys.disabled;
 
@@ -27,9 +25,9 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Table;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -37,7 +35,7 @@ import org.junit.Test;
  *
  * @author Yanming Zhou
  */
-@TestForIssue(jiraKey = "HHH-14229")
+@JiraKey(value = "HHH-14229")
 public class OneToManyBidirectionalForeignKeyTest {
 
 	private static final String TABLE_NAME_PLAIN = "plain";
@@ -45,7 +43,7 @@ public class OneToManyBidirectionalForeignKeyTest {
 
 	@Test
 	public void testForeignKeyShouldNotBeCreated() {
-		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( PlainTreeEntity.class ).addAnnotatedClass( TreeEntityWithOnDelete.class )
 					.buildMetadata();

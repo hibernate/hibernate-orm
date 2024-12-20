@@ -1,22 +1,25 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
 import java.sql.Connection;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.Query;
 import jakarta.persistence.SynchronizationType;
+import jakarta.persistence.TypedQueryReference;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
@@ -34,10 +37,9 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FastSessionServices;
-import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
-import org.hibernate.metamodel.spi.MetamodelImplementor;
+import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.BindableType;
@@ -49,6 +51,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -145,6 +148,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public PersistenceUnitTransactionType getTransactionType() {
+		return delegate.getTransactionType();
+	}
+
+	@Override
 	public void addNamedQuery(String name, Query query) {
 		delegate.addNamedQuery( name, query );
 	}
@@ -160,6 +168,16 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public void runInTransaction(Consumer<EntityManager> work) {
+		delegate.runInTransaction( work );
+	}
+
+	@Override
+	public <R> R callInTransaction(Function<EntityManager, R> work) {
+		return delegate.callInTransaction( work );
+	}
+
+	@Override
 	public Set<String> getDefinedFilterNames() {
 		return delegate.getDefinedFilterNames();
 	}
@@ -167,6 +185,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override @Deprecated
 	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {
 		return delegate.getFilterDefinition( filterName );
+	}
+
+	@Override
+	public Collection<FilterDefinition> getAutoEnabledFilters() {
+		return delegate.getAutoEnabledFilters();
 	}
 
 	@Override
@@ -179,12 +202,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 		return delegate.getDefinedFetchProfileNames();
 	}
 
-	@Override
-	public IdentifierGenerator getIdentifierGenerator(String rootEntityName) {
-		return delegate.getIdentifierGenerator( rootEntityName );
-	}
-
-	@Override
+	@Override @Deprecated
 	public Generator getGenerator(String rootEntityName) {
 		return delegate.getGenerator( rootEntityName );
 	}
@@ -207,6 +225,16 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public RootGraphImplementor<?> findEntityGraphByName(String name) {
 		return delegate.findEntityGraphByName( name );
+	}
+
+	@Override
+	public <R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType) {
+		return delegate.getNamedQueries( resultType );
+	}
+
+	@Override
+	public <E> Map<String, EntityGraph<? extends E>> getNamedEntityGraphs(Class<E> entityType) {
+		return delegate.getNamedEntityGraphs( entityType );
 	}
 
 	@Override
@@ -235,7 +263,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public JpaMetamodelImplementor getJpaMetamodel() {
+	public JpaMetamodel getJpaMetamodel() {
 		return delegate.getJpaMetamodel();
 	}
 
@@ -260,18 +288,18 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
+	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
 		return delegate.getCurrentTenantIdentifierResolver();
+	}
+
+	@Override
+	public JavaType<Object> getTenantIdentifierJavaType() {
+		return delegate.getTenantIdentifierJavaType();
 	}
 
 	@Override
 	public FastSessionServices getFastSessionServices() {
 		return delegate.getFastSessionServices();
-	}
-
-	@Override @Deprecated
-	public DeserializationResolver<?> getDeserializationResolver() {
-		return delegate.getDeserializationResolver();
 	}
 
 	@Override
@@ -300,6 +328,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public String getJndiName() {
+		return delegate.getJndiName();
+	}
+
+	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return delegate.getTypeConfiguration();
 	}
@@ -315,22 +348,22 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public EntityManager createEntityManager() {
+	public Session createEntityManager() {
 		return delegate.createEntityManager();
 	}
 
 	@Override
-	public EntityManager createEntityManager(Map map) {
+	public Session createEntityManager(Map map) {
 		return delegate.createEntityManager( map );
 	}
 
 	@Override
-	public EntityManager createEntityManager(SynchronizationType synchronizationType) {
+	public Session createEntityManager(SynchronizationType synchronizationType) {
 		return delegate.createEntityManager( synchronizationType );
 	}
 
 	@Override
-	public EntityManager createEntityManager(SynchronizationType synchronizationType, Map map) {
+	public Session createEntityManager(SynchronizationType synchronizationType, Map map) {
 		return delegate.createEntityManager( synchronizationType, map );
 	}
 
@@ -340,8 +373,8 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override @Deprecated
-	public MetamodelImplementor getMetamodel() {
-		return delegate.getMetamodel();
+	public MappingMetamodel getMetamodel() {
+		return (MappingMetamodel) delegate.getMetamodel();
 	}
 
 	@Override
@@ -350,7 +383,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override @Deprecated
-	public <T> BindableType<? extends T> resolveParameterBindType(T bindValue) {
+	public <T> BindableType<? super T> resolveParameterBindType(T bindValue) {
 		return delegate.resolveParameterBindType( bindValue );
 	}
 
@@ -367,5 +400,10 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
 		return delegate.findEntityGraphsByType(entityClass);
+	}
+
+	@Override
+	public Class<?> classForName(String className) {
+		return delegate.classForName( className );
 	}
 }

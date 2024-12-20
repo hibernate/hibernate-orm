@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.hbm2ddl;
 
@@ -137,7 +135,7 @@ public class SchemaValidatorTask extends MatchingTask {
 			throw new BuildException("File not found: " + e.getMessage(), e);
 		}
 		catch (IOException e) {
-			throw new BuildException("IOException : " + e.getMessage(), e);
+			throw new BuildException("IOException: " + e.getMessage(), e);
 		}
 		catch (BuildException e) {
 			throw e;
@@ -194,7 +192,7 @@ public class SchemaValidatorTask extends MatchingTask {
 	}
 
 	private void configure(MetadataBuilder metadataBuilder, StandardServiceRegistry serviceRegistry) {
-		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
 		if ( implicitNamingStrategy != null ) {
 			metadataBuilder.applyImplicitNamingStrategy(
 					strategySelector.resolveStrategy( ImplicitNamingStrategy.class, implicitNamingStrategy )

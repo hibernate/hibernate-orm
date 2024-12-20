@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.batchfetch;
 
@@ -34,7 +32,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -94,8 +91,8 @@ public class BatchFetchNotFoundIgnoreDynamicStyleTest {
 				session -> {
 					// delete 2nd and 8th Task so that the non-found Task entities will be queried
 					// in 2 different batches.
-					session.delete( tasks.get( 1 ) );
-					session.delete( tasks.get( 7 ) );
+					session.remove( tasks.get( 1 ) );
+					session.remove( tasks.get( 7 ) );
 				}
 		);
 
@@ -136,7 +133,7 @@ public class BatchFetchNotFoundIgnoreDynamicStyleTest {
 				session -> {
 					// delete all but last Task entity
 					for ( int i = 0; i < 7; i++ ) {
-						session.delete( tasks.get( i ) );
+						session.remove( tasks.get( i ) );
 					}
 				}
 		);
@@ -178,7 +175,7 @@ public class BatchFetchNotFoundIgnoreDynamicStyleTest {
 		scope.inTransaction(
 				session -> {
 					// delete task so it is not found later when getting the Employee.
-					session.delete( tasks.get( 0 ) );
+					session.remove( tasks.get( 0 ) );
 				}
 		);
 

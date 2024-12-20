@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
@@ -74,7 +72,7 @@ public class LegacyNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 		return new QualifiedSequenceName(
 				catalogName,
 				schemaName,
-				serviceRegistry.getService( JdbcEnvironment.class )
+				serviceRegistry.requireService( JdbcEnvironment.class )
 						.getIdentifierHelper()
 						.toIdentifier( sequenceName )
 		);
@@ -110,11 +108,12 @@ public class LegacyNamingStrategy implements ImplicitDatabaseObjectNamingStrateg
 			return QualifiedNameParser.INSTANCE.parse( implicitName );
 		}
 
-		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		return new QualifiedNameParser.NameParts(
 				catalogName,
 				schemaName,
-				jdbcEnvironment.getIdentifierHelper().toIdentifier( implicitName )
+				serviceRegistry.requireService( JdbcEnvironment.class )
+						.getIdentifierHelper()
+						.toIdentifier( implicitName )
 		);
 	}
 

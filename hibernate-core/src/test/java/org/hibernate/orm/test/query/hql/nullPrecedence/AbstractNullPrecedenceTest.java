@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql.nullPrecedence;
 
@@ -30,14 +28,14 @@ abstract class AbstractNullPrecedenceTest {
 		scope.inTransaction( session -> {
 			ExampleEntity entity1 = new ExampleEntity( 1L );
 			entity1.setName( "name1" );
-			session.save( entity1 );
+			session.persist( entity1 );
 
 			ExampleEntity entity2 = new ExampleEntity( 2L );
-			session.save( entity2 );
+			session.persist( entity2 );
 
 			ExampleEntity entity3 = new ExampleEntity( 3L );
 			entity3.setName( "name3" );
-			session.save( entity3 );
+			session.persist( entity3 );
 
 		} );
 	}

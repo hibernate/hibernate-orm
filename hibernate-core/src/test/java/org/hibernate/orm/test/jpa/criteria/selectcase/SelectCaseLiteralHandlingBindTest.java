@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.selectcase;
 
@@ -20,7 +18,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.criteria.ValueHandlingMode;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -74,7 +72,7 @@ public class SelectCaseLiteralHandlingBindTest extends BaseEntityManagerFunction
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13001")
+	@JiraKey(value = "HHH-13001")
 	public void selectSumOnCaseExpression() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {

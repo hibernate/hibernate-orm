@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.internal;
 
@@ -16,6 +14,8 @@ import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
+
+import java.lang.invoke.MethodHandles;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 
@@ -32,10 +32,7 @@ public interface LobCreationLogging extends BasicLogger {
 	String NAME = JdbcLogging.NAME + ".lob";
 
 	Logger LOB_LOGGER = Logger.getLogger( NAME );
-	LobCreationLogging LOB_MESSAGE_LOGGER = Logger.getMessageLogger( LobCreationLogging.class, NAME );
-
-	boolean LOB_TRACE_ENABLED = LOB_LOGGER.isTraceEnabled();
-	boolean LOB_DEBUG_ENABLED = LOB_LOGGER.isDebugEnabled();
+	LobCreationLogging LOB_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), LobCreationLogging.class, NAME );
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "Disabling contextual LOB creation as %s is true", id = 10010001)

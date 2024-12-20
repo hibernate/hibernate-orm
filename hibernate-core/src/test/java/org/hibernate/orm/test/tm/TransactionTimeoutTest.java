@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.tm;
 
@@ -13,7 +11,7 @@ import org.hibernate.TransactionException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jdbc.Person;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -30,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Lukasz Antoniak
  */
-@TestForIssue(jiraKey = "HHH-6780")
+@JiraKey(value = "HHH-6780")
 @ServiceRegistry(
 		settings = {
 				@Setting( name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "legacy-hbm" )

@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 /**
  * Raised whenever a duplicate for a certain type occurs,
  * such as a duplicate class, table, or property name.
- * 
+ *
  * @author Max Rydahl Andersen
  * @author Steve Ebersole
  */
@@ -95,7 +93,7 @@ public class DuplicateMappingException extends MappingException {
 	public String getType() {
 		return type;
 	}
-	
+
 	public String getName() {
 		return name;
 	}

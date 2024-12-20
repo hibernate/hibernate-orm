@@ -1,15 +1,21 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.bytecode.enhancement.basic;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -20,19 +26,18 @@ import jakarta.persistence.Id;
  * static accessors, accessors defined in a subclass,
  * or accessors defined in an inner class.
  */
-@RunWith(BytecodeEnhancerRunner.class)
+@DomainModel(
+		annotatedClasses = {
+			ExtendedEnhancementNonStandardAccessTest.MyAbstractEntity.class, ExtendedEnhancementNonStandardAccessTest.MyAbstractConfusingEntity.class, ExtendedEnhancementNonStandardAccessTest.MyConcreteEntity.class
+		}
+)
+@SessionFactory
+@BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true, extendedEnhancement = true)
-public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				MyAbstractEntity.class, MyAbstractConfusingEntity.class, MyConcreteEntity.class
-		};
-	}
+public class ExtendedEnhancementNonStandardAccessTest {
 
 	@Test
-	public void nonStandardInstanceGetterSetterPublicField() {
+	public void nonStandardInstanceGetterSetterPublicField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -43,11 +48,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return entity.nonStandardGetterForPublicField();
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void nonStandardInstanceGetterSetterProtectedField() {
+	public void nonStandardInstanceGetterSetterProtectedField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -58,11 +63,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return entity.nonStandardGetterForProtectedField();
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void nonStandardInstanceGetterSetterPackagePrivateField() {
+	public void nonStandardInstanceGetterSetterPackagePrivateField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -73,11 +78,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return entity.nonStandardGetterForPackagePrivateField();
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void nonStandardInstanceGetterSetterPrivateField() {
+	public void nonStandardInstanceGetterSetterPrivateField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -88,11 +93,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return entity.nonStandardGetterForPrivateField();
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void staticGetterSetterPublicField() {
+	public void staticGetterSetterPublicField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -103,11 +108,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return MyConcreteEntity.staticGetPublicField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void staticGetterSetterProtectedField() {
+	public void staticGetterSetterProtectedField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -118,11 +123,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return MyConcreteEntity.staticGetProtectedField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void staticGetterSetterPackagePrivateField() {
+	public void staticGetterSetterPackagePrivateField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -133,11 +138,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return MyConcreteEntity.staticGetPackagePrivateField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void staticGetterSetterPrivateField() {
+	public void staticGetterSetterPrivateField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -148,11 +153,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return MyConcreteEntity.staticGetPrivateField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void innerClassStaticGetterSetterPublicField() {
+	public void innerClassStaticGetterSetterPublicField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -163,11 +168,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return MyConcreteEntity.InnerClassAccessors.staticGetPublicField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void innerClassStaticGetterSetterProtectedField() {
+	public void innerClassStaticGetterSetterProtectedField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -178,11 +183,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return MyConcreteEntity.InnerClassAccessors.staticGetProtectedField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void innerClassStaticGetterSetterPackagePrivateField() {
+	public void innerClassStaticGetterSetterPackagePrivateField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -193,11 +198,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return MyConcreteEntity.InnerClassAccessors.staticGetPackagePrivateField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void innerClassStaticGetterSetterPrivateField() {
+	public void innerClassStaticGetterSetterPrivateField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -208,11 +213,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return MyConcreteEntity.InnerClassAccessors.staticGetPrivateField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void innerClassInstanceGetterSetterPublicField() {
+	public void innerClassInstanceGetterSetterPublicField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -223,11 +228,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return new MyConcreteEntity.InnerClassAccessors().instanceGetPublicField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void innerClassInstanceGetterSetterProtectedField() {
+	public void innerClassInstanceGetterSetterProtectedField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -238,11 +243,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return new MyConcreteEntity.InnerClassAccessors().instanceGetProtectedField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void innerClassInstanceGetterSetterPackagePrivateField() {
+	public void innerClassInstanceGetterSetterPackagePrivateField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -253,11 +258,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return new MyConcreteEntity.InnerClassAccessors().instanceGetPackagePrivateField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void innerClassInstanceGetterSetterPrivateField() {
+	public void innerClassInstanceGetterSetterPrivateField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -268,11 +273,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return new MyConcreteEntity.InnerClassAccessors().instanceGetPrivateField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void externalClassStaticGetterSetterPublicField() {
+	public void externalClassStaticGetterSetterPublicField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -283,11 +288,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return ExternalClassAccessors.staticGetPublicField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void externalClassStaticGetterSetterProtectedField() {
+	public void externalClassStaticGetterSetterProtectedField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -298,11 +303,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return ExternalClassAccessors.staticGetProtectedField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void externalClassStaticGetterSetterPackagePrivateField() {
+	public void externalClassStaticGetterSetterPackagePrivateField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -313,11 +318,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return ExternalClassAccessors.staticGetPackagePrivateField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void externalClassInstanceGetterSetterPublicField() {
+	public void externalClassInstanceGetterSetterPublicField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -328,11 +333,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return new ExternalClassAccessors().instanceGetPublicField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void externalClassInstanceGetterSetterProtectedField() {
+	public void externalClassInstanceGetterSetterProtectedField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -343,11 +348,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return new ExternalClassAccessors().instanceGetProtectedField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void externalClassInstanceGetterSetterPackagePrivateField() {
+	public void externalClassInstanceGetterSetterPackagePrivateField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -358,11 +363,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return new ExternalClassAccessors().instanceGetPackagePrivateField( entity );
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void subClassInstanceGetterSetterPublicField() {
+	public void subClassInstanceGetterSetterPublicField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -373,11 +378,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return entity.getAbstractEntityPublicField();
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void subClassInstanceGetterSetterProtectedField() {
+	public void subClassInstanceGetterSetterProtectedField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -388,11 +393,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return entity.getAbstractEntityProtectedField();
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void subClassInstanceGetterSetterPackagePrivateField() {
+	public void subClassInstanceGetterSetterPackagePrivateField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -403,11 +408,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return entity.getAbstractEntityPackagePrivateField();
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void subClassNonStandardInstanceGetterSetterPublicField() {
+	public void subClassNonStandardInstanceGetterSetterPublicField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -418,11 +423,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return entity.nonStandardGetterForAbstractEntityPublicField();
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void subClassNonStandardInstanceGetterSetterProtectedField() {
+	public void subClassNonStandardInstanceGetterSetterProtectedField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -433,11 +438,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return entity.nonStandardGetterForAbstractEntityProtectedField();
 			}
-		} );
+		}, scope );
 	}
 
 	@Test
-	public void subClassNonStandardInstanceGetterSetterPackagePrivateField() {
+	public void subClassNonStandardInstanceGetterSetterPackagePrivateField(SessionFactoryScope scope) {
 		doTestFieldAccess( new AccessDelegate() {
 			@Override
 			public void setValue(MyConcreteEntity entity, Long value) {
@@ -448,33 +453,33 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 			public Long getValue(MyConcreteEntity entity) {
 				return entity.nonStandardGetterForAbstractEntityPackagePrivateField();
 			}
-		} );
+		}, scope );
 	}
 
 	// Ideally we'd make this a @ParameterizedTest and pass the access delegate as parameter,
 	// but we cannot do that due to JUnit using a different classloader than the test.
-	private void doTestFieldAccess(AccessDelegate delegate) {
-		Long id = fromTransaction( em -> {
+	private void doTestFieldAccess(AccessDelegate delegate, SessionFactoryScope scope) {
+		Long id = scope.fromTransaction( em -> {
 			var entity = new MyConcreteEntity();
 			em.persist( entity );
 			return entity.id;
 		} );
 
-		inTransaction( em -> {
+		scope.inTransaction( em -> {
 			var entity = em.find( MyConcreteEntity.class, id );
 			assertThat( delegate.getValue( entity ) )
 					.as( "Loaded value before update" )
 					.isNull();
 		} );
 
-		inTransaction( em -> {
+		scope.inTransaction( em -> {
 			var entity = em.getReference( MyConcreteEntity.class, id );
 			// Since field access is replaced with accessor calls,
 			// we expect this change to be detected by dirty tracking and persisted.
 			delegate.setValue( entity, 42L );
 		} );
 
-		inTransaction( em -> {
+		scope.inTransaction( em -> {
 			var entity = em.find( MyConcreteEntity.class, id );
 			// We're working on an initialized entity.
 			assertThat( entity )
@@ -486,7 +491,7 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 					.isEqualTo( 42L );
 		} );
 
-		inTransaction( em -> {
+		scope.inTransaction( em -> {
 			var entity = em.getReference( MyConcreteEntity.class, id );
 			// We're working on an uninitialized entity.
 			assertThat( entity )
@@ -508,11 +513,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 		@Id
 		@GeneratedValue
 		public long id;
-
+		@Column(name = "abstract_public_field")
 		public Long abstractEntityPublicField;
-
+		@Column(name = "abstract_protected_field")
 		protected Long abstractEntityProtectedField;
-
+		@Column(name = "abstract_default_field")
 		Long abstractEntityPackagePrivateField;
 	}
 
@@ -523,9 +528,13 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 
 	@Entity(name = "concrete")
 	public static class MyConcreteEntity extends MyAbstractConfusingEntity {
+		@Column(name = "concrete_public_field")
 		public Long publicField;
+		@Column(name = "concrete_protected_field")
 		protected Long protectedField;
+		@Column(name = "concrete_default_field")
 		Long packagePrivateField;
+		@Column(name = "concrete_private_field")
 		private Long privateField;
 
 		public Long getAbstractEntityPublicField() {

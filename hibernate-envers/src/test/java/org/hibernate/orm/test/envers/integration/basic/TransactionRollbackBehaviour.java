@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.basic;
 
@@ -12,7 +10,7 @@ import jakarta.persistence.EntityManager;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.entities.IntTestEntity;
 import org.hibernate.internal.SessionImpl;
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -37,7 +35,7 @@ public class TransactionRollbackBehaviour extends BaseEnversJPAFunctionalTestCas
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-8189")
+	@JiraKey(value = "HHH-8189")
 	public void testFlushedAuditRecordsRollback() {
 		// default auto-clear behavior
 		testAuditRecordsRollbackBehavior( true, null );

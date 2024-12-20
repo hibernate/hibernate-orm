@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event.collection;
 import java.util.Collection;
@@ -73,10 +71,10 @@ public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 					for ( Iterator it = parents.iterator(); it.hasNext(); ) {
 						ParentWithCollection parent = ( ParentWithCollection ) it.next();
 						parent.clearChildren();
-						s.delete( parent );
+						s.remove( parent );
 					}
 					for ( Iterator it = children.iterator(); it.hasNext(); ) {
-						s.delete( it.next() );
+						s.remove( it.next() );
 					}
 				}
 		);
@@ -101,7 +99,7 @@ public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 		Transaction tx = s.beginTransaction();
 		Collection oldCollection = parent.getChildren();
 		parent.newChildren( null );
-		s.update( parent );
+		s.merge( parent );
 		tx.commit();
 		s.close();
 		int index = 0;
@@ -264,14 +262,14 @@ public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
 		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
 		checkNumberOfResults( listeners, index );
-	}	
+	}
 	*/
 
 	private ParentWithCollection createParentWithNullChildren(String parentName) {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		ParentWithCollection parent = createParent( parentName );
-		s.save( parent );
+		s.persist( parent );
 		tx.commit();
 		s.close();
 		return parent;
@@ -282,7 +280,7 @@ public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 		Transaction tx = s.beginTransaction();
 		ParentWithCollection parent = createParent( parentName );
 		parent.setChildren( createCollection() );
-		s.save( parent );
+		s.persist( parent );
 		tx.commit();
 		s.close();
 		return parent;
@@ -294,30 +292,30 @@ public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 		ParentWithCollection parent = createParent( parentName );
 		parent.setChildren( createCollection() );
 		parent.addChild( ChildName );
-		s.save( parent );
+		s.persist( parent );
 		tx.commit();
 		s.close();
 		return parent;
 	}
 
 	protected void checkResult(CollectionListeners listeners,
-							 CollectionListeners.Listener listenerExpected,
-							 ParentWithCollection parent,
-							 int index) {
+							CollectionListeners.Listener listenerExpected,
+							ParentWithCollection parent,
+							int index) {
 		checkResult( listeners, listenerExpected, parent, parent.getChildren(), index );
 	}
 	protected void checkResult(CollectionListeners listeners,
-							 CollectionListeners.Listener listenerExpected,
-							 ChildWithBidirectionalManyToMany child,
-							 int index) {
+							CollectionListeners.Listener listenerExpected,
+							ChildWithBidirectionalManyToMany child,
+							int index) {
 		checkResult( listeners, listenerExpected, child, child.getParents(), index );
 	}
 
 	protected void checkResult(CollectionListeners listeners,
-							 CollectionListeners.Listener listenerExpected,
-							 Entity ownerExpected,
-							 Collection collExpected,
-							 int index) {
+							CollectionListeners.Listener listenerExpected,
+							Entity ownerExpected,
+							Collection collExpected,
+							int index) {
 		assertSame( listenerExpected, listeners.getListenersCalled().get( index ) );
 		assertSame(
 				ownerExpected,

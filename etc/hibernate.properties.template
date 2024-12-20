@@ -89,7 +89,7 @@ hibernate.connection.url @DB_URL@
 
 ## Derby (Not supported!)
 
-#hibernate.dialect org.hibernate.dialect.DerbyDialect
+#hibernate.dialect org.hibernate.community.dialect.DerbyDialect
 #hibernate.connection.driver_class org.apache.derby.jdbc.EmbeddedDriver
 #hibernate.connection.username
 #hibernate.connection.password
@@ -161,7 +161,7 @@ hibernate.connection.url @DB_URL@
 
 ## HANA
 
-#hibernate.dialect org.hibernate.dialect.HANAColumnStoreDialect
+#hibernate.dialect org.hibernate.dialect.HANADialect
 #hibernate.connection.driver_class com.sap.db.jdbc.Driver
 #hibernate.connection.url jdbc:sap://localhost:30015
 #hibernate.connection.username HIBERNATE_TEST
@@ -191,22 +191,6 @@ hibernate.connection.pool_size 1
 
 
 
-##############################
-### Proxool Connection Pool###
-##############################
-
-## Properties for external configuration of Proxool
-
-hibernate.proxool.pool_alias pool1
-
-## Only need one of the following
-
-#hibernate.proxool.existing_pool true
-#hibernate.proxool.xml proxool.xml
-#hibernate.proxool.properties proxool.properties
-
-
-
 #################################
 ### Plugin ConnectionProvider ###
 #################################
@@ -217,7 +201,6 @@ hibernate.proxool.pool_alias pool1
 #hibernate.connection.provider_class org.hibernate.connection.DatasourceConnectionProvider
 #hibernate.connection.provider_class org.hibernate.connection.C3P0ConnectionProvider
 #hibernate.connection.provider_class org.hibernate.connection.DBCPConnectionProvider
-#hibernate.connection.provider_class org.hibernate.connection.ProxoolConnectionProvider
 
 
 
@@ -312,11 +295,6 @@ hibernate.default_batch_fetch_size 8
 ## rollback generated identifier values of deleted entities to default values
 
 #hibernate.use_identifier_rollback true
-
-
-## disable bytecode reflection optimizer (enabled by default)
-
-#hibernate.bytecode.use_reflection_optimizer false
 
 
 

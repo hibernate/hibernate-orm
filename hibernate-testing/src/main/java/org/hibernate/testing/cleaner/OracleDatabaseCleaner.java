@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.cleaner;
 
@@ -76,7 +74,7 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
 										// Exclude the tables with names starting like 'DEF$_'
 										"      AND table_name NOT LIKE 'DEF$\\_%' ESCAPE '\\'" +
 										" UNION ALL " +
-										"SELECT 'DROP SEQUENCE ' || sequence_owner || '.' || sequence_name FROM all_sequences WHERE sequence_owner = sys_context('USERENV', 'SESSION_USER') and sequence_name not like 'ISEQ$$%'"
+										"SELECT 'DROP SEQUENCE ' || sequence_owner || '.' || sequence_name FROM all_sequences WHERE sequence_owner = sys_context('USERENV', 'SESSION_USER') and sequence_name not like 'ISEQ$$%' and sequence_name not like 'MVIEW$%'"
 						);
 					}
 					catch (SQLException sqlException) {

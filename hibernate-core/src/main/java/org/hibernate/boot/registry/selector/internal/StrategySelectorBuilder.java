@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.selector.internal;
 
@@ -33,10 +31,15 @@ import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.id.enhanced.SingleNamingStrategy;
 import org.hibernate.id.enhanced.LegacyNamingStrategy;
 import org.hibernate.id.enhanced.StandardNamingStrategy;
+import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
@@ -115,6 +118,7 @@ public class StrategySelectorBuilder {
 		);
 		strategySelector.registerStrategyLazily( JtaPlatform.class, new DefaultJtaPlatformSelector() );
 		addTransactionCoordinatorBuilders( strategySelector );
+		addSqmMultiTableInsertStrategies( strategySelector );
 		addSqmMultiTableMutationStrategies( strategySelector );
 		addImplicitNamingStrategies( strategySelector );
 		addColumnOrderingStrategies( strategySelector );
@@ -174,6 +178,29 @@ public class StrategySelectorBuilder {
 				TransactionCoordinatorBuilder.class,
 				"org.hibernate.transaction.CMTTransactionFactory",
 				JtaTransactionCoordinatorBuilderImpl.class
+		);
+	}
+
+	private static void addSqmMultiTableInsertStrategies(StrategySelectorImpl strategySelector) {
+		strategySelector.registerStrategyImplementor(
+				SqmMultiTableInsertStrategy.class,
+				CteInsertStrategy.SHORT_NAME,
+				CteInsertStrategy.class
+		);
+		strategySelector.registerStrategyImplementor(
+				SqmMultiTableInsertStrategy.class,
+				GlobalTemporaryTableInsertStrategy.SHORT_NAME,
+				GlobalTemporaryTableInsertStrategy.class
+		);
+		strategySelector.registerStrategyImplementor(
+				SqmMultiTableInsertStrategy.class,
+				LocalTemporaryTableInsertStrategy.SHORT_NAME,
+				LocalTemporaryTableInsertStrategy.class
+		);
+		strategySelector.registerStrategyImplementor(
+				SqmMultiTableInsertStrategy.class,
+				PersistentTableInsertStrategy.SHORT_NAME,
+				PersistentTableInsertStrategy.class
 		);
 	}
 

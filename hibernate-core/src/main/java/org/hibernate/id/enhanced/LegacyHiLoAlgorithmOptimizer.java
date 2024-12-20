@@ -1,14 +1,14 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
 
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.hibernate.HibernateException;
 import org.hibernate.id.IntegralDataTypeHolder;
@@ -53,18 +53,29 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 	}
 
 	@Override
-	public synchronized Serializable generate(AccessCallback callback) {
-		final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
+	public Serializable generate(AccessCallback callback) {
+		lock.lock();
+		try {
+			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
 
-		if ( generationState.lo > generationState.maxLo ) {
-			generationState.lastSourceValue = callback.getNextValue();
-			generationState.lo = generationState.lastSourceValue.eq( 0 ) ? 1 : 0;
-			generationState.hi = generationState.lastSourceValue.copy().multiplyBy( generationState.maxLo + 1 );
+			if ( generationState.lo > generationState.maxLo ) {
+				generationState.lastSourceValue = callback.getNextValue();
+				generationState.lo = generationState.lastSourceValue.eq( 0 ) ? 1 : 0;
+				generationState.hi = generationState.lastSourceValue.copy().multiplyBy( generationState.maxLo + 1 );
+			}
+			generationState.value = generationState.hi.copy().add( generationState.lo++ );
+			return generationState.value.makeValue();
 		}
-		generationState.value = generationState.hi.copy().add( generationState.lo++ );
-		return generationState.value.makeValue();
+		finally {
+			lock.unlock();
+		}
+
 	}
 
+	/**
+	 * Use a lock instead of the monitor lock to avoid pinning when using virtual threads.
+	 */
+	private final Lock lock = new ReentrantLock();
 	private GenerationState noTenantState;
 	private Map<String,GenerationState> tenantSpecificState;
 
@@ -108,8 +119,14 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 	}
 
 	@Override
-	public synchronized IntegralDataTypeHolder getLastSourceValue() {
-		return noTenantGenerationState().lastSourceValue.copy();
+	public IntegralDataTypeHolder getLastSourceValue() {
+		lock.lock();
+		try {
+			return noTenantGenerationState().lastSourceValue.copy();
+		}
+		finally {
+			lock.unlock();
+		}
 	}
 
 	@Override
@@ -124,7 +141,13 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 	 *
 	 * @return Value for property 'lastValue'.
 	 */
-	public synchronized IntegralDataTypeHolder getLastValue() {
-		return noTenantGenerationState().value;
+	public IntegralDataTypeHolder getLastValue() {
+		lock.lock();
+		try {
+			return noTenantGenerationState().value;
+		}
+		finally {
+			lock.unlock();
+		}
 	}
 }

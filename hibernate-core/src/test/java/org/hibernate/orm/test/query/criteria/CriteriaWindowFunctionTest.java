@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria;
 
@@ -10,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -20,6 +19,7 @@ import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -134,6 +134,48 @@ public class CriteriaWindowFunctionTest {
 	}
 
 	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17391" )
+	public void testRowNumberMultiSelectGroupBy(final SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+					final CriteriaQuery<Tuple> cr = cb.createQuery( Tuple.class );
+					final Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
+
+					final JpaWindow window = cb.createWindow();
+					window.partitionBy( root.get( "id" ) ).orderBy( cb.asc( root.get( "id" ) ) );
+					final JpaExpression<Long> rowNumber = cb.rowNumber( window );
+
+					cr.multiselect( root.get( "id" ), rowNumber ).groupBy( root.get( "id" ) );
+					final List<Tuple> resultList = session.createQuery( cr ).getResultList();
+					assertEquals( 5, resultList.size() );
+					resultList.forEach( tuple -> assertEquals( 1L, tuple.get( 1, Long.class ) ) );
+				}
+		);
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17392" )
+	public void testRowNumberMultiSelect(final SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+					final CriteriaQuery<Tuple> cr = cb.createQuery( Tuple.class );
+					final Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
+
+					final JpaWindow window = cb.createWindow();
+					window.partitionBy( root.get( "id" ) ).orderBy( cb.asc( root.get( "id" ) ) );
+					final JpaExpression<Long> rowNumber = cb.rowNumber( window );
+
+					cr.multiselect( root.get( "id" ), rowNumber );
+					final List<Tuple> resultList = session.createQuery( cr ).getResultList();
+					assertEquals( 5, resultList.size() );
+					resultList.forEach( tuple -> assertEquals( 1L, tuple.get( 1, Long.class ) ) );
+				}
+		);
+	}
+
+	@Test
 	public void testFirstValue(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -214,6 +256,7 @@ public class CriteriaWindowFunctionTest {
 
 	@Test
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for percent_rank and cume_dist functions")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "No support for percent_rank and cume_dist functions with over clause")
 	public void testReusableWindow(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

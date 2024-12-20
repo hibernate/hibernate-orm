@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.lob;
 
@@ -56,7 +54,7 @@ public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 		Session session = openSession();
 		session.beginTransaction();
 		MaterializedBlobEntity entity = new MaterializedBlobEntity( "test", testData );
-		session.save( entity );
+		session.persist( entity );
 		session.getTransaction().commit();
 		session.close();
 
@@ -64,7 +62,7 @@ public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 		entity = session.get( MaterializedBlobEntity.class, entity.getId() );
 		assertTrue( Arrays.equals( testData, entity.getTheBytes() ) );
-		session.delete( entity );
+		session.remove( entity );
 		session.getTransaction().commit();
 		session.close();
 	}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
@@ -13,6 +11,7 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import org.hibernate.ScrollMode;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -37,10 +36,11 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.dialect.NullOrdering;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
@@ -62,11 +62,11 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.sqm.TemporalUnit.DAY;
-import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
-import static org.hibernate.query.sqm.TemporalUnit.MONTH;
-import static org.hibernate.query.sqm.TemporalUnit.QUARTER;
-import static org.hibernate.query.sqm.TemporalUnit.YEAR;
+import static org.hibernate.query.common.TemporalUnit.DAY;
+import static org.hibernate.query.common.TemporalUnit.EPOCH;
+import static org.hibernate.query.common.TemporalUnit.MONTH;
+import static org.hibernate.query.common.TemporalUnit.QUARTER;
+import static org.hibernate.query.common.TemporalUnit.YEAR;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
@@ -90,19 +90,20 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * An SQL dialect for SQLite.
  *
  * @author Christian Beikov
- * @author Vlad Mihalcea
  */
 public class SQLiteDialect extends Dialect {
+
+	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 2, 0 );
 
 	private final UniqueDelegate uniqueDelegate;
 
 	public SQLiteDialect(DialectResolutionInfo info) {
-		this( info.makeCopy() );
+		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
 		registerKeywords( info );
 	}
 
 	public SQLiteDialect() {
-		this( DatabaseVersion.make( 2, 0 ) );
+		this( DEFAULT_VERSION );
 	}
 
 	public SQLiteDialect(DatabaseVersion version) {
@@ -149,6 +150,19 @@ public class SQLiteDialect extends Dialect {
 		public String getColumnDefinitionUniquenessFragment(Column column, SqlStringGenerationContext context) {
 			return " unique";
 		}
+
+		/**
+		 * Alter table support in SQLite is very limited and does
+		 * not include adding a unique constraint (as of 9/2023).
+		 *
+		 * @return always empty String
+		 * @see <a href="https://www.sqlite.org/omitted.html">SQLite SQL omissions</a>
+		 */
+		@Override
+		public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata, SqlStringGenerationContext context) {
+			return "";
+		}
+
 	}
 
 	@Override
@@ -339,20 +353,20 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
+	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		switch ( specification ) {
 			case BOTH:
-				return character == ' '
+				return isWhitespace
 						? "trim(?1)"
-						: "trim(?1,'" + character + "')";
+						: "trim(?1,?2)";
 			case LEADING:
-				return character == ' '
+				return isWhitespace
 						? "ltrim(?1)"
-						: "ltrim(?1,'" + character + "')";
+						: "ltrim(?1,?2)";
 			case TRAILING:
-				return character == ' '
+				return isWhitespace
 						? "rtrim(?1)"
-						: "rtrim(?1,'" + character + "')";
+						: "rtrim(?1,?2)";
 		}
 		throw new UnsupportedOperationException( "Unsupported specification: " + specification );
 	}
@@ -400,6 +414,16 @@ public class SQLiteDialect extends Dialect {
 	@Override
 	public NullOrdering getNullOrdering() {
 		return NullOrdering.SMALLEST;
+	}
+
+	/**
+	 * Generated keys are not supported by the (standard) Xerial driver (9/2022).
+	 *
+	 * @return false
+	 */
+	@Override
+	public boolean getDefaultUseGetGeneratedKeys() {
+		return false;
 	}
 
 	@Override

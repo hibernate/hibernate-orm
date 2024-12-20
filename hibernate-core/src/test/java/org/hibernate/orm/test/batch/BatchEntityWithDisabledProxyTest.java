@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.batch;
 
 import java.util.ArrayList;
@@ -7,7 +11,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.Proxy;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -29,7 +32,6 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -104,7 +106,11 @@ public class BatchEntityWithDisabledProxyTest {
 			s.getSessionFactory().getCache().evictAllRegions();
 
 			Product product = s.getReference( Product.class, 3 );
-			assertTrue( Hibernate.isInitialized(product) );
+			assertFalse( Hibernate.isInitialized( product) );
+
+			Hibernate.initialize( product );
+
+			assertTrue( Hibernate.isInitialized( product) );
 		} );
 	}
 
@@ -137,7 +143,6 @@ public class BatchEntityWithDisabledProxyTest {
 	}
 
 	@Entity(name = "Product")
-	@Proxy(lazy = false)
 	@BatchSize(size = 512)
 	@Cacheable
 	public static class Product {

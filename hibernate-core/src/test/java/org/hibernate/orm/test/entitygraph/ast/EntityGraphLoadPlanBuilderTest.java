@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph.ast;
 
@@ -42,7 +40,7 @@ import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -84,7 +82,7 @@ import static org.hibernate.testing.hamcrest.CollectionMatchers.isEmpty;
 		}
 )
 @SessionFactory
-@TestForIssue( jiraKey = "HHH-13756" )
+@JiraKey( value = "HHH-13756" )
 public class EntityGraphLoadPlanBuilderTest implements SessionFactoryScopeAware {
 
 	private SessionFactoryScope scope;
@@ -248,10 +246,10 @@ public class EntityGraphLoadPlanBuilderTest implements SessionFactoryScopeAware 
 					// Check the from-clause
 					assertPluralAttributeJoinedGroup( sqlAst, "shipAddresses", tableGroup -> {
 						if ( graphSemantic == GraphSemantic.LOAD ) {
-							assertThat( tableGroup.getTableGroupJoins(), isEmpty() );
-							assertThat( tableGroup.getNestedTableGroupJoins(), hasSize( 1 ) );
+							assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
+							assertThat( tableGroup.getNestedTableGroupJoins(), isEmpty() );
 
-							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getNestedTableGroupJoins() )
+							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getTableGroupJoins() )
 									.getJoinedGroup();
 							assertThat( compositeTableGroup, instanceOf( StandardVirtualTableGroup.class ) );
 							assertThat( compositeTableGroup.getTableGroupJoins(), hasSize( 1 ) );
@@ -265,10 +263,10 @@ public class EntityGraphLoadPlanBuilderTest implements SessionFactoryScopeAware 
 							assertThat( countryTableGroup.getNestedTableGroupJoins(), isEmpty() );
 						}
 						else {
-							assertThat( tableGroup.getTableGroupJoins(), isEmpty() );
-							assertThat( tableGroup.getNestedTableGroupJoins(), hasSize( 1 ) );
+							assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
+							assertThat( tableGroup.getNestedTableGroupJoins(), isEmpty() );
 
-							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getNestedTableGroupJoins() ).getJoinedGroup();
+							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getTableGroupJoins() ).getJoinedGroup();
 							assertThat( compositeTableGroup, instanceOf( StandardVirtualTableGroup.class ) );
 							assertThat( compositeTableGroup.getNestedTableGroupJoins(), isEmpty() );
 							assertThat( compositeTableGroup.getTableGroupJoins(), hasSize( 1 ) );

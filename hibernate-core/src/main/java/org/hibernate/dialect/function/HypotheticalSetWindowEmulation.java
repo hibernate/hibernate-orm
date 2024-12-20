@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
@@ -72,9 +70,7 @@ public class HypotheticalSetWindowEmulation extends HypotheticalSetFunction {
 				else if ( currentClause != Clause.SELECT ) {
 					throw new IllegalArgumentException( "Can't emulate [" + getName() + "] in clause " + currentClause + ". Only the SELECT clause is supported" );
 				}
-				final ReturnableType<?> resultType = resolveResultType(
-						walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
-				);
+				final ReturnableType<?> resultType = resolveResultType( walker );
 
 				List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
 				ArgumentsValidator argumentsValidator = getArgumentsValidator();
@@ -103,7 +99,7 @@ public class HypotheticalSetWindowEmulation extends HypotheticalSetFunction {
 				}
 				final SelfRenderingFunctionSqlAstExpression function = new SelfRenderingOrderedSetAggregateFunctionSqlAstExpression(
 						getFunctionName(),
-						getRenderingSupport(),
+						getFunctionRenderer(),
 						Collections.emptyList(),
 						getFilter() == null ? null : (Predicate) getFilter().accept( walker ),
 						Collections.emptyList(),

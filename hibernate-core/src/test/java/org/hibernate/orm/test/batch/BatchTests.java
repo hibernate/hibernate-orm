@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.batch;
 
@@ -178,10 +176,14 @@ public class BatchTests extends BaseEntityManagerFunctionalTestCase {
 			}
 
 			txn.commit();
-		} catch (RuntimeException e) {
-			if (txn != null && txn.isActive()) txn.rollback();
-				throw e;
-		} finally {
+		}
+		catch (RuntimeException e) {
+			if (txn != null && txn.isActive()) {
+				txn.rollback();
+			}
+			throw e;
+		}
+		finally {
 			if (entityManager != null) {
 				entityManager.close();
 			}
@@ -214,10 +216,14 @@ public class BatchTests extends BaseEntityManagerFunctionalTestCase {
 			}
 
 			txn.commit();
-		} catch (RuntimeException e) {
-			if (txn != null && txn.isActive()) txn.rollback();
-				throw e;
-		} finally {
+		}
+		catch (RuntimeException e) {
+			if (txn != null && txn.isActive()) {
+				txn.rollback();
+			}
+			throw e;
+		}
+		finally {
 			if (entityManager != null) {
 				entityManager.close();
 			}
@@ -242,10 +248,10 @@ public class BatchTests extends BaseEntityManagerFunctionalTestCase {
 
 			Session session = entityManager.unwrap(Session.class);
 
-			scrollableResults = session
-				.createSelectionQuery("select p from Person p")
-				.setCacheMode(CacheMode.IGNORE)
-				.scroll(ScrollMode.FORWARD_ONLY);
+			scrollableResults =
+					session.createSelectionQuery("select p from Person p")
+							.setCacheMode(CacheMode.IGNORE)
+							.scroll(ScrollMode.FORWARD_ONLY);
 
 			int count = 0;
 			while (scrollableResults.next()) {
@@ -259,10 +265,14 @@ public class BatchTests extends BaseEntityManagerFunctionalTestCase {
 			}
 
 			txn.commit();
-		} catch (RuntimeException e) {
-			if (txn != null && txn.isActive()) txn.rollback();
-				throw e;
-		} finally {
+		}
+		catch (RuntimeException e) {
+			if (txn != null && txn.isActive()) {
+				txn.rollback();
+			}
+			throw e;
+		}
+		finally {
 			if (scrollableResults != null) {
 				scrollableResults.close();
 			}
@@ -279,7 +289,7 @@ public class BatchTests extends BaseEntityManagerFunctionalTestCase {
 		//tag::batch-stateless-session-example[]
 		StatelessSession statelessSession = null;
 		Transaction txn = null;
-		ScrollableResults scrollableResults = null;
+		ScrollableResults<?> scrollableResults = null;
 		try {
 			SessionFactory sessionFactory = entityManagerFactory().unwrap(SessionFactory.class);
 			statelessSession = sessionFactory.openStatelessSession();
@@ -287,9 +297,9 @@ public class BatchTests extends BaseEntityManagerFunctionalTestCase {
 			txn = statelessSession.getTransaction();
 			txn.begin();
 
-			scrollableResults = statelessSession
-				.createSelectionQuery("select p from Person p")
-				.scroll(ScrollMode.FORWARD_ONLY);
+			scrollableResults =
+					statelessSession.createSelectionQuery("select p from Person p")
+							.scroll(ScrollMode.FORWARD_ONLY);
 
 			while (scrollableResults.next()) {
 				Person Person = (Person) scrollableResults.get();
@@ -298,10 +308,14 @@ public class BatchTests extends BaseEntityManagerFunctionalTestCase {
 			}
 
 			txn.commit();
-		} catch (RuntimeException e) {
-			if (txn != null && txn.getStatus() == TransactionStatus.ACTIVE) txn.rollback();
-				throw e;
-		} finally {
+		}
+		catch (RuntimeException e) {
+			if (txn != null && txn.getStatus() == TransactionStatus.ACTIVE) {
+				txn.rollback();
+			}
+			throw e;
+		}
+		finally {
 			if (scrollableResults != null) {
 				scrollableResults.close();
 			}

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.relational;
 
@@ -17,11 +15,17 @@ import org.hibernate.Incubating;
  *
  * @see org.hibernate.SessionFactory#getSchemaManager()
  *
+ * @apiNote This interface was added to JPA 3.2 as
+ * {@link jakarta.persistence.SchemaManager}, which it now inherits,
+ * with a minor change to the naming of its operations. It is retained
+ * for backward compatibility and as a place to define additional
+ * functionality in the future.
+ *
  * @since 6.2
  * @author Gavin King
  */
 @Incubating
-public interface SchemaManager {
+public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	/**
 	 * Export database objects mapped by Hibernate entities.
 	 * <p>
@@ -29,6 +33,8 @@ public interface SchemaManager {
 	 *
 	 * @param createSchemas if {@code true}, attempt to create schemas,
 	 *                      otherwise, assume the schemas already exist
+	 *
+	 * @apiNote This operation is a synonym for {@link #create}.
 	 */
 	void exportMappedObjects(boolean createSchemas);
 
@@ -40,6 +46,8 @@ public interface SchemaManager {
 	 *
 	 * @param dropSchemas if {@code true}, drop schemas,
 	 *                    otherwise, leave them be
+	 *
+	 * @apiNote This operation is a synonym for {@link #drop}.
 	 */
 	void dropMappedObjects(boolean dropSchemas);
 
@@ -48,6 +56,8 @@ public interface SchemaManager {
 	 * have the expected definitions.
 	 * <p>
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaValidator}.
+	 *
+	 * @apiNote This operation is a synonym for {@link #validate}.
 	 */
 	void validateMappedObjects();
 
@@ -58,6 +68,8 @@ public interface SchemaManager {
 	 * load script}.
 	 * <p>
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaTruncator}.
+	 *
+	 * @apiNote This operation is a synonym for {@link #truncate}.
 	 */
 	void truncateMappedObjects();
 }

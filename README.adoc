@@ -5,7 +5,7 @@ Hibernate implements JPA, the standard API for object/relational persistence in 
 See https://hibernate.org/orm/[Hibernate.org] for more information.
 
 image:https://ci.hibernate.org/job/hibernate-orm-pipeline/job/main/badge/icon[Build Status,link=https://ci.hibernate.org/job/hibernate-orm-pipeline/job/main/]
-image:https://img.shields.io/badge/Revved%20up%20by-Gradle%20Enterprise-06A0CE?logo=Gradle&labelColor=02303A[link=https://ge.hibernate.org/scans]
+image:https://img.shields.io/badge/Revved%20up%20by-Develocity-06A0CE?logo=Gradle&labelColor=02303A[link=https://ge.hibernate.org/scans]
 
 == Continuous Integration
 
@@ -175,7 +175,7 @@ The following table illustrates a list of commands for various databases that ca
 |`./docker_db.sh edb`
 |`./gradlew test -Pdb=edb_ci`
 
-|Oracle XE
+|Oracle
 |`./docker_db.sh oracle`
 |`./gradlew test -Pdb=oracle_ci`
 
@@ -202,6 +202,14 @@ The following table illustrates a list of commands for various databases that ca
 |CockroachDB
 |`./docker_db.sh cockroachdb`
 |`./gradlew test -Pdb=cockroachdb`
+
+|TiDB
+|`./docker_db.sh tidb`
+|`./gradlew test -Pdb=tidb`
+
+|Informix
+|`./docker_db.sh informix`
+|`./gradlew test -Pdb=informix`
 |===
 
 To stop a container started by `docker`, use the command

@@ -1,13 +1,10 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.cacheable.annotation;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.SharedCacheMode;
@@ -21,6 +18,7 @@ import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -115,7 +113,7 @@ public class ConfigurationTest {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private MetadataImplementor buildMetadata(SharedCacheMode mode) {
-		Map settings = new HashMap();
+		Map settings = ServiceRegistryUtil.createBaseSettings();
 		settings.put( AvailableSettings.JPA_SHARED_CACHE_MODE, mode );
 		settings.put( AvailableSettings.CACHE_REGION_FACTORY, CustomRegionFactory.class.getName() );
 		settings.put(

@@ -1,8 +1,17 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.timezones;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
+
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -15,11 +24,9 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -29,8 +36,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class UTCNormalizedZonedTest {
 
 	@Test void test(SessionFactoryScope scope) {
-		ZonedDateTime nowZoned = ZonedDateTime.now().withZoneSameInstant( ZoneId.of("CET") );
-		OffsetDateTime nowOffset = OffsetDateTime.now().withOffsetSameInstant( ZoneOffset.ofHours(3) );
+		final ZonedDateTime nowZoned;
+		final OffsetDateTime nowOffset;
+		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		if ( dialect instanceof SybaseDialect ) {
+			// Sybase has 1/300th sec precision
+			nowZoned = ZonedDateTime.now().withZoneSameInstant( ZoneId.of("CET") )
+					.with( ChronoField.NANO_OF_SECOND, 0L );
+			nowOffset = OffsetDateTime.now().withOffsetSameInstant( ZoneOffset.ofHours(3) )
+					.with( ChronoField.NANO_OF_SECOND, 0L );
+		}
+		else if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+			nowZoned = ZonedDateTime.now().withZoneSameInstant( ZoneId.of("CET") ).truncatedTo( ChronoUnit.MICROS );
+			nowOffset = OffsetDateTime.now().withOffsetSameInstant( ZoneOffset.ofHours(3) ).truncatedTo( ChronoUnit.MICROS );
+		}
+		else {
+			nowZoned = ZonedDateTime.now().withZoneSameInstant( ZoneId.of("CET") );
+			nowOffset = OffsetDateTime.now().withOffsetSameInstant( ZoneOffset.ofHours(3) );
+		}
 		long id = scope.fromTransaction( s-> {
 			Zoned z = new Zoned();
 			z.zonedDateTime = nowZoned;
@@ -40,22 +63,18 @@ public class UTCNormalizedZonedTest {
 		});
 		scope.inSession( s-> {
 			Zoned z = s.find(Zoned.class, id);
-			final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-			if ( dialect instanceof SybaseDialect) {
-				// Sybase with jTDS driver has 1/300th sec precision
-				assertEquals( nowZoned.toInstant().truncatedTo(ChronoUnit.SECONDS), z.zonedDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS) );
-				assertEquals( nowOffset.toInstant().truncatedTo(ChronoUnit.SECONDS), z.offsetDateTime.toInstant().truncatedTo(ChronoUnit.SECONDS) );
-			}
-			else {
-				assertEquals(
-						DateTimeUtils.roundToDefaultPrecision( nowZoned.toInstant(), dialect ),
-						DateTimeUtils.roundToDefaultPrecision( z.zonedDateTime.toInstant(), dialect )
-				);
-				assertEquals(
-						DateTimeUtils.roundToDefaultPrecision( nowOffset.toInstant(), dialect ),
-						DateTimeUtils.roundToDefaultPrecision( z.offsetDateTime.toInstant(), dialect )
-				);
-			}
+			Instant expected = DateTimeUtils.adjustToDefaultPrecision( nowZoned.toInstant(), dialect );
+			Instant actual = DateTimeUtils.adjustToDefaultPrecision( z.zonedDateTime.toInstant(), dialect );
+			assertEquals(
+					expected,
+					actual
+			);
+			expected = DateTimeUtils.adjustToDefaultPrecision( nowOffset.toInstant(), dialect );
+			actual = DateTimeUtils.adjustToDefaultPrecision( z.offsetDateTime.toInstant(), dialect );
+			assertEquals(
+					expected,
+					actual
+			);
 			assertEquals( ZoneId.of("Z"), z.zonedDateTime.getZone() );
 			assertEquals( ZoneOffset.ofHours(0), z.offsetDateTime.getOffset() );
 		});

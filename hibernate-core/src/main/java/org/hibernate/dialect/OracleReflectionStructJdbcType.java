@@ -1,14 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
 import java.lang.reflect.Method;
 import java.sql.Connection;
-import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.naming.Identifier;
@@ -20,7 +17,7 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 /**
  * @author Christian Beikov
  */
-public class OracleReflectionStructJdbcType extends StructJdbcType {
+public class OracleReflectionStructJdbcType extends OracleBaseStructJdbcType {
 	public static final AggregateJdbcType INSTANCE = new OracleReflectionStructJdbcType();
 
 	private static final ClassValue<Method> RAW_JDBC_TRANSFORMER = new ClassValue<>() {
@@ -44,12 +41,8 @@ public class OracleReflectionStructJdbcType extends StructJdbcType {
 		this( null, null, null );
 	}
 
-	public OracleReflectionStructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName, int[] orderMapping) {
-		super(
-				embeddableMappingType,
-				typeName == null ? null : typeName.toUpperCase( Locale.ROOT ),
-				orderMapping
-		);
+	private OracleReflectionStructJdbcType(EmbeddableMappingType embeddableMappingType, String typeName, int[] orderMapping) {
+		super( embeddableMappingType, typeName, orderMapping );
 	}
 
 	@Override
@@ -75,13 +68,8 @@ public class OracleReflectionStructJdbcType extends StructJdbcType {
 			return rawJdbcValue;
 		}
 		try {
-			return rawJdbcTransformer.invoke(
-					rawJdbcValue,
-					options.getSession()
-							.getJdbcCoordinator()
-							.getLogicalConnection()
-							.getPhysicalConnection()
-			);
+			return rawJdbcTransformer.invoke( rawJdbcValue,
+					options.getSession().getJdbcCoordinator().getLogicalConnection().getPhysicalConnection() );
 		}
 		catch (Exception e) {
 			throw new HibernateException( "Could not transform the raw jdbc value", e );

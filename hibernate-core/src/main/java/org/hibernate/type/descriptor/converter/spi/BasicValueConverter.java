@@ -1,15 +1,13 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.converter.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Support for {@linkplain org.hibernate.type basic-typed} value conversions.
@@ -30,13 +28,13 @@ public interface BasicValueConverter<D,R> {
 	 * Convert the relational form just retrieved from JDBC ResultSet into
 	 * the domain form.
 	 */
-	D toDomainValue(R relationalForm);
+	@Nullable D toDomainValue(@Nullable R relationalForm);
 
 	/**
 	 * Convert the domain form into the relational form in preparation for
 	 * storage into JDBC
 	 */
-	R toRelationalValue(D domainForm);
+	@Nullable R toRelationalValue(@Nullable D domainForm);
 
 	/**
 	 * Descriptor for the Java type for the domain portion of this converter

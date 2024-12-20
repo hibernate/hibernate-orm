@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.transaction;
 
@@ -28,7 +26,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.internal.SessionImpl;
 
-import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -101,7 +99,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-10942")
+	@JiraKey(value = "HHH-10942")
 	public void testPersistThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
@@ -128,7 +126,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11166")
+	@JiraKey(value = "HHH-11166")
 	public void testMergeThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
@@ -171,7 +169,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11269")
+	@JiraKey(value = "HHH-11269")
 	public void testMergeWithDeletionOrphanRemovalThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope)
 			throws Exception {
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
@@ -212,7 +210,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11166")
+	@JiraKey(value = "HHH-11166")
 	public void testUpdateThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
@@ -253,7 +251,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11166")
+	@JiraKey(value = "HHH-11166")
 	public void testRemoveThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
@@ -295,7 +293,7 @@ public class CloseEntityManagerWithActiveTransactionTest {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11099")
+	@JiraKey(value = "HHH-11099")
 	public void testCommitReleasesLogicalConnection(EntityManagerFactoryScope scope) throws Exception {
 		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {

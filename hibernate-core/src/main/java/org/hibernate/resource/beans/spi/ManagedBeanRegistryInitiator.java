@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.spi;
 
@@ -47,8 +45,8 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 	}
 
 	private BeanContainer resolveBeanContainer(Map<?,?> configurationValues, ServiceRegistryImplementor serviceRegistry) {
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		final ConfigurationService cfgSvc = serviceRegistry.getService( ConfigurationService.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
+		final ConfigurationService cfgSvc = serviceRegistry.requireService( ConfigurationService.class );
 
 		// was a specific container explicitly specified?
 		final Object explicitBeanContainer = configurationValues.get( AvailableSettings.BEAN_CONTAINER );
@@ -99,7 +97,7 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 		else {
 			final String name = explicitSetting.toString();
 			// try the StrategySelector service
-			final Class<?> selected = serviceRegistry.getService( StrategySelector.class )
+			final Class<?> selected = serviceRegistry.requireService( StrategySelector.class )
 					.selectStrategyImplementor( BeanContainer.class, name );
 			if ( selected != null ) {
 				containerClass = selected;

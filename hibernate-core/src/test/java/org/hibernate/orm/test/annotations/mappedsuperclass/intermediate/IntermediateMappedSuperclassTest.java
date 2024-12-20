@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.mappedsuperclass.intermediate;
 
@@ -33,7 +31,7 @@ public class IntermediateMappedSuperclassTest {
 		scope.inTransaction(
 				session -> {
 					session.createQuery( "from Account" ).list().forEach(
-							account -> session.delete( account )
+							account -> session.remove( account )
 					);
 				}
 		);
@@ -45,7 +43,7 @@ public class IntermediateMappedSuperclassTest {
 		SavingsAccount savingsAccount = new SavingsAccount( "123", withdrawalLimit );
 		scope.inTransaction(
 				session -> {
-					session.save( savingsAccount );
+					session.persist( savingsAccount );
 				}
 		);
 

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
@@ -10,15 +8,15 @@ import java.util.Set;
 import java.util.UUID;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.TransactionRequiredException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.StatelessSession;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.Query;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
@@ -42,8 +40,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * including implementors of {@link org.hibernate.type.Type}, {@link EntityPersister},
  * and {@link org.hibernate.persister.collection.CollectionPersister}.
  * <p>
- * The {@code Session}, via this interface and {@link SharedSessionContractImplementor},
- * implements:
+ * The {@code Session}, via this interface, implements:
  * <ul>
  *     <li>
  *         {@link JdbcSessionOwner}, and so the session also acts as the orchestrator
@@ -88,7 +85,7 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Obtain the {@linkplain SessionFactoryImplementor factory} which created this session.
 	 */
-	@Override
+//	@Override
 	default SessionFactoryImplementor getSessionFactory() {
 		return getFactory();
 	}
@@ -99,6 +96,14 @@ public interface SharedSessionContractImplementor
 	@Override
 	default TypeConfiguration getTypeConfiguration() {
 		return getFactory().getTypeConfiguration();
+	}
+
+	/**
+	 * Obtain the {@link Dialect}.
+	 */
+	@Override
+	default Dialect getDialect() {
+		return getSessionFactory().getJdbcServices().getDialect();
 	}
 
 	/**
@@ -243,7 +248,7 @@ public interface SharedSessionContractImplementor
 	 * This method is primarily for internal or integrator use.
 	 *
 	 * @return the {@link Transaction}
-     */
+	 */
 	Transaction accessTransaction();
 
 	/**
@@ -307,7 +312,7 @@ public interface SharedSessionContractImplementor
 	 * @param entityName optional entity name
 	 * @param object the entity instance
 	 */
-	EntityPersister getEntityPersister(String entityName, Object object) throws HibernateException;
+	EntityPersister getEntityPersister(@Nullable String entityName, Object object) throws HibernateException;
 
 	/**
 	 * Get the entity instance associated with the given {@link EntityKey},
@@ -366,19 +371,13 @@ public interface SharedSessionContractImplementor
 	 */
 	boolean isDefaultReadOnly();
 
-	/**
-	 * Get the current {@link CacheMode} for this session.
-	 */
-	CacheMode getCacheMode();
-
-	/**
-	 * Set the current {@link CacheMode} for this session.
-	 */
-	void setCacheMode(CacheMode cm);
-
 	void setCriteriaCopyTreeEnabled(boolean jpaCriteriaCopyComplianceEnabled);
 
 	boolean isCriteriaCopyTreeEnabled();
+
+	boolean getNativeJdbcParametersIgnored();
+
+	void setNativeJdbcParametersIgnored(boolean nativeJdbcParametersIgnored);
 
 	/**
 	 * Get the current {@link FlushModeType} for this session.
@@ -532,23 +531,12 @@ public interface SharedSessionContractImplementor
 	 */
 	boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException;
 
-	/**
-	 * Are we currently enforcing a {@linkplain GraphSemantic#FETCH fetch graph}?
-	 *
-	 * @deprecated this is not used  anywhere
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	default boolean isEnforcingFetchGraph() {
-		return false;
+	default boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush)
+			throws HibernateException {
+		return autoFlushIfRequired( querySpaces );
 	}
 
-	/**
-	 * Enable or disable {@linkplain GraphSemantic#FETCH fetch graph} enforcement.
-	 *
-	 * @deprecated this is not used  anywhere
-	 */
-	@Deprecated(since = "6", forRemoval = true)
-	default void setEnforcingFetchGraph(boolean enforcingFetchGraph) {
+	default void autoPreFlush(){
 	}
 
 	/**

@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spi;
 
@@ -13,8 +11,6 @@ import org.hibernate.Incubating;
 import org.hibernate.internal.util.StringHelper;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * A compound name where the root path element is an entity name or a collection role
@@ -31,7 +27,6 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	private final String localName;
 	private final @Nullable String alias;
 	private final String identifierForTableGroup;
-	private final FullPathCalculator fullPathCalculator;
 	private final int hashCode;
 
 	public NavigablePath(String localName) {
@@ -43,8 +38,6 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		this.alias = alias = StringHelper.nullIfEmpty( alias );
 		this.localName = rootName;
 		this.identifierForTableGroup = rootName;
-
-		this.fullPathCalculator = NavigablePath::calculateRootFullPath;
 
 		this.hashCode = localName.hashCode() + ( alias == null ? 0 : alias.hashCode() );
 	}
@@ -71,14 +64,13 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		if ( IDENTIFIER_MAPPER_PROPERTY.equals( localName ) ) {
 			this.localName = "";
 			this.identifierForTableGroup = parent.getFullPath();
-			this.fullPathCalculator = NavigablePath::calculateIdMapperFullPath;
 		}
 		else {
 			this.localName = localName;
-			this.identifierForTableGroup = StringHelper.isEmpty( parent.getIdentifierForTableGroup() )
+			final String parentFullPath = parent.getFullPath();
+			this.identifierForTableGroup = StringHelper.isEmpty( parentFullPath )
 					? aliasedLocalName
-					: parent.getIdentifierForTableGroup() + "." + localName;
-			this.fullPathCalculator = NavigablePath::calculateNormalFullPath;
+					: parentFullPath + "." + localName;
 		}
 	}
 
@@ -87,14 +79,12 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 			String localName,
 			@Nullable String alias,
 			String identifierForTableGroup,
-			FullPathCalculator fullPathCalculator,
 			int hashCode) {
 		this.parent = parent;
 		this.localName = localName;
 		this.hashCode = hashCode;
 		this.alias = StringHelper.nullIfEmpty( alias );
 		this.identifierForTableGroup = identifierForTableGroup;
-		this.fullPathCalculator = fullPathCalculator;
 	}
 
 	@Override
@@ -139,8 +129,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 			return false;
 		}
 
-		if ( otherPath instanceof NavigablePath ) {
-			final NavigablePath otherNavigablePath = (NavigablePath) otherPath;
+		if ( otherPath instanceof NavigablePath otherNavigablePath ) {
 			if ( ! Objects.equals( getAlias(), otherNavigablePath.getAlias() ) ) {
 				return false;
 			}
@@ -316,47 +305,11 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 
 	@Override
 	public String getFullPath() {
-		return fullPathCalculator.calculateFullPath( parent, localName, alias );
+		return alias == null ? identifierForTableGroup : identifierForTableGroup + "(" + alias + ")";
 	}
 
 	@Override
 	public String toString() {
 		return getFullPath();
-	}
-
-	/**
-	 * Effectively a tri-function
-	 */
-	@FunctionalInterface
-	protected interface FullPathCalculator extends Serializable {
-		String calculateFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias);
-	}
-
-	/**
-	 * The pattern used for root NavigablePaths
-	 */
-	protected static String calculateRootFullPath(@Nullable NavigablePath parent, String rootName, @Nullable String alias) {
-		assert parent == null;
-		return alias == null ? rootName : rootName + "(" + alias + ")";
-	}
-
-	/**
-	 * The normal pattern used for the "full path"
-	 */
-	private static String calculateNormalFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias) {
-		assert parent != null;
-
-		final String parentFullPath = castNonNull( parent ).getFullPath();
-		final String baseFullPath = StringHelper.isEmpty( parentFullPath )
-				? localName
-				: parentFullPath + "." + localName;
-		return alias == null ? baseFullPath : baseFullPath + "(" + alias + ")";
-	}
-
-	/**
-	 * Pattern used for `_identifierMapper`
-	 */
-	protected static String calculateIdMapperFullPath(@Nullable NavigablePath parent, String localName, @Nullable String alias) {
-		return parent != null ? parent.getFullPath() : "";
 	}
 }

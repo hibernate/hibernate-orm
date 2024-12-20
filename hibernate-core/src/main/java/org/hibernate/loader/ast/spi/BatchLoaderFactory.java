@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.spi;
 
@@ -23,11 +21,26 @@ public interface BatchLoaderFactory extends Service {
 	 *
 	 * @param domainBatchSize The total number of entities (max) that will be need to be initialized
 	 * @param entityDescriptor The entity mapping metadata
+	 * @deprecated Use {@link #createEntityBatchLoader(int, EntityMappingType, LoadQueryInfluencers)} instead
+	 */
+	@Deprecated(forRemoval = true)
+	default <T> EntityBatchLoader<T> createEntityBatchLoader(
+			int domainBatchSize,
+			EntityMappingType entityDescriptor,
+			SessionFactoryImplementor factory) {
+		return createEntityBatchLoader( domainBatchSize, entityDescriptor, new LoadQueryInfluencers( factory ) );
+	}
+
+	/**
+	 * Create a BatchLoader for batch-loadable entities.
+	 *
+	 * @param domainBatchSize The total number of entities (max) that will be need to be initialized
+	 * @param entityDescriptor The entity mapping metadata
 	 */
 	<T> EntityBatchLoader<T> createEntityBatchLoader(
 			int domainBatchSize,
 			EntityMappingType entityDescriptor,
-			SessionFactoryImplementor factory);
+			LoadQueryInfluencers loadQueryInfluencers);
 
 	/**
 	 * Create a BatchLoader for batch-loadable collections.

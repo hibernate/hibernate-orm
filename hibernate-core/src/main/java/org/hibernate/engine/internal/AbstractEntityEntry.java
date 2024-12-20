@@ -368,8 +368,6 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
 				// we never have to check an uninitialized proxy
-				// TODO: why do we not check !lazinessInterceptor.hasWrittenFieldNames()
-				//       as we do below in isNonDirtyViaTracker() ?
 				return true;
 			}
 		}

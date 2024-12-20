@@ -94,7 +94,7 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 			declaration.append( "\n\t\t\t.onFailure(" )
 					.append( annotationMetaEntity.importType( handled ) )
 					.append( ".class)\n" )
-					.append( "\t\t\t\t\t.transform((_ex) -> new " )
+					.append( "\t\t\t\t\t.transform(_ex -> new " )
 					.append( annotationMetaEntity.importType( rethrown ) )
 					.append( "(_ex.getMessage(), _ex))" );
 

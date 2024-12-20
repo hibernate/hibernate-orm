@@ -396,7 +396,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void close() throws HibernateException {
+	public void close() {
 		if ( isClosed() ) {
 			if ( getFactory().getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
 				throw new IllegalStateException( "EntityManager was already closed" );
@@ -408,7 +408,7 @@ public class SessionImpl
 		}
 	}
 
-	public void closeWithoutOpenChecks() throws HibernateException {
+	public void closeWithoutOpenChecks() {
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Closing session [%s]", getSessionIdentifier() );
 		}
@@ -560,7 +560,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public LockMode getCurrentLockMode(Object object) throws HibernateException {
+	public LockMode getCurrentLockMode(Object object) {
 		checkOpen();
 		checkTransactionSynchStatus();
 		if ( object == null ) {
@@ -589,7 +589,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException {
+	public Object getEntityUsingInterceptor(EntityKey key) {
 		checkOpenOrWaitingForAutoClose();
 		// todo : should this get moved to PersistentContext?
 		// logically, is PersistentContext the "thing" to which an interceptor gets attached?
@@ -649,7 +649,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void lock(Object object, LockMode lockMode) throws HibernateException {
+	public void lock(Object object, LockMode lockMode) {
 		final LockOptions lockOptions = copySessionLockOptions();
 		lockOptions.setLockMode( lockMode );
 		fireLock( new LockEvent( object, lockOptions, this ) );
@@ -690,19 +690,19 @@ public class SessionImpl
 	// persist() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void persist(String entityName, Object object) throws HibernateException {
+	public void persist(String entityName, Object object) {
 		checkOpen();
 		firePersist( new PersistEvent( entityName, object, this ) );
 	}
 
 	@Override
-	public void persist(Object object) throws HibernateException {
+	public void persist(Object object) {
 		checkOpen();
 		firePersist( new PersistEvent( null, object, this ) );
 	}
 
 	@Override
-	public void persist(String entityName, Object object, PersistContext copiedAlready) throws HibernateException {
+	public void persist(String entityName, Object object, PersistContext copiedAlready) {
 		checkOpenOrWaitingForAutoClose();
 		firePersist( copiedAlready, new PersistEvent( entityName, object, this ) );
 	}
@@ -784,19 +784,19 @@ public class SessionImpl
 	// merge() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override @SuppressWarnings("unchecked")
-	public <T> T merge(String entityName, T object) throws HibernateException {
+	public <T> T merge(String entityName, T object) {
 		checkOpen();
 		return (T) fireMerge( new MergeEvent( entityName, object, this ) );
 	}
 
 	@Override @SuppressWarnings("unchecked")
-	public <T> T merge(T object) throws HibernateException {
+	public <T> T merge(T object) {
 		checkOpen();
 		return (T) fireMerge( new MergeEvent( null, object, this ));
 	}
 
 	@Override
-	public void merge(String entityName, Object object, MergeContext copiedAlready) throws HibernateException {
+	public void merge(String entityName, Object object, MergeContext copiedAlready) {
 		checkOpenOrWaitingForAutoClose();
 		fireMerge( copiedAlready, new MergeEvent( entityName, object, this ) );
 	}
@@ -848,8 +848,7 @@ public class SessionImpl
 	// delete() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, DeleteContext transientEntities)
-			throws HibernateException {
+	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, DeleteContext transientEntities) {
 		checkOpenOrWaitingForAutoClose();
 		final boolean removingOrphanBeforeUpdates = persistenceContext.isRemovingOrphanBeforeUpates();
 		final boolean traceEnabled = log.isTraceEnabled();
@@ -945,7 +944,7 @@ public class SessionImpl
 	// load()/get() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void load(Object object, Object id) throws HibernateException {
+	public void load(Object object, Object id) {
 		fireLoad( new LoadEvent( id, object, this, getReadOnlyFromLoadQueryInfluencers() ), LoadEventListener.RELOAD );
 	}
 
@@ -1003,12 +1002,12 @@ public class SessionImpl
 	}
 
 	@Override
-	public <T> T get(Class<T> entityClass, Object id) throws HibernateException {
+	public <T> T get(Class<T> entityClass, Object id) {
 		return byId( entityClass ).load( id );
 	}
 
 	@Override
-	public Object get(String entityName, Object id) throws HibernateException {
+	public Object get(String entityName, Object id) {
 		return byId( entityName ).load( id );
 	}
 
@@ -1018,7 +1017,7 @@ public class SessionImpl
 	 * Do NOT return a proxy.
 	 */
 	@Override
-	public Object immediateLoad(String entityName, Object id) throws HibernateException {
+	public Object immediateLoad(String entityName, Object id) {
 		if ( log.isDebugEnabled() ) {
 			final EntityPersister persister = requireEntityPersister( entityName );
 			log.debugf( "Initializing proxy: %s", infoString( persister, id, getFactory() ) );
@@ -1170,22 +1169,22 @@ public class SessionImpl
 	}
 
 	@Override
-	public <T> T get(Class<T> entityClass, Object id, LockMode lockMode) throws HibernateException {
+	public <T> T get(Class<T> entityClass, Object id, LockMode lockMode) {
 		return this.byId( entityClass ).with( new LockOptions( lockMode ) ).load( id );
 	}
 
 	@Override
-	public <T> T get(Class<T> entityClass, Object id, LockOptions lockOptions) throws HibernateException {
+	public <T> T get(Class<T> entityClass, Object id, LockOptions lockOptions) {
 		return this.byId( entityClass ).with( lockOptions ).load( id );
 	}
 
 	@Override
-	public Object get(String entityName, Object id, LockMode lockMode) throws HibernateException {
+	public Object get(String entityName, Object id, LockMode lockMode) {
 		return this.byId( entityName ).with( new LockOptions( lockMode ) ).load( id );
 	}
 
 	@Override
-	public Object get(String entityName, Object id, LockOptions lockOptions) throws HibernateException {
+	public Object get(String entityName, Object id, LockOptions lockOptions) {
 		return this.byId( entityName ).with( lockOptions ).load( id );
 	}
 
@@ -1299,24 +1298,24 @@ public class SessionImpl
 	// refresh() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void refresh(Object object) throws HibernateException {
+	public void refresh(Object object) {
 		fireRefresh( new RefreshEvent( object, this ) );
 	}
 
 	@Override
-	public void refresh(Object object, LockMode lockMode) throws HibernateException {
+	public void refresh(Object object, LockMode lockMode) {
 		final LockOptions lockOptions = copySessionLockOptions();
 		lockOptions.setLockMode( lockMode );
 		fireRefresh( new RefreshEvent( object, lockOptions, this ) );
 	}
 
 	@Override
-	public void refresh(Object object, LockOptions lockOptions) throws HibernateException {
+	public void refresh(Object object, LockOptions lockOptions) {
 		fireRefresh( new RefreshEvent( object, lockOptions, this ) );
 	}
 
 	@Override
-	public void refresh(String entityName, Object object, RefreshContext refreshedAlready) throws HibernateException {
+	public void refresh(String entityName, Object object, RefreshContext refreshedAlready) {
 		fireRefresh( refreshedAlready, new RefreshEvent( entityName, object, this ) );
 	}
 
@@ -1374,13 +1373,12 @@ public class SessionImpl
 	// replicate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public void replicate(Object obj, ReplicationMode replicationMode) throws HibernateException {
+	public void replicate(Object obj, ReplicationMode replicationMode) {
 		fireReplicate( new ReplicateEvent( obj, replicationMode, this ) );
 	}
 
 	@Override
-	public void replicate(String entityName, Object obj, ReplicationMode replicationMode)
-			throws HibernateException {
+	public void replicate(String entityName, Object obj, ReplicationMode replicationMode) {
 		fireReplicate( new ReplicateEvent( entityName, obj, replicationMode, this ) );
 	}
 
@@ -1400,7 +1398,7 @@ public class SessionImpl
 	 * (references held by application or other persistent instances are okay)
 	 */
 	@Override
-	public void evict(Object object) throws HibernateException {
+	public void evict(Object object) {
 		checkOpen();
 		pulseTransactionCoordinator();
 		final EvictEvent event = new EvictEvent( object, this );
@@ -1410,13 +1408,12 @@ public class SessionImpl
 	}
 
 	@Override
-	public boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException {
+	public boolean autoFlushIfRequired(Set<String> querySpaces) {
 		return autoFlushIfRequired( querySpaces, false );
 	}
 
 	@Override
-	public boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush)
-			throws HibernateException {
+	public boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush) {
 		checkOpen();
 		if ( !isTransactionInProgress() ) {
 			// do not auto-flush while outside a transaction
@@ -1440,7 +1437,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public boolean isDirty() throws HibernateException {
+	public boolean isDirty() {
 		checkOpen();
 		if ( actionQueue.areInsertionsOrDeletionsQueued() ) {
 			return true;
@@ -1454,7 +1451,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void flush() throws HibernateException {
+	public void flush() {
 		checkOpen();
 		doFlush();
 	}
@@ -1482,12 +1479,12 @@ public class SessionImpl
 	}
 
 	@Override
-	public void forceFlush(EntityEntry entityEntry) throws HibernateException {
+	public void forceFlush(EntityEntry entityEntry) {
 		forceFlush( entityEntry.getEntityKey() );
 	}
 
 	@Override
-	public void forceFlush(EntityKey key) throws HibernateException {
+	public void forceFlush(EntityKey key) {
 		if ( log.isDebugEnabled() ) {
 			log.debugf("Flushing to force deletion of re-saved object: "
 					+ infoString( key.getPersister(), key.getIdentifier(), getFactory() ) );
@@ -1505,7 +1502,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public Object instantiate(String entityName, Object id) throws HibernateException {
+	public Object instantiate(String entityName, Object id) {
 		return instantiate( requireEntityPersister( entityName ), id );
 	}
 
@@ -1513,7 +1510,7 @@ public class SessionImpl
 	 * give the interceptor an opportunity to override the default instantiation
 	 */
 	@Override
-	public Object instantiate(EntityPersister persister, Object id) throws HibernateException {
+	public Object instantiate(EntityPersister persister, Object id) {
 		checkOpenOrWaitingForAutoClose();
 		pulseTransactionCoordinator();
 		Object result = getInterceptor()
@@ -1554,7 +1551,7 @@ public class SessionImpl
 
 	// not for internal use:
 	@Override
-	public Object getIdentifier(Object object) throws HibernateException {
+	public Object getIdentifier(Object object) {
 		checkOpen();
 		checkTransactionSynchStatus();
 		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
@@ -1845,13 +1842,13 @@ public class SessionImpl
 	}
 
 	@Override
-	public String guessEntityName(Object object) throws HibernateException {
+	public String guessEntityName(Object object) {
 		checkOpenOrWaitingForAutoClose();
 		return getEntityNameResolver().resolveEntityName( object );
 	}
 
 	@Override
-	public void cancelQuery() throws HibernateException {
+	public void cancelQuery() {
 		checkOpen();
 		getJdbcCoordinator().cancelLastQuery();
 	}

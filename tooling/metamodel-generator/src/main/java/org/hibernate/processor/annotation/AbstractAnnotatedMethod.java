@@ -13,9 +13,6 @@ import java.util.List;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static org.hibernate.processor.annotation.AnnotationMetaEntity.usingReactiveSession;
-import static org.hibernate.processor.annotation.AnnotationMetaEntity.usingReactiveSessionAccess;
-import static org.hibernate.processor.annotation.AnnotationMetaEntity.usingStatelessSession;
 import static org.hibernate.processor.util.Constants.ENTITY_MANAGER;
 import static org.hibernate.processor.util.Constants.OBJECTS;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
@@ -50,15 +47,15 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 	}
 
 	boolean isUsingStatelessSession() {
-		return usingStatelessSession(sessionType);
+		return annotationMetaEntity.isStatelessSession();
 	}
 
 	boolean isReactive() {
-		return usingReactiveSession(sessionType);
+		return annotationMetaEntity.isReactive();
 	}
 
 	boolean isReactiveSessionAccess() {
-		return usingReactiveSessionAccess(sessionType);
+		return annotationMetaEntity.isReactiveSessionAccess();
 	}
 
 	String localSessionName() {

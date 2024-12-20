@@ -8,9 +8,12 @@ import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 
+import static org.hibernate.processor.util.Constants.INJECT;
+import static org.hibernate.processor.util.Constants.JD_LIFECYCLE_EVENT;
+
 
 /**
- * Used by the container to instantiate a Jakarta Data repository.
+ * Holds a reference to the CDI {@code Event} object.
  *
  * @author Gavin King
  */
@@ -34,8 +37,8 @@ public class EventField implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		annotationMetaEntity.importType("jakarta.inject.Inject");
-		annotationMetaEntity.importType("jakarta.data.event.LifecycleEvent");
+		annotationMetaEntity.importType(INJECT);
+		annotationMetaEntity.importType(JD_LIFECYCLE_EVENT);
 		return "\n@Inject\nprivate Event<? super LifecycleEvent<?>> event;";
 	}
 

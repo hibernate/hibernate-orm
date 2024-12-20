@@ -517,7 +517,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void validateStatelessSessionType() {
-		if ( !usingStatelessSession(sessionType) ) {
+		if ( !isStatelessSession() ) {
 			message( element,
 					"repository must be backed by a 'StatelessSession'",
 					Diagnostic.Kind.ERROR );
@@ -645,7 +645,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private boolean needsEventBus() {
 		return jakartaDataRepository
-			&& !usingReactiveSession( sessionType ) // non-reactive
+			&& !isReactive() // non-reactive
 			&& context.isDataEventPackageAvailable() // events
 			&& context.addInjectAnnotation() // @nject
 			&& context.addDependentAnnotation(); // CDI
@@ -700,9 +700,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return null;
 	}
 
-	@Override
+	public boolean isStatelessSession() {
+		return usingStatelessSession(sessionType);
+	}
+
 	public boolean isReactive() {
 		return usingReactiveSession(sessionType);
+	}
+
+	public boolean isReactiveSessionAccess() {
+		return usingReactiveSessionAccess(sessionType);
 	}
 
 	private boolean isPanacheType(TypeElement type) {
@@ -1195,7 +1202,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private TypeMirror unUniIfPossible(ExecutableElement method, TypeMirror returnType) {
 		final TypeMirror result = ununi( returnType );
 		if ( repository ) {
-			if ( usingReactiveSession( sessionType ) )  {
+			if ( isReactive() )  {
 				if ( result == returnType ) {
 					message( method, "backed by a reactive session, must return 'Uni'", Diagnostic.Kind.ERROR );
 				}
@@ -1464,7 +1471,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			case DECLARED:
 				final DeclaredType declaredType = (DeclaredType) returnType;
 				final TypeElement typeElement = (TypeElement) declaredType.asElement();
-				return typeElement.getQualifiedName().contentEquals(Void.class.getName());
+				return typeElement.getQualifiedName().contentEquals(VOID);
 			default:
 				return false;
 		}
@@ -2016,7 +2023,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private FieldType pickStrategy(FieldType fieldType, String sessionType, List<String> profiles) {
+	private static FieldType pickStrategy(FieldType fieldType, String sessionType, List<String> profiles) {
 		if ( ( usingStatelessSession(sessionType) || usingReactiveSession(sessionType) )
 				&& !profiles.isEmpty() ) {
 			// no support for passing fetch profiles i.e. IdentifierLoadAccess
@@ -2063,7 +2070,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			else if ( containsAnnotation( param, PATTERN ) ) {
 				final AnnotationMirror mirror = getAnnotationMirror(param, PATTERN);
-				if ( mirror!=null && !typeNameEquals(param.asType(), String.class.getName()) ) {
+				if ( mirror!=null && !typeNameEquals(param.asType(), STRING) ) {
 					message( param, mirror,
 							"parameter annotated '@Pattern' is not of type 'String'",
 							Diagnostic.Kind.ERROR );
@@ -2537,7 +2544,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			@Nullable TypeMirror returnType,
 			AnnotationMirror mirror,
 			AnnotationValue value) {
-		boolean reactive = usingReactiveSession( sessionType );
+		final boolean reactive = isReactive();
 		if ( !isValidUpdateReturnType( returnType, method, reactive ) ) {
 			message( method, mirror, value,
 					"return type of mutation query method must be "
@@ -3095,20 +3102,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				.matcher(hql).matches();
 	}
 
-	static boolean usingReactiveSession(String sessionType) {
+	private static boolean usingReactiveSession(String sessionType) {
 		return MUTINY_SESSION.equals(sessionType)
 			|| MUTINY_STATELESS_SESSION.equals(sessionType)
 			|| UNI_MUTINY_SESSION.equals(sessionType)
 			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
 	}
 
-	static boolean usingStatelessSession(String sessionType) {
+	private static boolean usingStatelessSession(String sessionType) {
 		return HIB_STATELESS_SESSION.equals(sessionType)
 			|| MUTINY_STATELESS_SESSION.equals(sessionType)
 			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
 	}
 
-	static boolean usingReactiveSessionAccess(String sessionType) {
+	private static boolean usingReactiveSessionAccess(String sessionType) {
 		return UNI_MUTINY_SESSION.equals(sessionType)
 			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
 	}

@@ -812,7 +812,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public Object immediateLoad(String entityName, Object id) throws HibernateException {
+	public Object immediateLoad(String entityName, Object id) {
 		if ( getPersistenceContextInternal().isLoadFinished() ) {
 			throw new SessionException( "proxies cannot be fetched by a stateless session" );
 		}
@@ -821,8 +821,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public void initializeCollection(PersistentCollection<?> collection, boolean writing)
-			throws HibernateException {
+	public void initializeCollection(PersistentCollection<?> collection, boolean writing) {
 		checkOpen();
 		final PersistenceContext persistenceContext = getPersistenceContextInternal();
 		final CollectionEntry ce = persistenceContext.getCollectionEntry( collection );
@@ -854,12 +853,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public Object instantiate(String entityName, Object id) throws HibernateException {
+	public Object instantiate(String entityName, Object id) {
 		return instantiate( getEntityPersister( entityName ), id );
 	}
 
 	@Override
-	public Object instantiate(EntityPersister persister, Object id) throws HibernateException {
+	public Object instantiate(EntityPersister persister, Object id) {
 		checkOpen();
 		return persister.instantiate( id, this );
 	}
@@ -869,7 +868,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			String entityName,
 			Object id,
 			boolean eager,
-			boolean nullable) throws HibernateException {
+			boolean nullable) {
 		checkOpen();
 
 		final EntityPersister persister = getEntityPersister( entityName );
@@ -1035,7 +1034,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public Object getIdentifier(Object entity) throws HibernateException {
+	public Object getIdentifier(Object entity) {
 		checkOpen();
 		return getFactory().getPersistenceUnitUtil().getIdentifier(entity);
 	}
@@ -1087,14 +1086,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public String guessEntityName(Object entity) throws HibernateException {
+	public String guessEntityName(Object entity) {
 		checkOpen();
 		return entity.getClass().getName();
 	}
 
 	@Override
-	public EntityPersister getEntityPersister(String entityName, Object object)
-			throws HibernateException {
+	public EntityPersister getEntityPersister(String entityName, Object object) {
 		checkOpen();
 		return entityName == null
 				? getEntityPersister( guessEntityName( object ) )
@@ -1102,7 +1100,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException {
+	public Object getEntityUsingInterceptor(EntityKey key) {
 		checkOpen();
 
 		final PersistenceContext persistenceContext = getPersistenceContext();
@@ -1134,7 +1132,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return false;
 	}
 
-	public void setDefaultReadOnly(boolean readOnly) throws HibernateException {
+	public void setDefaultReadOnly(boolean readOnly) {
 		if ( readOnly ) {
 			throw new UnsupportedOperationException();
 		}
@@ -1173,7 +1171,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException {
+	public boolean autoFlushIfRequired(Set<String> querySpaces) {
 		return false;
 	}
 

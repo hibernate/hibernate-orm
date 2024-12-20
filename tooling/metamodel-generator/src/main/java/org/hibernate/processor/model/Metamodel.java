@@ -60,8 +60,4 @@ public interface Metamodel extends ImportContext {
 	List<AnnotationMirror> inheritedAnnotations();
 
 	String javadoc();
-
-	default boolean isReactive() {
-		return false;
-	}
 }

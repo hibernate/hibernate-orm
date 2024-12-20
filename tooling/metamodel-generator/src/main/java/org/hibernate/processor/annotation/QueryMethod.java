@@ -10,7 +10,9 @@ import org.hibernate.internal.util.StringHelper;
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
+import static org.hibernate.processor.util.Constants.BOOLEAN;
 import static org.hibernate.processor.util.Constants.QUERY;
+import static org.hibernate.processor.util.Constants.VOID;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -152,11 +154,11 @@ public class QueryMethod extends AbstractQueryMethod {
 			declaration
 					.append("\t\t\t.executeUpdate()");
 			if ( isReactive() ) {
-				if ( Void.class.getName().equals( returnTypeName ) ) {
+				if ( VOID.equals(returnTypeName) ) {
 					declaration
 							.append( "\n\t\t\t.replaceWithVoid()" );
 				}
-				else if ( Boolean.class.getName().equals( returnTypeName ) ) {
+				else if ( BOOLEAN.equals(returnTypeName) ) {
 					declaration
 							.append( "\n\t\t\t.map(rows -> rows>0)" );
 				}

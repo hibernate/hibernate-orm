@@ -9,6 +9,7 @@ import org.hibernate.processor.model.Metamodel;
 
 import javax.lang.model.element.Element;
 
+import static org.hibernate.processor.util.Constants.STRING;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 import static org.hibernate.processor.util.TypeUtils.propertyName;
 
@@ -70,7 +71,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 				.append(getPropertyName())
 				.append( "\n **/\n" )
 				.append("public static final ")
-				.append(parent.importType(String.class.getName()))
+				.append(parent.importType(STRING))
 				.append(' ')
 				.append(getUpperUnderscoreCaseFromLowerCamelCase(getPropertyName()))
 				.append(" = ")

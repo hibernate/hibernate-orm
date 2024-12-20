@@ -10,7 +10,12 @@ import javax.lang.model.element.ExecutableElement;
 import java.util.Set;
 
 import static java.lang.Character.toUpperCase;
+import static org.hibernate.processor.util.Constants.EVENT;
+import static org.hibernate.processor.util.Constants.INJECT;
+import static org.hibernate.processor.util.Constants.JD_LIFECYCLE_EVENT;
 import static org.hibernate.processor.util.Constants.LIST;
+import static org.hibernate.processor.util.Constants.NONNULL;
+import static org.hibernate.processor.util.Constants.TYPE_LITERAL;
 import static org.hibernate.processor.util.Constants.UNI;
 
 public class LifecycleMethod extends AbstractAnnotatedMethod {
@@ -109,10 +114,10 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 	}
 
 	private void fireEvent(StringBuilder declaration, String entityName, String eventType) {
-		annotationMetaEntity.importType( "jakarta.data.event.LifecycleEvent" );
-		annotationMetaEntity.importType( "jakarta.enterprise.util.TypeLiteral" );
-		annotationMetaEntity.importType( "jakarta.enterprise.event.Event" );
-		annotationMetaEntity.importType( "jakarta.inject.Inject" );
+		annotationMetaEntity.importType( JD_LIFECYCLE_EVENT );
+		annotationMetaEntity.importType( TYPE_LITERAL );
+		annotationMetaEntity.importType( EVENT );
+		annotationMetaEntity.importType( INJECT );
 		annotationMetaEntity.importType( "jakarta.data.event." + eventType );
 		if (parameterKind != ParameterKind.NORMAL) {
 			declaration.append( "\t" );
@@ -354,7 +359,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		if ( addNonnullAnnotation ) {
 			declaration
 					.append('@')
-					.append(annotationMetaEntity.importType("jakarta.annotation.Nonnull"))
+					.append(annotationMetaEntity.importType(NONNULL))
 					.append(' ');
 		}
 	}

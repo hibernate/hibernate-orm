@@ -10,6 +10,7 @@ import org.hibernate.processor.model.Metamodel;
 
 import javax.lang.model.element.Element;
 
+import static org.hibernate.processor.util.Constants.STRING;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 import static org.hibernate.processor.util.TypeUtils.propertyName;
 
@@ -44,7 +45,7 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 	}
 
 	private boolean isTextual() {
-		return String.class.getName().equals(type);
+		return STRING.equals(type);
 	}
 
 	@Override
@@ -81,7 +82,7 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 				.append("#")
 				.append( getPropertyName().replace('.','_') )
 				.append( "\n **/\n" )
-				.append(parent.importType(String.class.getName()))
+				.append(parent.importType(STRING))
 				.append(" ")
 				.append(fieldName())
 				.append(" = ")

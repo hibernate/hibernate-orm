@@ -10,10 +10,10 @@ import org.hibernate.AssertionFailure;
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.processor.util.Constants.BOXED_VOID;
+import static org.hibernate.processor.util.Constants.COLLECTORS;
 import static org.hibernate.processor.util.Constants.HIB_KEYED_PAGE;
 import static org.hibernate.processor.util.Constants.HIB_KEYED_RESULT_LIST;
 import static org.hibernate.processor.util.Constants.HIB_ORDER;
@@ -28,6 +28,7 @@ import static org.hibernate.processor.util.Constants.JD_PAGE;
 import static org.hibernate.processor.util.Constants.JD_PAGE_REQUEST;
 import static org.hibernate.processor.util.Constants.JD_SORT;
 import static org.hibernate.processor.util.Constants.LIST;
+import static org.hibernate.processor.util.Constants.NONNULL;
 import static org.hibernate.processor.util.Constants.OPTIONAL;
 import static org.hibernate.processor.util.Constants.QUERY;
 import static org.hibernate.processor.util.Constants.SESSION_TYPES;
@@ -177,7 +178,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		if ( addNonnullAnnotation ) {
 			declaration
 					.append('@')
-					.append(annotationMetaEntity.importType("jakarta.annotation.Nonnull"))
+					.append(annotationMetaEntity.importType(NONNULL))
 					.append(' ');
 		}
 	}
@@ -363,7 +364,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		annotationMetaEntity.staticImport(HIB_ORDER, "by");
 		annotationMetaEntity.staticImport(HIB_PAGE, "page");
 		annotationMetaEntity.staticImport("org.hibernate.query.KeyedPage.KeyInterpretation", "*");
-		annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
+		annotationMetaEntity.staticImport(COLLECTORS, "toList");
 		if ( returnTypeName == null ) {
 			throw new AssertionFailure("entity class cannot be null");
 		}

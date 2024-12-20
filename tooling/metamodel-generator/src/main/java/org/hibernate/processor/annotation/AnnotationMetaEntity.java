@@ -53,6 +53,7 @@ import javax.tools.Diagnostic;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -172,7 +173,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		this.element = element;
 		this.context = context;
 		this.managed = managed;
-		this.members = new HashMap<>();
+		this.members = new LinkedHashMap<>();
 		this.quarkusInjection = context.isQuarkusInjection();
 		this.importContext = parent != null ? parent : new ImportContextImpl( getPackageName( context, element ) );
 		jakartaDataStaticModel = jakartaDataStaticMetamodel;

@@ -32,7 +32,7 @@ pipeline {
 				script {
 					dir('hibernate') {
 						checkout scm
-						sh "./gradlew publishToMavenLocal -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com --no-daemon -Dmaven.repo.local=${env.WORKSPACE}/.m2repository"
+						sh "./gradlew clean publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com -Dmaven.repo.local=${env.WORKSPACE}/.m2repository"
 						script {
 							env.HIBERNATE_VERSION = sh (
 									script: "grep hibernateVersion gradle/version.properties|cut -d'=' -f2",
@@ -42,7 +42,12 @@ pipeline {
 					}
 					dir('quarkus') {
 						sh "git clone -b 3.15 --single-branch https://github.com/quarkusio/quarkus.git . || git reset --hard && git clean -fx && git pull"
-						sh "sed -i 's@<hibernate-orm.version>.*</hibernate-orm.version>@<hibernate-orm.version>${env.HIBERNATE_VERSION}</hibernate-orm.version>@' bom/application/pom.xml"
+        				script {
+							def sedStatus = sh (script: "sed -i 's@<hibernate-orm.version>.*</hibernate-orm.version>@<hibernate-orm.version>${env.HIBERNATE_VERSION}</hibernate-orm.version>@' pom.xml", returnStatus: true)
+							if ( sedStatus != 0 ) {
+								throw new IllegalArgumentException( "Unable to replace hibernate version in Quarkus pom. Got exit code $sedStatus" )
+							}
+						}
 						// Need to override the default maven configuration this way, because there is no other way to do it
 						sh "sed -i 's/-Xmx5g/-Xmx2048m/' ./.mvn/jvm.config"
 						sh "echo -e '\\n-XX:MaxMetaspaceSize=1024m'>>./.mvn/jvm.config"

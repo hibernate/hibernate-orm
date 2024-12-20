@@ -124,7 +124,7 @@ pipeline {
 					else {
 						containerName = params.RDBMS
 					}
-					def dockerRunOptions = "--network=tck-net -e DB_HOST=${containerName} -u \$UID"
+					def dockerRunOptions = "--network=tck-net -e DB_HOST=${containerName}"
                     sh """ \
                         while IFS= read -r container; do
                             docker network disconnect tck-net \$container || true

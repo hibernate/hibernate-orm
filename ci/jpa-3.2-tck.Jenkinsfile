@@ -48,7 +48,15 @@ pipeline {
 				}
 				dir('hibernate') {
 					checkout scm
-					sh './gradlew publishToMavenLocal -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com'
+					withEnv([
+							"DISABLE_REMOTE_GRADLE_CACHE=true"
+					]) {
+                        sh './gradlew clean publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com'
+                        // For some reason, Gradle does not publish hibernate-platform
+                        // to the local maven repository with the previous command,
+                        // but requires an extra run instead
+                        sh './gradlew :hibernate-platform:publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com'
+					}
 					script {
 						env.HIBERNATE_VERSION = sh (
 							script: "grep hibernateVersion gradle/version.properties|cut -d'=' -f2",
@@ -116,15 +124,15 @@ pipeline {
 					else {
 						containerName = params.RDBMS
 					}
-					def dockerRunOptions = "--network=tck-net -e DB_HOST=${containerName}"
-						sh """ \
-							while IFS= read -r container; do
-								docker network disconnect tck-net \$container || true
-							done <<< \$(docker network inspect tck-net --format '{{range \$k, \$v := .Containers}}{{print \$k}}{{end}}' 2>/dev/null || true)
-							docker network rm -f tck-net
-							docker network create tck-net
-							docker network connect tck-net ${containerName}
-						"""
+					def dockerRunOptions = "--network=tck-net -e DB_HOST=${containerName} -u ${UID}:${GID}"
+                    sh """ \
+                        while IFS= read -r container; do
+                            docker network disconnect tck-net \$container || true
+                        done <<< \$(docker network inspect tck-net --format '{{range \$k, \$v := .Containers}}{{print \$k}}{{end}}' 2>/dev/null || true)
+                        docker network rm -f tck-net
+                        docker network create tck-net
+                        docker network connect tck-net ${containerName}
+                    """
 					sh """ \
 						rm -Rf ./results
 						docker rm -f tck || true

@@ -162,13 +162,23 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 					}
 					break;
 				case OracleJsonParser.Event.VALUE_INTERVALDS:
-				case OracleJsonParser.Event.VALUE_INTERVALYM:
 					if ( pluralType != null ) {
 						// dealing with arrays
 						subArrayList.add( osonParser.getDuration() );
 					}
 					else {
+						// TODO: shall I use mapping.getJdbcMapping().getJdbcJavaType().wrap(...) ?
 						finalResult[selectableIndex] = osonParser.getDuration();
+					}
+					break;
+				case OracleJsonParser.Event.VALUE_INTERVALYM:
+					if ( pluralType != null ) {
+						// dealing with arrays
+						subArrayList.add( osonParser.getPeriod() );
+					}
+					else {
+						// TODO: shall I use mapping.getJdbcMapping().getJdbcJavaType().wrap(...) ?
+						finalResult[selectableIndex] = osonParser.getPeriod();
 					}
 					break;
 				case OracleJsonParser.Event.VALUE_STRING:

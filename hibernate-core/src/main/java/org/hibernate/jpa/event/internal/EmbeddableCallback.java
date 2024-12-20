@@ -15,7 +15,12 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 /**
- * Represents a JPA callback on the embeddable type
+ * Represents a JPA callback method declared by an embeddable type.
+ *
+ * @apiNote The JPA specification does not require that we allow
+ * entity lifecycle callbacks on embeddable classes, and this is
+ * at least arguably a misfeature. It would by OK to simply remove
+ * or deprecate this.
  *
  * @author Vlad Mihalcea
  */
@@ -48,18 +53,17 @@ public class EmbeddableCallback extends AbstractCallback {
 	}
 
 	@Override
-	public boolean performCallback(Object entity) {
+	public void performCallback(Object entity) {
 		try {
-			Object embeddable = embeddableGetter.get( entity );
+			final Object embeddable = embeddableGetter.get( entity );
 			if ( embeddable != null ) {
 				callbackMethod.invoke( embeddable );
 			}
-			return true;
 		}
 		catch (InvocationTargetException e) {
 			//keep runtime exceptions as is
-			if ( e.getTargetException() instanceof RuntimeException ) {
-				throw (RuntimeException) e.getTargetException();
+			if ( e.getTargetException() instanceof RuntimeException runtimeException ) {
+				throw runtimeException;
 			}
 			else {
 				throw new RuntimeException( e.getTargetException() );

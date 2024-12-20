@@ -685,6 +685,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return null;
 	}
 
+	@Override
+	public boolean isReactive() {
+		return usingReactiveSession(sessionType);
+	}
+
 	private boolean isPanacheType(TypeElement type) {
 		return context.usesQuarkusOrm() && isOrmPanacheType( type )
 			|| context.usesQuarkusReactive() && isReactivePanacheType( type );

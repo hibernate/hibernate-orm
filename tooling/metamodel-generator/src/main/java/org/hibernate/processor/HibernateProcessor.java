@@ -243,6 +243,9 @@ public class HibernateProcessor extends AbstractProcessor {
 		final PackageElement quarkusOrmPackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "io.quarkus.hibernate.orm" );
+		final PackageElement dataEventPackage =
+				context.getProcessingEnvironment().getElementUtils()
+						.getPackageElement( "jakarta.data.event" );
 
 		PackageElement quarkusOrmPanachePackage =
 				context.getProcessingEnvironment().getElementUtils()
@@ -265,6 +268,7 @@ public class HibernateProcessor extends AbstractProcessor {
 		context.setAddGeneratedAnnotation( packagePresent(jakartaAnnotationPackage) );
 		context.setAddDependentAnnotation( packagePresent(jakartaContextPackage) );
 		context.setAddTransactionScopedAnnotation( packagePresent(jakartaTransactionsPackage) );
+		context.setDataEventPackageAvailable( packagePresent(dataEventPackage) );
 		context.setQuarkusInjection( packagePresent(quarkusOrmPackage) );
 		context.setUsesQuarkusOrm( packagePresent(quarkusOrmPanachePackage) );
 		context.setUsesQuarkusReactive( packagePresent(quarkusReactivePanachePackage) );

@@ -7,6 +7,9 @@ package org.hibernate.processor.annotation;
 
 import javax.lang.model.element.ExecutableElement;
 
+import java.util.Set;
+
+import static java.lang.Character.toUpperCase;
 import static org.hibernate.processor.util.Constants.LIST;
 import static org.hibernate.processor.util.Constants.UNI;
 
@@ -60,21 +63,24 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		return false;
 	}
 
+	private String capitalize(String string) {
+		return toUpperCase(string.charAt(0)) + string.substring(1);
+	}
+
+	static final Set<String> eventTypes = Set.of("insert", "update", "delete");
+
 	@Override
 	public String getAttributeDeclarationString() {
 		StringBuilder declaration = new StringBuilder();
 		preamble(declaration);
 		nullCheck(declaration, parameterName);
+		preEvent(declaration);
 		if ( !isReactive() ) {
 			declaration.append( "\ttry {\n" );
 		}
 		delegateCall(declaration);
-		returnArgument(declaration);
+		returnArgumentReactively(declaration);
 		if ( !isReactive() ) {
-			if ( returnArgument ) {
-				declaration
-						.append( ";\n" );
-			}
 			declaration.append( "\t}\n" );
 		}
 		convertExceptions( declaration );
@@ -82,9 +88,76 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			declaration
 					.append( ";\n" );
 		}
+		postEvent(declaration);
+		returnArgument(declaration);
 		declaration.append("}");
 		return declaration.toString();
 	}
+
+	private void postEvent(StringBuilder declaration) {
+		if ( annotationMetaEntity.getContext().isDataEventPackageAvailable()
+				&& annotationMetaEntity.getContext().addDependentAnnotation()
+				&& eventTypes.contains( operationName )
+				&& !isReactive() ) {
+			final String postEventType = "Post" + capitalize( operationName ) + "Event";
+			annotationMetaEntity.importType( "jakarta.data.event." + postEventType );
+			declaration
+					.append( "\tevent.select(new TypeLiteral<" )
+					.append( postEventType )
+					.append( "<" )
+					.append( annotationMetaEntity.importType( entity ) )
+					.append( ">>(){})\n\t\t\t.fire(new " )
+					.append( postEventType )
+					.append( "<>(" )
+					.append( parameterName )
+					.append( "));\n" );
+		}
+	}
+
+	private void preEvent(StringBuilder declaration) {
+		if ( annotationMetaEntity.getContext().isDataEventPackageAvailable()
+				&& annotationMetaEntity.getContext().addDependentAnnotation()
+				&& eventTypes.contains( operationName )
+				&& !isReactive()) {
+			final String preEventType = "Pre" + capitalize( operationName ) + "Event";
+			annotationMetaEntity.importType( "jakarta.data.event." + preEventType );
+			annotationMetaEntity.importType( "jakarta.data.event.LifecycleEvent" );
+			annotationMetaEntity.importType( "jakarta.enterprise.util.TypeLiteral" );
+			annotationMetaEntity.importType( "jakarta.enterprise.event.Event" );
+			annotationMetaEntity.importType( "jakarta.inject.Inject" );
+			declaration
+					.append( "\tevent.select(new TypeLiteral<" )
+					.append( preEventType )
+					.append( "<" )
+					.append( annotationMetaEntity.importType( entity ) )
+					.append( ">>(){})\n\t\t\t.fire(new " )
+					.append( preEventType )
+					.append( "<>(" )
+					.append( parameterName )
+					.append( "));\n" );
+		}
+	}
+
+	private void returnArgument(StringBuilder declaration) {
+		if ( returnArgument && !isReactive() ) {
+			declaration
+					.append( "\treturn " )
+					.append( parameterName )
+					.append( ";\n" );
+		}
+	}
+
+	private void returnArgumentReactively(StringBuilder declaration) {
+		if ( isReactive() ) {
+			if ( returnArgument ) {
+				declaration
+						.append( "\n\t\t\t.replaceWith(")
+						.append(parameterName)
+						.append(")");
+			}
+		}
+	}
+
 
 	private void convertExceptions(StringBuilder declaration) {
 		if ( operationName.equals("insert") ) {
@@ -100,23 +173,6 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		handle( declaration,
 				"jakarta.persistence.PersistenceException",
 				"jakarta.data.exceptions.DataException");
-	}
-
-	private void returnArgument(StringBuilder declaration) {
-		if ( returnArgument ) {
-			if ( isReactive() ) {
-				declaration
-						.append( "\n\t\t\t" )
-						.append(".replaceWith(")
-						.append(parameterName)
-						.append(")");
-			}
-			else {
-				declaration
-						.append("\t\treturn ")
-						.append(parameterName);
-			}
-		}
 	}
 
 	private void delegateCall(StringBuilder declaration) {
@@ -179,7 +235,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 				if ( isReactive() ) {
 					declaration
 							.append("All")
-							.append("(")
+							.append("((Object[]) ")
 							.append(parameterName)
 							.append(")");
 				}

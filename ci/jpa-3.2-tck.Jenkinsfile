@@ -52,10 +52,10 @@ pipeline {
 							"DISABLE_REMOTE_GRADLE_CACHE=true"
 					]) {
                         sh './gradlew clean publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com'
-                        // For some reason, Gradle does not publish hibernate-platform
+                        // For some reason, Gradle does not publish hibernate-platform and hibernate-testing
                         // to the local maven repository with the previous command,
                         // but requires an extra run instead
-                        sh './gradlew :hibernate-platform:publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com'
+                        sh './gradlew :hibernate-testing:publishToMavenLocal :hibernate-platform:publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com'
 					}
 					script {
 						env.HIBERNATE_VERSION = sh (

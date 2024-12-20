@@ -19,7 +19,7 @@ import java.lang.annotation.Retention;
  * considered temporary and are usually also {@linkplain Deprecated deprecated}.
  */
 @Target(ElementType.FIELD)
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Documented
 public @interface Compatibility {
 }

@@ -16,4 +16,7 @@ public interface PostRepository extends DataRepository<Post, Integer> {
 
 	@Query("from Post p where p.name in (:names)")
 	List<Post> getPostsByName(Collection<String> names);
+
+	@Query("from Post p where p.name = lower(:name)")
+	List<Post> getPostsByNameIgnoreCase(String name);
 }

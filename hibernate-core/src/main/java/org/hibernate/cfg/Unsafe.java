@@ -18,7 +18,7 @@ import java.lang.annotation.Retention;
  * are largely considered unsupported.
  */
 @Target(ElementType.FIELD)
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Documented
 public @interface Unsafe {
 }

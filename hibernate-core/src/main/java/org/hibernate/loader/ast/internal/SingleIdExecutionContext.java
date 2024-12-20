@@ -9,9 +9,10 @@ import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.query.internal.SimpleQueryOptions;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
+import org.hibernate.sql.exec.spi.Callback;
 
 /**
  * @author Steve Ebersole
@@ -23,6 +24,7 @@ class SingleIdExecutionContext extends BaseExecutionContext {
 	private final Boolean readOnly;
 	private final LockOptions lockOptions;
 	private final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
+	private final Callback callback;
 
 	public SingleIdExecutionContext(
 			Object entityId,
@@ -32,6 +34,27 @@ class SingleIdExecutionContext extends BaseExecutionContext {
 			LockOptions lockOptions,
 			SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler,
 			SharedSessionContractImplementor session) {
+		this(
+				entityId,
+				entityInstance,
+				rootEntityDescriptor,
+				readOnly,
+				lockOptions,
+				subSelectFetchableKeysHandler,
+				session,
+				null
+		);
+	}
+
+	public SingleIdExecutionContext(
+			Object entityId,
+			Object entityInstance,
+			EntityMappingType rootEntityDescriptor,
+			Boolean readOnly,
+			LockOptions lockOptions,
+			SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler,
+			SharedSessionContractImplementor session,
+			Callback callback) {
 		super( session );
 		this.entityInstance = entityInstance;
 		this.entityId = entityId;
@@ -39,6 +62,7 @@ class SingleIdExecutionContext extends BaseExecutionContext {
 		this.readOnly = readOnly;
 		this.lockOptions = lockOptions;
 		this.subSelectFetchableKeysHandler = subSelectFetchableKeysHandler;
+		this.callback = callback;
 	}
 
 	@Override
@@ -58,17 +82,7 @@ class SingleIdExecutionContext extends BaseExecutionContext {
 
 	@Override
 	public QueryOptions getQueryOptions() {
-		return new QueryOptionsAdapter() {
-			@Override
-			public Boolean isReadOnly() {
-				return readOnly;
-			}
-
-			@Override
-			public LockOptions getLockOptions() {
-				return lockOptions;
-			}
-		};
+		return new SimpleQueryOptions( lockOptions, readOnly );
 	}
 
 	@Override
@@ -76,4 +90,8 @@ class SingleIdExecutionContext extends BaseExecutionContext {
 		subSelectFetchableKeysHandler.addKey( holder );
 	}
 
+	@Override
+	public Callback getCallback() {
+		return callback;
+	}
 }

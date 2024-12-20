@@ -80,7 +80,7 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	boolean singleResult() {
-		return containerType == null;
+		return containerType == null && !isUpdate;
 	}
 
 	@Override
@@ -150,11 +150,22 @@ public class QueryMethod extends AbstractQueryMethod {
 	private void execute(StringBuilder declaration, boolean unwrapped) {
 		if ( isUpdate ) {
 			declaration
-					.append("\t\t\t")
-					.append(".executeUpdate()");
-			if ( "boolean".equals(returnTypeName) ) {
-				declaration
-						.append(" > 0");
+					.append("\t\t\t.executeUpdate()");
+			if ( isReactive() ) {
+				if ( Void.class.getName().equals( returnTypeName ) ) {
+					declaration
+							.append( "\n\t\t\t.replaceWithVoid()" );
+				}
+				else if ( Boolean.class.getName().equals( returnTypeName ) ) {
+					declaration
+							.append( "\n\t\t\t.map(rows -> rows>0)" );
+				}
+			}
+			else {
+				if ( "boolean".equals( returnTypeName ) ) {
+					declaration
+							.append( " > 0" );
+				}
 			}
 		}
 		else {

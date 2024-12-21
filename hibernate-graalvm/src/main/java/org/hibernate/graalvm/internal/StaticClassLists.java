@@ -47,7 +47,6 @@ final class StaticClassLists {
 				//Eventlisteners need to be registered for reflection to allow creation via Array#newInstance ;
 				// types need to be in synch with those declared in org.hibernate.event.spi.EventType
 				org.hibernate.event.spi.LoadEventListener[].class,
-				org.hibernate.event.spi.ResolveNaturalIdEventListener[].class,
 				org.hibernate.event.spi.InitializeCollectionEventListener[].class,
 				org.hibernate.event.spi.PersistEventListener[].class,
 				org.hibernate.event.spi.MergeEventListener[].class,

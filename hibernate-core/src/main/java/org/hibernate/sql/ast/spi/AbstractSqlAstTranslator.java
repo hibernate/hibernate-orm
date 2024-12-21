@@ -57,7 +57,7 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;

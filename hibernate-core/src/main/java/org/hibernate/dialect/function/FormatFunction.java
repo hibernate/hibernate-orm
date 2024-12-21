@@ -10,7 +10,7 @@ import java.util.List;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;

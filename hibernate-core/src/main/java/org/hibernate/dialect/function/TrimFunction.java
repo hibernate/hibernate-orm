@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;

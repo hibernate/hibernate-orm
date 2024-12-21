@@ -7,7 +7,7 @@ package org.hibernate.dialect.function.json;
 import java.util.List;
 
 import org.hibernate.QueryException;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;

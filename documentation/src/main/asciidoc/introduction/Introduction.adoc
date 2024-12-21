@@ -186,23 +186,19 @@ dependencies {
     // the GOAT ORM
     implementation 'org.hibernate.orm:hibernate-core:{fullVersion}'
 
+    // Hibernate Processor
+    annotationProcessor 'org.hibernate.orm:hibernate-processor:{fullVersion}'
+
     // Hibernate Validator
     implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
     implementation 'org.glassfish:jakarta.el:4.0.2'
 
     // Agroal connection pool
-    implementation 'org.hibernate.orm:hibernate-agroal:{fullVersion}'
-    implementation 'io.agroal:agroal-pool:2.1'
+    runtimeOnly 'org.hibernate.orm:hibernate-agroal:{fullVersion}'
+    runtimeOnly 'io.agroal:agroal-pool:2.5'
 
     // logging via Log4j
-    implementation 'org.apache.logging.log4j:log4j-core:2.24.1'
-
-    // Hibernate Processor
-    annotationProcessor 'org.hibernate.orm:hibernate-processor:{fullVersion}'
-
-    // Compile-time checking for HQL
-    //implementation 'org.hibernate:query-validator:2.0-SNAPSHOT'
-    //annotationProcessor 'org.hibernate:query-validator:2.0-SNAPSHOT'
+    runtimeOnly 'org.apache.logging.log4j:log4j-core:2.24.1'
 
     // H2 database
     runtimeOnly 'com.h2database:h2:2.3.232'
@@ -281,8 +277,8 @@ public class Main {
                         // use H2 in-memory database
                         .jdbcUrl("jdbc:h2:mem:db1")
                         .jdbcCredentials("sa", "")
-                        // use Agroal connection pool
-                        .property("hibernate.agroal.maxSize", 20)
+                        // set the Agroal connection pool size
+                        .jdbcPoolSize(16)
                         // display SQL in console
                         .showSql(true, true, true)
                         .createEntityManagerFactory();

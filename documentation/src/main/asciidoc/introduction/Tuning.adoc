@@ -35,7 +35,9 @@ the connection pool.
 The connection pool built in to Hibernate is suitable for testing, but isn't intended for use in production.
 Instead, Hibernate supports several different connection pools, including our favorite, Agroal.
 
-To select and configure Agroal, you'll need to set some extra configuration properties, in addition to the settings we already saw in <<basic-configuration-settings>>.
+Hibernate will automatically make use of `AgroalConnectionProvider` if the module `org.hibernate.orm:hibernate-agroal` is available at runtime.
+
+To properly configure Agroal, you'll need to set some extra configuration properties, in addition to the settings we already saw in <<basic-configuration-settings>>.
 Properties with the prefix `hibernate.agroal` are passed through to Agroal:
 
 [source,properties]
@@ -47,7 +49,6 @@ hibernate.agroal.acquisitionTimeout PT1s
 hibernate.agroal.reapTimeout PT10s
 ----
 
-As long as you set at least one property with the prefix `hibernate.agroal`, the `AgroalConnectionProvider` will be selected automatically.
 There are many to choose from, as enumerated by link:{doc-javadoc-url}/org/hibernate/cfg/AgroalSettings.html[`AgroalSettings`]:
 
 .Settings for configuring Agroal
@@ -78,7 +79,7 @@ The following settings are common to all connection pools supported by Hibernate
 |===
 
 A popular alternative to Agroal is HikariCP.
-Its setting are enumerated by link:{doc-javadoc-url}/org/hibernate/cfg/HikariCPSettings.html[`HikariCPSettings`].
+Its settings are enumerated by link:{doc-javadoc-url}/org/hibernate/cfg/HikariCPSettings.html[`HikariCPSettings`].
 
 .Container-managed datasources
 ****

@@ -17,9 +17,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -43,6 +43,7 @@ import static org.hibernate.cfg.JdbcSettings.URL;
 import static org.hibernate.cfg.JdbcSettings.USER;
 import static org.hibernate.cfg.SchemaToolingSettings.ENABLE_SYNONYMS;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl.isMultiTenancyEnabled;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
@@ -325,26 +326,35 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return null;
 		}
 		else if ( setting instanceof Number number ) {
-			return number.intValue();
+			final int isolationLevel = number.intValue();
+			checkIsolationLevel( isolationLevel );
+			return isolationLevel;
 		}
 		else {
 			final String string = setting.toString();
-			if ( StringHelper.isEmpty( string ) ) {
+			if ( isBlank( string ) ) {
 				return null;
 			}
 			else if ( ISOLATION_VALUE_MAP.containsKey( string ) ) {
 				return ISOLATION_VALUE_MAP.get( string );
 			}
 			else {
-				// it could be a String representation of the isolation numeric value...
+				// it could be a String representation of the isolation numeric value
 				try {
-					return Integer.valueOf( string );
+					final int isolationLevel = Integer.parseInt( string );
+					checkIsolationLevel( isolationLevel );
+					return isolationLevel;
 				}
 				catch (NumberFormatException ignore) {
+					throw new ConnectionProviderConfigurationException( "Unknown transaction isolation level: '" + string + "'" );
 				}
-
-				throw new HibernateException("Could not interpret transaction isolation setting [" + setting + "]");
 			}
+		}
+	}
+
+	private static void checkIsolationLevel(int isolationLevel) {
+		if ( !ISOLATION_VALUE_CONSTANT_NAME_MAP.containsKey( isolationLevel ) ) {
+			throw new ConnectionProviderConfigurationException( "Unknown transaction isolation level: " + isolationLevel );
 		}
 	}
 

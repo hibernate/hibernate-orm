@@ -152,6 +152,7 @@ public class C3P0ConnectionProvider
 		dataSource = createDataSource( jdbcUrl, connectionProps, poolSettings );
 
 		dbInfoProducer = dialect -> new DatabaseConnectionInfoImpl(
+				C3P0ConnectionProvider.class,
 				jdbcUrl,
 				jdbcDriverClass,
 				dialect.getVersion(),

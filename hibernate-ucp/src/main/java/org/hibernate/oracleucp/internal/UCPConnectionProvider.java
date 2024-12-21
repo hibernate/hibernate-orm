@@ -182,6 +182,7 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		return new DatabaseConnectionInfoImpl(
+				UCPConnectionProvider.class,
 				ucpDS.getURL(),
 				ucpDS.getConnectionFactoryClassName(),
 				dialect.getVersion(),

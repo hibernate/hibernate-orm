@@ -9,6 +9,7 @@ import java.util.Map;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -27,6 +28,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	public static final String DEFAULT = "undefined/unknown";
 
+	private final Class<?> connectionProviderClass;
 	protected final String jdbcUrl;
 	protected final String jdbcDriver;
 	protected final DatabaseVersion dialectVersion;
@@ -36,6 +38,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	protected final Integer poolMaxSize;
 
 	public DatabaseConnectionInfoImpl(
+			Class<? extends ConnectionProvider> connectionProviderClass,
 			String jdbcUrl,
 			String jdbcDriver,
 			DatabaseVersion dialectVersion,
@@ -43,6 +46,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 			String isolationLevel,
 			Integer poolMinSize,
 			Integer poolMaxSize) {
+		this.connectionProviderClass = connectionProviderClass;
 		this.jdbcUrl = nullIfEmpty( jdbcUrl );
 		this.jdbcDriver = nullIfEmpty( jdbcDriver );
 		this.dialectVersion = dialectVersion;
@@ -54,6 +58,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 
 	public DatabaseConnectionInfoImpl(Map<String, Object> settings, Dialect dialect) {
 		this(
+				null,
 				determineUrl( settings ),
 				determineDriver( settings ),
 				dialect.getVersion(),
@@ -66,7 +71,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	}
 
 	public DatabaseConnectionInfoImpl(Dialect dialect) {
-		this( null, null, dialect.getVersion(), null, null, null, null );
+		this( null, null, null, dialect.getVersion(), null, null, null, null );
 	}
 
 	@Override
@@ -111,6 +116,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 				"\n\tDatabase version: " + handleEmpty( dialectVersion ) +
 				"\n\tAutocommit mode: " + handleEmpty( autoCommitMode ) +
 				"\n\tIsolation level: " + handleEmpty( isolationLevel ) +
+				"\n\tPool: " + handleEmpty( connectionProviderClass ) +
 				"\n\tMinimum pool size: " + handleEmpty( poolMinSize ) +
 				"\n\tMaximum pool size: " + handleEmpty( poolMaxSize );
 	}
@@ -125,6 +131,10 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 
 	private static String handleEmpty(Integer value) {
 		return value != null ? value.toString() : DEFAULT;
+	}
+
+	private static String handleEmpty(Class<?> value) {
+		return value != null ? value.getSimpleName() : DEFAULT;
 	}
 
 

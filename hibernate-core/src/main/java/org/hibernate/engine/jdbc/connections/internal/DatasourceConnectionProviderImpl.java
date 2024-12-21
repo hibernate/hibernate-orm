@@ -150,6 +150,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		return new DatabaseConnectionInfoImpl(
+				DatasourceConnectionProviderImpl.class,
 				null,
 				null,
 				dialect.getVersion(),

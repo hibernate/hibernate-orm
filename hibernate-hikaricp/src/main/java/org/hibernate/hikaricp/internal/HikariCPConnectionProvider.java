@@ -95,6 +95,7 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		return new DatabaseConnectionInfoImpl(
+				HikariCPConnectionProvider.class,
 				hikariConfig.getJdbcUrl(),
 				// Attempt to resolve the driver name from the dialect, in case it wasn't explicitly set and access to
 				// the database metadata is allowed

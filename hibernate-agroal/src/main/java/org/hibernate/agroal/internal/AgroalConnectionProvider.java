@@ -167,6 +167,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 				agroalDataSource.getConfiguration().connectionPoolConfiguration();
 		final AgroalConnectionFactoryConfiguration acfc = acpc.connectionFactoryConfiguration();
 		return new DatabaseConnectionInfoImpl(
+				AgroalConnectionProvider.class,
 				acfc.jdbcUrl(),
 				// Attempt to resolve the driver name from the dialect,
 				// in case it wasn't explicitly set and access to the

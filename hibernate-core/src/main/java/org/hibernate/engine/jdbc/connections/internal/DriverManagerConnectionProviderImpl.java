@@ -142,6 +142,7 @@ public class DriverManagerConnectionProviderImpl
 		final ConnectionCreatorFactory factory = getConnectionCreatorFactory( configurationValues, serviceRegistry );
 
 		dbInfo = new DatabaseConnectionInfoImpl(
+				DriverManagerConnectionProviderImpl.class,
 				url,
 				driverList,
 				SimpleDatabaseVersion.ZERO_VERSION,
@@ -283,6 +284,7 @@ public class DriverManagerConnectionProviderImpl
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		return new DatabaseConnectionInfoImpl(
+				DriverManagerConnectionProviderImpl.class,
 				dbInfo.getJdbcUrl(),
 				dbInfo.getJdbcDriver(),
 				dialect.getVersion(),

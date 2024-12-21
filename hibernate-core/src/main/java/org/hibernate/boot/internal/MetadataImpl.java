@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -647,5 +648,33 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	public Map<Class<?>, DiscriminatorType<?>> getEmbeddableDiscriminatorTypesMap() {
 		return embeddableDiscriminatorTypesMap;
+	}
+
+	@Internal
+	// called by the Quarkus extension
+	public MetadataImpl trim() {
+		return new MetadataImpl(
+				getUUID(),
+				getMetadataBuildingOptions(), //TODO Replace this
+				getEntityBindingMap(),
+				getComposites(),
+				getGenericComponentsMap(),
+				getEmbeddableDiscriminatorTypesMap(),
+				getMappedSuperclassMap(),
+				getCollectionBindingMap(),
+				getTypeDefinitionMap(),
+				getFilterDefinitions(),
+				getFetchProfileMap(),
+				getImports(), // ok
+				getIdGeneratorDefinitionMap(),
+				getNamedQueryMap(),
+				getNamedNativeQueryMap(), // TODO might contain references to org.hibernate.loader.custom.ConstructorResultColumnProcessor, org.hibernate.type.TypeStandardSQLFunction
+				getNamedProcedureCallMap(),
+				getSqlResultSetMappingMap(), //TODO might contain NativeSQLQueryReturn (as namedNativeQueryMap above)
+				getNamedEntityGraphs(), //TODO reference to *annotation* instance ! FIXME or ignore feature?
+				getSqlFunctionMap(), // ok
+				getDatabase(), // Cleaned up: used to include references to MetadataBuildingOptions, etc.
+				getBootstrapContext() //FIXME WHOA!
+		);
 	}
 }

@@ -2,34 +2,37 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.derived;
+package org.hibernate.query.sqm.tuple.internal;
 
 import java.util.Set;
 
 import org.hibernate.Incubating;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.MergeContext;
-import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
+import org.hibernate.metamodel.mapping.internal.IdClassEmbeddable;
+import org.hibernate.metamodel.mapping.internal.VirtualIdEmbeddable;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.SqmExpressible;
 
 import jakarta.persistence.metamodel.Attribute;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Christian Beikov
  */
 @Incubating
-public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupleEmbeddableValuedModelPart
-		implements CompositeIdentifierMapping, SingleAttributeIdentifierMapping {
+public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends AnonymousTupleEmbeddableValuedModelPart
+		implements NonAggregatedIdentifierMapping {
 
-	private final CompositeIdentifierMapping delegate;
+	private final NonAggregatedIdentifierMapping delegate;
 
-	public AnonymousTupleEmbeddedEntityIdentifierMapping(
+	public AnonymousTupleNonAggregatedEntityIdentifierMapping(
 			SqmExpressible<?> sqmExpressible,
 			SqlTypedMapping[] sqlTypedMappings,
 			int selectionIndex,
@@ -37,7 +40,8 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 			Set<String> compatibleTableExpressions,
 			Set<Attribute<?, ?>> attributes,
 			DomainType<?> domainType,
-			CompositeIdentifierMapping delegate) {
+			String componentName,
+			NonAggregatedIdentifierMapping delegate) {
 		super(
 				sqmExpressible,
 				sqlTypedMappings,
@@ -46,7 +50,7 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 				compatibleTableExpressions,
 				attributes,
 				domainType,
-				delegate.getAttributeName(),
+				componentName,
 				delegate,
 				-1
 		);
@@ -55,7 +59,12 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 
 	@Override
 	public Nature getNature() {
-		return delegate.getNature();
+		return Nature.VIRTUAL;
+	}
+
+	@Override
+	public String getAttributeName() {
+		return null;
 	}
 
 	@Override
@@ -67,6 +76,7 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 	public Object getIdentifier(Object entity) {
 		return delegate.getIdentifier( entity );
 	}
+
 
 	@Override
 	public Object getIdentifier(Object entity, MergeContext mergeContext) {
@@ -84,26 +94,6 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 	}
 
 	@Override
-	public PropertyAccess getPropertyAccess() {
-		return ((SingleAttributeIdentifierMapping) delegate).getPropertyAccess();
-	}
-
-	@Override
-	public EmbeddableMappingType getPartMappingType() {
-		return this;
-	}
-
-	@Override
-	public int compare(Object value1, Object value2) {
-		return super.compare( value1, value2 );
-	}
-
-	@Override
-	public String getAttributeName() {
-		return getPartName();
-	}
-
-	@Override
 	public boolean hasContainingClass() {
 		return true;
 	}
@@ -118,4 +108,38 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 		return this;
 	}
 
+	@Override
+	public EmbeddableMappingType getPartMappingType() {
+		return this;
+	}
+
+	@Override
+	public VirtualIdEmbeddable getVirtualIdEmbeddable() {
+		return delegate.getVirtualIdEmbeddable();
+	}
+
+	@Override
+	public IdClassEmbeddable getIdClassEmbeddable() {
+		return delegate.getIdClassEmbeddable();
+	}
+
+	@Override
+	public IdentifierValueMapper getIdentifierValueMapper() {
+		return delegate.getIdentifierValueMapper();
+	}
+
+	@Override
+	public FetchStyle getStyle() {
+		return FetchStyle.JOIN;
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return FetchTiming.IMMEDIATE;
+	}
+
+	@Override
+	public boolean areEqual(@Nullable Object one, @Nullable Object other, SharedSessionContractImplementor session) {
+		return delegate.areEqual( one, other, session );
+	}
 }

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.derived;
+package org.hibernate.query.sqm.tuple.internal;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -21,20 +21,20 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Christian Beikov
  */
 @Incubating
-public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
+public class AnonymousTupleSqmPathSourceNew<J> implements SqmPathSource<J> {
 	private final String localPathName;
-	private final SqmPath<J> path;
+	private final SqmPathSource<J> pathSource;
+	private final DomainType<J> sqmPathType;
 
-	public AnonymousTupleSqmPathSource(
-			String localPathName,
-			SqmPath<J> path) {
+	public AnonymousTupleSqmPathSourceNew(String localPathName, SqmPathSource<J> pathSource, DomainType<J> sqmPathType) {
 		this.localPathName = localPathName;
-		this.path = path;
+		this.pathSource = pathSource;
+		this.sqmPathType = sqmPathType;
 	}
 
 	@Override
 	public Class<J> getBindableJavaType() {
-		return path.getNodeJavaType().getJavaTypeClass();
+		return pathSource.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override
@@ -44,28 +44,27 @@ public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
 
 	@Override
 	public DomainType<J> getSqmPathType() {
-		return path.getNodeType().getSqmPathType();
+		return sqmPathType;
 	}
 
 	@Override
 	public BindableType getBindableType() {
-		return path.getNodeType().getBindableType();
+		return pathSource.getBindableType();
 	}
 
 	@Override
 	public JavaType<J> getExpressibleJavaType() {
-		return path.getNodeJavaType();
+		return pathSource.getExpressibleJavaType();
 	}
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		return path.getNodeType().findSubPathSource( name );
+		return pathSource.findSubPathSource( name );
 	}
 
 	@Override
 	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
-		final DomainType<?> domainType = path.getNodeType().getSqmPathType();
-		if ( domainType instanceof BasicDomainType<?> ) {
+		if ( sqmPathType instanceof BasicDomainType<?> ) {
 			return new SqmBasicValuedSimplePath<>(
 					PathHelper.append( lhs, this, intermediatePathSource ),
 					this,
@@ -73,7 +72,7 @@ public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
 					lhs.nodeBuilder()
 			);
 		}
-		else if ( domainType instanceof EmbeddableDomainType<?> ) {
+		else if ( sqmPathType instanceof EmbeddableDomainType<?> ) {
 			return new SqmEmbeddedValuedSimplePath<>(
 					PathHelper.append( lhs, this, intermediatePathSource ),
 					this,
@@ -81,7 +80,7 @@ public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
 					lhs.nodeBuilder()
 			);
 		}
-		else if ( domainType instanceof EntityDomainType<?> ) {
+		else if ( sqmPathType instanceof EntityDomainType<?> ) {
 			return new SqmEntityValuedSimplePath<>(
 					PathHelper.append( lhs, this, intermediatePathSource ),
 					this,
@@ -90,6 +89,6 @@ public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
 			);
 		}
 
-		throw new UnsupportedOperationException( "Unsupported path source: " + domainType );
+		throw new UnsupportedOperationException( "Unsupported path source: " + sqmPathType );
 	}
 }

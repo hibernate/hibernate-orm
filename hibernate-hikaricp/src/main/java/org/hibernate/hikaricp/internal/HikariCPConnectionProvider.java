@@ -4,6 +4,7 @@
  */
 package org.hibernate.hikaricp.internal;
 
+import java.io.Serial;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -14,6 +15,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -27,13 +29,18 @@ import com.zaxxer.hikari.HikariDataSource;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
 
 /**
- * HikariCP Connection provider for Hibernate.
+ * {@link ConnectionProvider} based on HikariCP connection pool.
+ * <p>
+ * To force the use of this {@code ConnectionProvider} set
+ * {@value org.hibernate.cfg.JdbcSettings#CONNECTION_PROVIDER}
+ * to {@code hikari} or {@code hikaricp}.
  *
  * @author Brett Wooldridge
  * @author Luca Burgazzoli
  */
 public class HikariCPConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
 
+	@Serial
 	private static final long serialVersionUID = -9131625057941275711L;
 	private boolean isMetadataAccessAllowed = true;
 
@@ -63,7 +70,8 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 		}
 		catch (Exception e) {
 			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
-			throw new HibernateException( e );
+			throw new ConnectionProviderConfigurationException(
+					"Could not configure HikariCP: " + e.getMessage(),  e );
 		}
 	}
 

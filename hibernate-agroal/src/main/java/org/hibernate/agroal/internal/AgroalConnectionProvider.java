@@ -4,6 +4,7 @@
  */
 package org.hibernate.agroal.internal;
 
+import java.io.Serial;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.DatabaseMetaData;
@@ -19,6 +20,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.service.UnknownUnwrapTypeException;
@@ -33,14 +35,18 @@ import io.agroal.api.configuration.supplier.AgroalPropertiesReader;
 import io.agroal.api.security.NamePrincipal;
 import io.agroal.api.security.SimplePassword;
 
+import static java.util.stream.Collectors.toMap;
 import static org.hibernate.cfg.AgroalSettings.AGROAL_CONFIG_PREFIX;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
 
 /**
- * ConnectionProvider based on Agroal connection pool
- * To use this ConnectionProvider set: <pre> hibernate.connection.provider_class AgroalConnectionProvider </pre>
- *
- * Usual hibernate properties are supported:
+ * {@link ConnectionProvider} based on Agroal connection pool.
+ * <p>
+ * To force the use of this {@code ConnectionProvider} set
+ * {@value org.hibernate.cfg.JdbcSettings#CONNECTION_PROVIDER}
+ * to {@code agroal}.
+ * <p>
+ * Usual hibernate connection properties are supported:
  * <pre>
  *     hibernate.connection.driver_class
  *     hibernate.connection.url
@@ -49,8 +55,8 @@ import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.al
  *     hibernate.connection.autocommit
  *     hibernate.connection.isolation
  * </pre>
- *
- * Other configuration options are available, using the {@code hibernate.agroal} prefix
+ * <p>
+ * Other configuration options are available, using the {@code hibernate.agroal} prefix.
  *
  * @see AgroalSettings
  * @see AgroalPropertiesReader
@@ -61,6 +67,8 @@ import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.al
 public class AgroalConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
 
 	public static final String CONFIG_PREFIX = AGROAL_CONFIG_PREFIX + ".";
+
+	@Serial
 	private static final long serialVersionUID = 1L;
 	private AgroalDataSource agroalDataSource = null;
 	private boolean isMetadataAccessAllowed = true;
@@ -68,7 +76,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	// --- Configurable
 
 	private static String extractIsolationAsString(Map<String, Object> properties) {
-		Integer isolation = ConnectionProviderInitiator.extractIsolation( properties );
+		final Integer isolation = ConnectionProviderInitiator.extractIsolation( properties );
 		if ( isolation != null ) {
 			// Agroal resolves transaction isolation from the 'nice' name
 			return ConnectionProviderInitiator.toIsolationNiceName( isolation );
@@ -77,34 +85,34 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	}
 
 	private static void resolveIsolationSetting(Map<String, Object> properties, AgroalConnectionFactoryConfigurationSupplier cf) {
-		String isolationString = extractIsolationAsString( properties );
+		final String isolationString = extractIsolationAsString( properties );
 		if ( isolationString != null ) {
 			cf.jdbcTransactionIsolation( AgroalConnectionFactoryConfiguration.TransactionIsolation.valueOf( isolationString ) );
 		}
 	}
 
 	private static <T> void copyProperty(Map<String, Object> properties, String key, Consumer<T> consumer, Function<String, T> converter) {
-		Object value = properties.get( key );
-		if ( value instanceof String ) {
-			consumer.accept( converter.apply( (String) value ) );
+		final Object value = properties.get( key );
+		if ( value instanceof String string ) {
+			consumer.accept( converter.apply( string ) );
 		}
 	}
 
 	@Override
-	public void configure(Map<String, Object> props) throws HibernateException {
-		isMetadataAccessAllowed = allowJdbcMetadataAccess( props );
+	public void configure(Map<String, Object> properties) throws HibernateException {
+		isMetadataAccessAllowed = allowJdbcMetadataAccess( properties );
 
 		ConnectionInfoLogger.INSTANCE.configureConnectionPool( "Agroal" );
 		try {
-			AgroalPropertiesReader agroalProperties = new AgroalPropertiesReader( CONFIG_PREFIX )
-					.readProperties( (Map) props ); //TODO: this is a garbage cast
+			final AgroalPropertiesReader agroalProperties = new AgroalPropertiesReader( CONFIG_PREFIX )
+					.readProperties( toStringValuedProperties( properties ) );
 			agroalProperties.modify().connectionPoolConfiguration( cp -> cp.connectionFactoryConfiguration( cf -> {
-				copyProperty( props, AvailableSettings.DRIVER, cf::connectionProviderClassName, Function.identity() );
-				copyProperty( props, AvailableSettings.URL, cf::jdbcUrl, Function.identity() );
-				copyProperty( props, AvailableSettings.USER, cf::principal, NamePrincipal::new );
-				copyProperty( props, AvailableSettings.PASS, cf::credential, SimplePassword::new );
-				copyProperty( props, AvailableSettings.AUTOCOMMIT, cf::autoCommit, Boolean::valueOf );
-				resolveIsolationSetting( props, cf );
+				copyProperty( properties, AvailableSettings.DRIVER, cf::connectionProviderClassName, Function.identity() );
+				copyProperty( properties, AvailableSettings.URL, cf::jdbcUrl, Function.identity() );
+				copyProperty( properties, AvailableSettings.USER, cf::principal, NamePrincipal::new );
+				copyProperty( properties, AvailableSettings.PASS, cf::credential, SimplePassword::new );
+				copyProperty( properties, AvailableSettings.AUTOCOMMIT, cf::autoCommit, Boolean::valueOf );
+				resolveIsolationSetting( properties, cf );
 				return cf;
 			} ) );
 
@@ -112,8 +120,14 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 		}
 		catch ( Exception e ) {
 			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
-			throw new HibernateException( e );
+			throw new ConnectionProviderConfigurationException(
+					"Could not configure Agroal: " + e.getMessage(),  e );
 		}
+	}
+
+	private static Map<String,String> toStringValuedProperties(Map<String,Object> properties) {
+		return properties.entrySet().stream()
+				.collect( toMap( Map.Entry::getKey, e -> e.getValue().toString() ) );
 	}
 
 	// --- ConnectionProvider

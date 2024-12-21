@@ -19,7 +19,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
  */
 public class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
 	private static final List<StrategyRegistration> REGISTRATIONS = Collections.singletonList(
-			(StrategyRegistration) new SimpleStrategyRegistrationImpl<ConnectionProvider>(
+			new SimpleStrategyRegistrationImpl<>(
 					ConnectionProvider.class,
 					UCPConnectionProvider.class,
 					"ucp",
@@ -30,7 +30,6 @@ public class StrategyRegistrationProviderImpl implements StrategyRegistrationPro
 	);
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Iterable<StrategyRegistration> getStrategyRegistrations() {
 		return REGISTRATIONS;
 	}

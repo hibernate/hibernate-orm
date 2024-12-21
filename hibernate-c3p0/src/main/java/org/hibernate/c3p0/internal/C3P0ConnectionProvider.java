@@ -14,7 +14,6 @@ import javax.sql.DataSource;
 
 import com.mchange.v2.c3p0.DataSources;
 
-import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.C3p0Settings;
@@ -23,6 +22,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.internal.util.PropertiesHelper;
@@ -38,8 +38,13 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 
 /**
- * A connection provider that uses a C3P0 connection pool. Hibernate will use this by
- * default if the {@code hibernate.c3p0.*} properties are set.
+ * {@link ConnectionProvider} based on c3p0 connection pool.
+ * <p>
+ * To force the use of this {@code ConnectionProvider} set
+ * {@value org.hibernate.cfg.JdbcSettings#CONNECTION_PROVIDER}
+ * to {@code c3p0}.
+ * <p>
+ * Hibernate selects this by default if the {@code hibernate.c3p0.*} properties are set.
  *
  * @author various people
  * @see ConnectionProvider
@@ -141,8 +146,8 @@ public class C3P0ConnectionProvider
 			}
 		}
 
-		Integer minPoolSize = null;
-		Integer maxPoolSize = null;
+		final Integer minPoolSize;
+		final Integer maxPoolSize;
 		try {
 
 			//swaldman 2004-02-07: modify to allow null values to signify fall through to c3p0 PoolConfig defaults
@@ -197,7 +202,8 @@ public class C3P0ConnectionProvider
 		}
 		catch (Exception e) {
 			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
-			throw new HibernateException( e );
+			throw new ConnectionProviderConfigurationException(
+					"Could not configure c3p0: " + e.getMessage(),  e );
 		}
 
 		isolation = ConnectionProviderInitiator.extractIsolation( props );
@@ -257,17 +263,6 @@ public class C3P0ConnectionProvider
 		catch (SQLException sqle) {
 			ConnectionInfoLogger.INSTANCE.unableToDestroyConnectionPool( sqle );
 		}
-	}
-
-	/**
-	 * Close the provider.
-	 *
-	 * @deprecated Use {@link #stop} instead
-	 */
-	@SuppressWarnings("unused")
-	@Deprecated
-	public void close() {
-		stop();
 	}
 
 	@Override

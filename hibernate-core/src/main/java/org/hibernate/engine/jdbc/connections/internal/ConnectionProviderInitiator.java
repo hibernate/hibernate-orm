@@ -399,8 +399,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	public static void consumeSetting(Map<String, Object> settings, SettingConsumer consumer, String... names) {
 		for ( String name : names ) {
-			if ( settings.containsKey(name) ) {
-				consumer.consumeSetting( name, (String) settings.get(name) );
+			final Object setting = settings.get( name );
+			if ( setting != null ) {
+				consumer.consumeSetting( name, setting.toString() );
 				return;
 			}
 		}

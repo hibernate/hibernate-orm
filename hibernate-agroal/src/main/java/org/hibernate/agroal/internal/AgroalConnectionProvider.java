@@ -7,15 +7,16 @@ package org.hibernate.agroal.internal;
 import java.io.Serial;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.DatabaseMetaData;
 import javax.sql.DataSource;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import io.agroal.api.configuration.AgroalConnectionFactoryConfiguration.TransactionIsolation;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AgroalSettings;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
@@ -35,6 +36,7 @@ import io.agroal.api.configuration.supplier.AgroalPropertiesReader;
 import io.agroal.api.security.NamePrincipal;
 import io.agroal.api.security.SimplePassword;
 
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.hibernate.cfg.AgroalSettings.AGROAL_CONFIG_PREFIX;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
@@ -77,24 +79,23 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 	private static String extractIsolationAsString(Map<String, Object> properties) {
 		final Integer isolation = ConnectionProviderInitiator.extractIsolation( properties );
-		if ( isolation != null ) {
-			// Agroal resolves transaction isolation from the 'nice' name
-			return ConnectionProviderInitiator.toIsolationNiceName( isolation );
-		}
-		return null;
+		return isolation != null ?
+				// Agroal resolves transaction isolation from the 'nice' name
+				ConnectionProviderInitiator.toIsolationNiceName( isolation )
+				: null;
 	}
 
 	private static void resolveIsolationSetting(Map<String, Object> properties, AgroalConnectionFactoryConfigurationSupplier cf) {
 		final String isolationString = extractIsolationAsString( properties );
 		if ( isolationString != null ) {
-			cf.jdbcTransactionIsolation( AgroalConnectionFactoryConfiguration.TransactionIsolation.valueOf( isolationString ) );
+			cf.jdbcTransactionIsolation( TransactionIsolation.valueOf( isolationString ) );
 		}
 	}
 
 	private static <T> void copyProperty(Map<String, Object> properties, String key, Consumer<T> consumer, Function<String, T> converter) {
 		final Object value = properties.get( key );
-		if ( value instanceof String string ) {
-			consumer.accept( converter.apply( string ) );
+		if ( value != null ) {
+			consumer.accept( converter.apply( value.toString() ) );
 		}
 	}
 
@@ -104,14 +105,24 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 		ConnectionInfoLogger.INSTANCE.configureConnectionPool( "Agroal" );
 		try {
-			final AgroalPropertiesReader agroalProperties = new AgroalPropertiesReader( CONFIG_PREFIX )
-					.readProperties( toStringValuedProperties( properties ) );
-			agroalProperties.modify().connectionPoolConfiguration( cp -> cp.connectionFactoryConfiguration( cf -> {
-				copyProperty( properties, AvailableSettings.DRIVER, cf::connectionProviderClassName, Function.identity() );
-				copyProperty( properties, AvailableSettings.URL, cf::jdbcUrl, Function.identity() );
-				copyProperty( properties, AvailableSettings.USER, cf::principal, NamePrincipal::new );
-				copyProperty( properties, AvailableSettings.PASS, cf::credential, SimplePassword::new );
-				copyProperty( properties, AvailableSettings.AUTOCOMMIT, cf::autoCommit, Boolean::valueOf );
+			final Map<String, String> config = toStringValuedProperties( properties );
+			if ( !properties.containsKey( AgroalSettings.AGROAL_MAX_SIZE ) ) {
+				final String maxSize =
+						properties.containsKey( JdbcSettings.POOL_SIZE )
+								? properties.get( JdbcSettings.POOL_SIZE ).toString()
+								: String.valueOf( 10 );
+				config.put( AgroalSettings.AGROAL_MAX_SIZE, maxSize );
+			}
+			final AgroalPropertiesReader agroalProperties =
+					new AgroalPropertiesReader( CONFIG_PREFIX )
+							.readProperties( config );
+			agroalProperties.modify()
+					.connectionPoolConfiguration( cp -> cp.connectionFactoryConfiguration( cf -> {
+				copyProperty( properties, JdbcSettings.DRIVER, cf::connectionProviderClassName, identity() );
+				copyProperty( properties, JdbcSettings.URL, cf::jdbcUrl, identity() );
+				copyProperty( properties, JdbcSettings.USER, cf::principal, NamePrincipal::new );
+				copyProperty( properties, JdbcSettings.PASS, cf::credential, SimplePassword::new );
+				copyProperty( properties, JdbcSettings.AUTOCOMMIT, cf::autoCommit, Boolean::valueOf );
 				resolveIsolationSetting( properties, cf );
 				return cf;
 			} ) );
@@ -152,30 +163,31 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
-		final AgroalConnectionPoolConfiguration acpc = agroalDataSource.getConfiguration().connectionPoolConfiguration();
+		final AgroalConnectionPoolConfiguration acpc =
+				agroalDataSource.getConfiguration().connectionPoolConfiguration();
 		final AgroalConnectionFactoryConfiguration acfc = acpc.connectionFactoryConfiguration();
-
-
 		return new DatabaseConnectionInfoImpl(
 				acfc.jdbcUrl(),
-				// Attempt to resolve the driver name from the dialect, in case it wasn't explicitly set and access to
-				// the database metadata is allowed
-				acfc.connectionProviderClass() != null ? acfc.connectionProviderClass().toString() : extractDriverNameFromMetadata(),
+				// Attempt to resolve the driver name from the dialect,
+				// in case it wasn't explicitly set and access to the
+				// database metadata is allowed
+				acfc.connectionProviderClass() != null
+						? acfc.connectionProviderClass().toString()
+						: extractDriverNameFromMetadata(),
 				dialect.getVersion(),
 				Boolean.toString( acfc.autoCommit() ),
 				acfc.jdbcTransactionIsolation() != null
 						? ConnectionProviderInitiator.toIsolationNiceName( acfc.jdbcTransactionIsolation().level() )
 						: null,
 				acpc.minSize(),
-				acpc.minSize()
+				acpc.maxSize()
 		);
 	}
 
 	private String extractDriverNameFromMetadata() {
 		if (isMetadataAccessAllowed) {
 			try ( Connection conn = getConnection() ) {
-				DatabaseMetaData dbmd = conn.getMetaData();
-				return dbmd.getDriverName();
+				return conn.getMetaData().getDriverName();
 			}
 			catch (SQLException e) {
 				// Do nothing
@@ -209,8 +221,11 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	@Override
 	public void stop() {
 		if ( agroalDataSource != null ) {
-			ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool( agroalDataSource.getConfiguration().connectionPoolConfiguration().
-																			connectionFactoryConfiguration().jdbcUrl() );
+			ConnectionInfoLogger.INSTANCE.cleaningUpConnectionPool(
+					agroalDataSource.getConfiguration()
+							.connectionPoolConfiguration()
+							.connectionFactoryConfiguration()
+							.jdbcUrl() );
 			agroalDataSource.close();
 		}
 	}

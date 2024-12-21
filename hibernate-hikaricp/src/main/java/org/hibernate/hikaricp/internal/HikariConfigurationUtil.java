@@ -7,7 +7,6 @@ package org.hibernate.hikaricp.internal;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.HikariCPSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
@@ -29,15 +28,17 @@ public class HikariConfigurationUtil {
 	/**
 	 * Create/load a HikariConfig from Hibernate properties.
 	 *
-	 * @param props a map of Hibernate properties
+	 * @param properties a map of Hibernate properties
 	 * @return a HikariConfig
 	 */
-	public static HikariConfig loadConfiguration(Map<String,Object> props) {
+	public static HikariConfig loadConfiguration(Map<String,Object> properties) {
 		final Properties hikariProps = new Properties();
-		copyProperty( JdbcSettings.AUTOCOMMIT, props, "autoCommit", hikariProps );
+		copyProperty( JdbcSettings.AUTOCOMMIT, properties, "autoCommit", hikariProps );
+
+		copyProperty( JdbcSettings.POOL_SIZE, properties, "maximumPoolSize", hikariProps );
 
 		copyProperty(
-				props,
+				properties,
 				"driverClassName",
 				hikariProps,
 				JdbcSettings.JAKARTA_JDBC_DRIVER,
@@ -46,7 +47,7 @@ public class HikariConfigurationUtil {
 		);
 
 		copyProperty(
-				props,
+				properties,
 				"jdbcUrl",
 				hikariProps,
 				JdbcSettings.JAKARTA_JDBC_URL,
@@ -55,7 +56,7 @@ public class HikariConfigurationUtil {
 		);
 
 		copyProperty(
-				props,
+				properties,
 				"username",
 				hikariProps,
 				JdbcSettings.JAKARTA_JDBC_USER,
@@ -64,17 +65,17 @@ public class HikariConfigurationUtil {
 		);
 
 		copyProperty(
-				props,
+				properties,
 				"password",
 				hikariProps,
-				AvailableSettings.JAKARTA_JDBC_PASSWORD,
-				AvailableSettings.PASS,
-				AvailableSettings.JPA_JDBC_PASSWORD
+				JdbcSettings.JAKARTA_JDBC_PASSWORD,
+				JdbcSettings.PASS,
+				JdbcSettings.JPA_JDBC_PASSWORD
 		);
 
-		copyIsolationSetting( props, hikariProps );
+		copyIsolationSetting( properties, hikariProps );
 
-		for ( var entry : props.entrySet() ) {
+		for ( var entry : properties.entrySet() ) {
 			final String key = entry.getKey();
 			if ( key.startsWith( CONFIG_PREFIX ) ) {
 				hikariProps.setProperty( key.substring( CONFIG_PREFIX.length() ), entry.getValue().toString() );
@@ -101,10 +102,8 @@ public class HikariConfigurationUtil {
 	private static void copyIsolationSetting(Map<String,Object> props, Properties hikariProps) {
 		final Integer isolation = ConnectionProviderInitiator.extractIsolation( props );
 		if ( isolation != null ) {
-			hikariProps.put(
-					"transactionIsolation",
-					ConnectionProviderInitiator.toIsolationConnectionConstantName( isolation )
-			);
+			hikariProps.put( "transactionIsolation",
+					ConnectionProviderInitiator.toIsolationConnectionConstantName( isolation ) );
 		}
 	}
 

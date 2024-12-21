@@ -355,8 +355,10 @@ You can set the size of Hibernate's built-in connection pool using this property
 |===
 | Configuration property name | Purpose
 
-| `hibernate.connection.pool_size` | The size of the built-in connection pool
+| `hibernate.connection.pool_size` | The size of the connection pool
 |===
+
+This configuration property is also respected when you use Agroal, HikariCP, or c3p0 for connection pooling.
 
 [CAUTION]
 // .The default connection pool is not meant for production use

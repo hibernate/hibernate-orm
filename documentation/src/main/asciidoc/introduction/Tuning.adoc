@@ -72,6 +72,7 @@ The following settings are common to all connection pools supported by Hibernate
 .Common settings for connection pools
 [%breakable,cols="37,~"]
 |===
+| link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#POOL_SIZE[`hibernate.connection.pool_size`] | The size of the connection pool
 | link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#AUTOCOMMIT[`hibernate.connection.autocommit`] | The default autocommit mode
 | link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#ISOLATION[`hibernate.connection.isolation`] | The default transaction isolation level
 |===

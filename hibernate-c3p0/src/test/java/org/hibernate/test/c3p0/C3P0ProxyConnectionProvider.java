@@ -48,7 +48,7 @@ public class C3P0ProxyConnectionProvider extends C3P0ConnectionProvider {
 			throw new IllegalStateException( e );
 		}
 
-		ReflectionUtil.setField( this, "ds", dataSource );
+		ReflectionUtil.setField( this, "dataSource", dataSource );
 	}
 
 	@Override

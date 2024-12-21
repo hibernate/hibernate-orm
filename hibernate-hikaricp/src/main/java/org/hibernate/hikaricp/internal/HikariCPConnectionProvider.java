@@ -97,8 +97,9 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 		return new DatabaseConnectionInfoImpl(
 				HikariCPConnectionProvider.class,
 				hikariConfig.getJdbcUrl(),
-				// Attempt to resolve the driver name from the dialect, in case it wasn't explicitly set and access to
-				// the database metadata is allowed
+				// Attempt to resolve the driver name from the dialect,
+				// in case it wasn't explicitly set and access to the
+				// database metadata is allowed
 				isBlank( hikariConfig.getDriverClassName() )
 						? extractDriverNameFromMetadata()
 						: hikariConfig.getDriverClassName(),

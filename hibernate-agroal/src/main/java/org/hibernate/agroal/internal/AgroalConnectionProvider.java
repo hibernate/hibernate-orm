@@ -33,6 +33,7 @@ import io.agroal.api.configuration.supplier.AgroalPropertiesReader;
 import io.agroal.api.security.NamePrincipal;
 import io.agroal.api.security.SimplePassword;
 
+import static java.util.stream.Collectors.toMap;
 import static org.hibernate.cfg.AgroalSettings.AGROAL_CONFIG_PREFIX;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
 
@@ -68,7 +69,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	// --- Configurable
 
 	private static String extractIsolationAsString(Map<String, Object> properties) {
-		Integer isolation = ConnectionProviderInitiator.extractIsolation( properties );
+		final Integer isolation = ConnectionProviderInitiator.extractIsolation( properties );
 		if ( isolation != null ) {
 			// Agroal resolves transaction isolation from the 'nice' name
 			return ConnectionProviderInitiator.toIsolationNiceName( isolation );
@@ -77,34 +78,34 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 	}
 
 	private static void resolveIsolationSetting(Map<String, Object> properties, AgroalConnectionFactoryConfigurationSupplier cf) {
-		String isolationString = extractIsolationAsString( properties );
+		final String isolationString = extractIsolationAsString( properties );
 		if ( isolationString != null ) {
 			cf.jdbcTransactionIsolation( AgroalConnectionFactoryConfiguration.TransactionIsolation.valueOf( isolationString ) );
 		}
 	}
 
 	private static <T> void copyProperty(Map<String, Object> properties, String key, Consumer<T> consumer, Function<String, T> converter) {
-		Object value = properties.get( key );
-		if ( value instanceof String ) {
-			consumer.accept( converter.apply( (String) value ) );
+		final Object value = properties.get( key );
+		if ( value instanceof String string ) {
+			consumer.accept( converter.apply( string ) );
 		}
 	}
 
 	@Override
-	public void configure(Map<String, Object> props) throws HibernateException {
-		isMetadataAccessAllowed = allowJdbcMetadataAccess( props );
+	public void configure(Map<String, Object> properties) throws HibernateException {
+		isMetadataAccessAllowed = allowJdbcMetadataAccess( properties );
 
 		ConnectionInfoLogger.INSTANCE.configureConnectionPool( "Agroal" );
 		try {
-			AgroalPropertiesReader agroalProperties = new AgroalPropertiesReader( CONFIG_PREFIX )
-					.readProperties( (Map) props ); //TODO: this is a garbage cast
+			final AgroalPropertiesReader agroalProperties = new AgroalPropertiesReader( CONFIG_PREFIX )
+					.readProperties( toStringValuedProperties( properties ) );
 			agroalProperties.modify().connectionPoolConfiguration( cp -> cp.connectionFactoryConfiguration( cf -> {
-				copyProperty( props, AvailableSettings.DRIVER, cf::connectionProviderClassName, Function.identity() );
-				copyProperty( props, AvailableSettings.URL, cf::jdbcUrl, Function.identity() );
-				copyProperty( props, AvailableSettings.USER, cf::principal, NamePrincipal::new );
-				copyProperty( props, AvailableSettings.PASS, cf::credential, SimplePassword::new );
-				copyProperty( props, AvailableSettings.AUTOCOMMIT, cf::autoCommit, Boolean::valueOf );
-				resolveIsolationSetting( props, cf );
+				copyProperty( properties, AvailableSettings.DRIVER, cf::connectionProviderClassName, Function.identity() );
+				copyProperty( properties, AvailableSettings.URL, cf::jdbcUrl, Function.identity() );
+				copyProperty( properties, AvailableSettings.USER, cf::principal, NamePrincipal::new );
+				copyProperty( properties, AvailableSettings.PASS, cf::credential, SimplePassword::new );
+				copyProperty( properties, AvailableSettings.AUTOCOMMIT, cf::autoCommit, Boolean::valueOf );
+				resolveIsolationSetting( properties, cf );
 				return cf;
 			} ) );
 
@@ -114,6 +115,11 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
 			throw new HibernateException( e );
 		}
+	}
+
+	private static Map<String,String> toStringValuedProperties(Map<String,Object> properties) {
+		return properties.entrySet().stream()
+				.collect( toMap( Map.Entry::getKey, e -> e.getValue().toString() ) );
 	}
 
 	// --- ConnectionProvider

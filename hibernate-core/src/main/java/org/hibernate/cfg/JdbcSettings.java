@@ -240,11 +240,12 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	String CONNECTION_PROVIDER = "hibernate.connection.provider_class";
 
 	/**
-	 * Specifies the maximum number of inactive connections for the built-in
-	 * {@linkplain org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl
-	 * connection pool}.
-	 *
-	 * @settingDefault 20
+	 * Specifies the maximum number of inactive connections for any
+	 * {@linkplain ConnectionProvider connection pool} which respects this
+	 * setting, including every built-in implementation except for
+	 * {@link org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl}.
+	 * <p>
+	 * The default pool size depends on the connection provider.
 	 */
 	String POOL_SIZE = "hibernate.connection.pool_size";
 

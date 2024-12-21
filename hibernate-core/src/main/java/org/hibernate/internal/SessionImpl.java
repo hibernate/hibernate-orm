@@ -254,7 +254,6 @@ public class SessionImpl
 
 		final DiagnosticEvent sessionOpenEvent = getEventMonitor().beginSessionOpenEvent();
 		try {
-
 			persistenceContext = createPersistenceContext();
 			actionQueue = createActionQueue();
 
@@ -351,7 +350,10 @@ public class SessionImpl
 
 	protected void applyQuerySettingsAndHints(Query<?> query) {
 		applyQuerySettingsAndHints( (SelectionQuery<?>) query );
+		applyLockTimeoutHint( query );
+	}
 
+	private void applyLockTimeoutHint(Query<?> query) {
 		final Integer specLockTimeout = LegacySpecHelper.getInteger(
 				HINT_SPEC_LOCK_TIMEOUT,
 				HINT_JAVAEE_LOCK_TIMEOUT,

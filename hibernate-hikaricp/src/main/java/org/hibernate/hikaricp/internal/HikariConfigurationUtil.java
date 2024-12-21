@@ -33,7 +33,7 @@ public class HikariConfigurationUtil {
 	 * @return a HikariConfig
 	 */
 	public static HikariConfig loadConfiguration(Map<String,Object> props) {
-		Properties hikariProps = new Properties();
+		final Properties hikariProps = new Properties();
 		copyProperty( JdbcSettings.AUTOCOMMIT, props, "autoCommit", hikariProps );
 
 		copyProperty(
@@ -74,9 +74,10 @@ public class HikariConfigurationUtil {
 
 		copyIsolationSetting( props, hikariProps );
 
-		for ( String key : props.keySet() ) {
+		for ( var entry : props.entrySet() ) {
+			final String key = entry.getKey();
 			if ( key.startsWith( CONFIG_PREFIX ) ) {
-				hikariProps.setProperty( key.substring( CONFIG_PREFIX.length() ), (String) props.get( key ) );
+				hikariProps.setProperty( key.substring( CONFIG_PREFIX.length() ), entry.getValue().toString() );
 			}
 		}
 
@@ -85,7 +86,7 @@ public class HikariConfigurationUtil {
 
 	private static void copyProperty(String srcKey, Map<String,Object> src, String dstKey, Properties dst) {
 		if ( src.containsKey( srcKey ) ) {
-			dst.setProperty( dstKey, (String) src.get( srcKey ) );
+			dst.setProperty( dstKey, src.get( srcKey ).toString() );
 		}
 	}
 

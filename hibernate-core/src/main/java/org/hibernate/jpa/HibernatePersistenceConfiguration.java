@@ -157,6 +157,16 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
+	 * The JDBC connection pool size.
+	 *
+	 * @see JdbcSettings#POOL_SIZE
+	 */
+	public HibernatePersistenceConfiguration jdbcPoolSize(int poolSize) {
+		property( JdbcSettings.POOL_SIZE, poolSize );
+		return this;
+	}
+
+	/**
 	 * Enables SQL logging to the console.
 	 * <p>
 	 * Sets {@value AvailableSettings#SHOW_SQL}, {@value AvailableSettings#FORMAT_SQL},

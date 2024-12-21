@@ -155,8 +155,7 @@ public final class EventType<T> {
 		return eventName;
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Class baseListenerInterface() {
+	public Class<T> baseListenerInterface() {
 		return baseListenerInterface;
 	}
 

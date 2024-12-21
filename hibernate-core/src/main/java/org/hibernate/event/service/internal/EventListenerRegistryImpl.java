@@ -121,8 +121,9 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		setListeners( type, resolveListenerInstances( type, listenerClasses ) );
 	}
 
-	@SuppressWarnings( {"unchecked"})
+	@SafeVarargs
 	private <T> T[] resolveListenerInstances(EventType<T> type, Class<? extends T>... listenerClasses) {
+		@SuppressWarnings("unchecked")
 		T[] listeners = (T[]) Array.newInstance( type.baseListenerInterface(), listenerClasses.length );
 		for ( int i = 0; i < listenerClasses.length; i++ ) {
 			listeners[i] = resolveListenerInstance( listenerClasses[i] );
@@ -130,8 +131,8 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		return listeners;
 	}
 
-	@SuppressWarnings( {"unchecked"})
 	private <T> T resolveListenerInstance(Class<T> listenerClass) {
+		@SuppressWarnings("unchecked")
 		T listenerInstance = (T) listenerClassToInstanceMap.get( listenerClass );
 		if ( listenerInstance == null ) {
 			listenerInstance = instantiateListener( listenerClass );

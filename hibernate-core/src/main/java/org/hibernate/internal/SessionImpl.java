@@ -104,8 +104,6 @@ import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEvent;
 import org.hibernate.event.spi.ReplicateEventListener;
-import org.hibernate.event.spi.ResolveNaturalIdEvent;
-import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.loader.internal.CacheLoadHelper;
 import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.event.monitor.spi.EventMonitor;
@@ -1284,14 +1282,6 @@ public class SessionImpl
 		pulseTransactionCoordinator();
 		fastSessionServices.eventListenerGroup_LOAD
 				.fireEventOnEachListener( event, loadType, LoadEventListener::onLoad );
-	}
-
-	private void fireResolveNaturalId(final ResolveNaturalIdEvent event) {
-		checkOpenOrWaitingForAutoClose();
-		pulseTransactionCoordinator();
-		fastSessionServices.eventListenerGroup_RESOLVE_NATURAL_ID
-				.fireEventOnEachListener( event, ResolveNaturalIdEventListener::onResolveNaturalId );
-		delayedAfterCompletion();
 	}
 
 

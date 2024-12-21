@@ -29,7 +29,6 @@ import org.hibernate.event.internal.DefaultPostLoadEventListener;
 import org.hibernate.event.internal.DefaultPreLoadEventListener;
 import org.hibernate.event.internal.DefaultRefreshEventListener;
 import org.hibernate.event.internal.DefaultReplicateEventListener;
-import org.hibernate.event.internal.DefaultResolveNaturalIdEventListener;
 import org.hibernate.event.internal.PostDeleteEventListenerStandardImpl;
 import org.hibernate.event.internal.PostInsertEventListenerStandardImpl;
 import org.hibernate.event.internal.PostUpdateEventListenerStandardImpl;
@@ -75,7 +74,6 @@ import static org.hibernate.event.spi.EventType.PRE_UPDATE;
 import static org.hibernate.event.spi.EventType.PRE_UPSERT;
 import static org.hibernate.event.spi.EventType.REFRESH;
 import static org.hibernate.event.spi.EventType.REPLICATE;
-import static org.hibernate.event.spi.EventType.RESOLVE_NATURAL_ID;
 
 /**
  * Standard implementation of EventListenerRegistry
@@ -239,9 +237,6 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 
 			// load listeners
 			prepareListeners( LOAD, new DefaultLoadEventListener() );
-
-			// resolve natural-id listeners
-			prepareListeners( RESOLVE_NATURAL_ID, new DefaultResolveNaturalIdEventListener() );
 
 			// load-collection listeners
 			prepareListeners( INIT_COLLECTION, new DefaultInitializeCollectionEventListener() );

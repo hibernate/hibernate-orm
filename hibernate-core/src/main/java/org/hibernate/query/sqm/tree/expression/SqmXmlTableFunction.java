@@ -10,7 +10,7 @@ import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.query.criteria.JpaCastTarget;
 import org.hibernate.query.criteria.JpaXmlTableColumnNode;
 import org.hibernate.query.criteria.JpaXmlTableFunction;
-import org.hibernate.query.derived.AnonymousTupleType;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;

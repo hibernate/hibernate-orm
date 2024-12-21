@@ -10,7 +10,7 @@ import org.hibernate.dialect.XmlHelper;
 import org.hibernate.dialect.function.UnnestSetReturningFunctionTypeResolver;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingSetReturningFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver;
 import org.hibernate.sql.ast.SqlAstTranslator;

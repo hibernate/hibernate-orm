@@ -60,7 +60,7 @@ import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.internal.NullPrecedenceHelper;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;

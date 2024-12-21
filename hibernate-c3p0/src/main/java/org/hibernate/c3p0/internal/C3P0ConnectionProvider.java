@@ -144,6 +144,10 @@ public class C3P0ConnectionProvider
 
 		loadDriverClass( jdbcDriverClass );
 
+		// c3p0 returns Connections with autocommit enabled, but for
+		// historical reasons we default to calling setAutocommit(false)
+		// as soon as we obtain a new connection. This maybe isn't ideal,
+		// and it's not what we do with Agroal or Hikari.
 		autocommit = getBoolean( JdbcSettings.AUTOCOMMIT, properties ); // defaults to false
 		isolation = ConnectionProviderInitiator.extractIsolation( properties );
 

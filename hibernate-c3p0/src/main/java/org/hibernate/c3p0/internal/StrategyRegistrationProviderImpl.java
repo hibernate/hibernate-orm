@@ -20,7 +20,6 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 public final class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Iterable<StrategyRegistration> getStrategyRegistrations() {
 		final SimpleStrategyRegistrationImpl<ConnectionProvider> c3p0 = new SimpleStrategyRegistrationImpl<>(
 				ConnectionProvider.class,

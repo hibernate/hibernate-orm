@@ -4,6 +4,7 @@
  */
 package org.hibernate.agroal.internal;
 
+import java.io.Serial;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.DatabaseMetaData;
@@ -19,6 +20,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.service.UnknownUnwrapTypeException;
@@ -38,10 +40,13 @@ import static org.hibernate.cfg.AgroalSettings.AGROAL_CONFIG_PREFIX;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
 
 /**
- * ConnectionProvider based on Agroal connection pool
- * To use this ConnectionProvider set: <pre> hibernate.connection.provider_class AgroalConnectionProvider </pre>
- *
- * Usual hibernate properties are supported:
+ * {@link ConnectionProvider} based on Agroal connection pool.
+ * <p>
+ * To force the use of this {@code ConnectionProvider} set
+ * {@value org.hibernate.cfg.JdbcSettings#CONNECTION_PROVIDER}
+ * to {@code agroal}.
+ * <p>
+ * Usual hibernate connection properties are supported:
  * <pre>
  *     hibernate.connection.driver_class
  *     hibernate.connection.url
@@ -50,8 +55,8 @@ import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.al
  *     hibernate.connection.autocommit
  *     hibernate.connection.isolation
  * </pre>
- *
- * Other configuration options are available, using the {@code hibernate.agroal} prefix
+ * <p>
+ * Other configuration options are available, using the {@code hibernate.agroal} prefix.
  *
  * @see AgroalSettings
  * @see AgroalPropertiesReader
@@ -62,6 +67,8 @@ import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.al
 public class AgroalConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
 
 	public static final String CONFIG_PREFIX = AGROAL_CONFIG_PREFIX + ".";
+
+	@Serial
 	private static final long serialVersionUID = 1L;
 	private AgroalDataSource agroalDataSource = null;
 	private boolean isMetadataAccessAllowed = true;
@@ -113,7 +120,8 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 		}
 		catch ( Exception e ) {
 			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
-			throw new HibernateException( e );
+			throw new ConnectionProviderConfigurationException(
+					"Could not configure Agroal: " + e.getMessage(),  e );
 		}
 	}
 

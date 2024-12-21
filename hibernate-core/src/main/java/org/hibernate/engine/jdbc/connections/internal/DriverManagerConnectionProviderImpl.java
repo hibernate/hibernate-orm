@@ -21,7 +21,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Internal;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Database;
@@ -338,7 +337,6 @@ public class DriverManagerConnectionProviderImpl
 		}
 	}
 
-	//CHECKSTYLE:START_ALLOW_FINALIZER
 	@Override
 	protected void finalize() throws Throwable {
 		if ( state != null ) {
@@ -346,24 +344,10 @@ public class DriverManagerConnectionProviderImpl
 		}
 		super.finalize();
 	}
-	//CHECKSTYLE:END_ALLOW_FINALIZER
-
-	/**
-	 * Exposed to facilitate testing only.
-	 */
-	public Properties getConnectionProperties() {
-		BasicConnectionCreator connectionCreator = (BasicConnectionCreator) this.state.pool.connectionCreator;
-		return connectionCreator.getConnectionProperties();
-	}
 
 	@Override
 	public boolean isValid(Connection connection) throws SQLException {
 		return true;
-	}
-
-	@Internal
-	public void releasePooledConnections() {
-		state.pool.releasePooledConnections();
 	}
 
 	public static class PooledConnections {
@@ -438,7 +422,7 @@ public class DriverManagerConnectionProviderImpl
 			return null;
 		}
 
-		public Connection poll() throws SQLException {
+		public Connection poll() {
 			Connection conn;
 			do {
 				conn = availableConnections.poll();
@@ -524,13 +508,6 @@ public class DriverManagerConnectionProviderImpl
 
 		public String getUrl() {
 			return connectionCreator.getUrl();
-		}
-
-		@Internal
-		public void releasePooledConnections() {
-			for ( Connection connection : allConnections ) {
-				closeConnection( connection, null );
-			}
 		}
 
 		public static class Builder {
@@ -641,7 +618,7 @@ public class DriverManagerConnectionProviderImpl
 			}
 		}
 
-		public Connection getConnection() throws SQLException {
+		public Connection getConnection() {
 			startIfNeeded();
 			statelock.readLock().lock();
 			try {
@@ -704,7 +681,6 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	private static class ValidationThreadFactory implements ThreadFactory {
-
 		@Override
 		public Thread newThread(Runnable runnable) {
 			Thread thread = new Thread( runnable );

@@ -74,11 +74,11 @@ public class C3P0ConnectionProvider
 	private static final String C3P0_STYLE_MAX_STATEMENTS = "c3p0.maxStatements";
 	private static final String C3P0_STYLE_ACQUIRE_INCREMENT = "c3p0.acquireIncrement";
 	private static final String C3P0_STYLE_IDLE_CONNECTION_TEST_PERIOD = "c3p0.idleConnectionTestPeriod";
-
-	//swaldman 2006-08-28: define c3p0-style configuration parameters for initialPoolSize, which
-	//                     hibernate sensibly lets default to minPoolSize, but we'll let users
-	//                     override it with the c3p0-style property if they want.
+	//swaldman 2006-08-28: define c3p0-style configuration parameters for initialPoolSize,
+	//                     which hibernate sensibly lets default to minPoolSize, but we'll
+	//                     let users override it with the c3p0-style property if they want.
 	private static final String C3P0_STYLE_INITIAL_POOL_SIZE = "c3p0.initialPoolSize";
+
 	private DataSource dataSource;
 	private Integer isolation;
 	private boolean autocommit;
@@ -161,7 +161,7 @@ public class C3P0ConnectionProvider
 				jdbcDriverClass,
 				dialect.getVersion(),
 				Boolean.toString( autocommit ),
-				isolation != null ? ConnectionProviderInitiator.toIsolationNiceName( isolation ) : null,
+				isolation == null ? null : ConnectionProviderInitiator.toIsolationNiceName( isolation ),
 				requireNonNullElse( getInteger( C3P0_STYLE_MIN_POOL_SIZE.substring( 5 ), poolSettings ),
 						DEFAULT_MIN_POOL_SIZE ),
 				requireNonNullElse( getInteger( C3P0_STYLE_MAX_POOL_SIZE.substring( 5 ), poolSettings ),

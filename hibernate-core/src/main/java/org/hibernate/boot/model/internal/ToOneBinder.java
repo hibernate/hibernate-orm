@@ -393,8 +393,11 @@ public class ToOneBinder {
 		switch ( fetchMode ) {
 			case JOIN:
 				toOne.setFetchMode( FetchMode.JOIN );
-				toOne.setLazy( false );
 				toOne.setUnwrapProxy( false );
+				if ( toOne.isLazy() ) {
+					throw new AnnotationException("Association '" + property.getName()
+							+ "' is mapped 'fetch=LAZY' and '@Fetch(JOIN)' (join fetching is always eager)");
+				}
 				break;
 			case SELECT:
 				toOne.setFetchMode( FetchMode.SELECT );

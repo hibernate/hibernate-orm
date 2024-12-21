@@ -433,7 +433,7 @@ As we mentioned <<testing,earlier>>, it can also be useful to control schema exp
 The link:{doc-javadoc-url}org/hibernate/relational/SchemaManager.html[`SchemaManager`] API allows programmatic control over schema export:
 
 [source,java]
-sessionFactory.getSchemaManager().export(true);
+sessionFactory.getSchemaManager().create(true);
 ====
 
 [[logging-generated-sql]]

@@ -288,7 +288,7 @@ public class Main {
                         .createEntityManagerFactory();
 
         // export the inferred database schema
-        sessionFactory.getSchemaManager().export(true);
+        sessionFactory.getSchemaManager().create(true);
 
         // persist an entity
         sessionFactory.inTransaction(session -> {
@@ -729,7 +729,7 @@ This option is especially convenient when writing tests.
 
 [source,java]
 ----
-sessionFactory.getSchemaManager().export(true);
+sessionFactory.getSchemaManager().create(true);
 ----
 
 Since executing DDL statements is very slow on many databases, we don't want to do this before every test.

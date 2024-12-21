@@ -4,6 +4,7 @@
  */
 package org.hibernate.oracleucp.internal;
 
+import java.io.Serial;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -20,6 +21,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -36,32 +38,32 @@ import oracle.ucp.jdbc.PoolDataSourceFactory;
 
 public class UCPConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 	private PoolDataSource ucpDS = null;
-	private UniversalConnectionPoolManager poolManager = null;
 	private static final String UCP_CONFIG_PREFIX = "hibernate.oracleucp";
 	private static final String CONFIG_PREFIX = UCP_CONFIG_PREFIX + ".";
 	private boolean autoCommit;
 	private Integer isolation;
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public void configure(Map props) throws HibernateException {
+	public void configure(Map<String,Object> props) throws HibernateException {
 		try {
 			ConnectionInfoLogger.INSTANCE.configureConnectionPool( "Ucp" );
 
 			isolation = ConnectionProviderInitiator.extractIsolation( props );
 			autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, props );
 
-			UniversalConnectionPoolManager poolManager = UniversalConnectionPoolManagerImpl.
-				getUniversalConnectionPoolManager();
+			UniversalConnectionPoolManager poolManager =
+					UniversalConnectionPoolManagerImpl.getUniversalConnectionPoolManager();
 			ucpDS = PoolDataSourceFactory.getPoolDataSource();
 			Properties ucpProps = getConfiguration(props);
 			configureDataSource(ucpDS, ucpProps);
 		}
 		catch (Exception e) {
 			ConnectionInfoLogger.INSTANCE.unableToInstantiateConnectionPool( e );
-			throw new HibernateException( e );
+			throw new ConnectionProviderConfigurationException(
+					"Could not configure UCP: " + e.getMessage(),  e );
 		}
 	}
 
@@ -128,13 +130,11 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 		copyProperty( AvailableSettings.USER, props, "user", ucpProps );
 		copyProperty( AvailableSettings.PASS, props, "password", ucpProps );
 
-		for ( Object keyo : props.keySet() ) {
-			if ( !(keyo instanceof String) ) {
-				continue;
-			}
-			String key = (String) keyo;
-			if ( key.startsWith( CONFIG_PREFIX ) ) {
-				ucpProps.setProperty( key.substring( CONFIG_PREFIX.length() ), (String) props.get( key ) );
+		for ( Object object : props.keySet() ) {
+			if ( object instanceof String key ) {
+				if ( key.startsWith( CONFIG_PREFIX ) ) {
+					ucpProps.setProperty( key.substring( CONFIG_PREFIX.length() ), (String) props.get( key ) );
+				}
 			}
 		}
 

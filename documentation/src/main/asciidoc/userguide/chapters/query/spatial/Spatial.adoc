@@ -94,13 +94,13 @@ functions largely correspond to those specified in the https://portal.opengeospa
 |`boolean st_overlaps(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
 |`boolean st_relate(Geometry, Geometry, String)` | SFS §2.1.1.2 | {yes} | {yes} | {no} | {yes} | {yes} | {yes} | {yes}
 |Functions that support Spatial Analysis | | | | | | | |
-|`double st_distance(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes} | {yes}
-|`Geometry st_buffer(Geometry, double)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes} | {yes}
-|`Geometry st_convexhull(Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^ | {no}
-|`Geometry st_intersection(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^ | {yes}
+|`double st_distance(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`Geometry st_buffer(Geometry, double)` | SFS §2.1.1.3 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`Geometry st_convexhull(Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}^(1)^ | {no}
+|`Geometry st_intersection(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}^(1)^ | {yes}
 |`Geometry st_geomunion(Geometry, Geometry)` | SFS §2.1.1.3 (renamed from union) | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^ | {yes}
-|`Geometry st_difference(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^ | {yes}
-|`Geometry st_symdifference(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^ | {yes}
+|`Geometry st_difference(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}^(1)^ | {yes}
+|`Geometry st_symdifference(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}^(1)^ | {yes}
 |Common non-SFS functions | | | | | | | |
 |`boolean st_dwithin(Geometry, Geometry, double)` | Returns true if the geometries are within the specified distance of one another | {yes} | {yes} | {no} | {no} | {yes} | {yes}  | {yes}
 |`Geometry st_transform(Geometry, int)` | Returns a new geometry with its coordinates transformed to the SRID referenced by the integer parameter | {yes} | {yes} | {no} | {no} | {no} | {no}  | {yes}

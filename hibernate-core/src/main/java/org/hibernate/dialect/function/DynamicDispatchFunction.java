@@ -6,7 +6,7 @@ package org.hibernate.dialect.function;
 
 import java.util.List;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;

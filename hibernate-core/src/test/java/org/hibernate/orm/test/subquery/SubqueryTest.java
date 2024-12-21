@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;

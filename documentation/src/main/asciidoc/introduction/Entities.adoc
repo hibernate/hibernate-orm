@@ -432,8 +432,14 @@ Book book = session.find(Book.class, new BookId(isbn, printing));
 [[version-attributes]]
 === Version attributes
 
-An entity may have an attribute which is used by Hibernate for optimistic lock checking.
-A version attribute is usually of type `Integer`, `Short`, `Long`, `LocalDateTime`, `OffsetDateTime`, `ZonedDateTime`, or `Instant`.
+An entity may have an attribute which is used by Hibernate for <<optimistic-and-pessimistic-locking,optimistic lock verification>>.
+A _version attribute_ is usually of type `Integer`, `Short`, `Long`, `LocalDateTime`, `OffsetDateTime`, `ZonedDateTime`, or `Instant`.
+
+[source,java]
+----
+@Version
+int version;
+----
 
 [source,java]
 ----
@@ -441,7 +447,20 @@ A version attribute is usually of type `Integer`, `Short`, `Long`, `LocalDateTim
 LocalDateTime lastUpdated;
 ----
 
-Version attributes are automatically assigned by Hibernate when an entity is made persistent, and automatically incremented or updated each time the entity is updated.
+A version attribute is automatically assigned by Hibernate when an entity is made persistent, and automatically incremented or updated each time the entity is updated.
+
+If the version attribute is numeric, then an entity is, by default, assigned the version number `0` when it's first made persistent.
+It's easy to specify that the initial version should be assigned the number `1` instead:
+
+[source,java]
+----
+@Version
+int version = 1; // the initial version number
+----
+
+Optimistic locks are verified by checking versions.
+A version check is included in the `where` clause of every SQL `update` or `delete` statement for a versioned entity.
+If a version check fails--that is, if no rows are updated--Hibernate throws an `OptimisticLockException` indicating that the current session is working with stale data--that is, that the entity was updated in some other unit of work.
 
 [TIP]
 // .Optimistic locking in Hibernate

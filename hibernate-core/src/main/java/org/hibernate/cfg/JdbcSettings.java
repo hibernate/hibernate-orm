@@ -105,6 +105,9 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * </ul>
 	 * <p>
 	 * See section 8.2.1.9
+	 *
+	 * @see java.sql.DriverManager#getConnection(String, String, String)
+	 * @see javax.sql.DataSource#getConnection(String, String)
 	 */
 	String JAKARTA_JDBC_USER = "jakarta.persistence.jdbc.user";
 
@@ -115,6 +118,9 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * and {@link #JAKARTA_JDBC_USER} to specify how to connect to the database.
 	 * <p>
 	 * See JPA 2 section 8.2.1.9
+	 *
+	 * @see java.sql.DriverManager#getConnection(String, String, String)
+	 * @see javax.sql.DataSource#getConnection(String, String)
 	 */
 	String JAKARTA_JDBC_PASSWORD = "jakarta.persistence.jdbc.password";
 
@@ -256,11 +262,13 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * {@link org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl}.
 	 * <p>
 	 * Possible values are enumerated by {@link java.sql.Connection}:
-	 * {@code NONE}, {@code READ_UNCOMMITTED}, {@code READ_COMMITTED},
+	 * {@code READ_UNCOMMITTED}, {@code READ_COMMITTED},
 	 * {@code REPEATABLE_READ}, {@code SERIALIZABLE}.
 	 * <p>
 	 * If this setting is not explicitly specified, Hibernate does not modify
 	 * the transaction isolation level of the JDBC connection.
+	 *
+	 * @see java.sql.Connection#setTransactionIsolation(int)
 	 */
 	String ISOLATION = "hibernate.connection.isolation";
 
@@ -269,6 +277,8 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * {@link ConnectionProvider} implementation which respects this setting,
 	 * including every built-in implementation except for
 	 * {@link org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl}.
+	 *
+	 * @see java.sql.Connection#setAutoCommit(boolean)
 	 *
 	 * @settingDefault {@code false}
 	 */

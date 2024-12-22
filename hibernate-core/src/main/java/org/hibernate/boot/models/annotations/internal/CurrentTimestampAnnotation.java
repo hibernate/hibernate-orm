@@ -11,6 +11,7 @@ import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.generator.EventType.SOFT_DELETE;
 import static org.hibernate.generator.EventType.UPDATE;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -23,7 +24,7 @@ public class CurrentTimestampAnnotation implements CurrentTimestamp {
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
 	public CurrentTimestampAnnotation(SourceModelBuildingContext modelContext) {
-		this.event = new org.hibernate.generator.EventType[] {INSERT, UPDATE};
+		this.event = new org.hibernate.generator.EventType[] {INSERT, UPDATE, SOFT_DELETE};
 		this.source = org.hibernate.annotations.SourceType.DB;
 	}
 

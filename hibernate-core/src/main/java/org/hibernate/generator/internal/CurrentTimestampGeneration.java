@@ -30,6 +30,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
+import org.hibernate.annotations.SoftDeleteTimestamp;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.dialect.Dialect;
@@ -48,6 +49,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.generator.EventTypeSets.INSERT_AND_UPDATE;
 import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
+import static org.hibernate.generator.EventTypeSets.SOFT_DELETE_ONLY;
 import static org.hibernate.generator.EventTypeSets.fromArray;
 
 /**
@@ -55,23 +57,25 @@ import static org.hibernate.generator.EventTypeSets.fromArray;
  * {@link Dialect#currentTimestamp() current_timestamp} function or the JVM
  * {@linkplain java.time.Clock#instant() current instant}.
  * <p>
- * Underlies the {@link CurrentTimestamp}, {@link CreationTimestamp}, and
- * {@link UpdateTimestamp} annotations.
+ * Underlies the {@link CurrentTimestamp}, {@link CreationTimestamp}, {@link UpdateTimestamp}
+ * and {@link SoftDeleteTimestamp} annotations.
  *
  * @see CurrentTimestamp
  * @see CreationTimestamp
  * @see UpdateTimestamp
+ * @see SoftDeleteTimestamp
  *
  * @since 6.0
  *
  * @author Steve Ebersole
  * @author Gavin King
+ * @author Yongjun Hong
  */
 public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnExecutionGenerator {
 
 	/**
 	 * Configuration property name to set a custom {@link Clock} for Hibernate ORM to use when generating VM based
-	 * timestamp values for e.g. {@link CurrentTimestamp}, {@link CreationTimestamp}, {@link UpdateTimestamp}
+	 * timestamp values for e.g. {@link CurrentTimestamp}, {@link CreationTimestamp}, {@link UpdateTimestamp}, {@link SoftDeleteTimestamp}
 	 * and {@link org.hibernate.type.descriptor.java.VersionJavaType} methods.
 	 *
 	 * @since 6.6
@@ -195,6 +199,11 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	public CurrentTimestampGeneration(UpdateTimestamp annotation, Member member, GeneratorCreationContext context) {
 		delegate = getGeneratorDelegate( annotation.source(), member, context );
 		eventTypes = INSERT_AND_UPDATE;
+	}
+
+	public CurrentTimestampGeneration(SoftDeleteTimestamp annotation, Member member, GeneratorCreationContext context) {
+		delegate = getGeneratorDelegate( annotation.source(), member, context );
+		eventTypes = SOFT_DELETE_ONLY;
 	}
 
 	private static CurrentTimestampGeneratorDelegate getGeneratorDelegate(

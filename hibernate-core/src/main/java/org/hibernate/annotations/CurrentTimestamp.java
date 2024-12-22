@@ -15,6 +15,7 @@ import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.generator.EventType.SOFT_DELETE;
 import static org.hibernate.generator.EventType.UPDATE;
 
 /**
@@ -59,23 +60,27 @@ import static org.hibernate.generator.EventType.UPDATE;
  *
  * @see UpdateTimestamp
  * @see CreationTimestamp
+ * @see SoftDeleteTimestamp
  * @see CurrentTimestampGeneration
  *
  * @since 6.0
  *
  * @author Steve Ebersole
+ * @author Yongjun Hong
  */
 @ValueGenerationType(generatedBy = CurrentTimestampGeneration.class)
 @Retention(RUNTIME)
 @Target({ FIELD, METHOD, ANNOTATION_TYPE })
 public @interface CurrentTimestamp {
 	/**
-	 * Determines when the timestamp is generated. But default, it is updated
-	 * when any SQL {@code insert} or {@code update} statement is executed.
-	 * If it should be generated just once, on the initial SQL {@code insert},
-	 * explicitly specify {@link EventType#INSERT event = INSERT}.
+	 * Determines when the timestamp is generated. By default, it is updated
+	 * when any SQL {@code insert}, {@code update}, or soft-delete operation
+	 * is executed. If it should be generated just once, on the initial SQL
+	 * {@code insert}, explicitly specify {@link EventType#INSERT event = INSERT}.
+	 * For soft-delete operations, {@link EventType#SOFT_DELETE} can be used.
 	 */
-	EventType[] event() default {INSERT, UPDATE};
+	EventType[] event() default {INSERT, UPDATE, SOFT_DELETE};
+
 
 	/**
 	 * Specifies how the timestamp is generated. By default, it is generated

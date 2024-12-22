@@ -6,7 +6,6 @@ package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
 import org.hibernate.annotations.CacheLayout;
-import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.jpa.SpecHints;
@@ -111,14 +110,21 @@ public interface CacheSettings {
 	/**
 	 * The {@link RegionFactory} implementation, either:
 	 * <ul>
-	 *     <li>an instance of {@link RegionFactory},
-	 *     <li>a {@link Class} implementing {@link RegionFactory}, or
-	 *     <li>the name of a class implementing {@link RegionFactory}.
+	 *     <li>a short strategy name, for example, {@code jcache} or
+	 *         {@code infinispan},
+	 *     <li>an instance of {@code RegionFactory},
+	 *     <li>a {@link Class} object representing a class that implements
+	 *         {@code RegionFactory}, or
+	 *     <li>the name of a class implementing {@code RegionFactory}.
 	 * </ul>
-	 * <p>
-	 * Defaults to {@link NoCachingRegionFactory}, so that caching is disabled.
+	 *
+	 * @settingDefault {@link org.hibernate.cache.internal.NoCachingRegionFactory},
+	 *                 so that caching is disabled.
 	 *
 	 * @see #USE_SECOND_LEVEL_CACHE
+	 *
+	 * @apiNote The term {@code "class"} appears in the setting name due to legacy reasons;
+	 *          however it can accept instances.
 	 */
 	String CACHE_REGION_FACTORY = "hibernate.cache.region.factory_class";
 

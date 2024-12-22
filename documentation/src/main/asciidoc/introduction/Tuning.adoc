@@ -36,6 +36,20 @@ The connection pool built in to Hibernate is suitable for testing, but isn't int
 Instead, Hibernate supports several different connection pools, including our favorite, Agroal.
 
 Hibernate will automatically make use of `AgroalConnectionProvider` if the module `org.hibernate.orm:hibernate-agroal` is available at runtime.
+So just add it as a runtime dependency, and you're all set.
+
+Well, actually, that's a bit fragile, since Hibernate silently falls back to using the default connection pool if Agroal happens to be missing at runtime.
+Perhaps it's better to set this configuration property:
+
+[%breakable,cols="37,~"]
+|===
+| Configuration property name | Purpose
+
+| link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#CONNECTION_PROVIDER[`hibernate.connection.provider_class`] | Explicitly specify a link:{doc-javadoc-url}/org/hibernate/engine/jdbc/connections/spi/ConnectionProvider.html[connection pool], for example, `agroal`, `hikaricp`, `c3p0`, or `oracleucp`.
+|===
+
+TIP: You can set `hibernate.connection.provider_class` to `agroal` so that Hibernate fails at startup if Agroal is missing.
+
 
 To properly configure Agroal, you'll need to set some extra configuration properties, in addition to the settings we already saw in <<basic-configuration-settings>>.
 Properties with the prefix `hibernate.agroal` are passed through to Agroal:
@@ -100,8 +114,10 @@ All we need to do is set a single property:
 |===
 | Configuration property name | Purpose | Alternative
 
-| `hibernate.jdbc.batch_size` | Maximum batch size for SQL statement batching | `setJdbcBatchSize()`
+| link:{doc-javadoc-url}/org/hibernate/cfg/BatchSettings.html#STATEMENT_BATCH_SIZE[`hibernate.jdbc.batch_size`] | Maximum batch size for SQL statement batching | `setJdbcBatchSize()`
 |===
+
+That said, batching is rarely the most convenient or most efficient way to update or delete many rows at once.
 
 [TIP]
 ====

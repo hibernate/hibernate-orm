@@ -234,11 +234,28 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * Specifies a {@link ConnectionProvider} to use for obtaining JDBC connections,
 	 * either:
 	 * <ul>
+	 *     <li>a short strategy name like {@code agroal}, {@code hikaricp},
+	 *         {@code c3p0}, or {@code ucp},
 	 *     <li>an instance of {@code ConnectionProvider},
-	 *     <li>a {@link Class} representing a class that implements
+	 *     <li>a {@link Class} object representing a class that implements
 	 *         {@code ConnectionProvider}, or
 	 *     <li>the name of a class that implements {@code ConnectionProvider}.
 	 * </ul>
+	 * <p>
+	 * If this property is not explicitly set, a connection provider is chosen
+	 * automatically:
+	 * <ul>
+	 * <li>if {@link #JAKARTA_JTA_DATASOURCE} or {@link #JAKARTA_NON_JTA_DATASOURCE}
+	 *     is set, {@linkplain org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl
+	 *     a datasource-based implementation} is used;
+	 * <li>otherwise, a {@code ConnectionProvider} is loaded automatically as a
+	 *     {@linkplain java.util.ServiceLoader Java service};
+	 * <li>but if no service is found, or if more than one service is available,
+	 *     {@linkplain org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl
+	 *     a default implementation} is used as a fallback.
+	 * </ul>
+	 * <p>
+	 * The default implementation is not recommended for use in production.
 	 *
 	 * @apiNote The term {@code "class"} appears in the setting name due to legacy reasons;
 	 *          however it can accept instances.

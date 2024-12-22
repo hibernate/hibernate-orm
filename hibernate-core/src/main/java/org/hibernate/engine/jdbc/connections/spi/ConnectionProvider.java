@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.spi;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 

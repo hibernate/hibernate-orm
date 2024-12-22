@@ -156,11 +156,7 @@ public class ComponentPropertyMapper extends AbstractPropertyMapper implements C
 							);
 							i++;
 						}
-						subObj = embeddableInstantiator.instantiate(
-								() -> values,
-								versionsReader.getSessionImplementor()
-										.getSessionFactory()
-						);
+						subObj = embeddableInstantiator.instantiate( () -> values );
 					}
 					else {
 						subObj = ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
@@ -221,11 +217,7 @@ public class ComponentPropertyMapper extends AbstractPropertyMapper implements C
 							);
 							i++;
 						}
-						subObj = embeddableInstantiator.instantiate(
-								() -> values,
-								versionsReader.getSessionImplementor()
-										.getSessionFactory()
-						);
+						subObj = embeddableInstantiator.instantiate( () -> values );
 					}
 					else {
 						subObj = ReflectHelper.getDefaultConstructor( componentClass ).newInstance();

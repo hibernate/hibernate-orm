@@ -4,24 +4,7 @@
  */
 package org.hibernate.graalvm.internal;
 
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
-import org.hibernate.graph.internal.parse.SubGraphGenerator;
-import org.hibernate.graph.spi.AttributeNodeImplementor;
-import org.hibernate.graph.spi.GraphImplementor;
-import org.hibernate.query.hql.spi.DotIdentifierConsumer;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
-import org.hibernate.query.sqm.spi.ParameterDeclarationContext;
-import org.hibernate.query.sqm.sql.FromClauseIndex;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.SqlAstProcessingState;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor;
 import org.hibernate.type.EnumType;
 
@@ -64,7 +47,6 @@ final class StaticClassLists {
 				//Eventlisteners need to be registered for reflection to allow creation via Array#newInstance ;
 				// types need to be in synch with those declared in org.hibernate.event.spi.EventType
 				org.hibernate.event.spi.LoadEventListener[].class,
-				org.hibernate.event.spi.ResolveNaturalIdEventListener[].class,
 				org.hibernate.event.spi.InitializeCollectionEventListener[].class,
 				org.hibernate.event.spi.PersistEventListener[].class,
 				org.hibernate.event.spi.MergeEventListener[].class,
@@ -94,25 +76,6 @@ final class StaticClassLists {
 				org.hibernate.event.spi.PostCollectionRecreateEventListener[].class,
 				org.hibernate.event.spi.PostCollectionRemoveEventListener[].class,
 				org.hibernate.event.spi.PostCollectionUpdateEventListener[].class,
-				//And other array types, necessary for allocation of generified instances of org.hibernate.internal.util.collections.StandardStack:
-				//TODO can this list be tested for consistency with the core module? Or generated? e.g. could use Jandex?
-				AttributeNodeImplementor[].class,
-				Clause[].class,
-				DotIdentifierConsumer[].class,
-				FetchParent[].class,
-				FromClauseIndex[].class,
-				Function[].class,
-				GraphImplementor[].class,
-				JdbcValuesSourceProcessingState[].class,
-				List[].class,
-				Map.Entry[].class,
-				ParameterDeclarationContext[].class,
-				QueryPart[].class,
-				SqlAstProcessingState[].class,
-				SqmCreationProcessingState[].class,
-				Statement[].class,
-				SubGraphGenerator[].class,
-				Supplier[].class,
 		};
 	}
 

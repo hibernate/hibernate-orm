@@ -61,7 +61,7 @@ import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.spi.JavaTypeRegistration;
 import org.hibernate.boot.models.spi.JdbcTypeRegistration;
 import org.hibernate.boot.models.spi.JpaEventListener;
-import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
+import org.hibernate.boot.models.JpaEventListenerStyle;
 import org.hibernate.boot.models.spi.NamedNativeQueryRegistration;
 import org.hibernate.boot.models.spi.NamedQueryRegistration;
 import org.hibernate.boot.models.spi.NamedStoredProcedureQueryRegistration;

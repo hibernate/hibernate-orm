@@ -11,7 +11,6 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.SoftDeletable;
@@ -32,6 +31,7 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
 import static org.hibernate.internal.util.StringHelper.coalesce;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
 
 /**
@@ -93,7 +93,7 @@ public class SoftDeleteHelper {
 		softDeleteColumn.setNullable( false );
 		softDeleteColumn.setUnique( false );
 		softDeleteColumn.setOptions( softDeleteConfig.options() );
-		if ( StringHelper.isEmpty( softDeleteConfig.comment() ) ) {
+		if ( isBlank( softDeleteConfig.comment() ) ) {
 			softDeleteColumn.setComment( "Soft-delete indicator" );
 		}
 		else {

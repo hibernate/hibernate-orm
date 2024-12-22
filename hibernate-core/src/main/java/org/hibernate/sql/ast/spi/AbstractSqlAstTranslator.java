@@ -32,7 +32,6 @@ import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.LazySessionWrapperOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.MathHelper;
@@ -58,10 +57,10 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.internal.NullPrecedenceHelper;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
@@ -246,7 +245,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	/**
 	 * When emulating the recursive WITH clause subclauses SEARCH and CYCLE,
-	 * we need to build a string path and some database like MySQL require that
+	 * we need to build a string path and some databases like MySQL require that
 	 * we cast the expression to a char with certain size.
 	 * To estimate the size, we need to assume a certain max recursion depth.
 	 */
@@ -304,9 +303,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private final ParameterMarkerStrategy parameterMarkerStrategy;
 
 
-	private final Stack<Clause> clauseStack = new StandardStack<>( Clause.class );
-	private final Stack<QueryPart> queryPartStack = new StandardStack<>( QueryPart.class );
-	private final Stack<Statement> statementStack = new StandardStack<>( Statement.class );
+	private final Stack<Clause> clauseStack = new StandardStack<>();
+	private final Stack<QueryPart> queryPartStack = new StandardStack<>();
+	private final Stack<Statement> statementStack = new StandardStack<>();
 
 	private final Dialect dialect;
 	private final Set<String> affectedTableNames = new HashSet<>();
@@ -330,7 +329,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	// See #visitCteContainer for details about the usage.
 	private int withClauseRecursiveIndex = -1;
 	private transient FunctionRenderer castFunction;
-	private transient LazySessionWrapperOptions lazySessionWrapperOptions;
 	private transient BasicType<Integer> integerType;
 	private transient BasicType<String> stringType;
 	private transient BasicType<Boolean> booleanType;
@@ -373,10 +371,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected WrapperOptions getWrapperOptions() {
-		if ( lazySessionWrapperOptions == null ) {
-			lazySessionWrapperOptions = new LazySessionWrapperOptions( sessionFactory );
-		}
-		return lazySessionWrapperOptions;
+		return sessionFactory.getWrapperOptions();
 	}
 
 	public BasicType<Integer> getIntegerType() {
@@ -419,10 +414,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void cleanup() {
-		if ( lazySessionWrapperOptions != null ) {
-			lazySessionWrapperOptions.cleanup();
-			lazySessionWrapperOptions = null;
-		}
 		this.jdbcParameterBindings = null;
 		this.lockOptions = null;
 		this.limit = null;

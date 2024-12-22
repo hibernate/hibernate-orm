@@ -10,7 +10,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -37,7 +37,8 @@ public class DB2XmlTableFunction extends XmlTableFunction {
 	protected void renderXmlTable(SqlAppender sqlAppender, XmlTableArguments arguments, AnonymousTupleTableGroupProducer tupleType, String tableIdentifierVariable, SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "xmltable(" );
 		// DB2 doesn't like parameters for the xpath expression
-		walker.render( arguments.xpath(), SqlAstNodeRenderingMode.INLINE_PARAMETERS );
+		final String xpath = walker.getLiteralValue( arguments.xpath() );
+		sqlAppender.appendSingleQuoteEscapedString( "$d" + xpath );
 		sqlAppender.appendSql( " passing " );
 		if ( !arguments.isXmlType() ) {
 			sqlAppender.appendSql( "xmlparse(document " );
@@ -45,8 +46,9 @@ public class DB2XmlTableFunction extends XmlTableFunction {
 		// DB2 needs parameters to be casted here
 		walker.render( arguments.xmlDocument(), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		if ( !arguments.isXmlType() ) {
-			sqlAppender.appendSql( ")" );
+			sqlAppender.appendSql( ')' );
 		}
+		sqlAppender.appendSql( " as \"d\"" );
 		renderColumns( sqlAppender, arguments.columnsClause(), walker );
 		sqlAppender.appendSql( ')' );
 	}
@@ -69,7 +71,10 @@ public class DB2XmlTableFunction extends XmlTableFunction {
 	}
 
 	static boolean isBoolean(JdbcMapping type) {
-		return type.getJdbcType().isBoolean();
+		return switch ( type.getCastType() ) {
+			case BOOLEAN, TF_BOOLEAN, YN_BOOLEAN, INTEGER_BOOLEAN -> true;
+			default -> false;
+		};
 	}
 
 	private static class DB2XmlTableSetReturningFunctionTypeResolver extends XmlTableSetReturningFunctionTypeResolver {

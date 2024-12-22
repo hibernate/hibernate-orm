@@ -4,6 +4,7 @@
  */
 package org.hibernate.processor.util;
 
+import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.MetaModelGenerationException;
@@ -29,16 +30,14 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.tools.Diagnostic;
-
-import jakarta.persistence.AccessType;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 import static java.beans.Introspector.decapitalize;
+import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.processor.util.AccessTypeInformation.DEFAULT_ACCESS_TYPE;
 import static org.hibernate.processor.util.Constants.ACCESS;
 import static org.hibernate.processor.util.Constants.BASIC;
@@ -57,6 +56,7 @@ import static org.hibernate.processor.util.Constants.ONE_TO_MANY;
 import static org.hibernate.processor.util.Constants.ONE_TO_ONE;
 import static org.hibernate.processor.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.StringUtil.isProperty;
+import static org.hibernate.processor.util.StringUtil.removeDollar;
 
 /**
  * Utility class.
@@ -129,12 +129,11 @@ public final class TypeUtils {
 	}
 
 	public static @Nullable TypeElement getSuperclassTypeElement(TypeElement element) {
-		final TypeMirror superClass = element.getSuperclass();
+		final TypeMirror superclass = element.getSuperclass();
 		//superclass of Object is of NoType which returns some other kind
-		if ( superClass.getKind() == TypeKind.DECLARED ) {
-			//F..king Ch...t Have those people used their horrible APIs even once?
-			final Element superClassElement = ( (DeclaredType) superClass ).asElement();
-			return (TypeElement) superClassElement;
+		if ( superclass.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) superclass;
+			return (TypeElement) declaredType.asElement();
 		}
 		else {
 			return null;
@@ -191,12 +190,7 @@ public final class TypeUtils {
 				return context.getTypeUtils().getDeclaredType(
 						typeElement,
 						declaredType.getTypeArguments().stream()
-								.map( new Function<TypeMirror, TypeMirror>() {
-											@Override
-											public @Nullable TypeMirror apply(TypeMirror arg) {
-												return extractClosestRealType( arg, context, beingVisited );
-											}
-										} )
+								.map( arg -> extractClosestRealType( arg, context, beingVisited ) )
 								.toArray( TypeMirror[]::new )
 				);
 			default:
@@ -466,14 +460,11 @@ public final class TypeUtils {
 	}
 
 	private static @Nullable AccessType getAccessTypeOfIdAnnotation(Element element) {
-		switch ( element.getKind() ) {
-			case FIELD:
-				return AccessType.FIELD;
-			case METHOD:
-				return AccessType.PROPERTY;
-			default:
-				return null;
-		}
+		return switch ( element.getKind() ) {
+			case FIELD -> AccessType.FIELD;
+			case METHOD -> AccessType.PROPERTY;
+			default -> null;
+		};
 	}
 
 	private static boolean isIdAnnotation(AnnotationMirror annotationMirror) {
@@ -522,26 +513,17 @@ public final class TypeUtils {
 	}
 
 	public static boolean primitiveClassMatchesKind(Class<?> itemType, TypeKind kind) {
-		switch (kind) {
-			case SHORT:
-				return itemType.equals(Short.class);
-			case INT:
-				return itemType.equals(Integer.class);
-			case LONG:
-				return itemType.equals(Long.class);
-			case BOOLEAN:
-				return itemType.equals(Boolean.class);
-			case FLOAT:
-				return itemType.equals(Float.class);
-			case DOUBLE:
-				return itemType.equals(Double.class);
-			case CHAR:
-				return itemType.equals(Character.class);
-			case BYTE:
-				return itemType.equals(Byte.class);
-			default:
-				return false;
-		}
+		return switch ( kind ) {
+			case SHORT -> itemType.equals( Short.class );
+			case INT -> itemType.equals( Integer.class );
+			case LONG -> itemType.equals( Long.class );
+			case BOOLEAN -> itemType.equals( Boolean.class );
+			case FLOAT -> itemType.equals( Float.class );
+			case DOUBLE -> itemType.equals( Double.class );
+			case CHAR -> itemType.equals( Character.class );
+			case BYTE -> itemType.equals( Byte.class );
+			default -> false;
+		};
 	}
 
 	public static boolean isPropertyGetter(ExecutableType executable, Element element) {
@@ -602,7 +584,7 @@ public final class TypeUtils {
 				return elementsUtil.getName(decapitalize(name.substring(3))).toString();
 			}
 			else if ( name.startsWith( "is" ) ) {
-				return (elementsUtil.getName(decapitalize(name.substring(2)))).toString();
+				return elementsUtil.getName(decapitalize(name.substring(2))).toString();
 			}
 			return elementsUtil.getName(decapitalize(name)).toString();
 		}
@@ -611,17 +593,16 @@ public final class TypeUtils {
 		}
 	}
 
-	public static @Nullable String findMappedSuperClass(Metamodel entity, Context context) {
+	public static @Nullable Element findMappedSuperElement(Metamodel entity, Context context) {
 		final Element element = entity.getElement();
-		if ( element instanceof TypeElement ) {
-			final TypeElement typeElement = (TypeElement) element;
+		if ( element instanceof TypeElement typeElement ) {
 			TypeMirror superClass = typeElement.getSuperclass();
 			//superclass of Object is of NoType which returns some other kind
 			while ( superClass.getKind() == TypeKind.DECLARED ) {
 				final DeclaredType declaredType = (DeclaredType) superClass;
 				final TypeElement superClassElement = (TypeElement) declaredType.asElement();
 				if ( extendsSuperMetaModel( superClassElement, entity.isMetaComplete(), context ) ) {
-					return superClassElement.getQualifiedName().toString();
+					return superClassElement;
 				}
 				superClass = superClassElement.getSuperclass();
 			}
@@ -654,6 +635,46 @@ public final class TypeUtils {
 			|| !entityMetaComplete && containsAnnotation( superClassElement, ENTITY, MAPPED_SUPERCLASS );
 	}
 
+	public static boolean implementsInterface(TypeElement type, String interfaceName) {
+		for ( TypeMirror iface : type.getInterfaces() ) {
+			if ( iface.getKind() == TypeKind.DECLARED ) {
+				final DeclaredType declaredType = (DeclaredType) iface;
+				final TypeElement typeElement = (TypeElement) declaredType.asElement();
+				if ( typeElement.getQualifiedName().contentEquals( interfaceName )
+						|| implementsInterface( typeElement, interfaceName ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public static boolean extendsClass(TypeElement type, String className) {
+		TypeMirror superclass = type.getSuperclass();
+		while ( superclass != null && superclass.getKind() == TypeKind.DECLARED  ) {
+			final DeclaredType declaredType = (DeclaredType) superclass;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			if ( typeElement.getQualifiedName().contentEquals( className ) ) {
+				return true;
+			}
+			superclass = typeElement.getSuperclass();
+		}
+		return false;
+	}
+
+	public static boolean isMemberType(Element element) {
+		return element.getEnclosingElement() instanceof TypeElement;
+	}
+
+	public static String getGeneratedClassFullyQualifiedName(TypeElement element, String packageName, boolean jakartaDataStyle) {
+		final StringBuilder builder = new StringBuilder( packageName.isEmpty() ? "" : packageName + "." );
+		for ( String s : split( ".", element.getQualifiedName().toString().substring( builder.length() ) ) ) {
+			final String part = removeDollar( s );
+			builder.append( jakartaDataStyle ? '_' + part : part + '_' );
+		}
+		return builder.toString();
+	}
+
 	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor8<@Nullable TypeElement, Element> {
 		private final Context context;
 
@@ -665,7 +686,7 @@ public final class TypeUtils {
 		public @Nullable TypeElement visitDeclared(DeclaredType declaredType, Element element) {
 			final TypeElement returnedElement = (TypeElement)
 					context.getTypeUtils().asElement( declaredType );
-			return containsAnnotation( NullnessUtil.castNonNull( returnedElement ), EMBEDDABLE ) ? returnedElement : null;
+			return containsAnnotation( castNonNull( returnedElement ), EMBEDDABLE ) ? returnedElement : null;
 		}
 
 		@Override

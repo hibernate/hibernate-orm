@@ -31,7 +31,7 @@ import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
-import org.hibernate.boot.models.categorize.internal.ClassLoaderServiceLoading;
+import org.hibernate.boot.models.internal.ClassLoaderServiceLoading;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.internal.ModelsHelper;

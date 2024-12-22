@@ -71,7 +71,7 @@ import org.hibernate.query.criteria.JpaJsonValueNode;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.criteria.JpaXmlTableColumnNode;
-import org.hibernate.query.derived.AnonymousTupleType;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -193,6 +193,7 @@ import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
@@ -307,8 +308,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private final Stack<DotIdentifierConsumer> dotIdentifierConsumerStack;
 
-	private final Stack<ParameterDeclarationContext> parameterDeclarationContextStack = new StandardStack<>( ParameterDeclarationContext.class );
-	private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>( SqmCreationProcessingState.class );
+	private final Stack<ParameterDeclarationContext> parameterDeclarationContextStack = new StandardStack<>();
+	private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>();
 
 	private final BasicDomainType<Integer> integerDomainType;
 	private final JavaType<List<?>> listJavaType;
@@ -381,7 +382,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		this.creationContext = creationContext;
 		this.query = query;
 		this.dotIdentifierConsumerStack = new StandardStack<>(
-				DotIdentifierConsumer.class,
 				new BasicDotIdentifierConsumer( this )
 		);
 		this.parameterStyle = creationOptions.useStrictJpaCompliance()
@@ -1241,11 +1241,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private EntityDomainType<R> getResultEntity() {
 		final JpaMetamodel jpaMetamodel = creationContext.getJpaMetamodel();
 		if ( expectedResultEntity != null ) {
-			final EntityDomainType<?> entityDescriptor = jpaMetamodel.entity( expectedResultEntity );
+			final EntityDomainType<?> entityDescriptor = jpaMetamodel.findEntityType( expectedResultEntity );
 			if ( entityDescriptor == null ) {
 				throw new SemanticException( "Query has no 'from' clause, and the result type '"
 						+ expectedResultEntity + "' is not an entity type", query );
 			}
+			//noinspection unchecked
 			return (EntityDomainType<R>) entityDescriptor;
 		}
 		else if ( expectedResultType != null ) {
@@ -3390,12 +3391,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 			final SqmExpression<?> arrayExpr = (SqmExpression<?>) arrayInListContext.expression().accept( this );
 			final SqmExpressible<?> arrayExpressible = arrayExpr.getExpressible();
-			if ( arrayExpressible != null && !( arrayExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
-				throw new SemanticException(
-						"Right operand for in-array predicate must be a basic plural type expression, but found: "
+			if ( arrayExpressible != null ) {
+				if ( !(arrayExpressible.getSqmType() instanceof BasicPluralType<?, ?> pluralType) ) {
+					throw new SemanticException(
+							"Right operand for in-array predicate must be a basic plural type expression, but found: "
 								+ arrayExpressible.getSqmType(),
-						query
-				);
+							query
+					);
+				}
+				testExpression.applyInferableType( pluralType.getElementType() );
 			}
 			final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_contains" ).generateSqmExpression(
 					asList( arrayExpr, testExpression ),
@@ -5761,7 +5765,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final List<HqlParser.ExpressionContext> slicedFragments = ctx.slicedPathAccessFragment().expression();
 			final SqmTypedNode<?> lhs = (SqmTypedNode<?>) visitSimplePath( ctx.simplePath() );
 			final SqmExpressible<?> lhsExpressible = lhs.getExpressible();
-			if ( lhsExpressible != null && lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
+			if ( lhsExpressible == null ) {
+				throw new SemanticException( "Slice operator applied to expression of unknown type", query );
+			}
+			else if ( lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
 				return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
 						List.of(
 								lhs,
@@ -5772,7 +5779,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						creationContext.getQueryEngine()
 				);
 			}
-			else {
+			else if ( lhsExpressible.getRelationalJavaType() instanceof StringJavaType
+					&& !(lhs instanceof SqmPluralValuedSimplePath) ) {
 				final SqmExpression<?> start = (SqmExpression<?>) slicedFragments.get( 0 ).accept( this );
 				final SqmExpression<?> end = (SqmExpression<?>) slicedFragments.get( 1 ).accept( this );
 				return getFunctionDescriptor( "substring" ).generateSqmExpression(
@@ -5800,6 +5808,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						null,
 						creationContext.getQueryEngine()
 				);
+			}
+			else {
+				throw new SemanticException( "Slice operator applied to expression which is not a string or SQL array", query );
 			}
 		}
 		else {

@@ -326,6 +326,17 @@ public interface MappingSettings {
 	String XML_FORMAT_MAPPER = "hibernate.type.xml_format_mapper";
 
 	/**
+	 * Specifies whether to use the legacy provider specific and non-portable XML format for collections and byte arrays
+	 * for XML serialization/deserialization.
+	 * <p>
+	 * {@code false} by default. This property only exists for backwards compatibility.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	String XML_FORMAT_MAPPER_LEGACY_FORMAT = "hibernate.type.xml_format_mapper.legacy_format";
+
+	/**
 	 * Configurable control over how to handle {@code Byte[]} and {@code Character[]} types
 	 * encountered in the application domain model.  Allowable semantics are defined by
 	 * {@link WrapperArrayHandling}.  Accepted values include:<ol>
@@ -496,7 +507,17 @@ public interface MappingSettings {
 	String TRANSFORM_HBM_XML_FEATURE_HANDLING = "hibernate.transform_hbm_xml.unsupported_feature_handling";
 
 	/**
+	 * Specifies that Hibernate should always restrict by discriminator values in
+	 * SQL {@code select} statements, even when querying the root entity of an
+	 * entity inheritance hierarchy.
+	 * <p>
+	 * By default, Hibernate only restricts by discriminator values when querying
+	 * a subtype, or when the root entity is explicitly annotated
+	 * {@link org.hibernate.annotations.DiscriminatorOptions#force
+	 * DiscriminatorOptions(force=true)}.
+	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitForcingOfDiscriminatorsInSelect
+	 * @see org.hibernate.annotations.DiscriminatorOptions#force
 	 *
 	 * @settingDefault {@code false}
 	 */

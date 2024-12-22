@@ -63,10 +63,7 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
-import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.internal.Helper;
-import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
@@ -103,7 +100,6 @@ import static org.hibernate.cfg.AvailableSettings.IN_CLAUSE_PARAMETER_PADDING;
 import static org.hibernate.cfg.AvailableSettings.JDBC_TIME_ZONE;
 import static org.hibernate.cfg.AvailableSettings.JPA_CALLBACKS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
-import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
 import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
 import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
@@ -169,6 +165,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private Object validatorFactoryReference;
 	private FormatMapper jsonFormatMapper;
 	private FormatMapper xmlFormatMapper;
+	private final boolean xmlFormatMapperLegacyFormatEnabled;
 
 	// SessionFactory behavior
 	private final boolean jpaBootstrap;
@@ -326,7 +323,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 		this.xmlFormatMapper = determineXmlFormatMapper(
 				configurationSettings.get( AvailableSettings.XML_FORMAT_MAPPER ),
-				strategySelector
+				strategySelector,
+				this.xmlFormatMapperLegacyFormatEnabled = context.getMetadataBuildingOptions().isXmlFormatMapperLegacyFormatEnabled()
 		);
 
 		this.sessionFactoryName = (String) configurationSettings.get( SESSION_FACTORY_NAME );
@@ -358,8 +356,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				? null
 				: strategySelector.selectStrategyImplementor( SessionEventListener.class, autoSessionEventsListenerName );
 
-		final boolean logSessionMetrics = configurationService.getSetting( LOG_SESSION_METRICS, BOOLEAN, statisticsEnabled );
-		this.baselineSessionEventsListenerBuilder = new BaselineSessionEventsListenerBuilder( logSessionMetrics, autoSessionEventsListener );
+		this.baselineSessionEventsListenerBuilder = new BaselineSessionEventsListenerBuilder( autoSessionEventsListener );
 
 		this.customEntityDirtinessStrategy = strategySelector.resolveDefaultableStrategy(
 				CustomEntityDirtinessStrategy.class,
@@ -378,36 +375,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				configurationSettings.get( MULTI_TENANT_IDENTIFIER_RESOLVER )
 		);
 		if ( this.currentTenantIdentifierResolver == null ) {
-			final BeanContainer beanContainer = Helper.allowExtensionsInCdi( serviceRegistry ) ? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer() : null;
-			if (beanContainer != null) {
-				this.currentTenantIdentifierResolver = beanContainer.getBean(
-						CurrentTenantIdentifierResolver.class,
-						new BeanContainer.LifecycleOptions() {
-							@Override
-							public boolean canUseCachedReferences() {
-								return true;
-							}
-
-							@Override
-							public boolean useJpaCompliantCreation() {
-								return false;
-							}
-						},
-						new BeanInstanceProducer() {
-
-							@Override
-							public <B> B produceBeanInstance(Class<B> beanType) {
-								return null;
-							}
-
-							@Override
-							public <B> B produceBeanInstance(String name, Class<B> beanType) {
-								return null;
-							}
-
-						}
-				).getBeanInstance();
-			}
+			this.currentTenantIdentifierResolver = Helper.getBean(
+				Helper.getBeanContainer( serviceRegistry ),
+				CurrentTenantIdentifierResolver.class,
+				true,
+				false,
+				null
+			);
 		}
 
 		this.delayBatchFetchLoaderCreations = configurationService.getSetting( DELAY_ENTITY_LOADER_CREATIONS, BOOLEAN, true );
@@ -892,13 +866,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		);
 	}
 
-	private static FormatMapper determineXmlFormatMapper(Object setting, StrategySelector strategySelector) {
+	private static FormatMapper determineXmlFormatMapper(Object setting, StrategySelector strategySelector, boolean legacyFormat) {
 		return strategySelector.resolveDefaultableStrategy(
 				FormatMapper.class,
 				setting,
 				(Callable<FormatMapper>) () -> {
-					final FormatMapper jacksonFormatMapper = getXMLJacksonFormatMapperOrNull();
-					return jacksonFormatMapper != null ? jacksonFormatMapper : new JaxbXmlFormatMapper();
+					final FormatMapper jacksonFormatMapper = getXMLJacksonFormatMapperOrNull( legacyFormat );
+					return jacksonFormatMapper != null ? jacksonFormatMapper : new JaxbXmlFormatMapper( legacyFormat );
 				}
 		);
 	}
@@ -1356,6 +1330,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public FormatMapper getXmlFormatMapper() {
 		return xmlFormatMapper;
+	}
+
+	@Override
+	public boolean isXmlFormatMapperLegacyFormatEnabled() {
+		return xmlFormatMapperLegacyFormatEnabled;
 	}
 
 	@Override

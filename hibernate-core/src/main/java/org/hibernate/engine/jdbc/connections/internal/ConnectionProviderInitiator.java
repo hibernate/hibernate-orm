@@ -17,14 +17,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.internal.Helper;
-import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import static java.sql.Connection.TRANSACTION_NONE;
@@ -44,9 +41,9 @@ import static org.hibernate.cfg.JdbcSettings.ISOLATION;
 import static org.hibernate.cfg.JdbcSettings.POOL_SIZE;
 import static org.hibernate.cfg.JdbcSettings.URL;
 import static org.hibernate.cfg.JdbcSettings.USER;
-import static org.hibernate.cfg.ProxoolSettings.PROXOOL_CONFIG_PREFIX;
 import static org.hibernate.cfg.SchemaToolingSettings.ENABLE_SYNONYMS;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl.isMultiTenancyEnabled;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
@@ -70,19 +67,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	public static final String C3P0_STRATEGY = "c3p0";
 
 	/**
-	 * The strategy for proxool connection pooling
-	 */
-	public static final String PROXOOL_STRATEGY = "proxool";
-
-	/**
 	 * The strategy for hikari connection pooling
 	 */
 	public static final String HIKARI_STRATEGY = "hikari";
-
-	/**
-	 * The strategy for vibur connection pooling
-	 */
-	public static final String VIBUR_STRATEGY = "vibur";
 
 	/**
 	 * The strategy for oracle ucp connection pooling
@@ -108,7 +95,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return null;
 		}
 
-		final BeanContainer beanContainer = Helper.allowExtensionsInCdi( registry ) ? registry.requireService( ManagedBeanRegistry.class ).getBeanContainer() : null;
+		final BeanContainer beanContainer = Helper.getBeanContainer( registry );
 		final StrategySelector strategySelector = registry.requireService( StrategySelector.class );
 		final Object explicitSetting = configurationValues.get( CONNECTION_PROVIDER );
 		if ( explicitSetting != null ) {
@@ -165,14 +152,8 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		else if ( hasConfiguration( configurationValues, C3P0_CONFIG_PREFIX ) ) {
 			return instantiateProvider( strategySelector, C3P0_STRATEGY );
 		}
-		else if (hasConfiguration( configurationValues, PROXOOL_CONFIG_PREFIX )) {
-			return instantiateProvider( strategySelector, PROXOOL_STRATEGY );
-		}
 		else if ( hasConfiguration( configurationValues, HIKARI_CONFIG_PREFIX ) ) {
 			return instantiateProvider( strategySelector, HIKARI_STRATEGY );
-		}
-		else if ( hasConfiguration( configurationValues, "hibernate.vibur" ) ) {
-			return instantiateProvider( strategySelector, VIBUR_STRATEGY );
 		}
 		else if (hasConfiguration( configurationValues, "hibernate.oracleucp" ) ) {
 			return instantiateProvider( strategySelector, UCP_STRATEGY );
@@ -185,33 +166,13 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 		else {
 			if (beanContainer != null) {
-				return beanContainer.getBean(
-						ConnectionProvider.class,
-						new BeanContainer.LifecycleOptions() {
-							@Override
-							public boolean canUseCachedReferences() {
-								return true;
-							}
-
-							@Override
-							public boolean useJpaCompliantCreation() {
-								return true;
-							}
-						},
-						new BeanInstanceProducer() {
-
-							@Override
-							public <B> B produceBeanInstance(Class<B> beanType) {
-								return (B) noAppropriateConnectionProvider();
-							}
-
-							@Override
-							public <B> B produceBeanInstance(String name, Class<B> beanType) {
-								return (B) noAppropriateConnectionProvider();
-							}
-
-						}
-				).getBeanInstance();
+				return Helper.getBean(
+					beanContainer,
+					ConnectionProvider.class,
+					true,
+					true,
+					this::noAppropriateConnectionProvider
+				);
 			}
 			else {
 				return noAppropriateConnectionProvider();
@@ -236,21 +197,20 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	private ConnectionProvider instantiateExplicitConnectionProvider(Class<?> providerClass, BeanContainer beanContainer) {
 		try {
 			if ( beanContainer != null ) {
-				return (ConnectionProvider) beanContainer.getBean(
-						providerClass,
-						new BeanContainer.LifecycleOptions() {
-							@Override
-							public boolean canUseCachedReferences() {
-								return true;
-							}
-
-							@Override
-							public boolean useJpaCompliantCreation() {
-								return true;
-							}
-						},
-						FallbackBeanInstanceProducer.INSTANCE
-				).getBeanInstance();
+				return Helper.getBean(
+					beanContainer,
+					providerClass,
+					true,
+					true,
+					() -> {
+						try {
+							return (ConnectionProvider) providerClass.getConstructor().newInstance();
+						}
+						catch (Exception e) {
+							throw new HibernateException( "Could not instantiate connection provider [" + providerClass.getName() + "]", e );
+						}
+					}
+				);
 			}
 			else {
 				return (ConnectionProvider) providerClass.getConstructor().newInstance();
@@ -366,26 +326,35 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return null;
 		}
 		else if ( setting instanceof Number number ) {
-			return number.intValue();
+			final int isolationLevel = number.intValue();
+			checkIsolationLevel( isolationLevel );
+			return isolationLevel;
 		}
 		else {
 			final String string = setting.toString();
-			if ( StringHelper.isEmpty( string ) ) {
+			if ( isBlank( string ) ) {
 				return null;
 			}
 			else if ( ISOLATION_VALUE_MAP.containsKey( string ) ) {
 				return ISOLATION_VALUE_MAP.get( string );
 			}
 			else {
-				// it could be a String representation of the isolation numeric value...
+				// it could be a String representation of the isolation numeric value
 				try {
-					return Integer.valueOf( string );
+					final int isolationLevel = Integer.parseInt( string );
+					checkIsolationLevel( isolationLevel );
+					return isolationLevel;
 				}
 				catch (NumberFormatException ignore) {
+					throw new ConnectionProviderConfigurationException( "Unknown transaction isolation level: '" + string + "'" );
 				}
-
-				throw new HibernateException("Could not interpret transaction isolation setting [" + setting + "]");
 			}
+		}
+	}
+
+	private static void checkIsolationLevel(int isolationLevel) {
+		if ( !ISOLATION_VALUE_CONSTANT_NAME_MAP.containsKey( isolationLevel ) ) {
+			throw new ConnectionProviderConfigurationException( "Unknown transaction isolation level: " + isolationLevel );
 		}
 	}
 
@@ -440,8 +409,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	public static void consumeSetting(Map<String, Object> settings, SettingConsumer consumer, String... names) {
 		for ( String name : names ) {
-			if ( settings.containsKey(name) ) {
-				consumer.consumeSetting( name, (String) settings.get(name) );
+			final Object setting = settings.get( name );
+			if ( setting != null ) {
+				consumer.consumeSetting( name, setting.toString() );
 				return;
 			}
 		}

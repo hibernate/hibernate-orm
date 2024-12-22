@@ -159,7 +159,10 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 	@Override
 	public abstract EntityInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState);
 
-	protected EntityAssembler buildEntityAssembler(EntityInitializer<?> entityInitializer) {
-		return new EntityAssembler( getFetchedMapping().getJavaType(), entityInitializer );
+	/**
+	 * Used By Hibernate Reactive
+	 */
+	protected EntityAssembler<?> buildEntityAssembler(EntityInitializer<?> entityInitializer) {
+		return new EntityAssembler<>( getFetchedMapping().getJavaType(), entityInitializer );
 	}
 }

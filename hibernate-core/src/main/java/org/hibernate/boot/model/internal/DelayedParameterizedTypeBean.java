@@ -7,9 +7,10 @@ package org.hibernate.boot.model.internal;
 import java.util.Properties;
 
 import org.hibernate.boot.BootLogging;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.ParameterizedType;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * ManagedBean implementation for delayed {@link ParameterizedType}
@@ -51,7 +52,7 @@ public class DelayedParameterizedTypeBean<T> implements ManagedBean<T> {
 			String role,
 			ManagedBean<T> bean,
 			Properties properties) {
-		if ( CollectionHelper.isNotEmpty( properties ) ) {
+		if ( isNotEmpty( properties ) ) {
 			if ( ParameterizedType.class.isAssignableFrom( bean.getBeanClass() ) ) {
 				return new DelayedParameterizedTypeBean<>( bean, properties );
 			}

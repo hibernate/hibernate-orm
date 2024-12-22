@@ -22,8 +22,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Any;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -45,10 +43,12 @@ import org.jboss.logging.Logger;
 import jakarta.persistence.Index;
 import jakarta.persistence.UniqueConstraint;
 
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
-import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.internal.util.StringHelper.nullIfBlank;
 import static org.hibernate.internal.util.StringHelper.unquote;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * Stateful binder responsible for producing instances of {@link Table}.
@@ -492,8 +492,8 @@ public class TableBinder {
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 
 		final Table table = addTable(
-				nullIfEmpty( schema ),
-				nullIfEmpty( catalog ),
+				nullIfBlank( schema ),
+				nullIfBlank( catalog ),
 				logicalName,
 				isAbstract,
 				buildingContext,
@@ -868,7 +868,7 @@ public class TableBinder {
 	static void addTableCheck(
 			Table table,
 			jakarta.persistence.CheckConstraint[] checkConstraintAnnotationUsages) {
-		if ( CollectionHelper.isNotEmpty( checkConstraintAnnotationUsages ) ) {
+		if ( isNotEmpty( checkConstraintAnnotationUsages ) ) {
 			for ( jakarta.persistence.CheckConstraint checkConstraintAnnotationUsage : checkConstraintAnnotationUsages ) {
 				table.addCheck(
 						new CheckConstraint(
@@ -882,13 +882,13 @@ public class TableBinder {
 	}
 
 	static void addTableComment(Table table, String comment) {
-		if ( StringHelper.isNotEmpty( comment ) ) {
+		if ( isNotBlank( comment ) ) {
 			table.setComment( comment );
 		}
 	}
 
 	static void addTableOptions(Table table, String options) {
-		if ( StringHelper.isNotEmpty( options ) ) {
+		if ( isNotBlank( options ) ) {
 			table.setOptions( options );
 		}
 	}

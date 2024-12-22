@@ -23,8 +23,8 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.id.ExportableColumn;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IntegralDataTypeHolder;
@@ -109,6 +109,13 @@ public class TableStructure implements DatabaseStructure {
 	@Override
 	public QualifiedName getPhysicalName() {
 		return physicalTableName;
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	public Identifier getLogicalValueColumnNameIdentifier() {
+		return logicalValueColumnNameIdentifier;
 	}
 
 	@Override
@@ -230,8 +237,8 @@ public class TableStructure implements DatabaseStructure {
 			SessionEventListenerManager statsCollector,
 			SharedSessionContractImplementor session) throws SQLException {
 		logger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent creationEvent = eventManager.beginJdbcPreparedStatementCreationEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent creationEvent = eventMonitor.beginJdbcPreparedStatementCreationEvent();
 		final StatisticsImplementor stats = session.getFactory().getStatistics();
 		try {
 			statsCollector.jdbcPrepareStatementStart();
@@ -241,7 +248,7 @@ public class TableStructure implements DatabaseStructure {
 			return connection.prepareStatement( sql );
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementCreationEvent( creationEvent, sql );
+			eventMonitor.completeJdbcPreparedStatementCreationEvent( creationEvent, sql );
 			statsCollector.jdbcPrepareStatementEnd();
 			if ( stats != null && stats.isStatisticsEnabled() ) {
 				stats.closeStatement();
@@ -254,14 +261,14 @@ public class TableStructure implements DatabaseStructure {
 			SessionEventListenerManager statsCollector,
 			String sql,
 			SharedSessionContractImplementor session) throws SQLException {
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent executionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeUpdate();
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
+			eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 			statsCollector.jdbcExecuteStatementEnd();
 		}
 
@@ -272,14 +279,14 @@ public class TableStructure implements DatabaseStructure {
 			SessionEventListenerManager statsCollector,
 			String sql,
 			SharedSessionContractImplementor session) throws SQLException {
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent executionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeQuery();
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
+			eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 			statsCollector.jdbcExecuteStatementEnd();
 		}
 	}

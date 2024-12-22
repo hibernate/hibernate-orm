@@ -4,7 +4,7 @@
  */
 package org.hibernate.event.jfr.internal;
 
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.internal.build.AllowNonPortable;
 
 import jdk.jfr.Category;
@@ -18,9 +18,9 @@ import jdk.jfr.StackTrace;
 @Label("JDBC Batch Execution")
 @Category("Hibernate ORM")
 @Description("JDBC Batch Execution")
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
-public class JdbcBatchExecutionEvent extends Event implements HibernateMonitoringEvent {
+public class JdbcBatchExecutionEvent extends Event implements DiagnosticEvent {
 	public static final String NAME = "org.hibernate.orm.JdbcBatchExecution";
 
 	@Label("PreparedStatement SQL")

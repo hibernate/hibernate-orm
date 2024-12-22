@@ -164,10 +164,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		final Object id = representationStrategy.getInstantiator().instantiate(
-				null,
-				session.getSessionFactory()
-		);
+		final Object id = representationStrategy.getInstantiator().instantiate( null );
 
 		final Object[] propertyValues = new Object[virtualIdEmbeddable.getNumberOfAttributeMappings()];
 

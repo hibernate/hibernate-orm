@@ -5,7 +5,6 @@
 package org.hibernate.dialect.function;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.engine.spi.LazySessionWrapperOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -16,8 +15,8 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
-import org.hibernate.query.ReturnableType;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -485,18 +484,10 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 		private String getExpression(Expression expression, String tableIdentifierVariable, String syntheticColumnName, SqmToSqlAstConverter walker) {
 			if ( expression instanceof Literal literal ) {
 				final SessionFactoryImplementor sessionFactory = walker.getCreationContext().getSessionFactory();
-				final LazySessionWrapperOptions wrapperOptions = new LazySessionWrapperOptions( sessionFactory );
-				try {
-					//noinspection unchecked
-					return literal.getJdbcMapping().getJdbcLiteralFormatter().toJdbcLiteral(
-							literal.getLiteralValue(),
-							sessionFactory.getJdbcServices().getDialect(),
-							wrapperOptions
-					);
-				}
-				finally {
-					wrapperOptions.cleanup();
-				}
+				//noinspection unchecked
+				return literal.getJdbcMapping().getJdbcLiteralFormatter()
+						.toJdbcLiteral( literal.getLiteralValue(), sessionFactory.getJdbcServices().getDialect(),
+								sessionFactory.getWrapperOptions() );
 			}
 			else if ( expression instanceof ColumnReference columnReference ) {
 				return columnReference.getExpressionText();

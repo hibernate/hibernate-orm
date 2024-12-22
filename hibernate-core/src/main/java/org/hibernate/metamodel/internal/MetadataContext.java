@@ -16,6 +16,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
@@ -350,11 +351,17 @@ public class MetadataContext {
 //					applyNaturalIdAttribute( safeMapping, jpaType );
 
 					for ( Property property : safeMapping.getDeclaredProperties() ) {
-						if ( !safeMapping.isVersioned()
-								// skip the version property, it was already handled previously.
-								|| property != safeMapping.getVersion() ) {
-							buildAttribute( property, jpaType );
+						if ( isIdentifierProperty( property, safeMapping ) ) {
+							// property represents special handling for id-class mappings but we have already
+							// accounted for the embedded property mappings in #applyIdMetadata &&
+							// #buildIdClassAttributes
+							continue;
 						}
+						else if ( safeMapping.isVersioned() && property == safeMapping.getVersion() ) {
+							// skip the version property, it was already handled previously.
+							continue;
+						}
+						buildAttribute( property, jpaType );
 					}
 
 					( (AttributeContainer<?>) jpaType ).getInFlightAccess().finishUp();
@@ -404,6 +411,14 @@ public class MetadataContext {
 				}
 			}
 		}
+	}
+
+	private static boolean isIdentifierProperty(Property property, MappedSuperclass mappedSuperclass) {
+		final Component identifierMapper = mappedSuperclass.getIdentifierMapper();
+		return identifierMapper != null && ArrayHelper.contains(
+				identifierMapper.getPropertyNames(),
+				property.getName()
+		);
 	}
 
 	private <T> void addAttribute(EmbeddableDomainType<T> embeddable, Property property, Component component) {

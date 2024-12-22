@@ -10,10 +10,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 
+import org.hibernate.dialect.XmlHelper;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -58,49 +61,33 @@ public class XmlArrayJdbcType extends ArrayJdbcType {
 			return null;
 		}
 		if ( javaType.getJavaType() == SQLXML.class ) {
-			SQLXML sqlxml = options.getSession().getJdbcCoordinator().getLogicalConnection()
-					.getPhysicalConnection()
-					.createSQLXML();
+			final SQLXML sqlxml =
+					options.getSession().getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
+							.createSQLXML();
 			sqlxml.setString( string );
 			//noinspection unchecked
 			return (X) sqlxml;
 		}
-		return options.getSessionFactory().getFastSessionServices().getXmlFormatMapper().fromString(
-				string,
-				javaType,
-				options
-		);
+		return XmlHelper.arrayFromString( javaType, this, string, options );
 	}
 
 	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
-		return options.getSessionFactory().getFastSessionServices().getXmlFormatMapper().toString(
-				value,
-				javaType,
-				options
-		);
+		final JdbcType elementJdbcType = getElementJdbcType();
+		final Object[] domainObjects = javaType.unwrap( value, Object[].class, options );
+		if ( elementJdbcType instanceof XmlJdbcType xmlElementJdbcType ) {
+			final EmbeddableMappingType embeddableMappingType = xmlElementJdbcType.getEmbeddableMappingType();
+			return XmlHelper.arrayToString( embeddableMappingType, domainObjects, options );
+		}
+		else {
+			assert !( elementJdbcType instanceof AggregateJdbcType );
+			final JavaType<?> elementJavaType = ( (BasicPluralJavaType<?>) javaType ).getElementJavaType();
+			return XmlHelper.arrayToString( elementJavaType, elementJdbcType, domainObjects, options );
+		}
 	}
 
 	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
-		return new BasicBinder<>( javaType, this ) {
-			@Override
-			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
-					throws SQLException {
-				final String xml = ( (XmlArrayJdbcType ) getJdbcType() ).toString( value, getJavaType(), options );
-				SQLXML sqlxml = st.getConnection().createSQLXML();
-				sqlxml.setString( xml );
-				st.setSQLXML( index, sqlxml );
-			}
-
-			@Override
-			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
-					throws SQLException {
-				final String xml = ( (XmlArrayJdbcType ) getJdbcType() ).toString( value, getJavaType(), options );
-				SQLXML sqlxml = st.getConnection().createSQLXML();
-				sqlxml.setString( xml );
-				st.setSQLXML( name, sqlxml );
-			}
-		};
+		return new XmlArrayBinder<>( javaType, this );
 	}
 
 	@Override
@@ -133,5 +120,29 @@ public class XmlArrayJdbcType extends ArrayJdbcType {
 			}
 
 		};
+	}
+
+	protected static class XmlArrayBinder<X> extends BasicBinder<X> {
+		public XmlArrayBinder(JavaType<X> javaType, XmlArrayJdbcType jdbcType) {
+			super( javaType, jdbcType );
+		}
+
+		@Override
+		protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+				throws SQLException {
+			final String xml = ( (XmlArrayJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
+			SQLXML sqlxml = st.getConnection().createSQLXML();
+			sqlxml.setString( xml );
+			st.setSQLXML( index, sqlxml );
+		}
+
+		@Override
+		protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
+				throws SQLException {
+			final String xml = ( (XmlArrayJdbcType ) getJdbcType() ).toString( value, getJavaType(), options );
+			SQLXML sqlxml = st.getConnection().createSQLXML();
+			sqlxml.setString( xml );
+			st.setSQLXML( name, sqlxml );
+		}
 	}
 }

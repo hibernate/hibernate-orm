@@ -14,7 +14,7 @@ import org.hibernate.processor.model.MetaCollection;
  * @author Emmanuel Bernard
  */
 public class AnnotationMetaCollection extends AnnotationMetaAttribute implements MetaCollection {
-	private String collectionType;
+	private final String collectionType;
 
 	public AnnotationMetaCollection(AnnotationMetaEntity parent, Element element, String collectionType, String elementType) {
 		super( parent, element, elementType );

@@ -3,7 +3,7 @@ public class EventPublishingServiceContributor
 
     @Override
     public void contribute(StandardServiceRegistryBuilder builder) {
-        builder.addinitiator( eventpublishingserviceinitiator.instance );
+        builder.addInitiator( EventPublishingServiceInitiator.instance );
 
         // if we wanted to allow other strategies (e.g. a jms
         // queue publisher) we might also register short names

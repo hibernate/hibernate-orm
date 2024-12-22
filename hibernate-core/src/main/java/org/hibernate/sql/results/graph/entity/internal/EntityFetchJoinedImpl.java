@@ -132,8 +132,11 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 		return buildEntityAssembler( creationState.resolveInitializer( this, parent, this ).asEntityInitializer() );
 	}
 
-	protected EntityAssembler buildEntityAssembler(EntityInitializer<?> entityInitializer) {
-		return new EntityAssembler( getFetchedMapping().getJavaType(), entityInitializer );
+	/**
+	 * Used by Hibernate Reactive
+	 */
+	protected EntityAssembler<?> buildEntityAssembler(EntityInitializer<?> entityInitializer) {
+		return new EntityAssembler<>( getFetchedMapping().getJavaType(), entityInitializer );
 	}
 
 	@Override

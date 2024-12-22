@@ -4,8 +4,12 @@
  */
 package org.hibernate.event.spi;
 
-import org.hibernate.Incubating;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 
-@Incubating
-public interface HibernateMonitoringEvent {
+/**
+ * @deprecated Renamed {@link DiagnosticEvent}.
+ */
+@Deprecated(since = "7", forRemoval = true)
+public interface HibernateMonitoringEvent extends DiagnosticEvent {
+
 }

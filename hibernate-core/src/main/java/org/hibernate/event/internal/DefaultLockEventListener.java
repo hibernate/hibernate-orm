@@ -120,10 +120,7 @@ public class DefaultLockEventListener implements LockEventListener {
 	protected final EntityEntry reassociate(AbstractEvent event, Object object, Object id, EntityPersister persister) {
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Reassociating transient instance: {0}",
-					infoString( persister, id, event.getFactory() )
-			);
+			LOG.trace( "Reassociating transient instance: " + infoString( persister, id, event.getFactory() ) );
 		}
 
 		final EventSource source = event.getSession();

@@ -292,7 +292,7 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 			data.setInstance( null );
 		}
 		else {
-			data.setInstance( embeddableInstantiator.instantiate( data, sessionFactory ) );
+			data.setInstance( embeddableInstantiator.instantiate( data ) );
 		}
 		if ( parent == null ) {
 			data.setState( State.INITIALIZED );

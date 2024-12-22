@@ -15,6 +15,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.SybaseASEAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
@@ -27,7 +29,6 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.service.ServiceRegistry;
@@ -47,7 +48,10 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.cfg.DialectSpecificSettings.SYBASE_ANSI_NULL;
+import static org.hibernate.cfg.DialectSpecificSettings.SYBASE_PAGE_SIZE;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.NCLOB;
@@ -62,6 +66,8 @@ import static org.hibernate.type.SqlTypes.XML_ARRAY;
 public class SybaseASEDialect extends SybaseDialect {
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 16, 0 );
+
+	public static final int MAX_PAGE_SIZE = 16_384;
 
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
 		@Override
@@ -93,6 +99,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	};
 
 	private final boolean ansiNull;
+	private final int pageSize;
 
 	public SybaseASEDialect() {
 		this( MINIMUM_VERSION );
@@ -101,37 +108,29 @@ public class SybaseASEDialect extends SybaseDialect {
 	public SybaseASEDialect(DatabaseVersion version) {
 		super(version);
 		ansiNull = false;
+		pageSize = MAX_PAGE_SIZE;
 	}
 
 	public SybaseASEDialect(DialectResolutionInfo info) {
 		super(info);
 		ansiNull = isAnsiNull( info );
+		pageSize = pageSize( info );
 	}
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN: {
-				// On Sybase ASE, the 'bit' type cannot be null,
-				// and cannot have indexes (while we don't use
-				// tinyint to store signed bytes, we can use it
-				// to store boolean values)
-				return "tinyint";
-			}
-			case DATE: {
-				return "date";
-			}
-			case TIME: {
-				return "time";
-			}
-			case NCLOB: {
-				// Sybase uses `unitext` instead of the T-SQL `ntext` type name
-				return "unitext";
-			}
-			default: {
-				return super.columnType( sqlTypeCode );
-			}
-		}
+		return switch ( sqlTypeCode ) {
+			// On Sybase ASE, the 'bit' type cannot be null,
+			// and cannot have indexes (while we don't use
+			// tinyint to store signed bytes, we can use it
+			// to store boolean values)
+			case BOOLEAN -> "tinyint";
+			case DATE -> "date";
+			case TIME -> "time";
+			// Sybase uses `unitext` instead of the T-SQL `ntext` type name
+			case NCLOB -> "unitext";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -173,7 +172,7 @@ public class SybaseASEDialect extends SybaseDialect {
 		// not the individual column length -- anyway, the
 		// largest possible page size is 16k, so that's a
 		// hard upper limit
-		return 16_384;
+		return pageSize;
 	}
 
 	@Override
@@ -218,10 +217,26 @@ public class SybaseASEDialect extends SybaseDialect {
 			}
 		}
 		// default to the dialect-specific configuration setting
-		return ConfigurationHelper.getBoolean( SYBASE_ANSI_NULL, info.getConfigurationValues(), false );
+		return getBoolean( SYBASE_ANSI_NULL, info.getConfigurationValues(), false );
 	}
 
-	@Override
+	private int pageSize(DialectResolutionInfo info) {
+		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
+		if ( databaseMetaData != null ) {
+			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
+				final ResultSet rs = s.executeQuery( "SELECT @@maxpagesize" );
+				if ( rs.next() ) {
+					return rs.getInt( 1 );
+				}
+			}
+			catch (SQLException ex) {
+				// Ignore
+			}
+		}
+		// default to the dialect-specific configuration setting
+		return getInt( SYBASE_PAGE_SIZE, info.getConfigurationValues(), MAX_PAGE_SIZE );
+	}
+
 	public boolean isAnsiNullOn() {
 		return ansiNull;
 	}
@@ -250,6 +265,11 @@ public class SybaseASEDialect extends SybaseDialect {
 				return new SybaseASESqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return SybaseASEAggregateSupport.valueOf( this );
 	}
 
 	/**

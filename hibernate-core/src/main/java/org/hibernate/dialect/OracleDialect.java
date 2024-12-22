@@ -47,6 +47,8 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -78,6 +80,7 @@ import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
@@ -146,7 +149,10 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 
 /**
- * A {@linkplain Dialect SQL dialect} for Oracle 11g Release 2 and above.
+ * A {@linkplain Dialect SQL dialect} for Oracle 19c and above.
+ * <p>
+ * Please refer to the
+ * <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/sqlrf/">Oracle documentation</a>.
  *
  * @author Steve Ebersole
  * @author Gavin King
@@ -181,6 +187,17 @@ public class OracleDialect extends Dialect {
 	private final OracleUserDefinedTypeExporter userDefinedTypeExporter = new OracleUserDefinedTypeExporter( this );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 	private final SequenceSupport oracleSequenceSupport = OracleSequenceSupport.getInstance(this);
+	private final StandardTableExporter oracleTableExporter = new StandardTableExporter( this ) {
+		@Override
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+			if ( dialect.getVersion().isBefore( 23, 6 ) && jdbcType.isXml() ) {
+				// ORA-00600 when selecting XML columns that have a check constraint was fixed in 23.6
+				return;
+			}
+			super.applyAggregateColumnCheck( buf, aggregateColumn );
+		}
+	};
 
 	// Is it an Autonomous Database Cloud Service?
 	protected final boolean autonomous;
@@ -426,6 +443,10 @@ public class OracleDialect extends Dialect {
 		functionFactory.unnest_oracle();
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
 		functionFactory.jsonTable_oracle();
+
+		functionFactory.hex( "rawtohex(?1)" );
+		functionFactory.sha( "standard_hash(?1, 'SHA256')" );
+		functionFactory.md5( "standard_hash(?1, 'MD5')" );
 	}
 
 	/**
@@ -589,6 +610,8 @@ public class OracleDialect extends Dialect {
 					return "to_timestamp_tz(?1,'YYYY-MM-DD HH24:MI:SS.FF9 TZR')";
 				}
 				break;
+			case XML:
+				return "xmlparse(document ?1)";
 		}
 		return super.castPattern(from, to);
 	}
@@ -988,6 +1011,7 @@ public class OracleDialect extends Dialect {
 			typeContributions.contributeJdbcType( OracleBooleanJdbcType.INSTANCE );
 		}
 		typeContributions.contributeJdbcType( OracleXmlJdbcType.INSTANCE );
+		typeContributions.contributeJdbcTypeConstructor( OracleXmlArrayJdbcTypeConstructor.INSTANCE );
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
 			typeContributions.contributeJdbcType( OracleJdbcHelper.getStructJdbcType( serviceRegistry ) );
 		}
@@ -1130,6 +1154,11 @@ public class OracleDialect extends Dialect {
 	@Override
 	public SequenceSupport getSequenceSupport() {
 		return oracleSequenceSupport;
+	}
+
+	@Override
+	public Exporter<Table> getTableExporter() {
+		return oracleTableExporter;
 	}
 
 	@Override

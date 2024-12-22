@@ -63,7 +63,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			catch (Exception re) {
 				//swallow
 			}
-			return new RollbackException( "Error while committing the transaction",
+			return new RollbackException( "Error while committing the transaction [" + exception.getMessage() + "]",
 					exception instanceof HibernateException hibernateException
 							? convert( hibernateException )
 							: exception );

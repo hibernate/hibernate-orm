@@ -27,7 +27,6 @@ import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -70,9 +69,10 @@ import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClas
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.internal.CoreLogging.messageLogger;
-import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * A binder responsible for interpreting {@link Embeddable} classes and producing
@@ -232,7 +232,7 @@ public class EmbeddableBinder {
 		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
 
 		final List<? extends Annotation> metaAnnotatedAnnotations = annotatedClass.determineRawClass().getMetaAnnotated( TypeBinderType.class, sourceModelContext );
-		if ( CollectionHelper.isEmpty( metaAnnotatedAnnotations ) ) {
+		if ( isEmpty( metaAnnotatedAnnotations ) ) {
 			return;
 		}
 
@@ -648,7 +648,7 @@ public class EmbeddableBinder {
 		//embeddable elements can have type defs
 		final PropertyContainer container =
 				new PropertyContainer( returnedClassOrElement, annotatedClass, propertyAccessor );
-		addElementsOfClass( classElements, container, context);
+		addElementsOfClass( classElements, container, context, 0 );
 		//add elements of the embeddable's mapped superclasses
 		ClassDetails subclass = returnedClassOrElement;
 		ClassDetails superClass;
@@ -659,7 +659,7 @@ public class EmbeddableBinder {
 					annotatedClass,
 					propertyAccessor
 			);
-			addElementsOfClass( classElements, superContainer, context );
+			addElementsOfClass( classElements, superContainer, context, 0 );
 			if ( subclassToSuperclass != null ) {
 				subclassToSuperclass.put( subclass.getName(), superClass.getName() );
 			}
@@ -690,7 +690,7 @@ public class EmbeddableBinder {
 			assert put == null;
 			// collect property of subclass
 			final PropertyContainer superContainer = new PropertyContainer( subclass, superclass, propertyAccessor );
-			addElementsOfClass( classElements, superContainer, context );
+			addElementsOfClass( classElements, superContainer, context, 0 );
 			// recursively do that same for all subclasses
 			collectSubclassElements(
 					propertyAccessor,
@@ -712,7 +712,7 @@ public class EmbeddableBinder {
 				? annotatedClass.getDirectAnnotationUsage( DiscriminatorValue.class ).value()
 				: null;
 		final String discriminatorValue;
-		if ( isEmpty( explicitValue ) ) {
+		if ( isBlank( explicitValue ) ) {
 			final String name = unqualify( annotatedClass.getName() );
 			if ( "character".equals( discriminatorType.getName() ) ) {
 				throw new AnnotationException( String.format(
@@ -764,7 +764,7 @@ public class EmbeddableBinder {
 						entityAtStake,
 						propertyAccessor
 				);
-				addElementsOfClass( baseClassElements, container, context );
+				addElementsOfClass( baseClassElements, container, context, 0 );
 				baseReturnedClassOrElement = baseReturnedClassOrElement.determineRawClass().getGenericSuperType();
 			}
 			return baseClassElements;
@@ -835,8 +835,9 @@ public class EmbeddableBinder {
 
 		for ( int i = 0; i < classElements.size(); i++ ) {
 			final PropertyData idClassPropertyData = classElements.get( i );
+			final String propertyName = idClassPropertyData.getPropertyName();
 			final PropertyData entityPropertyData =
-					baseClassElementsByName.get( idClassPropertyData.getPropertyName() );
+					baseClassElementsByName.get( propertyName );
 			if ( propertyHolder.isInIdClass() ) {
 				if ( entityPropertyData == null ) {
 					throw new AnnotationException(
@@ -852,9 +853,36 @@ public class EmbeddableBinder {
 					//the annotation overriding will be dealt with by a mechanism similar to @MapsId
 					continue;
 				}
+				if ( !hasCompatibleType( idClassPropertyData.getTypeName(), entityPropertyData.getTypeName() ) ) {
+					throw new AnnotationException(
+							"Property '" + propertyName + "' in @IdClass '" + idClassPropertyData.getDeclaringClass().getName()
+									+ "' doesn't match type in entity class '" + baseInferredData.getPropertyType().getName()
+									+ "' (expected '" + entityPropertyData.getTypeName() + "' but was '" + idClassPropertyData.getTypeName() + "')"
+					);
+				}
 			}
 			classElements.set( i, entityPropertyData );  //this works since they are in the same order
 		}
+	}
+
+	private static boolean hasCompatibleType(String typeNameInIdClass, String typeNameInEntityClass) {
+		return typeNameInIdClass.equals( typeNameInEntityClass )
+				|| canonicalize( typeNameInIdClass ).equals( typeNameInEntityClass )
+				|| typeNameInIdClass.equals( canonicalize( typeNameInEntityClass ) );
+	}
+
+	private static String canonicalize(String typeName) {
+		return switch (typeName) {
+			case "boolean" -> Boolean.class.getName();
+			case "char" -> Character.class.getName();
+			case "int" -> Integer.class.getName();
+			case "long" -> Long.class.getName();
+			case "short" -> Short.class.getName();
+			case "byte" -> Byte.class.getName();
+			case "float" -> Float.class.getName();
+			case "double" -> Double.class.getName();
+			default -> typeName;
+		};
 	}
 
 	static Component createEmbeddable(

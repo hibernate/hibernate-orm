@@ -70,14 +70,8 @@ public class PostgreSQLIntervalSecondJdbcType implements AdjustableJdbcType {
 
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
-		return (appender, value, dialect, wrapperOptions) -> dialect.appendIntervalLiteral(
-				appender,
-				javaType.unwrap(
-						value,
-						Duration.class,
-						wrapperOptions
-				)
-		);
+		return (appender, value, dialect, wrapperOptions) ->
+				dialect.appendIntervalLiteral( appender, javaType.unwrap( value, Duration.class, wrapperOptions ) );
 	}
 
 	@Override

@@ -7,7 +7,6 @@ package org.hibernate.engine.spi;
 import java.util.Collection;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -94,7 +93,7 @@ public interface SessionFactoryImplementor
 	/**
 	 * Get a non-transactional "current" session (used by hibernate-envers)
 	 */
-	SessionImplementor openTemporarySession() throws HibernateException;
+	SessionImplementor openTemporarySession();
 
 	@Override
 	CacheImplementor getCache();
@@ -150,10 +149,16 @@ public interface SessionFactoryImplementor
 	JavaType<Object> getTenantIdentifierJavaType();
 
 	/**
-	 * @return the {@link FastSessionServices} instance associated with this SessionFactory
+	 * @return the {@link FastSessionServices} instance associated with this factory
 	 */
 	FastSessionServices getFastSessionServices();
 
+	/**
+	 * Return an instance of {@link WrapperOptions} which is not backed by a session,
+	 * and whose functionality is therefore incomplete.
+	 *
+	 * @apiNote Avoid using this operation.
+	 */
 	WrapperOptions getWrapperOptions();
 
 	@Override

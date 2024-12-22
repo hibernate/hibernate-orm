@@ -5,7 +5,6 @@
 package org.hibernate.metamodel.internal;
 
 import org.hibernate.InstantiationException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.spi.ValueAccess;
 
@@ -33,7 +32,7 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valuesAccess) {
 		if ( constructor == null ) {
 			throw new InstantiationException( "Unable to locate constructor for embeddable", getMappedPojoClass() );
 		}
@@ -59,7 +58,7 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 		}
 
 		@Override
-		public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
+		public Object instantiate(ValueAccess valuesAccess) {
 			if ( constructor == null ) {
 				throw new InstantiationException( "Unable to locate constructor for embeddable", getMappedPojoClass() );
 			}

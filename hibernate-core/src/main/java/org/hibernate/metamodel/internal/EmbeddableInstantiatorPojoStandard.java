@@ -9,7 +9,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -44,7 +43,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valuesAccess) {
 		if ( isAbstract() ) {
 			throw new InstantiationException(
 					"Cannot instantiate abstract class or interface", getMappedPojoClass()

@@ -9,7 +9,7 @@ import java.util.List;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.event.jfr.internal.CachePutEvent;
 import org.hibernate.event.jfr.internal.JdbcBatchExecutionEvent;
-import org.hibernate.event.jfr.internal.JfrEventManager;
+import org.hibernate.event.jfr.internal.JfrEventMonitor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -85,7 +85,7 @@ public class QueryCachePutEventTests {
 					assertThat( event.getBoolean( "cacheChanged" ) ).isTrue();
 					assertThat( event.getString( "regionName" ) ).isNotNull();
 					assertThat( event.getBoolean( "isNaturalId" ) ).isFalse();
-					assertThat( event.getString( "description" ) ).isEqualTo( JfrEventManager.CacheActionDescription.QUERY_RESULT.getText() );
+					assertThat( event.getString( "description" ) ).isEqualTo( JfrEventMonitor.CacheActionDescription.QUERY_RESULT.getText() );
 				}
 		);
 

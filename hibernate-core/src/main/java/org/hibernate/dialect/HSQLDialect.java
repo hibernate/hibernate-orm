@@ -62,6 +62,9 @@ import static org.hibernate.type.SqlTypes.NCLOB;
 
 /**
  * A {@linkplain Dialect SQL dialect} for HSQLDB (HyperSQL) 2.6.1 and above.
+ * <p>
+ * Please refer to the
+ * <a href="https://hsqldb.org/doc/2.0/guide/index.html">HyperSQL User Guide</a>.
  *
  * @author Christoph Sturm
  * @author Phillip Baird
@@ -222,6 +225,8 @@ public class HSQLDialect extends Dialect {
 				functionContributions.getTypeConfiguration(),
 				SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER
 		) );
+
+		functionFactory.hex( "hex(?1)" );
 	}
 
 	/**
@@ -712,6 +717,7 @@ public class HSQLDialect extends Dialect {
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore( true );
+		builder.setAutoQuoteDollar( true );
 		return super.buildIdentifierHelper( builder, dbMetaData );
 	}
 

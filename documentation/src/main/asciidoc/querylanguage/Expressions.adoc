@@ -841,6 +841,7 @@ Naturally, there are a good number of functions for working with strings.
 | `replace()` | Replace every occurrence of a pattern in a string | `replace(str, patt, rep)` | ✔ / ✖
 | `repeat()` | Concatenate a string with itself multiple times | `repeat(str, times)` | ✖ / ✖
 | `collate()` | Select a collation | `collate(p.name as collation)` | ✖ / ✖
+| `hex()` | Encode a binary value as a hexadecimal string | `hex(image.bytes)` | ✖ / ✖
 |===
 
 Let's take a closer look at just some of these.
@@ -1174,8 +1175,8 @@ Finally, the following functions evaluate the id, version, or natural id of an e
 |===
 | Function | Purpose | JPA standard
 
-| `id()` | The value of the entity `@Id` attribute. | ✖
-| `version()` | The value of the entity `@Version` attribute. | ✖
+| `id()` | The value of the entity `@Id` attribute. | ✔
+| `version()` | The value of the entity `@Version` attribute. | ✔
 | `naturalid()` | The value of the entity `@NaturalId` attribute. | ✖
 | `fk()` | The value of the foreign key column mapped by a `@ManyToOne` (or logical `@OneToOne`) association.
 Useful with associations annotated `@NotFound`. | ✖
@@ -1206,6 +1207,23 @@ However, we note that the following language constructs work with arrays, and ar
 | `element in array` or `array contains element` | Determine if an element belongs to an array
 | `array includes subarray` | Determine if the elements of one array include all the elements of a second array
 |===
+
+[[functions-hash]]
+=== Hash functions
+
+The following functions work on most supported platforms:
+
+[[hash-functions]]
+[cols="12,~,^15"]
+|===
+| Function | Purpose | JPA standard
+
+| `sha()` | The SHA256 hash of a string. | ✖
+| `md5()` | The MD5 hash of a string. | ✖
+|===
+
+These functions accept a string and return `byte[]`.
+The return value is compatible with the byte array produced by Java's `MessageDigest`.
 
 [[embedding-sql]]
 ==== Embedding SQL expressions

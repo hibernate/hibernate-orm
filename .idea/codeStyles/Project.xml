@@ -12,6 +12,7 @@
       <option name="WHILE_ON_NEW_LINE" value="true" />
       <option name="CATCH_ON_NEW_LINE" value="true" />
       <option name="FINALLY_ON_NEW_LINE" value="true" />
+      <option name="ALIGN_MULTILINE_BINARY_OPERATION" value="true" />
       <option name="SPACE_WITHIN_METHOD_CALL_PARENTHESES" value="true" />
       <option name="SPACE_WITHIN_IF_PARENTHESES" value="true" />
       <option name="SPACE_WITHIN_WHILE_PARENTHESES" value="true" />

@@ -134,7 +134,6 @@ public interface PersistenceSettings {
 	 *
 	 * @see #SCANNER
 	 * @see org.hibernate.boot.archive.scan.spi.Scanner
-	 * @see org.hibernate.boot.archive.scan.spi.AbstractScannerImpl
 	 * @see org.hibernate.boot.MetadataBuilder#applyArchiveDescriptorFactory
 	 */
 	String SCANNER_ARCHIVE_INTERPRETER = "hibernate.archive.interpreter";

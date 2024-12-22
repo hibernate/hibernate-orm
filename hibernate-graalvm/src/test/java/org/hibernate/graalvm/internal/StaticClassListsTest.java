@@ -158,27 +158,7 @@ public class StaticClassListsTest {
 				// Putting anything here is running the risk of forgetting
 				// why it was necessary in the first place...
 				return Stream.of(
-						// Java classes -- the why is lost to history
-						java.util.function.Function[].class,
-						java.util.List[].class,
-						java.util.Map.Entry[].class,
-						java.util.function.Supplier[].class,
-						// Graphs -- the why is lost to history
-						org.hibernate.graph.spi.AttributeNodeImplementor[].class,
-						org.hibernate.sql.results.graph.FetchParent[].class,
-						org.hibernate.graph.spi.GraphImplementor[].class,
-						org.hibernate.graph.internal.parse.SubGraphGenerator[].class,
-						// AST/parsing -- no way to detect this automatically, you just have to know.
-						org.hibernate.sql.ast.Clause[].class,
-						org.hibernate.query.hql.spi.DotIdentifierConsumer[].class,
-						org.hibernate.query.sqm.sql.FromClauseIndex[].class,
-						org.hibernate.query.sqm.spi.ParameterDeclarationContext[].class,
-						org.hibernate.sql.ast.tree.select.QueryPart[].class,
-						org.hibernate.sql.ast.spi.SqlAstProcessingState[].class,
-						org.hibernate.query.hql.spi.SqmCreationProcessingState[].class,
-						org.hibernate.sql.ast.tree.Statement[].class,
-						// Various internals -- the why is lost to history
-						org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState[].class
+						// Hopefully to remain empty
 				);
 			}
 		};

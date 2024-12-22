@@ -31,9 +31,9 @@ public interface JdbcLiteralFormatter<T> extends Serializable {
 	 * @return the SQL literal as a string
 	 */
 	default String toJdbcLiteral(T value, Dialect dialect, WrapperOptions wrapperOptions) {
-		final StringBuilder sb = new StringBuilder();
-		appendJdbcLiteral( new StringBuilderSqlAppender( sb ), value, dialect, wrapperOptions );
-		return sb.toString();
+		final StringBuilder result = new StringBuilder();
+		appendJdbcLiteral( new StringBuilderSqlAppender( result ), value, dialect, wrapperOptions );
+		return result.toString();
 	}
 
 	/**

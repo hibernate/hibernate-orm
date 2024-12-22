@@ -116,10 +116,33 @@ Take your time with this code, and try to produce a Java model that's as close a
 When in the slightest doubt, map a foreign key relationship using `@ManyToOne` with `@OneToMany(mappedBy=...)` in preference to more complicated association mappings.
 ====
 
+.What sort of logic belongs in an entity?
+****
+There exists an extensive online literature which posits that there are _rich domain models_, where entities have methods implementing interesting business logic, and _anemic domain models_, where the entities are pure data holders, and that a developer should hold an opinion that one or the other of these sorts of domain model is "better".
+
+We do not hold any such opinion, and if you ask us for one, we will most likely suddenly discover somewhere else we need to be.
+
+A more interesting question is not _how much_ logic belongs in the entity class, but _what sort_ of logic belongs there.
+We think the answer is that an entity should never implement technical concerns, and should never obtain references to framework objects.
+Nor should it hold extra mutable state which is not very directly related to its role in representing persistent state.
+For example:
+
+- an entity may compute totals and averages, even caching them if necessary, enforce its invariants, interact with and construct other entities, and so on,
+- but the entity should never call the `EntityManager` or a Jakarta Data repository, build a criteria query, send a JMS message, start a transaction, publish events to the CDI event bus, maintain a stateful queue of events to be published later, or anything of a similar nature.
+
+One way to summarize this is:
+
+> Entities do business logic; but they don't do orchestration.
+
+Later, we'll discuss various ways to <<managing-transactions,manage transactions>>, <<callbacks,send event notifications>>, and <<organizing-persistence,query the database>>.
+Such code will always be external to the entity itself.
+****
+
 The second part of the code is much trickier to get right. This code must:
 
 - manage transactions and sessions,
 - interact with the database via the Hibernate session,
+- publish CDI events and send JMS messages,
 - fetch and prepare data needed by the UI, and
 - handle failures.
 
@@ -127,6 +150,12 @@ The second part of the code is much trickier to get right. This code must:
 ====
 Responsibility for transaction and session management, and for recovery from certain kinds of failure, is best handled in some sort of framework code.
 ====
+
+// [TIP]
+// ====
+// A great way to handle CDI event publication is via a <<callbacks,JPA entity listener>>.
+// Whereas we would never want to inject a CDI https://jakarta.ee/specifications/cdi/3.0/apidocs/[event publisher] into an entity object, it's perfectly fine to inject them in an entity listener.
+// ====
 
 We're going to <<organizing-persistence,come back soon>> to the thorny question of how this persistence logic should be organized, and how it should fit into the rest of the system.
 // First we want to make the ideas above concrete by seeing a simple example program that uses Hibernate in isolation.
@@ -157,23 +186,19 @@ dependencies {
     // the GOAT ORM
     implementation 'org.hibernate.orm:hibernate-core:{fullVersion}'
 
+    // Hibernate Processor
+    annotationProcessor 'org.hibernate.orm:hibernate-processor:{fullVersion}'
+
     // Hibernate Validator
     implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
     implementation 'org.glassfish:jakarta.el:4.0.2'
 
     // Agroal connection pool
-    implementation 'org.hibernate.orm:hibernate-agroal:{fullVersion}'
-    implementation 'io.agroal:agroal-pool:2.1'
+    runtimeOnly 'org.hibernate.orm:hibernate-agroal:{fullVersion}'
+    runtimeOnly 'io.agroal:agroal-pool:2.5'
 
     // logging via Log4j
-    implementation 'org.apache.logging.log4j:log4j-core:2.24.1'
-
-    // Hibernate Processor
-    annotationProcessor 'org.hibernate.orm:hibernate-processor:{fullVersion}'
-
-    // Compile-time checking for HQL
-    //implementation 'org.hibernate:query-validator:2.0-SNAPSHOT'
-    //annotationProcessor 'org.hibernate:query-validator:2.0-SNAPSHOT'
+    runtimeOnly 'org.apache.logging.log4j:log4j-core:2.24.1'
 
     // H2 database
     runtimeOnly 'com.h2database:h2:2.3.232'
@@ -243,8 +268,6 @@ package org.hibernate.example;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 
 import static java.lang.System.out;
-import static jakarta.persistence.PersistenceConfiguration.*;
-import static org.hibernate.cfg.JdbcSettings.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -252,19 +275,16 @@ public class Main {
                 new HibernatePersistenceConfiguration("Bookshelf")
                         .managedClass(Book.class)
                         // use H2 in-memory database
-                        .property(JDBC_URL, "jdbc:h2:mem:db1")
-                        .property(JDBC_USER, "sa")
-                        .property(JDBC_PASSWORD, "")
-                        // use Agroal connection pool
-                        .property("hibernate.agroal.maxSize", 20)
+                        .jdbcUrl("jdbc:h2:mem:db1")
+                        .jdbcCredentials("sa", "")
+                        // set the Agroal connection pool size
+                        .jdbcPoolSize(16)
                         // display SQL in console
-                        .property(SHOW_SQL, true)
-                        .property(FORMAT_SQL, true)
-                        .property(HIGHLIGHT_SQL, true)
+                        .showSql(true, true, true)
                         .createEntityManagerFactory();
 
         // export the inferred database schema
-        sessionFactory.getSchemaManager().export(true);
+        sessionFactory.getSchemaManager().create(true);
 
         // persist an entity
         sessionFactory.inTransaction(session -> {
@@ -705,7 +725,7 @@ This option is especially convenient when writing tests.
 
 [source,java]
 ----
-sessionFactory.getSchemaManager().export(true);
+sessionFactory.getSchemaManager().create(true);
 ----
 
 Since executing DDL statements is very slow on many databases, we don't want to do this before every test.

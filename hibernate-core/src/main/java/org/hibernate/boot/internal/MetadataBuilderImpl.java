@@ -7,7 +7,6 @@ package org.hibernate.boot.internal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.Callable;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
@@ -72,8 +71,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.internal.util.NullnessHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -93,8 +90,11 @@ import jakarta.persistence.SharedCacheMode;
 
 import static org.hibernate.cfg.AvailableSettings.JPA_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.WRAPPER_ARRAY_HANDLING;
+import static org.hibernate.cfg.MappingSettings.XML_FORMAT_MAPPER_LEGACY_FORMAT;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
+import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * @author Steve Ebersole
@@ -114,16 +114,15 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		if ( serviceRegistry == null ) {
 			throw new HibernateException( "ServiceRegistry passed to MetadataBuilder cannot be null" );
 		}
-
-		if ( serviceRegistry instanceof StandardServiceRegistry ) {
-			return (StandardServiceRegistry) serviceRegistry;
+		else if ( serviceRegistry instanceof StandardServiceRegistry standardServiceRegistry ) {
+			return standardServiceRegistry;
 		}
-		else if ( serviceRegistry instanceof BootstrapServiceRegistry ) {
+		else if ( serviceRegistry instanceof BootstrapServiceRegistry bootstrapServiceRegistry ) {
 			log.debug(
 					"ServiceRegistry passed to MetadataBuilder was a BootstrapServiceRegistry; this likely won't end well " +
 							"if attempt is made to build SessionFactory"
 			);
-			return new StandardServiceRegistryBuilder( (BootstrapServiceRegistry) serviceRegistry ).build();
+			return new StandardServiceRegistryBuilder( bootstrapServiceRegistry ).build();
 		}
 		else {
 			throw new HibernateException(
@@ -442,8 +441,9 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 		final MetadataImplementor bootModel = MetadataBuildingProcess.build( sources, bootstrapContext, options );
 
-		if ( CollectionHelper.isNotEmpty( sources.getHbmXmlBindings() ) ) {
-			final ConfigurationService configurationService = bootstrapContext.getServiceRegistry().getService( ConfigurationService.class );
+		if ( isNotEmpty( sources.getHbmXmlBindings() ) ) {
+			final ConfigurationService configurationService =
+					bootstrapContext.getServiceRegistry().getService( ConfigurationService.class );
 			final boolean transformHbm = configurationService != null
 					&& configurationService.getSetting( MappingSettings.TRANSFORM_HBM_XML, BOOLEAN,false );
 
@@ -652,6 +652,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private final String schemaCharset;
 		private final boolean xmlMappingEnabled;
 		private final boolean allowExtensionsInCdi;
+		private final boolean xmlFormatMapperLegacyFormat;
 
 		public MetadataBuildingOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -662,7 +663,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
 
 			defaultTimezoneStorage = resolveTimeZoneStorageStrategy( configService );
-			wrapperArrayHandling = resolveWrapperArrayHandling( configService, serviceRegistry );
+			wrapperArrayHandling = resolveWrapperArrayHandling( configService );
 			multiTenancyEnabled = JdbcEnvironmentImpl.isMultiTenancyEnabled( serviceRegistry );
 
 			xmlMappingEnabled = configService.getSetting(
@@ -670,6 +671,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					BOOLEAN,
 					true
 			);
+			xmlFormatMapperLegacyFormat = configService.getSetting( XML_FORMAT_MAPPER_LEGACY_FORMAT, BOOLEAN, false );
 
 			implicitDiscriminatorsForJoinedInheritanceSupported = configService.getSetting(
 					AvailableSettings.IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS,
@@ -747,19 +749,14 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					null
 			) );
 
-			implicitNamingStrategy = strategySelector.resolveDefaultableStrategy(
+			implicitNamingStrategy = strategySelector.<ImplicitNamingStrategy>resolveDefaultableStrategy(
 					ImplicitNamingStrategy.class,
 					configService.getSettings().get( AvailableSettings.IMPLICIT_NAMING_STRATEGY ),
-					new Callable<>() {
-						@Override
-						public ImplicitNamingStrategy call() {
-							return strategySelector.resolveDefaultableStrategy(
-									ImplicitNamingStrategy.class,
-									"default",
-									ImplicitNamingStrategyJpaCompliantImpl.INSTANCE
-							);
-						}
-					}
+					() -> strategySelector.resolveDefaultableStrategy(
+							ImplicitNamingStrategy.class,
+							"default",
+							ImplicitNamingStrategyJpaCompliantImpl.INSTANCE
+					)
 			);
 
 			physicalNamingStrategy = strategySelector.resolveDefaultableStrategy(
@@ -768,19 +765,14 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					PhysicalNamingStrategyStandardImpl.INSTANCE
 			);
 
-			columnOrderingStrategy = strategySelector.resolveDefaultableStrategy(
+			columnOrderingStrategy = strategySelector.<ColumnOrderingStrategy>resolveDefaultableStrategy(
 					ColumnOrderingStrategy.class,
 					configService.getSettings().get( AvailableSettings.COLUMN_ORDERING_STRATEGY ),
-					new Callable<>() {
-						@Override
-						public ColumnOrderingStrategy call() {
-							return strategySelector.resolveDefaultableStrategy(
-									ColumnOrderingStrategy.class,
-									"default",
-									ColumnOrderingStrategyStandard.INSTANCE
-							);
-						}
-					}
+					() -> strategySelector.resolveDefaultableStrategy(
+							ColumnOrderingStrategy.class,
+							"default",
+							ColumnOrderingStrategyStandard.INSTANCE
+					)
 			);
 
 			useNationalizedCharacterData = configService.getSetting(
@@ -817,12 +809,14 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			return toTimeZoneStorageStrategy( getTimeZoneSupport() );
 		}
 
+		private Dialect getDialect() {
+			return serviceRegistry.requireService( JdbcServices.class ).getDialect();
+		}
+
 		@Override
 		public TimeZoneSupport getTimeZoneSupport() {
 			try {
-				return serviceRegistry.requireService( JdbcServices.class )
-						.getDialect()
-						.getTimeZoneSupport();
+				return getDialect().getTimeZoneSupport();
 			}
 			catch ( ServiceException se ) {
 				return TimeZoneSupport.NONE;
@@ -841,27 +835,25 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 				case NORMALIZE -> TimeZoneStorageStrategy.NORMALIZE;
 				case NORMALIZE_UTC -> TimeZoneStorageStrategy.NORMALIZE_UTC;
 				case AUTO -> switch (timeZoneSupport) {
-					case NATIVE ->
-							// if the db has native support for timezones, we use that, not a column
-							TimeZoneStorageStrategy.NATIVE;
-					case NORMALIZE, NONE ->
-							// otherwise we use a separate column
-							TimeZoneStorageStrategy.COLUMN;
+					// if the db has native support for timezones, we use that, not a column
+					case NATIVE -> TimeZoneStorageStrategy.NATIVE;
+					// otherwise we use a separate column
+					case NORMALIZE, NONE -> TimeZoneStorageStrategy.COLUMN;
 				};
 				case DEFAULT -> switch (timeZoneSupport) {
-					case NATIVE ->
-							// if the db has native support for timezones, we use that, and don't normalize
-							TimeZoneStorageStrategy.NATIVE;
-					case NORMALIZE, NONE ->
-							// otherwise we normalize things to UTC
-							TimeZoneStorageStrategy.NORMALIZE_UTC;
+					// if the db has native support for timezones, we use that, and don't normalize
+					case NATIVE -> TimeZoneStorageStrategy.NATIVE;
+					// otherwise we normalize things to UTC
+					case NORMALIZE, NONE -> TimeZoneStorageStrategy.NORMALIZE_UTC;
 				};
 			};
 		}
 
 		@Override
 		public WrapperArrayHandling getWrapperArrayHandling() {
-			return wrapperArrayHandling;
+			return wrapperArrayHandling == WrapperArrayHandling.PICK
+					? pickWrapperArrayHandling( getDialect() )
+					: wrapperArrayHandling;
 		}
 
 		@Override
@@ -954,6 +946,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			return allowExtensionsInCdi;
 		}
 
+		@Override
+		public boolean isXmlFormatMapperLegacyFormatEnabled() {
+			return xmlFormatMapperLegacyFormat;
+		}
+
 		/**
 		 * Yuck.  This is needed because JPA lets users define "global building options"
 		 * in {@code orm.xml} mappings.  Forget that there are generally multiple
@@ -971,9 +968,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 
 			if ( mappingDefaults.getImplicitSchemaName() == null ) {
-				mappingDefaults.implicitSchemaName = nullIfEmpty(
-						jpaOrmXmlPersistenceUnitDefaults.getDefaultSchemaName()
-				);
+				mappingDefaults.implicitSchemaName = nullIfEmpty( jpaOrmXmlPersistenceUnitDefaults.getDefaultSchemaName() );
 			}
 		}
 
@@ -1007,29 +1002,25 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	private static WrapperArrayHandling resolveWrapperArrayHandling(
-			ConfigurationService configService,
-			StandardServiceRegistry serviceRegistry) {
-		final WrapperArrayHandling setting = NullnessHelper.coalesceSuppliedValues(
+			ConfigurationService configService) {
+		return coalesceSuppliedValues(
 				() -> configService.getSetting(
 						WRAPPER_ARRAY_HANDLING,
 						WrapperArrayHandling::interpretExternalSettingLeniently
 				),
 				() -> resolveFallbackWrapperArrayHandling( configService )
 		);
+	}
 
-		if ( setting == WrapperArrayHandling.PICK ) {
-			final Dialect dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
-			if ( dialect.supportsStandardArrays()
-					&& ( dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY
-						|| dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.SQLXML ) ) {
-				return WrapperArrayHandling.ALLOW;
-			}
-			else {
-				return WrapperArrayHandling.LEGACY;
-			}
+	private static WrapperArrayHandling pickWrapperArrayHandling(Dialect dialect) {
+		if ( dialect.supportsStandardArrays()
+			&& ( dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY
+				|| dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.SQLXML ) ) {
+			return WrapperArrayHandling.ALLOW;
 		}
-
-		return setting;
+		else {
+			return WrapperArrayHandling.LEGACY;
+		}
 	}
 
 	private static WrapperArrayHandling resolveFallbackWrapperArrayHandling(

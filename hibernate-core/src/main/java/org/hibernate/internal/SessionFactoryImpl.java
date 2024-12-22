@@ -83,7 +83,6 @@ import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.SessionFactoryBasedWrapperOptions;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.LazyInitializer;
@@ -904,15 +903,14 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		return getJpaMetamodel().getNamedEntityGraphs( entityType );
 	}
 
-	@Override @SuppressWarnings({"unchecked", "rawtypes"})
+	@Override
 	public void runInTransaction(Consumer<EntityManager> work) {
-		inTransaction( (Consumer) work );
+		inTransaction( work );
 	}
 
 	@Override
 	public <R> R callInTransaction(Function<EntityManager, R> work) {
-		//noinspection unchecked,rawtypes
-		return (R) fromTransaction( (Function) work );
+		return fromTransaction( work );
 	}
 
 	@Override

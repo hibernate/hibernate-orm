@@ -25,8 +25,6 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.SingleNamingStrategy;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
@@ -47,6 +45,8 @@ import static org.hibernate.id.OptimizableGenerator.INITIAL_PARAM;
 import static org.hibernate.id.PersistentIdentifierGenerator.PK;
 import static org.hibernate.id.PersistentIdentifierGenerator.TABLE;
 import static org.hibernate.id.PersistentIdentifierGenerator.TABLES;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * Responsible for setting up the parameters which are passed to
@@ -220,22 +220,22 @@ public class GeneratorParameters {
 		definitionBuilder.addParam( org.hibernate.id.enhanced.TableGenerator.CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
 
 		final String catalog = tableGeneratorAnnotation.catalog();
-		if ( StringHelper.isNotEmpty( catalog ) ) {
+		if ( isNotBlank( catalog ) ) {
 			definitionBuilder.addParam( PersistentIdentifierGenerator.CATALOG, catalog );
 		}
 
 		final String schema = tableGeneratorAnnotation.schema();
-		if ( StringHelper.isNotEmpty( schema ) ) {
+		if ( isNotBlank( schema ) ) {
 			definitionBuilder.addParam( PersistentIdentifierGenerator.SCHEMA, schema );
 		}
 
 		final String table = tableGeneratorAnnotation.table();
-		if ( StringHelper.isNotEmpty( table ) ) {
+		if ( isNotBlank( table ) ) {
 			definitionBuilder.addParam( org.hibernate.id.enhanced.TableGenerator.TABLE_PARAM, table );
 		}
 
 		final String pkColumnName = tableGeneratorAnnotation.pkColumnName();
-		if ( StringHelper.isNotEmpty( pkColumnName ) ) {
+		if ( isNotBlank( pkColumnName ) ) {
 			definitionBuilder.addParam(
 					org.hibernate.id.enhanced.TableGenerator.SEGMENT_COLUMN_PARAM,
 					pkColumnName
@@ -243,7 +243,7 @@ public class GeneratorParameters {
 		}
 
 		final String pkColumnValue = tableGeneratorAnnotation.pkColumnValue();
-		if ( StringHelper.isNotEmpty( pkColumnValue ) ) {
+		if ( isNotBlank( pkColumnValue ) ) {
 			definitionBuilder.addParam(
 					org.hibernate.id.enhanced.TableGenerator.SEGMENT_VALUE_PARAM,
 					pkColumnValue
@@ -251,7 +251,7 @@ public class GeneratorParameters {
 		}
 
 		final String valueColumnName = tableGeneratorAnnotation.valueColumnName();
-		if ( StringHelper.isNotEmpty( valueColumnName ) ) {
+		if ( isNotBlank( valueColumnName ) ) {
 			definitionBuilder.addParam(
 					org.hibernate.id.enhanced.TableGenerator.VALUE_COLUMN_PARAM,
 					valueColumnName
@@ -259,7 +259,7 @@ public class GeneratorParameters {
 		}
 
 		final String options = tableGeneratorAnnotation.options();
-		if ( StringHelper.isNotEmpty( options ) ) {
+		if ( isNotBlank( options ) ) {
 			definitionBuilder.addParam(
 					PersistentIdentifierGenerator.OPTIONS,
 					options
@@ -279,7 +279,7 @@ public class GeneratorParameters {
 
 		// TODO : implement unique-constraint support
 		final UniqueConstraint[] uniqueConstraints = tableGeneratorAnnotation.uniqueConstraints();
-		if ( CollectionHelper.isNotEmpty( uniqueConstraints ) ) {
+		if ( isNotEmpty( uniqueConstraints ) ) {
 			LOG.ignoringTableGeneratorConstraints( tableGeneratorAnnotation.name() );
 		}
 	}
@@ -292,17 +292,17 @@ public class GeneratorParameters {
 		definitionBuilder.setStrategy( SequenceStyleGenerator.class.getName() );
 
 		final String catalog = sequenceGeneratorAnnotation.catalog();
-		if ( StringHelper.isNotEmpty( catalog ) ) {
+		if ( isNotBlank( catalog ) ) {
 			definitionBuilder.addParam( PersistentIdentifierGenerator.CATALOG, catalog );
 		}
 
 		final String schema = sequenceGeneratorAnnotation.schema();
-		if ( StringHelper.isNotEmpty( schema ) ) {
+		if ( isNotBlank( schema ) ) {
 			definitionBuilder.addParam( PersistentIdentifierGenerator.SCHEMA, schema );
 		}
 
 		final String sequenceName = sequenceGeneratorAnnotation.sequenceName();
-		if ( StringHelper.isNotEmpty( sequenceName ) ) {
+		if ( isNotBlank( sequenceName ) ) {
 			definitionBuilder.addParam( SequenceStyleGenerator.SEQUENCE_PARAM, sequenceName );
 		}
 
@@ -316,7 +316,7 @@ public class GeneratorParameters {
 		);
 
 		final String options = sequenceGeneratorAnnotation.options();
-		if ( StringHelper.isNotEmpty( options ) ) {
+		if ( isNotBlank( options ) ) {
 			definitionBuilder.addParam( PersistentIdentifierGenerator.OPTIONS, options );
 		}
 	}

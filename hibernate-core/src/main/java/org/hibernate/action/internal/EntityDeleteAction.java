@@ -13,7 +13,9 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.spi.PostCommitDeleteEventListener;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
@@ -126,7 +128,16 @@ public class EntityDeleteAction extends EntityAction {
 		final Object ck = lockCacheItem();
 
 		if ( !isCascadeDeleteEnabled && !veto ) {
-			persister.getDeleteCoordinator().delete( instance, id, version, session );
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent event = eventMonitor.beginEntityDeleteEvent();
+			boolean success = false;
+			try {
+				persister.getDeleteCoordinator().delete( instance, id, version, session );
+				success = true;
+			}
+			finally {
+				eventMonitor.completeEntityDeleteEvent( event, id, persister.getEntityName(), success, session );
+			}
 		}
 
 		if ( isInstanceLoaded() ) {
@@ -208,13 +219,7 @@ public class EntityDeleteAction extends EntityAction {
 	}
 
 	PostDeleteEvent newPostDeleteEvent() {
-		return new PostDeleteEvent(
-				getInstance(),
-				getId(),
-				state,
-				getPersister(),
-				eventSource()
-		);
+		return new PostDeleteEvent( getInstance(), getId(), state, getPersister(), eventSource() );
 	}
 
 	protected void postCommitDelete(boolean success) {

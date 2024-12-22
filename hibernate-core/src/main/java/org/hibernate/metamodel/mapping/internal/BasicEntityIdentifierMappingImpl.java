@@ -162,9 +162,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public Object instantiate() {
-		return entityPersister.getRepresentationStrategy()
-				.getInstantiator()
-				.instantiate( sessionFactory );
+		return entityPersister.getRepresentationStrategy().getInstantiator().instantiate();
 	}
 
 	@Override

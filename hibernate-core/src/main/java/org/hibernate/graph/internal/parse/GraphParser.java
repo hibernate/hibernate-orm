@@ -64,9 +64,9 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final Stack<GraphImplementor> graphStack = new StandardStack<>( GraphImplementor.class );
-	private final Stack<AttributeNodeImplementor> attributeNodeStack = new StandardStack<>( AttributeNodeImplementor.class );
-	private final Stack<SubGraphGenerator> graphSourceStack = new StandardStack<>(SubGraphGenerator.class);
+	private final Stack<GraphImplementor> graphStack = new StandardStack<>();
+	private final Stack<AttributeNodeImplementor> attributeNodeStack = new StandardStack<>();
+	private final Stack<SubGraphGenerator> graphSourceStack = new StandardStack<>();
 
 	public GraphParser(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;

@@ -36,7 +36,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
-import org.hibernate.models.internal.util.StringHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.query.sql.internal.ParameterParser;
@@ -60,6 +59,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.determineProperSizing;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOf;
+import static org.hibernate.models.internal.util.StringHelper.isEmpty;
 
 /**
  * Responsible for reading named queries defined in annotations and registering
@@ -85,7 +85,7 @@ public abstract class QueryBinder {
 		final String queryString = namedQuery.query();
 		final Class<?> resultClass = namedQuery.resultClass();
 
-		if ( queryName.isEmpty() ) {
+		if ( queryName.isBlank() ) {
 			throw new AnnotationException( "Class or package level '@NamedQuery' annotation must specify a 'name'" );
 		}
 
@@ -135,7 +135,7 @@ public abstract class QueryBinder {
 		final String registrationName = namedNativeQuery.name();
 		final String queryString = namedNativeQuery.query();
 
-		if ( registrationName.isEmpty() ) {
+		if ( registrationName.isBlank() ) {
 			throw new AnnotationException( "Class or package level '@NamedNativeQuery' annotation must specify a 'name'" );
 		}
 
@@ -223,7 +223,7 @@ public abstract class QueryBinder {
 
 		final String registrationName = namedNativeQuery.name();
 
-		if ( registrationName.isEmpty() ) {
+		if ( registrationName.isBlank() ) {
 			throw new AnnotationException( "Class or package level '@NamedNativeQuery' annotation must specify a 'name'" );
 		}
 
@@ -321,7 +321,7 @@ public abstract class QueryBinder {
 
 			final String typeName = builder.getParameterTypes().get( paramName );
 			final ClassDetails classDetails;
-			if ( StringHelper.isEmpty( typeName ) ) {
+			if ( isEmpty( typeName ) ) {
 				classDetails = ClassDetails.VOID_CLASS_DETAILS;
 			}
 			else {
@@ -391,7 +391,7 @@ public abstract class QueryBinder {
 		final String registrationName = namedQuery.name();
 		final Class<?> resultClass = namedQuery.resultClass();
 
-		if ( registrationName.isEmpty() ) {
+		if ( registrationName.isBlank() ) {
 			throw new AnnotationException( "Class or package level '@NamedQuery' annotation must specify a 'name'" );
 		}
 
@@ -452,7 +452,7 @@ public abstract class QueryBinder {
 			MetadataBuildingContext context,
 			boolean isDefault) {
 		if ( namedStoredProcedureQuery != null ) {
-			if ( namedStoredProcedureQuery.name().isEmpty() ) {
+			if ( namedStoredProcedureQuery.name().isBlank() ) {
 				throw new AnnotationException( "Class or package level '@NamedStoredProcedureQuery' annotation must specify a 'name'" );
 			}
 

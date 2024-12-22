@@ -189,6 +189,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAmount;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -278,7 +279,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	private static final Pattern ESCAPE_CLOSING_COMMENT_PATTERN = Pattern.compile( "\\*/" );
 	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
-	private static final Pattern QUERY_PATTERN = Pattern.compile( "^\\s*(select\\b.+?\\bfrom\\b.+?)(\\b(where|join)\\b.+?)$" );
+	private static final Pattern QUERY_PATTERN = Pattern.compile(
+		"^\\s*(select\\b.+?\\bfrom\\b.+?)(\\b(?:natural )?(?:left |right |full )?(?:inner |outer |cross )?join.+?\\b)?(\\bwhere\\b.+?)$");
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Dialect.class.getName() );
 
@@ -838,11 +840,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Generate a check condition for column with the given set of values.
+	 * Generate a SQL {@code check} condition for the given column,
+	 * constraining to the given values.
 	 *
-	 * @apiNote Only supports TINYINT, SMALLINT and (VAR)CHAR
+	 * @return a SQL expression that will occur in a {@code check} constraint
+	 *
+	 * @apiNote Only supports {@code TINYINT}, {@code SMALLINT}, {@code CHAR},
+	 *          and {@code VARCHAR}
+	 *
+	 * @since 7.0
 	 */
-	public String getCheckCondition(String columnName, Set<?> valueSet, JdbcType jdbcType) {
+	public String getCheckCondition(String columnName, Collection<?> valueSet, JdbcType jdbcType) {
 		final boolean isCharacterJdbcType = isCharacterType( jdbcType.getJdbcTypeCode() );
 		assert isCharacterJdbcType || isIntegral( jdbcType.getJdbcTypeCode() );
 
@@ -855,11 +863,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				nullIsValid = true;
 				continue;
 			}
+			check.append( separator );
 			if ( isCharacterJdbcType ) {
-				check.append( separator ).append('\'').append( value ).append('\'');
+				check.append('\'').append( value ).append('\'');
 			}
 			else {
-				check.append( separator ).append( value );
+				check.append( value );
 			}
 			separator = ",";
 		}
@@ -3821,17 +3830,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * A setting specific to {@link SybaseASEDialect}.
-	 *
-	 * @deprecated This is only called from {@link SybaseASESqlAstTranslator}
-	 *             so it doesn't need to be declared here.
-	 */
-	@Deprecated(since = "6")
-	public boolean isAnsiNullOn() {
-		return true;
-	}
-
-	/**
 	 * Does this dialect/database require casting of non-string arguments
 	 * in the {@code concat()} function?
 	 *
@@ -4778,13 +4776,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public static String addQueryHints(String query, String hints) {
 		Matcher matcher = QUERY_PATTERN.matcher( query );
 		if ( matcher.matches() && matcher.groupCount() > 1 ) {
-			String startToken = matcher.group( 1 );
-			String endToken = matcher.group( 2 );
+			final String startToken = matcher.group(1);
+			// Null if there is no join in the query
+			final String joinToken = Objects.toString(matcher.group(2), "");
+			final String endToken = matcher.group(3);
 
 			return startToken +
 					" use index (" +
 					hints +
 					") " +
+					joinToken +
 					endToken;
 		}
 		else {

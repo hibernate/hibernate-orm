@@ -39,80 +39,34 @@ plugins {
 
 apply from: file( 'gradle/module.gradle' )
 
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Release Task
 
-task release {
+tasks.register('release') {
 	description = "The task performed when we are performing a release build.  Relies on " +
 			"the fact that subprojects will appropriately define a release task " +
 			"themselves if they have any release-related activities to perform"
 
 	doFirst {
 		def javaVersionsInUse = jdkVersions.allVersions
-		if ( javaVersionsInUse != [JavaLanguageVersion.of( 11 )].toSet() ) {
-			throw new IllegalStateException( "Please use JDK 11 to perform the release. Currently using: ${javaVersionsInUse}" )
-		}
-	}
-}
-
-task publish {
-	description = "The task performed when we want to just publish maven artifacts.  Relies on " +
-			"the fact that subprojects will appropriately define a release task " +
-			"themselves if they have any publish-related activities to perform"
-}
-
-ext {
-	if ( project.hasProperty( 'hibernatePublishUsername' ) ) {
-		if ( ! project.hasProperty( 'hibernatePublishPassword' ) ) {
-			throw new GradleException( "Should specify both `hibernatePublishUsername` and `hibernatePublishPassword` as project properties" );
+		if (javaVersionsInUse != [JavaLanguageVersion.of(17)].toSet()) {
+			throw new IllegalStateException("Please use JDK 17 to perform the release. Currently using: ${javaVersionsInUse}")
 		}
 	}
 }
 
 nexusPublishing {
 	repositories {
-		sonatype {
-			username = project.hasProperty( 'hibernatePublishUsername' ) ? project.property( 'hibernatePublishUsername' ) : null
-			password = project.hasProperty( 'hibernatePublishPassword' ) ? project.property( 'hibernatePublishPassword' ) : null
-		}
+		sonatype()
 	}
 }
-
-gradle.taskGraph.addTaskExecutionGraphListener(
-		new TaskExecutionGraphListener() {
-			@Override
-			void graphPopulated(TaskExecutionGraph graph) {
-				String[] tasksToLookFor = [
-						'publish',
-						'publishToSonatype',
-						'publishAllPublicationsToSonatype',
-						'publishPublishedArtifactsPublicationToSonatypeRepository',
-						'publishRelocationArtifactsPublicationToSonatypeRepository',
-				]
-
-				for ( String taskToLookFor : tasksToLookFor ) {
-					if ( graph.hasTask( taskToLookFor ) ) {
-						// trying to publish - make sure the needed credentials are available
-
-						if ( project.property( 'hibernatePublishUsername' ) == null ) {
-							throw new RuntimeException( "`-PhibernatePublishUsername=...` not found" )
-						}
-						if ( project.property( 'hibernatePublishPassword' ) == null ) {
-							throw new RuntimeException( "`-PhibernatePublishPassword=...` not found" )
-						}
-
-						break;
-					}
-				}
-			}
-		}
-)
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // CI Build Task
 
-task ciBuild {
+tasks.register('ciBuild') {
 	description = "The task performed when one of the 'main' jobs are triggered on the " +
 			"CI server.  Just as above, relies on the fact that subprojects will " +
 			"appropriately define a release task themselves if they have any tasks " +
@@ -139,6 +93,3 @@ idea {
 		name = "hibernate-orm"
 	}
 }
-
-
-

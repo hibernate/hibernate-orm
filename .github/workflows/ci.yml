@@ -214,6 +214,8 @@ jobs:
         env:
           RDBMS: ${{ matrix.rdbms }}
           RUNID: ${{ github.run_number }}
+          # These runners have no HOME variable set by default, we need to explicitly set it to make the build work
+          HOME: /root
         run: ./ci/build-github.sh
         shell: bash
       # Upload build scan data.

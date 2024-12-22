@@ -15,10 +15,12 @@ import org.hibernate.sql.results.graph.Initializer;
 
 /**
  * This is in all practical terms a {@code Map<NavigablePath, Initializer>}
- * but wrapping an HashMap so to keep the client code readable as we need
+ * but wrapping a {@code HashMap} to keep the client code readable as we need
  * to:
- * a) have a way to log all initializers
- * b) prevent type pollution from happening on Initializer retrieval
+ * <ul>
+ *     <li>have a way to log all initializers</li>
+ *     <li>prevent type pollution from happening on Initializer retrieval</li>
+ * </ul>
  * I also consider it good practice to only expose the minimal set of
  * operations the client actually needs.
  */

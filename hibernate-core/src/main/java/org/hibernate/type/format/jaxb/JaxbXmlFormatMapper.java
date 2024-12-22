@@ -18,6 +18,8 @@ import java.util.Map;
 
 import javax.xml.namespace.QName;
 
+import jakarta.xml.bind.annotation.XmlElement;
+import org.hibernate.dialect.XmlHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
@@ -44,8 +46,27 @@ import org.w3c.dom.Node;
 public final class JaxbXmlFormatMapper implements FormatMapper {
 
 	public static final String SHORT_NAME = "jaxb";
+	private final boolean legacyFormat;
+	private final String collectionElementTagName;
+	private final String mapKeyTagName;
+	private final String mapValueTagName;
 
 	public JaxbXmlFormatMapper() {
+		this( true );
+	}
+
+	public JaxbXmlFormatMapper(boolean legacyFormat) {
+		this.legacyFormat = legacyFormat;
+		if ( legacyFormat ) {
+			collectionElementTagName = "value";
+			mapKeyTagName = "key";
+			mapValueTagName = "value";
+		}
+		else {
+			collectionElementTagName = XmlHelper.ROOT_TAG;
+			mapKeyTagName = "k";
+			mapValueTagName = "v";
+		}
 	}
 
 	@Override
@@ -64,18 +85,27 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					final Type[] typeArguments = ( (ParameterizedType) javaType.getJavaType() ).getActualTypeArguments();
 					keyClass = ReflectHelper.getClass( typeArguments[0] );
 					valueClass = ReflectHelper.getClass( typeArguments[1] );
-					context = JAXBContext.newInstance( MapWrapper.class, keyClass, valueClass );
+					if ( legacyFormat ) {
+						context = JAXBContext.newInstance( LegacyMapWrapper.class, keyClass, valueClass );
+					}
+					else {
+						context = JAXBContext.newInstance( MapWrapper.class, EntryWrapper.class, keyClass, valueClass );
+					}
 				}
 				else {
 					keyClass = Object.class;
 					valueClass = Object.class;
-					context = JAXBContext.newInstance( MapWrapper.class );
+					if ( legacyFormat ) {
+						context = JAXBContext.newInstance( LegacyMapWrapper.class );
+					}
+					else {
+						context = JAXBContext.newInstance( MapWrapper.class, EntryWrapper.class );
+					}
 				}
 				final Unmarshaller unmarshaller = context.createUnmarshaller();
-				final MapWrapper mapWrapper = (MapWrapper) unmarshaller
+				final ManagedMapWrapper mapWrapper = (ManagedMapWrapper) unmarshaller
 						.unmarshal( new StringReader( charSequence.toString() ) );
-				final Collection<Object> elements = mapWrapper.elements;
-				final Map<Object, Object> map = CollectionHelper.linkedMapOfSize( elements.size() >> 1 );
+				final Map<Object, Object> map = CollectionHelper.linkedMapOfSize( mapWrapper.size() >> 1 );
 				final JAXBIntrospector jaxbIntrospector = context.createJAXBIntrospector();
 				final JAXBElementTransformer keyTransformer;
 				final JAXBElementTransformer valueTransformer;
@@ -83,7 +113,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					keyTransformer = createTransformer(
 							appender,
 							keyClass,
-							"key",
+							mapKeyTagName,
 							null,
 							jaxbIntrospector,
 							wrapperOptions
@@ -91,7 +121,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					valueTransformer = createTransformer(
 							appender,
 							( (BasicPluralJavaType<?>) javaType ).getElementJavaType(),
-							"value",
+							mapValueTagName,
 							null,
 							jaxbIntrospector,
 							wrapperOptions
@@ -101,7 +131,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					keyTransformer = createTransformer(
 							appender,
 							keyClass,
-							"key",
+							mapKeyTagName,
 							null,
 							jaxbIntrospector,
 							wrapperOptions
@@ -109,16 +139,26 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					valueTransformer = createTransformer(
 							appender,
 							valueClass,
-							"value",
+							mapValueTagName,
 							null,
 							jaxbIntrospector,
 							wrapperOptions
 					);
 				}
-				for ( final Iterator<Object> iterator = elements.iterator(); iterator.hasNext(); ) {
-					final Object key = keyTransformer.fromJAXBElement( iterator.next(), unmarshaller );
-					final Object value = valueTransformer.fromJAXBElement( iterator.next(), unmarshaller );
-					map.put( key, value );
+				if ( legacyFormat ) {
+					final Collection<Object> elements = ( (LegacyMapWrapper) mapWrapper).elements;
+					for ( final Iterator<Object> iterator = elements.iterator(); iterator.hasNext(); ) {
+						final Object key = keyTransformer.fromJAXBElement( iterator.next(), unmarshaller );
+						final Object value = valueTransformer.fromJAXBElement( iterator.next(), unmarshaller );
+						map.put( key, value );
+					}
+				}
+				else {
+					for ( EntryWrapper entry : ((MapWrapper) mapWrapper).entries ) {
+						final Object key = keyTransformer.fromXmlContent( entry.key );
+						final Object value = valueTransformer.fromXmlContent( entry.value );
+						map.put( key, value );
+					}
 				}
 				return javaType.wrap( map, wrapperOptions );
 			}
@@ -145,7 +185,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					valueTransformer = createTransformer(
 							appender,
 							( (BasicPluralJavaType<?>) javaType ).getElementJavaType(),
-							"value",
+							collectionElementTagName,
 							null,
 							jaxbIntrospector,
 							wrapperOptions
@@ -155,7 +195,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					valueTransformer = createTransformer(
 							appender,
 							valueClass,
-							"value",
+							collectionElementTagName,
 							null,
 							jaxbIntrospector,
 							wrapperOptions
@@ -180,7 +220,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					valueTransformer = createTransformer(
 							appender,
 							( (BasicPluralJavaType<?>) javaType ).getElementJavaType(),
-							"value",
+							collectionElementTagName,
 							null,
 							jaxbIntrospector,
 							wrapperOptions
@@ -190,7 +230,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					valueTransformer = createTransformer(
 							appender,
 							valueClass,
-							"value",
+							collectionElementTagName,
 							null,
 							jaxbIntrospector,
 							wrapperOptions
@@ -243,19 +283,28 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 				final JAXBContext context;
 				final Class<Object> keyClass;
 				final Class<Object> valueClass;
-				final MapWrapper mapWrapper = new MapWrapper();
 				final Map<?, ?> map = (Map<?, ?>) value;
 				if ( javaType.getJavaType() instanceof ParameterizedType ) {
 					final Type[] typeArguments = ( (ParameterizedType) javaType.getJavaType() ).getActualTypeArguments();
 					keyClass = ReflectHelper.getClass( typeArguments[0] );
 					valueClass = ReflectHelper.getClass( typeArguments[1] );
-					context = JAXBContext.newInstance( MapWrapper.class, keyClass, valueClass );
+					if ( legacyFormat ) {
+						context = JAXBContext.newInstance( LegacyMapWrapper.class, keyClass, valueClass );
+					}
+					else {
+						context = JAXBContext.newInstance( MapWrapper.class, EntryWrapper.class, keyClass, valueClass );
+					}
 				}
 				else {
 					if ( map.isEmpty() ) {
 						keyClass = Object.class;
 						valueClass = Object.class;
-						context = JAXBContext.newInstance( MapWrapper.class );
+						if ( legacyFormat ) {
+							context = JAXBContext.newInstance( LegacyMapWrapper.class );
+						}
+						else {
+							context = JAXBContext.newInstance( MapWrapper.class, EntryWrapper.class );
+						}
 					}
 					else {
 						final Map.Entry<?, ?> firstEntry = map.entrySet().iterator().next();
@@ -263,9 +312,15 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 						keyClass = (Class<Object>) firstEntry.getKey().getClass();
 						//noinspection unchecked
 						valueClass = (Class<Object>) firstEntry.getValue().getClass();
-						context = JAXBContext.newInstance( MapWrapper.class, keyClass, valueClass );
+						if ( legacyFormat ) {
+							context = JAXBContext.newInstance( LegacyMapWrapper.class, keyClass, valueClass );
+						}
+						else {
+							context = JAXBContext.newInstance( MapWrapper.class, EntryWrapper.class, keyClass, valueClass );
+						}
 					}
 				}
+				final ManagedMapWrapper managedMapWrapper = legacyFormat ? new LegacyMapWrapper() : new MapWrapper();
 				if ( !map.isEmpty() ) {
 					Object exampleKey = null;
 					Object exampleValue = null;
@@ -289,7 +344,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					final JAXBElementTransformer keyTransformer = createTransformer(
 							appender,
 							keyClass,
-							"key",
+							mapKeyTagName,
 							exampleKey,
 							jaxbIntrospector,
 							wrapperOptions
@@ -297,17 +352,29 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					final JAXBElementTransformer valueTransformer = createTransformer(
 							appender,
 							valueClass,
-							"value",
+							mapValueTagName,
 							exampleValue,
 							jaxbIntrospector,
 							wrapperOptions
 					);
-					for ( Map.Entry<?, ?> entry : map.entrySet() ) {
-						mapWrapper.elements.add( keyTransformer.toJAXBElement( entry.getKey() ) );
-						mapWrapper.elements.add( valueTransformer.toJAXBElement( entry.getValue() ) );
+					if ( legacyFormat ) {
+						final LegacyMapWrapper legacyMapWrapper = (LegacyMapWrapper) managedMapWrapper;
+						for ( Map.Entry<?, ?> entry : map.entrySet() ) {
+							legacyMapWrapper.elements.add( keyTransformer.toJAXBElement( entry.getKey() ) );
+							legacyMapWrapper.elements.add( valueTransformer.toJAXBElement( entry.getValue() ) );
+						}
+					}
+					else {
+						final MapWrapper mapWrapper = (MapWrapper) managedMapWrapper;
+						for ( Map.Entry<?, ?> entry : map.entrySet() ) {
+							mapWrapper.entries.add( new EntryWrapper(
+									(String) keyTransformer.toJAXBElement( entry.getKey() ).getValue(),
+									(String) valueTransformer.toJAXBElement( entry.getValue() ).getValue()
+							) );
+						}
 					}
 				}
-				createMarshaller( context ).marshal( mapWrapper, stringWriter );
+				createMarshaller( context ).marshal( managedMapWrapper, stringWriter );
 			}
 			else if ( Collection.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
 				final JAXBContext context;
@@ -347,7 +414,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 						valueTransformer = createTransformer(
 								appender,
 								( (BasicPluralJavaType<?>) javaType ).getElementJavaType(),
-								"value",
+								collectionElementTagName,
 								exampleValue,
 								context.createJAXBIntrospector(),
 								wrapperOptions
@@ -357,7 +424,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 						valueTransformer = createTransformer(
 								appender,
 								valueClass,
-								"value",
+								collectionElementTagName,
 								exampleValue,
 								context.createJAXBIntrospector(),
 								wrapperOptions
@@ -389,7 +456,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 						transformer = createTransformer(
 								appender,
 								( (BasicPluralJavaType<?>) javaType ).getElementJavaType(),
-								"value",
+								collectionElementTagName,
 								exampleElement,
 								context.createJAXBIntrospector(),
 								wrapperOptions
@@ -399,7 +466,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 						transformer = createTransformer(
 								appender,
 								valueClass,
-								"value",
+								collectionElementTagName,
 								exampleElement,
 								context.createJAXBIntrospector(),
 								wrapperOptions
@@ -417,7 +484,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					final JavaTypeJAXBElementTransformer transformer = new JavaTypeJAXBElementTransformer(
 							appender,
 							( (BasicPluralJavaType<?>) javaType ).getElementJavaType(),
-							"value"
+							collectionElementTagName
 					);
 					for ( int i = 0; i < length; i++ ) {
 						list.add( transformer.toJAXBElement( Array.get( value, i ) ) );
@@ -444,10 +511,9 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 			Object exampleElement,
 			JAXBIntrospector introspector,
 			WrapperOptions wrapperOptions) {
-		final JavaType<Object> elementJavaType = wrapperOptions.getSessionFactory()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.findDescriptor( elementClass );
+		final JavaType<Object> elementJavaType =
+				wrapperOptions.getTypeConfiguration().getJavaTypeRegistry()
+						.findDescriptor( elementClass );
 		if ( exampleElement == null && ( elementJavaType == null || JavaTypeHelper.isUnknown( elementJavaType ) ) ) {
 			try {
 				final Constructor<?> declaredConstructor = elementClass.getDeclaredConstructor();
@@ -500,17 +566,60 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 		return marshaller;
 	}
 
+	public static interface ManagedMapWrapper {
+		int size();
+	}
+
 	@XmlRootElement(name = "Map")
-	public static class MapWrapper {
+	public static class LegacyMapWrapper implements ManagedMapWrapper {
 		@XmlAnyElement
 		Collection<Object> elements;
 
-		public MapWrapper() {
+		public LegacyMapWrapper() {
 			this.elements = new ArrayList<>();
 		}
 
-		public MapWrapper(Collection<Object> elements) {
+		public LegacyMapWrapper(Collection<Object> elements) {
 			this.elements = elements;
+		}
+
+		@Override
+		public int size() {
+			return elements.size();
+		}
+	}
+
+	@XmlRootElement(name = "Map")
+	public static class MapWrapper implements ManagedMapWrapper {
+		@XmlElement(name = "e")
+		Collection<EntryWrapper> entries;
+
+		public MapWrapper() {
+			this.entries = new ArrayList<>();
+		}
+
+		public MapWrapper(Collection<EntryWrapper> elements) {
+			this.entries = elements;
+		}
+
+		@Override
+		public int size() {
+			return entries.size();
+		}
+	}
+
+	public static class EntryWrapper {
+		@XmlElement(name = "k", nillable = true)
+		String key;
+		@XmlElement(name = "v", nillable = true)
+		String value;
+
+		public EntryWrapper() {
+		}
+
+		public EntryWrapper(String key, String value) {
+			this.key = key;
+			this.value = value;
 		}
 	}
 
@@ -531,6 +640,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 	private static interface JAXBElementTransformer {
 		JAXBElement<?> toJAXBElement(Object o);
 		Object fromJAXBElement(Object element, Unmarshaller unmarshaller) throws JAXBException;
+		Object fromXmlContent(String content);
 	}
 
 	private static class SimpleJAXBElementTransformer implements JAXBElementTransformer {
@@ -559,6 +669,11 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 				value = valueElement;
 			}
 			return value;
+		}
+
+		@Override
+		public Object fromXmlContent(String content) {
+			return content;
 		}
 	}
 
@@ -593,8 +708,13 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 
 		@Override
 		public Object fromJAXBElement(Object element, Unmarshaller unmarshaller) throws JAXBException {
-			final String value = unmarshaller.unmarshal( (Node) element, String.class ).getValue();
+			final String value = element == null ? null : unmarshaller.unmarshal( (Node) element, String.class ).getValue();
 			return value == null ? null : elementJavaType.fromEncodedString( value, 0, value.length() );
+		}
+
+		@Override
+		public Object fromXmlContent(String content) {
+			return content == null ? null : elementJavaType.fromEncodedString( content, 0, content.length() );
 		}
 	}
 }

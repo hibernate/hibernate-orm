@@ -7,7 +7,6 @@ package org.hibernate.metamodel.internal;
 
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -57,9 +56,9 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 	}
 
 	@Override
-	public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
-		return super.isInstance( object, sessionFactory ) ||
-				//this one needed only for guessEntityMode()
-				( proxyInterface!=null && proxyInterface.isInstance(object) );
+	public boolean isInstance(Object object) {
+		return super.isInstance( object )
+			// this one needed only for guessEntityMode()
+			|| proxyInterface!=null && proxyInterface.isInstance(object);
 	}
 }

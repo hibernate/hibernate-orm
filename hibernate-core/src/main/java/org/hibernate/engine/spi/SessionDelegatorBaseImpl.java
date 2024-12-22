@@ -34,7 +34,7 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -70,6 +70,7 @@ import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.metamodel.Metamodel;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.type.format.FormatMapper;
 
 /**
  * A wrapper class that delegates all method invocations to a delegate instance of
@@ -222,8 +223,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void setCacheMode(CacheMode cm) {
-		delegate.setCacheMode( cm );
+	public void setCacheMode(CacheMode cacheMode) {
+		delegate.setCacheMode( cacheMode );
 	}
 
 	@Override
@@ -1167,8 +1168,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public EventManager getEventManager() {
-		return delegate.getEventManager();
+	public EventMonitor getEventMonitor() {
+		return delegate.getEventMonitor();
 	}
 
 	@Override
@@ -1199,5 +1200,15 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public TimeZone getJdbcTimeZone() {
 		return delegate.getJdbcTimeZone();
+	}
+
+	@Override
+	public FormatMapper getJsonFormatMapper() {
+		return delegate.getJsonFormatMapper();
+	}
+
+	@Override
+	public FormatMapper getXmlFormatMapper() {
+		return delegate.getXmlFormatMapper();
 	}
 }

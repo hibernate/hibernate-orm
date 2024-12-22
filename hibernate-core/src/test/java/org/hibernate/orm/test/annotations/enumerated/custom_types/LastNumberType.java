@@ -9,8 +9,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.orm.test.annotations.enumerated.enums.LastNumber;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * @author Janario Oliveira
@@ -23,7 +23,7 @@ public class LastNumberType extends org.hibernate.type.EnumType<LastNumber> {
 	}
 
 	@Override
-	public LastNumber nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	public LastNumber nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
 		String persistValue = (String) rs.getObject( position );
 		if ( rs.wasNull() ) {
@@ -33,7 +33,7 @@ public class LastNumberType extends org.hibernate.type.EnumType<LastNumber> {
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, LastNumber value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, LastNumber value, int index, WrapperOptions options)
 			throws SQLException {
 		if ( value == null ) {
 			st.setNull( index, getSqlType() );

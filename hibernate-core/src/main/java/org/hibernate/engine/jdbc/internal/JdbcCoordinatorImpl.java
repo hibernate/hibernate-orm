@@ -4,15 +4,6 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.function.Supplier;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
@@ -20,7 +11,6 @@ import org.hibernate.engine.jdbc.batch.JdbcBatchLogging;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
-import org.hibernate.engine.jdbc.spi.InvalidatableWrapper;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.JdbcWrapper;
@@ -39,6 +29,14 @@ import org.hibernate.resource.jdbc.internal.ResourceRegistryStandardImpl;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.function.Supplier;
 
 import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
 
@@ -167,8 +165,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				return currentBatch;
 			}
 			else {
-				currentBatch.execute();
-				currentBatch.release();
+				try {
+					currentBatch.execute();
+				}
+				finally {
+					currentBatch.release();
+				}
 			}
 		}
 
@@ -194,7 +196,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	public void conditionallyExecuteBatch(BatchKey key) {
 		if ( currentBatch != null && !currentBatch.getKey().equals( key ) ) {
 			JdbcBatchLogging.BATCH_LOGGER.debugf( "Conditionally executing batch - %s", currentBatch.getKey() );
-			currentBatch.execute();
+			try {
+				currentBatch.execute();
+			}
+			finally {
+				currentBatch.release();
+			}
 		}
 	}
 
@@ -355,71 +362,6 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void disableReleases() {
 		releasesEnabled = false;
-	}
-
-	protected void close(Statement statement) {
-		LOG.tracev( "Closing prepared statement [{0}]", statement );
-
-		// Important for Statement caching -- some DBs (especially Sybase) log warnings on every Statement under
-		// certain situations.
-		sqlExceptionHelper().logAndClearWarnings( statement );
-
-		if ( statement instanceof InvalidatableWrapper ) {
-			@SuppressWarnings("unchecked")
-			final InvalidatableWrapper<Statement> wrapper = (InvalidatableWrapper<Statement>) statement;
-			close( wrapper.getWrappedObject() );
-			wrapper.invalidate();
-		}
-		else {
-			try {
-				// if we are unable to "clean" the prepared statement,
-				// we do not close it
-				try {
-					if ( statement.getMaxRows() != 0 ) {
-						statement.setMaxRows( 0 );
-					}
-					if ( statement.getQueryTimeout() != 0 ) {
-						statement.setQueryTimeout( 0 );
-					}
-				}
-				catch( SQLException sqle ) {
-					// there was a problem "cleaning" the prepared statement
-					if ( LOG.isDebugEnabled() ) {
-						LOG.debugf( "Exception clearing maxRows/queryTimeout [%s]", sqle.getMessage() );
-					}
-					// EARLY EXIT!!!
-					return;
-				}
-				statement.close();
-				if ( lastQuery == statement ) {
-					lastQuery = null;
-				}
-			}
-			catch ( Exception e ) {
-				LOG.debugf( "Unable to release JDBC statement [%s]", e.getMessage() );
-			}
-		}
-	}
-
-
-	protected void close(ResultSet resultSet) {
-		LOG.tracev( "Closing result set [{0}]", resultSet );
-
-		if ( resultSet instanceof InvalidatableWrapper ) {
-			@SuppressWarnings("unchecked")
-			final InvalidatableWrapper<ResultSet> wrapper = (InvalidatableWrapper<ResultSet>) resultSet;
-			close( wrapper.getWrappedObject() );
-			wrapper.invalidate();
-			return;
-		}
-
-		try {
-			resultSet.close();
-		}
-		catch ( Exception e ) {
-			// try to handle general errors more elegantly
-			LOG.debugf( "Unable to release JDBC result set [%s]", e.getMessage() );
-		}
 	}
 
 	@Override

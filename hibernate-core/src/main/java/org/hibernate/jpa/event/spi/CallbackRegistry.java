@@ -5,7 +5,7 @@
 package org.hibernate.jpa.event.spi;
 
 /**
- * Registry of Callbacks by entity and type
+ * Registry of JPA entity lifecycle callbacks by entity and type.
  *
  * @author Steve Ebersole
  */

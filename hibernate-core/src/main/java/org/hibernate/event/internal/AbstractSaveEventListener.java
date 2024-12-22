@@ -11,7 +11,6 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
-import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingAction;
@@ -161,7 +160,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			if  ( LOG.isDebugEnabled() ) {
 				// TODO: define toString()s for generators
 				LOG.debugf(
-						"Generated identifier: %s, using strategy: %s",
+						"Generated identifier [%s] using generator '%s'",
 						persister.getIdentifierType().toLoggableString( id, source.getFactory() ),
 						generator.getClass().getName()
 				);
@@ -211,16 +210,11 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 		}
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Saving {0}", infoString( persister, id, source.getFactory() ) );
+			LOG.trace( "Saving " + infoString( persister, id, source.getFactory() ) );
 		}
 
 		final EntityKey key = useIdentityColumn ? null : entityKey( id, persister, source );
-		if ( invokeSaveLifecycle( entity, persister, source ) ) {
-			return id;
-		}
-		else {
-			return performSaveOrReplicate( entity, key, persister, useIdentityColumn, context, source, delayIdentityInserts );
-		}
+		return performSaveOrReplicate( entity, key, persister, useIdentityColumn, context, source, delayIdentityInserts );
 	}
 
 	private static EntityKey entityKey(Object id, EntityPersister persister, EventSource source) {
@@ -239,19 +233,6 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			source.forceFlush( key );
 		}
 		return key;
-	}
-
-	protected boolean invokeSaveLifecycle(Object entity, EntityPersister persister, EventSource source) {
-		// Sub-insertions should occur before containing insertion so
-		// Try to do the callback now
-		if ( persister.implementsLifecycle() ) {
-			LOG.debug( "Calling onSave()" );
-			if ( ((Lifecycle) entity).onSave( source ) ) {
-				LOG.debug( "Insertion vetoed by onSave()" );
-				return true;
-			}
-		}
-		return false;
 	}
 
 	/**
@@ -412,7 +393,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	}
 
 	/**
-	 * After the save, will te version number be incremented
+	 * After the save, will the version number be incremented
 	 * if the instance is modified?
 	 *
 	 * @return True if the version will be incremented on an entity change after save;

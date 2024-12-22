@@ -113,6 +113,8 @@ import org.hibernate.type.MapType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
@@ -257,21 +259,15 @@ public abstract class MockSessionFactory
 	}
 
 	static CollectionType createCollectionType(String role, String name) {
-		switch (name) {
-			case "Set":
-			case "SortedSet":
+		return switch ( name ) {
+			case "Set", "SortedSet" ->
 				//might actually be a bag!
 				//TODO: look for @OrderColumn on the property
-				return new SetType(role, null);
-			case "List":
-			case "SortedList":
-				return new ListType(role, null);
-			case "Map":
-			case "SortedMap":
-				return new MapType(role, null);
-			default:
-				return new BagType(role, null);
-		}
+					new SetType( role, null );
+			case "List", "SortedList" -> new ListType( role, null );
+			case "Map", "SortedMap" -> new MapType( role, null );
+			default -> new BagType( role, null );
+		};
 	}
 
 	/**
@@ -284,15 +280,15 @@ public abstract class MockSessionFactory
 	 */
 	abstract MockCollectionPersister createMockCollectionPersister(String role);
 
-	abstract boolean isEntityDefined(String entityName);
+	abstract boolean isEntityDefined(String jpaEntityName);
 
-	abstract String findEntityName(String typeName);
-
-	abstract String qualifyName(String entityName);
+	abstract String qualifyName(String jpaEntityName);
 
 	abstract boolean isAttributeDefined(String entityName, String fieldName);
 
 	abstract boolean isClassDefined(String qualifiedName);
+
+	protected abstract boolean isEntity(String entityName);
 
 	abstract boolean isEnum(String className);
 
@@ -437,6 +433,11 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	public boolean isXmlFormatMapperLegacyFormatEnabled() {
+		return false;
+	}
+
+	@Override
 	public FastSessionServices getFastSessionServices() {
 		throw new UnsupportedOperationException("operation not supported");
 	}
@@ -451,26 +452,17 @@ public abstract class MockSessionFactory
 	}
 
 	static Class<?> toPrimitiveClass(Class<?> type) {
-		switch (type.getName()) {
-			case "java.lang.Boolean":
-				return boolean.class;
-			case "java.lang.Character":
-				return char.class;
-			case "java.lang.Integer":
-				return int.class;
-			case "java.lang.Short":
-				return short.class;
-			case "java.lang.Byte":
-				return byte.class;
-			case "java.lang.Long":
-				return long.class;
-			case "java.lang.Float":
-				return float.class;
-			case "java.lang.Double":
-				return double.class;
-			default:
-				return Object.class;
-		}
+		return switch ( type.getName() ) {
+			case "java.lang.Boolean" -> boolean.class;
+			case "java.lang.Character" -> char.class;
+			case "java.lang.Integer" -> int.class;
+			case "java.lang.Short" -> short.class;
+			case "java.lang.Byte" -> byte.class;
+			case "java.lang.Long" -> long.class;
+			case "java.lang.Float" -> float.class;
+			case "java.lang.Double" -> double.class;
+			default -> Object.class;
+		};
 	}
 
 	@Override
@@ -534,7 +526,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public RuntimeMetamodelsImplementor getRuntimeMetamodels() {
-		RuntimeMetamodelsImpl runtimeMetamodels = new RuntimeMetamodelsImpl();
+		final RuntimeMetamodelsImpl runtimeMetamodels = new RuntimeMetamodelsImpl();
 		runtimeMetamodels.setJpaMetamodel( metamodel.getJpaMetamodel() );
 		runtimeMetamodels.setMappingMetamodel( metamodel );
 		return runtimeMetamodels;
@@ -691,6 +683,39 @@ public abstract class MockSessionFactory
 		return SqlTypes.ARRAY;
 	}
 
+	private static class MockJavaType<X> implements BasicJavaType<X> {
+		private final String typeName;
+
+		public MockJavaType(String typeName) {
+			this.typeName = typeName;
+		}
+
+		@Override
+		public <X1> X1 unwrap(X value, Class<X1> type, WrapperOptions options) {
+			return null;
+		}
+
+		@Override
+		public <X1> X wrap(X1 value, WrapperOptions options) {
+			return null;
+		}
+
+		@Override
+		public String getTypeName() {
+			return typeName;
+		}
+
+		@Override
+		public Class<X> getJavaTypeClass() {
+			try {
+				return (Class<X>) Class.forName( typeName );
+			}
+			catch (ClassNotFoundException e) {
+				return null;
+			}
+		}
+	}
+
 	private class MockMappingMetamodelImpl extends MappingMetamodelImpl {
 		public MockMappingMetamodelImpl() {
 			super(typeConfiguration, serviceRegistry);
@@ -783,9 +808,10 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public EntityDomainType<?> entity(String entityName) {
-			if ( isEntityDefined(entityName) ) {
-				return new MockEntityDomainType<>(entityName);
+		public @Nullable EntityDomainType<?> findEntityType(@Nullable String jpaEntityName) {
+			final String entityTypeName = qualifyName(jpaEntityName);
+			if ( entityTypeName != null ) {
+				return new MockEntityDomainType<>(new MockJavaType<>(entityTypeName), jpaEntityName);
 			}
 			else {
 				return null;
@@ -800,45 +826,33 @@ public abstract class MockSessionFactory
 			else if (isEntityDefined(queryName)) {
 				return qualifyName(queryName);
 			}
-			return null;
-		}
-
-		@Override
-		public <X> ManagedDomainType<X> managedType(String typeName) {
-			final String entityName = qualifyName( typeName );
-			//noinspection unchecked
-			return entityName == null ? null : (ManagedDomainType<X>) entity( entityName );
-		}
-
-		@Override
-		public <X> ManagedDomainType<X> findManagedType(Class<X> cls) {
-			throw new UnsupportedOperationException("operation not supported");
-		}
-
-		@Override
-		public <X> EntityDomainType<X> findEntityType(Class<X> cls) {
-			if ( isEntityDefined( cls.getName() ) ) {
-				return new MockEntityDomainType<>( cls.getName() );
-			}
 			else {
 				return null;
 			}
 		}
 
 		@Override
-		public <X> ManagedDomainType<X> managedType(Class<X> cls) {
-			throw new UnsupportedOperationException("operation not supported");
+		public @Nullable <X> ManagedDomainType<X> findManagedType(@Nullable String typeName) {
+			// TODO: not every ManagedDomainType is an EntityDomainType!
+			return typeName == null ? null : new MockEntityDomainType<>(new MockJavaType<>(typeName));
 		}
 
 		@Override
-		public <X> EntityDomainType<X> entity(Class<X> cls) {
-			throw new UnsupportedOperationException("operation not supported");
+		public <X> ManagedDomainType<X> findManagedType(Class<X> cls) {
+			return findManagedType( cls.getName() );
+		}
+
+		@Override
+		public <X> EntityDomainType<X> findEntityType(Class<X> cls) {
+			return !cls.isArray() && !cls.isPrimitive() && isEntity(cls.getName())
+					? new MockEntityDomainType<>(new MockJavaType<>(cls.getName()))
+					: null;
 		}
 
 		@Override
 		public EnumJavaType<?> getEnumType(String className) {
 			if ( isEnum(className) ) {
-				return new EnumJavaType( Enum.class ) {
+				return new EnumJavaType<>( Enum.class ) {
 					@Override
 					public String getTypeName() {
 						return className;
@@ -852,10 +866,9 @@ public abstract class MockSessionFactory
 
 		@Override
 		public JavaType<?> getJavaConstantType(String className, String fieldName) {
-			final Class<?> fieldType = javaConstantType( className, fieldName );
 			return MockSessionFactory.this.getTypeConfiguration()
 					.getJavaTypeRegistry()
-					.getDescriptor( fieldType );
+					.getDescriptor( javaConstantType( className, fieldName ) );
 		}
 
 		@Override
@@ -893,7 +906,7 @@ public abstract class MockSessionFactory
 
 		@Override
 		public PersistentAttribute<X,?> findDeclaredAttribute(String name) {
-			String typeName = getTypeName();
+			final String typeName = getTypeName();
 			return isFieldDefined(typeName, name)
 					? createAttribute(name, typeName, propertyType(typeName, name), this)
 					: null;
@@ -902,8 +915,13 @@ public abstract class MockSessionFactory
 
 	class MockEntityDomainType<X> extends EntityTypeImpl<X> {
 
-		public MockEntityDomainType(String entityName) {
-			super(entityName, entityName, false, true, false, null, null,
+		public MockEntityDomainType(JavaType<X> javaType) {
+			this(javaType, getJpaEntityName(javaType.getTypeName()));
+		}
+
+		public MockEntityDomainType(JavaType<X> javaType, String jpaEntityName) {
+			super(javaType.getTypeName(), jpaEntityName,
+					false, true, false, javaType, null,
 					metamodel.getJpaMetamodel());
 		}
 
@@ -941,21 +959,21 @@ public abstract class MockSessionFactory
 			if (type == null) {
 				return null;
 			}
-			else if (type instanceof BasicDomainType) {
+			else if (type instanceof BasicDomainType<?> basicDomainType) {
 				return new BasicSqmPathSource<>(
 						EntityIdentifierMapping.ID_ROLE_NAME,
 						null,
-						(BasicDomainType<?>) type,
+						basicDomainType,
 						MockEntityDomainType.this.getExpressibleJavaType(),
 						Bindable.BindableType.SINGULAR_ATTRIBUTE,
 						false
 				);
 			}
-			else if (type instanceof EmbeddableDomainType) {
+			else if (type instanceof EmbeddableDomainType<?> embeddableDomainType) {
 				return new EmbeddedSqmPathSource<>(
 						EntityIdentifierMapping.ID_ROLE_NAME,
 						null,
-						(EmbeddableDomainType<?>) type,
+						embeddableDomainType,
 						Bindable.BindableType.SINGULAR_ATTRIBUTE,
 						false
 				);
@@ -977,17 +995,21 @@ public abstract class MockSessionFactory
 			if ( source != null ) {
 				return source;
 			}
-			String supertype = MockSessionFactory.this.getSupertype(getHibernateEntityName());
-			PersistentAttribute<? super Object, ?> superattribute
+			final String supertype = MockSessionFactory.this.getSupertype(getHibernateEntityName());
+			final PersistentAttribute<? super Object, ?> superattribute
 					= new MockMappedDomainType<>(supertype).findAttribute(name);
 			if (superattribute != null) {
 				return (SqmPathSource<?>) superattribute;
 			}
 			for (Map.Entry<String, MockEntityPersister> entry : entityPersistersByName.entrySet()) {
-				if (!entry.getValue().getEntityName().equals(getHibernateEntityName())
-						&& isSubtype(entry.getValue().getEntityName(), getHibernateEntityName())) {
-					PersistentAttribute<? super Object, ?> subattribute
-							= new MockEntityDomainType<>(entry.getValue().getEntityName()).findAttribute(name);
+				final MockEntityPersister entityPersister = entry.getValue();
+				if (!entityPersister.getEntityName().equals(getHibernateEntityName())
+						&& isSubtype(entityPersister.getEntityName(), getHibernateEntityName())) {
+					final MockEntityDomainType<Object> entityDomainType =
+							new MockEntityDomainType<>(new MockJavaType<>(entityPersister.getEntityName()),
+									entityPersister.getJpaEntityName());
+					final PersistentAttribute<? super Object, ?> subattribute =
+							entityDomainType.findAttribute(name);
 					if (subattribute != null) {
 						return (SqmPathSource<?>) subattribute;
 					}
@@ -998,12 +1020,12 @@ public abstract class MockSessionFactory
 
 		@Override
 		public PersistentAttribute<? super X, ?> findAttribute(String name) {
-			PersistentAttribute<? super X, ?> attribute = super.findAttribute(name);
+			final PersistentAttribute<? super X, ?> attribute = super.findAttribute(name);
 			if (attribute != null) {
 				return attribute;
 			}
-			String supertype = MockSessionFactory.this.getSupertype(getHibernateEntityName());
-			PersistentAttribute<? super Object, ?> superattribute
+			final String supertype = MockSessionFactory.this.getSupertype(getHibernateEntityName());
+			final PersistentAttribute<? super Object, ?> superattribute
 					= new MockMappedDomainType<>(supertype).findAttribute(name);
 			if (superattribute != null) {
 				return superattribute;
@@ -1013,19 +1035,21 @@ public abstract class MockSessionFactory
 
 		@Override
 		public PersistentAttribute<X,?> findDeclaredAttribute(String name) {
-			String entityName = getHibernateEntityName();
+			final String entityName = getHibernateEntityName();
 			return isAttributeDefined(entityName, name)
 					? createAttribute(name, entityName, getReferencedPropertyType(entityName, name), this)
 					: null;
 		}
 	}
 
+	protected abstract String getJpaEntityName(String typeName);
+
 	private AbstractAttribute createAttribute(String name, String entityName, Type type, ManagedDomainType<?> owner) {
 		if (type==null) {
 			throw new UnsupportedOperationException(entityName + "." + name);
 		}
 		else if ( type.isCollectionType() ) {
-			CollectionType collectionType = (CollectionType) type;
+			final CollectionType collectionType = (CollectionType) type;
 			return createPluralAttribute(collectionType, entityName, name, owner);
 		}
 		else if ( type.isEntityType() ) {
@@ -1033,7 +1057,7 @@ public abstract class MockSessionFactory
 					owner,
 					name,
 					AttributeClassification.MANY_TO_ONE,
-					new MockEntityDomainType<>(type.getName()),
+					new MockEntityDomainType<>(new MockJavaType<>(type.getName())),
 					null,
 					null,
 					false,
@@ -1044,7 +1068,7 @@ public abstract class MockSessionFactory
 			);
 		}
 		else if ( type.isComponentType() ) {
-			CompositeType compositeType = (CompositeType) type;
+			final CompositeType compositeType = (CompositeType) type;
 			return new SingularAttributeImpl<>(
 					owner,
 					name,
@@ -1065,8 +1089,8 @@ public abstract class MockSessionFactory
 					name,
 					AttributeClassification.BASIC,
 					(DomainType<?>) type,
-					type instanceof JdbcMapping
-							? ((JdbcMapping) type).getJavaTypeDescriptor()
+					type instanceof JdbcMapping jdbcMapping
+							? jdbcMapping.getJavaTypeDescriptor()
 							: null,
 					null,
 					false,
@@ -1079,26 +1103,27 @@ public abstract class MockSessionFactory
 	}
 
 	private DomainType<?> getElementDomainType(String entityName, CollectionType collectionType, ManagedDomainType<?> owner) {
-		Type elementType = collectionType.getElementType(MockSessionFactory.this);
+		final Type elementType = collectionType.getElementType(MockSessionFactory.this);
 		return getDomainType(entityName, collectionType, owner, elementType);
 	}
 
 	private DomainType<?> getMapKeyDomainType(String entityName, CollectionType collectionType, ManagedDomainType<?> owner) {
-		Type keyType = getMappingMetamodel().getCollectionDescriptor( collectionType.getRole() ).getIndexType();
+		final Type keyType = getMappingMetamodel().getCollectionDescriptor( collectionType.getRole() ).getIndexType();
 		return getDomainType(entityName, collectionType, owner, keyType);
 	}
 
-	private DomainType<?> getDomainType(String entityName, CollectionType collectionType, ManagedDomainType<?> owner, Type elementType) {
+	private DomainType<?> getDomainType(
+			String entityName, CollectionType collectionType, ManagedDomainType<?> owner, Type elementType) {
 		if ( elementType.isEntityType() ) {
-			String associatedEntityName = collectionType.getAssociatedEntityName(MockSessionFactory.this);
-			return new MockEntityDomainType<>(associatedEntityName);
+			final String associatedEntityName = collectionType.getAssociatedEntityName(this);
+			return new MockEntityDomainType<>(new MockJavaType<>(associatedEntityName));
 		}
 		else if ( elementType.isComponentType() ) {
-			CompositeType compositeType = (CompositeType) elementType;
+			final CompositeType compositeType = (CompositeType) elementType;
 			return createEmbeddableDomainType(entityName, compositeType, owner);
 		}
-		else if ( elementType instanceof DomainType ) {
-			return (DomainType<?>) elementType;
+		else if ( elementType instanceof DomainType<?> domainType ) {
+			return domainType;
 		}
 		else {
 			return OBJECT_BASIC_TYPE;
@@ -1110,84 +1135,73 @@ public abstract class MockSessionFactory
 			String entityName,
 			String name,
 			ManagedDomainType<?> owner) {
-		Property property = new Property();
+		final Property property = new Property();
 		property.setName(name);
-		JavaType<Object> collectionJavaType =
+		final JavaType<?> collectionJavaType =
 				typeConfiguration.getJavaTypeRegistry()
 						.getDescriptor(collectionType.getReturnedClass());
-		DomainType<?> elementDomainType = getElementDomainType(entityName, collectionType, owner);
-		CollectionClassification classification = collectionType.getCollectionClassification();
-		switch (classification) {
-			case LIST:
-				return new ListAttributeImpl(
-						new PluralAttributeBuilder<>(
-								collectionJavaType,
-								true,
-								AttributeClassification.MANY_TO_MANY,
-								classification,
-								elementDomainType,
-								typeConfiguration.getBasicTypeRegistry()
-										.getRegisteredType(Integer.class),
-								owner,
-								property,
-								null
-						),
-						metadataContext
-				);
-			case BAG:
-			case ID_BAG:
-				return new BagAttributeImpl(
-						new PluralAttributeBuilder<>(
-								collectionJavaType,
-								true,
-								AttributeClassification.MANY_TO_MANY,
-								classification,
-								elementDomainType,
-								null,
-								owner,
-								property,
-								null
-						),
-						metadataContext
-				);
-			case SET:
-			case SORTED_SET:
-			case ORDERED_SET:
-				return new SetAttributeImpl(
-						new PluralAttributeBuilder<>(
-								collectionJavaType,
-								true,
-								AttributeClassification.MANY_TO_MANY,
-								classification,
-								elementDomainType,
-								null,
-								owner,
-								property,
-								null
-						),
-						metadataContext
-				);
-			case MAP:
-			case SORTED_MAP:
-			case ORDERED_MAP:
-				DomainType<?> keyDomainType = getMapKeyDomainType(entityName, collectionType, owner);
-				return new MapAttributeImpl(
-						new PluralAttributeBuilder<>(
-								collectionJavaType,
-								true,
-								AttributeClassification.MANY_TO_MANY,
-								classification,
-								elementDomainType,
-								keyDomainType,
-								owner,
-								property,
-								null
-						),
-						metadataContext
-				);
-			default:
-				return null;
-		}
+		final DomainType<?> elementDomainType = getElementDomainType(entityName, collectionType, owner);
+		final CollectionClassification classification = collectionType.getCollectionClassification();
+		return switch ( classification ) {
+			case LIST -> new ListAttributeImpl(
+					new PluralAttributeBuilder<>(
+							collectionJavaType,
+							true,
+							AttributeClassification.MANY_TO_MANY,
+							classification,
+							elementDomainType,
+							typeConfiguration.getBasicTypeRegistry()
+									.getRegisteredType( Integer.class ),
+							owner,
+							property,
+							null
+					),
+					metadataContext
+			);
+			case BAG, ID_BAG -> new BagAttributeImpl(
+					new PluralAttributeBuilder<>(
+							collectionJavaType,
+							true,
+							AttributeClassification.MANY_TO_MANY,
+							classification,
+							elementDomainType,
+							null,
+							owner,
+							property,
+							null
+					),
+					metadataContext
+			);
+			case SET, SORTED_SET, ORDERED_SET -> new SetAttributeImpl(
+					new PluralAttributeBuilder<>(
+							collectionJavaType,
+							true,
+							AttributeClassification.MANY_TO_MANY,
+							classification,
+							elementDomainType,
+							null,
+							owner,
+							property,
+							null
+					),
+					metadataContext
+			);
+			case MAP, SORTED_MAP, ORDERED_MAP -> new MapAttributeImpl(
+					new PluralAttributeBuilder<>(
+							collectionJavaType,
+							true,
+							AttributeClassification.MANY_TO_MANY,
+							classification,
+							elementDomainType,
+							getMapKeyDomainType( entityName, collectionType, owner ),
+							owner,
+							property,
+							null
+					),
+					metadataContext
+			);
+			default -> null;
+		};
 	}
 
 	private EmbeddableTypeImpl<?> createEmbeddableDomainType(String entityName, CompositeType compositeType, ManagedDomainType<?> owner) {

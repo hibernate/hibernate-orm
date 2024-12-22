@@ -583,17 +583,17 @@ public class PropertyBinder {
 	/**
 	 * @param elements List of {@link PropertyData} instances
 	 * @param propertyContainer Metadata about a class and its properties
+	 * @param idPropertyCounter number of id properties already present in list of {@link PropertyData} instances
 	 *
-	 * @return the number of id properties found while iterating the elements of
-	 *         {@code annotatedClass} using the determined access strategy
+	 * @return total number of id properties found after iterating the elements of {@code annotatedClass}
+	 * using the determined access strategy (starting from the provided {@code idPropertyCounter})
 	 */
 	static int addElementsOfClass(
 			List<PropertyData> elements,
 			PropertyContainer propertyContainer,
-			MetadataBuildingContext context) {
-		int idPropertyCounter = 0;
+			MetadataBuildingContext context, int idPropertyCounter) {
 		for ( MemberDetails property : propertyContainer.propertyIterator() ) {
-			idPropertyCounter += addProperty( propertyContainer, property, elements, context );
+			idPropertyCounter = addProperty( propertyContainer, property, elements, context, idPropertyCounter );
 		}
 		return idPropertyCounter;
 	}
@@ -602,20 +602,20 @@ public class PropertyBinder {
 			PropertyContainer propertyContainer,
 			MemberDetails property,
 			List<PropertyData> inFlightPropertyDataList,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			int idPropertyCounter) {
 		// see if inFlightPropertyDataList already contains a PropertyData for this name,
 		// and if so, skip it...
 		for ( PropertyData propertyData : inFlightPropertyDataList ) {
 			if ( propertyData.getPropertyName().equals( property.resolveAttributeName() ) ) {
 				checkIdProperty( property, propertyData );
 				// EARLY EXIT!!!
-				return 0;
+				return idPropertyCounter;
 			}
 		}
 
 		final ClassDetails declaringClass = propertyContainer.getDeclaringClass();
 		final TypeVariableScope ownerType = propertyContainer.getTypeAtStake();
-		int idPropertyCounter = 0;
 		final PropertyData propertyAnnotatedElement = new PropertyInferredData(
 				declaringClass,
 				ownerType,
@@ -628,7 +628,7 @@ public class PropertyBinder {
 		// before any association by Hibernate
 		final MemberDetails element = propertyAnnotatedElement.getAttributeMember();
 		if ( hasIdAnnotation( element ) ) {
-			inFlightPropertyDataList.add( 0, propertyAnnotatedElement );
+			inFlightPropertyDataList.add( idPropertyCounter, propertyAnnotatedElement );
 			handleIdProperty( propertyContainer, context, declaringClass, ownerType, element );
 			if ( hasToOneAnnotation( element ) ) {
 				context.getMetadataCollector()

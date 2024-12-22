@@ -21,6 +21,13 @@ public class Any {
 
 	private String prop;
 
+	public Any() {
+	}
+
+	public Any( String prop) {
+		this.prop = prop;
+	}
+
 	public long getId() {
 		return id;
 	}

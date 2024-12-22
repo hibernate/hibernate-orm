@@ -25,7 +25,7 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
@@ -41,6 +41,7 @@ import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.type.format.FormatMapper;
 
 import java.util.List;
 import java.util.Set;
@@ -328,8 +329,8 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public EventManager getEventManager() {
-		return delegate.getEventManager();
+	public EventMonitor getEventMonitor() {
+		return delegate.getEventMonitor();
 	}
 
 	@Override
@@ -483,8 +484,8 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public void setCacheMode(CacheMode cm) {
-		delegate.setCacheMode( cm );
+	public void setCacheMode(CacheMode cacheMode) {
+		delegate.setCacheMode( cacheMode );
 	}
 
 	@Override
@@ -681,5 +682,15 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public void disableFilter(String filterName) {
 		delegate.disableFilter( filterName );
+	}
+
+	@Override
+	public FormatMapper getJsonFormatMapper() {
+		return delegate.getJsonFormatMapper();
+	}
+
+	@Override
+	public FormatMapper getXmlFormatMapper() {
+		return delegate.getXmlFormatMapper();
 	}
 }

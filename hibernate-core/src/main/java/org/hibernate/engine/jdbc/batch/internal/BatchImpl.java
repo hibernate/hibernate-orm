@@ -21,8 +21,8 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 
@@ -162,26 +162,11 @@ public class BatchImpl implements Batch {
 		if ( batchPosition == batchSizeToUse ) {
 			notifyObserversImplicitExecution();
 			performExecution();
-			batchPosition = 0;
-			batchExecuted = true;
 		}
 	}
 
 	protected void releaseStatements() {
-		statementGroup.forEachStatement( (tableName, statementDetails) -> {
-			if ( statementDetails.getStatement() == null ) {
-				BATCH_LOGGER.debugf(
-						"PreparedStatementDetails did not contain PreparedStatement on #releaseStatements : %s",
-						statementDetails.getSqlString()
-				);
-			}
-			else {
-				clearBatch( statementDetails );
-			}
-		} );
-
 		statementGroup.release();
-		jdbcCoordinator.afterStatementExecution();
 	}
 
 	protected void clearBatch(PreparedStatementDetails statementDetails) {
@@ -273,14 +258,14 @@ public class BatchImpl implements Batch {
 					try {
 						if ( statementDetails.getMutatingTableDetails().isIdentifierTable() ) {
 							final int[] rowCounts;
-							final EventManager eventManager = jdbcSessionOwner.getEventManager();
-							final HibernateMonitoringEvent executionEvent = eventManager.beginJdbcBatchExecutionEvent();
+							final EventMonitor eventMonitor = jdbcSessionOwner.getEventMonitor();
+							final DiagnosticEvent executionEvent = eventMonitor.beginJdbcBatchExecutionEvent();
 							try {
 								eventHandler.jdbcExecuteBatchStart();
 								rowCounts = statement.executeBatch();
 							}
 							finally {
-								eventManager.completeJdbcBatchExecutionEvent( executionEvent, sql );
+								eventMonitor.completeJdbcBatchExecutionEvent( executionEvent, sql );
 								eventHandler.jdbcExecuteBatchEnd();
 							}
 							checkRowCounts( rowCounts, statementDetails );
@@ -299,8 +284,10 @@ public class BatchImpl implements Batch {
 					}
 				}
 			} );
+			batchExecuted = true;
 		}
 		finally {
+			jdbcCoordinator.afterStatementExecution();
 			batchPosition = 0;
 		}
 	}

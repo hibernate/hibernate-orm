@@ -29,7 +29,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
-import static org.hibernate.processor.validation.ProcessorSessionFactory.getEntityName;
+import static org.hibernate.processor.validation.ProcessorSessionFactory.getHibernateEntityName;
 import static org.hibernate.processor.validation.ProcessorSessionFactory.isEntity;
 
 
@@ -109,7 +109,7 @@ public class Validation {
 			final String typeName = typeElement.getQualifiedName().toString();
 			final String shortName = typeElement.getSimpleName().toString();
 			return isEntity( typeElement )
-					? new SemanticQueryBuilder<>( typeName, shortName, getEntityName(typeElement), CREATION_OPTIONS, factory, hql )
+					? new SemanticQueryBuilder<>( typeName, shortName, getHibernateEntityName(typeElement), CREATION_OPTIONS, factory, hql )
 					: new SemanticQueryBuilder<>( typeName, shortName, Object[].class, CREATION_OPTIONS, factory, hql );
 		}
 		else {

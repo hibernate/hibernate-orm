@@ -98,12 +98,8 @@ public interface TransactionCoordinator {
 	int getTimeOut();
 
 	default boolean isTransactionActive() {
-		return isTransactionActive( true );
-	}
-
-	default boolean isTransactionActive(boolean isMarkedRollbackConsideredActive) {
 		return isJoined()
-			&& getTransactionDriverControl().isActive( isMarkedRollbackConsideredActive );
+			&& getTransactionDriverControl().isActive();
 	}
 
 	default void invalidate(){}
@@ -134,10 +130,13 @@ public interface TransactionCoordinator {
 
 		void markRollbackOnly();
 
-		default boolean isActive(boolean isMarkedRollbackConsideredActive) {
+		default boolean isActive() {
 			final TransactionStatus status = getStatus();
-			return status == ACTIVE
-				|| isMarkedRollbackConsideredActive && status == MARKED_ROLLBACK;
+			return status == ACTIVE || status == MARKED_ROLLBACK;
+		}
+
+		default boolean isActiveAndNoMarkedForRollback() {
+			return getStatus() == ACTIVE;
 		}
 
 		// todo : org.hibernate.Transaction will need access to register local Synchronizations.

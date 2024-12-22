@@ -23,7 +23,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A set of operations providing support for aggregate column types
- * in a certain {@link Dialect SQL dialect}.
+ * in a certain {@linkplain Dialect SQL dialect}.
  *
  * @since 6.2
  */
@@ -65,7 +65,8 @@ public interface AggregateSupport {
 						column.getScale(),
 						column.getTemporalPrecision(),
 						column.getType()
-				)
+				),
+				aggregateColumn.getComponent().getMetadata().getTypeConfiguration()
 		);
 	}
 
@@ -80,7 +81,7 @@ public interface AggregateSupport {
 	 * @param columnExpression The column within the aggregate type, for which to return the read expression
 	 * @param aggregateColumnTypeCode The SQL type code of the aggregate column
 	 * @param column The column within the aggregate type, for which to return the read expression
-	 *
+	 * @param typeConfiguration The type configuration
 	 * @since 7.0
 	 */
 	String aggregateComponentCustomReadExpression(
@@ -89,7 +90,8 @@ public interface AggregateSupport {
 			String aggregateParentReadExpression,
 			String columnExpression,
 			int aggregateColumnTypeCode,
-			SqlTypedMapping column);
+			SqlTypedMapping column,
+			TypeConfiguration typeConfiguration);
 
 	/**
 	 * Returns the assignment expression to use for {@code column},

@@ -27,7 +27,7 @@ public class NaturalIdReadOnlyAccess extends AbstractNaturalIdDataAccess {
 			NaturalIdDataCachingConfig config) {
 		super( region, keysFactory, storageAccess, config );
 		if ( config.isMutable() ) {
-			L2CACHE_LOGGER.readOnlyCachingMutableNaturalId( config.getNavigableRole() );
+			L2CACHE_LOGGER.readOnlyCachingMutableNaturalId( config.getNavigableRole().getFullPath() );
 		}
 	}
 

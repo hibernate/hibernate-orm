@@ -334,10 +334,11 @@ public final class ForeignKeys {
 	 * Return the identifier of the persistent or transient object, or throw
 	 * an exception if the instance is "unsaved"
 	 * <p>
-	 * Used by OneToOneType and ManyToOneType to determine what id value should
+	 * Used by {@link org.hibernate.type.OneToOneType} and
+	 * {@link org.hibernate.type.ManyToOneType} to determine what id value should
 	 * be used for an object that may or may not be associated with the session.
 	 * This does a "best guess" using any/all info available to use (not just the
-	 * EntityEntry).
+	 * {@link EntityEntry}).
 	 *
 	 * @param entityName The name of the entity
 	 * @param object The entity instance
@@ -357,15 +358,30 @@ public final class ForeignKeys {
 		else {
 			final Object id = session.getContextEntityIdentifier( object );
 			if ( id == null ) {
-				// context-entity-identifier returns null explicitly if the entity
-				// is not associated with the persistence context; so make some
-				// deeper checks...
+				// context-entity-identifier always returns null if the
+				// entity is not associated with the persistence context;
+				// so make some deeper checks...
 				throwIfTransient( entityName, object, session );
 				return session.getEntityPersister( entityName, object ).getIdentifier( object, session );
 			}
 			else {
 				return id;
 			}
+		}
+	}
+
+	public static Object getEntityIdentifier(
+			final String entityName,
+			final Object object,
+			final SharedSessionContractImplementor session) {
+		if ( object == null ) {
+			return null;
+		}
+		else {
+			final Object id = session.getContextEntityIdentifier( object );
+			return id == null
+					? session.getEntityPersister( entityName, object ).getIdentifier( object, session )
+					: id;
 		}
 	}
 

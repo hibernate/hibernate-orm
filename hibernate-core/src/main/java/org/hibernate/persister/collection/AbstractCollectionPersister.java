@@ -322,10 +322,15 @@ public abstract class AbstractCollectionPersister
 		keyColumnNames = new String[keySpan];
 		keyColumnAliases = new String[keySpan];
 		int k = 0;
-		for ( Column column: collectionBootDescriptor.getKey().getColumns() ) {
+		for ( Selectable selectable: collectionBootDescriptor.getKey().getSelectables() ) {
 			// NativeSQL: collect key column and auto-aliases
-			keyColumnNames[k] = column.getQuotedName( dialect );
-			keyColumnAliases[k] = column.getAlias( dialect, table );
+			keyColumnAliases[k] = selectable.getAlias( dialect, table );
+			if ( selectable instanceof Column column ) {
+				keyColumnNames[k] = column.getQuotedName( dialect );
+			}
+			else {
+				throw new MappingException("Collection keys may not contain formulas: " + navigableRole.getFullPath() );
+			}
 			k++;
 		}
 
@@ -374,7 +379,7 @@ public abstract class AbstractCollectionPersister
 				elementFormulas[j] = form.getFormula();
 			}
 			else {
-				Column col = (Column) selectable;
+				final Column col = (Column) selectable;
 				elementColumnNames[j] = col.getQuotedName( dialect );
 				elementColumnWriters[j] = col.getWriteExpr( elementBootDescriptor.getSelectableType( factory, j ), dialect );
 				elementColumnReaders[j] = col.getReadExpr( dialect );

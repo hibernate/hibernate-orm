@@ -4,7 +4,7 @@
  */
 package org.hibernate.event.jfr.internal;
 
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.internal.build.AllowNonPortable;
 
 import jdk.jfr.Category;
@@ -18,9 +18,9 @@ import jdk.jfr.StackTrace;
 @Label( "JDBC PreparedStatement Executed" )
 @Category( "Hibernate ORM" )
 @Description( "JDBC PreparedStatement Executed" )
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
-public class JdbcPreparedStatementExecutionEvent extends Event implements HibernateMonitoringEvent {
+public class JdbcPreparedStatementExecutionEvent extends Event implements DiagnosticEvent {
 	public static final String NAME = "org.hibernate.orm.JdbcPreparedStatementExecution";
 
 	@Label( "PreparedStatement SQL" )

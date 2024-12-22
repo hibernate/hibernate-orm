@@ -81,7 +81,7 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 				}
 			}
 			catch (SQLException e) {
-				throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable set JDBC Connection for DDL execution to autocommit" );
+				throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable to set JDBC Connection for DDL execution to autocommit" );
 			}
 		}
 		return jdbcConnection;

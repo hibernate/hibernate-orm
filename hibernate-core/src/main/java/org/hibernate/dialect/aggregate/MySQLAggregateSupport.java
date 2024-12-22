@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.aggregate;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -48,13 +49,32 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
 
 public class MySQLAggregateSupport extends AggregateSupportImpl {
 
-	public static final AggregateSupport JSON_INSTANCE = new MySQLAggregateSupport( true );
-	public static final AggregateSupport LONGTEXT_INSTANCE = new MySQLAggregateSupport( false );
+	private static final AggregateSupport JSON_INSTANCE = new MySQLAggregateSupport( true, false );
+	private static final AggregateSupport JSON_WITH_UUID_INSTANCE = new MySQLAggregateSupport( true, true );
+	private static final AggregateSupport LONGTEXT_INSTANCE = new MySQLAggregateSupport( false, false );
 
 	private final boolean jsonType;
+	private final boolean uuidFunctions;
 
-	public MySQLAggregateSupport(boolean jsonType) {
+	private MySQLAggregateSupport(boolean jsonType, boolean uuidFunctions) {
 		this.jsonType = jsonType;
+		this.uuidFunctions = uuidFunctions;
+	}
+
+	public static AggregateSupport forMySQL(Dialect dialect) {
+		return dialect.getVersion().isSameOrAfter( 8 )
+				? JSON_WITH_UUID_INSTANCE
+				: dialect.getVersion().isSameOrAfter( 5, 7 )
+						? JSON_INSTANCE
+						: AggregateSupportImpl.INSTANCE;
+	}
+
+	public static AggregateSupport forTiDB(Dialect dialect) {
+		return JSON_WITH_UUID_INSTANCE;
+	}
+
+	public static AggregateSupport forMariaDB(Dialect dialect) {
+		return LONGTEXT_INSTANCE;
 	}
 
 	@Override
@@ -64,7 +84,8 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 			String aggregateParentReadExpression,
 			String columnExpression,
 			int aggregateColumnTypeCode,
-			SqlTypedMapping column) {
+			SqlTypedMapping column,
+			TypeConfiguration typeConfiguration) {
 		switch ( aggregateColumnTypeCode ) {
 			case JSON_ARRAY:
 			case JSON:
@@ -92,10 +113,19 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 						);
 					case UUID:
 						if ( column.getJdbcMapping().getJdbcType().isBinary() ) {
-							return template.replace(
-									placeholder,
-									"unhex(replace(json_unquote(" + queryExpression( aggregateParentReadExpression, columnExpression ) + "),'-',''))"
-							);
+							if ( uuidFunctions ) {
+								return template.replace(
+										placeholder,
+										"uuid_to_bin(json_unquote(" + queryExpression( aggregateParentReadExpression, columnExpression ) + "))"
+								);
+							}
+							else {
+								return template.replace(
+										placeholder,
+										"unhex(replace(json_unquote(" + queryExpression( aggregateParentReadExpression,
+												columnExpression ) + "),'-',''))"
+								);
+							}
 						}
 						// Fall-through intended
 					default:
@@ -142,7 +172,7 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 		}
 	}
 
-	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+	private String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
 		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 		switch ( sqlTypeCode ) {
 			case BINARY:
@@ -159,7 +189,12 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 				return "date_format(" + customWriteExpression + ",'%Y-%m-%dT%T.%fZ')";
 			case UUID:
 				if ( jdbcMapping.getJdbcType().isBinary() ) {
-					return "regexp_replace(lower(hex(" + customWriteExpression + ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','$1-$2-$3-$4-$5')";
+					if ( uuidFunctions ) {
+						return "bin_to_uuid(" + customWriteExpression + ")";
+					}
+					else {
+						return "regexp_replace(lower(hex(" + customWriteExpression + ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','$1-$2-$3-$4-$5')";
+					}
 				}
 				// Fall-through intended
 			default:

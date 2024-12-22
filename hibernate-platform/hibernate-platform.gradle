@@ -23,8 +23,6 @@ dependencies {
         api project( ":hibernate-agroal" )
         api project( ":hibernate-c3p0" )
         api project( ":hibernate-hikaricp" )
-        api project( ":hibernate-proxool" )
-        api project( ":hibernate-vibur" )
 
         api project( ":hibernate-jcache" )
 
@@ -59,8 +57,6 @@ dependencies {
         runtime libs.agroalPool
         runtime libs.c3p0
         runtime libs.hikaricp
-        runtime libs.proxool
-        runtime libs.vibur
 
         runtime libs.jcache
 

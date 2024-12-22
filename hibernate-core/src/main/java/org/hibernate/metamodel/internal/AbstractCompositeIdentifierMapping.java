@@ -262,7 +262,7 @@ public abstract class AbstractCompositeIdentifierMapping
 
 	@Override
 	public Object instantiate() {
-		return getEntityMapping().getRepresentationStrategy().getInstantiator().instantiate( sessionFactory );
+		return getEntityMapping().getRepresentationStrategy().getInstantiator().instantiate();
 	}
 
 	@Override

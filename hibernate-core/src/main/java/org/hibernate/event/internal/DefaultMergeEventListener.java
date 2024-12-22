@@ -113,7 +113,7 @@ public class DefaultMergeEventListener
 			if ( lazyInitializer != null ) {
 				if ( lazyInitializer.isUninitialized() ) {
 					LOG.trace( "Ignoring uninitialized proxy" );
-					event.setResult( source.load( lazyInitializer.getEntityName(), lazyInitializer.getInternalIdentifier() ) );
+					event.setResult( source.getReference( lazyInitializer.getEntityName(), lazyInitializer.getInternalIdentifier() ) );
 				}
 				else {
 					doMerge( event, copiedAlready, lazyInitializer.getImplementation() );
@@ -124,7 +124,8 @@ public class DefaultMergeEventListener
 						asPersistentAttributeInterceptable( original ).$$_hibernate_getInterceptor();
 				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
 					LOG.trace( "Ignoring uninitialized enhanced-proxy" );
-					event.setResult( source.load( proxyInterceptor.getEntityName(), proxyInterceptor.getIdentifier() ) );
+					event.setResult( source.byId( proxyInterceptor.getEntityName() )
+							.getReference( proxyInterceptor.getIdentifier() ) );
 				}
 				else {
 					doMerge( event, copiedAlready, original );

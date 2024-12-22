@@ -4,11 +4,8 @@
  */
 package org.hibernate.boot.models.spi;
 
-import java.lang.annotation.Annotation;
-import java.util.List;
-import java.util.Objects;
-
-import org.hibernate.boot.spi.ClassmateContext;
+import com.fasterxml.classmate.ResolvedType;
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorBypassedImpl;
 import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorStandardImpl;
 import org.hibernate.boot.model.convert.internal.ConverterHelper;
@@ -16,7 +13,7 @@ import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
-import org.hibernate.boot.models.Copied;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
@@ -24,21 +21,21 @@ import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import com.fasterxml.classmate.ResolvedType;
-import jakarta.persistence.AttributeConverter;
+import java.lang.annotation.Annotation;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * A registered conversion.
  *
  * @see org.hibernate.annotations.ConverterRegistration
  *
- * @todo copied from RegisteredConversion because of the "early" creation of `ConverterDescriptor`
- * 		upstream. Technically the conversion from ClassDetails to Class should be fine since
- * 		conversions are only valid for basic types which we will never enhance.
+ * @apiNote Largely a copy of {@linkplain RegisteredConversion} to avoid early creation of
+ * {@linkplain ConverterDescriptor}. Technically the conversion from ClassDetails to Class
+ * should be fine since conversions are only valid for basic types which we will never enhance.
  *
  * @author Steve Ebersole
  */
-@Copied(RegisteredConversion.class)
 public class ConversionRegistration {
 	private final Class<?> explicitDomainType;
 	private final Class<? extends AttributeConverter<?,?>> converterType;

@@ -20,7 +20,7 @@ import org.hibernate.tool.schema.internal.exec.JdbcContext;
  */
 public interface TransactionCoordinatorBuilder extends Service {
 	/**
-	 * Access to options to are specific to each {@link TransactionCoordinator} instance.
+	 * Access to options that are specific to each {@link TransactionCoordinator} instance.
 	 */
 	interface Options {
 		/**
@@ -40,6 +40,8 @@ public interface TransactionCoordinatorBuilder extends Service {
 	PhysicalConnectionHandlingMode getDefaultConnectionHandlingMode();
 
 	default DdlTransactionIsolator buildDdlTransactionIsolator(JdbcContext jdbcContext) {
-		return isJta() ? new DdlTransactionIsolatorJtaImpl( jdbcContext ) : new DdlTransactionIsolatorNonJtaImpl( jdbcContext );
+		return isJta()
+				? new DdlTransactionIsolatorJtaImpl( jdbcContext )
+				: new DdlTransactionIsolatorNonJtaImpl( jdbcContext );
 	}
 }

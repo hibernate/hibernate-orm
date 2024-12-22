@@ -15,6 +15,7 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -22,6 +23,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
@@ -47,6 +49,8 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -59,6 +63,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -525,6 +530,8 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select round(cast(e.theDouble as BigDecimal), 3) from EntityOfBasics e", BigDecimal.class)
 							.list();
+					assertThat( session.createQuery("select round(1.2345bd, 2)").getSingleResult(),
+							isOneOf(BigDecimal.valueOf(1.23), BigDecimal.valueOf(12300,4)) );
 					assertThat( session.createQuery("select abs(-2)", Integer.class).getSingleResult(), is(2) );
 					assertThat( session.createQuery("select sign(-2)", Integer.class).getSingleResult(), is(-1) );
 					assertThat(
@@ -2309,6 +2316,12 @@ public class FunctionTests {
 	public void testMedian(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+					assertEquals( 1.0,
+							session.createQuery("select median(e.theDouble) from EntityOfBasics e", Double.class).getSingleResult(),
+							1e-5);
+					assertEquals( 5.0,
+							session.createQuery("select median(e.theInt) from EntityOfBasics e", Double.class).getSingleResult(),
+							1e-5);
 					List<Object[]> list = session.createQuery("select median(e.theDouble), median(e.theInt) from EntityOfBasics e", Object[].class)
 							.list();
 					assertEquals( 1, list.size() );
@@ -2527,6 +2540,23 @@ public class FunctionTests {
 	}
 
 	@Test
+	public void testSlice(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals("ring",
+							session.createSelectionQuery("select theString[3:6] from EntityOfBasics", String.class)
+									.getSingleResult());
+					assertEquals('s',
+							session.createSelectionQuery("select theString[1] from EntityOfBasics", Character.class)
+									.getSingleResult());
+					assertEquals('y',
+							session.createSelectionQuery("select theString[7] from EntityOfBasics", Character.class)
+									.getSingleResult());
+				}
+		);
+	}
+
+	@Test
 	@SkipForDialect(dialectClass = H2Dialect.class)
 	@SkipForDialect(dialectClass = DerbyDialect.class)
 	@SkipForDialect(dialectClass = HSQLDialect.class)
@@ -2575,6 +2605,44 @@ public class FunctionTests {
 					.getSingleResultOrNull();
 			byte[] bytes = s.createSelectionQuery("select column(e.ctid as binary) from EntityOfBasics e", byte[].class)
 					.getSingleResultOrNull();
+		});
+	}
+
+	@Test
+	@RequiresDialect(PostgreSQLDialect.class)
+	@RequiresDialect(MySQLDialect.class)
+	@RequiresDialect(OracleDialect.class)
+	@RequiresDialect(value = DB2Dialect.class, majorVersion = 11)
+	@RequiresDialect(SQLServerDialect.class)
+	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(HANADialect.class)
+	@RequiresDialect(CockroachDialect.class)
+	public void testSha256Function(SessionFactoryScope scope) {
+		scope.inTransaction(s -> {
+			byte[] bytes = s.createSelectionQuery("select sha('hello')", byte[].class).getSingleResult();
+			try {
+				assertArrayEquals( MessageDigest.getInstance( "SHA-256" ).digest("hello".getBytes()), bytes );
+			}
+			catch (NoSuchAlgorithmException e) {
+				throw new RuntimeException( e );
+			}
+			bytes = s.createSelectionQuery("select md5('hello')", byte[].class).getSingleResult();
+			try {
+				assertArrayEquals( MessageDigest.getInstance( "MD5" ).digest("hello".getBytes()), bytes );
+			}
+			catch (NoSuchAlgorithmException e) {
+				throw new RuntimeException( e );
+			}
+		});
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = SybaseASEDialect.class)
+	public void testHexFunction(SessionFactoryScope scope) {
+		scope.inTransaction(s -> {
+			assertEquals( "DEADBEEF",
+					s.createSelectionQuery("select hex({0xDE, 0xAD, 0xBE, 0xEF})", String.class)
+							.getSingleResult().toUpperCase( Locale.ROOT ) );
 		});
 	}
 }

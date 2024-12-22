@@ -11,7 +11,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -203,6 +203,9 @@ public class SybaseASEXmlTableFunction extends XmlTableFunction {
 	}
 
 	public static boolean isBoolean(JdbcMapping type) {
-		return type.getJavaTypeDescriptor().getJavaTypeClass() == Boolean.class;
+		return switch ( type.getCastType() ) {
+			case BOOLEAN, TF_BOOLEAN, YN_BOOLEAN, INTEGER_BOOLEAN -> true;
+			default -> false;
+		};
 	}
 }

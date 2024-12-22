@@ -6,7 +6,9 @@ package org.hibernate.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
 
+import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.aggregate.AggregateSupport;
@@ -21,6 +23,10 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.LockTimeoutException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -37,6 +43,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.OTHER;
@@ -125,7 +132,7 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return MySQLAggregateSupport.LONGTEXT_INSTANCE;
+		return MySQLAggregateSupport.forMariaDB( this );
 	}
 
 	@Override
@@ -312,5 +319,52 @@ public class MariaDBDialect extends MySQLDialect {
 	@Override
 	public String getDual() {
 		return "dual";
+	}
+
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return (sqlException, message, sql) -> {
+			switch ( sqlException.getErrorCode() ) {
+				// If @@innodb_snapshot_isolation is set (default since 11.6.2),
+				// if an attempt to acquire a lock on a record that does not exist in the current read view is made,
+				// an error DB_RECORD_CHANGED will be raised.
+				case 1020:
+					return new LockAcquisitionException( message, sqlException, sql );
+				case 1205:
+				case 3572:
+					return new PessimisticLockException( message, sqlException, sql );
+				case 1207:
+				case 1206:
+					return new LockAcquisitionException( message, sqlException, sql );
+				case 1062:
+					// Unique constraint violation
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+					);
+			}
+
+			final String sqlState = extractSqlState( sqlException );
+			if ( sqlState != null ) {
+				switch ( sqlState ) {
+					case "41000":
+						return new LockTimeoutException( message, sqlException, sql );
+					case "40001":
+						return new LockAcquisitionException( message, sqlException, sql );
+				}
+			}
+
+			return null;
+		};
+	}
+
+	@Override
+	public boolean equivalentTypes(int typeCode1, int typeCode2) {
+		return typeCode1 == Types.LONGVARCHAR && typeCode2 == SqlTypes.JSON
+			|| typeCode1 == SqlTypes.JSON && typeCode2 == Types.LONGVARCHAR
+			|| super.equivalentTypes( typeCode1, typeCode2 );
 	}
 }

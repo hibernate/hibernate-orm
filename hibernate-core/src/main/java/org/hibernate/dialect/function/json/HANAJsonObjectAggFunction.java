@@ -6,7 +6,7 @@ package org.hibernate.dialect.function.json;
 
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -71,19 +71,13 @@ public class HANAJsonObjectAggFunction extends JsonObjectAggFunction {
 			sqlAppender.appendSql( " as nvarchar(" + Integer.MAX_VALUE + "))" );
 		}
 		else {
-			if ( nullBehavior != JsonNullBehavior.NULL ) {
-				sqlAppender.appendSql( "nullif(" );
-			}
 			sqlAppender.appendSql( "json_query((select " );
 			arg.accept( translator );
 			sqlAppender.appendSql( " V from sys.dummy for json('arraywrap'='no'" );
-			if ( nullBehavior != JsonNullBehavior.NULL ) {
+			if ( nullBehavior == JsonNullBehavior.NULL ) {
 				sqlAppender.appendSql( ",'omitnull'='no'" );
 			}
 			sqlAppender.appendSql( ") returns nvarchar(" + Integer.MAX_VALUE + ")),'$.V')" );
-			if ( nullBehavior != JsonNullBehavior.NULL ) {
-				sqlAppender.appendSql( ",'null')" );
-			}
 		}
 	}
 }

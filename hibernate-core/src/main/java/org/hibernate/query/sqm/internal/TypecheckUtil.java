@@ -491,8 +491,8 @@ public class TypecheckUtil {
 	}
 
 	public static void assertOperable(SqmExpression<?> left, SqmExpression<?> right, BinaryArithmeticOperator op) {
-		final SqmExpressible<?> leftNodeType = left.getNodeType();
-		final SqmExpressible<?> rightNodeType = right.getNodeType();
+		final SqmExpressible<?> leftNodeType = left.getExpressible();
+		final SqmExpressible<?> rightNodeType = right.getExpressible();
 		if ( leftNodeType != null && rightNodeType != null ) {
 			final Class<?> leftJavaType = leftNodeType.getRelationalJavaType().getJavaTypeClass();
 			final Class<?> rightJavaType = rightNodeType.getRelationalJavaType().getJavaTypeClass();
@@ -628,7 +628,7 @@ public class TypecheckUtil {
 	}
 
 	public static void assertNumeric(SqmExpression<?> expression, UnaryArithmeticOperator op) {
-		final SqmExpressible<?> nodeType = expression.getNodeType();
+		final SqmExpressible<?> nodeType = expression.getExpressible();
 		if ( nodeType != null ) {
 			if ( !( nodeType.getSqmType() instanceof JdbcMapping jdbcMapping )
 					|| !jdbcMapping.getJdbcType().isNumber() ) {

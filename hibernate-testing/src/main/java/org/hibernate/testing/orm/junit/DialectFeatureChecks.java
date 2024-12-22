@@ -66,6 +66,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.SybaseDriverKind;
 import org.hibernate.dialect.TiDBDialect;
@@ -551,13 +552,11 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsMedian implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
-			return !( dialect instanceof MySQLDialect
+			return !( dialect instanceof MySQLDialect && !(dialect instanceof MariaDBDialect)
 					|| dialect instanceof SybaseDialect
 					|| dialect instanceof DerbyDialect
 					|| dialect instanceof FirebirdDialect
-					|| dialect instanceof DB2Dialect && ( (DB2Dialect) dialect ).getDB2Version().isBefore( 11 ) )
-					|| dialect instanceof InformixDialect
-					|| dialect instanceof MariaDBDialect;
+					|| dialect instanceof DB2Dialect && ( (DB2Dialect) dialect ).getDB2Version().isBefore( 11 ) );
 		}
 	}
 
@@ -599,7 +598,8 @@ abstract public class DialectFeatureChecks {
 								null,
 								null,
 								new BasicTypeImpl<>( StringJavaType.INSTANCE, VarcharJdbcType.INSTANCE )
-						)
+						),
+						new TypeConfiguration()
 				) != null;
 			}
 			catch (UnsupportedOperationException | IllegalArgumentException e) {
@@ -625,7 +625,8 @@ abstract public class DialectFeatureChecks {
 								null,
 								null,
 								new BasicTypeImpl<>( StringJavaType.INSTANCE, VarcharJdbcType.INSTANCE )
-						)
+						),
+						new TypeConfiguration()
 				) != null;
 			}
 			catch (UnsupportedOperationException | IllegalArgumentException e) {
@@ -651,7 +652,8 @@ abstract public class DialectFeatureChecks {
 								null,
 								null,
 								new BasicTypeImpl<>( StringJavaType.INSTANCE, VarcharJdbcType.INSTANCE )
-						)
+						),
+						new TypeConfiguration()
 				) != null;
 			}
 			catch (UnsupportedOperationException | IllegalArgumentException e) {
@@ -664,6 +666,18 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			try {
 				dialect.getAggregateSupport().requiresAggregateCustomWriteExpressionRenderer( SqlTypes.JSON );
+				return true;
+			}
+			catch (UnsupportedOperationException | IllegalArgumentException e) {
+				return false;
+			}
+		}
+	}
+
+	public static class SupportsXmlComponentUpdate implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			try {
+				dialect.getAggregateSupport().requiresAggregateCustomWriteExpressionRenderer( SqlTypes.SQLXML );
 				return true;
 			}
 			catch (UnsupportedOperationException | IllegalArgumentException e) {
@@ -1023,6 +1037,15 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsUnicodeNClob implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return !(dialect instanceof SybaseASEDialect aseDialect)
+					// The jconn driver apparently doesn't support unicode characters
+					|| aseDialect.getDriverKind() == SybaseDriverKind.JTDS;
+		}
+	}
+
 	private static final HashMap<Dialect, SqmFunctionRegistry> FUNCTION_REGISTRIES = new HashMap<>();
 
 	public static boolean definesFunction(Dialect dialect, String functionName) {
@@ -1032,6 +1055,21 @@ abstract public class DialectFeatureChecks {
 	public static boolean definesSetReturningFunction(Dialect dialect, String functionName) {
 		return getSqmFunctionRegistry( dialect ).findSetReturningFunctionDescriptor( functionName ) != null;
 	}
+
+	public static class SupportsSubqueryInSelect implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsSubqueryInSelect();
+		}
+	}
+
+	public static class SupportSubqueryAsLeftHandSideInPredicate implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsSubselectAsInPredicateLHS();
+		}
+	}
+
 
 	private static SqmFunctionRegistry getSqmFunctionRegistry(Dialect dialect) {
 		SqmFunctionRegistry sqmFunctionRegistry = FUNCTION_REGISTRIES.get( dialect );

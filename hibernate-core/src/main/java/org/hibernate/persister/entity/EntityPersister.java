@@ -537,8 +537,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 			JdbcValueBiConsumer<X, Y> valueConsumer,
 			SharedSessionContractImplementor session) {
 		int span = 0;
-		if ( domainValue instanceof Object[] ) {
-			final Object[] values = (Object[]) domainValue;
+		if ( domainValue instanceof Object[] values ) {
 			for ( int i = 0; i < getNumberOfAttributeMappings(); i++ ) {
 				final AttributeMapping attributeMapping = getAttributeMapping( i );
 				span += attributeMapping.breakDownJdbcValues( values[ i ], offset + span, x, y, valueConsumer, session );
@@ -1077,11 +1076,6 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * The persistent class, or null
 	 */
 	Class<?> getMappedClass();
-
-	/**
-	 * Does the class implement the {@link org.hibernate.classic.Lifecycle} interface?
-	 */
-	boolean implementsLifecycle();
 
 	/**
 	 * Get the proxy interface that instances of <em>this</em> concrete class will be

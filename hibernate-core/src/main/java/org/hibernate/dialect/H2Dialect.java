@@ -109,6 +109,10 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
 
 /**
  * A {@linkplain Dialect SQL dialect} for H2.
+ * <p>
+ * Please refer to the
+ * <a href="http://www.h2database.com/html/main.html">H2 documentation</a>.
+ *
  *
  * @author Thomas Mueller
  * @author Jürgen Kreitler
@@ -368,6 +372,10 @@ public class H2Dialect extends Dialect {
 		functionFactory.unnest_h2( getMaximumArraySize() );
 		functionFactory.generateSeries_h2( getMaximumSeriesSize() );
 		functionFactory.jsonTable_h2( getMaximumArraySize() );
+
+		functionFactory.hex( "rawtohex(?1)" );
+		functionFactory.sha( "hash('SHA-256', ?1)" );
+		functionFactory.md5( "hash('MD5', ?1)" );
 	}
 
 	/**

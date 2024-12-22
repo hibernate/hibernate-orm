@@ -357,7 +357,7 @@ public class EmbeddableAggregate {
 		aggregate.theBinary = new byte[] { 1 };
 		aggregate.theDate = new java.sql.Date( 2000 - 1900, 0, 1 );
 		aggregate.theTime = new Time( 1, 0, 0 );
-		aggregate.theTimestamp = new Timestamp( 2000 - 1900, 0, 1, 1, 0, 0, 1000 );
+		aggregate.theTimestamp = new Timestamp( 2000 - 1900, 0, 1, 1, 0, 0, 3000000 ); // Use 3 millis to allow representation on Sybase
 		aggregate.theInstant = LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ).toInstant( ZoneOffset.UTC );
 		aggregate.theUuid = UUID.fromString( "53886a8a-7082-4879-b430-25cb94415be8" );
 		aggregate.gender = EntityOfBasics.Gender.FEMALE;

@@ -6,8 +6,7 @@ package org.hibernate.orm.test.annotations.collectionelement.recreate;
 
 import java.util.Date;
 
-import org.hibernate.BaseSessionEventListener;
-
+import org.hibernate.SessionEventListener;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -29,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SessionFactory
 public class RecreateCollectionTest {
 
-	private static class StatementsCounterListener extends BaseSessionEventListener {
+	private static class StatementsCounterListener implements SessionEventListener {
 		int statements;
 
 		@Override

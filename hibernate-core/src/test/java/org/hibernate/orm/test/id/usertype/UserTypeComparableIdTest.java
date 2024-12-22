@@ -14,7 +14,7 @@ import java.util.Comparator;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Type;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.EnhancedUserType;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -128,7 +128,7 @@ public class UserTypeComparableIdTest {
 		}
 
 		@Override
-		public CustomId nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+		public CustomId nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 				throws SQLException {
 			Long value = rs.getLong( position );
 
@@ -140,7 +140,7 @@ public class UserTypeComparableIdTest {
 				PreparedStatement preparedStatement,
 				CustomId customId,
 				int index,
-				SharedSessionContractImplementor sessionImplementor) throws SQLException {
+				WrapperOptions sessionImplementor) throws SQLException {
 			if ( customId == null ) {
 				preparedStatement.setNull( index, Types.BIGINT );
 			}

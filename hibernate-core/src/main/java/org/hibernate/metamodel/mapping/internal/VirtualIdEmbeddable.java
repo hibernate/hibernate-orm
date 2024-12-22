@@ -106,10 +106,7 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		return representationStrategy.getInstantiator().instantiate(
-				() -> getValues( entity ),
-				session.getSessionFactory()
-		);
+		return representationStrategy.getInstantiator().instantiate( () -> getValues( entity ) );
 	}
 
 	@Override

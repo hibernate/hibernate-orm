@@ -21,8 +21,6 @@ import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
@@ -126,15 +124,9 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	@SuppressWarnings( "unchecked" )
 	protected T doGetReference(Object id) {
 		final SessionImplementor session = context.getSession();
-		final SessionFactoryImplementor factory = session.getFactory();
 		final EntityMappingType concreteType = entityPersister.resolveConcreteProxyTypeForId( id, session );
-		return (T) getReference(
-				coerceId( id, factory ),
-				session.asEventSource(),
-				factory,
-				concreteType.getEntityName(),
-				isReadOnly( session )
-		);
+		return (T) context.load( LoadEventListener.LOAD, coerceId( id, session.getFactory() ),
+				concreteType.getEntityName(), lockOptions, isReadOnly( session ) );
 	}
 
 	private Boolean isReadOnly(SessionImplementor session) {
@@ -156,66 +148,17 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	@SuppressWarnings( "unchecked" )
 	protected final T doLoad(Object id) {
 		final SessionImplementor session = context.getSession();
-		final Object result = load(
-				coerceId( id, session.getFactory() ),
-				session.asEventSource(),
-				entityPersister.getEntityName(),
-				isReadOnly( session )
-		);
+		Object result;
+		try {
+			result = context.load( LoadEventListener.GET, coerceId( id, session.getFactory() ),
+					entityPersister.getEntityName(), lockOptions, isReadOnly( session ) );
+		}
+		catch (ObjectNotFoundException notFoundException) {
+			// if session cache contains proxy for non-existing object
+			result = null;
+		}
 		initializeIfNecessary( result );
 		return (T) result;
-	}
-
-	private Object getReference(
-			Object id,
-			EventSource eventSource,
-			SessionFactoryImplementor factory,
-			String entityName,
-			Boolean readOnly) {
-		if ( lockOptions != null ) {
-			final LoadEvent event = new LoadEvent( id, entityName, lockOptions, eventSource, readOnly );
-			context.fireLoad( event, LoadEventListener.LOAD );
-			return event.getResult();
-		}
-		else {
-			final LoadEvent event = new LoadEvent( id, entityName, false, eventSource, readOnly );
-			boolean success = false;
-			try {
-				context.fireLoad( event, LoadEventListener.LOAD );
-				final Object result = event.getResult();
-				if ( result == null ) {
-					factory.getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
-				}
-				success = true;
-				return result;
-			}
-			finally {
-				context.afterOperation( success );
-			}
-		}
-	}
-
-	private Object load(Object id, EventSource eventSource, String entityName, Boolean readOnly) {
-		final LoadEvent event;
-		if ( lockOptions != null ) {
-			event = new LoadEvent( id, entityName, lockOptions, eventSource, readOnly );
-			context.fireLoad( event, LoadEventListener.GET );
-		}
-		else {
-			event = new LoadEvent( id, entityName, false, eventSource, readOnly );
-			boolean success = false;
-			try {
-				context.fireLoad( event, LoadEventListener.GET );
-				success = true;
-			}
-			catch (ObjectNotFoundException e) {
-				// if session cache contains proxy for non-existing object
-			}
-			finally {
-				context.afterOperation( success );
-			}
-		}
-		return event.getResult();
 	}
 
 	private Object coerceId(Object id, SessionFactoryImplementor factory) {
@@ -249,9 +192,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 				if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
 					final BytecodeLazyAttributeInterceptor interceptor =
 							enhancementMetadata.extractLazyInterceptor( result);
-					if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-						final EnhancementAsProxyLazinessInterceptor lazinessInterceptor =
-								(EnhancementAsProxyLazinessInterceptor) interceptor;
+					if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
 						lazinessInterceptor.forceInitialize( result, null );
 					}
 				}

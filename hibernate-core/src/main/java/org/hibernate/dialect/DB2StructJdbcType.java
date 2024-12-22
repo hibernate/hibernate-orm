@@ -166,11 +166,9 @@ public class DB2StructJdbcType implements StructJdbcType {
 
 	@Override
 	public SQLXML createJdbcValue(Object value, WrapperOptions options) throws SQLException {
-		final SQLXML sqlxml = options.getSession()
-				.getJdbcCoordinator()
-				.getLogicalConnection()
-				.getPhysicalConnection()
-				.createSQLXML();
+		final SQLXML sqlxml =
+				options.getSession().getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
+						.createSQLXML();
 		sqlxml.setString( XmlHelper.toString( embeddableMappingType, value, options) );
 		return sqlxml;
 	}

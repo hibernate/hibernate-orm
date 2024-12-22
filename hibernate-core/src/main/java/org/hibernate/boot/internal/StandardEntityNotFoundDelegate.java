@@ -8,8 +8,8 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 
 /**
- * Standard non-JPA implementation of EntityNotFoundDelegate, throwing the
- * Hibernate-specific {@link ObjectNotFoundException}.
+ * Standard non-JPA implementation of {@link EntityNotFoundDelegate},
+ * throwing the Hibernate-specific {@link ObjectNotFoundException}.
  *
  * @author Steve Ebersole
  */

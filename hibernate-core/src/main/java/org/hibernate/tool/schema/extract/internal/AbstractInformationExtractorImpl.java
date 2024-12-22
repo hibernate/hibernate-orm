@@ -638,7 +638,10 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		}
 	}
 
-	private ColumnInformationImpl columnInformation(TableInformation tableInformation, ResultSet resultSet)
+	/*
+	 * Hibernate Reactive overrides this
+	 */
+	protected ColumnInformationImpl columnInformation(TableInformation tableInformation, ResultSet resultSet)
 			throws SQLException {
 		return new ColumnInformationImpl(
 				tableInformation,
@@ -864,7 +867,10 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		}
 	}
 
-	private Boolean interpretTruthValue(String nullable) {
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected Boolean interpretTruthValue(String nullable) {
 		if ( "yes".equalsIgnoreCase( nullable ) ) {
 			return Boolean.TRUE;
 		}

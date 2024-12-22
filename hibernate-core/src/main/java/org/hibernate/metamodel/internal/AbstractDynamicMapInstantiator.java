@@ -7,7 +7,6 @@ package org.hibernate.metamodel.internal;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.Instantiator;
 
 /**
@@ -32,11 +31,9 @@ public abstract class AbstractDynamicMapInstantiator implements Instantiator {
 	}
 
 	@Override
-	public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
-		if ( object instanceof Map ) {
-			//noinspection rawtypes
-			final String type = (String) ( (Map) object ).get( TYPE_KEY );
-			return isSameRole( type );
+	public boolean isInstance(Object object) {
+		if ( object instanceof Map<?,?> map ) {
+			return isSameRole( (String) map.get( TYPE_KEY ) );
 		}
 
 		// todo (6.0) : should this be an exception instead?
@@ -48,8 +45,8 @@ public abstract class AbstractDynamicMapInstantiator implements Instantiator {
 	}
 
 	@Override
-	public boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
-		return isInstance( object, sessionFactory );
+	public boolean isSameClass(Object object) {
+		return isInstance( object );
 	}
 
 	@SuppressWarnings("rawtypes")

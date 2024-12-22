@@ -23,12 +23,12 @@ import static org.hibernate.internal.util.StringHelper.WHITESPACE;
  * should be written in the native SQL dialect of the target database,
  * with the following special exceptions:
  * <ul>
- *     <li>any backtick-quoted identifiers, for example {@code `hello`},
+ *     <li>any backtick-quoted identifier, for example {@code `hello`},
  *     is interpreted as a quoted identifier and re-quoted using the
  *     {@linkplain Dialect#quote native quoted identifier syntax} of
  *     the database, and</li>
  *     <li>the literal identifiers {@code true} and {@code false} are
- *     interpreted are literal boolean values, and replaced with
+ *     interpreted as literal boolean values, and replaced with
  *     {@linkplain Dialect#toBooleanValueString dialect-specific
  *     literal values}.
  *     </li>
@@ -167,8 +167,11 @@ public final class Template {
 
 		boolean hasMore = tokens.hasMoreTokens();
 		String nextToken = hasMore ? tokens.nextToken() : null;
+		String token = null;
+		String previousToken;
 		while ( hasMore ) {
-			String token = nextToken;
+			previousToken = token;
+			token = nextToken;
 			String lcToken = token.toLowerCase(Locale.ROOT);
 			hasMore = tokens.hasMoreTokens();
 			nextToken = hasMore ? tokens.nextToken() : null;
@@ -203,7 +206,9 @@ public final class Template {
 				else {
 					isOpenQuote = false;
 				}
-				if ( isOpenQuote ) {
+				if ( isOpenQuote
+					&& !inFromClause // don't want to append alias to tokens inside the from clause
+					&& notEndsWithDot( previousToken ) ) {
 					result.append( alias ).append( '.' );
 				}
 			}
@@ -232,7 +237,8 @@ public final class Template {
 				result.append(token);
 				inExtractOrTrim = true;
 			}
-			else if ( isIdentifier(token)
+			else if ( !inFromClause // don't want to append alias to tokens inside the from clause
+					&& isIdentifier( token )
 					&& !isFunctionOrKeyword( lcToken, nextToken, dialect, typeConfiguration )
 					&& !isLiteral( lcToken, nextToken, sql, symbols, tokens ) ) {
 				result.append(alias)
@@ -266,6 +272,10 @@ public final class Template {
 		}
 
 		return result.toString();
+	}
+
+	private static boolean notEndsWithDot(String token) {
+		return token == null || !token.endsWith( "." );
 	}
 
 	private static boolean isLiteral(

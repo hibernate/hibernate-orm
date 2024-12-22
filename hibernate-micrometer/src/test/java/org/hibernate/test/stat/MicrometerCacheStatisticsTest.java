@@ -111,6 +111,7 @@ public class MicrometerCacheStatisticsTest extends BaseNonConfigCoreFunctionalTe
 		Assert.assertNotNull(registry.get("hibernate.entities.inserts").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.entities.loads").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.entities.updates").functionCounter());
+		Assert.assertNotNull(registry.get("hibernate.entities.upserts").functionCounter());
 
 		Assert.assertNotNull(registry.get("hibernate.collections.deletes").functionCounter());
 		Assert.assertNotNull(registry.get("hibernate.collections.fetches").functionCounter());

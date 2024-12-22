@@ -17,6 +17,7 @@ import java.util.Properties;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
@@ -562,7 +563,7 @@ public class ModelBinder {
 			keyBinding.makeNationalized();
 		}
 		entityDescriptor.setKey( keyBinding );
-		keyBinding.setCascadeDeleteEnabled( entitySource.isCascadeDeleteEnabled() );
+		keyBinding.setOnDeleteAction( getOnDeleteAction( entitySource.isCascadeDeleteEnabled() ) );
 		relationalObjectBinder.bindColumns(
 				mappingDocument,
 				entitySource.getPrimaryKeyColumnSources(),
@@ -593,7 +594,6 @@ public class ModelBinder {
 
 		bindJoinedSubclassEntities( entitySource, entityDescriptor );
 	}
-
 	private void bindUnionSubclassEntities(
 			EntitySource entitySource,
 			PersistentClass superEntityDescriptor) {
@@ -1622,7 +1622,7 @@ public class ModelBinder {
 		}
 		secondaryTableJoin.setKey( keyBinding );
 
-		keyBinding.setCascadeDeleteEnabled( secondaryTableSource.isCascadeDeleteEnabled() );
+		keyBinding.setOnDeleteAction( getOnDeleteAction( secondaryTableSource.isCascadeDeleteEnabled() ) );
 
 		// NOTE : no Type info to bind...
 
@@ -1972,7 +1972,7 @@ public class ModelBinder {
 			setForeignKeyName( oneToOneBinding, oneToOneSource.getExplicitForeignKeyName() );
 		}
 
-		oneToOneBinding.setCascadeDeleteEnabled( oneToOneSource.isCascadeDeleteEnabled() );
+		oneToOneBinding.setOnDeleteAction( getOnDeleteAction( oneToOneSource.isCascadeDeleteEnabled() ) );
 	}
 
 	private Property createManyToOneAttribute(
@@ -2121,7 +2121,7 @@ public class ModelBinder {
 			}
 		}
 
-		manyToOneBinding.setCascadeDeleteEnabled( manyToOneSource.isCascadeDeleteEnabled() );
+		manyToOneBinding.setOnDeleteAction( getOnDeleteAction( manyToOneSource.isCascadeDeleteEnabled() ) );
 	}
 
 	private static void setForeignKeyName(SimpleValue manyToOneBinding, String foreignKeyName) {
@@ -3203,8 +3203,8 @@ public class ModelBinder {
 					keyVal
 			);
 			setForeignKeyName( key, keySource.getExplicitForeignKeyName() );
-			key.setCascadeDeleteEnabled( getPluralAttributeSource().getKeySource().isCascadeDeleteEnabled() );
-//
+			key.setOnDeleteAction( getOnDeleteAction( getPluralAttributeSource().getKeySource().isCascadeDeleteEnabled() ) );
+
 //			final ImplicitJoinColumnNameSource.Nature implicitNamingNature;
 //			if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceManyToMany
 //					|| getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceOneToMany ) {
@@ -4068,5 +4068,9 @@ public class ModelBinder {
 			builder.append( selectable.getText() );
 		}
 		return builder.toString();
+	}
+
+	private static OnDeleteAction getOnDeleteAction(boolean entitySource) {
+		return entitySource ? OnDeleteAction.CASCADE : OnDeleteAction.NO_ACTION;
 	}
 }

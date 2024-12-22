@@ -488,6 +488,19 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				&& sessionFactory.getSessionFactoryOptions().isPreferJdbcDatetimeTypesInNativeQueriesEnabled();
 		}
 
+		@Override
+		public boolean isXmlFormatMapperLegacyFormatEnabled() {
+			if ( metadataBuildingContext != null ) {
+				return metadataBuildingContext.getBuildingOptions().isXmlFormatMapperLegacyFormatEnabled();
+			}
+			else if ( sessionFactory != null ) {
+				return sessionFactory.getSessionFactoryOptions().isXmlFormatMapperLegacyFormatEnabled();
+			}
+			else {
+				return false;
+			}
+		}
+
 		private Scope(TypeConfiguration typeConfiguration) {
 			this.typeConfiguration = typeConfiguration;
 		}

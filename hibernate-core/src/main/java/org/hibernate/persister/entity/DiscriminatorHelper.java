@@ -37,9 +37,9 @@ public class DiscriminatorHelper {
 	 * and the {@link org.hibernate.type.descriptor.jdbc.JdbcType}.
 	 */
 	static BasicType<?> getDiscriminatorType(PersistentClass persistentClass) {
-		Type discriminatorType = persistentClass.getDiscriminator().getType();
-		if ( discriminatorType instanceof BasicType ) {
-			return (BasicType<?>) discriminatorType;
+		final Type discriminatorType = persistentClass.getDiscriminator().getType();
+		if ( discriminatorType instanceof BasicType<?> basicType ) {
+			return basicType;
 		}
 		else {
 			throw new MappingException( "Illegal discriminator type: " + discriminatorType.getName() );
@@ -47,16 +47,16 @@ public class DiscriminatorHelper {
 	}
 
 	public static BasicType<?> getDiscriminatorType(Component component) {
-		Type discriminatorType = component.getDiscriminator().getType();
-		if ( discriminatorType instanceof BasicType ) {
-			return (BasicType<?>) discriminatorType;
+		final Type discriminatorType = component.getDiscriminator().getType();
+		if ( discriminatorType instanceof BasicType<?> basicType ) {
+			return basicType;
 		}
 		else {
 			throw new MappingException( "Illegal discriminator type: " + discriminatorType.getName() );
 		}
 	}
 
-	static String getDiscriminatorSQLValue(PersistentClass persistentClass, Dialect dialect) {
+	public static String getDiscriminatorSQLValue(PersistentClass persistentClass, Dialect dialect) {
 		if ( persistentClass.isDiscriminatorValueNull() ) {
 			return InFragment.NULL;
 		}
@@ -69,16 +69,18 @@ public class DiscriminatorHelper {
 	}
 
 	private static Object parseDiscriminatorValue(PersistentClass persistentClass) {
-		BasicType<?> discriminatorType = getDiscriminatorType( persistentClass );
+		final BasicType<?> discriminatorType = getDiscriminatorType( persistentClass );
+		final String discriminatorValue = persistentClass.getDiscriminatorValue();
 		try {
-			return discriminatorType.getJavaTypeDescriptor().fromString( persistentClass.getDiscriminatorValue() );
+			return discriminatorType.getJavaTypeDescriptor().fromString( discriminatorValue );
 		}
 		catch ( Exception e ) {
-			throw new MappingException( "Could not parse discriminator value", e );
+			throw new MappingException( "Could not parse discriminator value '" + discriminatorValue
+							+ "' as discriminator type '" + discriminatorType.getName() + "'", e );
 		}
 	}
 
-	static Object getDiscriminatorValue(PersistentClass persistentClass) {
+	public static Object getDiscriminatorValue(PersistentClass persistentClass) {
 		if ( persistentClass.isDiscriminatorValueNull() ) {
 			return NULL_DISCRIMINATOR;
 		}
@@ -101,10 +103,7 @@ public class DiscriminatorHelper {
 		);
 	}
 
-	public static <T> String jdbcLiteral(
-			T value,
-			JdbcLiteralFormatter<T> formatter,
-			Dialect dialect) {
+	public static <T> String jdbcLiteral(T value, JdbcLiteralFormatter<T> formatter, Dialect dialect) {
 		try {
 			return formatter.toJdbcLiteral( value, dialect, null );
 		}
@@ -119,26 +118,12 @@ public class DiscriminatorHelper {
 	 * domain types, or to {@link StandardBasicTypes#CLASS Class} for non-inherited ones.
 	 */
 	public static <T> SqmExpressible<? super T> getDiscriminatorType(
-			SqmPathSource<T> domainType,
-			NodeBuilder nodeBuilder) {
+			SqmPathSource<T> domainType, NodeBuilder nodeBuilder) {
 		final SqmPathSource<?> subPathSource = domainType.findSubPathSource( DISCRIMINATOR_ROLE_NAME );
-		final SqmExpressible<?> type;
-		if ( subPathSource != null ) {
-			type = subPathSource.getSqmPathType();
-		}
-		else {
-			type = nodeBuilder.getTypeConfiguration()
-					.getBasicTypeRegistry()
-					.resolve( StandardBasicTypes.CLASS );
-		}
+		final SqmExpressible<?> type = subPathSource != null
+				? subPathSource.getSqmPathType()
+				: nodeBuilder.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.CLASS );
 		//noinspection unchecked
 		return (SqmExpressible<? super T>) type;
 	}
-
-	static String discriminatorLiteral(JdbcLiteralFormatter<Object> formatter, Dialect dialect, Object value) {
-		return value == NULL_DISCRIMINATOR || value == NOT_NULL_DISCRIMINATOR
-				? null
-				: jdbcLiteral( value, formatter, dialect );
-	}
-
 }

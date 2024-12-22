@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.EnhancedUserType;
@@ -57,7 +56,7 @@ public class ClassificationType implements EnhancedUserType<Classification>, Val
 	}
 
 	@Override
-	public Classification nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	public Classification nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
 		final int intValue = rs.getInt( position );
 		if ( rs.wasNull() ) {
@@ -67,7 +66,7 @@ public class ClassificationType implements EnhancedUserType<Classification>, Val
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Classification value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, Classification value, int index, WrapperOptions options)
 			throws SQLException {
 		if ( value == null ) {
 			st.setNull( index, Types.INTEGER );

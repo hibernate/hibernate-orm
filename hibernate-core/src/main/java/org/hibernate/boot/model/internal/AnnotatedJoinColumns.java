@@ -28,8 +28,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
@@ -45,10 +43,12 @@ import jakarta.persistence.JoinColumn;
 
 import static org.hibernate.boot.model.internal.BinderHelper.findReferencedColumnOwner;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
 
 /**
  * A list of {@link jakarta.persistence.JoinColumn}s that form a single join
@@ -94,7 +94,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			final JoinFormula formula = columnOrFormula.formula();
 			final JoinColumn column = columnOrFormula.column();
 			final String annotationString = formula.value();
-			if ( isNotEmpty( annotationString ) ) {
+			if ( isNotBlank( annotationString ) ) {
 				AnnotatedJoinColumn.buildJoinFormula( formula, parent );
 			}
 			else {
@@ -114,8 +114,8 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		}
 
 		final String referencedPropertyName = propertyRefUsage.value();
-		if ( StringHelper.isEmpty( referencedPropertyName ) ) {
-			throw new AnnotationException( "@PropertyRef did not specify target attribute name : " + attributeMember );
+		if ( isBlank( referencedPropertyName ) ) {
+			throw new AnnotationException( "@PropertyRef did not specify target attribute name: " + attributeMember );
 		}
 		parent.referencedProperty = referencedPropertyName;
 	}
@@ -165,7 +165,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			PropertyData inferredData,
 			String defaultColumnSuffix,
 			MetadataBuildingContext context) {
-		assert mappedBy == null || !mappedBy.isEmpty();
+		assert mappedBy == null || !mappedBy.isBlank();
 		final String propertyName = inferredData.getPropertyName();
 		final String path = qualify( propertyHolder.getPath(), propertyName );
 		final JoinColumn[] overrides = propertyHolder.getOverriddenJoinColumn( path );
@@ -177,7 +177,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		parent.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
 		parent.setMappedBy( mappedBy );
 		final MemberDetails memberDetails = inferredData.getAttributeMember();
-		if ( ArrayHelper.isEmpty( actualColumns ) ) {
+		if ( isEmpty( actualColumns ) ) {
 			AnnotatedJoinColumn.buildJoinColumn(
 					null,
 //					comment,

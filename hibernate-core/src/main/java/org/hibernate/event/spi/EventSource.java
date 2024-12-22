@@ -5,6 +5,8 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -68,5 +70,18 @@ public interface EventSource extends SessionImplementor {
 	//       This should be removed once action/task ordering is improved.
 	void removeOrphanBeforeUpdates(String entityName, Object child);
 
-	Object load(String entityName, Object identifier);
+	/**
+	 * Attempts to load the entity from the second-level cache.
+	 *
+	 * @param persister The persister for the entity being requested for load
+	 * @param entityKey The entity key
+	 * @param instanceToLoad The instance that is being initialized, or null
+	 * @param lockMode The lock mode
+	 *
+	 * @return The entity from the second-level cache, or null.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode);
 }

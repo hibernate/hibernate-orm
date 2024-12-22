@@ -245,7 +245,7 @@ public interface MetadataBuilder {
 
 	/**
 	 * For entities which do not explicitly say, should we force discriminators into
-	 * SQL selects?  The (historical) default is {@code false}
+	 * SQL selects?  The (historical) default is {@code false}.
 	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT}
 	 * setting if using property-based configuration.

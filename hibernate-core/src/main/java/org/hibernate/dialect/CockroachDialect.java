@@ -413,7 +413,6 @@ public class CockroachDialect extends Dialect {
 		functionFactory.substr();
 		functionFactory.reverse();
 		functionFactory.repeat();
-		functionFactory.md5();
 		functionFactory.sha1();
 		functionFactory.octetLength();
 		functionFactory.bitLength();
@@ -503,6 +502,10 @@ public class CockroachDialect extends Dialect {
 				new PostgreSQLTruncFunction( true, functionContributions.getTypeConfiguration() )
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+
+		functionFactory.hex( "encode(?1, 'hex')" );
+		functionFactory.sha( "digest(?1, 'sha256')" );
+		functionFactory.md5( "digest(?1, 'md5')" );
 	}
 
 	@Override

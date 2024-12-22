@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAmount;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -1052,11 +1053,6 @@ public class DialectDelegateWrapper extends Dialect {
 		return wrapped.supportsNullPrecedence();
 	}
 
-	@Override
-	@Deprecated(since = "6")
-	public boolean isAnsiNullOn() {
-		return wrapped.isAnsiNullOn();
-	}
 
 	@Override
 	public boolean requiresCastForConcatenatingNonStrings() {
@@ -1686,7 +1682,7 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, Set<?> valueSet, JdbcType jdbcType) {
+	public String getCheckCondition(String columnName, Collection<?> valueSet, JdbcType jdbcType) {
 		return wrapped.getCheckCondition( columnName, valueSet, jdbcType );
 	}
 

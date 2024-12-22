@@ -8,7 +8,7 @@ import org.hibernate.dialect.XmlHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -126,9 +126,9 @@ public class SQLServerUnnestFunction extends UnnestFunction {
 					sqlAppender.appendSql( selectableMapping.getSelectionExpression() );
 				}
 				else {
-					sqlAppender.appendSql( "t.v.value('");
+					sqlAppender.appendSql( "t.v.value('(");
 					sqlAppender.appendSql( selectableMapping.getSelectableName() );
-					sqlAppender.appendSql( "/text()[1]','" );
+					sqlAppender.appendSql( "/text())[1]','" );
 					sqlAppender.append( getDdlType( selectableMapping, SqlTypes.XML_ARRAY, walker ) );
 					sqlAppender.appendSql( "') " );
 					sqlAppender.appendSql( selectableMapping.getSelectionExpression() );

@@ -40,7 +40,6 @@ import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StructuredCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
-import org.hibernate.classic.Lifecycle;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -70,7 +69,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
@@ -90,13 +88,11 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.IndexedConsumer;
-import org.hibernate.internal.util.LazyValue;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.LockModeEnumMap;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
 import org.hibernate.loader.ast.internal.EntityConcreteTypeLoader;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
@@ -464,8 +460,6 @@ public abstract class AbstractEntityPersister
 	 */
 	private final EntityPropertyMapping propertyMapping;
 
-	private final boolean implementsLifecycle;
-
 	private List<UniqueKeyEntry> uniqueKeyEntries = null; //lazily initialized
 	private ConcurrentHashMap<String,SingleIdArrayLoadPlan> nonLazyPropertyLoadPlansByName;
 
@@ -500,7 +494,7 @@ public abstract class AbstractEntityPersister
 			isLazyPropertiesCacheable = true;
 		}
 
-		entityMetamodel = new EntityMetamodel( persistentClass, this, creationContext );
+		entityMetamodel = creationContext.createEntityMetamodel( persistentClass, this );
 
 		entityEntryFactory = entityMetamodel.isMutable()
 				? MutableEntityEntryFactory.INSTANCE
@@ -523,7 +517,6 @@ public abstract class AbstractEntityPersister
 
 		javaType = representationStrategy.getLoadJavaType();
 		assert javaType != null;
-		this.implementsLifecycle = Lifecycle.class.isAssignableFrom( javaType.getJavaTypeClass() );
 
 		concreteProxy = entityMetamodel.isPolymorphic()
 				&& ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() || hasProxy() )
@@ -686,6 +679,15 @@ public abstract class AbstractEntityPersister
 		final ArrayList<String[]> propColumnReaders = new ArrayList<>();
 		final ArrayList<String[]> propColumnReaderTemplates = new ArrayList<>();
 		final ArrayList<FetchMode> joinedFetchesList = new ArrayList<>();
+
+		if ( persistentClass.hasSubclasses() ) {
+			for ( Selectable selectable : persistentClass.getIdentifier().getSelectables() ) {
+				if ( !selectable.isFormula() ) {
+					// Identifier columns are always shared between subclasses
+					sharedColumnNames.add( ( (Column) selectable ).getQuotedName( dialect ) );
+				}
+			}
+		}
 
 		for ( Property prop : persistentClass.getSubclassPropertyClosure() ) {
 			names.add( prop.getName() );
@@ -3551,16 +3553,15 @@ public abstract class AbstractEntityPersister
 			SharedSessionContractImplementor session) {
 		final BytecodeEnhancementMetadata enhancementMetadata = getEntityMetamodel().getBytecodeEnhancementMetadata();
 		final BytecodeLazyAttributeInterceptor currentInterceptor = enhancementMetadata.extractLazyInterceptor( entity );
-		if ( currentInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-			final EnhancementAsProxyLazinessInterceptor proxyInterceptor = (EnhancementAsProxyLazinessInterceptor) currentInterceptor;
+		if ( currentInterceptor instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
 
 			final EntityKey entityKey = proxyInterceptor.getEntityKey();
 			final Object identifier = entityKey.getIdentifier();
 
 			Object loaded = null;
 			if ( canReadFromCache && session.isEventSource() ) {
-				LoadEvent loadEvent = new LoadEvent( identifier, entity, session.asEventSource(), false );
-				loaded = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( loadEvent, this, entityKey );
+				final EventSource eventSource = (EventSource) session;
+				loaded = eventSource.loadFromSecondLevelCache( this, entityKey, entity, LockMode.NONE );
 			}
 			if ( loaded == null ) {
 				loaded = determineLoaderToUse( session ).load( identifier, entity, LockOptions.NONE, session );
@@ -4173,11 +4174,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public boolean implementsLifecycle() {
-		return this.implementsLifecycle;
-	}
-
-	@Override
 	public Class<?> getConcreteProxyClass() {
 		final JavaType<?> proxyJavaType = getRepresentationStrategy().getProxyJavaType();
 		return proxyJavaType != null ? proxyJavaType.getJavaTypeClass() : javaType.getJavaTypeClass();
@@ -4321,7 +4317,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object instantiate(Object id, SharedSessionContractImplementor session) {
-		final Object instance = getRepresentationStrategy().getInstantiator().instantiate( session.getFactory() );
+		final Object instance = getRepresentationStrategy().getInstantiator().instantiate();
 		linkToSession( instance, session );
 		if ( id != null ) {
 			setIdentifier( instance, id, session );
@@ -4346,7 +4342,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean isInstance(Object object) {
-		return getRepresentationStrategy().getInstantiator().isInstance( object, getFactory() );
+		return getRepresentationStrategy().getInstantiator().isInstance( object );
 	}
 
 	@Override
@@ -4376,12 +4372,12 @@ public abstract class AbstractEntityPersister
 	public EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
 		if ( instance != null
 				&& hasSubclasses()
-				&& !getRepresentationStrategy().getInstantiator().isSameClass( instance, factory ) ) {
+				&& !getRepresentationStrategy().getInstantiator().isSameClass( instance ) ) {
 			// todo (6.0) : this previously used `org.hibernate.tuple.entity.EntityTuplizer#determineConcreteSubclassEntityName`
 			//		- we may need something similar here...
 			for ( EntityMappingType subclassMappingType : subclassMappingTypes.values() ) {
 				if ( subclassMappingType.getEntityPersister().getRepresentationStrategy()
-						.getInstantiator().isSameClass(instance, factory) ) {
+						.getInstantiator().isSameClass(instance ) ) {
 					return subclassMappingType.getEntityPersister();
 				}
 			}
@@ -4620,8 +4616,20 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected String determineTableName(Table table) {
-		return MappingModelCreationHelper.getTableIdentifierExpression( table, factory );
+		if ( table.getSubselect() != null ) {
+			final SQLQueryParser sqlQueryParser = new SQLQueryParser(
+					table.getSubselect(),
+					null,
+					// NOTE : this allows finer control over catalog and schema used for placeholder
+					// handling (`{h-catalog}`, `{h-schema}`, `{h-domain}`)
+					new ExplicitSqlStringGenerationContext( table.getCatalog(), table.getSchema(), factory )
+			);
+			return "( " + sqlQueryParser.process() + " )";
+		}
+
+		return factory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
 	}
+
 
 	@Override
 	public EntityEntryFactory getEntityEntryFactory() {
@@ -4895,21 +4903,15 @@ public abstract class AbstractEntityPersister
 
 	private void prepareMappingModel(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		final EntityInstantiator instantiator = getRepresentationStrategy().getInstantiator();
-		final Supplier<?> templateInstanceCreator;
-		if ( ! instantiator.canBeInstantiated() ) {
-			templateInstanceCreator = null;
-		}
-		else {
-			final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
-			templateInstanceCreator = new LazyValue<>( () -> instantiator.instantiate( sessionFactory ) )::getValue;
-		}
+		final Supplier<?> instantiate = instantiator.canBeInstantiated() ? instantiator::instantiate : null;
 
 		identifierMapping = creationProcess.processSubPart(
 				EntityIdentifierMapping.ID_ROLE_NAME,
-				(role, process) -> generateIdentifierMapping( templateInstanceCreator, bootEntityDescriptor, process )
+				(role, process)
+						-> generateIdentifierMapping( instantiate, bootEntityDescriptor, process )
 		);
 
-		versionMapping = generateVersionMapping( templateInstanceCreator, bootEntityDescriptor, creationProcess );
+		versionMapping = generateVersionMapping( instantiate, bootEntityDescriptor, creationProcess );
 
 		if ( rowIdName == null ) {
 			rowIdMapping = null;
@@ -4917,7 +4919,8 @@ public abstract class AbstractEntityPersister
 		else {
 			rowIdMapping = creationProcess.processSubPart(
 					rowIdName,
-					(role, process) -> new EntityRowIdMappingImpl( rowIdName, getTableName(), this )
+					(role, process)
+							-> new EntityRowIdMappingImpl( rowIdName, getTableName(), this )
 			);
 		}
 

@@ -50,6 +50,8 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -78,6 +80,8 @@ import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
@@ -137,7 +141,10 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A {@linkplain Dialect SQL dialect} for PostgreSQL 11 and above.
+ * A {@linkplain Dialect SQL dialect} for PostgreSQL 12 and above.
+ * <p>
+ * Please refer to the
+ * <a href="https://www.postgresql.org/docs/current/index.html">PostgreSQL documentation</a>.
  *
  * @author Gavin King
  */
@@ -145,6 +152,17 @@ public class PostgreSQLDialect extends Dialect {
 	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 12 );
 
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+	private final StandardTableExporter postgresqlTableExporter = new StandardTableExporter( this ) {
+		@Override
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+			if ( jdbcType.isXml() ) {
+				// Requires the use of xmltable which is not supported in check constraints
+				return;
+			}
+			super.applyAggregateColumnCheck( buf, aggregateColumn );
+		}
+	};
 
 	protected final PostgreSQLDriverKind driverKind;
 	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
@@ -228,7 +246,8 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	protected String castType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
-			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "text";
+			case CHAR, NCHAR, VARCHAR, NVARCHAR -> "varchar";
+			case LONG32VARCHAR, LONG32NVARCHAR -> "text";
 			case BINARY, VARBINARY, LONG32VARBINARY -> "bytea";
 			default -> super.castType( sqlTypeCode );
 		};
@@ -535,7 +554,6 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.pi();
 		functionFactory.trim2();
 		functionFactory.repeat();
-		functionFactory.md5();
 		functionFactory.initcap();
 		functionFactory.substr();
 		functionFactory.substring_substr();
@@ -675,6 +693,10 @@ public class PostgreSQLDialect extends Dialect {
 			functionFactory.unnest_postgresql();
 		}
 		functionFactory.generateSeries( null, "ordinality", false );
+
+		functionFactory.hex( "encode(?1, 'hex')" );
+		functionFactory.sha( "sha256(?1)" );
+		functionFactory.md5( "decode(md5(?1), 'hex')" );
 	}
 
 	@Override
@@ -1472,6 +1494,11 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
+	}
+
+	@Override
+	public Exporter<Table> getTableExporter() {
+		return postgresqlTableExporter;
 	}
 
 	/**

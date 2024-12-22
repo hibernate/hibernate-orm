@@ -392,9 +392,7 @@ public class MySQLLegacyDialect extends Dialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return getMySQLVersion().isSameOrAfter( 5, 7 )
-				? MySQLAggregateSupport.JSON_INSTANCE
-				: super.getAggregateSupport();
+		return MySQLAggregateSupport.forMySQL( this );
 	}
 
 	@Deprecated
@@ -620,10 +618,7 @@ public class MySQLLegacyDialect extends Dialect {
 		BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 
 		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
-		functionRegistry.noArgsBuilder( "localtime" )
-				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ))
-				.setUseParenthesesWhenNoArgs( false )
-				.register();
+
 		// pi() produces a value with 7 digits unless we're explicit
 		if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
 			functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )

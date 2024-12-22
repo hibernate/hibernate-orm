@@ -13,8 +13,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.query.results.ResultSetMappingImpl;
-import org.hibernate.query.results.complete.CompleteResultBuilderEntityValued;
+import org.hibernate.query.results.internal.ResultSetMappingImpl;
+import org.hibernate.query.results.internal.complete.CompleteResultBuilderEntityValued;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;

@@ -45,7 +45,8 @@ public class JpaComplianceAlreadyStartedTransactionTest extends BaseNonConfigCor
 			Transaction tx = null;
 			try {
 				// A call to begin() with an active Tx should cause an IllegalStateException
-				tx = s.beginTransaction();
+				tx = s.getTransaction();
+				tx.begin();
 			}
 			catch (Exception e) {
 				if ( tx != null && tx.isActive() ) {

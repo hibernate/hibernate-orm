@@ -453,6 +453,10 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	}
 
 	/**
+	 * Should HQL integer division HQL should produce an integer on
+	 * Oracle, MySQL, and MariaDB, where the {@code /} operator produces
+	 * a non-integer.
+	 *
 	 * @see org.hibernate.cfg.AvailableSettings#PORTABLE_INTEGER_DIVISION
 	 */
 	@Override
@@ -461,11 +465,18 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	}
 
 	/**
+	 * The number of {@link org.hibernate.stat.QueryStatistics} entries
+	 * that should be stored by {@link org.hibernate.stat.Statistics}.
+	 *
 	 * @see org.hibernate.cfg.StatisticsSettings#QUERY_STATISTICS_MAX_SIZE
 	 */
 	int getQueryStatisticsMaxSize();
 
 	/**
+	 * Should JPA entity lifecycle callbacks be processed by
+	 * the {@link org.hibernate.event.spi.EventEngine} and
+	 * {@link org.hibernate.jpa.event.spi.CallbackRegistry}?
+	 *
 	 * @see org.hibernate.cfg.PersistenceSettings#JPA_CALLBACKS_ENABLED
 	 */
 	boolean areJPACallbacksEnabled();
@@ -570,6 +581,15 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 */
 	@Incubating
 	FormatMapper getXmlFormatMapper();
+
+	/**
+	 * Whether to use the legacy format for serializing/deserializing XML data.
+	 *
+	 * @since 7.0
+	 * @see org.hibernate.cfg.MappingSettings#XML_FORMAT_MAPPER_LEGACY_FORMAT
+	 */
+	@Incubating
+	boolean isXmlFormatMapperLegacyFormatEnabled();
 
 	/**
 	 * The default tenant identifier java type to use, in case no explicit tenant identifier property is defined.

@@ -400,9 +400,9 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 					// NOTE: `valuesAccess` is set to null to indicate that all values are null,
 					//		as opposed to returning the all-null value array.  the instantiator
 					//		interprets that as the values are not known or were all null.
-					final Object target = embeddableMappingType.getRepresentationStrategy()
-							.getInstantiator()
-							.instantiate( data, sessionFactory );
+					final Object target =
+							embeddableMappingType.getRepresentationStrategy().getInstantiator()
+									.instantiate( data );
 					lazyInitializer.setImplementation( target );
 				}
 			}
@@ -520,7 +520,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 		final EmbeddableInstantiator instantiator = data.concreteEmbeddableType == null
 				? embeddableMappingType.getRepresentationStrategy().getInstantiator()
 				: data.concreteEmbeddableType.getInstantiator();
-		final Object instance = instantiator.instantiate( data, sessionFactory );
+		final Object instance = instantiator.instantiate( data );
 		data.setState( State.RESOLVED );
 		EMBEDDED_LOAD_LOGGER.debugf( "Created composite instance [%s] : %s", navigablePath, instance );
 		return instance;

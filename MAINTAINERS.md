@@ -103,15 +103,9 @@ and the documentation to [docs.jboss.org](https://docs.jboss.org/hibernate/orm/)
     Note only `RELEASE_VERSION` is absolutely necessary.
   * Note that for new branches where the job has never run, the first run may not ask for parameters and thus may fail:
     that's expected, just run it again.
-* After the job succeeds, check the artifacts are available on Maven Central:
-  https://repo1.maven.org/maven2/org/hibernate/orm/hibernate-core/.
-  They should appear after a few minutes, sometimes a few hours.
 
-#### Announcing the release
+After the job succeeds:
 
-* Blog about release on [in.relation.to](https://github.com/hibernate/in.relation.to).
-  Make sure to use the tags "Hibernate ORM" and "Releases" for the blog entry.
-  Use [release-announcement.adoc](release-announcement.adoc) as a starting point.
 * Update [hibernate.org](https://github.com/hibernate/hibernate.org) if necessary:
   * If it is a new major or minor release, add a `_data/projects/orm/releases/series.yml` file
     and a `orm/releases/<version>/index.adoc` file.
@@ -119,6 +113,14 @@ and the documentation to [docs.jboss.org](https://docs.jboss.org/hibernate/orm/)
   * Depending on which series you want to have displayed,
     make sure to adjust the `status`/`displayed` attributes of the `series.yml` file of the old series.
   * Push to the production branch.
+* Check that the artifacts are available on Maven Central:
+  https://repo1.maven.org/maven2/org/hibernate/orm/hibernate-core/.
+  They should appear after a few minutes, sometimes a few hours.
+* Make sure a GitHub release got created and that everything looks ok.
+
+
+#### Announcing the release
+
 * Send an email to `hibernate-announce@lists.jboss.org` and CC `hibernate-dev@lists.jboss.org`.
 * Tweet about the release via the `@Hibernate` account.
 
@@ -137,7 +139,7 @@ If you just released the latest stable, you will need to update other projects:
 
 In any case:
 
-* Reset [release-announcement.adoc](release-announcement.adoc).
+* Reset [release_notes.md](release_notes.md).
 
 **If it is a new major or minor release**:
 

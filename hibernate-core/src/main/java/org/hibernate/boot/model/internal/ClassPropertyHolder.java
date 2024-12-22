@@ -127,12 +127,10 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 
 		property.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
 			final AttributeConversionInfo info = new AttributeConversionInfo( usage, property );
-			if ( isEmpty( info.getAttributeName() ) ) {
-				attributeConversionInfoMap.put( propertyName, info );
-			}
-			else {
-				attributeConversionInfoMap.put( propertyName + '.' + info.getAttributeName(), info );
-			}
+			final String path = isEmpty( info.getAttributeName() )
+					? propertyName
+					: propertyName + '.' + info.getAttributeName();
+			attributeConversionInfoMap.put( path, info );
 		} );
 	}
 

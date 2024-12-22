@@ -640,11 +640,6 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public boolean implementsLifecycle() {
-			return false;
-		}
-
-		@Override
 		public Class getConcreteProxyClass() {
 			return null;
 		}

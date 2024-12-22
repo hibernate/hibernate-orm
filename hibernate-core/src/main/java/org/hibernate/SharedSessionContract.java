@@ -43,6 +43,23 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	Object getTenantIdentifierValue();
 
 	/**
+	 * Get the current {@linkplain CacheMode cache mode} for this session.
+	 *
+	 * @return the current cache mode
+	 */
+	CacheMode getCacheMode();
+
+	/**
+	 * Set the current {@linkplain CacheMode cache mode} for this session.
+	 * <p>
+	 * The cache mode determines the manner in which this session can interact with
+	 * the second level cache.
+	 *
+	 * @param cacheMode the new cache mode
+	 */
+	void setCacheMode(CacheMode cacheMode);
+
+	/**
 	 * End the session by releasing the JDBC connection and cleaning up.
 	 *
 	 * @throws HibernateException Indicates problems cleaning up.
@@ -69,6 +86,29 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	 * If a new underlying transaction is required, begin the transaction. Otherwise,
 	 * continue the new work in the context of the existing underlying transaction.
 	 *
+	 * @apiNote
+	 * The JPA-standard way to begin a new resource-local transaction is by calling
+	 * {@link #getTransaction getTransaction().begin()}. But it's not always safe to
+	 * execute this idiom.
+	 * <ul>
+	 * <li>JPA doesn't allow an {@link jakarta.persistence.EntityTransaction
+	 * EntityTransaction} to represent a JTA transaction context. Therefore, when
+	 * {@linkplain org.hibernate.jpa.spi.JpaCompliance#isJpaTransactionComplianceEnabled
+	 * strict JPA transaction compliance} is enabled via, for example, setting
+	 * {@value org.hibernate.cfg.JpaComplianceSettings#JPA_TRANSACTION_COMPLIANCE},
+	 * the call to {@code getTransaction()} fails if transactions are managed by JTA.
+	 * <p>
+	 * On the other hand, this method does not fail when JTA transaction management
+	 * is used, not even if strict JPA transaction compliance is enabled.
+	 * <li>Even when resource-local transactions are in use, and even when strict JPA
+	 * transaction compliance is <em>disabled</em>, the call to {@code begin()}
+	 * fails if a transaction is already {@linkplain Transaction#isActive active}.
+	 * <p>
+	 * This method never fails when a transaction is already active. Instead,
+	 * {@code beginTransaction()} simply returns the {@link Transaction} object
+	 * representing the active transaction.
+	 * </ul>
+	 *
 	 * @return an instance of {@link Transaction} representing the new transaction
 	 *
 	 * @see #getTransaction()
@@ -78,6 +118,20 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 
 	/**
 	 * Get the {@link Transaction} instance associated with this session.
+	 *
+	 * @apiNote
+	 * This method is the JPA-standard way to obtain an instance of
+	 * {@link jakarta.persistence.EntityTransaction EntityTransaction}
+	 * representing a resource-local transaction. But JPA doesn't allow an
+	 * {@code EntityTransaction} to represent a JTA transaction. Therefore, when
+	 * {@linkplain org.hibernate.jpa.spi.JpaCompliance#isJpaTransactionComplianceEnabled
+	 * strict JPA transaction compliance} is enabled via, for example, setting
+	 * {@value org.hibernate.cfg.JpaComplianceSettings#JPA_TRANSACTION_COMPLIANCE},
+	 * this method fails if transactions are managed by JTA.
+	 * <p>
+	 * On the other hand, when JTA transaction management is used, and when
+	 * strict JPA transaction compliance is <em>disabled</em>, this method happily
+	 * returns a {@link Transaction} representing the current JTA transaction context.
 	 *
 	 * @return an instance of {@link Transaction} representing the transaction
 	 *         associated with this session

@@ -13,7 +13,6 @@ import org.hibernate.mapping.Value;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
@@ -40,7 +39,6 @@ public class JoinColumnAndFormulaTests {
 	@Test
 	@ServiceRegistry( settings = @Setting( name= MappingSettings.TRANSFORM_HBM_XML, value = "true" ) )
 	@DomainModel( xmlMappings = "mappings/models/hbm/joinformula/many-to-one-join-column-and-formula.xml" )
-	@FailureExpected( reason = "@JoinColumnsOrFormulas broken", jiraKey = "https://hibernate.atlassian.net/browse/HHH-18384" )
 	void testHbmXmlTransformed(DomainModelScope domainModelScope) {
 		verifyMapping( domainModelScope );
 	}

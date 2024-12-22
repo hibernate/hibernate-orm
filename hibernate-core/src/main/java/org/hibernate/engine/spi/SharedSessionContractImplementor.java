@@ -10,12 +10,12 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.TransactionRequiredException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.StatelessSession;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.query.Query;
 import org.hibernate.SharedSessionContract;
@@ -85,7 +85,7 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Obtain the {@linkplain SessionFactoryImplementor factory} which created this session.
 	 */
-	@Override
+//	@Override
 	default SessionFactoryImplementor getSessionFactory() {
 		return getFactory();
 	}
@@ -96,6 +96,14 @@ public interface SharedSessionContractImplementor
 	@Override
 	default TypeConfiguration getTypeConfiguration() {
 		return getFactory().getTypeConfiguration();
+	}
+
+	/**
+	 * Obtain the {@link Dialect}.
+	 */
+	@Override
+	default Dialect getDialect() {
+		return getSessionFactory().getJdbcServices().getDialect();
 	}
 
 	/**
@@ -362,16 +370,6 @@ public interface SharedSessionContractImplementor
 	 * Are entities and proxies loaded by this session read-only by default?
 	 */
 	boolean isDefaultReadOnly();
-
-	/**
-	 * Get the current {@link CacheMode} for this session.
-	 */
-	CacheMode getCacheMode();
-
-	/**
-	 * Set the current {@link CacheMode} for this session.
-	 */
-	void setCacheMode(CacheMode cm);
 
 	void setCriteriaCopyTreeEnabled(boolean jpaCriteriaCopyComplianceEnabled);
 

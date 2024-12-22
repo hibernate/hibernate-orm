@@ -13,15 +13,27 @@ import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.type.SqlTypes.ARRAY;
+import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.JSON_ARRAY;
+import static org.hibernate.type.SqlTypes.SQLXML;
+import static org.hibernate.type.SqlTypes.XML_ARRAY;
 
 public class AggregateSupportImpl implements AggregateSupport {
 
 	public static final AggregateSupport INSTANCE = new AggregateSupportImpl();
 
 	@Override
-	public String aggregateComponentCustomReadExpression(String template, String placeholder, String aggregateParentReadExpression, String columnExpression, int aggregateColumnTypeCode, SqlTypedMapping column) {
+	public String aggregateComponentCustomReadExpression(
+			String template,
+			String placeholder,
+			String aggregateParentReadExpression,
+			String columnExpression,
+			int aggregateColumnTypeCode,
+			SqlTypedMapping column,
+			TypeConfiguration typeConfiguration) {
 		throw new UnsupportedOperationException( "Dialect does not support aggregateComponentCustomReadExpression: " + getClass().getName() );
 	}
 
@@ -78,7 +90,8 @@ public class AggregateSupportImpl implements AggregateSupport {
 	@Override
 	public int aggregateComponentSqlTypeCode(int aggregateColumnSqlTypeCode, int columnSqlTypeCode) {
 		return switch (aggregateColumnSqlTypeCode) {
-			case SqlTypes.JSON -> columnSqlTypeCode == SqlTypes.ARRAY ? SqlTypes.JSON_ARRAY : columnSqlTypeCode;
+			case JSON -> columnSqlTypeCode == ARRAY ? JSON_ARRAY : columnSqlTypeCode;
+			case SQLXML -> columnSqlTypeCode == ARRAY ? XML_ARRAY : columnSqlTypeCode;
 			default -> columnSqlTypeCode;
 		};
 	}

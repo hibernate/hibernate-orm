@@ -77,15 +77,11 @@ public class XmlJdbcType implements AggregateJdbcType {
 		return XmlHelper.fromString( embeddableMappingType, (String) rawJdbcValue, false, options );
 	}
 
-	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
+	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) throws SQLException {
 		if ( embeddableMappingType != null ) {
 			return XmlHelper.toString( embeddableMappingType, value, options );
 		}
-		return options.getSessionFactory().getFastSessionServices().getXmlFormatMapper().toString(
-				value,
-				javaType,
-				options
-		);
+		return options.getXmlFormatMapper().toString( value, javaType, options );
 	}
 
 	protected <X> X fromString(String string, JavaType<X> javaType, WrapperOptions options) throws SQLException {
@@ -98,18 +94,14 @@ public class XmlJdbcType implements AggregateJdbcType {
 			);
 		}
 		if ( javaType.getJavaType() == SQLXML.class ) {
-			SQLXML sqlxml = options.getSession().getJdbcCoordinator().getLogicalConnection()
-					.getPhysicalConnection()
-					.createSQLXML();
+			final SQLXML sqlxml =
+					options.getSession().getJdbcCoordinator().getLogicalConnection().getPhysicalConnection()
+							.createSQLXML();
 			sqlxml.setString( string );
 			//noinspection unchecked
 			return (X) sqlxml;
 		}
-		return options.getSessionFactory().getFastSessionServices().getXmlFormatMapper().fromString(
-				string,
-				javaType,
-				options
-		);
+		return options.getXmlFormatMapper().fromString( string, javaType, options );
 	}
 
 	@Override

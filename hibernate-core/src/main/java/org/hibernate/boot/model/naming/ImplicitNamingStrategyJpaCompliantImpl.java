@@ -36,7 +36,7 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 			throw new HibernateException( "Entity naming information was not provided." );
 		}
 
-		String tableName = transformEntityName( source.getEntityNaming() );
+		final String tableName = transformEntityName( source.getEntityNaming() );
 
 		if ( tableName == null ) {
 			// todo : add info to error message - but how to know what to write since we failed to interpret the naming source
@@ -136,9 +136,9 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 
 		// todo : we need to better account for "referencing relationship property"
 
-		final String name;
+		final String referencedColumnName = source.getReferencedColumnName().getText();
 
-		String referencedColumnName = source.getReferencedColumnName().getText();
+		final String name;
 		if ( source.getNature() == ELEMENT_COLLECTION
 				|| source.getAttributePath() == null ) {
 			name = transformEntityName( source.getEntityNaming() )

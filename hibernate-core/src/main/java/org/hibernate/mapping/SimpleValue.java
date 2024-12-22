@@ -35,8 +35,6 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -72,7 +70,6 @@ import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray
  * @author Yanming Zhou
  */
 public abstract class SimpleValue implements KeyValue {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( SimpleValue.class );
 
 	@Deprecated(since = "7.0", forRemoval = true)
 	public static final String DEFAULT_ID_GEN_STRATEGY = ASSIGNED_GENERATOR_NAME;
@@ -171,23 +168,10 @@ public abstract class SimpleValue implements KeyValue {
 		return onDeleteAction;
 	}
 
-	/**
-	 * @deprecated use {@link #getOnDeleteAction()}
-	 */
-	@Deprecated(since = "6.2")
 	@Override
 	public boolean isCascadeDeleteEnabled() {
 		return onDeleteAction == OnDeleteAction.CASCADE;
 	}
-
-	/**
-	 * @deprecated use {@link #setOnDeleteAction(OnDeleteAction)}
-	 */
-	@Deprecated(since = "6.2")
-	public void setCascadeDeleteEnabled(boolean cascadeDeleteEnabled) {
-		this.onDeleteAction = cascadeDeleteEnabled ? OnDeleteAction.CASCADE : OnDeleteAction.NO_ACTION;
-	}
-
 
 	public void addColumn(Column column) {
 		addColumn( column, true, true );

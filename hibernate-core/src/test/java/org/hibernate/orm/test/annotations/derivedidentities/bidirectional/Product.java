@@ -9,9 +9,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.processing.Exclude;
 
 @SuppressWarnings("serial")
 @Entity
+@Exclude
 @Table(name = "products")
 public class Product implements Serializable
 {

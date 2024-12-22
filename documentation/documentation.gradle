@@ -52,8 +52,6 @@ configurations {
 	agroal
 	c3p0
 	hikaricp
-	proxool
-	vibur
 
 	jcache
 
@@ -72,8 +70,6 @@ configurations {
 		extendsFrom agroal
 		extendsFrom c3p0
 		extendsFrom hikaricp
-		extendsFrom proxool
-		extendsFrom vibur
 		extendsFrom jcache
 		extendsFrom jpamodelgen
 	}
@@ -133,9 +129,7 @@ dependencies {
 	reportAggregation project(':hibernate-hikaricp')
 	reportAggregation project(':hibernate-jcache')
 	reportAggregation project(':hibernate-micrometer')
-	reportAggregation project(':hibernate-proxool')
 	reportAggregation project(':hibernate-spatial')
-	reportAggregation project(':hibernate-vibur')
 	reportAggregation project(':hibernate-ant')
 	reportAggregation project(':hibernate-maven-plugin')
 	reportAggregation project(':hibernate-processor')
@@ -145,35 +139,22 @@ dependencies {
 	core project( ':hibernate-core' )
 	javadocSources project( path: ':hibernate-core', configuration: 'javadocSources' )
 
-	testing project( ':hibernate-testing' )
-	javadocSources project( path: ':hibernate-testing', configuration: 'javadocSources' )
-
 	envers project( ':hibernate-envers' )
 	javadocSources project( path: ':hibernate-envers', configuration: 'javadocSources' )
 
+	testing project( ':hibernate-testing' )
+
 	spatial project( ':hibernate-spatial' )
-	javadocSources project( path: ':hibernate-spatial', configuration: 'javadocSources' )
 
 	agroal project( ':hibernate-agroal' )
-	javadocSources project( path: ':hibernate-agroal', configuration: 'javadocSources' )
 
 	c3p0 project( ':hibernate-c3p0' )
-	javadocSources project( path: ':hibernate-c3p0', configuration: 'javadocSources' )
 
 	hikaricp project( ':hibernate-hikaricp' )
-	javadocSources project( path: ':hibernate-hikaricp', configuration: 'javadocSources' )
-
-	proxool project( ':hibernate-proxool' )
-	javadocSources project( path: ':hibernate-proxool', configuration: 'javadocSources' )
-
-	vibur project( ':hibernate-vibur' )
-	javadocSources project( path: ':hibernate-vibur', configuration: 'javadocSources' )
 
 	jcache project( ':hibernate-jcache' )
-	javadocSources project( path: ':hibernate-jcache', configuration: 'javadocSources' )
 
 	jpamodelgen project( ':hibernate-processor' )
-	javadocSources project( path: ':hibernate-processor', configuration: 'javadocSources' )
 
 	javadocClasspath libs.loggingAnnotations
 	javadocClasspath jakartaLibs.validation
@@ -181,11 +162,11 @@ dependencies {
 	javadocClasspath jakartaLibs.jacc
 	javadocClasspath jakartaLibs.jsonbApi
 	javadocClasspath libs.ant
-	javadocClasspath dbLibs.postgresql
+	javadocClasspath jdbcLibs.postgresql
 	javadocClasspath libs.jackson
 	javadocClasspath gradleApi()
 	javadocClasspath libs.jacksonXml
-	javadocClasspath dbLibs.oracle
+	javadocClasspath jdbcLibs.oracle
 }
 
 
@@ -303,7 +284,7 @@ def buildTutorialZipTask = tasks.register( 'buildTutorialZip', Zip ) { task ->
 			version: project.version,
 			slf4j: "2.0.7",
 			junit: testLibs.versions.junit4.get(),
-			h2: dbLibs.versions.h2.get()
+			h2: jdbcLibs.versions.h2.get()
 	)
 }
 
@@ -565,12 +546,6 @@ settingsDocumentation {
 			description = "Settings related to integrating with the C3P0 Connection pool"
 			settingsClassName "org.hibernate.cfg.C3p0Settings"
 		}
-		proxool {
-			explicitPosition = 5
-			summary = "Proxool Connection Pool Settings"
-			description = "Settings related to integrating with the Proxool Connection pool"
-			settingsClassName "org.hibernate.cfg.ProxoolSettings"
-		}
 		transaction {
 			explicitPosition = 6
 			summary = "Transaction Environment Settings"
@@ -637,7 +612,7 @@ settingsDocumentation {
 			settingsClassName "org.hibernate.cfg.StatisticsSettings"
 		}
 		validation {
-			summary = "Jakarta Validation Integeration Settings"
+			summary = "Jakarta Validation Integration Settings"
 			description = "Settings used in the integration of Jakarta Validation"
 			settingsClassName "org.hibernate.cfg.ValidationSettings"
 		}

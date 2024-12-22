@@ -18,7 +18,9 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.loader.LoaderLogging;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -107,7 +109,17 @@ public class LoaderHelper {
 				}
 				else {
 					if ( entry.isExistsInDatabase() ) {
-						persister.lock( entry.getId(), entry.getVersion(), object, lockOptions, session );
+						final EventMonitor eventMonitor = session.getEventMonitor();
+						final DiagnosticEvent entityLockEvent = eventMonitor.beginEntityLockEvent();
+						boolean success = false;
+						try {
+							persister.lock( entry.getId(), entry.getVersion(), object, lockOptions, session );
+							success = true;
+						}
+						finally {
+							eventMonitor.completeEntityLockEvent( entityLockEvent, entry.getId(),
+									persister.getEntityName(), lockOptions.getLockMode(), success, session );
+						}
 					}
 					else {
 						session.forceFlush( entry );

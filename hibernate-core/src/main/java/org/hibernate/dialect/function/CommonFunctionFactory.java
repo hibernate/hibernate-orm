@@ -68,6 +68,7 @@ public class CommonFunctionFactory {
 	private final BasicType<Boolean> booleanType;
 	private final BasicType<Character> characterType;
 	private final BasicType<String> stringType;
+	private final BasicType<byte[]> binaryType;
 	private final BasicType<Integer> integerType;
 	private final BasicType<Long> longType;
 	private final BasicType<Double> doubleType;
@@ -90,6 +91,7 @@ public class CommonFunctionFactory {
 		characterType = basicTypeRegistry.resolve(StandardBasicTypes.CHARACTER);
 		booleanType = basicTypeRegistry.resolve(StandardBasicTypes.BOOLEAN);
 		stringType = basicTypeRegistry.resolve(StandardBasicTypes.STRING);
+		binaryType = basicTypeRegistry.resolve(StandardBasicTypes.BINARY);
 		integerType = basicTypeRegistry.resolve(StandardBasicTypes.INTEGER);
 		doubleType = basicTypeRegistry.resolve(StandardBasicTypes.DOUBLE);
 	}
@@ -387,7 +389,8 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * CockroachDB lacks implicit casting: https://github.com/cockroachdb/cockroach/issues/89965
+	 * CockroachDB lacks
+	 * <a href="https://github.com/cockroachdb/cockroach/issues/89965">implicit casting</a>
 	 */
 	public void median_percentileCont_castDouble() {
 		functionRegistry.patternDescriptorBuilder(
@@ -813,6 +816,7 @@ public class CommonFunctionFactory {
 		functionRegistry.registerAlternateKey( "repeat", "replicate" );
 	}
 
+	@Deprecated(since = "7")
 	public void md5() {
 		functionRegistry.namedDescriptorBuilder( "md5" )
 				.setInvariantType(stringType)
@@ -2313,6 +2317,7 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	@Deprecated(since = "7")
 	public void crc32() {
 		functionRegistry.namedDescriptorBuilder( "crc32" )
 				.setInvariantType(integerType)
@@ -2321,6 +2326,31 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public void hex(String pattern) {
+		functionRegistry.patternDescriptorBuilder( "hex", pattern )
+				.setInvariantType(stringType)
+				.setParameterTypes( BINARY )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public void md5(String pattern) {
+		functionRegistry.patternDescriptorBuilder( "md5", pattern )
+				.setInvariantType(binaryType)
+				.setParameterTypes( STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public void sha(String pattern) {
+		functionRegistry.patternDescriptorBuilder( "sha", pattern )
+				.setInvariantType(binaryType)
+				.setParameterTypes( STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	@Deprecated(since = "7")
 	public void sha1() {
 		functionRegistry.namedDescriptorBuilder( "sha1" )
 				.setInvariantType(stringType)
@@ -2329,6 +2359,7 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	@Deprecated(since = "7")
 	public void sha2() {
 		functionRegistry.namedDescriptorBuilder( "sha2" )
 				.setInvariantType(stringType)
@@ -2337,6 +2368,7 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	@Deprecated(since = "7")
 	public void sha() {
 		functionRegistry.namedDescriptorBuilder( "sha" )
 				.setInvariantType(stringType)

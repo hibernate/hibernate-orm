@@ -147,8 +147,7 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 	}
 
 	static String getTypeName(WrapperOptions options, BasicPluralJavaType<?> containerJavaType, ArrayJdbcType arrayJdbcType) {
-		final Dialect dialect = options.getSessionFactory().getJdbcServices().getDialect();
-		return getTypeName( containerJavaType.getElementJavaType(), arrayJdbcType.getElementJdbcType(), dialect );
+		return getTypeName( containerJavaType.getElementJavaType(), arrayJdbcType.getElementJdbcType(), options.getDialect() );
 	}
 
 	static String getTypeName(BasicType<?> elementType, Dialect dialect) {
@@ -253,6 +252,7 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 		userDefinedArrayType.setArraySqlTypeCode( getDdlTypeCode() );
 		userDefinedArrayType.setElementTypeName( elementTypeName );
 		userDefinedArrayType.setElementSqlTypeCode( elementJdbcType.getDefaultSqlTypeCode() );
+		userDefinedArrayType.setElementDdlTypeCode( elementJdbcType.getDdlTypeCode() );
 		userDefinedArrayType.setArrayLength( columnSize.getArrayLength() == null ? 127 : columnSize.getArrayLength() );
 	}
 

@@ -169,15 +169,15 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 
 	@Override
 	public JpaCompliance immutableCopy() {
-		JpaComplianceImpl.JpaComplianceBuilder builder = new JpaComplianceImpl.JpaComplianceBuilder();
-		builder = builder.setProxyCompliance( proxyCompliance )
+		return new JpaComplianceImpl.JpaComplianceBuilder()
+				.setProxyCompliance( proxyCompliance )
 				.setOrderByMappingCompliance( orderByMappingCompliance )
 				.setGlobalGeneratorNameCompliance( generatorNameScopeCompliance )
 				.setQueryCompliance( queryCompliance )
 				.setTransactionCompliance( transactionCompliance )
 				.setClosedCompliance( closedCompliance )
 				.setCachingCompliance( cachingCompliance )
-				.setLoadByIdCompliance( loadByIdCompliance );
-		return builder.createJpaCompliance();
+				.setLoadByIdCompliance( loadByIdCompliance )
+				.createJpaCompliance();
 	}
 }

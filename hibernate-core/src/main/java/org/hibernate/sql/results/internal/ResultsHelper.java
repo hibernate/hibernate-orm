@@ -16,8 +16,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -199,8 +199,8 @@ public class ResultsHelper {
 		// CollectionRegionAccessStrategy has no update, so avoid putting uncommitted data via putFromLoad
 		if ( isPutFromLoad ) {
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-			final EventManager eventManager = session.getEventManager();
-			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 			boolean put = false;
 			try {
 				eventListenerManager.cachePutStart();
@@ -214,13 +214,13 @@ public class ResultsHelper {
 				);
 			}
 			finally {
-				eventManager.completeCachePutEvent(
+				eventMonitor.completeCachePutEvent(
 						cachePutEvent,
 						session,
 						cacheAccess,
 						collectionDescriptor,
 						put,
-						EventManager.CacheActionDescription.COLLECTION_INSERT
+						EventMonitor.CacheActionDescription.COLLECTION_INSERT
 				);
 				eventListenerManager.cachePutEnd();
 

@@ -4,7 +4,7 @@
  */
 package org.hibernate.event.jfr.internal;
 
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.internal.build.AllowNonPortable;
 
 import jdk.jfr.Category;
@@ -18,9 +18,9 @@ import jdk.jfr.StackTrace;
 @Label("DirtyCalculationEvent Execution")
 @Category("Hibernate ORM")
 @Description("DirtyCalculationEvent Execution")
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
-public class DirtyCalculationEvent extends Event implements HibernateMonitoringEvent {
+public class DirtyCalculationEvent extends Event implements DiagnosticEvent {
 	public static final String NAME = "org.hibernate.orm.DirtyCalculationEvent";
 
 	@Label("Session Identifier")

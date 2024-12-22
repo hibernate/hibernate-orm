@@ -82,7 +82,7 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode
 	public DomainResultAssembler createResultAssembler(
 			InitializerParent parent,
 			AssemblerCreationState creationState) {
-		return new EntityAssembler(
+		return new EntityAssembler<>(
 				this.getResultJavaType(),
 				creationState.resolveInitializer( this, parent, this ).asEntityInitializer()
 		);

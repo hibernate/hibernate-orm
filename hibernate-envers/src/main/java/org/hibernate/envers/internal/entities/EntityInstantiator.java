@@ -77,7 +77,7 @@ public class EntityInstantiator {
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName )
 				.getRepresentationStrategy().getInstantiator()
-				.instantiate( versionsReader.getSessionImplementor().getSessionFactory() );
+				.instantiate();
 
 		// Putting the newly created entity instance into the first level cache, in case a one-to-one bidirectional
 		// relation is present (which is eagerly loaded).

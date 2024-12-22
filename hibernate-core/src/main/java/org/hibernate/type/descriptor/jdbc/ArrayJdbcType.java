@@ -155,7 +155,7 @@ public class ArrayJdbcType implements JdbcType {
 			return objects;
 		}
 		else {
-			final TypeConfiguration typeConfiguration = options.getSessionFactory().getTypeConfiguration();
+			final TypeConfiguration typeConfiguration = options.getTypeConfiguration();
 			final JdbcType underlyingJdbcType =
 					typeConfiguration.getJdbcTypeRegistry().getDescriptor( elementJdbcType.getDefaultSqlTypeCode() );
 			final Class<?> preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( options );
@@ -180,7 +180,7 @@ public class ArrayJdbcType implements JdbcType {
 				final Object[] aggregateRawValues = aggregateJdbcType.extractJdbcValues( Array.get( rawArray, i ), options );
 				final StructAttributeValues attributeValues =
 						StructHelper.getAttributeValues( embeddableMappingType, aggregateRawValues, options );
-				domainObjects[i] = instantiate( embeddableMappingType, attributeValues, options.getSessionFactory() );
+				domainObjects[i] = instantiate( embeddableMappingType, attributeValues );
 			}
 			return extractor.getJavaType().wrap( domainObjects, options );
 		}

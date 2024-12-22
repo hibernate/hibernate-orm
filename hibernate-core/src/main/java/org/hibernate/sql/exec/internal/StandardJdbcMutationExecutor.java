@@ -12,8 +12,8 @@ import java.util.function.Function;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -82,15 +82,15 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 				}
 
 				session.getEventListenerManager().jdbcExecuteStatementStart();
-				final EventManager eventManager = session.getEventManager();
-				final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+				final EventMonitor eventMonitor = session.getEventMonitor();
+				final DiagnosticEvent jdbcPreparedStatementExecutionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 				try {
 					int rows = preparedStatement.executeUpdate();
 					expectationCheck.accept( rows, preparedStatement );
 					return rows;
 				}
 				finally {
-					eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, finalSql );
+					eventMonitor.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, finalSql );
 					session.getEventListenerManager().jdbcExecuteStatementEnd();
 				}
 			}

@@ -14,7 +14,7 @@ import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.internal.util.StringHelper;
 
 /**
- * A SQL {FOR UPDATE} clause.
+ * A SQL {@code FOR UPDATE} clause.
  *
  * @author Gavin King
  */

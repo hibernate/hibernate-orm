@@ -112,6 +112,22 @@ public class DelegatingJdbcTypeIndicators implements JdbcTypeIndicators {
 	}
 
 	@Override
+	@Incubating
+	public boolean isXmlFormatMapperLegacyFormatEnabled() {
+		return delegate.isXmlFormatMapperLegacyFormatEnabled();
+	}
+
+	@Override
+	public boolean preferJdbcDatetimeTypes() {
+		return delegate.preferJdbcDatetimeTypes();
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForArray(int elementSqlTypeCode) {
+		return delegate.getPreferredSqlTypeCodeForArray( elementSqlTypeCode );
+	}
+
+	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return delegate.getTypeConfiguration();
 	}

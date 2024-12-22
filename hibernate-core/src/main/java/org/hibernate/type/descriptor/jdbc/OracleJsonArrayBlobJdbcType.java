@@ -35,6 +35,11 @@ public class OracleJsonArrayBlobJdbcType extends JsonArrayJdbcType {
 	}
 
 	@Override
+	public int getDdlTypeCode() {
+		return SqlTypes.BLOB;
+	}
+
+	@Override
 	public String toString() {
 		return "JsonArrayBlobJdbcType";
 	}

@@ -6,7 +6,7 @@ package org.hibernate.dialect.function.xml;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.function.array.DdlTypeHelper;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingSetReturningFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;

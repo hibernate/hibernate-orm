@@ -42,7 +42,6 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcType;
 
 import static org.hibernate.dialect.StructHelper.getEmbeddedPart;
 import static org.hibernate.dialect.StructHelper.instantiate;
@@ -111,7 +110,6 @@ public class JsonHelper {
 			Object domainValue,
 			char separator) {
 		final Object[] values = embeddableMappingType.getValues( domainValue );
-		final int numberOfAttributes = embeddableMappingType.getNumberOfAttributeMappings();
 		for ( int i = 0; i < values.length; i++ ) {
 			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, i );
 			if ( attributeMapping instanceof SelectableMapping ) {
@@ -312,13 +310,7 @@ public class JsonHelper {
 			case SqlTypes.MATERIALIZED_BLOB:
 				// These types need to be serialized as JSON string, and for efficiency uses appendString directly
 				appender.append( '"' );
-				appender.write(
-						javaType.unwrap(
-								value,
-								byte[].class,
-								options
-						)
-				);
+				appender.write( javaType.unwrap( value, byte[].class, options ) );
 				appender.append( '"' );
 				break;
 			case SqlTypes.ARRAY:
@@ -364,29 +356,29 @@ public class JsonHelper {
 					options
 			);
 			//noinspection unchecked
-			return (X) instantiate( embeddableMappingType, attributeValues, options.getSessionFactory() );
+			return (X) instantiate( embeddableMappingType, attributeValues );
 		}
 		//noinspection unchecked
 		return (X) values;
 	}
 
+	// This is also used by Hibernate Reactive
 	public static <X> X arrayFromString(
 			JavaType<X> javaType,
-			JsonArrayJdbcType jsonArrayJdbcType,
+			JdbcType elementJdbcType,
 			String string,
 			WrapperOptions options) throws SQLException {
 		if ( string == null ) {
 			return null;
 		}
 		final JavaType<?> elementJavaType = ((BasicPluralJavaType<?>) javaType).getElementJavaType();
-		final Class<?> preferredJavaTypeClass = jsonArrayJdbcType.getElementJdbcType().getPreferredJavaTypeClass( options );
+		final Class<?> preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( options );
 		final JavaType<?> jdbcJavaType;
 		if ( preferredJavaTypeClass == null || preferredJavaTypeClass == elementJavaType.getJavaTypeClass() ) {
 			jdbcJavaType = elementJavaType;
 		}
 		else {
-			jdbcJavaType = options.getSessionFactory().getTypeConfiguration().getJavaTypeRegistry()
-					.resolveDescriptor( preferredJavaTypeClass );
+			jdbcJavaType = options.getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( preferredJavaTypeClass );
 		}
 		final CustomArrayList arrayList = new CustomArrayList();
 		final int i = fromArrayString(
@@ -397,7 +389,7 @@ public class JsonHelper {
 				arrayList,
 				elementJavaType,
 				jdbcJavaType,
-				jsonArrayJdbcType.getElementJdbcType()
+				elementJdbcType
 		);
 		assert string.charAt( i - 1 ) == ']';
 		return javaType.wrap( arrayList, options );
@@ -534,7 +526,7 @@ public class JsonHelper {
 										subValues,
 										options
 								);
-								values[selectableIndex] = instantiate( embeddableMappingType, attributeValues, options.getSessionFactory() );
+								values[selectableIndex] = instantiate( embeddableMappingType, attributeValues );
 							}
 							else {
 								values[selectableIndex] = subValues;
@@ -1310,17 +1302,12 @@ public class JsonHelper {
 								subValues,
 								options
 						);
-						final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
-						return instantiate( embeddableMappingType, subAttributeValues, options.getSessionFactory() ) ;
+						return instantiate( aggregateJdbcType.getEmbeddableMappingType(), subAttributeValues ) ;
 					}
 					return subValues;
 				}
 
-				return jdbcJavaType.fromEncodedString(
-						string,
-						start,
-						end
-				);
+				return jdbcJavaType.fromEncodedString( string, start, end );
 		}
 	}
 

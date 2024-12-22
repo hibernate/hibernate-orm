@@ -59,7 +59,7 @@ public class JsonArrayJdbcType extends ArrayJdbcType {
 		if ( string == null ) {
 			return null;
 		}
-		return JsonHelper.arrayFromString( javaType, this, string, options );
+		return JsonHelper.arrayFromString( javaType, this.getElementJdbcType(), string, options );
 	}
 
 	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {

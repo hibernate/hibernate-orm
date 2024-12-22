@@ -17,10 +17,11 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
@@ -382,10 +383,17 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 
 	@Override
 	protected String determineColumnType(CastTarget castTarget, SqlAstTranslator<?> walker) {
-		final String typeName = super.determineColumnType( castTarget, walker );
-		return switch ( typeName ) {
+		return xmlValueReturningType( castTarget, super.determineColumnType( castTarget, walker ) );
+	}
+
+	public static String xmlValueReturningType(SqlTypedMapping column, String columnDefinition) {
+		final int parenthesisIndex = columnDefinition.indexOf( '(' );
+		final String baseName = parenthesisIndex == -1
+				? columnDefinition
+				: columnDefinition.substring( 0, parenthesisIndex );
+		return switch ( baseName ) {
 			// xmltable doesn't support tinyint. Usually it is a boolean, but if not, use "integer"
-			case "tinyint" -> isBoolean( castTarget.getJdbcMapping() ) ? "varchar(5)" : "integer";
+			case "tinyint" -> isBoolean( column.getJdbcMapping() ) ? "varchar(5)" : "integer";
 			// Also, smallint isn't supported
 			case "smallint" -> "integer";
 			// For boolean, use varchar since that decoding is done through a read expression
@@ -394,7 +402,7 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 			case "float" -> "double";
 			// Clobs are also not supported, so use the biggest nvarchar possible
 			case "clob", "nclob" -> "nvarchar(5000)";
-			default -> typeName;
+			default -> columnDefinition;
 		};
 	}
 
@@ -417,7 +425,10 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 	}
 
 	static boolean isBoolean(JdbcMapping type) {
-		return type.getJdbcType().isBoolean();
+		return switch ( type.getCastType() ) {
+			case BOOLEAN, TF_BOOLEAN, YN_BOOLEAN, INTEGER_BOOLEAN -> true;
+			default -> false;
+		};
 	}
 
 	private static class DB2XmlTableSetReturningFunctionTypeResolver extends XmlTableSetReturningFunctionTypeResolver {

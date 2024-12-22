@@ -11,7 +11,7 @@ import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.query.results.ResultSetMappingImpl;
+import org.hibernate.query.results.internal.ResultSetMappingImpl;
 import org.hibernate.query.spi.QueryEngine;
 
 import org.hibernate.testing.orm.junit.DomainModel;

@@ -34,13 +34,12 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.internal.util.ImmutableBitSet;
-import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
@@ -87,6 +86,7 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.loader.internal.CacheLoadHelper.loadFromSecondLevelCache;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -1290,7 +1290,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	}
 
 	private Object resolveInstanceFromCache(EntityInitializerData data) {
-		return CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
+		return loadFromSecondLevelCache(
 				data.getRowProcessingState().getSession().asEventSource(),
 				null,
 				data.lockMode,
@@ -1506,10 +1506,10 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		// 		2) Session#clear + some form of load
 		//
 		// we need to be careful not to clobber the lock here in the cache so that it can be rolled back if need be
-		final EventManager eventManager = session.getEventManager();
+		final EventMonitor eventMonitor = session.getEventMonitor();
 		if ( persistenceContext.wasInsertedDuringTransaction( data.concreteDescriptor, data.entityKey.getIdentifier() ) ) {
 			boolean cacheContentChanged = false;
-			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 			try {
 				// Updating the cache entry for entities that were inserted in this transaction
 				// only makes sense for transactional caches. Other implementations no-op for #update
@@ -1530,20 +1530,20 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				}
 			}
 			finally {
-				eventManager.completeCachePutEvent(
+				eventMonitor.completeCachePutEvent(
 						cachePutEvent,
 						session,
 						cacheAccess,
 						data.concreteDescriptor,
 						cacheContentChanged,
-						EventManager.CacheActionDescription.ENTITY_UPDATE
+						EventMonitor.CacheActionDescription.ENTITY_UPDATE
 				);
 			}
 		}
 		else {
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 			boolean put = false;
-			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 				put = cacheAccess.putFromLoad(
@@ -1556,13 +1556,13 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				);
 			}
 			finally {
-				eventManager.completeCachePutEvent(
+				eventMonitor.completeCachePutEvent(
 						cachePutEvent,
 						session,
 						cacheAccess,
 						data.concreteDescriptor,
 						put,
-						EventManager.CacheActionDescription.ENTITY_LOAD
+						EventMonitor.CacheActionDescription.ENTITY_LOAD
 				);
 				final StatisticsImplementor statistics = factory.getStatistics();
 				if ( put && statistics.isStatisticsEnabled() ) {
@@ -1583,14 +1583,14 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			final Type type = entry.getPropertyType();
 
 			// polymorphism not really handled completely correctly,
-			// perhaps...well, actually its ok, assuming that the
+			// perhaps...well, actually it's ok, assuming that the
 			// entity name used in the lookup is the same as the
 			// one used here, which it will be
 
 			if ( resolvedEntityState[index] != null ) {
 				final Object key;
 				if ( type instanceof ManyToOneType manyToOneType ) {
-					key = ForeignKeys.getEntityIdentifierIfNotUnsaved(
+					key = ForeignKeys.getEntityIdentifier(
 							manyToOneType.getAssociatedEntityName(),
 							resolvedEntityState[index],
 							session

@@ -21,7 +21,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *             annotations, for example,
  *             {@link jakarta.persistence.OneToMany#targetEntity()}
  */
-@Deprecated(since = "6.2")
+@Deprecated(since = "6.2", forRemoval = true)
 @java.lang.annotation.Target({FIELD, METHOD})
 @Retention(RUNTIME)
 public @interface Target {

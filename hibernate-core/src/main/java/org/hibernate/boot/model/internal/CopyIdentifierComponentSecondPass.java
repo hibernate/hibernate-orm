@@ -16,7 +16,6 @@ import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
@@ -114,8 +113,10 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 			// TODO: much better error message if this is something that can really happen!
 			throw new AnnotationException( "Unknown entity name '" + referencedEntityName + "'");
 		}
-		final KeyValue identifier = referencedPersistentClass.getIdentifier();
-		if ( !(identifier instanceof Component) ) {
+		if ( referencedPersistentClass.getIdentifier() instanceof Component id ) {
+			return id;
+		}
+		else {
 			// The entity with the @MapsId annotation has a composite
 			// id type, but the referenced entity has a basic-typed id.
 			// Therefore, the @MapsId annotation should have specified
@@ -128,7 +129,6 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 							+ referencedEntityName + "')"
 			);
 		}
-		return (Component) identifier;
 	}
 
 	private Property createComponentProperty(
@@ -136,7 +136,7 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 			Map<String, AnnotatedJoinColumn> columnByReferencedName,
 			MutableInteger index,
 			Property referencedProperty ) {
-		Property property = new Property();
+		final Property property = new Property();
 		property.setName( referencedProperty.getName() );
 		//FIXME set optional?
 		//property.setOptional( property.isOptional() );
@@ -181,13 +181,13 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 			Map<String, AnnotatedJoinColumn> columnByReferencedName,
 			MutableInteger index,
 			Property referencedProperty ) {
-		Property property = new Property();
+		final Property property = new Property();
 		property.setName( referencedProperty.getName() );
 		//FIXME set optional?
 		//property.setOptional( property.isOptional() );
 		property.setPersistentClass( component.getOwner() );
 		property.setPropertyAccessorName( referencedProperty.getPropertyAccessorName() );
-		SimpleValue value = new BasicValue( buildingContext, component.getTable() );
+		final SimpleValue value = new BasicValue( buildingContext, component.getTable() );
 		property.setValue( value );
 		final SimpleValue referencedValue = (SimpleValue) referencedProperty.getValue();
 		value.copyTypeFrom( referencedValue );
@@ -202,48 +202,50 @@ public class CopyIdentifierComponentSecondPass extends FkSecondPass {
 			);
 		}
 		else {
-			//FIXME take care of Formula
 			for ( Selectable selectable : referencedValue.getSelectables() ) {
-				if ( !(selectable instanceof Column) ) {
-					log.debug( "Encountered formula definition; skipping" );
-					continue;
-				}
-				final Column column = (Column) selectable;
-				final AnnotatedJoinColumn joinColumn;
-				final String logicalColumnName;
-				if ( isExplicitReference ) {
-					logicalColumnName = column.getName();
-					//JPA 2 requires referencedColumnNames to be case-insensitive
-					joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase(Locale.ROOT ) );
+				if ( selectable instanceof Column column ) {
+					final AnnotatedJoinColumn joinColumn;
+					final String logicalColumnName;
+					if ( isExplicitReference ) {
+						logicalColumnName = column.getName();
+						//JPA 2 requires referencedColumnNames to be case-insensitive
+						joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase( Locale.ROOT ) );
+					}
+					else {
+						logicalColumnName = null;
+						joinColumn = columnByReferencedName.get( String.valueOf( index.get() ) );
+						index.getAndIncrement();
+					}
+					if ( joinColumn == null && !firstColumn.isNameDeferred() ) {
+						throw new AnnotationException(
+								"Property '" + propertyName
+								+ "' of entity '" + component.getOwner().getEntityName()
+								+ "' must have a '@JoinColumn' which references the foreign key column '"
+								+ logicalColumnName + "'"
+						);
+					}
+					final String columnName =
+							joinColumn == null || joinColumn.isNameDeferred()
+									? "tata_" + column.getName()
+									: joinColumn.getName();
+
+					final Database database = buildingContext.getMetadataCollector().getDatabase();
+					final String physicalName =
+							buildingContext.getBuildingOptions().getPhysicalNamingStrategy()
+									.toPhysicalColumnName( database.toIdentifier( columnName ),
+											database.getJdbcEnvironment() )
+									.render( database.getDialect() );
+					value.addColumn( new Column( physicalName ) );
+					if ( joinColumn != null ) {
+						applyComponentColumnSizeValueToJoinColumn( column, joinColumn );
+						joinColumn.linkWithValue( value );
+					}
+					column.setValue( value );
 				}
 				else {
-					logicalColumnName = null;
-					joinColumn = columnByReferencedName.get( String.valueOf( index.get() ) );
-					index.getAndIncrement();
+					//FIXME take care of Formula
+					log.debug( "Encountered formula definition; skipping" );
 				}
-				if ( joinColumn == null && !firstColumn.isNameDeferred() ) {
-					throw new AnnotationException(
-							"Property '" + propertyName
-									+ "' of entity '" + component.getOwner().getEntityName()
-									+ "' must have a '@JoinColumn' which references the foreign key column '"
-									+ logicalColumnName + "'"
-					);
-				}
-				final String columnName = joinColumn == null || joinColumn.isNameDeferred()
-						? "tata_" + column.getName()
-						: joinColumn.getName();
-
-				final Database database = buildingContext.getMetadataCollector().getDatabase();
-				final String physicalName =
-						buildingContext.getBuildingOptions().getPhysicalNamingStrategy()
-								.toPhysicalColumnName( database.toIdentifier( columnName ), database.getJdbcEnvironment() )
-								.render( database.getDialect() );
-				value.addColumn( new Column( physicalName ) );
-				if ( joinColumn != null ) {
-					applyComponentColumnSizeValueToJoinColumn( column, joinColumn );
-					joinColumn.linkWithValue( value );
-				}
-				column.setValue( value );
 			}
 		}
 		return property;

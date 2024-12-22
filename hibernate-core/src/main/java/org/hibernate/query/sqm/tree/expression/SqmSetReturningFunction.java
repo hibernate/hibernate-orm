@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaSetReturningFunction;
-import org.hibernate.query.derived.AnonymousTupleType;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.function.SqmSetReturningFunctionDescriptor;

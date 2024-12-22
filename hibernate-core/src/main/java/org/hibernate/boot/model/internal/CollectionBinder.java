@@ -1609,7 +1609,7 @@ public abstract class CollectionBinder {
 		}
 
 		if ( manyToAny != null ) {
-			return LAZY;
+			return manyToAny.fetch();
 		}
 
 		throw new AssertionFailure(

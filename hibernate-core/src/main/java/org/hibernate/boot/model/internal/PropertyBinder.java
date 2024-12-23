@@ -450,7 +450,7 @@ public class PropertyBinder {
 	private void handleValueGeneration(Property property) {
 		if ( memberDetails != null ) {
 			property.setValueGeneratorCreator(
-					createValueGeneratorFromAnnotations( holder, name, memberDetails, buildingContext ) );
+					createValueGeneratorFromAnnotations( holder, name, value, memberDetails, buildingContext ) );
 		}
 	}
 

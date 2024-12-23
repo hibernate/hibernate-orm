@@ -1521,7 +1521,7 @@ class Event {
 }
 ----
 
-The `@Array` annotation is optional, but it's important to limit the amount of storage space the database allocates to the `ARRAY` column.
+The `@Array` annotation is optional--it lets us specify an upper bound on the length of the `ARRAY` column.
 By writing `@Array(length=7)` here, we specified that DDL should be generated with the column type `TINYINT ARRAY[7]`.
 
 Just for fun, we used an enumerated type in the code above, but the array element time may be almost any <<basic-type-list,basic type>>.

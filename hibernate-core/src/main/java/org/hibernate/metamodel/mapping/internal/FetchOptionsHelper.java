@@ -8,8 +8,6 @@ import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -19,12 +17,12 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 
+import static org.hibernate.engine.FetchStyle.JOIN;
+
 /**
  * @author Steve Ebersole
  */
 public final class FetchOptionsHelper {
-
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( FetchOptionsHelper.class );
 
 	private FetchOptionsHelper() {
 	}
@@ -46,7 +44,7 @@ public final class FetchOptionsHelper {
 		}
 
 		if ( mappingFetchMode == FetchMode.JOIN ) {
-			return FetchStyle.JOIN;
+			return JOIN;
 		}
 
 		if ( type instanceof EntityType ) {
@@ -58,7 +56,7 @@ public final class FetchOptionsHelper {
 				return FetchStyle.SELECT;
 			}
 			else if ( !persister.hasProxy() ) {
-				return FetchStyle.JOIN;
+				return JOIN;
 			}
 		}
 		else {
@@ -78,41 +76,25 @@ public final class FetchOptionsHelper {
 			FetchStyle style,
 			AssociationType type,
 			SessionFactoryImplementor sessionFactory) {
-		switch ( style ) {
-			case JOIN: {
-				return FetchTiming.IMMEDIATE;
-			}
-			case BATCH:
-			case SUBSELECT:
-			default: {
-				return isSubsequentSelectDelayed( type, sessionFactory )
-						? FetchTiming.DELAYED
-						: FetchTiming.IMMEDIATE;
-			}
-		}
+		return determineFetchTiming( style, type, false, sessionFactory );
 	}
 
 	public static FetchTiming determineFetchTiming(
 			FetchStyle style,
 			AssociationType type,
 			boolean lazy,
-			String role,
 			SessionFactoryImplementor sessionFactory) {
-		switch ( style ) {
-			case JOIN: {
-				if ( lazy ) {
-					LOG.fetchModeJoinWithLazyWarning( role );
-					return FetchTiming.DELAYED;
-				}
-				return FetchTiming.IMMEDIATE;
+		if ( style == JOIN ) {
+			if ( lazy ) {
+				return FetchTiming.DELAYED;
+//				throw new AssertionFailure("JOIN FetchStyle with LAZY fetching");
 			}
-			case BATCH:
-			case SUBSELECT:
-			default: {
-				return isSubsequentSelectDelayed( type, sessionFactory )
-						? FetchTiming.DELAYED
-						: FetchTiming.IMMEDIATE;
-			}
+			return FetchTiming.IMMEDIATE;
+		}
+		else {
+			return isSubsequentSelectDelayed( type, sessionFactory )
+					? FetchTiming.DELAYED
+					: FetchTiming.IMMEDIATE;
 		}
 	}
 
@@ -133,6 +115,6 @@ public final class FetchOptionsHelper {
 
 	public static boolean isJoinFetched(FetchOptions fetchOptions) {
 		return fetchOptions.getTiming() == FetchTiming.IMMEDIATE
-				&& fetchOptions.getStyle() == FetchStyle.JOIN;
+			&& fetchOptions.getStyle() == JOIN;
 	}
 }

@@ -125,7 +125,7 @@ public class GeneratorBinder {
 						determineImpliedGenerator( strategy, strategyGeneratorClassName, localGenerators );
 				if ( impliedGenerator != null ) {
 					configuration.putAll( impliedGenerator.getParameters() );
-					instantiateGeneratorBean( identifierValue, strategyGeneratorClassName, configuration, context );
+					instantiateNamedStrategyGenerator( identifierValue, strategyGeneratorClassName, configuration, context );
 					return;
 				}
 			}
@@ -550,9 +550,7 @@ public class GeneratorBinder {
 	 * @param beanContainer an optional {@code BeanContainer}
 	 * @param generatorClass a class which implements {@code Generator}
 	 */
-	public static <T extends Generator> T instantiateGenerator(
-			BeanContainer beanContainer,
-			Class<T> generatorClass) {
+	public static <T extends Generator> T instantiateGenerator(BeanContainer beanContainer, Class<T> generatorClass) {
 		return beanContainer != null
 				? instantiateGeneratorAsBean( beanContainer, generatorClass )
 				: instantiateGeneratorViaDefaultConstructor( generatorClass );
@@ -682,7 +680,7 @@ public class GeneratorBinder {
 			Map<String, Object> configuration,
 			MetadataBuildingContext context) {
 		configuration.putAll( defaultedGenerator.getParameters() );
-		instantiateGeneratorBean( idValue, defaultedGenerator.getStrategy(), configuration, context );
+		instantiateNamedStrategyGenerator( idValue, defaultedGenerator.getStrategy(), configuration, context );
 	}
 
 
@@ -690,12 +688,7 @@ public class GeneratorBinder {
 			IdentifierGeneratorDefinition defaultedGenerator,
 			SimpleValue idValue,
 			MetadataBuildingContext context) {
-		createGeneratorFrom(
-				defaultedGenerator,
-				idValue,
-				buildConfigurationMap( idValue ),
-				context
-		);
+		createGeneratorFrom( defaultedGenerator, idValue, buildConfigurationMap( idValue ), context );
 	}
 
 	private static Map<String, Object> buildConfigurationMap(KeyValue idValue) {
@@ -760,11 +753,11 @@ public class GeneratorBinder {
 			identifierValue.setCustomIdGeneratorCreator( ASSIGNED_IDENTIFIER_GENERATOR_CREATOR );
 		}
 		else {
-			instantiateGeneratorBean( identifierValue, generatorStrategy, configuration, context );
+			instantiateNamedStrategyGenerator( identifierValue, generatorStrategy, configuration, context );
 		}
 	}
 
-	private static void instantiateGeneratorBean(
+	private static void instantiateNamedStrategyGenerator(
 			SimpleValue identifierValue,
 			String generatorStrategy,
 			Map<String, Object> configuration,
@@ -773,6 +766,8 @@ public class GeneratorBinder {
 		identifierValue.setCustomIdGeneratorCreator( creationContext -> {
 			final Generator identifierGenerator =
 					instantiateGenerator( beanContainer, generatorClass( generatorStrategy, identifierValue ) );
+			// in this code path, there's no generator annotation,
+			// and therefore no need to call initialize()
 			callConfigure( creationContext, identifierGenerator, configuration, identifierValue );
 			if ( identifierGenerator instanceof IdentityGenerator) {
 				identifierValue.setColumnToIdentity();

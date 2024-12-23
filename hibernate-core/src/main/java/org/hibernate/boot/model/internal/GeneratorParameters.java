@@ -96,25 +96,21 @@ public class GeneratorParameters {
 			RootClass rootClass,
 			BiConsumer<String,String> parameterCollector) {
 
-		final ConfigurationService configService = identifierValue
-				.getMetadata()
-				.getMetadataBuildingOptions()
-				.getServiceRegistry()
-				.requireService( ConfigurationService.class );
+		final ConfigurationService configService =
+				identifierValue.getMetadata().getMetadataBuildingOptions()
+						.getServiceRegistry().requireService( ConfigurationService.class );
 
 		// default initial value and allocation size per-JPA defaults
 		parameterCollector.accept( INITIAL_PARAM, String.valueOf( DEFAULT_INITIAL_VALUE ) );
 		parameterCollector.accept( INCREMENT_PARAM,	String.valueOf( defaultIncrement( configService ) ) );
 
-		collectBaselineProperties( identifierValue, dialect, rootClass, parameterCollector );
+		collectBaselineProperties( identifierValue, dialect, rootClass, parameterCollector, configService );
 	}
 
 	public static int fallbackAllocationSize(Annotation generatorAnnotation, MetadataBuildingContext buildingContext) {
 		if ( generatorAnnotation == null ) {
-			final ConfigurationService configService = buildingContext
-					.getBootstrapContext()
-					.getServiceRegistry()
-					.requireService( ConfigurationService.class );
+			final ConfigurationService configService = buildingContext.getBootstrapContext()
+					.getServiceRegistry().requireService( ConfigurationService.class );
 			final String idNamingStrategy = configService.getSetting( ID_DB_STRUCTURE_NAMING_STRATEGY, StandardConverters.STRING );
 			if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
 					|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )
@@ -127,18 +123,12 @@ public class GeneratorParameters {
 		return OptimizableGenerator.DEFAULT_INCREMENT_SIZE;
 	}
 
-	public static void collectBaselineProperties(
+	static void collectBaselineProperties(
 			SimpleValue identifierValue,
 			Dialect dialect,
 			RootClass rootClass,
-			BiConsumer<String,String> parameterCollector) {
-
-		final ConfigurationService configService = identifierValue
-				.getMetadata()
-				.getMetadataBuildingOptions()
-				.getServiceRegistry()
-				.requireService( ConfigurationService.class );
-
+			BiConsumer<String,String> parameterCollector,
+			ConfigurationService configService) {
 		//init the table here instead of earlier, so that we can get a quoted table name
 		//TODO: would it be better to simply pass the qualified table name, instead of
 		//	  splitting it up into schema/catalog/table names
@@ -172,7 +162,8 @@ public class GeneratorParameters {
 			parameterCollector.accept( IMPLICIT_NAME_BASE, tableName );
 		}
 
-		parameterCollector.accept( CONTRIBUTOR_NAME, identifierValue.getBuildingContext().getCurrentContributorName() );
+		parameterCollector.accept( CONTRIBUTOR_NAME,
+				identifierValue.getBuildingContext().getCurrentContributorName() );
 
 		final Map<String, Object> settings = configService.getSettings();
 		if ( settings.containsKey( AvailableSettings.PREFERRED_POOLED_OPTIMIZER ) ) {
@@ -181,7 +172,6 @@ public class GeneratorParameters {
 					(String) settings.get( AvailableSettings.PREFERRED_POOLED_OPTIMIZER )
 			);
 		}
-
 	}
 
 	public static String identityTablesString(Dialect dialect, RootClass rootClass) {

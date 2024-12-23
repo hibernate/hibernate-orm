@@ -42,7 +42,8 @@ import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
  * @author Steve Ebersole
  */
 public class NativeGenerator
-		implements OnExecutionGenerator, BeforeExecutionGenerator, Configurable, ExportableProducer, AnnotationBasedGenerator<org.hibernate.annotations.NativeGenerator> {
+		implements OnExecutionGenerator, BeforeExecutionGenerator, Configurable, ExportableProducer,
+						AnnotationBasedGenerator<org.hibernate.annotations.NativeGenerator> {
 	private GenerationType generationType;
 	private org.hibernate.annotations.NativeGenerator annotation;
 	private Generator dialectNativeGenerator;

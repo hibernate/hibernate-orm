@@ -606,6 +606,19 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setOrder(Order<? super R> order);
 
 	/**
+	 * If the result type of this query is an entity class, add a
+	 * {@linkplain Restriction rule} for restricting the query results.
+	 *
+	 * @param restriction an instance of {@link Restriction}
+	 *
+	 * @see Restriction
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	SelectionQuery<R> addRestriction(Restriction<? super R> restriction);
+
+	/**
 	 * Specifies whether follow-on locking should be applied
 	 */
 	SelectionQuery<R> setFollowOnLocking(boolean enable);

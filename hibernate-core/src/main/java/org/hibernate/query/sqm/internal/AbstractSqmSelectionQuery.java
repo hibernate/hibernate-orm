@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import jakarta.persistence.criteria.Root;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
@@ -13,6 +14,7 @@ import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.QueryLogging;
+import org.hibernate.query.Restriction;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
@@ -138,6 +140,19 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	public SelectionQuery<R> setOrder(Order<? super R> order) {
 		final SqmSelectStatement<R> selectStatement = getSqmSelectStatement().copy( noParamCopyContext() );
 		selectStatement.orderBy( sortSpecification( selectStatement, order ) );
+		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
+		//       simply cache the new SQM as if it were a criteria query, and remove this:
+		getQueryOptions().setQueryPlanCachingEnabled( false );
+		setSqmStatement( selectStatement );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> addRestriction(Restriction<? super R> restriction) {
+		final SqmSelectStatement<R> selectStatement = getSqmSelectStatement().copy( noParamCopyContext() );
+		final Root<? extends R> root = (Root<? extends R>) selectStatement.getRootList().get( 0 );
+		selectStatement.where( selectStatement.getRestriction(),
+				restriction.toPredicate( root, selectStatement.nodeBuilder() ) );
 		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
 		//       simply cache the new SQM as if it were a criteria query, and remove this:
 		getQueryOptions().setQueryPlanCachingEnabled( false );

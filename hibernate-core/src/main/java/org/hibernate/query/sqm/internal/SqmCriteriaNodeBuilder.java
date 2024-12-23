@@ -184,7 +184,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	private final String name;
 	private final transient JpaCompliance jpaCompliance;
 	private final transient QueryEngine queryEngine;
-	private transient ValueHandlingMode criteriaValueHandlingMode;
+	private final transient ValueHandlingMode criteriaValueHandlingMode;
 	private final transient ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 	private final transient BindingContext bindingContext;
 	private transient BasicType<Boolean> booleanType;

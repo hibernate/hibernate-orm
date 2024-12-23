@@ -927,6 +927,9 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	@Override @Incubating
 	Query<R> setOrder(Order<? super R> order);
 
+	@Override
+	Query<R> addRestriction(Restriction<? super R> restriction);
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// deprecated methods
 

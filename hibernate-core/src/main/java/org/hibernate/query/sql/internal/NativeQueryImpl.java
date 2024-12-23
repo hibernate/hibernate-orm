@@ -56,6 +56,7 @@ import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.PathException;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.Restriction;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
@@ -1665,6 +1666,11 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public Query<R> setOrder(Order<? super R> order) {
+		throw new UnsupportedOperationException("Ordering not currently supported for native queries");
+	}
+
+	@Override
+	public Query<R> addRestriction(Restriction<? super R> restriction) {
 		throw new UnsupportedOperationException("Ordering not currently supported for native queries");
 	}
 

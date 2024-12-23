@@ -301,9 +301,15 @@ The persistence context is fragile.
 If you receive an exception from Hibernate, you should immediately close and discard the current session. Open a new session if you need to, but throw the bad one away first.
 ====
 
+One very important kind of exception which can happen when data is shared between concurrent units of work is an _optimistic lock failure_.
+Optimistic locks are verified by checking <<version-attributes,versions>>.
+A version check is included in the `where` clause of every SQL `update` or `delete` statement for a versioned entity.
+If a version check fails--that is, if no rows are updated--Hibernate infers that the entity was updated in some other unit of work and throws an `OptimisticLockException` to indicate that the current session is working with stale data.
+As with other exceptions, this loss of synchronization between the persistence context and the database means that we must discard the current session.
+
 [CAUTION]
 ====
-Some of these operations require slightly more care than others.
+Some of these operations listed above require slightly more care than others.
 When you call `detach()`, `clear()`, `flush()`, or `refresh()`, you've already strayed from the narrow path.
 You didn't stray far--and you probably had a good reason for going there--but you're in territory where Hibernate just has to assume you know what you're doing.
 If you start to feel that this terrain is bogging you down, consider using a <<stateless-sessions,stateless session>>.
@@ -1315,7 +1321,7 @@ Therefore, Hibernate has some APIs that streamline certain more complicated look
 | `byMultipleIds()` | Lets us load a _batch_ of ids at the same time
 |===
 
-[WARNING]
+[NOTE]
 ====
 Since the introduction of `FindOption` in JPA 3.2, `byId()` is now much less useful.
 ====

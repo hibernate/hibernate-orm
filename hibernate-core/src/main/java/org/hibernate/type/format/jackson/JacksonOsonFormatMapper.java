@@ -236,9 +236,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 								pluralType.getElementType().getJdbcJavaType().fromString( osonParser.getString() ) );
 					}
 					else {
-//						finalResult[selectableIndex] = mapping.getJdbcMapping().getJdbcJavaType().wrap( osonParser.getString(),options );
-//						finalResult[selectableIndex] = mapping.getJdbcMapping().convertToDomainValue( mapping.getJdbcMapping().getJdbcJavaType().wrap( osonParser.getString(),options ));
-						finalResult[selectableIndex] = mapping.getJdbcMapping().getJdbcJavaType().fromEncodedString( osonParser.getString(),0,osonParser.getString().length() );
+						finalResult[selectableIndex] = mapping.getJdbcMapping().getJdbcJavaType().fromString( osonParser.getString());
 					}
 					break;
 				case OracleJsonParser.Event.VALUE_TRUE:

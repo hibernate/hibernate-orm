@@ -44,6 +44,7 @@ import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.Restriction;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.criteria.internal.NamedCriteriaQueryMementoImpl;
@@ -754,6 +755,12 @@ public class QuerySqmImpl<R>
 	@Override
 	public Query<R> setOrder(Order<? super R> order) {
 		super.setOrder(order);
+		return this;
+	}
+
+	@Override
+	public Query<R> addRestriction(Restriction<? super R> restriction) {
+		super.addRestriction( restriction );
 		return this;
 	}
 

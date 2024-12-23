@@ -51,6 +51,7 @@ import static org.hibernate.query.SortDirection.DESCENDING;
  *
  * @see SelectionQuery#setOrder(Order)
  * @see SelectionQuery#setOrder(java.util.List)
+ * @see Restriction
  *
  * @author Gavin King
  *

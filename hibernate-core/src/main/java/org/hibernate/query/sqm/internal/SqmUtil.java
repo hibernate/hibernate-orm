@@ -780,7 +780,7 @@ public class SqmUtil {
 
 	static JpaOrder sortSpecification(SqmSelectStatement<?> sqm, Order<?> order) {
 		final List<SqmSelectableNode<?>> items = sqm.getQuerySpec().getSelectClause().getSelectionItems();
-		int element = order.getElement();
+		final int element = order.getElement();
 		if ( element < 1) {
 			throw new IllegalQueryOperationException("Cannot order by element " + element
 					+ " (the first select item is element 1)");

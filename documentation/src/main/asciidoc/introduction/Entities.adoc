@@ -458,9 +458,7 @@ It's easy to specify that the initial version should be assigned the number `1` 
 int version = 1; // the initial version number
 ----
 
-Optimistic locks are verified by checking versions.
-A version check is included in the `where` clause of every SQL `update` or `delete` statement for a versioned entity.
-If a version check fails--that is, if no rows are updated--Hibernate throws an `OptimisticLockException` indicating that the current session is working with stale data--that is, that the entity was updated in some other unit of work.
+Almost every entity which is frequently updated should have a version attribute.
 
 [TIP]
 // .Optimistic locking in Hibernate

@@ -412,7 +412,6 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 		GeneratorAnnotationHelper.handleTableGenerator(
 				nameFromGeneratedValue,
 				generatorAnnotation,
-				entityMapping,
 				idValue,
 				idMember,
 				buildingContext

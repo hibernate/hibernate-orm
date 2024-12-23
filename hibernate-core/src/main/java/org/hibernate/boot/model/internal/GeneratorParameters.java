@@ -27,12 +27,12 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.UniqueConstraint;
+import org.hibernate.mapping.Value;
 
 import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
 import static org.hibernate.id.IdentifierGenerator.CONTRIBUTOR_NAME;
@@ -66,24 +66,13 @@ public class GeneratorParameters {
 	 * {@link Configurable#configure(GeneratorCreationContext, Properties)}.
 	 */
 	public static Properties collectParameters(
-			SimpleValue identifierValue,
-			Dialect dialect,
-			RootClass rootClass) {
-		final Properties params = new Properties();
-		collectParameters( identifierValue, dialect, rootClass, params::put );
-		return params;
-	}
-
-	/**
-	 * Collect the parameters which should be passed to
-	 * {@link Configurable#configure(GeneratorCreationContext, Properties)}.
-	 */
-	public static Properties collectParameters(
-			SimpleValue identifierValue,
+			Value identifierValue,
 			Dialect dialect,
 			RootClass rootClass,
-			Map<String, Object> configuration) {
-		final Properties params = collectParameters( identifierValue, dialect, rootClass );
+			Map<String, Object> configuration,
+			ConfigurationService configService) {
+		final Properties params = new Properties();
+		collectParameters( identifierValue, dialect, rootClass, params::put, configService );
 		if ( configuration != null ) {
 			params.putAll( configuration );
 		}
@@ -91,15 +80,11 @@ public class GeneratorParameters {
 	}
 
 	public static void collectParameters(
-			SimpleValue identifierValue,
+			Value identifierValue,
 			Dialect dialect,
 			RootClass rootClass,
-			BiConsumer<String,String> parameterCollector) {
-
-		final ConfigurationService configService =
-				identifierValue.getMetadata().getMetadataBuildingOptions()
-						.getServiceRegistry().requireService( ConfigurationService.class );
-
+			BiConsumer<String, String> parameterCollector,
+			ConfigurationService configService) {
 		// default initial value and allocation size per-JPA defaults
 		parameterCollector.accept( INITIAL_PARAM, String.valueOf( DEFAULT_INITIAL_VALUE ) );
 		parameterCollector.accept( INCREMENT_PARAM,	String.valueOf( defaultIncrement( configService ) ) );
@@ -124,7 +109,7 @@ public class GeneratorParameters {
 	}
 
 	static void collectBaselineProperties(
-			SimpleValue identifierValue,
+			Value identifierValue,
 			Dialect dialect,
 			RootClass rootClass,
 			BiConsumer<String,String> parameterCollector,

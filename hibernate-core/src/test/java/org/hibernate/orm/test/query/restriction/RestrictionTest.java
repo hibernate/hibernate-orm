@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class RestrictionTest {
 
 	@Test
-	void testAscendingDescending(SessionFactoryScope scope) {
+	void test(SessionFactoryScope scope) {
 		scope.inTransaction( session -> session.createMutationQuery("delete Book").executeUpdate() );
 		scope.inTransaction( session -> {
 			session.persist(new Book("9781932394153", "Hibernate in Action", 400));

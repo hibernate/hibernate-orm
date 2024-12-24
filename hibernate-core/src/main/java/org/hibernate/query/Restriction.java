@@ -10,15 +10,7 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
-import org.hibernate.query.Domain.AttributeRestriction;
-import org.hibernate.query.Domain.Conjunction;
-import org.hibernate.query.Domain.Disjunction;
-import org.hibernate.query.Domain.Interval;
-import org.hibernate.query.Domain.List;
-import org.hibernate.query.Domain.LowerBound;
-import org.hibernate.query.Domain.Pattern;
-import org.hibernate.query.Domain.UpperBound;
-import org.hibernate.query.Domain.Value;
+import org.hibernate.query.range.Range;
 
 /**
  * A rule for restricting query results.
@@ -62,60 +54,64 @@ public interface Restriction<X> {
 	@Internal
 	Predicate toPredicate(Root<? extends X> root, CriteriaBuilder builder);
 
+	static <T,U> Restriction<T> restrict(SingularAttribute<T,U> attribute, Range<U> range) {
+		return new AttributeRange<>( attribute, range );
+	}
+
 	static <T,U> Restriction<T> equal(SingularAttribute<T,U> attribute, U value) {
-		return new AttributeRestriction<>( attribute, new Value<>(value) );
+		return restrict( attribute, Range.singleValue(value) );
 	}
 
 	static <T,U> Restriction<T> unequal(SingularAttribute<T,U> attribute, U value) {
-		return new AttributeRestriction<>( attribute, new Value<>(value) ).negated();
+		return equal(attribute, value).negated();
 	}
 
 	static <T,U> Restriction<T> in(SingularAttribute<T,U> attribute, java.util.List<U> values) {
-		return new AttributeRestriction<>( attribute, new List<>(values) );
+		return restrict( attribute, Range.valueList(values) );
 	}
 
 	static <T,U> Restriction<T> notIn(SingularAttribute<T,U> attribute, java.util.List<U> values) {
-		return new AttributeRestriction<>( attribute, new List<>(values) ).negated();
+		return in(attribute, values).negated();
 	}
 
 	static <T,U extends Comparable<U>> Restriction<T> between(SingularAttribute<T,U> attribute, U lowerBound, U upperBound) {
-		return new AttributeRestriction<>( attribute, Interval.closed(lowerBound, upperBound) );
+		return restrict( attribute, Range.closed(lowerBound, upperBound) );
 	}
 
 	static <T,U extends Comparable<U>> Restriction<T> notBetween(SingularAttribute<T,U> attribute, U lowerBound, U upperBound) {
-		return new AttributeRestriction<>( attribute, Interval.closed(lowerBound, upperBound) ).negated();
+		return between(attribute, lowerBound, upperBound).negated();
 	}
 
 	static <T,U extends Comparable<U>> Restriction<T> greaterThan(SingularAttribute<T,U> attribute, U lowerBound) {
-		return new AttributeRestriction<>( attribute, LowerBound.greaterThan(lowerBound) );
+		return restrict( attribute, Range.greaterThan(lowerBound) );
 	}
 
 	static <T,U extends Comparable<U>> Restriction<T> lessThan(SingularAttribute<T,U> attribute, U upperBound) {
-		return new AttributeRestriction<>( attribute, UpperBound.lessThan(upperBound) );
+		return restrict( attribute, Range.lessThan(upperBound) );
 	}
 
 	static <T,U extends Comparable<U>> Restriction<T> greaterThanOrEqual(SingularAttribute<T,U> attribute, U lowerBound) {
-		return new AttributeRestriction<>( attribute, LowerBound.greaterThanOrEqualTo(lowerBound) );
+		return restrict( attribute, Range.greaterThanOrEqualTo(lowerBound) );
 	}
 
 	static <T,U extends Comparable<U>> Restriction<T> lessThanOrEqual(SingularAttribute<T,U> attribute, U upperBound) {
-		return new AttributeRestriction<>( attribute, UpperBound.lessThanOrEqualTo(upperBound) );
-	}
-
-	static <T> Restriction<T> like(SingularAttribute<T,String> attribute, String pattern) {
-		return like( attribute, pattern, true );
+		return restrict( attribute, Range.lessThanOrEqualTo(upperBound) );
 	}
 
 	static <T> Restriction<T> like(SingularAttribute<T,String> attribute, String pattern, boolean caseSensitive) {
-		return new AttributeRestriction<>( attribute, new Pattern(pattern, caseSensitive) );
+		return restrict( attribute, Range.pattern(pattern, caseSensitive) );
+	}
+
+	static <T> Restriction<T> like(SingularAttribute<T,String> attribute, String pattern) {
+		return like(attribute, pattern, true);
 	}
 
 	static <T> Restriction<T> notLike(SingularAttribute<T,String> attribute, String pattern) {
-		return notLike( attribute, pattern, true );
+		return like(attribute, pattern, true).negated();
 	}
 
 	static <T> Restriction<T> notLike(SingularAttribute<T,String> attribute, String pattern, boolean caseSensitive) {
-		return new AttributeRestriction<>( attribute, new Pattern(pattern, caseSensitive) ).negated();
+		return like(attribute, pattern, caseSensitive).negated();
 	}
 
 	@SafeVarargs

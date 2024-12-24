@@ -36,8 +36,12 @@ import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.Book;
 import org.hibernate.orm.test.jpa.Distributor;
+import org.hibernate.orm.test.jpa.EmbeddedDataColumn;
 import org.hibernate.orm.test.jpa.Item;
+import org.hibernate.orm.test.jpa.SubBook;
+import org.hibernate.orm.test.jpa.ValueEmbeddedDataColumn;
 import org.hibernate.orm.test.jpa.Wallet;
 import org.hibernate.stat.Statistics;
 
@@ -70,7 +74,11 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 				Distributor.class,
 				Wallet.class,
 				Employee.class,
-				Contractor.class
+				Contractor.class,
+				Book.class,
+				SubBook.class,
+				EmbeddedDataColumn.class,
+				ValueEmbeddedDataColumn.class,
 		};
 	}
 
@@ -1658,4 +1666,24 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.close();
 		}
 	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-18236")
+	public void test18236() {
+		EntityManager em = getOrCreateEntityManager();
+		try {
+			em.getTransaction().begin();
+			em.persist( new Book("9781932394153", "Hibernate in Action") );
+			em.flush();
+
+			List results = em.createNativeQuery("select b.* from book b", Book.class).getResultList();
+			assertEquals(1, results.size());
+		}
+		finally {
+			em.getTransaction().rollback();
+			em.close();
+		}
+
+	}
+
 }

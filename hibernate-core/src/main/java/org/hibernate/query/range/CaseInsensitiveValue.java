@@ -25,4 +25,9 @@ record CaseInsensitiveValue(String value) implements Range<String> {
 		final Expression<String> literal = builder.literal( value.toLowerCase( Locale.ROOT ) );
 		return builder.lower( root.get( attribute ) ).equalTo( literal );
 	}
+
+	@Override
+	public Class<String> getType() {
+		return String.class;
+	}
 }

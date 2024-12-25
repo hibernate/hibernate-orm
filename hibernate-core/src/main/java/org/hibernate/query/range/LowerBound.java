@@ -25,4 +25,9 @@ record LowerBound<U extends Comparable<U>>(U bound, boolean open) implements Ran
 				? builder.greaterThan( root.get( attribute ), literal )
 				: builder.greaterThanOrEqualTo( root.get( attribute ), literal );
 	}
+
+	@Override @SuppressWarnings("unchecked")
+	public Class<? extends U> getType() {
+		return (Class<? extends U>) bound.getClass();
+	}
 }

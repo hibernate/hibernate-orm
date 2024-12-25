@@ -22,4 +22,9 @@ record Pattern(String pattern, boolean caseSensitive) implements Range<String> {
 				: builder.like( builder.lower( root.get( attribute ) ),
 						builder.literal( pattern.toLowerCase( Locale.ROOT ) ) );
 	}
+
+	@Override
+	public Class<String> getType() {
+		return String.class;
+	}
 }

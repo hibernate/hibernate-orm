@@ -12,6 +12,8 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.query.Restriction;
 
+import java.util.List;
+
 /**
  * Specifies an allowed set of range of values for a value being restricted.
  *
@@ -32,7 +34,7 @@ public interface Range<U> {
 	 * values.
 	 */
 	@Internal
-	<X> Predicate toPredicate(Path<? extends X> root, SingularAttribute<X,U> attribute, CriteriaBuilder builder);
+	<X> Predicate toPredicate(Path<? extends X> root, SingularAttribute<X, U> attribute, CriteriaBuilder builder);
 
 	static <U> Range<U> singleValue(U value) {
 		return new Value<>( value );
@@ -42,8 +44,8 @@ public interface Range<U> {
 		return new CaseInsensitiveValue( value );
 	}
 
-	static <U> Range<U> valueList(java.util.List<U> values) {
-		return new List<>( values );
+	static <U> Range<U> valueList(List<U> values) {
+		return new ValueList<>( values );
 	}
 
 	static <U extends Comparable<U>> Range<U> greaterThan(U bound) {
@@ -66,12 +68,13 @@ public interface Range<U> {
 		return new Interval<>( new LowerBound<>( lowerBound, true ),
 				new UpperBound<>( upperBound, true ) );
 	}
+
 	static <U extends Comparable<U>> Range<U> closed(U lowerBound, U upperBound) {
 		return new Interval<>( new LowerBound<>( lowerBound, false ),
 				new UpperBound<>( upperBound, false ) );
 	}
 
 	static Range<String> pattern(String pattern, boolean caseSensitive) {
-		return new Pattern(pattern, caseSensitive);
+		return new Pattern( pattern, caseSensitive );
 	}
 }

@@ -9,10 +9,12 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import java.util.List;
+
 /**
  * Restricts to a list of literal values.
  */
-record List<U>(java.util.List<U> values) implements Range<U> {
+record ValueList<U>(List<U> values) implements Range<U> {
 	@Override
 	public <X> Predicate toPredicate(Path<? extends X> root, SingularAttribute<X, U> attribute, CriteriaBuilder builder) {
 		return root.get( attribute ).in( values.stream().map( builder::literal ).toList() );

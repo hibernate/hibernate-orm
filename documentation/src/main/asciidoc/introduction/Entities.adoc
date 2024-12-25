@@ -432,8 +432,14 @@ Book book = session.find(Book.class, new BookId(isbn, printing));
 [[version-attributes]]
 === Version attributes
 
-An entity may have an attribute which is used by Hibernate for optimistic lock checking.
-A version attribute is usually of type `Integer`, `Short`, `Long`, `LocalDateTime`, `OffsetDateTime`, `ZonedDateTime`, or `Instant`.
+An entity may have an attribute which is used by Hibernate for <<optimistic-and-pessimistic-locking,optimistic lock verification>>.
+A _version attribute_ is usually of type `Integer`, `Short`, `Long`, `LocalDateTime`, `OffsetDateTime`, `ZonedDateTime`, or `Instant`.
+
+[source,java]
+----
+@Version
+int version;
+----
 
 [source,java]
 ----
@@ -441,7 +447,18 @@ A version attribute is usually of type `Integer`, `Short`, `Long`, `LocalDateTim
 LocalDateTime lastUpdated;
 ----
 
-Version attributes are automatically assigned by Hibernate when an entity is made persistent, and automatically incremented or updated each time the entity is updated.
+A version attribute is automatically assigned by Hibernate when an entity is made persistent, and automatically incremented or updated each time the entity is updated.
+
+If the version attribute is numeric, then an entity is, by default, assigned the version number `0` when it's first made persistent.
+It's easy to specify that the initial version should be assigned the number `1` instead:
+
+[source,java]
+----
+@Version
+int version = 1; // the initial version number
+----
+
+Almost every entity which is frequently updated should have a version attribute.
 
 [TIP]
 // .Optimistic locking in Hibernate
@@ -1504,7 +1521,7 @@ class Event {
 }
 ----
 
-The `@Array` annotation is optional, but it's important to limit the amount of storage space the database allocates to the `ARRAY` column.
+The `@Array` annotation is optional--it lets us specify an upper bound on the length of the `ARRAY` column.
 By writing `@Array(length=7)` here, we specified that DDL should be generated with the column type `TINYINT ARRAY[7]`.
 
 Just for fun, we used an enumerated type in the code above, but the array element time may be almost any <<basic-type-list,basic type>>.

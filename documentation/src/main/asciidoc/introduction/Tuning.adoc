@@ -924,7 +924,7 @@ When many transactions try to read and update the same data, the program might b
 
 There's two basic approaches to data concurrency in Hibernate:
 
-- optimistic locking using `@Version` columns, and
+- optimistic locking using <<version-attributes,`@Version` columns>>, and
 - database-level pessimistic locking using the SQL `for update` syntax (or equivalent).
 
 In the Hibernate community it's _much_ more common to use optimistic locking, and Hibernate makes that incredibly easy.
@@ -938,8 +938,8 @@ Indeed, the usual practice is to avoid having transactions that span user intera
 
 That said, there _is_ also a place for pessimistic locks, which can sometimes reduce the probability of transaction rollbacks.
 
-Therefore, the `find()`, `lock()`, and `refresh()` methods of the reactive session accept an optional `LockMode`.
-We can also specify a link:{doc-javadoc-url}/org/hibernate/LockMode.html[`LockMode`] for a query.
+Therefore, the `find()`, `lock()`, and `refresh()` methods of the session accept an optional link:{doc-javadoc-url}/org/hibernate/LockMode.html[`LockMode`].
+We can also specify a `LockMode` for a query.
 The lock mode can be used to request a pessimistic lock, or to customize the behavior of optimistic locking:
 
 .Optimistic and pessimistic lock modes

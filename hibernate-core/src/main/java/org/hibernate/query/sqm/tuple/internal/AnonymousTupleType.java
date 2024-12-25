@@ -231,8 +231,7 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 
 	@Override
 	public JavaType<T> getExpressibleJavaType() {
-		//noinspection unchecked
-		return (JavaType<T>) javaTypeDescriptor;
+		return javaTypeDescriptor;
 	}
 
 	@Override

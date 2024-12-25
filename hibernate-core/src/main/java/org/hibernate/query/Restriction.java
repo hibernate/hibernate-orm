@@ -66,6 +66,10 @@ public interface Restriction<X> {
 		return equal(attribute, value).negated();
 	}
 
+	static <T> Restriction<T> equalIgnoringCase(SingularAttribute<T,String> attribute, String value) {
+		return restrict( attribute, Range.singleCaseInsensitiveValue(value) );
+	}
+
 	static <T,U> Restriction<T> in(SingularAttribute<T,U> attribute, java.util.List<U> values) {
 		return restrict( attribute, Range.valueList(values) );
 	}

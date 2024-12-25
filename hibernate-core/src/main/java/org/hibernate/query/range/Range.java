@@ -38,6 +38,10 @@ public interface Range<U> {
 		return new Value<>( value );
 	}
 
+	static Range<String> singleCaseInsensitiveValue(String value) {
+		return new CaseInsensitiveValue( value );
+	}
+
 	static <U> Range<U> valueList(java.util.List<U> values) {
 		return new List<>( values );
 	}

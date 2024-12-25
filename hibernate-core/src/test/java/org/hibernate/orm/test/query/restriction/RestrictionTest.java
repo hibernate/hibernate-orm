@@ -69,6 +69,11 @@ public class RestrictionTest {
 						.addRestriction( Restriction.between( pages, 150, 400 ) )
 						.getResultList() );
 		assertEquals( 1, booksByPageRange.size() );
+		Book bookByTitle = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( Restriction.equalIgnoringCase( title, "hibernate in action" ) )
+						.getSingleResultOrNull() );
+		assertEquals( "9781932394153", bookByTitle.isbn );
 	}
 
 	@Entity(name="Book")

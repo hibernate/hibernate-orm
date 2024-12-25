@@ -11,7 +11,9 @@ plugins {
 description = 'Hibernate compile-time tooling'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply plugin: 'version-injection'
+apply from: rootProject.file( 'gradle/group-relocation.gradle' )
+
+apply plugin: 'org.hibernate.build.version-injection'
 
 ext {
 	xjcTargetDir = file( "${buildDir}/generated/sources/xjc/main" )
@@ -134,7 +136,7 @@ compileTestJava {
 
 // Tests with records
 if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
-    // We need to configure the source and target version to 17
+	// We need to configure the source and target version to 17
 	def testCompilerConfig = {
 		javaCompiler = javaToolchains.compilerFor {
 			languageVersion = jdkVersions.test.compile
@@ -143,9 +145,9 @@ if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
 		targetCompatibility = 17
 	}
 
-    compileTestJava {
-        configure testCompilerConfig
-    }
+	compileTestJava {
+		configure testCompilerConfig
+	}
 
 	compileQuarkusOrmPanacheJava {
 		configure testCompilerConfig
@@ -165,9 +167,9 @@ if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
 		}
 	}
 
-    test {
-        configure testLauncherConfig
-    }
+	test {
+		configure testLauncherConfig
+	}
 
 	quarkusOrmPanacheTest {
 		configure testLauncherConfig
@@ -182,13 +184,39 @@ if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
 	}
 }
 else {
-    sourceSets {
-        test {
-            java {
-                exclude '**/records/*.java'
-            }
-        }
-    }
+	sourceSets {
+		test {
+			java {
+				exclude '**/records/*.java'
+			}
+		}
+	}
+}
+
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+
+publishingExtension.publications.named("groupRelocation", MavenPublication) {
+	// org.hibernate:hibernate-jpamodelgen -> org.hibernate.orm:hibernate-processor
+	pom {
+		artifactId = 'hibernate-jpamodelgen'
+		name = 'hibernate-jpamodelgen (relocated)'
+	}
+}
+
+publishingExtension.publications.register("renameRelocation", MavenPublication) {
+	// org.hibernate.orm:hibernate-jpamodelgen -> org.hibernate.orm:hibernate-processor
+	pom {
+		artifactId = 'hibernate-jpamodelgen'
+		name = 'hibernate-jpamodelgen (relocated)'
+
+		distributionManagement {
+			relocation {
+				groupId = project.group
+				artifactId = project.name
+				version = project.version
+			}
+		}
+	}
 }
 
 

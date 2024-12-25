@@ -2,13 +2,10 @@ plugins {
     id 'java-platform'
 }
 
-description = 'Gradle platform for Hibernate ORM'
+description = 'Platform (BOM) for Hibernate ORM dependencies'
 
-apply from: rootProject.file( 'gradle/releasable.gradle' )
 apply from: rootProject.file( "gradle/base-information.gradle" )
-apply from: rootProject.file( "gradle/publishing-pom.gradle" )
-
-apply plugin: 'signing'
+apply from: rootProject.file( "gradle/publishing.gradle" )
 
 dependencies {
     constraints {
@@ -65,15 +62,13 @@ dependencies {
     }
 }
 
-publishing {
-    publications {
-        publishedArtifacts {
-            from components.javaPlatform
-        }
-    }
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+publishingExtension.publications.named("publishedArtifacts", MavenPublication) {
+    from components.javaPlatform
 }
 
-project( ":release" ).getTasks().named( "publishReleaseArtifacts" ).configure {
+tasks.register("publishReleaseArtifacts") {
+    // mirror for `:release:publishReleaseArtifacts`
     dependsOn tasks.release
 }
 

@@ -18,7 +18,7 @@ buildscript {
 	}
 }
 
-import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
+
 import org.apache.tools.ant.filters.ReplaceTokens
 
 apply plugin: 'java-library'
@@ -156,21 +156,6 @@ dependencies {
 			}
 			because('CVE-2021-44228, CVE-2021-45046, CVE-2021-45105, CVE-2021-44832: Log4j vulnerable to remote code execution and other critical security vulnerabilities')
 		}
-	}
-}
-
-configurations {
-	javadocSources {
-		canBeConsumed = true
-		canBeResolved = false
-		visible = false
-		description = 'Configuration for accessing the sources that should be included in the javadoc for the project'
-	}
-}
-
-artifacts {
-	sourceSets.main.allJava.srcDirs.each { srcDir ->
-		javadocSources srcDir
 	}
 }
 

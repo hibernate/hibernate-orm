@@ -8,6 +8,7 @@
 description = "Experimental extension to make it easier to compile applications into a GraalVM native image"
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/group-relocation.gradle' )
 
 dependencies {
     //No need for transitive dependencies: this is all just metadata to be used as companion jar.

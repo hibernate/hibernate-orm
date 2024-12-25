@@ -143,21 +143,6 @@ dependencies {
 	}
 }
 
-configurations {
-	javadocSources {
-		canBeConsumed = true
-		canBeResolved = false
-		visible = false
-		description = 'Configuration for accessing the sources that should be included in the javadoc for the project'
-	}
-}
-
-artifacts {
-	sourceSets.main.allJava.srcDirs.each { srcDir ->
-		javadocSources srcDir
-	}
-}
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Compilation
 

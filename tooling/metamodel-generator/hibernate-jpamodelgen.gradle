@@ -11,7 +11,9 @@ plugins {
 description = 'Annotation Processor to generate JPA 2 static metamodel classes'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply plugin: 'version-injection'
+apply from: rootProject.file( 'gradle/group-relocation.gradle' )
+
+apply plugin: 'org.hibernate.build.version-injection'
 
 ext {
 	xjcTargetDir = file( "${buildDir}/generated/sources/xjc/main" )
@@ -42,38 +44,63 @@ compileTestJava {
     ]
 }
 
-
 // Tests with records
 if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
-    // We need to configure the source and target version to 17
-    //compileTestJava17Java {
-    compileTestJava {
-        javaCompiler = javaToolchains.compilerFor {
-            languageVersion = jdkVersions.test.compile
-        }
-        sourceCompatibility = 17
-        targetCompatibility = 17
-    }
+	// We need to configure the source and target version to 17
+	//compileTestJava17Java {
+	compileTestJava {
+		javaCompiler = javaToolchains.compilerFor {
+			languageVersion = jdkVersions.test.compile
+		}
+		sourceCompatibility = 17
+		targetCompatibility = 17
+	}
 
-    test {
-        javaLauncher = javaToolchains.launcherFor {
-            languageVersion = jdkVersions.test.launcher
-        }
+	test {
+		javaLauncher = javaToolchains.launcherFor {
+			languageVersion = jdkVersions.test.launcher
+		}
 
-        if ( jdkVersions.test.launcher.asInt() >= 19 ) {
-            logger.warn( "The version of Java bytecode that will be tested is not supported by Bytebuddy by default. " +
-                                 " Setting 'net.bytebuddy.experimental=true'." )
-            systemProperty 'net.bytebuddy.experimental', true
-        }
-    }
+		if ( jdkVersions.test.launcher.asInt() >= 19 ) {
+			logger.warn( "The version of Java bytecode that will be tested is not supported by Bytebuddy by default. " +
+								 " Setting 'net.bytebuddy.experimental=true'." )
+			systemProperty 'net.bytebuddy.experimental', true
+		}
+	}
 } else {
-    sourceSets {
-        test {
-            java {
-                exclude '**/records/*.java'
-            }
-        }
-    }
+	sourceSets {
+		test {
+			java {
+				exclude '**/records/*.java'
+			}
+		}
+	}
+}
+
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+
+publishingExtension.publications.named("groupRelocation", MavenPublication) {
+	// org.hibernate:hibernate-jpamodelgen -> org.hibernate.orm:hibernate-processor
+	pom {
+		artifactId = 'hibernate-jpamodelgen'
+		name = 'hibernate-jpamodelgen (relocated)'
+	}
+}
+
+publishingExtension.publications.register("renameRelocation", MavenPublication) {
+	// org.hibernate.orm:hibernate-jpamodelgen -> org.hibernate.orm:hibernate-processor
+	pom {
+		artifactId = 'hibernate-jpamodelgen'
+		name = 'hibernate-jpamodelgen (relocated)'
+
+		distributionManagement {
+			relocation {
+				groupId = project.group
+				artifactId = project.name
+				version = project.version
+			}
+		}
+	}
 }
 
 

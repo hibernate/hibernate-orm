@@ -28,6 +28,8 @@ import java.util.List;
 @Incubating
 public interface Range<U> {
 
+	Class<? extends U> getType();
+
 	/**
 	 * Return a JPA Criteria {@link Predicate} constraining the given
 	 * attribute of the given root entity to this domain of allowed

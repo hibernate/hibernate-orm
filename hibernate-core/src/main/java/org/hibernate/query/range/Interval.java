@@ -22,4 +22,9 @@ record Interval<U extends Comparable<U>>(LowerBound<U> lowerBound, UpperBound<U>
 				: builder.between( root.get( attribute ),
 						builder.literal( lowerBound.bound() ), builder.literal( upperBound.bound() ) );
 	}
+
+	@Override
+	public Class<? extends U> getType() {
+		return lowerBound.getType();
+	}
 }

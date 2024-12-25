@@ -57,6 +57,10 @@ public interface Restriction<X> {
 		return new AttributeRange<>( attribute, range );
 	}
 
+	static <T> Restriction<T> restrict(Class<T> type, String attributeName, Range<?> range) {
+		return new NamedAttributeRange<>( type, attributeName, range );
+	}
+
 	static <T, U> Restriction<T> equal(SingularAttribute<T, U> attribute, U value) {
 		return restrict( attribute, Range.singleValue( value ) );
 	}

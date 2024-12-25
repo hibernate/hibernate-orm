@@ -23,4 +23,9 @@ record Value<U>(U value) implements Range<U> {
 		final Expression<U> literal = builder.literal( value );
 		return root.get( attribute ).equalTo( literal );
 	}
+
+	@Override @SuppressWarnings("unchecked")
+	public Class<? extends U> getType() {
+		return (Class<? extends U>) value.getClass();
+	}
 }

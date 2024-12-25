@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.query.Order;
 import org.hibernate.query.Restriction;
+import org.hibernate.query.range.Range;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -74,6 +75,12 @@ public class RestrictionTest {
 						.addRestriction( Restriction.equalIgnoringCase( title, "hibernate in action" ) )
 						.getSingleResultOrNull() );
 		assertEquals( "9781932394153", bookByTitle.isbn );
+		Book bookByTitleUnsafe = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( Restriction.restrict( Book.class, "title",
+								Range.singleCaseInsensitiveValue("hibernate in action") ) )
+						.getSingleResultOrNull() );
+		assertEquals( "9781932394153", bookByTitleUnsafe.isbn );
 	}
 
 	@Entity(name="Book")

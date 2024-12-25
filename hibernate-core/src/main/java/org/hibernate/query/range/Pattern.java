@@ -7,7 +7,6 @@ package org.hibernate.query.range;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.metamodel.SingularAttribute;
 
 import java.util.Locale;
 
@@ -16,10 +15,10 @@ import java.util.Locale;
  */
 record Pattern(String pattern, boolean caseSensitive) implements Range<String> {
 	@Override
-	public <X> Predicate toPredicate(Path<? extends X> root, SingularAttribute<X, String> attribute, CriteriaBuilder builder) {
+	public Predicate toPredicate(Path<String> path, CriteriaBuilder builder) {
 		return caseSensitive
-				? builder.like( root.get( attribute ), builder.literal( pattern ) )
-				: builder.like( builder.lower( root.get( attribute ) ),
+				? builder.like( path, builder.literal( pattern ) )
+				: builder.like( builder.lower( path ),
 						builder.literal( pattern.toLowerCase( Locale.ROOT ) ) );
 	}
 

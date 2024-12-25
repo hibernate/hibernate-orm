@@ -30,16 +30,14 @@ record NamedAttributeRange<X, U>(Class<X> entity, String attributeName, Range<U>
 		if ( !entity.isAssignableFrom( entityType.getJavaType() ) ) {
 			throw new IllegalArgumentException( "Root entity is not a subtype of '" + entity.getTypeName() + "'" );
 		}
-		final Attribute<?, ?> att = entityType.getAttribute( attributeName );
-		if ( !range.getType().isAssignableFrom( att.getJavaType() ) ) {
+		final Attribute<?, ?> attribute = entityType.getAttribute( attributeName );
+		if ( !(attribute instanceof SingularAttribute) ) {
+			throw new IllegalArgumentException( "Attribute '" + attributeName + "' is not singular" );
+		}
+		if ( !range.getType().isAssignableFrom( attribute.getJavaType() ) ) {
 			throw new IllegalArgumentException( "Attribute '" + attributeName
 					+ "' is not assignable to range of type '" + range.getType().getName() + "'" );
 		}
-		if ( !(att instanceof SingularAttribute) ) {
-			throw new IllegalArgumentException( "Attribute '" + attributeName + "' is not singular" );
-		}
-		@SuppressWarnings("unchecked")
-		final SingularAttribute<X, U> attribute = (SingularAttribute<X, U>) att;
-		return range.toPredicate( root, attribute, builder );
+		return range.toPredicate( root.get( attributeName ), builder );
 	}
 }

@@ -7,7 +7,6 @@ package org.hibernate.query.range;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.metamodel.SingularAttribute;
 
 import java.util.List;
 
@@ -16,8 +15,8 @@ import java.util.List;
  */
 record ValueList<U>(List<U> values) implements Range<U> {
 	@Override
-	public <X> Predicate toPredicate(Path<? extends X> root, SingularAttribute<X, U> attribute, CriteriaBuilder builder) {
-		return root.get( attribute ).in( values.stream().map( builder::literal ).toList() );
+	public Predicate toPredicate(Path<U> path, CriteriaBuilder builder) {
+		return path.in( values.stream().map( builder::literal ).toList() );
 	}
 
 	@Override @SuppressWarnings("unchecked")

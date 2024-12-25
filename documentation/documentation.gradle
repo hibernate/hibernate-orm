@@ -79,7 +79,10 @@ configurations {
 	}
 
 	javadocSources {
-		description = 'Source files to be built by the javadoc tool'
+		description = 'All Java sources for the aggregated Javadocs'
+		canBeConsumed = false
+		canBeResolved = true
+		visible = false
 	}
 }
 

@@ -81,6 +81,16 @@ public class RestrictionTest {
 								Range.singleCaseInsensitiveValue("hibernate in action") ) )
 						.getSingleResultOrNull() );
 		assertEquals( "9781932394153", bookByTitleUnsafe.isbn );
+		List<Book> allBooks = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( Restriction.none() )
+						.getResultList() );
+		assertEquals( 2, allBooks.size() );
+		List<Book> noBooks = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( Restriction.none().negated() )
+						.getResultList() );
+		assertEquals( 0, noBooks.size() );
 	}
 
 	@Entity(name="Book")

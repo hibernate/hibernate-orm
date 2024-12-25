@@ -130,4 +130,27 @@ public interface Restriction<X> {
 	static <T> Restriction<T> or(Restriction<T>... restrictions) {
 		return new Disjunction<>( java.util.List.of( restrictions ) );
 	}
+
+	static <T> Restriction<T> none() {
+		return new Restriction<>() {
+			final Restriction<T> none = this;
+			@Override
+			public Restriction<T> negated() {
+				return new Restriction<>() {
+					@Override
+					public Predicate toPredicate(Root<? extends T> root, CriteriaBuilder builder) {
+						return builder.disjunction();
+					}
+					@Override
+					public Restriction<T> negated() {
+						return none;
+					}
+				};
+			}
+			@Override
+			public Predicate toPredicate(Root<? extends T> root, CriteriaBuilder builder) {
+				return builder.conjunction();
+			}
+		};
+	}
 }

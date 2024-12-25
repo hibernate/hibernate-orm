@@ -8,22 +8,21 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
  * Restricts to all values lower than a given upper bound.
  */
 record UpperBound<U extends Comparable<U>>(U bound, boolean open) implements Range<U> {
 	@Override
-	public <X> Predicate toPredicate(Path<? extends X> root, SingularAttribute<X, U> attribute, CriteriaBuilder builder) {
+	public Predicate toPredicate(Path<U> path, CriteriaBuilder builder) {
 		// TODO: it would be much better to not do use literal,
 		//       and let it be treated as a parameter, but we
 		//       we run into the usual bug with parameters in
 		//       manipulated SQM trees
 		final Expression<U> literal = builder.literal( bound );
 		return open
-				? builder.lessThan( root.get( attribute ), literal )
-				: builder.lessThanOrEqualTo( root.get( attribute ), literal );
+				? builder.lessThan( path, literal )
+				: builder.lessThanOrEqualTo( path, literal );
 	}
 
 	@Override @SuppressWarnings("unchecked")

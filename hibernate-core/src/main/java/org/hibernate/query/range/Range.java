@@ -7,7 +7,6 @@ package org.hibernate.query.range;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.query.Restriction;
@@ -36,7 +35,7 @@ public interface Range<U> {
 	 * values.
 	 */
 	@Internal
-	<X> Predicate toPredicate(Path<? extends X> root, SingularAttribute<X, U> attribute, CriteriaBuilder builder);
+	Predicate toPredicate(Path<U> path, CriteriaBuilder builder);
 
 	static <U> Range<U> singleValue(U value) {
 		return new Value<>( value );

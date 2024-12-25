@@ -24,6 +24,6 @@ record AttributeRange<X, U>(SingularAttribute<X, U> attribute, Range<U> range) i
 
 	@Override
 	public Predicate toPredicate(Root<? extends X> root, CriteriaBuilder builder) {
-		return range.toPredicate( root, attribute, builder );
+		return range.toPredicate( root.get( attribute ), builder );
 	}
 }

@@ -7,7 +7,6 @@ package org.hibernate.query.range;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
  * Restricts to an upper-bounded and lower-bounded interval.
@@ -15,12 +14,10 @@ import jakarta.persistence.metamodel.SingularAttribute;
 record Interval<U extends Comparable<U>>(LowerBound<U> lowerBound, UpperBound<U> upperBound)
 		implements Range<U> {
 	@Override
-	public <X> Predicate toPredicate(Path<? extends X> root, SingularAttribute<X, U> attribute, CriteriaBuilder builder) {
+	public Predicate toPredicate(Path<U> path, CriteriaBuilder builder) {
 		return lowerBound.open() || upperBound.open()
-				? builder.and( lowerBound.toPredicate( root, attribute, builder ),
-				upperBound.toPredicate( root, attribute, builder ) )
-				: builder.between( root.get( attribute ),
-						builder.literal( lowerBound.bound() ), builder.literal( upperBound.bound() ) );
+				? builder.and( lowerBound.toPredicate( path, builder ), upperBound.toPredicate( path, builder ) )
+				: builder.between( path, builder.literal( lowerBound.bound() ), builder.literal( upperBound.bound() ) );
 	}
 
 	@Override

@@ -11,7 +11,7 @@ import jakarta.persistence.criteria.Root;
 /**
  * A null restriction.
  */
-public class Unrestricted<T> implements Restriction<T> {
+record Unrestricted<T>() implements Restriction<T> {
 	@Override
 	public Restriction<T> negated() {
 		return new Restriction<>() {

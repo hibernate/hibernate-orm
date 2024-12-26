@@ -75,6 +75,7 @@ import static org.hibernate.grammars.hql.HqlLexer.ORDER;
 import static org.hibernate.grammars.hql.HqlLexer.WHERE;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.processor.annotation.AbstractQueryMethod.isRangeParam;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isRestrictionParam;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isSessionParameter;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isSpecialParam;
@@ -1819,7 +1820,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean isFinderParameterMappingToAttribute(VariableElement param) {
-		return !isSpecialParam(typeName(param.asType()));
+		final String typeName = typeName( param.asType() );
+		return !isSpecialParam(typeName)
+			|| isRangeParam(typeName);
 	}
 
 	private String[] sessionTypeFromParameters(List<String> paramNames, List<String> paramTypes) {
@@ -2134,13 +2137,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						parameterType = typeVariable.getUpperBound();
 						// INTENTIONAL FALL-THROUGH
 					case DECLARED:
-						if ( types.isSameType( parameterType, attributeType) ) {
+						if ( types.isSameType(parameterType, attributeType) ) {
 							return false;
 						}
 						else {
 							final TypeElement list = context.getTypeElementForFullyQualifiedName(LIST);
-							if ( types.isSameType( parameterType, types.getDeclaredType( list, attributeType) ) ) {
+							final TypeElement range = context.getTypeElementForFullyQualifiedName(HIB_RANGE);
+							if ( types.isSameType( parameterType, types.getDeclaredType(list, attributeType) ) ) {
 								return true;
+							}
+							else if ( types.isSameType( parameterType, types.getDeclaredType(range, attributeType) ) ) {
+								return false;
 							}
 							else {
 								parameterTypeError( entityType, param, attributeType );
@@ -2174,9 +2181,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void parameterTypeError(TypeElement entityType, VariableElement param, TypeMirror attributeType) {
 		message(param,
-				"matching field has type '" + attributeType
+				"matching field has type '" + stripAnnotations(typeAsString(attributeType))
 						+ "' in entity class '" + entityType + "'",
 				Diagnostic.Kind.ERROR );
+	}
+
+	private String stripAnnotations(String type) {
+		if ( type.startsWith("@") ) {
+			final int index = type.lastIndexOf(' ');
+			return index > 0 ? type.substring( index + 1 ) : type;
+		}
+		else {
+			return type;
+		}
 	}
 
 	private boolean finderParameterNullable(TypeElement entity, VariableElement param) {

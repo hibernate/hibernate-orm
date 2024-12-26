@@ -9,10 +9,16 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 
+import java.util.Objects;
+
 /**
- * Restricts to a single literal value.
+ * A {@link Range} with a single literal value.
  */
 record Value<U>(U value) implements Range<U> {
+	Value {
+		Objects.requireNonNull( value, "value is null" );
+	}
+
 	@Override
 	public Predicate toPredicate(Path<U> path, CriteriaBuilder builder) {
 		// TODO: it would be much better to not do use literal,

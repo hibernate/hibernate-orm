@@ -83,12 +83,12 @@ public class RestrictionTest {
 		assertEquals( "9781932394153", bookByTitleUnsafe.isbn );
 		List<Book> allBooks = scope.fromSession( session ->
 				session.createSelectionQuery( "from Book", Book.class)
-						.addRestriction( Restriction.none() )
+						.addRestriction( Restriction.unrestricted() )
 						.getResultList() );
 		assertEquals( 2, allBooks.size() );
 		List<Book> noBooks = scope.fromSession( session ->
 				session.createSelectionQuery( "from Book", Book.class)
-						.addRestriction( Restriction.none().negated() )
+						.addRestriction( Restriction.unrestricted().negated() )
 						.getResultList() );
 		assertEquals( 0, noBooks.size() );
 	}

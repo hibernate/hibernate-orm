@@ -34,7 +34,7 @@ record NamedAttributeRange<X, U>(Class<X> entity, String attributeName, Range<U>
 		if ( !(attribute instanceof SingularAttribute) ) {
 			throw new IllegalArgumentException( "Attribute '" + attributeName + "' is not singular" );
 		}
-		if ( !range.getType().isAssignableFrom( attribute.getJavaType() ) ) {
+		if ( range.getType()!=null && !range.getType().isAssignableFrom( attribute.getJavaType() ) ) {
 			throw new IllegalArgumentException( "Attribute '" + attributeName
 					+ "' is not assignable to range of type '" + range.getType().getName() + "'" );
 		}

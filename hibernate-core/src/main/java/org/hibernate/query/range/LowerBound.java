@@ -9,10 +9,16 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 
+import java.util.Objects;
+
 /**
- * Restricts to all values higher than a given lower bound.
+ * The {@link Range} of all values above a given lower bound.
  */
 record LowerBound<U extends Comparable<U>>(U bound, boolean open) implements Range<U> {
+	LowerBound {
+		Objects.requireNonNull( bound, "bound is null" );
+	}
+
 	@Override
 	public Predicate toPredicate(Path<U> path, CriteriaBuilder builder) {
 		// TODO: it would be much better to not do use literal,

@@ -765,6 +765,12 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
+	public Query<R> addRestrictions(List<Restriction<? super R>> restrictionList) {
+		super.addRestrictions( restrictionList );
+		return this;
+	}
+
+	@Override
 	public Query<R> setOrder(List<? extends Order<? super R>> orders) {
 		super.setOrder(orders);
 		return this;

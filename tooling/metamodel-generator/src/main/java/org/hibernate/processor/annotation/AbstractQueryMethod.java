@@ -294,10 +294,27 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			final String paramName = paramNames.get(i);
 			final String paramType = paramTypes.get(i);
 			if ( isRestrictionParam(paramType) ) {
-				declaration
-						.append("\t\t\t.addRestriction(")
-						.append(paramName)
-						.append(")\n");
+				if ( paramType.startsWith(LIST) ) {
+					declaration
+							.append( "\t\t\t.addRestrictions(" )
+							.append( paramName )
+							.append( ")\n" );
+
+				}
+				else if ( paramType.endsWith("[]") ) {
+					declaration
+							.append( "\t\t\t.addRestrictions(" )
+							.append( annotationMetaEntity.importType(LIST) )
+							.append( ".of(" )
+							.append( paramName )
+							.append( "))\n" );
+				}
+				else {
+					declaration
+							.append( "\t\t\t.addRestriction(" )
+							.append( paramName )
+							.append( ")\n" );
+				}
 			}
 			else if ( isRangeParam(paramType) ) {
 				declaration
@@ -378,11 +395,12 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		return parameterType.startsWith(HIB_ORDER)
 			|| parameterType.startsWith(LIST + "<" + HIB_ORDER)
 			|| parameterType.startsWith(JD_SORT)
-			|| parameterType.startsWith(JD_ORDER);
+			|| parameterType.startsWith(JD_ORDER) && !parameterType.endsWith("[]");
 	}
 
 	static boolean isRestrictionParam(String parameterType) {
-		return parameterType.startsWith(HIB_RESTRICTION);
+		return parameterType.startsWith(HIB_RESTRICTION)
+			|| parameterType.startsWith(LIST + "<" + HIB_RESTRICTION);
 	}
 
 	static boolean isRangeParam(String parameterType) {

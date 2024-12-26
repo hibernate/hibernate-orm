@@ -97,7 +97,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration );
 		createQuery( declaration );
-		handleRestrictionParameters( declaration, paramTypes, containerType );
+		handleRestrictionParameters( declaration, paramTypes );
 		setParameters( declaration, paramTypes, "");
 		handlePageParameters( declaration, paramTypes, containerType );
 		boolean unwrapped = !isUsingEntityManager();

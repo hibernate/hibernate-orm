@@ -19,6 +19,7 @@ import static org.hibernate.processor.util.Constants.HIB_KEYED_RESULT_LIST;
 import static org.hibernate.processor.util.Constants.HIB_ORDER;
 import static org.hibernate.processor.util.Constants.HIB_PAGE;
 import static org.hibernate.processor.util.Constants.HIB_QUERY;
+import static org.hibernate.processor.util.Constants.HIB_RANGE;
 import static org.hibernate.processor.util.Constants.HIB_RESTRICTION;
 import static org.hibernate.processor.util.Constants.HIB_SELECTION_QUERY;
 import static org.hibernate.processor.util.Constants.HIB_SORT_DIRECTION;
@@ -288,8 +289,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	}
 
 	void handleRestrictionParameters(
-			StringBuilder declaration, List<String> paramTypes,
-			@Nullable String containerType) {
+			StringBuilder declaration, List<String> paramTypes) {
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
 			final String paramName = paramNames.get(i);
 			final String paramType = paramTypes.get(i);
@@ -298,6 +298,18 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						.append("\t\t\t.addRestriction(")
 						.append(paramName)
 						.append(")\n");
+			}
+			else if ( isRangeParam(paramType) ) {
+				declaration
+						.append("\t\t\t.addRestriction(")
+						.append(annotationMetaEntity.importType(HIB_RESTRICTION))
+						.append(".restrict(")
+						.append(annotationMetaEntity.importType(returnTypeName + '_'))
+						.append('.')
+						.append(paramName)
+						.append(", ")
+						.append(paramName)
+						.append("))\n");
 			}
 		}
 	}
@@ -346,6 +358,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	static boolean isSpecialParam(String parameterType) {
 		return isPageParam(parameterType)
 			|| isRestrictionParam(parameterType)
+			|| isRangeParam(parameterType)
 			|| isOrderParam(parameterType)
 			|| isKeyedPageParam(parameterType)
 			|| isSessionParameter(parameterType);
@@ -370,6 +383,10 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 
 	static boolean isRestrictionParam(String parameterType) {
 		return parameterType.startsWith(HIB_RESTRICTION);
+	}
+
+	static boolean isRangeParam(String parameterType) {
+		return parameterType.startsWith(HIB_RANGE);
 	}
 
 	static boolean isJakartaCursoredPage(@Nullable String containerType) {

@@ -9,7 +9,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 
 /**
- * Restricts to an upper-bounded and lower-bounded interval.
+ * An upper-bounded and lower-bounded interval.
  */
 record Interval<U extends Comparable<U>>(LowerBound<U> lowerBound, UpperBound<U> upperBound)
 		implements Range<U> {

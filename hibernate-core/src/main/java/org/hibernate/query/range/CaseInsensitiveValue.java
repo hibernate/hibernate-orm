@@ -10,11 +10,16 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 
 import java.util.Locale;
+import java.util.Objects;
 
 /**
- * Restricts to a single literal string, ignoring case.
+ * A {@link Range} with a single literal string, ignoring case.
  */
 record CaseInsensitiveValue(String value) implements Range<String> {
+	CaseInsensitiveValue {
+		Objects.requireNonNull( value, "value is null" );
+	}
+
 	@Override
 	public Predicate toPredicate(Path<String> path, CriteriaBuilder builder) {
 		// TODO: it would be much better to not do use literal,

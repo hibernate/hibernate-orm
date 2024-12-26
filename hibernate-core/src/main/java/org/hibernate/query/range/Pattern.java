@@ -11,7 +11,7 @@ import jakarta.persistence.criteria.Predicate;
 import java.util.Locale;
 
 /**
- * Restricts a string by a pattern.
+ * The {@link Range} of strings recognized by the given pattern.
  */
 record Pattern(String pattern, boolean caseSensitive) implements Range<String> {
 	@Override

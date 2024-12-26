@@ -24,6 +24,9 @@ import org.hibernate.query.range.Range;
  *         .setOrder(Order.desc(Book_.title))
  * 		   .getResultList() );
  * </pre>
+ * <p>
+ * Each restriction pairs an {@linkplain SingularAttribute attribute} of the
+ * entity with a {@link Range} of allowed values for the attribute.
  *
  * @param <X> The entity result type of the query
  *
@@ -53,10 +56,21 @@ public interface Restriction<X> {
 	@Internal
 	Predicate toPredicate(Root<? extends X> root, CriteriaBuilder builder);
 
+	/**
+	 * Restrict the allowed values of the given attribute to the given
+	 * {@linkplain Range range}.
+	 */
 	static <T, U> Restriction<T> restrict(SingularAttribute<T, U> attribute, Range<U> range) {
 		return new AttributeRange<>( attribute, range );
 	}
 
+	/**
+	 * Restrict the allowed values of the named attribute of the given
+	 * entity class to the given {@linkplain Range range}.
+	 * <p>
+	 * This operation is not compile-time type safe. Prefer the use of
+	 * {@link #restrict(SingularAttribute, Range)}.
+	 */
 	static <T> Restriction<T> restrict(Class<T> type, String attributeName, Range<?> range) {
 		return new NamedAttributeRange<>( type, attributeName, range );
 	}
@@ -131,26 +145,7 @@ public interface Restriction<X> {
 		return new Disjunction<>( java.util.List.of( restrictions ) );
 	}
 
-	static <T> Restriction<T> none() {
-		return new Restriction<>() {
-			final Restriction<T> none = this;
-			@Override
-			public Restriction<T> negated() {
-				return new Restriction<>() {
-					@Override
-					public Predicate toPredicate(Root<? extends T> root, CriteriaBuilder builder) {
-						return builder.disjunction();
-					}
-					@Override
-					public Restriction<T> negated() {
-						return none;
-					}
-				};
-			}
-			@Override
-			public Predicate toPredicate(Root<? extends T> root, CriteriaBuilder builder) {
-				return builder.conjunction();
-			}
-		};
+	static <T> Restriction<T> unrestricted() {
+		return new Unrestricted<>();
 	}
 }

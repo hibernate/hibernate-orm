@@ -78,4 +78,12 @@ public interface Range<U> {
 	static Range<String> pattern(String pattern, boolean caseSensitive) {
 		return new Pattern( pattern, caseSensitive );
 	}
+
+	static <U> Range<U> empty(Class<U> type) {
+		return new EmptyRange<>( type );
+	}
+
+	static <U> Range<U> full(Class<U> type) {
+		return new FullRange<>( type );
+	}
 }

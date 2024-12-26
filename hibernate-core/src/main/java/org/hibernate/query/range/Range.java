@@ -79,6 +79,10 @@ public interface Range<U> {
 		return new Pattern( pattern, caseSensitive );
 	}
 
+	static Range<String> pattern(String pattern, boolean caseSensitive, char charWildcard, char stringWildcard) {
+		return new Pattern( pattern, caseSensitive, charWildcard, stringWildcard );
+	}
+
 	static Range<String> pattern(String pattern) {
 		return pattern( pattern, true );
 	}

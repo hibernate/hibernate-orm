@@ -14,6 +14,10 @@ import java.util.Locale;
  * The {@link Range} of strings recognized by the given pattern.
  */
 record Pattern(String pattern, boolean caseSensitive) implements Range<String> {
+	Pattern(String pattern, boolean caseSensitive, char charWildcard, char stringWildcard) {
+		this( translate( pattern, charWildcard, stringWildcard ), caseSensitive );
+	}
+
 	@Override
 	public Predicate toPredicate(Path<String> path, CriteriaBuilder builder) {
 		return caseSensitive
@@ -26,5 +30,25 @@ record Pattern(String pattern, boolean caseSensitive) implements Range<String> {
 	@Override
 	public Class<String> getType() {
 		return String.class;
+	}
+
+	private static String translate(String pattern, char charWildcard, char stringWildcard) {
+		final var result = new StringBuilder();
+		for ( int i = 0; i < pattern.length(); i++ ) {
+			final char ch = pattern.charAt( i );
+			if ( ch == charWildcard ) {
+				result.append( '_' );
+			}
+			else if ( ch == stringWildcard ) {
+				result.append( '%' );
+			}
+			else {
+				if ( ch == '%' || ch == '_' || ch == '\\' ) {
+					result.append( '\\' );
+				}
+				result.append( ch );
+			}
+		}
+		return result.toString();
 	}
 }

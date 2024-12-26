@@ -123,7 +123,7 @@ public interface Restriction<X> {
 			SingularAttribute<T, String> attribute,
 			String pattern, boolean caseSensitive,
 			char charWildcard, char stringWildcard) {
-		return like( attribute, escape( pattern, charWildcard, stringWildcard ), caseSensitive );
+		return restrict( attribute, Range.pattern( pattern, caseSensitive, charWildcard, stringWildcard ) );
 	}
 
 	static <T> Restriction<T> like(SingularAttribute<T, String> attribute, String pattern, boolean caseSensitive) {
@@ -170,26 +170,6 @@ public interface Restriction<X> {
 
 	static <T> Restriction<T> unrestricted() {
 		return new Unrestricted<>();
-	}
-
-	private static String escape(String literal, char charWildcard, char stringWildcard) {
-		final var result = new StringBuilder();
-		for ( int i = 0; i < literal.length(); i++ ) {
-			final char ch = literal.charAt( i );
-			if ( ch == charWildcard ) {
-				result.append( '_' );
-			}
-			else if ( ch == stringWildcard ) {
-				result.append( '%' );
-			}
-			else {
-				if ( ch=='%' || ch=='_' || ch=='\\' ) {
-					result.append('\\');
-				}
-				result.append( ch );
-			}
-		}
-		return result.toString();
 	}
 
 	private static String escape(String literal) {

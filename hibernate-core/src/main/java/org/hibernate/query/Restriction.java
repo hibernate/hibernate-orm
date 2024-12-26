@@ -119,6 +119,13 @@ public interface Restriction<X> {
 		return restrict( attribute, Range.lessThanOrEqualTo( upperBound ) );
 	}
 
+	static <T> Restriction<T> like(
+			SingularAttribute<T, String> attribute,
+			String pattern, boolean caseSensitive,
+			char charWildcard, char stringWildcard) {
+		return like( attribute, escape( pattern, charWildcard, stringWildcard ), caseSensitive );
+	}
+
 	static <T> Restriction<T> like(SingularAttribute<T, String> attribute, String pattern, boolean caseSensitive) {
 		return restrict( attribute, Range.pattern( pattern, caseSensitive ) );
 	}
@@ -135,6 +142,22 @@ public interface Restriction<X> {
 		return like( attribute, pattern, caseSensitive ).negated();
 	}
 
+	static <T> Restriction<T> startsWith(SingularAttribute<T, String> attribute, String prefix) {
+		return like( attribute, escape( prefix ) + '%' );
+	}
+
+	static <T> Restriction<T> endWith(SingularAttribute<T, String> attribute, String suffix) {
+		return like( attribute, '%' + escape( suffix ) );
+	}
+
+	static <T> Restriction<T> contains(SingularAttribute<T, String> attribute, String substring) {
+		return like( attribute, '%' + escape( substring ) + '%' );
+	}
+
+	static <T> Restriction<T> notContains(SingularAttribute<T, String> attribute, String substring) {
+		return contains( attribute, substring ).negated();
+	}
+
 	@SafeVarargs
 	static <T> Restriction<T> and(Restriction<T>... restrictions) {
 		return new Conjunction<>( java.util.List.of( restrictions ) );
@@ -147,5 +170,37 @@ public interface Restriction<X> {
 
 	static <T> Restriction<T> unrestricted() {
 		return new Unrestricted<>();
+	}
+
+	private static String escape(String literal, char charWildcard, char stringWildcard) {
+		final var result = new StringBuilder();
+		for ( int i = 0; i < literal.length(); i++ ) {
+			final char ch = literal.charAt( i );
+			if ( ch == charWildcard ) {
+				result.append( '_' );
+			}
+			else if ( ch == stringWildcard ) {
+				result.append( '%' );
+			}
+			else {
+				if ( ch=='%' || ch=='_' || ch=='\\' ) {
+					result.append('\\');
+				}
+				result.append( ch );
+			}
+		}
+		return result.toString();
+	}
+
+	private static String escape(String literal) {
+		final var result = new StringBuilder();
+		for ( int i = 0; i < literal.length(); i++ ) {
+			final char ch = literal.charAt( i );
+			if ( ch=='%' || ch=='_' || ch=='\\' ) {
+				result.append('\\');
+			}
+			result.append( ch );
+		}
+		return result.toString();
 	}
 }

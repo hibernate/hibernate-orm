@@ -17,9 +17,10 @@ record Pattern(String pattern, boolean caseSensitive) implements Range<String> {
 	@Override
 	public Predicate toPredicate(Path<String> path, CriteriaBuilder builder) {
 		return caseSensitive
-				? builder.like( path, builder.literal( pattern ) )
+				? builder.like( path, builder.literal( pattern ), '\\' )
 				: builder.like( builder.lower( path ),
-						builder.literal( pattern.toLowerCase( Locale.ROOT ) ) );
+						builder.literal( pattern.toLowerCase( Locale.ROOT ) ),
+						'\\' );
 	}
 
 	@Override

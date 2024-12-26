@@ -91,6 +91,21 @@ public class RestrictionTest {
 						.addRestriction( Restriction.unrestricted().negated() )
 						.getResultList() );
 		assertEquals( 0, noBooks.size() );
+		List<Book> books1 = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( Restriction.endWith(title, "Hibernate") )
+						.getResultList() );
+		assertEquals( 1, books1.size() );
+		List<Book> books2 = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( Restriction.like(title, "*Hibernat?", false, '?', '*') )
+						.getResultList() );
+		assertEquals( 1, books2.size() );
+		List<Book> books3 = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( Restriction.contains(title, "Hibernate") )
+						.getResultList() );
+		assertEquals( 2, books3.size() );
 	}
 
 	@Entity(name="Book")

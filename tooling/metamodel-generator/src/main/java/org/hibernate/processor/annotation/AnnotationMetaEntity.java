@@ -75,6 +75,7 @@ import static org.hibernate.grammars.hql.HqlLexer.ORDER;
 import static org.hibernate.grammars.hql.HqlLexer.WHERE;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.processor.annotation.AbstractQueryMethod.isRestrictionParam;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isSessionParameter;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isSpecialParam;
 import static org.hibernate.processor.annotation.QueryMethod.isOrderParam;
@@ -1669,7 +1670,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void checkFinderParameter(TypeElement entity, VariableElement parameter) {
 		final Types types = context.getTypeUtils();
 		final TypeMirror parameterType = parameterType(parameter);
-		if ( isOrderParam( typeName(parameterType) ) ) {
+		final String typeName = typeName( parameterType );
+		if ( isOrderParam( typeName ) || isRestrictionParam( typeName ) ) {
 			final TypeMirror typeArgument = getTypeArgument( parameterType, entity );
 			if ( typeArgument == null ) {
 				missingTypeArgError( entity.getSimpleName().toString(), parameter );
@@ -1790,6 +1792,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						}
 						return null;
 					case HIB_ORDER:
+					case HIB_RESTRICTION:
 					case JD_SORT:
 					case JD_ORDER:
 						for ( TypeMirror arg : type.getTypeArguments() ) {

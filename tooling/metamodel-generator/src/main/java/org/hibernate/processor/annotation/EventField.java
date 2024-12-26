@@ -8,6 +8,7 @@ import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 
+import static org.hibernate.processor.util.Constants.EVENT;
 import static org.hibernate.processor.util.Constants.INJECT;
 import static org.hibernate.processor.util.Constants.JD_LIFECYCLE_EVENT;
 
@@ -38,6 +39,7 @@ public class EventField implements MetaAttribute {
 	@Override
 	public String getAttributeDeclarationString() {
 		annotationMetaEntity.importType(INJECT);
+		annotationMetaEntity.importType(EVENT);
 		annotationMetaEntity.importType(JD_LIFECYCLE_EVENT);
 		return "\n@Inject\nprivate Event<? super LifecycleEvent<?>> event;";
 	}

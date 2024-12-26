@@ -311,11 +311,6 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public Query<R> addRestrictions(List<Restriction<? super R>> restrictionList) {
-		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
-	}
-
-	@Override
 	public String getComment() {
 		return super.getComment();
 	}

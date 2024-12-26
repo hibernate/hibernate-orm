@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.archive.scan.internal;
+package org.hibernate.boot.archive.scan.internal;
 
 import java.io.Serializable;
 import java.util.Set;
@@ -12,10 +12,11 @@ import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 import org.hibernate.boot.archive.scan.spi.PackageDescriptor;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 
-
 /**
-* @author Steve Ebersole
-*/
+ * Standard ScanResult implementation
+ *
+ * @author Steve Ebersole
+ */
 public class ScanResultImpl implements ScanResult, Serializable {
 	private final Set<PackageDescriptor> packageDescriptorSet;
 	private final Set<ClassDescriptor> classDescriptorSet;

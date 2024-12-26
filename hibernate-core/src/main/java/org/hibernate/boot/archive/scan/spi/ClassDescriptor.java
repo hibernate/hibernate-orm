@@ -23,14 +23,14 @@ public interface ClassDescriptor {
 	 *
 	 * @return The name (FQN) of the class
 	 */
-	String getName();
+	String name();
 
-	Categorization getCategorization();
+	Categorization categorization();
 
 	/**
 	 * Retrieves access to the InputStream for the class file.
 	 *
 	 * @return Access to the InputStream for the class file.
 	 */
-	InputStreamAccess getStreamAccess();
+	InputStreamAccess streamAccess();
 }

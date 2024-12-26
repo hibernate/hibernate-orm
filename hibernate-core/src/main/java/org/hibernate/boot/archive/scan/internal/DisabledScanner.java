@@ -7,6 +7,7 @@ package org.hibernate.boot.archive.scan.internal;
 import java.util.Collections;
 import java.util.Set;
 
+import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 import org.hibernate.boot.archive.scan.spi.PackageDescriptor;
@@ -15,6 +16,7 @@ import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.ScanParameters;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.boot.archive.scan.spi.Scanner;
+import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 
 /**
  * Implementation of Scanner that does nothing. Used for optimizing startup
@@ -23,6 +25,13 @@ import org.hibernate.boot.archive.scan.spi.Scanner;
  * @author Petteri Pitkanen
  */
 public class DisabledScanner implements Scanner {
+	public DisabledScanner() {
+		this( StandardArchiveDescriptorFactory.INSTANCE );
+	}
+
+	public DisabledScanner(ArchiveDescriptorFactory archiveDescriptorFactory) {
+	}
+
 	private static final ScanResult emptyScanResult = new ScanResult() {
 		@Override
 		public Set<PackageDescriptor> getLocatedPackages() {

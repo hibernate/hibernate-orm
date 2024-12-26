@@ -30,4 +30,5 @@ module org.hibernate.orm.integrationtest.java.module.test {
 
 	opens org.hibernate.orm.integrationtest.java.module.test to junit;
 	requires junit;
+	requires org.hibernate.orm.scan.jandex;
 }

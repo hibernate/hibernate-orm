@@ -49,7 +49,6 @@ dependencies {
 
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')
-    testImplementation project(':hibernate-scan-jandex')
 
     testImplementation testLibs.shrinkwrap
     testImplementation testLibs.shrinkwrapDescriptors

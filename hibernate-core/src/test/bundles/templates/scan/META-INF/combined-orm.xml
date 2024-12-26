@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ SPDX-License-Identifier: LGPL-2.1-or-later
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_2_0.xsd"
+                 version="2.0">
+    <package>org.hibernate.orm.test.jpa.pack.scan</package>
+    <entity class="CheeseSpread" access="FIELD" metadata-complete="true">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+</entity-mappings>

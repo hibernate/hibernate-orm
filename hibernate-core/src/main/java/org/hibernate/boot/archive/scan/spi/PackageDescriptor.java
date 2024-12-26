@@ -17,12 +17,12 @@ public interface PackageDescriptor {
 	 *
 	 * @return The package name
 	 */
-	String getName();
+	String name();
 
 	/**
 	 * Retrieves access to the InputStream for the {@code package-info.class} file.
 	 *
 	 * @return Access to the InputStream for the {@code package-info.class} file.
 	 */
-	InputStreamAccess getStreamAccess();
+	InputStreamAccess streamAccess();
 }

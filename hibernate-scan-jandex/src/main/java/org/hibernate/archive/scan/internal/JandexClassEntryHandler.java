@@ -2,34 +2,33 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.archive.scan.spi;
+package org.hibernate.archive.scan.internal;
 
-import java.io.IOException;
-import java.io.InputStream;
 import jakarta.persistence.Converter;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.MappedSuperclass;
-
-import org.hibernate.archive.scan.internal.ClassDescriptorImpl;
-import org.hibernate.archive.scan.internal.ScanResultCollector;
+import org.hibernate.boot.archive.scan.internal.ClassDescriptorImpl;
+import org.hibernate.boot.archive.scan.internal.ScanResultCollector;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveContext;
 import org.hibernate.boot.archive.spi.ArchiveEntry;
 import org.hibernate.boot.archive.spi.ArchiveEntryHandler;
 import org.hibernate.boot.archive.spi.ArchiveException;
-
 import org.jboss.jandex.ClassSummary;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Defines handling and filtering for class file entries within an archive
  *
  * @author Steve Ebersole
  */
-public class ClassFileArchiveEntryHandler implements ArchiveEntryHandler {
+public class JandexClassEntryHandler implements ArchiveEntryHandler {
 
 	private final static DotName CONVERTER = DotName.createSimple( Converter.class.getName() );
 
@@ -42,7 +41,7 @@ public class ClassFileArchiveEntryHandler implements ArchiveEntryHandler {
 	private final ScanResultCollector resultCollector;
 	private final Indexer indexer;
 
-	public ClassFileArchiveEntryHandler(ScanResultCollector resultCollector) {
+	public JandexClassEntryHandler(ScanResultCollector resultCollector) {
 		this.resultCollector = resultCollector;
 		this.indexer = new Indexer();
 	}
@@ -52,7 +51,7 @@ public class ClassFileArchiveEntryHandler implements ArchiveEntryHandler {
 
 		final ClassDescriptor classDescriptor = toClassDescriptor( entry );
 
-		if ( classDescriptor.getCategorization() == ClassDescriptor.Categorization.OTHER ) {
+		if ( classDescriptor.categorization() == ClassDescriptor.Categorization.OTHER ) {
 			return;
 		}
 

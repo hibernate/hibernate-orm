@@ -4,19 +4,10 @@
  */
 package org.hibernate.boot.model.process.internal;
 
-import java.lang.reflect.Constructor;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
 import org.hibernate.boot.MappingException;
-import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.boot.archive.internal.UrlInputStreamAccess;
-import org.hibernate.boot.archive.scan.internal.DisabledScanner;
 import org.hibernate.boot.archive.scan.internal.StandardScanParameters;
+import org.hibernate.boot.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 import org.hibernate.boot.archive.scan.spi.PackageDescriptor;
@@ -29,13 +20,23 @@ import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
-
+import org.hibernate.service.ServiceRegistry;
 import org.jboss.logging.Logger;
+
+import java.lang.reflect.Constructor;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * Coordinates the process of executing {@link Scanner} (if enabled)
@@ -79,112 +80,124 @@ public class ScanningCoordinator {
 		applyScanResultsToManagedResources( managedResources, scanResult, bootstrapContext, xmlMappingBinderAccess );
 	}
 
-	private static final Class<?>[] SINGLE_ARG = new Class[] { ArchiveDescriptorFactory.class };
+	private static final Class<?>[] FULL_ARGS = new Class[] { ArchiveDescriptorFactory.class, ServiceRegistry.class };
+	private static final Class<?>[] ARCHIVING_ARG = new Class[] { ArchiveDescriptorFactory.class };
+	private static final Class<?>[] REGISTRY_ARG = new Class[] { ServiceRegistry.class };
 
 	@SuppressWarnings("unchecked")
 	private static Scanner buildScanner(BootstrapContext bootstrapContext, ClassLoaderAccess classLoaderAccess) {
 		final Object scannerSetting = bootstrapContext.getScanner();
 		final ArchiveDescriptorFactory archiveDescriptorFactory = bootstrapContext.getArchiveDescriptorFactory();
+		final StandardServiceRegistry serviceRegistry = bootstrapContext.getServiceRegistry();
 
 		if ( scannerSetting == null ) {
-			// No custom Scanner specified, use the StandardScanner
-			final Iterator<ScannerFactory> iterator = bootstrapContext.getServiceRegistry()
+			final Iterator<ScannerFactory> iterator = serviceRegistry
 					.requireService( ClassLoaderService.class )
 					.loadJavaServices( ScannerFactory.class )
 					.iterator();
 			if ( iterator.hasNext() ) {
-				// todo: check for multiple scanner and in case raise a warning?
 				final ScannerFactory factory = iterator.next();
-				return factory.getScanner( archiveDescriptorFactory );
+				log.debugf( "Using ScannerFactory : %s", factory );
+				if ( iterator.hasNext() ) {
+					log.debugf( "More than one ScannerFactory discovered" );
+				}
+				return factory.createScanner( archiveDescriptorFactory, serviceRegistry );
 			}
-			else {
-				// todo: add a debug message that there is no Scanner?
-				return new DisabledScanner();
+
+			// No custom Scanner specified, use the StandardScanner
+			return new StandardScanner( archiveDescriptorFactory, serviceRegistry );
+		}
+
+		if ( scannerSetting instanceof Scanner ) {
+			if ( archiveDescriptorFactory != null ) {
+				throw new IllegalStateException(
+						"A Scanner instance and an ArchiveDescriptorFactory were both specified; please " +
+								"specify one or the other, or if you need to supply both, Scanner class to use " +
+								"(assuming it has a constructor accepting a ArchiveDescriptorFactory).  " +
+								"Alternatively, just pass the ArchiveDescriptorFactory during your own " +
+								"Scanner constructor assuming it is statically known."
+				);
 			}
+			return (Scanner) scannerSetting;
+		}
+
+		final Class<? extends Scanner> scannerImplClass;
+		if ( scannerSetting instanceof Class ) {
+			scannerImplClass = (Class<? extends Scanner>) scannerSetting;
 		}
 		else {
-			if ( scannerSetting instanceof Scanner ) {
-				if ( archiveDescriptorFactory != null ) {
-					throw new IllegalStateException(
-							"A Scanner instance and an ArchiveDescriptorFactory were both specified; please " +
-									"specify one or the other, or if you need to supply both, Scanner class to use " +
-									"(assuming it has a constructor accepting a ArchiveDescriptorFactory).  " +
-									"Alternatively, just pass the ArchiveDescriptorFactory during your own " +
-									"Scanner constructor assuming it is statically known."
-					);
-				}
-				return (Scanner) scannerSetting;
-			}
+			scannerImplClass = classLoaderAccess.classForName( scannerSetting.toString() );
+		}
 
-			final Class<? extends Scanner> scannerImplClass;
-			if ( scannerSetting instanceof Class ) {
-				scannerImplClass = (Class<? extends Scanner>) scannerSetting;
-			}
-			else {
-				scannerImplClass = classLoaderAccess.classForName( scannerSetting.toString() );
-			}
+		final Scanner fromFullConstructor = fromFullConstructor( scannerImplClass, archiveDescriptorFactory, serviceRegistry );
+		if ( fromFullConstructor != null ) {
+			return fromFullConstructor;
+		}
 
+		final Scanner fromArchivingConstructor = fromArchivingConstructor( scannerImplClass, archiveDescriptorFactory );
+		if ( fromArchivingConstructor != null ) {
+			return fromArchivingConstructor;
+		}
 
-			if ( archiveDescriptorFactory != null ) {
-				// find the single-arg constructor - it's an error if none exists
-				try {
-					final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor( SINGLE_ARG );
-					try {
-						return constructor.newInstance( archiveDescriptorFactory );
-					}
-					catch (Exception e) {
-						throw new IllegalStateException(
-								"Error trying to instantiate custom specified Scanner [" +
-										scannerImplClass.getName() + "]",
-								e
-						);
-					}
-				}
-				catch (NoSuchMethodException e) {
-					throw new IllegalArgumentException(
-							"Configuration named a custom Scanner and a custom ArchiveDescriptorFactory, but " +
-									"Scanner impl did not define a constructor accepting ArchiveDescriptorFactory"
-					);
-				}
+		final Scanner fromServiceRegistryConstructor = fromServiceRegistryConstructor( scannerImplClass, serviceRegistry );
+		if ( fromServiceRegistryConstructor != null ) {
+			return fromServiceRegistryConstructor;
+		}
+
+		throw new IllegalArgumentException(
+				String.format(
+						Locale.ROOT,
+						"Configuration named a custom Scanner [%s] which did not define an expected constructor.",
+						scannerImplClass.getName()
+				)
+		);
+	}
+
+	private static Scanner fromFullConstructor(
+			Class<? extends Scanner> scannerImplClass,
+			ArchiveDescriptorFactory archiveDescriptorFactory,
+			StandardServiceRegistry serviceRegistry) {
+		try {
+			final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor( FULL_ARGS );
+			try {
+				return constructor.newInstance( archiveDescriptorFactory, serviceRegistry );
 			}
-			else {
-				// could be either ctor form...
-				// find the single-arg constructor - its an error if none exists
-				try {
-					final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor( SINGLE_ARG );
-					try {
-						return constructor.newInstance( StandardArchiveDescriptorFactory.INSTANCE );
-					}
-					catch (Exception e) {
-						throw new IllegalStateException(
-								"Error trying to instantiate custom specified Scanner [" +
-										scannerImplClass.getName() + "]",
-								e
-						);
-					}
-				}
-				catch (NoSuchMethodException e) {
-					try {
-						final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor();
-						try {
-							return constructor.newInstance();
-						}
-						catch (Exception e2) {
-							throw new IllegalStateException(
-									"Error trying to instantiate custom specified Scanner [" +
-											scannerImplClass.getName() + "]",
-									e2
-							);
-						}
-					}
-					catch (NoSuchMethodException ignore) {
-						throw new IllegalArgumentException(
-								"Configuration named a custom Scanner, but we were unable to locate " +
-										"an appropriate constructor"
-						);
-					}
-				}
+			catch (Exception e) {
+				return null;
 			}
+		}
+		catch (NoSuchMethodException e) {
+			return null;
+		}
+	}
+
+	private static Scanner fromArchivingConstructor(Class<? extends Scanner> scannerImplClass, ArchiveDescriptorFactory archiveDescriptorFactory) {
+		try {
+			final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor( ARCHIVING_ARG );
+			try {
+				return constructor.newInstance( archiveDescriptorFactory );
+			}
+			catch (Exception e) {
+				return null;
+			}
+		}
+		catch (NoSuchMethodException e) {
+			return null;
+		}
+	}
+
+	private static Scanner fromServiceRegistryConstructor(Class<? extends Scanner> scannerImplClass, StandardServiceRegistry serviceRegistry) {
+		try {
+			final Constructor<? extends Scanner> constructor = scannerImplClass.getConstructor( REGISTRY_ARG );
+			try {
+				return constructor.newInstance( serviceRegistry );
+			}
+			catch (Exception e) {
+				return null;
+			}
+		}
+		catch (NoSuchMethodException e) {
+			return null;
 		}
 	}
 
@@ -233,26 +246,26 @@ public class ScanningCoordinator {
 				: new ArrayList<>( scanEnvironment.getExplicitlyListedClassNames() );
 
 		for ( ClassDescriptor classDescriptor : scanResult.getLocatedClasses() ) {
-			if ( classDescriptor.getCategorization() == ClassDescriptor.Categorization.CONVERTER ) {
+			if ( classDescriptor.categorization() == ClassDescriptor.Categorization.CONVERTER ) {
 				// converter classes are safe to load because we never enhance them,
 				// and notice we use the ClassLoaderService specifically, not the temp ClassLoader (if any)
 				managedResources.addAttributeConverterDefinition(
 						new ClassBasedConverterDescriptor(
-								classLoaderService.classForName( classDescriptor.getName() ),
+								classLoaderService.classForName( classDescriptor.name() ),
 								bootstrapContext.getClassmateContext()
 						)
 				);
 			}
-			else if ( classDescriptor.getCategorization() == ClassDescriptor.Categorization.MODEL ) {
-				managedResources.addAnnotatedClassName( classDescriptor.getName() );
+			else if ( classDescriptor.categorization() == ClassDescriptor.Categorization.MODEL ) {
+				managedResources.addAnnotatedClassName( classDescriptor.name() );
 			}
-			unresolvedListedClassNames.remove( classDescriptor.getName() );
+			unresolvedListedClassNames.remove( classDescriptor.name() );
 		}
 
 		// IMPL NOTE : "explicitlyListedClassNames" can contain class or package names...
 		for ( PackageDescriptor packageDescriptor : scanResult.getLocatedPackages() ) {
-			managedResources.addAnnotatedPackageName( packageDescriptor.getName() );
-			unresolvedListedClassNames.remove( packageDescriptor.getName() );
+			managedResources.addAnnotatedPackageName( packageDescriptor.name() );
+			unresolvedListedClassNames.remove( packageDescriptor.name() );
 		}
 
 		for ( String unresolvedListedClassName : unresolvedListedClassNames ) {

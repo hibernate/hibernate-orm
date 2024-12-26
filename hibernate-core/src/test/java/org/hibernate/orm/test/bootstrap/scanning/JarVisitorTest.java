@@ -16,17 +16,17 @@ import java.net.URLStreamHandlerFactory;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.archive.scan.internal.ClassDescriptorImpl;
-import org.hibernate.archive.scan.internal.ScanResultCollector;
-import org.hibernate.archive.scan.internal.StandardScanner;
-import org.hibernate.archive.scan.spi.AbstractScannerImpl;
 import org.hibernate.boot.archive.internal.ArchiveHelper;
 import org.hibernate.boot.archive.internal.ExplodedArchiveDescriptor;
 import org.hibernate.boot.archive.internal.JarFileBasedArchiveDescriptor;
 import org.hibernate.boot.archive.internal.JarProtocolArchiveDescriptor;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
+import org.hibernate.boot.archive.scan.internal.ArchiveContextImpl;
+import org.hibernate.boot.archive.scan.internal.ClassDescriptorImpl;
+import org.hibernate.boot.archive.scan.internal.ScanResultCollector;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.archive.scan.internal.StandardScanParameters;
+import org.hibernate.boot.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
@@ -39,6 +39,8 @@ import org.hibernate.orm.test.jpa.pack.explodedpar.Carpet;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -52,8 +54,9 @@ import static org.junit.Assert.assertTrue;
  */
 @RequiresDialect( H2Dialect.class ) // Nothing dialect-specific -- no need to run in matrix.
 public class JarVisitorTest extends PackagingTestCase {
+	@ServiceRegistry
 	@Test
-	public void testHttp() throws Exception {
+	public void testHttp(ServiceRegistryScope registryScope) throws Exception {
 		final URL url = ArchiveHelper.getJarURLFromURLEntry(
 				new URL(
 						"jar:http://www.ibiblio.org/maven/hibernate/jars/hibernate-annotations-3.0beta1.jar!/META-INF/persistence.xml"
@@ -69,15 +72,15 @@ public class JarVisitorTest extends PackagingTestCase {
 			return;
 		}
 
-		ScanResult result = standardScan( url );
+		ScanResult result = standardScan( url, registryScope.getRegistry() );
 		assertEquals( 0, result.getLocatedClasses().size() );
 		assertEquals( 0, result.getLocatedPackages().size() );
 		assertEquals( 0, result.getLocatedMappingFiles().size() );
 	}
 
-	private ScanResult standardScan(URL url) {
+	private ScanResult standardScan(URL url, org.hibernate.service.ServiceRegistry serviceRegistry) {
 		ScanEnvironment env = new ScanEnvironmentImpl( url );
-		return new StandardScanner().scan(
+		return new StandardScanner( serviceRegistry ).scan(
 				env,
 				new StandardScanOptions(),
 				StandardScanParameters.INSTANCE
@@ -113,11 +116,12 @@ public class JarVisitorTest extends PackagingTestCase {
 	}
 
 	@Test
-	public void testInputStreamZippedJar() throws Exception {
+	@ServiceRegistry
+	public void testInputStreamZippedJar(ServiceRegistryScope registryScope) throws Exception {
 		File defaultPar = buildDefaultPar();
 		addPackageToClasspath( defaultPar );
 
-		ScanResult result = standardScan( defaultPar.toURL() );
+		ScanResult result = standardScan( defaultPar.toURL(), registryScope.getRegistry() );
 		validateResults( result, org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer.class, Version.class );
 	}
 
@@ -141,7 +145,8 @@ public class JarVisitorTest extends PackagingTestCase {
 	}
 
 	@Test
-	public void testNestedJarProtocol() throws Exception {
+	@ServiceRegistry
+	public void testNestedJarProtocol(ServiceRegistryScope registryScope) throws Exception {
 		File defaultPar = buildDefaultPar();
 		File nestedEar = buildNestedEar( defaultPar );
 		File nestedEarDir = buildNestedEarDir( defaultPar );
@@ -163,9 +168,7 @@ public class JarVisitorTest extends PackagingTestCase {
 				StandardScanParameters.INSTANCE
 		);
 
-		archiveDescriptor.visitArchive(
-				new AbstractScannerImpl.ArchiveContextImpl( true, collector )
-		);
+		archiveDescriptor.visitArchive( new ArchiveContextImpl( true, collector, registryScope.getRegistry() ) );
 
 		validateResults(
 				collector.toScanResult(),
@@ -188,9 +191,7 @@ public class JarVisitorTest extends PackagingTestCase {
 				StandardScanParameters.INSTANCE
 		);
 
-		archiveDescriptor.visitArchive(
-				new AbstractScannerImpl.ArchiveContextImpl( true, collector )
-		);
+		archiveDescriptor.visitArchive( new ArchiveContextImpl( true, collector, registryScope.getRegistry() ) );
 		validateResults(
 				collector.toScanResult(),
 				org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer.class,
@@ -199,7 +200,8 @@ public class JarVisitorTest extends PackagingTestCase {
 	}
 
 	@Test
-	public void testJarProtocol() throws Exception {
+	@ServiceRegistry
+	public void testJarProtocol(ServiceRegistryScope registryScope) throws Exception {
 		File war = buildWar();
 		addPackageToClasspath( war );
 
@@ -219,9 +221,7 @@ public class JarVisitorTest extends PackagingTestCase {
 				StandardScanParameters.INSTANCE
 		);
 
-		archiveDescriptor.visitArchive(
-				new AbstractScannerImpl.ArchiveContextImpl( true, collector )
-		);
+		archiveDescriptor.visitArchive( new ArchiveContextImpl( true, collector, registryScope.getRegistry() ) );
 
 		validateResults(
 				collector.toScanResult(),
@@ -231,11 +231,12 @@ public class JarVisitorTest extends PackagingTestCase {
 	}
 
 	@Test
-	public void testZippedJar() throws Exception {
+	@ServiceRegistry
+	public void testZippedJar(ServiceRegistryScope registryScope) throws Exception {
 		File defaultPar = buildDefaultPar();
 		addPackageToClasspath( defaultPar );
 
-		ScanResult result = standardScan( defaultPar.toURL() );
+		ScanResult result = standardScan( defaultPar.toURL(), registryScope.getRegistry() );
 		validateResults(
 				result,
 				org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer.class,
@@ -244,7 +245,8 @@ public class JarVisitorTest extends PackagingTestCase {
 	}
 
 	@Test
-	public void testExplodedJar() throws Exception {
+	@ServiceRegistry
+	public void testExplodedJar(ServiceRegistryScope registryScope) throws Exception {
 		File explodedPar = buildExplodedPar();
 		addPackageToClasspath( explodedPar );
 
@@ -254,7 +256,7 @@ public class JarVisitorTest extends PackagingTestCase {
 			dirPath = dirPath.substring( 0, dirPath.length() - 1 );
 		}
 
-		ScanResult result = standardScan( ArchiveHelper.getURLFromPath( dirPath ) );
+		ScanResult result = standardScan( ArchiveHelper.getURLFromPath( dirPath ), registryScope.getRegistry() );
 		assertEquals( 1, result.getLocatedClasses().size() );
 		assertEquals( 1, result.getLocatedPackages().size() );
 		assertEquals( 1, result.getLocatedMappingFiles().size() );

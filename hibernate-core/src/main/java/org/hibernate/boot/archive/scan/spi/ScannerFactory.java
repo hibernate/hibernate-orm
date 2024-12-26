@@ -8,6 +8,7 @@ import org.hibernate.Incubating;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.service.JavaServiceLoadable;
 import org.hibernate.service.Service;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Support for scanning various sources to detect {@code managed resources}
@@ -20,5 +21,5 @@ public interface ScannerFactory extends Service {
 	/**
 	 * Create a scanner.
 	 */
-	Scanner getScanner(ArchiveDescriptorFactory archiveDescriptorFactory);
+	Scanner createScanner(ArchiveDescriptorFactory archiveDescriptorFactory, ServiceRegistry serviceRegistry);
 }

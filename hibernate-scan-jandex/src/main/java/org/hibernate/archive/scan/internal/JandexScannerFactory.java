@@ -7,13 +7,14 @@ package org.hibernate.archive.scan.internal;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.scan.spi.ScannerFactory;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.service.ServiceRegistry;
 
-public class StandardScannerFactory implements ScannerFactory {
+public class JandexScannerFactory implements ScannerFactory {
 	@Override
-	public Scanner getScanner(ArchiveDescriptorFactory archiveDescriptorFactory) {
+	public Scanner createScanner(ArchiveDescriptorFactory archiveDescriptorFactory, ServiceRegistry serviceRegistry) {
 		if ( archiveDescriptorFactory == null ) {
-			return new StandardScanner();
+			return new JandexScanner();
 		}
-		return new StandardScanner( archiveDescriptorFactory );
+		return new JandexScanner( archiveDescriptorFactory );
 	}
 }

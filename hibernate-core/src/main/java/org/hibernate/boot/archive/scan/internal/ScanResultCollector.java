@@ -2,11 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.archive.scan.internal;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+package org.hibernate.boot.archive.scan.internal;
 
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
@@ -16,11 +12,16 @@ import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.ScanParameters;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
+ * In-flight collector of scan results
+ *
  * @author Steve Ebersole
  */
 public class ScanResultCollector {
-
 	private final ScanEnvironment environment;
 	private final ScanOptions options;
 
@@ -45,8 +46,12 @@ public class ScanResultCollector {
 		this.discoveredMappingFiles = new HashSet<>();
 	}
 
+	public ScanOptions getScanOptions() {
+		return options;
+	}
+
 	public void handleClass(ClassDescriptor classDescriptor, boolean rootUrl) {
-		if ( !isListedOrDetectable( classDescriptor.getName(), rootUrl ) ) {
+		if ( !isListedOrDetectable( classDescriptor.name(), rootUrl ) ) {
 			return;
 		}
 
@@ -74,7 +79,7 @@ public class ScanResultCollector {
 	}
 
 	public void handlePackage(PackageDescriptor packageDescriptor, boolean rootUrl) {
-		if ( !isListedOrDetectable( packageDescriptor.getName(), rootUrl ) ) {
+		if ( !isListedOrDetectable( packageDescriptor.name(), rootUrl ) ) {
 			// not strictly needed, but helps cut down on the size of discoveredPackages
 			return;
 		}

@@ -4,19 +4,25 @@
  */
 package org.hibernate.orm.test.bootstrap.scanning;
 
-import org.hibernate.archive.scan.internal.StandardScanner;
+import org.hibernate.boot.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.ScanParameters;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.boot.archive.scan.spi.Scanner;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Emmanuel Bernard
  */
 public class CustomScanner implements Scanner {
 	public static boolean isUsed = false;
-	private Scanner delegate = new StandardScanner();
+
+	private final Scanner delegate;
+
+	public CustomScanner(ServiceRegistry serviceRegistry) {
+		delegate = new StandardScanner( serviceRegistry );
+	}
 
 	public static boolean isUsed() {
 		return isUsed;

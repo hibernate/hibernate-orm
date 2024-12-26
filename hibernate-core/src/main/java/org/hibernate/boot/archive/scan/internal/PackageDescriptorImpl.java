@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.archive.scan.internal;
+package org.hibernate.boot.archive.scan.internal;
 
 import java.io.Serializable;
 
@@ -12,24 +12,8 @@ import org.hibernate.boot.archive.scan.spi.PackageDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class PackageDescriptorImpl implements PackageDescriptor, Serializable {
-	private final String name;
-	private final InputStreamAccess streamAccess;
-
-	public PackageDescriptorImpl(String name, InputStreamAccess streamAccess) {
-		this.name = name;
-		this.streamAccess = streamAccess;
-	}
-
-	@Override
-	public String getName() {
-		return name;
-	}
-
-	@Override
-	public InputStreamAccess getStreamAccess() {
-		return streamAccess;
-	}
+public record PackageDescriptorImpl(String name, InputStreamAccess streamAccess)
+		implements PackageDescriptor, Serializable {
 
 	@Override
 	public boolean equals(Object o) {
@@ -47,5 +31,10 @@ public class PackageDescriptorImpl implements PackageDescriptor, Serializable {
 	@Override
 	public int hashCode() {
 		return name.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return "PackageDescriptor(" + name + ")";
 	}
 }

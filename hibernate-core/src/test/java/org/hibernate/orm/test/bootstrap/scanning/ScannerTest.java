@@ -14,9 +14,9 @@ import java.util.Map;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
-import org.hibernate.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.archive.scan.internal.StandardScanParameters;
+import org.hibernate.boot.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
@@ -31,6 +31,8 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer;
 import org.hibernate.orm.test.jpa.pack.defaultpar.Version;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
@@ -39,23 +41,25 @@ import org.junit.jupiter.api.Test;
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry
 public class ScannerTest extends PackagingTestCase {
 	@Test
-	public void testNativeScanner() throws Exception {
+	public void testNativeScanner(ServiceRegistryScope registryScope) throws Exception {
 		File defaultPar = buildDefaultPar();
 		addPackageToClasspath( defaultPar );
 
 		PersistenceUnitDescriptor descriptor = new ParsedPersistenceXmlDescriptor( defaultPar.toURL() );
 		ScanEnvironment env = new StandardJpaScanEnvironmentImpl( descriptor );
 		ScanOptions options = new StandardScanOptions( "hbm,class", descriptor.isExcludeUnlistedClasses() );
-		Scanner scanner = new StandardScanner();
+		Scanner scanner = new StandardScanner( registryScope.getRegistry() );
 		ScanResult scanResult = scanner.scan(
 				env,
 				options,
 				StandardScanParameters.INSTANCE
 		);
 
-		assertEquals( 3, scanResult.getLocatedClasses().size() );
+		assertThat( scanResult.getLocatedClasses() ).hasSize( 3 );
 		assertClassesContained( scanResult, ApplicationServer.class );
 		assertClassesContained( scanResult, Version.class );
 
@@ -71,7 +75,7 @@ public class ScannerTest extends PackagingTestCase {
 
 	private void assertClassesContained(ScanResult scanResult, Class classToCheckFor) {
 		for ( ClassDescriptor classDescriptor : scanResult.getLocatedClasses() ) {
-			if ( classDescriptor.getName().equals( classToCheckFor.getName() ) ) {
+			if ( classDescriptor.name().equals( classToCheckFor.getName() ) ) {
 				return;
 			}
 		}
@@ -79,7 +83,7 @@ public class ScannerTest extends PackagingTestCase {
 	}
 
 	@Test
-	public void testCustomScanner() throws Exception {
+	public void testCustomScanner(ServiceRegistryScope registryScope) throws Exception {
 		File defaultPar = buildDefaultPar();
 		File explicitPar = buildExplicitPar();
 		addPackageToClasspath( defaultPar, explicitPar );
@@ -97,7 +101,7 @@ public class ScannerTest extends PackagingTestCase {
 		emf.close();
 
 		CustomScanner.resetUsed();
-		integration.put( AvailableSettings.SCANNER, new CustomScanner() );
+		integration.put( AvailableSettings.SCANNER, new CustomScanner( registryScope.getRegistry() ) );
 		emf = Persistence.createEntityManagerFactory( "defaultpar", integration );
 		assertTrue( CustomScanner.isUsed() );
 		emf.close();
@@ -110,14 +114,14 @@ public class ScannerTest extends PackagingTestCase {
 
 	@Test
 	@JiraKey("HHH-16840")
-	public void testScanResultSerialization() throws Exception {
+	public void testScanResultSerialization(ServiceRegistryScope registryScope) throws Exception {
 		final File defaultPar = buildDefaultPar();
 		addPackageToClasspath( defaultPar );
 
 		final PersistenceUnitDescriptor descriptor = new ParsedPersistenceXmlDescriptor( defaultPar.toURL() );
 		final ScanEnvironment env = new StandardJpaScanEnvironmentImpl( descriptor );
 		final ScanOptions options = new StandardScanOptions( "hbm,class", descriptor.isExcludeUnlistedClasses() );
-		final Scanner scanner = new StandardScanner();
+		final Scanner scanner = new StandardScanner( registryScope.getRegistry() );
 		final ScanResult scanResult = scanner.scan(
 				env,
 				options,
@@ -136,9 +140,9 @@ public class ScannerTest extends PackagingTestCase {
 
 		assertThat( scanResult.getLocatedClasses() ).hasSize( 3 );
 		assertThat( scanResult.getLocatedClasses() ).allSatisfy( descriptor -> {
-			assertThat( descriptor.getStreamAccess() ).isNotNull();
-			assertThat( descriptor.getCategorization() ).isNotNull();
-			assertThat( descriptor.getName() ).isNotBlank();
+			assertThat( descriptor.streamAccess() ).isNotNull();
+			assertThat( descriptor.categorization() ).isNotNull();
+			assertThat( descriptor.name() ).isNotBlank();
 		} );
 
 		assertThat( scanResult.getLocatedMappingFiles() ).hasSize( 2 );
@@ -149,8 +153,8 @@ public class ScannerTest extends PackagingTestCase {
 
 		assertThat( scanResult.getLocatedPackages() ).hasSize( 1 );
 		assertThat( scanResult.getLocatedPackages() ).allSatisfy( descriptor -> {
-			assertThat( descriptor.getStreamAccess() ).isNotNull();
-			assertThat( descriptor.getName() ).isNotBlank();
+			assertThat( descriptor.streamAccess() ).isNotNull();
+			assertThat( descriptor.name() ).isNotBlank();
 		} );
 	}
 }

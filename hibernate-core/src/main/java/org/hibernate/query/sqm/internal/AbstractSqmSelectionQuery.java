@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -40,7 +39,6 @@ import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -155,23 +153,6 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		final Root<? extends R> root = (Root<? extends R>) selectStatement.getRootList().get( 0 );
 		selectStatement.where( selectStatement.getRestriction(),
 				restriction.toPredicate( root, selectStatement.nodeBuilder() ) );
-		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
-		//       simply cache the new SQM as if it were a criteria query, and remove this:
-		getQueryOptions().setQueryPlanCachingEnabled( false );
-		setSqmStatement( selectStatement );
-		return this;
-	}
-
-	@Override
-	public SelectionQuery<R> addRestrictions(List<Restriction<? super R>> restrictionList) {
-		final SqmSelectStatement<R> selectStatement = getSqmSelectStatement().copy( noParamCopyContext() );
-		final Root<? extends R> root = (Root<? extends R>) selectStatement.getRootList().get( 0 );
-		final List<Predicate> list = new ArrayList<>( restrictionList.size() );
-		list.add( selectStatement.getRestriction() );
-		for ( var restriction : restrictionList ) {
-			list.add( restriction.toPredicate( root, selectStatement.nodeBuilder() ) );
-		}
-		selectStatement.where( list.toArray(new Predicate[0]) );
 		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
 		//       simply cache the new SQM as if it were a criteria query, and remove this:
 		getQueryOptions().setQueryPlanCachingEnabled( false );

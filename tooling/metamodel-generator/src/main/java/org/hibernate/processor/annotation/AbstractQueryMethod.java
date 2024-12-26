@@ -294,20 +294,14 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			final String paramName = paramNames.get(i);
 			final String paramType = paramTypes.get(i);
 			if ( isRestrictionParam(paramType) ) {
-				if ( paramType.startsWith(LIST) ) {
+				if ( paramType.startsWith(LIST) || paramType.endsWith("[]") ) {
 					declaration
-							.append( "\t\t\t.addRestrictions(" )
-							.append( paramName )
-							.append( ")\n" );
-
-				}
-				else if ( paramType.endsWith("[]") ) {
-					declaration
-							.append( "\t\t\t.addRestrictions(" )
-							.append( annotationMetaEntity.importType(LIST) )
-							.append( ".of(" )
+							.append( "\t\t\t.addRestriction(" )
+							.append( annotationMetaEntity.importType(HIB_RESTRICTION) )
+							.append( ".and(" )
 							.append( paramName )
 							.append( "))\n" );
+
 				}
 				else {
 					declaration

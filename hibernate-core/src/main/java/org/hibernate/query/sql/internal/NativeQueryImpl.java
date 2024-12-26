@@ -1674,11 +1674,6 @@ public class NativeQueryImpl<R>
 		throw new UnsupportedOperationException("Restrictions not currently supported for native queries");
 	}
 
-	@Override
-	public Query<R> addRestrictions(List<Restriction<? super R>> restrictionList) {
-		throw new UnsupportedOperationException("Restrictions not currently supported for native queries");
-	}
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Hints
 

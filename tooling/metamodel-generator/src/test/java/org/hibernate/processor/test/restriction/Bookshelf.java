@@ -9,6 +9,7 @@ import org.hibernate.annotations.processing.Find;
 import org.hibernate.annotations.processing.HQL;
 import org.hibernate.query.Order;
 import org.hibernate.query.Restriction;
+import org.hibernate.query.range.Range;
 
 import java.util.List;
 
@@ -36,4 +37,7 @@ public interface Bookshelf {
 	List<Book> books4(Order<? super Book>... orders);
 	@HQL("from Book")
 	List<Book> book5(List<Restriction<? super Book>> restrictions, List<Order<? super Book>> orders);
+
+	@Find Book[] books(Range<String> isbn);
+	@Find List<Book> booksByTitle(Range<String> title);
 }

@@ -12,6 +12,8 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.query.range.Range;
 
+import java.util.List;
+
 /**
  * A rule for restricting query results.
  * <p>
@@ -158,14 +160,22 @@ public interface Restriction<X> {
 		return contains( attribute, substring ).negated();
 	}
 
-	@SafeVarargs
-	static <T> Restriction<T> and(Restriction<T>... restrictions) {
-		return new Conjunction<>( java.util.List.of( restrictions ) );
+	static <T> Restriction<T> and(List<? extends Restriction<? super T>> restrictions) {
+		return new Conjunction<>( restrictions );
+	}
+
+	static <T> Restriction<T> or(List<? extends Restriction<? super T>> restrictions) {
+		return new Disjunction<>( restrictions );
 	}
 
 	@SafeVarargs
-	static <T> Restriction<T> or(Restriction<T>... restrictions) {
-		return new Disjunction<>( java.util.List.of( restrictions ) );
+	static <T> Restriction<T> and(Restriction<? super T>... restrictions) {
+		return new Conjunction<T>( java.util.List.of( restrictions ) );
+	}
+
+	@SafeVarargs
+	static <T> Restriction<T> or(Restriction<? super T>... restrictions) {
+		return new Disjunction<T>( java.util.List.of( restrictions ) );
 	}
 
 	static <T> Restriction<T> unrestricted() {

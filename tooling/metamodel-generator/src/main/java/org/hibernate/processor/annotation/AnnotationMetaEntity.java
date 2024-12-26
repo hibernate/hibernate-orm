@@ -1590,7 +1590,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 				else {
 					for ( VariableElement parameter : method.getParameters() ) {
-						final String type = typeName(parameter.asType());
+						final String type = parameter.asType().toString();
 						if ( isPageParam(type) ) {
 							message( parameter, "pagination would have no effect", Diagnostic.Kind.ERROR);
 						}
@@ -1671,7 +1671,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void checkFinderParameter(TypeElement entity, VariableElement parameter) {
 		final Types types = context.getTypeUtils();
 		final TypeMirror parameterType = parameterType(parameter);
-		final String typeName = typeName( parameterType );
+		final String typeName = parameterType.toString();
 		if ( isOrderParam( typeName ) || isRestrictionParam( typeName ) ) {
 			final TypeMirror typeArgument = getTypeArgument( parameterType, entity );
 			if ( typeArgument == null ) {
@@ -1819,8 +1819,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private static boolean isFinderParameterMappingToAttribute(VariableElement param) {
-		final String typeName = typeName( param.asType() );
+	private static boolean isFinderParameterMappingToAttribute(VariableElement parameter) {
+		final String typeName = parameter.asType().toString();
 		return !isSpecialParam(typeName)
 			|| isRangeParam(typeName);
 	}

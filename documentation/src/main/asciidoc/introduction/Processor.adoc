@@ -555,6 +555,24 @@ The `@Pattern` annotation may be applied to a parameter of type `String`, indica
 List<Book> getBooksByTitle(@Pattern String title, Type type);
 ----
 
+Even better, a parameter may be of type `Range<T>`, where `T` is the type of the matching field.
+
+[source,java]
+----
+@Find
+List<Book> getBooksByTitle(Range<String> title, Type type);
+----
+
+The link:{doc-javadoc-url}org/hibernate/query/range/Range.html[`Range`] interface has a variety of `static` methods the caller may use to construct different kinds of ranges.
+For example, `Range.pattern()` constructs a `Range` representing a pattern.
+
+[source,java]
+----
+List<Book> books =
+        // returns books with titles beginning with "hibernate"
+        queries.getBooksByTitle(Range.prefix("hibernate", false), type);
+----
+
 A finder method may specify <<fetch-profiles,fetch profiles>>, for example:
 
 [source,java]
@@ -588,7 +606,7 @@ This lets us declare which associations of `Book` should be pre-fetched by annot
 // ----
 
 [[paging-and-ordering]]
-=== Paging and ordering
+=== Paging, ordering, and restrictions
 
 Optionally, a query method--or a finder method which returns multiple results--may have additional "magic" parameters which do not map to query parameters:
 
@@ -603,6 +621,7 @@ Optionally, a query method--or a finder method which returns multiple results--m
 | `Order<Object[]>` | Specifies a column to order by, if the query returns a projection list | Order.asc(1)
 | `List<Object[]>` +
 (or varargs) | Specifies columns to order by, if the query returns a projection list | List.of(Order.asc(1), Order.desc(2))
+| `Restriction<? super E>` | Specifies a restriction used to filter query results | Restriction.startsWith("Hibernate")
 |===
 
 Thus, if we redefine our earlier query method as follows:
@@ -636,8 +655,28 @@ interface Queries {
 }
 ----
 
-This gives some dynamic control over query execution, but what if we would like direct control over the `Query` object?
-Well, let's talk about the return type.
+Similarly, we may define a query method which accepts an arbitrary ``Restriction``:
+
+[source,java]
+----
+interface Queries {
+    @Find
+    List<Book> findBooks(Restriction<? super Book> restriction, Order<? super Book>... order);
+}
+----
+
+As we <<restrictions-and-ordering,saw earlier>>, the `Restriction` interface has a variety of `static` methods for constructing restrictions.
+
+[source,java]
+----
+List<Book> books =
+        // returns books with titles beginning with "hibernate", sorted by title
+        queries.findBooks(Restriction.startsWith(Book_.title, "hibernate", false),
+                          Order.asc(Book_.title));
+----
+
+This gives some dynamic control over query execution.
+We'll see <<return-query-from-method-example,below>> that it's even possible for the caller to gain direct control over the `Query` object.
 
 [[key-based-paging]]
 === Key-based pagination
@@ -722,6 +761,7 @@ List<IsbnTitle> listIsbnAndTitleForEachBook(Page page);
 
 A query method might even return `TypedQuery` or `SelectionQuery`:
 
+[[return-query-from-method-example]]
 [source,java]
 ----
 @HQL("where title like :title")

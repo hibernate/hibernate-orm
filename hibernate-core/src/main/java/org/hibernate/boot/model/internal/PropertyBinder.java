@@ -305,8 +305,8 @@ public class PropertyBinder {
 					binder.bind( metaAnnotatedTarget, buildingContext, persistentClass, property );
 				}
 				catch ( Exception e ) {
-					throw new AnnotationException( "error processing @AttributeBinderType annotation '" 
-							+ metaAnnotatedDescriptor.getAnnotationType().getName() + "' for property " 
+					throw new AnnotationException( "error processing @AttributeBinderType annotation '"
+							+ metaAnnotatedDescriptor.getAnnotationType().getName() + "' for property "
 							+ qualify( holder.getPath(), name ), e );
 				}
 			}

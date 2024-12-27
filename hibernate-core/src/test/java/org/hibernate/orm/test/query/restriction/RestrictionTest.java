@@ -106,6 +106,18 @@ public class RestrictionTest {
 						.addRestriction( Restriction.contains(title, "Hibernate") )
 						.getResultList() );
 		assertEquals( 2, books3.size() );
+		List<Book> booksByTitleAndIsbn = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( Restriction.all( Restriction.contains(title, "Hibernate"),
+								Restriction.equal( isbn, "9781932394153" ) ) )
+						.getResultList() );
+		assertEquals( 1, booksByTitleAndIsbn.size() );
+		List<Book> booksByTitleOrIsbn = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( Restriction.any( Restriction.contains(title, "Hibernate"),
+								Restriction.equal( isbn, "9781932394153" ) ) )
+						.getResultList() );
+		assertEquals( 2, booksByTitleOrIsbn.size() );
 	}
 
 	@Entity(name="Book")

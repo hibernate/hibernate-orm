@@ -51,6 +51,14 @@ public interface Restriction<X> {
 	 */
 	Restriction<X> negated();
 
+	default Restriction<X> or(Restriction<X> restriction) {
+		return any( this, restriction );
+	}
+
+	default Restriction<X> and(Restriction<X> restriction) {
+		return all( this, restriction );
+	}
+
 	/**
 	 * Return a JPA Criteria {@link Predicate} constraining the given
 	 * root entity by this restriction.
@@ -160,21 +168,21 @@ public interface Restriction<X> {
 		return contains( attribute, substring ).negated();
 	}
 
-	static <T> Restriction<T> and(List<? extends Restriction<? super T>> restrictions) {
+	static <T> Restriction<T> all(List<? extends Restriction<? super T>> restrictions) {
 		return new Conjunction<>( restrictions );
 	}
 
-	static <T> Restriction<T> or(List<? extends Restriction<? super T>> restrictions) {
+	static <T> Restriction<T> any(List<? extends Restriction<? super T>> restrictions) {
 		return new Disjunction<>( restrictions );
 	}
 
 	@SafeVarargs
-	static <T> Restriction<T> and(Restriction<? super T>... restrictions) {
+	static <T> Restriction<T> all(Restriction<? super T>... restrictions) {
 		return new Conjunction<T>( java.util.List.of( restrictions ) );
 	}
 
 	@SafeVarargs
-	static <T> Restriction<T> or(Restriction<? super T>... restrictions) {
+	static <T> Restriction<T> any(Restriction<? super T>... restrictions) {
 		return new Disjunction<T>( java.util.List.of( restrictions ) );
 	}
 

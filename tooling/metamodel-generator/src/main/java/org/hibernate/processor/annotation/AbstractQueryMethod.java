@@ -298,7 +298,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					declaration
 							.append( "\t\t\t.addRestriction(" )
 							.append( annotationMetaEntity.importType(HIB_RESTRICTION) )
-							.append( ".and(" )
+							.append( ".all(" )
 							.append( paramName )
 							.append( "))\n" );
 

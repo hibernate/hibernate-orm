@@ -94,13 +94,13 @@ functions largely correspond to those specified in the https://portal.opengeospa
 |`boolean st_overlaps(Geometry, Geometry)` | SFS §2.1.1.2 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
 |`boolean st_relate(Geometry, Geometry, String)` | SFS §2.1.1.2 | {yes} | {yes} | {no} | {yes} | {yes} | {yes} | {yes}
 |Functions that support Spatial Analysis | | | | | | | |
-|`double st_distance(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes} | {yes}
-|`Geometry st_buffer(Geometry, double)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes} | {yes}
-|`Geometry st_convexhull(Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^ | {no}
-|`Geometry st_intersection(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^ | {yes}
+|`double st_distance(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`Geometry st_buffer(Geometry, double)` | SFS §2.1.1.3 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}
+|`Geometry st_convexhull(Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}^(1)^ | {no}
+|`Geometry st_intersection(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}^(1)^ | {yes}
 |`Geometry st_geomunion(Geometry, Geometry)` | SFS §2.1.1.3 (renamed from union) | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^ | {yes}
-|`Geometry st_difference(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^ | {yes}
-|`Geometry st_symdifference(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {no} | {yes} | {yes} | {yes}^(1)^ | {yes}
+|`Geometry st_difference(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}^(1)^ | {yes}
+|`Geometry st_symdifference(Geometry, Geometry)` | SFS §2.1.1.3 | {yes} | {yes} | {yes} | {yes} | {yes} | {yes}^(1)^ | {yes}
 |Common non-SFS functions | | | | | | | |
 |`boolean st_dwithin(Geometry, Geometry, double)` | Returns true if the geometries are within the specified distance of one another | {yes} | {yes} | {no} | {no} | {yes} | {yes}  | {yes}
 |`Geometry st_transform(Geometry, int)` | Returns a new geometry with its coordinates transformed to the SRID referenced by the integer parameter | {yes} | {yes} | {no} | {no} | {no} | {no}  | {yes}
@@ -138,14 +138,7 @@ In addition to the common spatial functions, the following functions are support
 [[spatial-configuration-dialect-mysql]]
 MySQL::
 
-MySQL versions before 5.6.1 had only limited support for spatial operators.
-Most operators only took account of the minimum bounding rectangles (MBR) of the geometries, and not the geometries themselves.
-+
-This changed in version 5.6.1, when MySQL introduced `ST_*` spatial operators.
-The dialect `MySQLSpatial56Dialect` uses these newer, more precise operators.
-+
-For more information, see this page in the MySQL reference guide (esp. the section https://dev.mysql.com/doc/refman/5.7/en/spatial-relation-functions.html[Functions That Test Spatial Relations Between Geometry Objects])
-
+For more information, see this page in the MySQL reference guide (esp. the section https://dev.mysql.com/doc/refman/8.4/en/spatial-relation-functions.html[Functions That Test Spatial Relations Between Geometry Objects])
 
 [[spatial-configuration-dialect-oracle]]
 Oracle 19c/21c/23ai::

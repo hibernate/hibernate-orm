@@ -16,7 +16,6 @@ import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.internal.CacheHelper;
-import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -36,7 +35,6 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.NavigablePath;
@@ -62,6 +60,8 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * @author Steve Ebersole
@@ -496,7 +496,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		if ( targetObject == null ) {
 			return null;
 		}
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( targetObject );
+		final LazyInitializer lazyInitializer = extractLazyInitializer( targetObject );
 		if ( lazyInitializer != null ) {
 			if ( refersToPrimaryKey ) {
 				return lazyInitializer.getIdentifier();
@@ -510,10 +510,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			return ( (EntityIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
 		}
 
-		if ( lazyInitializer == null && ManagedTypeHelper.isPersistentAttributeInterceptable( targetObject ) ) {
+		if ( lazyInitializer == null && isPersistentAttributeInterceptable( targetObject ) ) {
 			final PersistentAttributeInterceptor interceptor =
 					asPersistentAttributeInterceptable( targetObject ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor && !( (EnhancementAsProxyLazinessInterceptor) interceptor ).isInitialized() ) {
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor
+					&& !lazinessInterceptor.isInitialized() ) {
 				Hibernate.initialize( targetObject );
 			}
 		}

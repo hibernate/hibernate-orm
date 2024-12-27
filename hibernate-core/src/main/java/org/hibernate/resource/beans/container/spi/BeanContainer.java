@@ -8,9 +8,14 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.service.spi.Stoppable;
 
 /**
- * Represents a backend "bean container" - CDI, Spring, etc
+ * Abstracts any kind of container for managed beans, for example,
+ * the CDI {@link jakarta.enterprise.inject.spi.BeanManager}. A
+ * custom bean container may be integrated with Hibernate by
+ * implementing this interface and specifying the implementation
+ * using {@value org.hibernate.cfg.AvailableSettings#BEAN_CONTAINER}.
  *
  * @see org.hibernate.cfg.AvailableSettings#BEAN_CONTAINER
+ * @see org.hibernate.resource.beans.container.internal.CdiBasedBeanContainer
  *
  * @author Steve Ebersole
  */

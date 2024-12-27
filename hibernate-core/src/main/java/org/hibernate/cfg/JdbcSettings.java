@@ -105,6 +105,9 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * </ul>
 	 * <p>
 	 * See section 8.2.1.9
+	 *
+	 * @see java.sql.DriverManager#getConnection(String, String, String)
+	 * @see javax.sql.DataSource#getConnection(String, String)
 	 */
 	String JAKARTA_JDBC_USER = "jakarta.persistence.jdbc.user";
 
@@ -115,6 +118,9 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * and {@link #JAKARTA_JDBC_USER} to specify how to connect to the database.
 	 * <p>
 	 * See JPA 2 section 8.2.1.9
+	 *
+	 * @see java.sql.DriverManager#getConnection(String, String, String)
+	 * @see javax.sql.DataSource#getConnection(String, String)
 	 */
 	String JAKARTA_JDBC_PASSWORD = "jakarta.persistence.jdbc.password";
 
@@ -228,11 +234,28 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * Specifies a {@link ConnectionProvider} to use for obtaining JDBC connections,
 	 * either:
 	 * <ul>
+	 *     <li>a short strategy name like {@code agroal}, {@code hikaricp},
+	 *         {@code c3p0}, or {@code ucp},
 	 *     <li>an instance of {@code ConnectionProvider},
-	 *     <li>a {@link Class} representing a class that implements
+	 *     <li>a {@link Class} object representing a class that implements
 	 *         {@code ConnectionProvider}, or
 	 *     <li>the name of a class that implements {@code ConnectionProvider}.
 	 * </ul>
+	 * <p>
+	 * If this property is not explicitly set, a connection provider is chosen
+	 * automatically:
+	 * <ul>
+	 * <li>if {@link #JAKARTA_JTA_DATASOURCE} or {@link #JAKARTA_NON_JTA_DATASOURCE}
+	 *     is set, {@linkplain org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl
+	 *     a datasource-based implementation} is used;
+	 * <li>otherwise, a {@code ConnectionProvider} is loaded automatically as a
+	 *     {@linkplain java.util.ServiceLoader Java service};
+	 * <li>but if no service is found, or if more than one service is available,
+	 *     {@linkplain org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl
+	 *     a default implementation} is used as a fallback.
+	 * </ul>
+	 * <p>
+	 * The default implementation is not recommended for use in production.
 	 *
 	 * @apiNote The term {@code "class"} appears in the setting name due to legacy reasons;
 	 *          however it can accept instances.
@@ -240,11 +263,12 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	String CONNECTION_PROVIDER = "hibernate.connection.provider_class";
 
 	/**
-	 * Specifies the maximum number of inactive connections for the built-in
-	 * {@linkplain org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl
-	 * connection pool}.
-	 *
-	 * @settingDefault 20
+	 * Specifies the maximum number of inactive connections for any
+	 * {@linkplain ConnectionProvider connection pool} which respects this
+	 * setting, including every built-in implementation except for
+	 * {@link org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl}.
+	 * <p>
+	 * The default pool size depends on the connection provider.
 	 */
 	String POOL_SIZE = "hibernate.connection.pool_size";
 
@@ -255,11 +279,13 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * {@link org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl}.
 	 * <p>
 	 * Possible values are enumerated by {@link java.sql.Connection}:
-	 * {@code NONE}, {@code READ_UNCOMMITTED}, {@code READ_COMMITTED},
+	 * {@code READ_UNCOMMITTED}, {@code READ_COMMITTED},
 	 * {@code REPEATABLE_READ}, {@code SERIALIZABLE}.
 	 * <p>
 	 * If this setting is not explicitly specified, Hibernate does not modify
 	 * the transaction isolation level of the JDBC connection.
+	 *
+	 * @see java.sql.Connection#setTransactionIsolation(int)
 	 */
 	String ISOLATION = "hibernate.connection.isolation";
 
@@ -268,6 +294,8 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * {@link ConnectionProvider} implementation which respects this setting,
 	 * including every built-in implementation except for
 	 * {@link org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl}.
+	 *
+	 * @see java.sql.Connection#setAutoCommit(boolean)
 	 *
 	 * @settingDefault {@code false}
 	 */

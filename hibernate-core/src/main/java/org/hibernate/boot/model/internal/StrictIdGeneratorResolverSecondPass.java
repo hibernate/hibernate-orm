@@ -116,7 +116,6 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 			handleTableGenerator(
 					entityMapping.getJpaEntityName(),
 					globalMatch.configuration(),
-					entityMapping,
 					idValue,
 					idMember,
 					buildingContext
@@ -127,7 +126,6 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 		handleTableGenerator(
 				entityMapping.getJpaEntityName(),
 				new TableGeneratorJpaAnnotation( metadataCollector.getSourceModelBuildingContext() ),
-				entityMapping,
 				idValue,
 				idMember,
 				buildingContext
@@ -145,7 +143,6 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 			handleTableGenerator(
 					generatedValue.generator(),
 					globalMatch.configuration(),
-					entityMapping,
 					idValue,
 					idMember,
 					buildingContext
@@ -157,7 +154,6 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 		handleTableGenerator(
 				generatedValue.generator(),
 				new TableGeneratorJpaAnnotation( generatedValue.generator(), metadataCollector.getSourceModelBuildingContext() ),
-				entityMapping,
 				idValue,
 				idMember,
 				buildingContext
@@ -197,7 +193,6 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 			handleTableGenerator(
 					globalRegistrationName,
 					globalTableMatch.configuration(),
-					entityMapping,
 					idValue,
 					idMember,
 					buildingContext

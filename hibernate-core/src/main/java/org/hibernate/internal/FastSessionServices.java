@@ -117,7 +117,6 @@ public final class FastSessionServices {
 	public final EventListenerGroup<PreUpsertEventListener> eventListenerGroup_PRE_UPSERT;
 	public final EventListenerGroup<RefreshEventListener> eventListenerGroup_REFRESH;
 	public final EventListenerGroup<ReplicateEventListener> eventListenerGroup_REPLICATE;
-	public final EventListenerGroup<ResolveNaturalIdEventListener> eventListenerGroup_RESOLVE_NATURAL_ID;
 
 	// Fields used only from within this package
 	final boolean disallowOutOfTransactionUpdateOperations;
@@ -196,7 +195,6 @@ public final class FastSessionServices {
 		this.eventListenerGroup_PRE_UPSERT = listeners( eventListenerRegistry, EventType.PRE_UPSERT );
 		this.eventListenerGroup_REFRESH = listeners( eventListenerRegistry, EventType.REFRESH );
 		this.eventListenerGroup_REPLICATE = listeners( eventListenerRegistry, EventType.REPLICATE );
-		this.eventListenerGroup_RESOLVE_NATURAL_ID = listeners( eventListenerRegistry, EventType.RESOLVE_NATURAL_ID );
 
 		//Other highly useful constants:
 		this.dialect = jdbcServices.getJdbcEnvironment().getDialect();

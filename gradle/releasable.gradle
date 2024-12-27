@@ -1,10 +1,10 @@
 apply from: rootProject.file( 'gradle/base-information.gradle' )
 
-task release {
+tasks.register('release') {
     mustRunAfter ':release:releaseChecks'
     enabled !project.ormVersion.isSnapshot
 }
 
-task preVerifyRelease {
+tasks.register('preVerifyRelease') {
     dependsOn ':release:preVerifyRelease'
 }

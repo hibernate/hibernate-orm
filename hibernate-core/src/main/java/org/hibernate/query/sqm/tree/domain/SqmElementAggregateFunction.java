@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.tree.domain;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;

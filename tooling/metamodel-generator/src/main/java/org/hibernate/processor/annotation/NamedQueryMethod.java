@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import java.util.TreeSet;
 
+import static org.hibernate.processor.util.Constants.NONNULL;
 import static org.hibernate.processor.util.StringUtil.nameToFieldName;
 
 /**
@@ -97,7 +98,7 @@ class NamedQueryMethod implements MetaAttribute {
 		if ( addNonnullAnnotation ) {
 			declaration
 					.append('@')
-					.append(annotationMeta.importType("jakarta.annotation.Nonnull"))
+					.append(annotationMeta.importType(NONNULL))
 					.append(' ');
 		}
 	}

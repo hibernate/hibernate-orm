@@ -104,8 +104,6 @@ import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEvent;
 import org.hibernate.event.spi.ReplicateEventListener;
-import org.hibernate.event.spi.ResolveNaturalIdEvent;
-import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.loader.internal.CacheLoadHelper;
 import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.event.monitor.spi.EventMonitor;
@@ -210,6 +208,16 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * <p>
  * This class is not thread-safe.
  *
+ * @implNote The {@code SessionImpl} does not directly perform operations against the database or second-level cache.
+ * Instead, it is an {@link org.hibernate.event.spi.EventSource}, raising events which are processed by various
+ * implementations of the listener interfaces defined by {@link org.hibernate.event.spi}. These listeners typically
+ * place {@link org.hibernate.action.internal.EntityAction} instances on the {@link ActionQueue} associated with the
+ * session, and such actions are executed asynchronously when the session is {@linkplain #flush flushed}. The
+ * motivation behind this architecture is two-fold: first, it enables customization by sophisticated extensions to
+ * Hibernate ORM, and, second, it enables the transactional write-behind semantics of a stateful session. The stateful
+ * session holds its state in an instance of {@link StatefulPersistenceContext}, which we may view as the first-level
+ * cache associated with the session.
+ *
  * @author Gavin King
  * @author Steve Ebersole
  * @author Brett Meyer
@@ -246,7 +254,6 @@ public class SessionImpl
 
 		final DiagnosticEvent sessionOpenEvent = getEventMonitor().beginSessionOpenEvent();
 		try {
-
 			persistenceContext = createPersistenceContext();
 			actionQueue = createActionQueue();
 
@@ -343,7 +350,10 @@ public class SessionImpl
 
 	protected void applyQuerySettingsAndHints(Query<?> query) {
 		applyQuerySettingsAndHints( (SelectionQuery<?>) query );
+		applyLockTimeoutHint( query );
+	}
 
+	private void applyLockTimeoutHint(Query<?> query) {
 		final Integer specLockTimeout = LegacySpecHelper.getInteger(
 				HINT_SPEC_LOCK_TIMEOUT,
 				HINT_JAVAEE_LOCK_TIMEOUT,
@@ -1284,14 +1294,6 @@ public class SessionImpl
 		pulseTransactionCoordinator();
 		fastSessionServices.eventListenerGroup_LOAD
 				.fireEventOnEachListener( event, loadType, LoadEventListener::onLoad );
-	}
-
-	private void fireResolveNaturalId(final ResolveNaturalIdEvent event) {
-		checkOpenOrWaitingForAutoClose();
-		pulseTransactionCoordinator();
-		fastSessionServices.eventListenerGroup_RESOLVE_NATURAL_ID
-				.fireEventOnEachListener( event, ResolveNaturalIdEventListener::onResolveNaturalId );
-		delayedAfterCompletion();
 	}
 
 

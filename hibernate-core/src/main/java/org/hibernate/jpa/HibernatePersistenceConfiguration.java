@@ -99,8 +99,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * JDBC driver class name for non-{@link javax.sql.DataSource DataSource}
-	 * connection.
+	 * JDBC driver class name. This setting is ignored when Hibernate is configured
+	 * to obtain connections from a {@link javax.sql.DataSource}.
 	 *
 	 * @see #JDBC_DRIVER
 	 */
@@ -110,7 +110,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * JDBC URL of non-{@link javax.sql.DataSource DataSource} JDBC connection.
+	 * JDBC URL. This setting is ignored when Hibernate is configured to obtain
+	 * connections from a {@link javax.sql.DataSource}.
 	 *
 	 * @see #JDBC_URL
 	 */
@@ -120,10 +121,12 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Username for non-{@link javax.sql.DataSource DataSource} JDBC connection.
+	 * Username for JDBC authentication.
 	 *
 	 * @see #JDBC_USER
 	 * @see #jdbcPassword
+	 * @see java.sql.DriverManager#getConnection(String, String, String)
+	 * @see javax.sql.DataSource#getConnection(String, String)
 	 */
 	public HibernatePersistenceConfiguration jdbcUsername(String username) {
 		property( JDBC_USER, username );
@@ -131,10 +134,12 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Password for non-{@link javax.sql.DataSource DataSource} JDBC connection.
+	 * Password for JDBC authentication.
 	 *
 	 * @see #JDBC_PASSWORD
 	 * @see #jdbcUsername
+	 * @see java.sql.DriverManager#getConnection(String, String, String)
+	 * @see javax.sql.DataSource#getConnection(String, String)
 	 */
 	public HibernatePersistenceConfiguration jdbcPassword(String password) {
 		property( JDBC_PASSWORD, password );
@@ -142,17 +147,59 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Username and password for non-{@link javax.sql.DataSource DataSource}
-	 * JDBC connection.
+	 * Username and password for JDBC authentication.
 	 *
 	 * @see #JDBC_USER
 	 * @see #JDBC_PASSWORD
 	 * @see #jdbcUsername
 	 * @see #jdbcPassword
+	 * @see java.sql.DriverManager#getConnection(String, String, String)
+	 * @see javax.sql.DataSource#getConnection(String, String)
 	 */
 	public HibernatePersistenceConfiguration jdbcCredentials(String username, String password) {
 		jdbcUsername( username );
 		jdbcPassword( password );
+		return this;
+	}
+
+	/**
+	 * The JDBC connection pool size. This setting is ignored when Hibernate is
+	 * configured to obtain connections from a {@link javax.sql.DataSource}.
+	 *
+	 * @see JdbcSettings#POOL_SIZE
+	 */
+	public HibernatePersistenceConfiguration jdbcPoolSize(int poolSize) {
+		property( JdbcSettings.POOL_SIZE, poolSize );
+		return this;
+	}
+
+	/**
+	 * The JDBC {@linkplain java.sql.Connection#setAutoCommit autocommit mode}
+	 * for pooled connections. This setting is ignored when Hibernate is
+	 * configured to obtain connections from a {@link javax.sql.DataSource}.
+	 *
+	 * @see JdbcSettings#AUTOCOMMIT
+	 */
+	public HibernatePersistenceConfiguration jdbcAutocommit(boolean autocommit) {
+		property( JdbcSettings.AUTOCOMMIT, autocommit );
+		return this;
+	}
+
+	/**
+	 * The JDBC {@linkplain java.sql.Connection#setTransactionIsolation transaction
+	 * isolation level}. This setting is ignored when Hibernate is configured to
+	 * obtain connections from a {@link javax.sql.DataSource}.
+	 * <p>
+	 * Possible values are enumerated by {@link java.sql.Connection}:
+	 * {@link java.sql.Connection#TRANSACTION_READ_UNCOMMITTED},
+	 * {@link java.sql.Connection#TRANSACTION_READ_COMMITTED},
+	 * {@link java.sql.Connection#TRANSACTION_REPEATABLE_READ}, and
+	 * {@link java.sql.Connection#TRANSACTION_SERIALIZABLE}.
+	 *
+	 * @see JdbcSettings#ISOLATION
+	 */
+	public HibernatePersistenceConfiguration jdbcTransactionIsolation(int isolationLevel) {
+		property( JdbcSettings.ISOLATION, isolationLevel );
 		return this;
 	}
 

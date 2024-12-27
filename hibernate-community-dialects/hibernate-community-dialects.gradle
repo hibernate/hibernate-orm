@@ -7,7 +7,8 @@
 
 description = 'Hibernate\'s community supported dialects'
 
-apply from: rootProject.file( 'gradle/relocated-published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/group-relocation.gradle' )
 
 dependencies {
     api project( ':hibernate-core' )

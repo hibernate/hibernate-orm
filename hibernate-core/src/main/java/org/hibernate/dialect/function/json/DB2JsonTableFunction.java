@@ -7,7 +7,7 @@ package org.hibernate.dialect.function.json;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.CteGenerateSeriesFunction;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;

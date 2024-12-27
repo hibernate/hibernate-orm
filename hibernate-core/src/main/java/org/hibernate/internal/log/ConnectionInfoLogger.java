@@ -66,7 +66,7 @@ public interface ConnectionInfoLogger extends BasicLogger {
 	void unableToDestroyConnectionPool(@Cause Exception e);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Could not instantiate connection pool", id = 10001011)
+	@Message(value = "Could not create connection pool", id = 10001011)
 	void unableToInstantiateConnectionPool(@Cause Exception e);
 
 	@LogMessage(level = DEBUG)

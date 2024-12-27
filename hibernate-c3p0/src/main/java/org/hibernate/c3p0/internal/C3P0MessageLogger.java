@@ -41,7 +41,7 @@ public interface C3P0MessageLogger extends ConnectionInfoLogger {
 	 * @param c3p0Style The {@code c3p0.} prefixed setting
 	 */
 	@LogMessage(level = WARN)
-	@Message(value = "Both hibernate-style property '%1$s' and c3p0-style property '%2$s' have been set in Hibernate "
-			+ "properties.  Hibernate-style property '%1$s' will be used and c3p0-style property '%2$s' will be ignored!", id = 10001)
+	@Message(value = "Both hibernate-style property '%1$s' and c3p0-style property '%2$s' have been set in Hibernate properties.\n"
+			+ "Hibernate-style property '%1$s' will be used and c3p0-style property '%2$s' will be ignored", id = 10001)
 	void bothHibernateAndC3p0StylesSet(String hibernateStyle,String c3p0Style);
 }

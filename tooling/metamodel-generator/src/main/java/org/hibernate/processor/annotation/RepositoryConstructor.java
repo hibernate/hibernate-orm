@@ -9,6 +9,9 @@ import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 
+import static org.hibernate.processor.util.Constants.INJECT;
+import static org.hibernate.processor.util.Constants.NONNULL;
+
 /**
  * A general purpose constructor which accepts the session.
  *
@@ -168,7 +171,7 @@ public class RepositoryConstructor implements MetaAttribute {
 		if ( addInjectAnnotation && !annotationMetaEntity.needsDefaultConstructor() ) {
 			declaration
 					.append('@')
-					.append(annotationMetaEntity.importType("jakarta.inject.Inject"))
+					.append(annotationMetaEntity.importType(INJECT))
 					.append('\n');
 		}
 	}
@@ -177,7 +180,7 @@ public class RepositoryConstructor implements MetaAttribute {
 		if ( addNonnullAnnotation ) {
 			declaration
 					.append('@')
-					.append(annotationMetaEntity.importType("jakarta.annotation.Nonnull"))
+					.append(annotationMetaEntity.importType(NONNULL))
 					.append(' ');
 		}
 	}

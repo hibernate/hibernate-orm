@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.derived;
+package org.hibernate.query.sqm.tuple.internal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +20,7 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.TupleType;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -231,8 +231,7 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 
 	@Override
 	public JavaType<T> getExpressibleJavaType() {
-		//noinspection unchecked
-		return (JavaType<T>) javaTypeDescriptor;
+		return javaTypeDescriptor;
 	}
 
 	@Override

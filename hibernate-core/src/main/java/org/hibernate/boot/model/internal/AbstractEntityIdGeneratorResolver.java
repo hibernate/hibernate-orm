@@ -137,7 +137,9 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 	}
 
 	private Annotation findGeneratorAnnotation(AnnotationTarget annotationTarget) {
-		final List<? extends Annotation> metaAnnotated = annotationTarget.getMetaAnnotated( IdGeneratorType.class, buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
+		final List<? extends Annotation> metaAnnotated =
+				annotationTarget.getMetaAnnotated( IdGeneratorType.class,
+						buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
 		if ( CollectionHelper.size( metaAnnotated ) > 0 ) {
 			return metaAnnotated.get( 0 );
 		}
@@ -149,12 +151,14 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 		// Handle a few legacy Hibernate generators...
 		final String nameFromGeneratedValue = generatedValue.generator();
 		if ( !nameFromGeneratedValue.isBlank() ) {
-			final Class<? extends Generator> legacyNamedGenerator = mapLegacyNamedGenerator( nameFromGeneratedValue, idValue );
+			final Class<? extends Generator> legacyNamedGenerator =
+					mapLegacyNamedGenerator( nameFromGeneratedValue, idValue );
 			if ( legacyNamedGenerator != null ) {
 				final Map<String,String> configuration = buildLegacyGeneratorConfig();
 				//noinspection unchecked,rawtypes
 				GeneratorBinder.createGeneratorFrom(
-						new IdentifierGeneratorDefinition( nameFromGeneratedValue, legacyNamedGenerator.getName(), configuration ),
+						new IdentifierGeneratorDefinition( nameFromGeneratedValue,
+								legacyNamedGenerator.getName(), configuration ),
 						idValue,
 						(Map) configuration,
 						buildingContext

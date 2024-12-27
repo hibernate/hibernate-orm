@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaJsonValueExpression;
 import org.hibernate.query.sqm.NodeBuilder;

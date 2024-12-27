@@ -10,12 +10,13 @@ import org.hibernate.event.spi.EventSource;
 /**
  * A strategy abstraction for how locks are obtained in the underlying database.
  * <p>
- * All locking provided implementations assume the underlying database supports
- * (and that the connection is in) at least read-committed transaction isolation.
- * The most glaring exclusion to this is HSQLDB which only offers support for
- * READ_UNCOMMITTED isolation.
+ * All built-in implementations assume the underlying database supports at least
+ * {@linkplain java.sql.Connection#TRANSACTION_READ_COMMITTED read-committed}
+ * transaction isolation, and that the JDBC connection was obtained with at least
+ * this isolation level.
  *
  * @see org.hibernate.dialect.Dialect#getLockingStrategy
+ * @see org.hibernate.cfg.JdbcSettings#ISOLATION
  * @since 3.2
  *
  * @author Steve Ebersole

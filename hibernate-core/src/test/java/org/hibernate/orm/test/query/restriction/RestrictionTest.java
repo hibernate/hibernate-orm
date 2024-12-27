@@ -130,6 +130,16 @@ public class RestrictionTest {
 								equal( isbn, "9781932394153" ) ) )
 						.getResultList() );
 		assertEquals( 2, booksByTitleOrIsbn.size() );
+		List<Book> booksByIsbn1 = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( in( isbn, "9781932394153", "9781617290459", "XYZ" ) )
+						.getResultList() );
+		assertEquals( 2, booksByIsbn1.size() );
+		List<Book> booksByIsbn2 = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( in( isbn, List.of("9781617290459", "XYZ", "ABC") ) )
+						.getResultList() );
+		assertEquals( 1, booksByIsbn2.size() );
 	}
 
 	@Entity(name="Book")

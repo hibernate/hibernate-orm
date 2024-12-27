@@ -1,10 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.env;
+package org.hibernate.build;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,14 +12,10 @@ import java.io.Serializable;
 import java.util.Properties;
 import java.util.function.Consumer;
 
-import org.gradle.api.Project;
-
 /**
  * @author Steve Ebersole
  */
 public class HibernateVersion implements Serializable {
-	public static final String EXT_KEY = "ormVersion";
-	public static final String VERSION_KEY = "releaseVersion";
 	public static final String RELATIVE_FILE = "gradle/version.properties";
 
 	private final String fullName;
@@ -64,34 +58,22 @@ public class HibernateVersion implements Serializable {
 		return isSnapshot;
 	}
 
-	public static HibernateVersion from(Project project, File versionFile) {
-		if ( project.hasProperty( VERSION_KEY ) ) {
-			final Object version = project.property( VERSION_KEY );
-			if ( version != null ) {
-				return new HibernateVersion( (String) version );
-			}
-		}
-
-		final String fullName = readVersionProperties( versionFile );
-		return new HibernateVersion( fullName );
-	}
-
-	private static String readVersionProperties(File file) {
-		if ( !file.exists() ) {
+	public static HibernateVersion fromVersionFile(File versionFile) {
+		if ( !versionFile.exists() ) {
 			throw new RuntimeException( "Version file $file.canonicalPath does not exists" );
 		}
 
 		final Properties versionProperties = new Properties();
-		withInputStream( file, (stream) -> {
+		withInputStream( versionFile, (stream) -> {
 			try {
 				versionProperties.load( stream );
 			}
 			catch (IOException e) {
-				throw new RuntimeException( "Unable to load properties from file - " + file.getAbsolutePath(), e );
+				throw new RuntimeException( "Unable to load properties from file - " + versionFile.getAbsolutePath(), e );
 			}
 		} );
 
-		return versionProperties.getProperty( "hibernateVersion" );
+		return new HibernateVersion( versionProperties.getProperty( "hibernateVersion" ) );
 	}
 
 	private static void withInputStream(File file, Consumer<InputStream> action) {

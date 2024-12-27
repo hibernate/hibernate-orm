@@ -1,11 +1,12 @@
 package org.hibernate.orm.env;
 
-import java.util.Map;
-import java.util.Objects;
-
 import org.gradle.StartParameter;
 import org.gradle.api.Plugin;
 import org.gradle.api.initialization.Settings;
+import org.hibernate.build.JpaVersion;
+
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Steve Ebersole
@@ -14,7 +15,9 @@ public class EnvironmentSettingsPlugin implements Plugin<Settings> {
 
 	@Override
 	public void apply(Settings settings) {
-		settings.getExtensions().add( JpaVersion.EXT_KEY, JpaVersion.from( settings ) );
+		final JpaVersion jpaVersion = JpaVersion.from( settings );
+		settings.getExtensions().add( "jpaVersion", jpaVersion );
+		settings.getExtensions().add( JpaVersion.EXT_KEY, jpaVersion.getOsgiName() );
 		settings.getExtensions().add( "db", Objects.requireNonNullElse( getP( settings, "db" ), "h2" ) );
 		String ciNode = getP( settings, "ci.node" );
 		if ( ciNode != null ) {

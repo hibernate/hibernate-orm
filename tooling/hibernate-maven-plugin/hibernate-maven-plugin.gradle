@@ -1,16 +1,17 @@
-description = 'Maven plugin to integrate aspects of Hibernate into your build.'
-
-apply from: rootProject.file( 'gradle/java-module.gradle' )
-apply from: rootProject.file( 'gradle/publishing.gradle' )
-
-apply plugin: 'org.hibernate.build.maven-embedder'
-
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
+
+plugins {
+    id "local.java-module"
+    id "local.publishing"
+    id "org.hibernate.build.maven-embedder"
+}
+
+description = 'Maven plugin to integrate aspects of Hibernate into your build.'
 
 dependencies {
     implementation project( ":hibernate-core" )
@@ -19,6 +20,28 @@ dependencies {
     implementation "org.apache.maven.plugin-tools:maven-plugin-annotations:3.6.0"
     implementation "org.apache.maven:maven-project:2.2.1"
     implementation "org.apache.maven.shared:file-management:3.1.0"
+}
+
+def releasePrepareTask = tasks.register("releasePrepare") {
+    group "release-prepare"
+    description "See :release:releasePrepare for details.  Here we hook in the `check` task."
+
+    dependsOn tasks.check
+}
+
+// used from the h2 CI job
+tasks.register("preVerifyRelease") {
+    group "release-prepare"
+    description "Delegates to `releasePrepare` task"
+
+    dependsOn releasePrepareTask
+}
+
+tasks.register( 'releasePerform' ) {
+    group "release-perform"
+    description "See :release:releasePerform for details.  Here we hook in publishing to Sonatype"
+
+    dependsOn tasks.publishAllPublicationsToSonatypeRepository
 }
 
 var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension

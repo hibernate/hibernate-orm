@@ -1,10 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.env;
+package org.hibernate.build;
 
 import java.util.Map;
 
@@ -18,11 +16,14 @@ import org.gradle.api.initialization.Settings;
 public class JpaVersion {
 	public static final String EXT_KEY = "jakartaJpaVersion";
 	public static final String VERSION_KEY = "jakartaJpaVersionOverride";
-	public static final String DEFAULT_VERSION = "3.2.0";
+	public static final String DEFAULT_VERSION = "3.2";
 
 	private final String name;
 	private final String osgiName;
 
+	/**
+	 * The version - 3.2, 3.1, 2.2, ...
+	 */
 	public JpaVersion(String version) {
 		this.name = version;
 		this.osgiName = version + ".0";

@@ -1,11 +1,10 @@
 plugins {
-    id 'java-platform'
+    id "java-platform"
+    id "local.module"
+    id "local.publishing"
 }
 
 description = 'Platform (BOM) for Hibernate ORM dependencies'
-
-apply from: rootProject.file( "gradle/base-information.gradle" )
-apply from: rootProject.file( "gradle/publishing.gradle" )
 
 dependencies {
     constraints {
@@ -67,9 +66,10 @@ publishingExtension.publications.named("publishedArtifacts", MavenPublication) {
     from components.javaPlatform
 }
 
-tasks.register("publishReleaseArtifacts") {
-    // mirror for `:release:publishReleaseArtifacts`
-    dependsOn tasks.release
+tasks.register("releasePerform") {
+    group "release"
+    description "See :release:releasePerform for details.  Here we hook in publishing to Sonatype"
+
+    dependsOn tasks.publishToSonatype
 }
 
-tasks.release.dependsOn tasks.publishToSonatype

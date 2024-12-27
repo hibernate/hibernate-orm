@@ -6,7 +6,7 @@
  */
 plugins {
 	id "java-gradle-plugin"
-	id "groovy"
+	id 'groovy-gradle-plugin'
 }
 
 repositories {
@@ -28,6 +28,8 @@ dependencies {
 	implementation 'jakarta.json:jakarta.json-api:2.0.1'
 	implementation 'org.eclipse:yasson:2.0.4'
 	implementation 'org.jsoup:jsoup:1.15.3'
+
+	implementation "de.thetaphi:forbiddenapis:3.8"
 
 	implementation "org.apache.maven:maven-embedder:3.9.9"
 	implementation "org.apache.maven:maven-compat:3.9.9"
@@ -76,10 +78,6 @@ gradlePlugin {
 			id = 'org.hibernate.orm.build.jdks-settings'
 			implementationClass = 'org.hibernate.orm.toolchains.JdkVersionSettingsPlugin'
 		}
-		envProject {
-			id = 'org.hibernate.orm.build.env-project'
-			implementationClass = 'org.hibernate.orm.env.EnvironmentProjectPlugin'
-		}
 		settingsDocumentationPlugin {
 			id = 'org.hibernate.orm.build.settings-doc'
 			implementationClass = 'org.hibernate.orm.properties.SettingsDocumentationPlugin'
@@ -99,6 +97,10 @@ gradlePlugin {
 		register( "xjc-plugin" ) {
 			id = "local-xjc-plugin"
 			implementationClass = "org.hibernate.build.xjc.XjcPlugin"
+		}
+		register("aspect-module") {
+			id = "local.module"
+			implementationClass = "org.hibernate.build.aspects.ModuleAspect"
 		}
 	}
 }

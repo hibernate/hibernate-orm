@@ -1,10 +1,16 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
 import java.util.function.Function
 
 import org.asciidoctor.gradle.jvm.AsciidoctorTask
 import org.asciidoctor.gradle.jvm.pdf.AsciidoctorPdfTask
 
 buildscript {
-	configurations.all {
+	configurations.configureEach {
 		resolutionStrategy.dependencySubstitution {
 			substitute module( 'com.burgstaller:okhttp-digest:1.10' ) using module(
 					'io.github.rburgst:okhttp-digest:1.21'
@@ -14,6 +20,11 @@ buildscript {
 }
 
 plugins {
+	id "local.module"
+	id "local.javadoc"
+
+	id "org.hibernate.orm.build.reports"
+
 	id 'org.asciidoctor.jvm.convert' version '4.0.2'
 	id 'org.asciidoctor.jvm.pdf' version '4.0.2'
 	id "org.asciidoctor.jvm.gems" version "4.0.2"
@@ -25,19 +36,8 @@ repositories {
 	ruby.gems()
 }
 
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
-
-
-apply from: rootProject.file( 'gradle/module.gradle' )
-apply from: rootProject.file( 'gradle/releasable.gradle' )
-
-apply plugin: 'org.hibernate.orm.build.reports'
-
+def hibernateVersion = ormBuildDetails.hibernateVersion
+def jpaVersion = ormBuildDetails.jpaVersion
 
 defaultTasks 'buildDocs'
 
@@ -174,13 +174,9 @@ dependencies {
 }
 
 
-if ( project.ormVersion.isSnapshot ) {
+if ( hibernateVersion.isSnapshot ) {
 	// only run the ci build tasks for SNAPSHOT versions
 	tasks.register('ciBuild') { dependsOn clean }
-	tasks.release.enabled false
-}
-else {
-	tasks.release.dependsOn clean
 }
 
 
@@ -229,9 +225,6 @@ def aggregateJavadocsTask = tasks.register( "javadoc", Javadoc ) {
 	}
 }
 
-apply from: rootProject.file( 'gradle/javadoc.gradle' )
-
-
 asciidoctorj {
 	requires 'rouge'
 	modules {
@@ -242,10 +235,10 @@ asciidoctorj {
 	attributes  icons: 'font',
 			experimental: true,
 			'source-highlighter': 'rouge',
-			majorMinorVersion: rootProject.ormVersion.family,
-			fullVersion: rootProject.ormVersion.fullName,
+			majorMinorVersion: hibernateVersion.family,
+			fullVersion: hibernateVersion.fullName,
 			javaCompatibleVersions: jdks.versions.compatible.get(),
-			jakartaJpaVersion: rootProject.jakartaJpaVersion,
+			jakartaJpaVersion: jpaVersion.name,
 			jdbcVersion: jdks.versions.jdbc.get()
 
 	options logDocuments: true
@@ -257,7 +250,7 @@ asciidoctorj {
 def renderTopicalGuideHtmlTask = tasks.register( 'renderTopicalGuideHtml', AsciidoctorTask ) { task ->
 	group = "Documentation"
 	description = 'Renders the  Topical Guides in HTML format using Asciidoctor.'
-	inputs.property "hibernate-version", project.ormVersion
+	inputs.property "hibernate-version", hibernateVersion
 
 	sourceDir = file( 'src/main/asciidoc/topical' )
 	outputDir = new File( "$buildDir/asciidoc/topical/html_single" )
@@ -295,7 +288,7 @@ def buildTutorialZipTask = tasks.register( 'buildTutorialZip', Zip ) { task ->
 def renderGettingStartedGuideHtmlTask = tasks.register( 'renderGettingStartedGuideHtmlTask', AsciidoctorTask ) { task ->
 	group = "Documentation"
 	description = 'Renders the Getting Started Guides (quickstarts) in HTML format using Asciidoctor.'
-	inputs.property "hibernate-version", project.ormVersion
+	inputs.property "hibernate-version", hibernateVersion
 	finalizedBy buildTutorialZipTask
 
 	sourceDir = file( 'src/main/asciidoc/quickstart/guides' )
@@ -324,7 +317,7 @@ def renderGettingStartedGuideHtmlTask = tasks.register( 'renderGettingStartedGui
 def renderGettingStartedGuidePdfTask = tasks.register( 'renderGettingStartedGuidePdf', AsciidoctorPdfTask ) { task ->
 	group = "Documentation"
 	description = 'Renders the Getting Started Guides in PDF format using Asciidoctor.'
-	inputs.property "hibernate-version", project.ormVersion
+	inputs.property "hibernate-version", hibernateVersion
 
 	baseDir = file( 'src/main/asciidoc/quickstart/guides' )
 
@@ -348,7 +341,7 @@ def renderGettingStartedGuidesTask = tasks.register( 'renderGettingStartedGuides
 def renderIntroductionHtmlTask = tasks.register( 'renderIntroductionHtml', AsciidoctorTask ) { task ->
 	group = "Documentation"
 	description = 'Renders the Introduction in HTML format using Asciidoctor.'
-	inputs.property "hibernate-version", project.ormVersion
+	inputs.property "hibernate-version", hibernateVersion
 
 	sourceDir = file( 'src/main/asciidoc/introduction' )
 	sources 'Hibernate_Introduction.adoc'
@@ -379,7 +372,7 @@ def renderIntroductionHtmlTask = tasks.register( 'renderIntroductionHtml', Ascii
 def renderIntroductionPdfTask = tasks.register( 'renderIntroductionPdf', AsciidoctorPdfTask ) { task ->
 	group = "Documentation"
 	description = 'Renders the Introduction in PDF format using Asciidoctor.'
-	inputs.property "hibernate-version", project.ormVersion
+	inputs.property "hibernate-version", hibernateVersion
 
 	baseDir = file( 'src/main/asciidoc/introduction' )
 
@@ -407,7 +400,7 @@ def renderQueryLanguageGuideHtmlTask = tasks.register( 'renderQueryLanguageGuide
 	task.group = "Documentation"
 	task.description = 'Renders the Query Language document in HTML format using Asciidoctor.'
 
-	task.inputs.property "hibernate-version", project.ormVersion
+	task.inputs.property "hibernate-version", hibernateVersion
 
 	task.sourceDir = file( 'src/main/asciidoc/querylanguage' )
 	task.sources 'Hibernate_Query_Language.adoc'
@@ -439,7 +432,7 @@ def renderQueryLanguageGuidePdfTask = tasks.register( 'renderQueryLanguageGuideP
 	group = "Documentation"
 	description = 'Renders the Query Language document in PDF format using Asciidoctor.'
 
-	inputs.property "hibernate-version", project.ormVersion
+	inputs.property "hibernate-version", hibernateVersion
 
 	sourceDir = file( 'src/main/asciidoc/querylanguage' )
 	baseDir = file( 'src/main/asciidoc/querylanguage' )
@@ -455,7 +448,7 @@ def renderRepositoriesHtmlTask = tasks.register( 'renderRepositoriesHtml', Ascii
 	task.group = "Documentation"
 	task.description = 'Renders the Hibernate Data Repositories document in HTML format using Asciidoctor.'
 
-	task.inputs.property "hibernate-version", project.ormVersion
+	task.inputs.property "hibernate-version", hibernateVersion
 
 	task.sourceDir = file( 'src/main/asciidoc/repositories' )
 	task.sources 'Hibernate_Data_Repositories.adoc'
@@ -487,7 +480,7 @@ def renderRepositoriesPdfTask = tasks.register( 'renderRepositoriesPdf', Asciido
 	group = "Documentation"
 	description = 'Renders the Hibernate Data Repositories document in PDF format using Asciidoctor.'
 
-	inputs.property "hibernate-version", project.ormVersion
+	inputs.property "hibernate-version", hibernateVersion
 
 	sourceDir = file( 'src/main/asciidoc/repositories' )
 	baseDir = file( 'src/main/asciidoc/repositories' )
@@ -667,7 +660,7 @@ def generateSettingsDocTask = tasks.named( "generateSettingsDoc" ) {
 def renderUserGuideHtmlTask = tasks.register( 'renderUserGuideHtml', AsciidoctorTask ) { task ->
 	group = "Documentation"
 	description = 'Renders the User Guides in HTML format using Asciidoctor.'
-	inputs.property "hibernate-version", project.ormVersion
+	inputs.property "hibernate-version", hibernateVersion
 	inputs.file( generateSettingsDocTask.get().outputFile )
 
 	dependsOn generateSettingsDocTask, generateDialectTableReport
@@ -712,7 +705,7 @@ def renderUserGuidesTask = tasks.register( 'renderUserGuides' ) { task ->
 def renderIntegrationGuideHtmlTask = tasks.register( "renderIntegrationGuideHtml", AsciidoctorTask ) { task->
 	group = "Documentation"
 	description = 'Renders the User Guides in HTML format using Asciidoctor.'
-	inputs.property "hibernate-version", project.ormVersion
+	inputs.property "hibernate-version", hibernateVersion
 
 	sourceDir = file( 'src/main/asciidoc/integrationguide' )
 	sources {
@@ -755,7 +748,7 @@ def copyMigrationGuideTask = tasks.register( "copyMigrationGuide", Copy ) {task 
 	group = "Documentation"
 	description = "Copies migration-guide.adoc in preparation for rendering."
 
-	inputs.property "hibernate-version", project.ormVersion
+	inputs.property "hibernate-version", hibernateVersion
 
 	from rootProject.layout.projectDirectory.file( "migration-guide.adoc" )
 	into migrationGuideSourceStagingDir
@@ -766,7 +759,7 @@ def renderMigrationGuideTask = tasks.register( "renderMigrationGuide", Asciidoct
 	description = "Renders the Migration Guide in HTML format using Asciidoctor."
 
 	dependsOn copyMigrationGuideTask
-	inputs.property "hibernate-version", project.ormVersion
+	inputs.property "hibernate-version", hibernateVersion
 
 	sourceDir = migrationGuideSourceStagingDir
 
@@ -794,7 +787,7 @@ def renderLoggingReportTask = tasks.register( 'renderLoggingReport', Asciidoctor
 	task.description = 'Renders the logging report (generated LoggingReportTask) by in HTML format using Asciidoctor.'
 	task.dependsOn "generateLoggingReport"
 
-	task.inputs.property "version", project.ormVersion
+	task.inputs.property "version", hibernateVersion
 
 	task.sourceDir = layout.buildDirectory.dir( 'orm/generated/logging' )
 	task.sources 'logging.adoc'
@@ -820,7 +813,7 @@ def renderDialectReportTask = tasks.register( 'renderDialectReport', Asciidoctor
 	task.dependsOn "generateDialectReport"
 	task.dependsOn "generateDialectTableReport"
 
-	task.inputs.property "version", project.ormVersion
+	task.inputs.property "version", hibernateVersion
 
 	task.sourceDir = layout.buildDirectory.dir( 'orm/generated/dialect' )
 	task.sources 'dialect.adoc'

@@ -22,6 +22,7 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputFile;
 
+import org.hibernate.build.OrmBuildDetails;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.DotName;
@@ -41,7 +42,7 @@ public abstract class AbstractJandexAwareTask extends DefaultTask {
 		setGroup( TASK_GROUP_NAME );
 
 		this.indexManager = getProject().provider( () -> getProject().getExtensions().getByType( IndexManager.class ) );
-		getInputs().property( "version", getProject().getExtensions().getByName( "ormVersion" ) );
+		getInputs().property( "version", getProject().getExtensions().getByType( OrmBuildDetails.class ).getHibernateVersion() );
 	}
 
 	@Internal

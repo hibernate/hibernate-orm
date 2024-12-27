@@ -19,7 +19,8 @@ buildscript {
 
 
 plugins {
-	id 'org.hibernate.build.xjc-jakarta' version '2.0.3' apply false
+	id "local.module"
+
 	id "org.hibernate.build.version-injection" version "2.0.0" apply false
 	id 'org.hibernate.matrix-test' version '3.1.1' apply false
 	id 'org.hibernate.orm.database-service' apply false
@@ -37,24 +38,26 @@ plugins {
 	id "com.dorongold.task-tree" version "2.1.1"
 }
 
-apply from: file( 'gradle/module.gradle' )
-
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Release Task
+// Releasing
 
-tasks.register('release') {
-	description = "The task performed when we are performing a release build.  Relies on " +
-			"the fact that subprojects will appropriately define a release task " +
-			"themselves if they have any release-related activities to perform"
-
-	doFirst {
-		def javaVersionsInUse = jdkVersions.allVersions
-		if (javaVersionsInUse != [JavaLanguageVersion.of(17)].toSet()) {
-			throw new IllegalStateException("Please use JDK 17 to perform the release. Currently using: ${javaVersionsInUse}")
-		}
-	}
+tasks.register( 'releasePrepare' ) {
+	group "release-prepare"
+	description "Scripted release 'Release Prepare' stage.  " +
+			"Includes various checks as to the publish-ability of the project: testing, generation, etc.  " +
+			"Sub-projects register their own `releasePrepare` to hook into this stage."
+	// See `:release:releasePrepare` which does a lot of heavy lifting here
 }
+
+tasks.register( 'releasePerform' ) {
+	group "release-perform"
+	description "Scripted release 'Release Perform' stage.  " +
+			"Generally this entails publishing artifacts to various servers.  " +
+			"Sub-projects register their own `releasePerform` to hook into this stage."
+	// See `:release:releasePerform` which does a lot of heavy lifting here
+}
+
 
 nexusPublishing {
 	repositories {

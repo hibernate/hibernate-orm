@@ -2,15 +2,20 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-apply plugin: 'maven-publish'
-apply plugin: 'signing'
 
-apply from: rootProject.file( 'gradle/releasable.gradle' )
+plugins {
+    id "maven-publish"
+    id "signing"
+}
 
 // Disable Gradle module metadata publishing until we know what we want.
 // https://docs.gradle.org/6.0.1/userguide/publishing_gradle_module_metadata.html#sub:disabling-gmm-publication
 tasks.withType(GenerateModuleMetadata).configureEach {
     enabled = false
+}
+
+if ( !project.description ) {
+    project.description = "The Hibernate ORM $project.name module"
 }
 
 var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
@@ -60,11 +65,10 @@ publishingExtension.publications.configureEach {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // register the "main" publication named `publishedArtifacts`
-
-publishingExtension.publications.create("publishedArtifacts", MavenPublication) {
+publishingExtension.publications.register("publishedArtifacts", MavenPublication) {
     pom {
-        name = 'Hibernate ORM - ' + project.name
-        description = project.description
+        name = "Hibernate ORM - ${project.name}"
+        description = project.provider { project.description }
     }
 }
 
@@ -72,7 +76,9 @@ publishingExtension.publications.create("publishedArtifacts", MavenPublication) 
 // Create a special local repository used for local testing of PublishToMavenRepository
 
 if ( project.hasProperty("local_pub_repo") ) {
-    // used for
+    // to use -
+    //      1. run `gradlew -Plocal_pub_repo publishAllPublicationsToLocalRepoRepository`
+    //      2. check ${rootProject}/target/maven-repo
     publishingExtension.repositories {
         maven {
             name = "localRepo"

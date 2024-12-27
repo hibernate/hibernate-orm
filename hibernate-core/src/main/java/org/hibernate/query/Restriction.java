@@ -97,6 +97,16 @@ public interface Restriction<X> {
 		return restrict( attribute, Range.singleCaseInsensitiveValue( value ) );
 	}
 
+	@SafeVarargs
+	static <T, U> Restriction<T> in(SingularAttribute<T, U> attribute, U... values) {
+		return in( attribute, List.of(values ) );
+	}
+
+	@SafeVarargs
+	static <T, U> Restriction<T> notIn(SingularAttribute<T, U> attribute, U... values) {
+		return notIn( attribute, List.of(values ) );
+	}
+
 	static <T, U> Restriction<T> in(SingularAttribute<T, U> attribute, java.util.List<U> values) {
 		return restrict( attribute, Range.valueList( values ) );
 	}

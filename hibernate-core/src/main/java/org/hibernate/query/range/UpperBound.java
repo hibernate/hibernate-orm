@@ -13,6 +13,8 @@ import java.util.Objects;
 
 /**
  * The {@link Range} of all values below a given upper bound.
+ *
+ * @author Gavin King
  */
 record UpperBound<U extends Comparable<U>>(U bound, boolean open) implements Range<U> {
 	UpperBound {

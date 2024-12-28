@@ -7,26 +7,24 @@ package org.hibernate.query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import org.hibernate.query.range.Range;
 
 /**
- * A compound restriction constructed using logical OR.
+ * Restricts a path from an entity to a given {@link Range}.
  *
- * @param restrictions The restrictions to be OR-ed
  * @param <X> The entity type
+ * @param <U> The attribute type
  *
  * @author Gavin King
  */
-record Disjunction<X>(java.util.List<? extends Restriction<? super X>> restrictions)
-		implements Restriction<X> {
+record PathRange<X, U>(Path<X, U> path, Range<U> range) implements Restriction<X> {
 	@Override
 	public Restriction<X> negated() {
-		return new Conjunction<>( restrictions.stream().map( Restriction::negated ).toList() );
+		return new Negation<>( this );
 	}
 
 	@Override
 	public Predicate toPredicate(Root<? extends X> root, CriteriaBuilder builder) {
-		return builder.or( restrictions.stream()
-				.map( restriction -> restriction.toPredicate( root, builder ) )
-				.toList() );
+		return range.toPredicate( path.path( root ), builder );
 	}
 }

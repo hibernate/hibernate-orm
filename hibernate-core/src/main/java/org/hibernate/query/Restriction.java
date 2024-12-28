@@ -35,6 +35,8 @@ import java.util.List;
  * HQL query method} may be declared with type {@code Restriction<? super E>},
  * {@code List<Restriction<? super E>>}, or {@code Restriction<? super E>...}
  * (varargs) where {@code E} is the entity type returned by the query.
+ * <p>
+ * To create a {@code Restriction} on a compound path, use {@link Path}.
  *
  * @param <X> The entity result type of the query
  *
@@ -43,6 +45,7 @@ import java.util.List;
  *          query methods.
  *
  * @see SelectionQuery#addRestriction(Restriction)
+ * @see Path
  * @see Order
  *
  * @author Gavin King

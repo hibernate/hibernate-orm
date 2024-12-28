@@ -14,6 +14,8 @@ import java.util.Objects;
 
 /**
  * A {@link Range} with a single literal string, ignoring case.
+ *
+ * @author Gavin King
  */
 record CaseInsensitiveValue(String value) implements Range<String> {
 	CaseInsensitiveValue {

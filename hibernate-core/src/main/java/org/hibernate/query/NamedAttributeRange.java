@@ -17,6 +17,8 @@ import org.hibernate.query.range.Range;
  *
  * @param <X> The entity type
  * @param <U> The attribute type
+ *
+ * @author Gavin King
  */
 record NamedAttributeRange<X, U>(Class<X> entity, String attributeName, Range<U> range) implements Restriction<X> {
 	@Override

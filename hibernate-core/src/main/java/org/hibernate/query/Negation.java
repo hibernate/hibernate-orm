@@ -13,6 +13,8 @@ import jakarta.persistence.criteria.Root;
  *
  * @param restriction The restriction to be negated
  * @param <X> The entity type
+ *
+ * @author Gavin King
  */
 record Negation<X>(Restriction<X> restriction) implements Restriction<X> {
 	@Override

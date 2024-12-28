@@ -10,6 +10,8 @@ import jakarta.persistence.criteria.Predicate;
 
 /**
  * A {@link Range} containing every value of the given type.
+ *
+ * @author Gavin King
  */
 record FullRange<U>(Class<U> type) implements Range<U> {
 	@Override

@@ -86,12 +86,12 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		final IdentifierHelperBuilder identifierHelperBuilder =
 				identifierHelperBuilder( cfgService, nameQualifierSupport );
 
-		final ExtractedDatabaseMetaDataImpl.Builder dbMetaDataBuilder =
+		final ExtractedDatabaseMetaDataImpl.Builder metaDataBuilder =
 				new ExtractedDatabaseMetaDataImpl.Builder( this, false, null );
 
-		this.identifierHelper = identifierHelper( dialect, identifierHelperBuilder, dbMetaDataBuilder );;
+		this.identifierHelper = identifierHelper( dialect, identifierHelperBuilder, metaDataBuilder );;
 
-		this.extractedMetaDataSupport = dbMetaDataBuilder.build();
+		this.extractedMetaDataSupport = metaDataBuilder.build();
 
 		this.currentCatalog = identifierHelper.toIdentifier(
 				cfgService.getSetting( AvailableSettings.DEFAULT_CATALOG, StandardConverters.STRING )

@@ -9,6 +9,7 @@ import java.sql.SQLException;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
+import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.Wrapped;
 
@@ -71,8 +72,21 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 */
 	boolean supportsAggressiveRelease();
 
+	/**
+	 * @return an informative instance of {@link DatabaseConnectionInfo} for logging.
+	 *
+	 * @since 6.6
+	 */
 	default DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		return new DatabaseConnectionInfoImpl( dialect );
 	}
 
+	/**
+	 * @return an informative instance of {@link DatabaseConnectionInfo} for logging.
+	 *
+	 * @since 7.0
+	 */
+	default DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect, ExtractedDatabaseMetaData metaData) {
+		return getDatabaseConnectionInfo( dialect );
+	}
 }

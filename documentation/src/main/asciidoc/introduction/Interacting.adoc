@@ -1091,8 +1091,7 @@ The interface link:{doc-javadoc-url}org/hibernate/query/Path.html[`Path`] may be
 ----
 List<Book> booksForPublisher =
         session.createSelectionQuery("from Book", Book.class)
-                .addRestriction(Path.root(Book_.publisher)
-                                .get(Publisher_.name)
+                .addRestriction(Path.from(Book.class).to(Book_.publisher).to(Publisher_.name)
                                 .equalTo(publisherName))
                 .getResultList();
 ----

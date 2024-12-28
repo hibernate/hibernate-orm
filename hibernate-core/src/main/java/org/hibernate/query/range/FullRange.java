@@ -15,12 +15,12 @@ import jakarta.persistence.criteria.Predicate;
  */
 record FullRange<U>(Class<U> type) implements Range<U> {
 	@Override
-	public Class<? extends U> getType() {
+	public Class<U> getType() {
 		return type;
 	}
 
 	@Override
-	public Predicate toPredicate(Path<U> path, CriteriaBuilder builder) {
+	public Predicate toPredicate(Path<? extends U> path, CriteriaBuilder builder) {
 		return builder.conjunction();
 	}
 }

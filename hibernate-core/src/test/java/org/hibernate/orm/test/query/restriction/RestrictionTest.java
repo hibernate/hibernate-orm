@@ -18,7 +18,7 @@ import java.util.List;
 
 import static org.hibernate.query.Order.asc;
 import static org.hibernate.query.Order.desc;
-import static org.hibernate.query.Path.root;
+import static org.hibernate.query.Path.from;
 import static org.hibernate.query.Restriction.all;
 import static org.hibernate.query.Restriction.any;
 import static org.hibernate.query.Restriction.between;
@@ -42,7 +42,7 @@ public class RestrictionTest {
 
 	@Test
 	void test(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createMutationQuery("delete Book").executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 		scope.inTransaction( session -> {
 			session.persist(new Book("9781932394153", "Hibernate in Action", 400));
 			session.persist(new Book("9781617290459", "Java Persistence with Hibernate", 1000));
@@ -149,7 +149,7 @@ public class RestrictionTest {
 
 	@Test
 	void testPath(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createMutationQuery( "delete Book" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 		scope.inTransaction( session -> {
 			Publisher pub = new Publisher();
 			pub.name = "Manning";
@@ -173,29 +173,47 @@ public class RestrictionTest {
 		@SuppressWarnings( "unchecked" )
 		var version = (SingularAttribute<? super Publisher, Integer>) pubType.findSingularAttribute("version");
 
+		scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( from(Book.class).equalTo( session.find(Book.class, "9781932394153") ) )
+						.getSingleResult() );
+
+		List<Book> booksInIsbn = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( from(Book.class).to(isbn).in( List.of("9781932394153", "9781617290459") ) )
+						.setOrder( desc( isbn ) )
+						.getResultList() );
+		assertEquals( 2, booksInIsbn.size() );
 		List<Book> booksWithPub = scope.fromSession( session ->
 				session.createSelectionQuery( "from Book", Book.class)
-						.addRestriction( root(publisher).get(name).equalTo("Manning") )
+						.addRestriction( from(Book.class).to(publisher).to(name).equalTo("Manning") )
 						.setOrder( desc( title ) )
 						.getResultList() );
 		assertEquals( 2, booksWithPub.size() );
 		List<Book> noBookWithPub = scope.fromSession( session ->
 				session.createSelectionQuery( "from Book", Book.class)
-						.addRestriction( root(publisher).get(name).notEqualTo("Manning") )
+						.addRestriction( from(Book.class).to(publisher).to(name).notEqualTo("Manning") )
 						.setOrder( desc( title ) )
 						.getResultList() );
 		assertEquals( 0, noBookWithPub.size() );
 		List<Book> books = scope.fromSession( session ->
 				session.createSelectionQuery( "from Book", Book.class)
-						.addRestriction( root(title).restrict( containing("hibernate", false) ) )
+						.addRestriction( from(Book.class).to(title).restrict( containing("hibernate", false) ) )
 						.setOrder( desc( title ) )
 						.getResultList() );
 		assertEquals( 2, books.size() );
 		List<Book> booksWithPubVersion = scope.fromSession( session ->
 				session.createSelectionQuery( "from Book", Book.class)
-						.addRestriction( root(publisher).get(version).restrict( greaterThan(5) ) )
+						.addRestriction( from(Book.class).to(publisher).to(version).restrict( greaterThan(5) ) )
 						.getResultList() );
 		assertEquals( 0, booksWithPubVersion.size() );
+		List<Book> unsafeTest = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( from(Book.class)
+								.to("publisher", Publisher.class)
+								.to("name", String.class).equalTo("Manning") )
+						.getResultList() );
+		assertEquals( 2, unsafeTest.size() );
 	}
 
 	@Entity(name="Book")

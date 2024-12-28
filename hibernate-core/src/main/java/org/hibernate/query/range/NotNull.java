@@ -9,11 +9,12 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 
 /**
- * A {@link Range} containing no values.
+ * A {@link Range} containing every value of the given type,
+ * except the null value.
  *
  * @author Gavin King
  */
-record EmptyRange<U>(Class<U> type) implements Range<U> {
+record NotNull<U>(Class<U> type) implements Range<U> {
 	@Override
 	public Class<U> getType() {
 		return type;
@@ -21,6 +22,6 @@ record EmptyRange<U>(Class<U> type) implements Range<U> {
 
 	@Override
 	public Predicate toPredicate(Path<? extends U> path, CriteriaBuilder builder) {
-		return builder.disjunction();
+		return path.isNotNull();
 	}
 }

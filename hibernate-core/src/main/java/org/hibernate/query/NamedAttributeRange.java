@@ -13,7 +13,8 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.query.range.Range;
 
 /**
- * Restricts an attribute of an entity to a given {@link Range}.
+ * Restricts an attribute of an entity to a given {@link Range},
+ * using a stringly-typed attribute reference.
  *
  * @param <X> The entity type
  * @param <U> The attribute type
@@ -36,9 +37,10 @@ record NamedAttributeRange<X, U>(Class<X> entity, String attributeName, Range<U>
 		if ( !(attribute instanceof SingularAttribute) ) {
 			throw new IllegalArgumentException( "Attribute '" + attributeName + "' is not singular" );
 		}
-		if ( range.getType()!=null && !range.getType().isAssignableFrom( attribute.getJavaType() ) ) {
+		final Class<? extends U> rangeType = range.getType();
+		if ( rangeType != null && !rangeType.isAssignableFrom( attribute.getJavaType() ) ) {
 			throw new IllegalArgumentException( "Attribute '" + attributeName
-					+ "' is not assignable to range of type '" + range.getType().getName() + "'" );
+												+ "' is not assignable to range of type '" + rangeType.getName() + "'" );
 		}
 		return range.toPredicate( root.get( attributeName ), builder );
 	}

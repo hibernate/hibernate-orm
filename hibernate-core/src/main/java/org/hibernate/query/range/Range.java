@@ -39,7 +39,7 @@ public interface Range<U> {
 	 * values.
 	 */
 	@Internal
-	Predicate toPredicate(Path<U> path, CriteriaBuilder builder);
+	Predicate toPredicate(Path<? extends U> path, CriteriaBuilder builder);
 
 	static <U> Range<U> singleValue(U value) {
 		return new Value<>( value );
@@ -121,6 +121,10 @@ public interface Range<U> {
 
 	static <U> Range<U> full(Class<U> type) {
 		return new FullRange<>( type );
+	}
+
+	static <U> Range<U> notNull(Class<U> type) {
+		return new NotNull<>( type );
 	}
 
 	private static String escape(String literal) {

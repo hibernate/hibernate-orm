@@ -17,7 +17,7 @@ import org.hibernate.query.range.Range;
  *
  * @author Gavin King
  */
-record PathRange<X, U>(Path<X, U> path, Range<U> range) implements Restriction<X> {
+record PathRange<X, U>(Path<X, U> path, Range<? super U> range) implements Restriction<X> {
 	@Override
 	public Restriction<X> negated() {
 		return new Negation<>( this );

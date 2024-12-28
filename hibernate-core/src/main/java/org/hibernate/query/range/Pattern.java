@@ -21,10 +21,12 @@ record Pattern(String pattern, boolean caseSensitive) implements Range<String> {
 	}
 
 	@Override
-	public Predicate toPredicate(Path<String> path, CriteriaBuilder builder) {
+	public Predicate toPredicate(Path<? extends String> path, CriteriaBuilder builder) {
+		@SuppressWarnings("unchecked")
+		final Path<String> stringPath = (Path<String>) path; // safe, because String is final
 		return caseSensitive
-				? builder.like( path, builder.literal( pattern ), '\\' )
-				: builder.like( builder.lower( path ),
+				? builder.like( stringPath, builder.literal( pattern ), '\\' )
+				: builder.like( builder.lower( stringPath ),
 						builder.literal( pattern.toLowerCase( Locale.ROOT ) ),
 						'\\' );
 	}

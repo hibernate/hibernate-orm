@@ -169,12 +169,11 @@ public class QuerySqmImpl<R>
 		this.hql = hql;
 		this.resultType = resultType;
 
-		this.sqm = hqlInterpretation.getSqmStatement();
+		sqm = hqlInterpretation.getSqmStatement();
 
-		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
-		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
-
-		this.parameterBindings = parameterMetadata.createBindings( session.getFactory() );
+		parameterMetadata = hqlInterpretation.getParameterMetadata();
+		domainParameterXref = hqlInterpretation.getDomainParameterXref();
+		parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
 		if ( sqm instanceof SqmSelectStatement<?> ) {
 			hqlInterpretation.validateResultType( resultType );
@@ -186,7 +185,7 @@ public class QuerySqmImpl<R>
 		}
 		setComment( hql );
 
-		this.tupleMetadata = buildTupleMetadata( sqm, resultType );
+		tupleMetadata = buildTupleMetadata( sqm, resultType );
 	}
 
 	/**
@@ -210,14 +209,10 @@ public class QuerySqmImpl<R>
 		setComment( hql );
 
 		domainParameterXref = DomainParameterXref.from( sqm );
-		if ( ! domainParameterXref.hasParameters() ) {
-			parameterMetadata = ParameterMetadataImpl.EMPTY;
-		}
-		else {
-			parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
-		}
-
-		this.parameterBindings = parameterMetadata.createBindings( producer.getFactory() );
+		parameterMetadata = !domainParameterXref.hasParameters()
+				? ParameterMetadataImpl.EMPTY
+				: new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
+		parameterBindings = parameterMetadata.createBindings( producer.getFactory() );
 
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
 		for ( SqmParameter<?> sqmParameter : domainParameterXref.getParameterResolutions().getSqmParameters() ) {
@@ -232,11 +227,11 @@ public class QuerySqmImpl<R>
 			validateCriteriaQuery( queryPart );
 			selectStatement.validateResultType( expectedResultType );
 		}
-		else {
+		else if ( sqm instanceof AbstractSqmDmlStatement<R> update ) {
 			if ( expectedResultType != null ) {
 				throw new IllegalQueryOperationException( "Result type given for a non-SELECT Query", hql, null );
 			}
-			( (AbstractSqmDmlStatement<?>) sqm ).validate( hql );
+			update.validate( hql );
 		}
 
 		resultType = expectedResultType;

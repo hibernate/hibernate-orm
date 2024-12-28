@@ -15,6 +15,10 @@ import java.util.List;
 
 /**
  * Specifies an allowed set of range of values for a value being restricted.
+ * <p>
+ * A parameter of a {@linkplain org.hibernate.annotations.processing.Find
+ * finder method} may be declared with type {@code Range<T>} where {@code T}
+ * is the type of the matching field of property of the entity.
  *
  * @param <U> The type of the value being restricted
  *
@@ -87,11 +91,47 @@ public interface Range<U> {
 		return pattern( pattern, true );
 	}
 
+	static Range<String> prefix(String prefix, boolean caseSensitive) {
+		return pattern( escape( prefix ) + '%', caseSensitive );
+	}
+
+	static Range<String> suffix(String suffix, boolean caseSensitive) {
+		return pattern( '%' + escape( suffix ), caseSensitive );
+	}
+
+	static Range<String> containing(String substring, boolean caseSensitive) {
+		return pattern( '%' + escape( substring ) + '%', caseSensitive );
+	}
+
+	static Range<String> prefix(String prefix) {
+		return prefix( prefix, true );
+	}
+
+	static Range<String> suffix(String suffix) {
+		return pattern( suffix, true );
+	}
+
+	static Range<String> containing(String substring) {
+		return pattern( substring, true );
+	}
+
 	static <U> Range<U> empty(Class<U> type) {
 		return new EmptyRange<>( type );
 	}
 
 	static <U> Range<U> full(Class<U> type) {
 		return new FullRange<>( type );
+	}
+
+	private static String escape(String literal) {
+		final var result = new StringBuilder();
+		for ( int i = 0; i < literal.length(); i++ ) {
+			final char ch = literal.charAt( i );
+			if ( ch=='%' || ch=='_' || ch=='\\' ) {
+				result.append('\\');
+			}
+			result.append( ch );
+		}
+		return result.toString();
 	}
 }

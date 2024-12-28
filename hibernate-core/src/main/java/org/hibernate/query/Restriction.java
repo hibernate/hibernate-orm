@@ -29,6 +29,12 @@ import java.util.List;
  * <p>
  * Each restriction pairs an {@linkplain SingularAttribute attribute} of the
  * entity with a {@link Range} of allowed values for the attribute.
+ * <p>
+ * A parameter of a {@linkplain org.hibernate.annotations.processing.Find
+ * finder method} or {@linkplain org.hibernate.annotations.processing.HQL
+ * HQL query method} may be declared with type {@code Restriction<? super E>},
+ * {@code List<Restriction<? super E>>}, or {@code Restriction<? super E>...}
+ * (varargs) where {@code E} is the entity type returned by the query.
  *
  * @param <X> The entity result type of the query
  *
@@ -163,19 +169,35 @@ public interface Restriction<X> {
 	}
 
 	static <T> Restriction<T> startsWith(SingularAttribute<T, String> attribute, String prefix) {
-		return like( attribute, escape( prefix ) + '%' );
+		return startsWith( attribute, prefix, true );
 	}
 
-	static <T> Restriction<T> endWith(SingularAttribute<T, String> attribute, String suffix) {
-		return like( attribute, '%' + escape( suffix ) );
+	static <T> Restriction<T> endsWith(SingularAttribute<T, String> attribute, String suffix) {
+		return endsWith( attribute, suffix, true );
 	}
 
 	static <T> Restriction<T> contains(SingularAttribute<T, String> attribute, String substring) {
-		return like( attribute, '%' + escape( substring ) + '%' );
+		return contains( attribute, substring, true );
 	}
 
 	static <T> Restriction<T> notContains(SingularAttribute<T, String> attribute, String substring) {
-		return contains( attribute, substring ).negated();
+		return notContains( attribute, substring, true );
+	}
+
+	static <T> Restriction<T> startsWith(SingularAttribute<T, String> attribute, String prefix, boolean caseSensitive) {
+		return restrict( attribute, Range.prefix( prefix, caseSensitive ) );
+	}
+
+	static <T> Restriction<T> endsWith(SingularAttribute<T, String> attribute, String suffix, boolean caseSensitive) {
+		return restrict( attribute, Range.suffix( suffix, caseSensitive ) );
+	}
+
+	static <T> Restriction<T> contains(SingularAttribute<T, String> attribute, String substring, boolean caseSensitive) {
+		return restrict( attribute, Range.containing( substring, caseSensitive ) );
+	}
+
+	static <T> Restriction<T> notContains(SingularAttribute<T, String> attribute, String substring, boolean caseSensitive) {
+		return contains( attribute, substring, caseSensitive ).negated();
 	}
 
 	static <T> Restriction<T> all(List<? extends Restriction<? super T>> restrictions) {
@@ -198,17 +220,5 @@ public interface Restriction<X> {
 
 	static <T> Restriction<T> unrestricted() {
 		return new Unrestricted<>();
-	}
-
-	private static String escape(String literal) {
-		final var result = new StringBuilder();
-		for ( int i = 0; i < literal.length(); i++ ) {
-			final char ch = literal.charAt( i );
-			if ( ch=='%' || ch=='_' || ch=='\\' ) {
-				result.append('\\');
-			}
-			result.append( ch );
-		}
-		return result.toString();
 	}
 }

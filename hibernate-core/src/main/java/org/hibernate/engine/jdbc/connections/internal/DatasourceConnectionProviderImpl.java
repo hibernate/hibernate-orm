@@ -16,6 +16,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.service.UnknownUnwrapTypeException;
@@ -24,6 +25,7 @@ import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.Stoppable;
 
 import static org.hibernate.cfg.JdbcSettings.DATASOURCE;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
 
 /**
  * A {@link ConnectionProvider} that manages connections from an underlying {@link DataSource}.
@@ -40,6 +42,7 @@ import static org.hibernate.cfg.JdbcSettings.DATASOURCE;
  * @author Steve Ebersole
  */
 public class DatasourceConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable {
+
 	private DataSource dataSource;
 	private String user;
 	private String pass;
@@ -149,21 +152,41 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return getDatabaseConnectionInfo( dialect, null );
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect, ExtractedDatabaseMetaData metaData) {
+		final String url;
+		final String driver;
+		final String isolationLevel;
+		if ( metaData != null ) {
+			url = metaData.getUrl();
+			driver = metaData.getDriver();
+			isolationLevel = toIsolationNiceName( metaData.getTransactionIsolation() )
+							+ " [default " + toIsolationNiceName( metaData.getDefaultTransactionIsolation() ) + "]";
+		}
+		else {
+			url = null;
+			driver = null;
+			isolationLevel = null;
+		}
+
 		return new DatabaseConnectionInfoImpl(
 				DatasourceConnectionProviderImpl.class,
-				null,
-				null,
+				url,
+				driver,
 				dialect.getVersion(),
 				null,
-				null,
+				isolationLevel,
 				null,
 				null
 		) {
 			@Override
 			public String toInfoString() {
 				return dataSourceJndiName != null
-						? "\tDatasource JNDI name [" + dataSourceJndiName + "]"
-						: "\tProvided DataSource";
+						? "\tDataSource JNDI name [" + dataSourceJndiName + "]\n" + super.toInfoString()
+						: super.toInfoString();
 			}
 		};
 	}

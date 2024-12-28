@@ -38,6 +38,7 @@ import org.hibernate.service.spi.Stoppable;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 
 import static org.hibernate.cfg.JdbcSettings.JAKARTA_JDBC_URL;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getLong;
@@ -148,7 +149,7 @@ public class DriverManagerConnectionProviderImpl
 				driverList,
 				SimpleDatabaseVersion.ZERO_VERSION,
 				Boolean.toString( autoCommit ),
-				isolation != null ? ConnectionProviderInitiator.toIsolationNiceName( isolation ) : null,
+				isolation != null ? toIsolationNiceName( isolation ) : null,
 				getInt( MIN_SIZE, configurationValues, 1 ),
 				getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 )
 		);

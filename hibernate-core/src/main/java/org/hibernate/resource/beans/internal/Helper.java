@@ -49,12 +49,19 @@ public final class Helper {
 
 	@Nullable
 	public static BeanContainer getBeanContainer(ServiceRegistry serviceRegistry) {
-		return allowExtensionsInCdi( serviceRegistry ) ? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer() : null;
+		return allowExtensionsInCdi( serviceRegistry )
+				? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer()
+				: null;
 	}
 
 	@SuppressWarnings( "unchecked" )
 	@Nullable
-	public static <T> T getBean(@Nullable BeanContainer beanContainer, Class<?> beanType, boolean canUseCachedReferences, boolean useJpaCompliantCreation, @Nullable Supplier<T> fallbackSupplier) {
+	public static <T> T getBean(
+			@Nullable BeanContainer beanContainer,
+			Class<?> beanType,
+			boolean canUseCachedReferences,
+			boolean useJpaCompliantCreation,
+			@Nullable Supplier<T> fallbackSupplier) {
 		if ( beanContainer == null ) {
 			return null;
 		}
@@ -72,10 +79,9 @@ public final class Helper {
 					}
 				},
 				new BeanInstanceProducer() {
-
 					@Override
 					public <B> B produceBeanInstance(Class<B> beanType) {
-						return (B) (fallbackSupplier != null ? fallbackSupplier.get() : null);
+						return fallbackSupplier != null ? (B) fallbackSupplier.get() : null;
 					}
 
 					@Override

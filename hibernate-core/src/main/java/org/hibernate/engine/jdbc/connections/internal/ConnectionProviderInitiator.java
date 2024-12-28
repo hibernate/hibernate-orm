@@ -44,7 +44,7 @@ import static org.hibernate.cfg.JdbcSettings.USER;
 import static org.hibernate.cfg.SchemaToolingSettings.ENABLE_SYNONYMS;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl.isMultiTenancyEnabled;
 import static org.hibernate.internal.util.StringHelper.isBlank;
-import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.internal.util.StringHelper.nullIfBlank;
 
 /**
  * Instantiates and configures an appropriate {@link ConnectionProvider}.
@@ -108,9 +108,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 				return instantiateExplicitConnectionProvider( providerClass, beanContainer );
 			}
 			else {
-				final String providerName = nullIfEmpty( explicitSetting.toString() );
+				final String providerName = nullIfBlank( explicitSetting.toString() );
 				if ( providerName != null ) {
-					return instantiateNamedConnectionProvider(providerName, strategySelector, beanContainer);
+					return instantiateNamedConnectionProvider( providerName, strategySelector, beanContainer );
 				}
 			}
 		}
@@ -118,7 +118,8 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		return instantiateConnectionProvider( configurationValues, strategySelector, beanContainer );
 	}
 
-	private ConnectionProvider instantiateNamedConnectionProvider(String providerName, StrategySelector strategySelector, BeanContainer beanContainer) {
+	private ConnectionProvider instantiateNamedConnectionProvider(
+			String providerName, StrategySelector strategySelector, BeanContainer beanContainer) {
 		LOG.instantiatingExplicitConnectionProvider( providerName );
 		final Class<?> providerClass =
 				strategySelector.selectStrategyImplementor( ConnectionProvider.class, providerName );
@@ -126,10 +127,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return instantiateExplicitConnectionProvider( providerClass, beanContainer );
 		}
 		catch (Exception e) {
-			throw new HibernateException(
-					"Could not instantiate connection provider [" + providerName + "]",
-					e
-			);
+			throw new HibernateException( "Could not instantiate connection provider [" + providerName + "]", e );
 		}
 	}
 
@@ -165,7 +163,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return new DriverManagerConnectionProviderImpl();
 		}
 		else {
-			if (beanContainer != null) {
+			if ( beanContainer != null ) {
 				return Helper.getBean(
 					beanContainer,
 					ConnectionProvider.class,

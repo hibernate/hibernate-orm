@@ -13,6 +13,8 @@ import java.util.Objects;
 
 /**
  * A {@link Range} with a single literal value.
+ *
+ * @author Gavin King
  */
 record Value<U>(U value) implements Range<U> {
 	Value {

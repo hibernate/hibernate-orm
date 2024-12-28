@@ -13,6 +13,8 @@ import jakarta.persistence.criteria.Root;
  *
  * @param restrictions The restrictions to be AND-ed
  * @param <X> The entity type
+ *
+ * @author Gavin King
  */
 record Conjunction<X>(java.util.List<? extends Restriction<? super X>> restrictions)
 		implements Restriction<X> {

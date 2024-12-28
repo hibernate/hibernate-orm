@@ -10,6 +10,8 @@ import jakarta.persistence.criteria.Predicate;
 
 /**
  * An upper-bounded and lower-bounded interval.
+ *
+ * @author Gavin King
  */
 record Interval<U extends Comparable<U>>(LowerBound<U> lowerBound, UpperBound<U> upperBound)
 		implements Range<U> {

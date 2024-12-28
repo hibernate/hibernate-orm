@@ -12,6 +12,8 @@ import java.util.Locale;
 
 /**
  * The {@link Range} of strings recognized by the given pattern.
+ *
+ * @author Gavin King
  */
 record Pattern(String pattern, boolean caseSensitive) implements Range<String> {
 	Pattern(String pattern, boolean caseSensitive, char charWildcard, char stringWildcard) {

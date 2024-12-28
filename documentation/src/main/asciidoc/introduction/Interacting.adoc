@@ -1085,6 +1085,18 @@ Unfortunately, `Restriction` and `Order` can't be used with JPA's `TypedQuery` i
 
 Alternatively, `Restriction` and `Order` can be used with <<paging-and-ordering,generated query or finder methods>>, and even with link:{doc-data-repositories-url}[Jakarta Data repositories].
 
+The interface link:{doc-javadoc-url}org/hibernate/query/Path.html[`Path`] may be used to express restrictions on fields of an embedded or associated entity class.
+
+[source,java]
+----
+List<Book> booksForPublisher =
+        session.createSelectionQuery("from Book", Book.class)
+                .addRestriction(Path.root(Book_.publisher)
+                                .get(Publisher_.name)
+                                .equalTo(publisherName))
+                .getResultList();
+----
+
 Programmatic restrictions, and especially programmatic ordering, are often used together with pagination.
 
 [[pagination]]

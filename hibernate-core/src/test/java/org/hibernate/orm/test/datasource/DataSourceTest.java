@@ -20,7 +20,6 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 
-import java.util.Properties;
 
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.junit.jupiter.api.Assertions.assertTrue;

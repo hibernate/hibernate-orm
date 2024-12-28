@@ -13,6 +13,8 @@ import java.util.Objects;
 
 /**
  * Restricts to a list of literal values.
+ *
+ * @author Gavin King
  */
 record ValueList<U>(List<U> values) implements Range<U> {
 	ValueList {

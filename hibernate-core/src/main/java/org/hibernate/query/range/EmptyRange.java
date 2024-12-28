@@ -10,6 +10,8 @@ import jakarta.persistence.criteria.Predicate;
 
 /**
  * A {@link Range} containing no values.
+ *
+ * @author Gavin King
  */
 record EmptyRange<U>(Class<U> type) implements Range<U> {
 	@Override

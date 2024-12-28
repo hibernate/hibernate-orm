@@ -6,6 +6,8 @@ package org.hibernate.orm.test.query.restriction;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Version;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -16,6 +18,7 @@ import java.util.List;
 
 import static org.hibernate.query.Order.asc;
 import static org.hibernate.query.Order.desc;
+import static org.hibernate.query.Path.root;
 import static org.hibernate.query.Restriction.all;
 import static org.hibernate.query.Restriction.any;
 import static org.hibernate.query.Restriction.between;
@@ -28,11 +31,13 @@ import static org.hibernate.query.Restriction.in;
 import static org.hibernate.query.Restriction.like;
 import static org.hibernate.query.Restriction.restrict;
 import static org.hibernate.query.Restriction.unrestricted;
+import static org.hibernate.query.range.Range.containing;
+import static org.hibernate.query.range.Range.greaterThan;
 import static org.hibernate.query.range.Range.singleCaseInsensitiveValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SessionFactory
-@DomainModel(annotatedClasses = RestrictionTest.Book.class)
+@DomainModel(annotatedClasses = {RestrictionTest.Book.class, RestrictionTest.Publisher.class})
 public class RestrictionTest {
 
 	@Test
@@ -142,6 +147,57 @@ public class RestrictionTest {
 		assertEquals( 1, booksByIsbn2.size() );
 	}
 
+	@Test
+	void testPath(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.createMutationQuery( "delete Book" ).executeUpdate() );
+		scope.inTransaction( session -> {
+			Publisher pub = new Publisher();
+			pub.name = "Manning";
+			session.persist( pub );
+			session.persist( new Book( "9781932394153", "Hibernate in Action", 400, pub ) );
+			session.persist( new Book( "9781617290459", "Java Persistence with Hibernate", 1000, pub ) );
+		} );
+
+		var bookType = scope.getSessionFactory().getJpaMetamodel().findEntityType(Book.class);
+		var pubType = scope.getSessionFactory().getJpaMetamodel().findEntityType(Publisher.class);
+		@SuppressWarnings( "unchecked" )
+		var title = (SingularAttribute<? super Book, String>) bookType.findSingularAttribute("title");
+		@SuppressWarnings( "unchecked" )
+		var isbn = (SingularAttribute<? super Book, String>) bookType.findSingularAttribute("isbn");
+		@SuppressWarnings( "unchecked" )
+		var pages = (SingularAttribute<? super Book, Integer>) bookType.findSingularAttribute("pages");
+		@SuppressWarnings( "unchecked" )
+		var publisher = (SingularAttribute<? super Book, Publisher>) bookType.findSingularAttribute("publisher");
+		@SuppressWarnings( "unchecked" )
+		var name = (SingularAttribute<? super Publisher, String>) pubType.findSingularAttribute("name");
+		@SuppressWarnings( "unchecked" )
+		var version = (SingularAttribute<? super Publisher, Integer>) pubType.findSingularAttribute("version");
+
+		List<Book> booksWithPub = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( root(publisher).get(name).equalTo("Manning") )
+						.setOrder( desc( title ) )
+						.getResultList() );
+		assertEquals( 2, booksWithPub.size() );
+		List<Book> noBookWithPub = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( root(publisher).get(name).notEqualTo("Manning") )
+						.setOrder( desc( title ) )
+						.getResultList() );
+		assertEquals( 0, noBookWithPub.size() );
+		List<Book> books = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( root(title).restrict( containing("hibernate", false) ) )
+						.setOrder( desc( title ) )
+						.getResultList() );
+		assertEquals( 2, books.size() );
+		List<Book> booksWithPubVersion = scope.fromSession( session ->
+				session.createSelectionQuery( "from Book", Book.class)
+						.addRestriction( root(publisher).get(version).restrict( greaterThan(5) ) )
+						.getResultList() );
+		assertEquals( 0, booksWithPubVersion.size() );
+	}
+
 	@Entity(name="Book")
 	static class Book {
 		@Id
@@ -149,14 +205,30 @@ public class RestrictionTest {
 		String title;
 		int pages;
 
+		@ManyToOne
+		Publisher publisher;
+
 		Book(String isbn, String title, int pages) {
 			this.isbn = isbn;
 			this.title = title;
 			this.pages = pages;
 		}
 
+		Book(String isbn, String title, int pages, Publisher publisher) {
+			this.isbn = isbn;
+			this.title = title;
+			this.pages = pages;
+			this.publisher = publisher;
+		}
+
 		Book() {
 		}
+	}
+
+	@Entity(name="Publisher")
+	static class Publisher{
+		@Id String name;
+		@Version int version;
 	}
 
 }

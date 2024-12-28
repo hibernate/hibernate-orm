@@ -27,25 +27,17 @@ public class LocalTemporaryTableStrategy {
 
 	private boolean dropIdTables;
 
-	public LocalTemporaryTableStrategy(
-			TemporaryTable temporaryTable,
-			SessionFactoryImplementor sessionFactory) {
+	public LocalTemporaryTableStrategy(TemporaryTable temporaryTable, SessionFactoryImplementor sessionFactory) {
 		this.temporaryTable = temporaryTable;
 		this.sessionFactory = sessionFactory;
 	}
 
-	public void prepare(
-			MappingModelCreationProcess mappingModelCreationProcess,
-			JdbcConnectionAccess connectionAccess) {
+	public void prepare(MappingModelCreationProcess mappingModelCreationProcess, JdbcConnectionAccess connectionAccess) {
 		final ConfigurationService configService =
 				mappingModelCreationProcess.getCreationContext()
 						.getBootstrapContext().getServiceRegistry()
 						.requireService( ConfigurationService.class );
-		this.dropIdTables = configService.getSetting(
-				DROP_ID_TABLES,
-				StandardConverters.BOOLEAN,
-				false
-		);
+		dropIdTables = configService.getSetting( DROP_ID_TABLES, StandardConverters.BOOLEAN, false );
 	}
 
 	public void release(SessionFactoryImplementor sessionFactory, JdbcConnectionAccess connectionAccess) {

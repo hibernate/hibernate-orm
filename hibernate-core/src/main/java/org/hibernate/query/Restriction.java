@@ -17,14 +17,14 @@ import java.util.List;
 /**
  * A rule for restricting query results.
  * <p>
- * This allows restrictions to be added to a {@link Query} by calling
+ * This allows restrictions to be added to a {@link SelectionQuery} by calling
  * {@link SelectionQuery#addRestriction(Restriction)}.
  * <pre>
  * session.createSelectionQuery("from Book", Book.class)
  *         .addRestriction(Restriction.like(Book_.title, "%Hibernate%", false))
  *         .addRestriction(Restriction.greaterThan(Book_.pages, 100))
  *         .setOrder(Order.desc(Book_.title))
- * 		   .getResultList() );
+ *         .getResultList() );
  * </pre>
  * <p>
  * Each restriction pairs an {@linkplain SingularAttribute attribute} of the

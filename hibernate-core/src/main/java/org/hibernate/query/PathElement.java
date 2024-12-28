@@ -12,7 +12,13 @@ import jakarta.persistence.metamodel.SingularAttribute;
  *
  * @author Gavin King
  */
-record PathElement<X, U, V>(Path<? super X, U> parent, SingularAttribute<? super U, V> attribute) implements Path<X, V> {
+record PathElement<X, U, V>(Path<? super X, U> parent, SingularAttribute<? super U, V> attribute)
+		implements Path<X, V> {
+	@Override
+	public Class<V> getType() {
+		return attribute.getJavaType();
+	}
+
 	@Override
 	public jakarta.persistence.criteria.Path<V> path(Root<? extends X> root) {
 		return parent.path( root ).get( attribute );

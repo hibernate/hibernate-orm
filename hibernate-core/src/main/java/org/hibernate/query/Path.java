@@ -18,7 +18,8 @@ import java.util.List;
  * the root entity type of the query.
  * <pre>
  * session.createSelectionQuery("from Book", Book.class)
- *         .addRestriction(root(publisher).get(name).equalTo("Manning"))
+ *         .addRestriction(from(Book.class).to(Book_.publisher).to(Publisher_.name)
+ *                         .equalTo("Manning"))
  *         .getResultList()
  * </pre>
  * A compound path-based restriction has the same semantics as the
@@ -37,15 +38,21 @@ import java.util.List;
 public interface Path<X,U> {
 	jakarta.persistence.criteria.Path<U> path(Root<? extends X> root);
 
-	default <V> Path<X, V> get(SingularAttribute<? super U, V> attribute) {
+	Class<U> getType();
+
+	default <V> Path<X, V> to(SingularAttribute<? super U, V> attribute) {
 		return new PathElement<>( this, attribute );
 	}
 
-	static <X, U> Path<X, U> root(SingularAttribute<? super X, U> attribute) {
-		return new PathRoot<X>().get( attribute );
+	default <V> Path<X, V> to(String attributeName, Class<V> attributeType) {
+		return new NamedPathElement<>( this, attributeName, attributeType );
 	}
 
-	default Restriction<X> restrict(Range<U> range) {
+	static <X> Path<X, X> from(Class<X> type) {
+		return new PathRoot<>( type );
+	}
+
+	default Restriction<X> restrict(Range<? super U> range) {
 		return new PathRange<>( this, range );
 	}
 
@@ -65,5 +72,7 @@ public interface Path<X,U> {
 		return in( values ).negated();
 	}
 
-	//TODO: between, lessThan, greaterThan?
+	default Restriction<X> notNull() {
+		return restrict( Range.notNull( getType() ) );
+	}
 }

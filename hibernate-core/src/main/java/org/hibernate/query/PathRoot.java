@@ -11,7 +11,12 @@ import jakarta.persistence.criteria.Root;
  *
  * @author Gavin King
  */
-record PathRoot<X>() implements Path<X, X> {
+record PathRoot<X>(Class<X> type) implements Path<X, X> {
+	@Override
+	public Class<X> getType() {
+		return type;
+	}
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public jakarta.persistence.criteria.Path<X> path(Root<? extends X> root) {

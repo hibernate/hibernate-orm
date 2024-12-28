@@ -22,7 +22,7 @@ record Value<U>(U value) implements Range<U> {
 	}
 
 	@Override
-	public Predicate toPredicate(Path<U> path, CriteriaBuilder builder) {
+	public Predicate toPredicate(Path<? extends U> path, CriteriaBuilder builder) {
 		// TODO: it would be much better to not do use literal,
 		//       and let it be treated as a parameter, but we
 		//       we run into the usual bug with parameters in

@@ -203,6 +203,10 @@ public interface Restriction<X> {
 		return contains( attribute, substring, caseSensitive ).negated();
 	}
 
+	static <T, U> Restriction<T> notNull(SingularAttribute<T, U> attribute) {
+		return restrict( attribute, Range.notNull( attribute.getJavaType() ) );
+	}
+
 	static <T> Restriction<T> all(List<? extends Restriction<? super T>> restrictions) {
 		return new Conjunction<>( restrictions );
 	}

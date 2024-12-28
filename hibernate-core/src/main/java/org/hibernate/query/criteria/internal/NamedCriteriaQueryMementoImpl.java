@@ -75,11 +75,7 @@ public class NamedCriteriaQueryMementoImpl<E> extends AbstractNamedQueryMemento<
 
 	@Override
 	public <T> SqmSelectionQuery<T> toSelectionQuery(Class<T> resultType, SharedSessionContractImplementor session) {
-		return new SqmSelectionQueryImpl<>(
-				this,
-				resultType,
-				session
-		);
+		return new SqmSelectionQueryImpl<>( this, resultType, session );
 	}
 
 	@Override

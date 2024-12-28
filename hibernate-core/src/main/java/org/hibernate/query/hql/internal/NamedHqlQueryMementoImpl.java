@@ -137,11 +137,7 @@ public class NamedHqlQueryMementoImpl<R> extends AbstractNamedQueryMemento<R>
 
 	@Override
 	public <T> SqmSelectionQuery<T> toSelectionQuery(Class<T> resultType, SharedSessionContractImplementor session) {
-		return new SqmSelectionQueryImpl<>(
-				this,
-				resultType,
-				session
-		);
+		return new SqmSelectionQueryImpl<>( this, resultType, session );
 	}
 
 	@Override

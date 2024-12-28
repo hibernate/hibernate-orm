@@ -20,7 +20,7 @@ import static org.hibernate.query.Restriction.all;
 import static org.hibernate.query.Restriction.any;
 import static org.hibernate.query.Restriction.between;
 import static org.hibernate.query.Restriction.contains;
-import static org.hibernate.query.Restriction.endWith;
+import static org.hibernate.query.Restriction.endsWith;
 import static org.hibernate.query.Restriction.equal;
 import static org.hibernate.query.Restriction.equalIgnoringCase;
 import static org.hibernate.query.Restriction.greaterThan;
@@ -105,7 +105,7 @@ public class RestrictionTest {
 		assertEquals( 0, noBooks.size() );
 		List<Book> books1 = scope.fromSession( session ->
 				session.createSelectionQuery( "from Book", Book.class)
-						.addRestriction( endWith(title, "Hibernate") )
+						.addRestriction( endsWith(title, "Hibernate") )
 						.getResultList() );
 		assertEquals( 1, books1.size() );
 		List<Book> books2 = scope.fromSession( session ->

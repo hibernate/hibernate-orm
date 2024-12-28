@@ -37,7 +37,7 @@ public class ModelTypePool extends TypePool.Default implements EnhancerClassLoca
 	 * @return the newly created EnhancerClassLocator
 	 */
 	public static EnhancerClassLocator buildModelTypePool(ClassLoader classLoader) {
-		return buildModelTypePool( ClassFileLocator.ForClassLoader.of( classLoader ) );
+		return ThreadsafeLocator.buildModelTypePool( classLoader );
 	}
 
 	/**
@@ -105,4 +105,53 @@ public class ModelTypePool extends TypePool.Default implements EnhancerClassLoca
 		return locator;
 	}
 
+	/**
+	 * Based on https://github.com/quarkusio/quarkus/blob/main/extensions/hibernate-orm/deployment/src/main/java/io/quarkus/hibernate/orm/deployment/integration/QuarkusClassFileLocator.java#L19
+	 */
+	private static final class ThreadsafeLocator implements EnhancerClassLocator {
+		private final ClassFileLocator classFileLocator;
+		final ThreadLocal<EnhancerClassLocator> localLocator;
+
+		private ThreadsafeLocator() {
+			classFileLocator = null;
+			localLocator = null;
+		}
+		private ThreadsafeLocator(ClassFileLocator of) {
+			classFileLocator = of;
+			localLocator = ThreadLocal
+			                .withInitial(() -> ModelTypePool.buildModelTypePool(classFileLocator,
+									new CoreTypePool() ));
+		}
+
+		public static EnhancerClassLocator buildModelTypePool(ClassLoader classLoader) {
+			return new ThreadsafeLocator( ClassFileLocator.ForClassLoader.of( classLoader ) );
+		}
+
+        @Override
+        public void registerClassNameAndBytes(String s, byte[] bytes) {
+            localLocator.get().registerClassNameAndBytes(s, bytes);
+        }
+
+        @Override
+        public void deregisterClassNameAndBytes(String s) {
+            localLocator.get().deregisterClassNameAndBytes(s);
+        }
+
+        @Override
+        public ClassFileLocator asClassFileLocator() {
+            return localLocator.get().asClassFileLocator();
+        }
+
+        @Override
+        public Resolution describe(String s) {
+            return localLocator.get().describe(s);
+        }
+
+        @Override
+        public void clear() {
+            //not essential as it gets discarded, but could help:
+            localLocator.get().clear();
+            localLocator.remove();
+        }
+    }
 }

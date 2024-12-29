@@ -35,6 +35,7 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 import org.hibernate.engine.profile.DefaultFetchProfile;
 import org.hibernate.graph.GraphSemantic;
+import org.hibernate.query.restriction.Restriction;
 
 /**
  * Within the context of an active {@linkplain org.hibernate.Session session},

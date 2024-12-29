@@ -2,28 +2,30 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query;
+package org.hibernate.query.restriction;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.metamodel.SingularAttribute;
+import org.hibernate.query.range.Range;
 
 /**
- * Negates a restriction; a logical NOT.
+ * Restricts an attribute of an entity to a given {@link Range}.
  *
- * @param restriction The restriction to be negated
  * @param <X> The entity type
+ * @param <U> The attribute type
  *
  * @author Gavin King
  */
-record Negation<X>(Restriction<X> restriction) implements Restriction<X> {
+record AttributeRange<X, U>(SingularAttribute<X, U> attribute, Range<U> range) implements Restriction<X> {
 	@Override
 	public Restriction<X> negated() {
-		return restriction;
+		return new Negation<>( this );
 	}
 
 	@Override
 	public Predicate toPredicate(Root<? extends X> root, CriteriaBuilder builder) {
-		return builder.not( restriction.toPredicate( root, builder ) );
+		return range.toPredicate( root.get( attribute ), builder );
 	}
 }

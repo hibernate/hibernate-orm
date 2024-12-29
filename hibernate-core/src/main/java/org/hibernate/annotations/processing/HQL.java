@@ -135,7 +135,7 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * </ul>
  * <p>
  * Finally, a method might have a parameter of type
- * {@link org.hibernate.query.Restriction Restriction<? super E>},
+ * {@link org.hibernate.query.restriction.Restriction Restriction<? super E>},
  * allowing the caller to apply an arbitrary filtering criterion to
  * the query results.
  * <p>

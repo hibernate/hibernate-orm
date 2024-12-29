@@ -9,7 +9,6 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
-import org.hibernate.query.Restriction;
 
 import java.util.List;
 
@@ -22,7 +21,7 @@ import java.util.List;
  *
  * @param <U> The type of the value being restricted
  *
- * @see Restriction
+ * @see org.hibernate.query.restriction.Restriction
  *
  * @author Gavin King
  *

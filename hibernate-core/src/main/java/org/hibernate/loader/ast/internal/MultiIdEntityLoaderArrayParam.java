@@ -18,6 +18,7 @@ import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
@@ -121,7 +122,12 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 		getJdbcSelectExecutor().executeQuery(
 				getSqlAstTranslatorFactory().buildSelectTranslator( getSessionFactory(), sqlAst )
-						.translate( NO_BINDINGS, QueryOptions.NONE ),
+						.translate( NO_BINDINGS, new QueryOptionsAdapter() {
+							@Override
+							public LockOptions getLockOptions() {
+								return lockOptions;
+							}
+						} ),
 				jdbcParameterBindings,
 				new ExecutionContextWithSubselectFetchHandler(
 						session,

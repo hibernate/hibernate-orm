@@ -99,6 +99,7 @@ public class MultiNaturalIdLoaderArrayParam<E> implements MultiNaturalIdLoader<E
 				.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( sessionFactory, sqlAst )
+				// TODO: do we need to pass the LockOptions here?
 				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 
 		return LoaderHelper.loadByArrayParameter(

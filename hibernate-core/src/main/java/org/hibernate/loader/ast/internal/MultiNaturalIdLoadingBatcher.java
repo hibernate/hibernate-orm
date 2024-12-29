@@ -83,6 +83,7 @@ public class MultiNaturalIdLoadingBatcher {
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory =
 				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory();
 		this.jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
+				//TODO: do we need to pass the LockOptions here?
 				.translate( null, QueryOptions.NONE );
 	}
 

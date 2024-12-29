@@ -23,7 +23,7 @@ public class ForUpdateFragment {
 	private final Dialect dialect;
 	private final LockOptions lockOptions;
 
-	public ForUpdateFragment(Dialect dialect, LockOptions lockOptions, Map<String, String[]> keyColumnNames) throws QueryException {
+	public ForUpdateFragment(Dialect dialect, LockOptions lockOptions, Map<String, String[]> keyColumnNames) {
 		this.dialect = dialect;
 		LockMode upgradeType = null;
 		this.lockOptions =  lockOptions;
@@ -62,7 +62,7 @@ public class ForUpdateFragment {
 	}
 
 	public ForUpdateFragment addTableAlias(String alias) {
-		if ( aliases.length() > 0 ) {
+		if ( !aliases.isEmpty() ) {
 			aliases.append( ", " );
 		}
 		aliases.append( alias );
@@ -70,7 +70,7 @@ public class ForUpdateFragment {
 	}
 
 	public String toFragmentString() {
-		if ( aliases.length() == 0) {
+		if ( aliases.isEmpty() ) {
 			return dialect.getForUpdateString( lockOptions );
 		}
 		else {

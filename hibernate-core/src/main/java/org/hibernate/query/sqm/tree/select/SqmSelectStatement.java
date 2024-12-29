@@ -348,7 +348,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmSelectStatement<T> multiselect(Selection<?>... selections) {
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			for ( Selection<?> selection : selections ) {
@@ -361,7 +361,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmSelectStatement<T> multiselect(List<Selection<?>> selectionList) {
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			for ( Selection<?> selection : selectionList ) {

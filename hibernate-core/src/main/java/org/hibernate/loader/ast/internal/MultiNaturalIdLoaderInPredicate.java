@@ -7,7 +7,6 @@ package org.hibernate.loader.ast.internal;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -48,24 +47,27 @@ public class MultiNaturalIdLoaderInPredicate<E> implements MultiNaturalIdLoader<
 			maxBatchSize = options.getBatchSize();
 		}
 		else {
-			maxBatchSize = session.getJdbcServices().getJdbcEnvironment().getDialect().getMultiKeyLoadSizingStrategy().determineOptimalBatchLoadSize(
-					entityDescriptor.getNaturalIdMapping().getJdbcTypeCount(),
-					naturalIds.length,
-					sessionFactory.getSessionFactoryOptions().inClauseParameterPaddingEnabled()
-			);
+			maxBatchSize =
+					session.getJdbcServices().getJdbcEnvironment().getDialect()
+							.getMultiKeyLoadSizingStrategy().determineOptimalBatchLoadSize(
+									entityDescriptor.getNaturalIdMapping().getJdbcTypeCount(),
+									naturalIds.length,
+									sessionFactory.getSessionFactoryOptions().inClauseParameterPaddingEnabled()
+							);
 		}
 
 		final int batchSize = Math.min( maxBatchSize, naturalIds.length );
 
-		final LockOptions lockOptions = (options.getLockOptions() == null)
-				? new LockOptions( LockMode.NONE )
-				: options.getLockOptions();
+		final LockOptions lockOptions =
+				options.getLockOptions() == null
+						? LockOptions.NONE
+						: options.getLockOptions();
 
 		final MultiNaturalIdLoadingBatcher batcher = new MultiNaturalIdLoadingBatcher(
 				entityDescriptor,
 				entityDescriptor.getNaturalIdMapping(),
 				batchSize,
-				(naturalId, session1) -> {
+				(naturalId, s) -> {
 					// `naturalId` here is the one passed in by the API as part of the values array
 					// todo (6.0) : use this to help create the ordered results
 					return entityDescriptor.getNaturalIdMapping().normalizeInput( naturalId );
@@ -75,7 +77,7 @@ public class MultiNaturalIdLoaderInPredicate<E> implements MultiNaturalIdLoader<
 				sessionFactory
 		);
 
-		final List<E> results = batcher.multiLoad( naturalIds, options, session );
+		final List<E> results = batcher.multiLoad( naturalIds, session );
 
 		if ( results.size() == 1 ) {
 			return results;

@@ -7,7 +7,6 @@ package org.hibernate.loader.ast.internal;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -18,7 +17,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
-import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
@@ -73,9 +72,10 @@ public class MultiNaturalIdLoaderArrayParam<E> implements MultiNaturalIdLoader<E
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 		naturalIds = LoaderHelper.normalizeKeys( naturalIds, getNaturalIdAttribute(), session, sessionFactory );
 
-		final LockOptions lockOptions = (loadOptions.getLockOptions() == null)
-				? new LockOptions( LockMode.NONE )
-				: loadOptions.getLockOptions();
+		final LockOptions lockOptions =
+				loadOptions.getLockOptions() == null
+						? LockOptions.NONE
+						: loadOptions.getLockOptions();
 
 		final BasicTypeRegistry basicTypeRegistry = sessionFactory.getTypeConfiguration().getBasicTypeRegistry();
 		final BasicType<?> arrayBasicType = basicTypeRegistry.getRegisteredType( keyArrayClass );
@@ -99,8 +99,12 @@ public class MultiNaturalIdLoaderArrayParam<E> implements MultiNaturalIdLoader<E
 				.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( sessionFactory, sqlAst )
-				// TODO: do we need to pass the LockOptions here?
-				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
+				.translate( JdbcParameterBindings.NO_BINDINGS, new QueryOptionsAdapter() {
+					@Override
+					public LockOptions getLockOptions() {
+						return lockOptions;
+					}
+				} );
 
 		return LoaderHelper.loadByArrayParameter(
 				naturalIds,

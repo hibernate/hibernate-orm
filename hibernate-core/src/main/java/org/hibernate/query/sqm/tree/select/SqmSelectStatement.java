@@ -41,6 +41,7 @@ import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.metamodel.EntityType;
 
 import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.combinePredicates;
 import static org.hibernate.query.sqm.SqmQuerySource.CRITERIA;
@@ -164,6 +165,11 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	@Override
 	public NodeBuilder getCriteriaBuilder() {
 		return nodeBuilder();
+	}
+
+	@Override
+	public List<Order> getOrderList() {
+		return unmodifiableList( getQueryPart().getSortSpecifications() );
 	}
 
 	@Override
@@ -368,33 +374,26 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@SuppressWarnings("unchecked")
-	private Selection<? extends T> getResultSelection(List<?> selectionList) {
+	private Selection<? extends T> getResultSelection(List<?> selections) {
 		final Class<T> resultType = getResultType();
-		//noinspection rawtypes
-		final List<? extends JpaSelection<?>> selections = (List) selectionList;
 		if ( resultType == null || resultType == Object.class ) {
-			switch ( selectionList.size() ) {
-				case 0: {
-					throw new IllegalArgumentException(
-							"empty selections passed to criteria query typed as Object"
-					);
-				}
-				case 1: {
-					return (Selection<? extends T>) selectionList.get( 0 );
-				}
-				default: {
-					return (Selection<? extends T>) nodeBuilder().array( (List) selectionList );
-				}
+			switch ( selections.size() ) {
+				case 0:
+					throw new IllegalArgumentException( "Empty selections passed to criteria query typed as Object" );
+				case 1:
+					return (Selection<? extends T>) selections.get( 0 );
+				default:
+					return (Selection<? extends T>) nodeBuilder().array( (List<Selection<?>>) selections );
 			}
 		}
 		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
-			return (Selection<? extends T>) nodeBuilder().tuple( (List) selectionList );
+			return (Selection<? extends T>) nodeBuilder().tuple( (List<Selection<?>>) selections );
 		}
 		else if ( resultType.isArray() ) {
-			return nodeBuilder().array( resultType, selections );
+			return nodeBuilder().array( resultType, (List<? extends JpaSelection<?>>) selections );
 		}
 		else {
-			return nodeBuilder().construct( resultType, selections );
+			return nodeBuilder().construct( resultType, (List<? extends JpaSelection<?>>) selections );
 		}
 	}
 

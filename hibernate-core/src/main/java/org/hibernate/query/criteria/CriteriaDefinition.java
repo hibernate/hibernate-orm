@@ -53,7 +53,7 @@ import java.util.function.Function;
  *     List&lt;Book&gt; books
  *             = new CriteriaDefinition&lt;&gt;(sessionFactory, Book.class,
  *                     "from Book left join fetch authors where type = BOOK") {{
- *                 var book = (JpaRoot&lt;Book&gt;) getSelection();
+ *                 var book = getRoot(0, Book.class);
  *                 where(getRestriction(), like(book.get(Book_.title), "%Hibernate%"));
  *                 orderBy(desc(book.get(Book_.publicationDate)), asc(book.get(Book_.isbn)));
  *             }}
@@ -408,8 +408,18 @@ public abstract class CriteriaDefinition<R>
 	}
 
 	@Override
-	public List<Root<?>> getRootList() {
+	public List<? extends JpaRoot<?>> getRootList() {
 		return query.getRootList();
+	}
+
+	@Override
+	public <E> JpaRoot<? extends E> getRoot(int position, Class<E> type) {
+		return query.getRoot( position, type );
+	}
+
+	@Override
+	public <E> JpaRoot<? extends E> getRoot(String alias, Class<E> type) {
+		return query.getRoot( alias, type );
 	}
 
 	@Override

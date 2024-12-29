@@ -8,7 +8,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Version;
-import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -251,11 +250,22 @@ public class RestrictionTest {
 		} );
 		scope.inSession( session -> {
 			var query = session.getCriteriaBuilder().createQuery("select title from Book", String.class);
-			var root = (Root<Book>) query.getRootList().get(0);
+			var root = query.getRoot(0, Book.class);
 			equal( isbn, "9781932394153" ).apply( query, root );
 			List<String> titles = session.createQuery( query ).getResultList();
 			assertEquals( 1, titles.size() );
 		} );
+
+		var builder = scope.getSessionFactory().getCriteriaBuilder();
+		var query = builder.createQuery("from Book where pages > 200", Book.class);
+		var root = query.getRoot(0, Book.class);
+		like( title, "Hibernate%" ).apply( query, root );
+		query.orderBy(builder.asc(root.get(title)), builder.desc(root.get(isbn)));
+		scope.inSession( session -> {
+			List<Book> matchingBooks = session.createSelectionQuery(query).getResultList();
+			assertEquals( 1, matchingBooks.size() );
+		});
+
 	}
 
 

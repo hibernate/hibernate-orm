@@ -919,7 +919,7 @@ It's even possible to transform a HQL query string to a criteria query, and modi
 ----
 HibernateCriteriaBuilder builder = sessionFactory.getCriteriaBuilder();
 var query = builder.createQuery("from Book where year(publicationDate) > 2000", Book.class);
-var root = (Root<Book>) query.getRootList().get(0);
+var root = query.getRoot(0, Book.class);
 query.where(builder.like(root.get(Book_.title), builder.literal("Hibernate%")));
 query.orderBy(builder.asc(root.get(Book_.title)), builder.desc(root.get(Book_.isbn)));
 List<Book> matchingBooks = session.createSelectionQuery(query).getResultList();

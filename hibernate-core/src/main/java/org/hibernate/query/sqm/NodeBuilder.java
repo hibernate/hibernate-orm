@@ -908,19 +908,19 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
 	SqmSelectStatement<Tuple> createTupleQuery();
 
 	@Override
-	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>[] selections);
+	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>... selections);
 
 	@Override
 	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends JpaSelection<?>> arguments);
 
 	@Override
-	JpaCompoundSelection<Tuple> tuple(Selection<?>[] selections);
+	JpaCompoundSelection<Tuple> tuple(Selection<?>... selections);
 
 	@Override
 	JpaCompoundSelection<Tuple> tuple(List<Selection<?>> selections);
 
 	@Override
-	JpaCompoundSelection<Object[]> array(Selection<?>[] selections);
+	JpaCompoundSelection<Object[]> array(Selection<?>... selections);
 
 	@Override
 	JpaCompoundSelection<Object[]> array(List<Selection<?>> selections);

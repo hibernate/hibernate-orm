@@ -5,6 +5,7 @@
 package org.hibernate.query.restriction;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.SingularAttribute;
@@ -12,6 +13,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.query.Order;
 import org.hibernate.query.SelectionQuery;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.range.Range;
 
 import java.util.List;
@@ -76,6 +78,17 @@ public interface Restriction<X> {
 	 */
 	@Internal
 	Predicate toPredicate(Root<? extends X> root, CriteriaBuilder builder);
+
+	/**
+	 * Apply this restriction to the given root entity of the given
+	 * {@linkplain CriteriaQuery criteria query}.
+	 */
+	default void apply(CriteriaQuery<?> query, Root<? extends X> root) {
+		if ( !(query instanceof JpaCriteriaQuery<?> criteriaQuery) ) {
+			throw new IllegalArgumentException( "Not a JpaCriteriaQuery" );
+		}
+		query.where( query.getRestriction(), toPredicate( root, criteriaQuery.getCriteriaBuilder() ) );
+	}
 
 	/**
 	 * Restrict the allowed values of the given attribute to the given

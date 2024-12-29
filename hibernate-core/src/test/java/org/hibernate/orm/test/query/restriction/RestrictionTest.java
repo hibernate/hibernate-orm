@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Version;
+import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -215,6 +216,48 @@ public class RestrictionTest {
 						.getResultList() );
 		assertEquals( 2, unsafeTest.size() );
 	}
+
+	@Test
+	void testCriteria(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.inTransaction( session -> {
+			session.persist(new Book("9781932394153", "Hibernate in Action", 400));
+			session.persist(new Book("9781617290459", "Java Persistence with Hibernate", 1000));
+		});
+
+		var bookType = scope.getSessionFactory().getJpaMetamodel().findEntityType(Book.class);
+		@SuppressWarnings( "unchecked" )
+		var title = (SingularAttribute<? super Book, String>) bookType.findSingularAttribute("title");
+		@SuppressWarnings( "unchecked" )
+		var isbn = (SingularAttribute<? super Book, String>) bookType.findSingularAttribute("isbn");
+		@SuppressWarnings( "unchecked" )
+		var pages = (SingularAttribute<? super Book, Integer>) bookType.findSingularAttribute("pages");
+
+		scope.inSession( session -> {
+			var query = session.getCriteriaBuilder().createQuery(String.class);
+			var root = query.from( Book.class );
+			like( title, "%Hibernate%" ).apply( query, root );
+			query.select( root.get( title ) );
+			List<String> titles = session.createQuery( query ).getResultList();
+			assertEquals( 2, titles.size() );
+		} );
+		scope.inSession( session -> {
+			var query = session.getCriteriaBuilder().createQuery(String.class);
+			var root = query.from( Book.class );
+			equal( isbn, "9781932394153" ).apply( query, root );
+			query.select( root.get( title ) );
+			List<String> titles = session.createQuery( query ).getResultList();
+			assertEquals( 1, titles.size() );
+		} );
+		scope.inSession( session -> {
+			var query = session.getCriteriaBuilder().createQuery("select title from Book", String.class);
+			var root = (Root<Book>) query.getRootList().get(0);
+			equal( isbn, "9781932394153" ).apply( query, root );
+			List<String> titles = session.createQuery( query ).getResultList();
+			assertEquals( 1, titles.size() );
+		} );
+	}
+
 
 	@Entity(name="Book")
 	static class Book {

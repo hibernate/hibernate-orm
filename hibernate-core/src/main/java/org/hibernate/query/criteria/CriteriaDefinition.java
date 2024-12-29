@@ -148,8 +148,10 @@ public abstract class CriteriaDefinition<R>
 	 */
 	public CriteriaDefinition(CriteriaDefinition<?> template, Class<R> resultType) {
 		super( template.getCriteriaBuilder() );
-		query = ((SqmSelectStatement<?>) template.query)
-				.createCopy( SqmCopyContext.simpleContext(), resultType );
+		if ( !(template.query instanceof SqmSelectStatement<?> selectStatement) ) {
+			throw new IllegalArgumentException( "Not a SqmSelectStatement" );
+		}
+		query = selectStatement.createCopy( SqmCopyContext.simpleContext(), resultType );
 	}
 
 	public CriteriaDefinition(SessionFactory factory, Class<R> resultType) {
@@ -218,6 +220,11 @@ public abstract class CriteriaDefinition<R>
 	public JpaCriteriaQuery<R> restrict(Predicate predicate) {
 		final JpaPredicate existing = getRestriction();
 		return existing == null ? where( predicate ) : where( existing, predicate );
+	}
+
+	@Override
+	public HibernateCriteriaBuilder getCriteriaBuilder() {
+		return query.getCriteriaBuilder();
 	}
 
 	@Override

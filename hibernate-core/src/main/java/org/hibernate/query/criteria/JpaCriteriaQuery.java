@@ -132,4 +132,6 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 
 	@Override
 	<U> JpaSubQuery<U> subquery(EntityType<U> type);
+
+	HibernateCriteriaBuilder getCriteriaBuilder();
 }

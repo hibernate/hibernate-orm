@@ -8,7 +8,7 @@ import org.hibernate.StatelessSession;
 import org.hibernate.annotations.processing.Find;
 import org.hibernate.annotations.processing.HQL;
 import org.hibernate.query.Order;
-import org.hibernate.query.Restriction;
+import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.range.Range;
 
 import java.util.List;

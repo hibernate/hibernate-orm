@@ -14,7 +14,7 @@ import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.QueryLogging;
-import org.hibernate.query.Restriction;
+import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query;
+package org.hibernate.query.restriction;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
@@ -10,6 +10,8 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
+import org.hibernate.query.Order;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.range.Range;
 
 import java.util.List;

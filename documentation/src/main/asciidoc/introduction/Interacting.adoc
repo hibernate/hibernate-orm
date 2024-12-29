@@ -1067,7 +1067,7 @@ List<Book> matchingBooks = query.getResultList();
 
 Notice that:
 
-- The link:{doc-javadoc-url}org/hibernate/query/Restriction.html[`Restriction`] interface has static methods for constructing a variety of different kinds of restriction in a completely typesafe way.
+- The link:{doc-javadoc-url}org/hibernate/query/restriction/Restriction.html[`Restriction`] interface has static methods for constructing a variety of different kinds of restriction in a completely typesafe way.
 - Similarly, the link:{doc-javadoc-url}org/hibernate/query/Order.html[`Order`] class has a variety of static methods for constructing different kinds of ordering criteria.
 
 We need the following methods of `SelectionQuery`:
@@ -1085,7 +1085,7 @@ Unfortunately, `Restriction` and `Order` can't be used with JPA's `TypedQuery` i
 
 Alternatively, `Restriction` and `Order` can be used with <<paging-and-ordering,generated query or finder methods>>, and even with link:{doc-data-repositories-url}[Jakarta Data repositories].
 
-The interface link:{doc-javadoc-url}org/hibernate/query/Path.html[`Path`] may be used to express restrictions on fields of an embedded or associated entity class.
+The interface link:{doc-javadoc-url}org/hibernate/query/restriction/Path.html[`Path`] may be used to express restrictions on fields of an embedded or associated entity class.
 
 [source,java]
 ----

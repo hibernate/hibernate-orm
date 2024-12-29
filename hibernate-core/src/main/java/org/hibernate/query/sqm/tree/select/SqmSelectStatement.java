@@ -20,6 +20,7 @@ import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -49,8 +50,8 @@ import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParamet
 /**
  * @author Steve Ebersole
  */
-public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements JpaCriteriaQuery<T>, SqmStatement<T>,
-		org.hibernate.query.sqm.internal.ParameterCollector {
+public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
+		implements JpaCriteriaQuery<T>, SqmStatement<T>, ParameterCollector {
 	private final SqmQuerySource querySource;
 
 	private Set<SqmParameter<?>> parameters;
@@ -158,6 +159,11 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 
 	public void validateResultType(Class<?> resultType) {
 		SqmUtil.validateQueryReturnType( getQueryPart(), resultType );
+	}
+
+	@Override
+	public NodeBuilder getCriteriaBuilder() {
+		return nodeBuilder();
 	}
 
 	@Override

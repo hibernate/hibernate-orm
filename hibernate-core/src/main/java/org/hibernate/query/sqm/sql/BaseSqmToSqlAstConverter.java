@@ -2437,7 +2437,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				offset = -subResult - i;
 			}
 			else if ( selectableNode instanceof SqmJpaCompoundSelection<?> compoundSelection ) {
-				final List<SqmSelectableNode<?>> selectionItems = compoundSelection.getSelectionItems();
+				final List<? extends SqmSelectableNode<?>> selectionItems = compoundSelection.getSelectionItems();
 				for ( int j = 0; j < selectionItems.size(); j++ ) {
 					if ( selectionItems.get( j ) == node ) {
 						return offset + i + j;

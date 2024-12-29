@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import jakarta.persistence.criteria.Root;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
@@ -150,13 +149,7 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	@Override
 	public SelectionQuery<R> addRestriction(Restriction<? super R> restriction) {
 		final SqmSelectStatement<R> selectStatement = getSqmSelectStatement().copy( noParamCopyContext() );
-		final Root<?> firstRoot = selectStatement.getRootList().get( 0 );
-		if ( !getExpectedResultType().isAssignableFrom( firstRoot.getJavaType() ) ) {
-			throw new IllegalStateException("First root entity of the query did not have the query result type");
-		}
-		@SuppressWarnings("unchecked") // safe, we just checked
-		final Root<? extends R> root = (Root<? extends R>) firstRoot;
-		restriction.apply( selectStatement, root );
+		restriction.apply( selectStatement, selectStatement.<R>getRoot( 0, getExpectedResultType() ) );
 		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
 		//       simply cache the new SQM as if it were a criteria query, and remove this:
 		getQueryOptions().setQueryPlanCachingEnabled( false );

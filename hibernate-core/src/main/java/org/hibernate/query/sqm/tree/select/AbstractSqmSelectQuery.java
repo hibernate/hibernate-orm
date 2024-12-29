@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -12,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaFunctionRoot;
@@ -40,11 +40,12 @@ import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
 
 import static java.lang.Character.isAlphabetic;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
 
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("unchecked")
 public abstract class AbstractSqmSelectQuery<T>
 		extends AbstractSqmNode
 		implements SqmSelectQuery<T> {
@@ -110,7 +111,7 @@ public abstract class AbstractSqmSelectQuery<T>
 		return cteStatements.values();
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public <X> JpaCteCriteria<X> getCteCriteria(String cteName) {
 		return (JpaCteCriteria<X>) cteStatements.get( cteName );
 	}
@@ -222,14 +223,54 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	@SuppressWarnings("rawtypes")
 	public Set<Root<?>> getRoots() {
-		return (Set) getQuerySpec().getRoots();
+		return unmodifiableSet( getQuerySpec().getRoots() );
 	}
 
-	@SuppressWarnings("rawtypes")
-	public List<Root<?>> getRootList() {
-		return (List) getQuerySpec().getRootList();
+	/**
+	 * @see org.hibernate.query.criteria.JpaCriteriaQuery#getRootList()
+	 */
+	public List<? extends JpaRoot<?>> getRootList() {
+		return getQuerySpec().getRootList();
+	}
+
+	/**
+	 * @see org.hibernate.query.criteria.JpaCriteriaQuery#getRoot(int, Class)
+	 */
+	public <E> JpaRoot<? extends E> getRoot(int position, Class<E> type) {
+		final List<SqmRoot<?>> rootList = getQuerySpec().getRootList();
+		if ( rootList.size() <= position ) {
+			throw new IllegalArgumentException( "Not enough root entities" );
+		}
+		return castRoot( rootList.get( position ), type );
+	}
+
+	/**
+	 * @see org.hibernate.query.criteria.JpaCriteriaQuery#getRoot(String, Class)
+	 */
+	public <E> JpaRoot<? extends E> getRoot(String alias, Class<E> type) {
+		final List<SqmRoot<?>> rootList = getQuerySpec().getRootList();
+		for ( SqmRoot<?> root : rootList ) {
+			final String rootAlias = root.getAlias();
+			if ( rootAlias != null && rootAlias.equals( alias ) ) {
+				return castRoot( root, type );
+			}
+		}
+		throw new IllegalArgumentException( "No root entity with alias " + alias );
+	}
+
+	private static <E> JpaRoot<? extends E> castRoot(JpaRoot<?> root, Class<E> type) {
+		final Class<?> rootEntityType = root.getJavaType();
+		if ( rootEntityType == null ) {
+			throw new AssertionFailure( "Java type of root entity was null" );
+		}
+		if ( !type.isAssignableFrom( rootEntityType ) ) {
+			throw new IllegalArgumentException( "Root entity of type '" + rootEntityType.getTypeName()
+												+ "' did not have the given type '" + type.getTypeName() + "'");
+		}
+		@SuppressWarnings("unchecked") // safe, we just checked
+		final JpaRoot<? extends E> result = (JpaRoot<? extends E>) root;
+		return result;
 	}
 
 	@Override
@@ -329,20 +370,19 @@ public abstract class AbstractSqmSelectQuery<T>
 	// Grouping
 
 	@Override
-	@SuppressWarnings("rawtypes")
 	public List<Expression<?>> getGroupList() {
-		return (List) getQuerySpec().getGroupingExpressions();
+		return unmodifiableList( getQuerySpec().getGroupingExpressions() );
 	}
 
 	@Override
 	public SqmSelectQuery<T> groupBy(Expression<?>... expressions) {
-		return groupBy( Arrays.asList( expressions ) );
+		getQuerySpec().setGroupingExpressions( List.of( expressions ) );
+		return this;
 	}
 
 	@Override
-	@SuppressWarnings("rawtypes")
 	public SqmSelectQuery<T> groupBy(List<Expression<?>> grouping) {
-		getQuerySpec().setGroupingExpressions( (List) grouping );
+		getQuerySpec().setGroupingExpressions( grouping );
 		return this;
 	}
 
@@ -363,35 +403,6 @@ public abstract class AbstractSqmSelectQuery<T>
 		return this;
 	}
 
-//
-//	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//	// Limit
-//
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public <X> ExpressionImplementor<X> getLimit() {
-//		return limit;
-//	}
-//
-//	@Override
-//	public C setLimit(JpaExpression<?> limit) {
-//		this.limit = (ExpressionImplementor) limit;
-//		return this;
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public <X> ExpressionImplementor<X> getOffset() {
-//		return offset;
-//	}
-//
-//	@Override
-//	public C setOffset(JpaExpression offset) {
-//		this.offset = (ExpressionImplementor) offset;
-//		return this;
-//	}
-
 	public void appendHqlString(StringBuilder sb) {
 		if ( !cteStatements.isEmpty() ) {
 			sb.append( "with " );
@@ -404,35 +415,28 @@ public abstract class AbstractSqmSelectQuery<T>
 		sqmQueryPart.appendHqlString( sb );
 	}
 
+	@SuppressWarnings("unchecked")
 	protected Selection<? extends T> getResultSelection(Selection<?>[] selections) {
-		final Selection<? extends T> resultSelection;
-		Class<T> resultType = getResultType();
+		final Class<T> resultType = getResultType();
 		if ( resultType == null || resultType == Object.class ) {
 			switch ( selections.length ) {
-				case 0: {
-					throw new IllegalArgumentException(
-							"empty selections passed to criteria query typed as Object"
-					);
-				}
-				case 1: {
-					resultSelection = ( Selection<? extends T> ) selections[0];
-					break;
-				}
-				default: {
-					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selections );
-				}
+				case 0:
+					throw new IllegalArgumentException( "Empty selections passed to criteria query typed as Object" );
+				case 1:
+					return (Selection<? extends T>) selections[0];
+				default:
+					return (Selection<? extends T>) nodeBuilder().array( selections );
 			}
 		}
 		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
-			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( selections );
+			return (Selection<? extends T>) nodeBuilder().tuple( selections );
 		}
 		else if ( resultType.isArray() ) {
-			resultSelection = nodeBuilder().array( resultType, selections );
+			return nodeBuilder().array( resultType, selections );
 		}
 		else {
-			resultSelection = nodeBuilder().construct( resultType, selections );
+			return nodeBuilder().construct( resultType, selections );
 		}
-		return resultSelection;
 	}
 
 }

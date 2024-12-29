@@ -40,7 +40,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -167,6 +166,7 @@ import jakarta.persistence.metamodel.Bindable;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Arrays.asList;
+import static org.hibernate.internal.util.collections.CollectionHelper.determineProperSizing;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
 import static org.hibernate.query.sqm.TrimSpec.fromCriteriaTrimSpec;
 
@@ -872,7 +872,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public JpaCompoundSelection<Tuple> tuple(Selection<?>[] selections) {
+	public JpaCompoundSelection<Tuple> tuple(Selection<?>... selections) {
 		return tuple( Arrays.asList( selections ) );
 	}
 
@@ -916,62 +916,69 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public JpaCompoundSelection<Object[]> array(Selection<?>[] selections) {
-		return array( Arrays.asList( selections ) );
+	public JpaCompoundSelection<Object[]> array(Selection<?>... selections) {
+		return array( Object[].class,
+				Arrays.stream( selections ).map( selection -> (SqmSelectableNode<?>) selection ).toList() );
 	}
 
 	@Override
 	public JpaCompoundSelection<Object[]> array(List<Selection<?>> selections) {
-		//noinspection unchecked,rawtypes
-		return array( Object[].class, (List) selections );
+		return arrayInternal( Object[].class,
+				selections.stream().map( selection -> (SqmSelectableNode<?>) selection ).toList() );
 	}
 
 	@Override
-	public <Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>[] selections) {
-		//noinspection unchecked
-		return array( resultClass, (List<SqmSelectableNode<?>>) (List<?>) Arrays.asList( selections ) );
+	public <Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>... selections) {
+		return arrayInternal( resultClass,
+				Arrays.stream( selections ).map( selection -> (SqmSelectableNode<?>) selection ).toList() );
 	}
 
 	@Override
 	public <Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends JpaSelection<?>> selections) {
-		//noinspection rawtypes,unchecked
-		checkMultiselect( (List) selections );
+		return arrayInternal( resultClass,
+				selections.stream().map( selection -> (SqmSelectableNode<?>) selection ).toList() );
+	}
+
+	public <Y> JpaCompoundSelection<Y> arrayInternal(Class<Y> resultClass, List<? extends SqmSelectableNode<?>> selections) {
+		checkMultiselect( selections );
 		final JavaType<Y> javaType = getTypeConfiguration().getJavaTypeRegistry().getDescriptor( resultClass );
-		//noinspection unchecked
-		return new SqmJpaCompoundSelection<>( (List<SqmSelectableNode<?>>) selections, javaType, this );
+		return new SqmJpaCompoundSelection<>( selections, javaType, this );
 	}
 
 	@Override
-	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>[] arguments) {
-		//noinspection unchecked
-		return construct( resultClass, (List<JpaSelection<?>>) (List<?>) Arrays.asList( arguments ) );
+	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>... arguments) {
+		return constructInternal( resultClass,
+				Arrays.stream( arguments ).map( arg -> (SqmSelectableNode<?>) arg ).toList() );
 	}
 
 	@Override
 	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends JpaSelection<?>> arguments) {
-		//noinspection unchecked,rawtypes
-		checkMultiselect( (List) arguments );
-		final SqmDynamicInstantiation<Y> instantiation;
+		return constructInternal( resultClass,
+				arguments.stream().map( arg -> (SqmSelectableNode<?>) arg ).toList() );
+	}
+
+	private <Y> JpaCompoundSelection<Y> constructInternal(Class<Y> resultClass, List<? extends SqmSelectableNode<?>> arguments) {
+		checkMultiselect( arguments );
+		final SqmDynamicInstantiation<Y> instantiation = createInstantiation( resultClass );
+		for ( SqmSelectableNode<?> argument : arguments ) {
+			final SqmDynamicInstantiationArgument<?> arg =
+					new SqmDynamicInstantiationArgument<>( argument, argument.getAlias(), this );
+			instantiation.addArgument( arg );
+		}
+		return instantiation;
+	}
+
+	@SuppressWarnings("unchecked")
+	private <Y> SqmDynamicInstantiation<Y> createInstantiation(Class<Y> resultClass) {
 		if ( List.class.equals( resultClass ) ) {
-			//noinspection unchecked
-			instantiation = (SqmDynamicInstantiation<Y>) SqmDynamicInstantiation.forListInstantiation( this );
+			return (SqmDynamicInstantiation<Y>) SqmDynamicInstantiation.forListInstantiation( this );
 		}
 		else if ( Map.class.equals( resultClass ) ) {
-			//noinspection unchecked
-			instantiation = (SqmDynamicInstantiation<Y>) SqmDynamicInstantiation.forMapInstantiation( this );
+			return (SqmDynamicInstantiation<Y>) SqmDynamicInstantiation.forMapInstantiation( this );
 		}
 		else {
-			instantiation = SqmDynamicInstantiation.forClassInstantiation( resultClass, this );
+			return SqmDynamicInstantiation.forClassInstantiation( resultClass, this );
 		}
-
-		for ( Selection<?> argument : arguments ) {
-			final SqmSelectableNode<?> arg = (SqmSelectableNode<?>) argument;
-			instantiation.addArgument(
-					new SqmDynamicInstantiationArgument<>( arg, argument.getAlias(), this )
-			);
-		}
-
-		return instantiation;
 	}
 
 	/**
@@ -985,8 +992,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	 * <i>&quot;An argument to the multiselect method must not be a tuple-
 	 * or array-valued compound selection item.&quot;</i>
 	 */
-	void checkMultiselect(List<Selection<?>> selections) {
-		final HashSet<String> aliases = new HashSet<>( CollectionHelper.determineProperSizing( selections.size() ) );
+	void checkMultiselect(List<? extends Selection<?>> selections) {
+		final HashSet<String> aliases = new HashSet<>( determineProperSizing( selections.size() ) );
 
 		for ( Selection<?> it : selections ) {
 			final JpaSelection<?> selection = (JpaSelection<?>) it;

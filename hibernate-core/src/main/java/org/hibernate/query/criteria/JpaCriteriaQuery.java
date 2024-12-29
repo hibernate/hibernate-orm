@@ -114,10 +114,10 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	@Override
 	JpaCriteriaQuery<T> select(Selection<? extends T> selection);
 
-	@Override
+	@Override @Deprecated
 	JpaCriteriaQuery<T> multiselect(Selection<?>... selections);
 
-	@Override
+	@Override @Deprecated
 	JpaCriteriaQuery<T> multiselect(List<Selection<?>> selectionList);
 
 	@Override

@@ -232,12 +232,12 @@ public abstract class CriteriaDefinition<R>
 		return query.select(selection);
 	}
 
-	@Override
+	@Override @Deprecated
 	public JpaCriteriaQuery<R> multiselect(Selection<?>... selections) {
 		return query.multiselect(selections);
 	}
 
-	@Override
+	@Override @Deprecated
 	public JpaCriteriaQuery<R> multiselect(List<Selection<?>> list) {
 		return query.multiselect(list);
 	}

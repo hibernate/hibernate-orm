@@ -899,7 +899,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			return resolution;
 		}
 
-
 		// see if the name is a UserType or BasicType implementor class name
 		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		try {
@@ -907,12 +906,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			// if there are no local config params, register an implicit TypeDefinition for this custom type .
 			//  later uses may find it and re-use its cacheable reference...
 			if ( isEmpty( localTypeParams ) ) {
-				final TypeDefinition implicitDefinition = new TypeDefinition(
-						name,
-						typeNamedClass,
-						null,
-						null
-				);
+				final TypeDefinition implicitDefinition =
+						new TypeDefinition( name, typeNamedClass, null, null );
 				context.getTypeDefinitionRegistry().register( implicitDefinition );
 				return implicitDefinition.resolve(
 						localTypeParams,

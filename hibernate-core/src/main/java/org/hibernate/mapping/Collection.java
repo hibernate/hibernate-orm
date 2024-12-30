@@ -16,7 +16,6 @@ import java.util.function.Supplier;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheLayout;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
@@ -24,6 +23,7 @@ import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
+import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.resource.beans.spi.ManagedBean;
@@ -36,6 +36,8 @@ import org.hibernate.usertype.UserCollectionType;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
+import static org.hibernate.mapping.MappingHelper.classForName;
+import static org.hibernate.mapping.MappingHelper.createUserTypeBean;
 
 /**
  * A mapping model object representing a collection. Subclasses specialize to particular kinds of collection.
@@ -228,11 +230,11 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 
 	public Comparator<?> getComparator() {
 		if ( comparator == null && comparatorClassName != null ) {
+			@SuppressWarnings("rawtypes")
+			final Class<? extends Comparator> clazz =
+					classForName( Comparator.class, comparatorClassName, getMetadata() );
 			try {
-				final ClassLoaderService classLoaderService = getMetadata().getMetadataBuildingOptions()
-						.getServiceRegistry()
-						.requireService( ClassLoaderService.class );
-				setComparator( (Comparator<?>) classLoaderService.classForName( comparatorClassName ).getConstructor().newInstance() );
+				comparator = clazz.getConstructor().newInstance();
 			}
 			catch (Exception e) {
 				throw new MappingException(
@@ -469,23 +471,18 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 			collectionType = cachedCollectionType;
 		}
 		else if ( customTypeBeanResolver != null ) {
-			collectionType = new CustomCollectionType(
-					customTypeBeanResolver.get(),
-					role,
-					referencedPropertyName
-			);
+			collectionType = new CustomCollectionType( customTypeBeanResolver.get(), role, referencedPropertyName );
 		}
 		else if ( typeName == null ) {
 			collectionType = getDefaultCollectionType();
 		}
 		else {
-			collectionType = MappingHelper.customCollection(
-					typeName,
-					typeParameters,
-					role,
-					referencedPropertyName,
-					getMetadata()
-			);
+			final MetadataImplementor metadata = getMetadata();
+			final Class<? extends UserCollectionType> clazz =
+					classForName( UserCollectionType.class, typeName, metadata );
+			final ManagedBean<? extends UserCollectionType> userTypeBean =
+					createUserTypeBean( role, clazz, PropertiesHelper.map( typeParameters ), metadata );
+			collectionType = new CustomCollectionType( userTypeBean, role, referencedPropertyName );
 		}
 		return collectionType;
 	}
@@ -542,14 +539,14 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 
 	public boolean isSame(Collection other) {
 		return this == other || isSame( key, other.key )
-				&& isSame( element, other.element )
-				&& Objects.equals( collectionTable, other.collectionTable )
-				&& Objects.equals( where, other.where )
-				&& Objects.equals( manyToManyWhere, other.manyToManyWhere )
-				&& Objects.equals( referencedPropertyName, other.referencedPropertyName )
-				&& Objects.equals( mappedByProperty, other.mappedByProperty )
-				&& Objects.equals( typeName, other.typeName )
-				&& Objects.equals( typeParameters, other.typeParameters );
+			&& isSame( element, other.element )
+			&& Objects.equals( collectionTable, other.collectionTable )
+			&& Objects.equals( where, other.where )
+			&& Objects.equals( manyToManyWhere, other.manyToManyWhere )
+			&& Objects.equals( referencedPropertyName, other.referencedPropertyName )
+			&& Objects.equals( mappedByProperty, other.mappedByProperty )
+			&& Objects.equals( typeName, other.typeName )
+			&& Objects.equals( typeParameters, other.typeParameters );
 	}
 
 	private void createForeignKeys() throws MappingException {

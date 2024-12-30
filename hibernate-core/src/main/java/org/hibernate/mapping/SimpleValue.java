@@ -62,6 +62,7 @@ import static org.hibernate.boot.model.internal.GeneratorBinder.ASSIGNED_IDENTIF
 import static org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit;
 import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyClass;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
+import static org.hibernate.mapping.MappingHelper.classForName;
 
 /**
  * A mapping model object that represents any value that maps to columns.
@@ -282,9 +283,13 @@ public abstract class SimpleValue implements KeyValue {
 
 	void setAttributeConverterDescriptor(String typeName) {
 		final String converterClassName = typeName.substring( TYPE_NAME_PREFIX.length() );
-		this.attributeConverterDescriptor =
-				new ClassBasedConverterDescriptor( classLoaderService().classForName( converterClassName ),
-						false, getBuildingContext().getBootstrapContext().getClassmateContext() );
+		@SuppressWarnings("unchecked")
+		final Class<? extends AttributeConverter<?,?>> clazz =
+				(Class<? extends AttributeConverter<?,?>>)
+						classForName( AttributeConverter.class, converterClassName, getMetadata() );
+		attributeConverterDescriptor =
+				new ClassBasedConverterDescriptor( clazz, false,
+						getBuildingContext().getBootstrapContext().getClassmateContext() );
 	}
 
 	ClassLoaderService classLoaderService() {

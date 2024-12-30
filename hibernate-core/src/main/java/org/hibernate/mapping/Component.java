@@ -21,7 +21,6 @@ import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -60,6 +59,7 @@ import static java.util.stream.Collectors.toList;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
+import static org.hibernate.mapping.MappingHelper.classForName;
 import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
 /**
@@ -333,24 +333,20 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	public Class<?> getComponentClass() throws MappingException {
-		Class<?> result = componentClass;
-		if ( result == null ) {
+		if ( componentClass == null ) {
 			if ( componentClassName == null ) {
 				return null;
 			}
 			else {
 				try {
-					result = componentClass = getMetadata()
-							.getMetadataBuildingOptions()
-							.getServiceRegistry()
-							.requireService( ClassLoaderService.class ).classForName( componentClassName );
+					componentClass = classForName( componentClassName, getMetadata() );
 				}
 				catch (ClassLoadingException e) {
-					throw new MappingException( "component class not found: " + componentClassName, e );
+					throw new MappingException( "Embeddable class not found: " + componentClassName, e );
 				}
 			}
 		}
-		return result;
+		return componentClass;
 	}
 
 	public PersistentClass getOwner() {
@@ -389,12 +385,13 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	private CompositeUserType<?> createCompositeUserType(Component component) {
 		final BootstrapContext bootstrapContext = getBuildingContext().getBootstrapContext();
-		final Class<CompositeUserType<?>> customTypeClass =
-				bootstrapContext.getClassLoaderAccess().classForName( component.getTypeName() );
+		@SuppressWarnings("rawtypes")
+		final Class<? extends CompositeUserType> clazz =
+				classForName( CompositeUserType.class, component.getTypeName(), getMetadataCollector() );
 		return !getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
-				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( customTypeClass )
+				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( clazz )
 				: bootstrapContext.getServiceRegistry().requireService( ManagedBeanRegistry.class )
-				.getBean( customTypeClass ).getBeanInstance();
+						.getBean( clazz ).getBeanInstance();
 	}
 
 	@Override

@@ -15,24 +15,13 @@ import org.hibernate.boot.model.internal.DelayedParameterizedTypeBean;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
-import org.hibernate.type.AnyType;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.CustomCollectionType;
-import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.MetaType;
-import org.hibernate.type.OneToOneType;
-import org.hibernate.type.SpecialOneToOneType;
-import org.hibernate.type.Type;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserCollectionType;
 
-import static org.hibernate.internal.util.PropertiesHelper.map;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
@@ -45,18 +34,7 @@ public final class MappingHelper {
 	private MappingHelper() {
 	}
 
-	public static CollectionType customCollection(
-			String typeName,
-			Properties typeParameters,
-			String role,
-			String propertyRef,
-			MetadataImplementor metadata) {
-		final ManagedBean<? extends UserCollectionType> userTypeBean =
-				createUserTypeBean( role, classForName( typeName, metadata ), map( typeParameters ), metadata );
-		return new CustomCollectionType( userTypeBean, role, propertyRef );
-	}
-
-	private static ManagedBean<? extends UserCollectionType> createUserTypeBean(
+	public static ManagedBean<? extends UserCollectionType> createUserTypeBean(
 			String role,
 			Class<? extends UserCollectionType> userCollectionTypeClass,
 			Map<String, ?> parameters,
@@ -100,18 +78,12 @@ public final class MappingHelper {
 		return managedBean;
 	}
 
-	private static Class<UserCollectionType> classForName(String typeName, MetadataImplementor metadata) {
-		return metadata.getMetadataBuildingOptions().getServiceRegistry()
-				.requireService( ClassLoaderService.class )
-				.classForName( typeName );
-	}
-
 	private static ManagedBeanRegistry getManagedBeanRegistry(MetadataImplementor metadata) {
 		return metadata.getMetadataBuildingOptions().getServiceRegistry()
 				.requireService( ManagedBeanRegistry.class );
 	}
 
-	public static void throwIgnoredCollectionTypeParameters(String role, Class<?> implementation) {
+	private static void throwIgnoredCollectionTypeParameters(String role, Class<?> implementation) {
 		throw new MappingException( "'@CollectionType' [" + role + "] specified parameters, but the implementation '"
 				+ implementation.getName() + "' does not implement 'ParameterizedType' which is used to inject them" );
 	}
@@ -124,90 +96,6 @@ public final class MappingHelper {
 			throw new MappingException( "'UserType' implementation '" + type.getClass().getName()
 					+ "' does not implement 'ParameterizedType' but parameters were provided" );
 		}
-	}
-
-	public static AnyType anyMapping(
-			Type discriminatorType,
-			Type identifierType,
-			Map<Object, String> explicitValeMappings,
-			ImplicitDiscriminatorStrategy implicitValueStrategy,
-			boolean lazy,
-			MetadataBuildingContext buildingContext) {
-		final MetaType metaType = new MetaType( discriminatorType, implicitValueStrategy, explicitValeMappings );
-		return new AnyType( buildingContext.getBootstrapContext().getTypeConfiguration(), metaType, identifierType, lazy );
-	}
-
-	public static ManyToOneType manyToOne(
-			String referencedEntityName,
-			boolean referenceToPrimaryKey,
-			String referencedPropertyName,
-			String propertyName,
-			boolean isLogicalOneToOne,
-			boolean lazy,
-			boolean unwrapProxy,
-			boolean ignoreNotFound,
-			MetadataBuildingContext buildingContext) {
-		return new ManyToOneType(
-				buildingContext.getBootstrapContext().getTypeConfiguration(),
-				referencedEntityName,
-				referenceToPrimaryKey,
-				referencedPropertyName,
-				propertyName,
-				lazy,
-				unwrapProxy,
-				ignoreNotFound,
-				isLogicalOneToOne
-		);
-	}
-
-	public static SpecialOneToOneType specialOneToOne(
-			String referencedEntityName,
-			ForeignKeyDirection foreignKeyType,
-			boolean referenceToPrimaryKey,
-			String referencedPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			String owningEntityName,
-			String owningEntityPropertyName,
-			boolean constrained,
-			MetadataBuildingContext buildingContext) {
-		return new SpecialOneToOneType(
-				buildingContext.getBootstrapContext().getTypeConfiguration(),
-				referencedEntityName,
-				foreignKeyType,
-				referenceToPrimaryKey,
-				referencedPropertyName,
-				lazy,
-				unwrapProxy,
-				owningEntityName,
-				owningEntityPropertyName,
-				constrained
-		);
-	}
-
-	public static OneToOneType oneToOne(
-			String referencedEntityName,
-			ForeignKeyDirection foreignKeyType,
-			boolean referenceToPrimaryKey,
-			String referencedPropertyName,
-			boolean lazy,
-			boolean unwrapProxy,
-			String owningEntityName,
-			String owningEntityPropertyName,
-			boolean constrained,
-			MetadataBuildingContext buildingContext) {
-		return new OneToOneType(
-				buildingContext.getBootstrapContext().getTypeConfiguration(),
-				referencedEntityName,
-				foreignKeyType,
-				referenceToPrimaryKey,
-				referencedPropertyName,
-				lazy,
-				unwrapProxy,
-				owningEntityName,
-				owningEntityPropertyName,
-				constrained
-		);
 	}
 
 	private static ManagedBean<UserCollectionType> createLocalUserTypeBean(
@@ -238,6 +126,23 @@ public final class MappingHelper {
 			if ( prop.isUpdateable() || prop.isInsertable() ) {
 				prop.getValue().checkColumnDuplication( distinctColumns, owner );
 			}
+		}
+	}
+
+	static Class<?> classForName(String typeName, MetadataImplementor metadata) {
+		return metadata.getMetadataBuildingOptions().getServiceRegistry()
+				.requireService( ClassLoaderService.class )
+				.classForName( typeName );
+	}
+
+	static <T> Class<? extends T> classForName(Class<T> supertype, String typeName, MetadataImplementor metadata) {
+		final Class<?> clazz = classForName( typeName, metadata );
+		if ( supertype.isAssignableFrom( clazz ) ) {
+			//noinspection unchecked
+			return (Class<? extends T>) clazz;
+		}
+		else {
+			throw new MappingException( "Class '" + typeName + "' does not implement '" + supertype.getName() + "'" );
 		}
 	}
 }

@@ -69,7 +69,6 @@ import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
@@ -112,7 +111,6 @@ import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserCollectionType;
-
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AttributeOverride;
@@ -235,9 +233,6 @@ public abstract class CollectionBinder {
 	private SQLOrder sqlOrder;
 	private SortNatural naturalSort;
 	private SortComparator comparatorSort;
-
-	private String explicitType;
-	private final Map<String,String> explicitTypeParameters = new HashMap<>();
 
 	protected CollectionBinder(
 			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver,
@@ -855,17 +850,9 @@ public abstract class CollectionBinder {
 		final CollectionType typeAnnotation =
 				property.getAnnotationUsage( CollectionType.class,
 						buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
-		if ( typeAnnotation != null ) {
-			binder = createBinderFromCustomTypeAnnotation( property, typeAnnotation, buildingContext );
-			// todo (6.0) - technically, these should no longer be needed
-			binder.explicitType = typeAnnotation.type().getName();
-			for ( Parameter param : typeAnnotation.parameters() ) {
-				binder.explicitTypeParameters.put( param.name(), param.value() );
-			}
-		}
-		else {
-			binder = createBinderAutomatically( property, buildingContext );
-		}
+		binder = typeAnnotation != null
+				? createBinderFromCustomTypeAnnotation( property, typeAnnotation, buildingContext )
+				: createBinderAutomatically( property, buildingContext );
 		binder.setIsHibernateExtensionMapping( isHibernateExtensionMapping );
 		return binder;
 	}
@@ -1160,7 +1147,6 @@ public abstract class CollectionBinder {
 		collection.setMappedByProperty( mappedBy );
 
 		checkMapKeyColumn();
-		bindExplicitTypes();
 		//set laziness
 		defineFetchingStrategy();
 		collection.setMutable( isMutable() );
@@ -1220,22 +1206,6 @@ public abstract class CollectionBinder {
 			collection.setCacheRegionName( cacheRegionName );
 		}
 		collection.setQueryCacheLayout( queryCacheLayout );
-	}
-
-	private void bindExplicitTypes() {
-		// set explicit type information
-		final InFlightMetadataCollector metadataCollector = getMetadataCollector();
-		if ( explicitType != null ) {
-			final TypeDefinition typeDef = metadataCollector.getTypeDefinition( explicitType );
-			if ( typeDef == null ) {
-				collection.setTypeName( explicitType );
-				collection.setTypeParameters( explicitTypeParameters );
-			}
-			else {
-				collection.setTypeName( typeDef.getTypeImplementorClass().getName() );
-				collection.setTypeParameters( typeDef.getParameters() );
-			}
-		}
 	}
 
 	private void detectMappedByProblem(boolean isMappedBy) {
@@ -1751,13 +1721,11 @@ public abstract class CollectionBinder {
 	}
 
 	private void bindFilters(boolean hasAssociationTable) {
-		property.forEachAnnotationUsage( Filter.class, sourceModelContext(), (usage) -> {
-			addFilter( hasAssociationTable, usage );
-		} );
+		property.forEachAnnotationUsage( Filter.class, sourceModelContext(),
+				usage -> addFilter( hasAssociationTable, usage ) );
 
-		property.forEachAnnotationUsage( FilterJoinTable.class, sourceModelContext(), (usage) -> {
-			addFilterJoinTable( hasAssociationTable, usage );
-		} );
+		property.forEachAnnotationUsage( FilterJoinTable.class, sourceModelContext(),
+				usage -> addFilterJoinTable( hasAssociationTable, usage ) );
 	}
 
 	private void addFilter(boolean hasAssociationTable, Filter filterAnnotation) {
@@ -2510,9 +2478,8 @@ public abstract class CollectionBinder {
 	}
 
 	private void handleCheckConstraints(Table collectionTable) {
-		property.forEachAnnotationUsage( Check.class, sourceModelContext(), (usage) -> {
-			addCheckToCollection( collectionTable, usage );
-		} );
+		property.forEachAnnotationUsage( Check.class, sourceModelContext(),
+				usage -> addCheckToCollection( collectionTable, usage ) );
 		property.forEachAnnotationUsage( jakarta.persistence.JoinTable.class, sourceModelContext(), (usage) -> {
 			TableBinder.addTableCheck( collectionTable, usage.check() );
 			TableBinder.addTableComment( collectionTable, usage.comment() );

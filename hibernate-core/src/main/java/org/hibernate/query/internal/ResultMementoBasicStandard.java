@@ -7,7 +7,6 @@ package org.hibernate.query.internal;
 import java.lang.reflect.ParameterizedType;
 import java.util.function.Consumer;
 
-import org.hibernate.boot.model.convert.internal.ConverterHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.named.ResultMementoBasic;
@@ -26,6 +25,8 @@ import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.ColumnResult;
+
+import static org.hibernate.boot.model.convert.internal.ConverterHelper.extractAttributeConverterParameterizedType;
 
 /**
  * Implementation of {@link ResultMementoBasic} for scalar (basic) results.
@@ -80,16 +81,17 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 			builder = new CompleteResultBuilderBasicValuedStandard( explicitColumnName, null, null );
 		}
 		else if ( AttributeConverter.class.isAssignableFrom( definedType ) ) {
+			@SuppressWarnings("unchecked")
 			final Class<? extends AttributeConverter<?, ?>> converterClass =
 					(Class<? extends AttributeConverter<?, ?>>) definedType;
-			final ManagedBean<? extends AttributeConverter<?,?>> converterBean = sessionFactory.getServiceRegistry()
-					.requireService( ManagedBeanRegistry.class )
-					.getBean( converterClass );
-			final JavaType<? extends AttributeConverter<?,?>> converterJtd = typeConfiguration
-					.getJavaTypeRegistry()
-					.getDescriptor( converterClass );
+			final ManagedBean<? extends AttributeConverter<?,?>> converterBean =
+					sessionFactory.getServiceRegistry().requireService( ManagedBeanRegistry.class )
+							.getBean( converterClass );
+			final JavaType<? extends AttributeConverter<?,?>> converterJtd =
+					typeConfiguration.getJavaTypeRegistry().getDescriptor( converterClass );
 
-			final ParameterizedType parameterizedType = ConverterHelper.extractAttributeConverterParameterizedType( converterBean.getBeanClass() );
+			final ParameterizedType parameterizedType =
+					extractAttributeConverterParameterizedType( converterBean.getBeanClass() );
 
 			builder = new CompleteResultBuilderBasicValuedConverted(
 					explicitColumnName,
@@ -104,7 +106,8 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 			final JavaType<?> explicitJavaType;
 
 			// see if this is a registered BasicType...
-			final BasicType<Object> registeredBasicType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( definedType.getName() );
+			final BasicType<Object> registeredBasicType =
+					typeConfiguration.getBasicTypeRegistry().getRegisteredType( definedType.getName() );
 			if ( registeredBasicType != null ) {
 				explicitType = registeredBasicType;
 				explicitJavaType = registeredBasicType.getJavaTypeDescriptor();

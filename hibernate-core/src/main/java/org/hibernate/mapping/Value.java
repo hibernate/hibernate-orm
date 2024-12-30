@@ -72,7 +72,6 @@ public interface Value extends Serializable {
 
 	Type getType() throws MappingException;
 
-
 	/**
 	 * @deprecated use {@link #getSelectableType(MappingContext, int)}
 	 */

@@ -2281,16 +2281,16 @@ public class ModelBinder {
 			try {
 				final Object typeInstance = typeInstance( typeName, classLoaderService.classForName( typeName ) );
 
-				if ( typeInstance instanceof ParameterizedType ) {
+				if ( typeInstance instanceof ParameterizedType parameterizedType ) {
 					if ( parameters != null ) {
-						Properties properties = new Properties();
+						final Properties properties = new Properties();
 						properties.putAll( parameters );
-						( (ParameterizedType) typeInstance ).setParameterValues( properties );
+						parameterizedType.setParameterValues( properties );
 					}
 				}
 
-				if ( typeInstance instanceof UserType ) {
-					return new CustomType<>( (UserType<?>) typeInstance, typeConfiguration);
+				if ( typeInstance instanceof UserType<?> userType ) {
+					return new CustomType<>( userType, typeConfiguration);
 				}
 
 				return (BasicType<?>) typeInstance;

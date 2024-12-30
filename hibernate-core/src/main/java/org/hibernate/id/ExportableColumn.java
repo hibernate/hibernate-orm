@@ -83,7 +83,7 @@ public class ExportableColumn extends Column {
 		}
 
 		@Override
-		public Type getType() throws MappingException {
+		public Type getType() {
 			return type;
 		}
 

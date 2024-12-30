@@ -6,7 +6,6 @@ package org.hibernate.mapping;
 
 import java.util.function.Supplier;
 
-import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.CollectionType;
@@ -51,7 +50,7 @@ public class List extends IndexedCollection {
 		return true;
 	}
 
-	public CollectionType getDefaultCollectionType() throws MappingException {
+	public CollectionType getDefaultCollectionType() {
 		return new ListType( getRole(), getReferencedPropertyName() );
 	}
 

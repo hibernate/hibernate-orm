@@ -73,12 +73,12 @@ public class Set extends Collection {
 		if ( isSorted() ) {
 			return new SortedSetType( getRole(), getReferencedPropertyName(), getComparator() );
 		}
-
-		if ( hasOrder() ) {
+		else if ( hasOrder() ) {
 			return new OrderedSetType( getRole(), getReferencedPropertyName() );
 		}
-
-		return new SetType( getRole(), getReferencedPropertyName() );
+		else {
+			return new SetType( getRole(), getReferencedPropertyName() );
+		}
 	}
 
 	void createPrimaryKey() {

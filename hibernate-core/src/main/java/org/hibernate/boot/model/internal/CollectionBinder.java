@@ -170,7 +170,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
-import static org.hibernate.mapping.MappingHelper.createCustomTypeBean;
+import static org.hibernate.mapping.MappingHelper.createUserTypeBean;
 
 /**
  * Base class for stateful binders responsible for producing mapping model objects of type {@link Collection}.
@@ -870,17 +870,17 @@ public abstract class CollectionBinder {
 			MemberDetails property,
 			CollectionClassification classification,
 			CollectionTypeRegistrationDescriptor typeRegistration,
-			MetadataBuildingContext buildingContext) {
+			MetadataBuildingContext context) {
 		return createBinder(
 				property,
-				() -> createCustomTypeBean(
+				() -> createUserTypeBean(
 						property.getDeclaringType().getName() + "#" + property.getName(),
 						typeRegistration.getImplementation(),
 						typeRegistration.getParameters(),
-						buildingContext
+						context.getMetadataCollector()
 				),
 				classification,
-				buildingContext
+				context
 		);
 	}
 
@@ -908,11 +908,11 @@ public abstract class CollectionBinder {
 			MemberDetails property,
 			CollectionType typeAnnotation,
 			MetadataBuildingContext context) {
-		return createCustomTypeBean(
+		return createUserTypeBean(
 				property.getDeclaringType().getName() + "." + property.getName(),
 				typeAnnotation.type(),
 				PropertiesHelper.map( extractParameters( typeAnnotation ) ),
-				context
+				context.getMetadataCollector()
 		);
 	}
 

@@ -5,7 +5,6 @@
 package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -43,7 +42,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
@@ -65,7 +63,6 @@ import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeVariableScope;
 import org.hibernate.usertype.CompositeUserType;
 
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
@@ -110,7 +107,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
  * @author Emmanuel Bernard
  */
 public class PropertyBinder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, PropertyBinder.class.getName() );
 
 	private MetadataBuildingContext buildingContext;
 
@@ -198,7 +194,7 @@ public class PropertyBinder {
 		this.value = value;
 	}
 
-	public void setComponentElement(Component componentElement) {
+	private void setComponentElement(Component componentElement) {
 		this.componentElement = componentElement;
 	}
 
@@ -260,7 +256,6 @@ public class PropertyBinder {
 	private Property makePropertyAndValue() {
 		validateBind();
 
-		LOG.debugf( "MetadataSourceProcessor property %s with lazy=%s", name, lazy );
 		final String containerClassName = holder.getClassName();
 		holder.startingProperty( memberDetails );
 
@@ -306,8 +301,8 @@ public class PropertyBinder {
 				}
 				catch ( Exception e ) {
 					throw new AnnotationException( "error processing @AttributeBinderType annotation '"
-							+ metaAnnotatedDescriptor.getAnnotationType().getName() + "' for property "
-							+ qualify( holder.getPath(), name ), e );
+							+ metaAnnotatedDescriptor.getAnnotationType().getName() + "' for property '"
+							+ qualify( holder.getPath(), name ) + "'", e );
 				}
 			}
 		}
@@ -334,9 +329,7 @@ public class PropertyBinder {
 		else {
 			holder.addProperty( property, memberDetails, columns, declaringClass );
 		}
-
 		callAttributeBindersInSecondPass( property );
-
 		return property;
 	}
 
@@ -365,10 +358,10 @@ public class PropertyBinder {
 				rootClass.setEmbeddedIdentifier( true );
 			}
 			else {
-				rootClass.setIdentifierProperty(property);
+				rootClass.setIdentifierProperty( property );
 				final MappedSuperclass superclass =
 						getMappedSuperclassOrNull( declaringClass, inheritanceStatePerClass, buildingContext );
-				setDeclaredIdentifier( rootClass, superclass, property);
+				setDeclaredIdentifier( rootClass, superclass, property );
 			}
 		}
 	}
@@ -428,7 +421,6 @@ public class PropertyBinder {
 	public Property makeProperty() {
 		validateMake();
 		validateAnnotationsAgainstType();
-		LOG.debugf( "Building property %s", name );
 		Property property = new Property();
 		property.setName( name );
 		property.setValue( value );
@@ -444,7 +436,6 @@ public class PropertyBinder {
 		handleMutability( property );
 		handleOptional( property );
 		inferOptimisticLocking( property );
-		LOG.tracev( "Cascading {0} with {1}", name, cascade );
 		return property;
 	}
 
@@ -535,11 +526,12 @@ public class PropertyBinder {
 
 	private void validateAnnotationsAgainstType() {
 		if ( memberDetails != null ) {
-			if ( !(memberDetails.getType() instanceof ArrayTypeDetails) ) {
+			final TypeDetails type = memberDetails.getType();
+			if ( !(type instanceof ArrayTypeDetails) ) {
 				checkAnnotation( OrderColumn.class, List.class );
 				if ( memberDetails.hasDirectAnnotationUsage( OrderBy.class )
-						&& !memberDetails.getType().isImplementor( Collection.class )
-						&& !memberDetails.getType().isImplementor( Map.class ) ) {
+						&& !type.isImplementor( Collection.class )
+						&& !type.isImplementor( Map.class ) ) {
 					throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
 							+ "' is annotated '@OrderBy' but is not of type 'Collection' or 'Map'" );
 				}
@@ -654,13 +646,9 @@ public class PropertyBinder {
 		final Id existingIdProperty = attributeMember.getDirectAnnotationUsage( Id.class );
 		if ( incomingIdProperty != null && existingIdProperty == null ) {
 			throw new MappingException(
-					String.format(
-							"You cannot override the [%s] non-identifier property from the [%s] base class or @MappedSuperclass and make it an identifier in the [%s] subclass",
-							attributeMember.getName(),
-							attributeMember.getDeclaringType().getName(),
-							property.getDeclaringType().getName()
-					)
-			);
+					"Attribute '" + attributeMember.getName()
+					+ "' is declared by '" + attributeMember.getDeclaringType().getName()
+					+ "' and may not be redeclared as an '@Id' by '" + property.getDeclaringType().getName() + "'" );
 		}
 	}
 
@@ -703,13 +691,10 @@ public class PropertyBinder {
 	}
 
 	private static boolean isJoinColumnPresent(String columnName, MemberDetails property, SourceModelBuildingContext modelContext) {
-		//The detection of a configured individual JoinColumn differs between Annotation
-		//and XML configuration processing.
-		final JoinColumn[] joinColumnAnnotations = property.getRepeatedAnnotationUsages(
-				JpaAnnotations.JOIN_COLUMN,
-				modelContext
-		);
-		for ( JoinColumn joinColumnAnnotation : joinColumnAnnotations ) {
+		// The detection of a configured individual JoinColumn differs
+		// between Annotation and XML configuration processing.
+		for ( JoinColumn joinColumnAnnotation :
+				property.getRepeatedAnnotationUsages( JpaAnnotations.JOIN_COLUMN, modelContext ) ) {
 			if ( joinColumnAnnotation.name().equals( columnName ) ) {
 				return true;
 			}
@@ -736,26 +721,10 @@ public class PropertyBinder {
 			MetadataBuildingContext context,
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass) throws MappingException {
 
-		if ( alreadyProcessedBySuper( propertyHolder, inferredData, entityBinder ) ) {
-			LOG.debugf(
-					"Skipping attribute [%s : %s] as it was already processed as part of super hierarchy",
-					inferredData.getClassOrElementName(),
-					inferredData.getPropertyName()
-			);
-		}
-		else {
+		if ( !alreadyProcessedBySuper( propertyHolder, inferredData, entityBinder ) ) {
 			// inSecondPass can only be used to apply right away the second pass of a composite-element
 			// Because it's a value type, there is no bidirectional association, hence second pass
 			// ordering does not matter
-
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Processing annotations of {0}.{1}" ,
-						propertyHolder.getEntityName(),
-						inferredData.getPropertyName()
-				);
-			}
-
 			final MemberDetails property = inferredData.getAttributeMember();
 			if ( property.hasDirectAnnotationUsage( Parent.class ) ) {
 				handleParentProperty( propertyHolder, inferredData, property );
@@ -994,9 +963,6 @@ public class PropertyBinder {
 			AnnotatedColumns columns,
 			PropertyBinder propertyBinder) {
 		checkVersionProperty( propertyHolder, isIdentifierMapper );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "{0} is a version property", inferredData.getPropertyName() );
-		}
 		final RootClass rootClass = (RootClass) propertyHolder.getPersistentClass();
 		propertyBinder.setColumns( columns );
 		final Property property = propertyBinder.makePropertyValueAndBind();
@@ -1019,12 +985,6 @@ public class PropertyBinder {
 		}
 
 		rootClass.setOptimisticLockStyle( OptimisticLockStyle.VERSION );
-		if ( LOG.isTraceEnabled() ) {
-			final SimpleValue versionValue = (SimpleValue) rootClass.getVersion().getValue();
-			LOG.tracev( "Version name: {0}, unsavedValue: {1}",
-					rootClass.getVersion().getName(),
-					versionValue.getNullValue() );
-		}
 	}
 
 	private static void checkVersionProperty(PropertyHolder propertyHolder, boolean isIdentifierMapper) {

@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -42,8 +41,6 @@ import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 import org.hibernate.type.BasicType;
 
-import org.jboss.logging.Logger;
-
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.NamedNativeQuery;
@@ -55,6 +52,7 @@ import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.StoredProcedureParameter;
 
 import static java.lang.Boolean.TRUE;
+import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.determineProperSizing;
@@ -70,7 +68,7 @@ import static org.hibernate.models.internal.util.StringHelper.isEmpty;
  * @author Emmanuel Bernard
  */
 public abstract class QueryBinder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, QueryBinder.class.getName() );
+	private static final CoreMessageLogger LOG = messageLogger( QueryBinder.class );
 
 	public static void bindQuery(
 			NamedQuery namedQuery,
@@ -464,7 +462,7 @@ public abstract class QueryBinder {
 			else {
 				context.getMetadataCollector().addNamedProcedureCallDefinition( definition );
 			}
-			LOG.debugf( "Bound named stored procedure query : %s => %s",
+			LOG.debugf( "Bound named stored procedure query: %s => %s",
 					definition.getRegistrationName(), definition.getProcedureName() );
 		}
 	}

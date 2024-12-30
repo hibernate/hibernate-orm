@@ -5,7 +5,6 @@
 package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandles;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -117,7 +116,6 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserCollectionType;
 
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AttributeOverride;
@@ -168,6 +166,7 @@ import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
 import static org.hibernate.boot.model.internal.GeneratorBinder.visitIdGeneratorDefinitions;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
+import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isBlank;
@@ -185,7 +184,7 @@ import static org.hibernate.mapping.MappingHelper.createLocalUserCollectionTypeB
  * @author Emmanuel Bernard
  */
 public abstract class CollectionBinder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CollectionBinder.class.getName() );
+	private static final CoreMessageLogger LOG = messageLogger( CollectionBinder.class );
 
 	private static final List<Class<?>> INFERRED_CLASS_PRIORITY = List.of(
 			List.class,
@@ -1207,7 +1206,9 @@ public abstract class CollectionBinder {
 	public void bind() {
 		collection = createCollection( propertyHolder.getPersistentClass() );
 		final String role = qualify( propertyHolder.getPath(), propertyName );
-		LOG.debugf( "Collection role: %s", role );
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug( "Binding collection role: " + role );
+		}
 		collection.setRole( role );
 		collection.setMappedByProperty( mappedBy );
 
@@ -1642,7 +1643,7 @@ public abstract class CollectionBinder {
 	}
 
 	/**
-	 * return true if it's a Fk, false if it's an association table
+	 * @return true if it's a foreign key, false if it's an association table
 	 */
 	protected boolean bindStarToManySecondPass(Map<String, PersistentClass> persistentClasses) {
 		if ( noAssociationTable( persistentClasses ) ) {
@@ -1739,9 +1740,6 @@ public abstract class CollectionBinder {
 		}
 		else {
 			collection.setCollectionTable( foreignJoinColumns.getTable() );
-		}
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Mapping collection: %s -> %s", getRole(), collection.getCollectionTable().getName() );
 		}
 
 		bindSynchronize();
@@ -2952,7 +2950,7 @@ public abstract class CollectionBinder {
 
 	private void logOneToManySecondPass() {
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Binding a OneToMany: %s through a foreign key", safeCollectionRole() );
+			LOG.debug( "Binding @OneToMany through foreign key: " + safeCollectionRole() );
 		}
 	}
 
@@ -2962,16 +2960,16 @@ public abstract class CollectionBinder {
 			boolean isManyToAny) {
 		if ( LOG.isDebugEnabled() ) {
 			if ( isCollectionOfEntities && isOneToMany ) {
-				LOG.debugf( "Binding a OneToMany: %s through an association table", safeCollectionRole() );
+				LOG.debug( "Binding @OneToMany through association table: " + safeCollectionRole() );
 			}
 			else if ( isCollectionOfEntities ) {
-				LOG.debugf( "Binding a ManyToMany: %s", safeCollectionRole() );
+				LOG.debug( "Binding @ManyToMany through association table: " + safeCollectionRole() );
 			}
 			else if ( isManyToAny ) {
-				LOG.debugf( "Binding a ManyToAny: %s", safeCollectionRole() );
+				LOG.debug( "Binding @ManyToAny: " + safeCollectionRole() );
 			}
 			else {
-				LOG.debugf( "Binding a collection of element: %s", safeCollectionRole() );
+				LOG.debug( "Binding @ElementCollection to collection table: " + safeCollectionRole() );
 			}
 		}
 	}

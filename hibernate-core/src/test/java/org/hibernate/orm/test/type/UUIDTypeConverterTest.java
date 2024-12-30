@@ -124,7 +124,6 @@ public class UUIDTypeConverterTest {
 	public static class Id {
 		@Column(unique = true, length = 16, nullable = false)
 		@jakarta.persistence.Id
-		@Convert(converter = UuidBase64TypeConverter.class)
 		private UUID id = safeRandomUUID();
 	}
 

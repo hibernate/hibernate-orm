@@ -364,7 +364,9 @@ public class EmbeddableBinder {
 		);
 
 		final String subpath = getPath( propertyHolder, inferredData );
-		LOG.tracev( "Binding component with path: {0}", subpath );
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug( "Binding component with path: " + subpath );
+		}
 		final PropertyHolder subholder = buildPropertyHolder(
 				component,
 				subpath,
@@ -602,7 +604,6 @@ public class EmbeddableBinder {
 			PropertyHolder holder,
 			MetadataBuildingContext context) {
 		assert component.getDiscriminator() == null;
-		LOG.tracev( "Setting discriminator for embeddable {0}", component.getComponentClassName() );
 		final AnnotatedColumns columns = new AnnotatedColumns();
 		columns.setPropertyHolder( holder );
 		columns.setBuildingContext( context );

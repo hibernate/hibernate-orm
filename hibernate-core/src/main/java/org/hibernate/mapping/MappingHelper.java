@@ -13,7 +13,6 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.internal.DelayedParameterizedTypeBean;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
@@ -42,17 +41,6 @@ public final class MappingHelper {
 		return metadata.getMetadataBuildingOptions().isAllowExtensionsInCdi()
 				? createSharedUserTypeBean( role, userCollectionTypeClass, parameters, metadata )
 				: createLocalUserTypeBean( role, userCollectionTypeClass, parameters );
-	}
-
-	public static ManagedBean<? extends UserCollectionType> createCustomTypeBean(
-			String role,
-			Class<? extends UserCollectionType> implementation,
-			Map<String, ?> parameters,
-			MetadataBuildingContext context) {
-		// if deferred container access is enabled, we locally create the user-type
-		return context.getBuildingOptions().isAllowExtensionsInCdi()
-				? createSharedUserTypeBean( role, implementation, parameters, context.getMetadataCollector() )
-				: createLocalUserTypeBean( role, implementation, parameters );
 	}
 
 	private static ManagedBean<? extends UserCollectionType> createSharedUserTypeBean(

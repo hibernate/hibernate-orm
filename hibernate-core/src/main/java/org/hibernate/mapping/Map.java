@@ -57,12 +57,12 @@ public class Map extends IndexedCollection {
 		if ( isSorted() ) {
 			return new SortedMapType( getRole(), getReferencedPropertyName(), getComparator() );
 		}
-
-		if ( hasOrder() ) {
+		else if ( hasOrder() ) {
 			return new OrderedMapType( getRole(), getReferencedPropertyName() );
 		}
-
-		return new MapType( getRole(), getReferencedPropertyName() );
+		else {
+			return new MapType( getRole(), getReferencedPropertyName() );
+		}
 	}
 
 

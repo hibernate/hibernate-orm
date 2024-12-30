@@ -65,7 +65,7 @@ public class Array extends List {
 	}
 
 	@Override
-	public CollectionType getDefaultCollectionType() throws MappingException {
+	public CollectionType getDefaultCollectionType() {
 		return new ArrayType( getRole(), getReferencedPropertyName(), getElementClass() );
 	}
 

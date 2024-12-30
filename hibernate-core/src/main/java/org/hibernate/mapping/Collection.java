@@ -5,7 +5,6 @@
 package org.hibernate.mapping;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +33,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.UserCollectionType;
 
+import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
 import static org.hibernate.mapping.MappingHelper.classForName;
@@ -191,10 +191,6 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		return getBuildingContext().getMetadataCollector();
 	}
 
-//	public TypeConfiguration getTypeConfiguration() {
-//		return getBuildingContext().getBootstrapContext().getTypeConfiguration();
-//	}
-
 	@Override
 	public ServiceRegistry getServiceRegistry() {
 		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
@@ -260,7 +256,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		return role;
 	}
 
-	public abstract CollectionType getDefaultCollectionType() throws MappingException;
+	public abstract CollectionType getDefaultCollectionType();
 
 	public boolean isPrimitiveArray() {
 		return false;
@@ -426,12 +422,12 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 
 	@Override
 	public List<Selectable> getSelectables() {
-		return Collections.emptyList();
+		return emptyList();
 	}
 
 	@Override
 	public List<Column> getColumns() {
-		return Collections.emptyList();
+		return emptyList();
 	}
 
 	@Override
@@ -448,7 +444,6 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		if ( cachedCollectionSemantics == null ) {
 			cachedCollectionSemantics = resolveCollectionSemantics();
 		}
-
 		return cachedCollectionSemantics;
 	}
 
@@ -466,25 +461,26 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 	}
 
 	private CollectionType resolveCollectionType() {
-		final CollectionType collectionType;
 		if ( cachedCollectionType != null ) {
-			collectionType = cachedCollectionType;
+			return cachedCollectionType;
 		}
 		else if ( customTypeBeanResolver != null ) {
-			collectionType = new CustomCollectionType( customTypeBeanResolver.get(), role, referencedPropertyName );
+			return new CustomCollectionType( customTypeBeanResolver.get(), role, referencedPropertyName );
 		}
 		else if ( typeName == null ) {
-			collectionType = getDefaultCollectionType();
+			return getDefaultCollectionType();
 		}
 		else {
-			final MetadataImplementor metadata = getMetadata();
-			final Class<? extends UserCollectionType> clazz =
-					classForName( UserCollectionType.class, typeName, metadata );
-			final ManagedBean<? extends UserCollectionType> userTypeBean =
-					createUserTypeBean( role, clazz, PropertiesHelper.map( typeParameters ), metadata );
-			collectionType = new CustomCollectionType( userTypeBean, role, referencedPropertyName );
+			return new CustomCollectionType( userTypeBean(), role, referencedPropertyName );
 		}
-		return collectionType;
+	}
+
+	private ManagedBean<? extends UserCollectionType> userTypeBean() {
+		final MetadataImplementor metadata = getMetadata();
+		return createUserTypeBean( role,
+				classForName( UserCollectionType.class, typeName, metadata ),
+				PropertiesHelper.map( typeParameters ),
+				metadata );
 	}
 
 	public CollectionType getCollectionType() {

@@ -15,7 +15,6 @@ import org.hibernate.boot.model.internal.DelayedParameterizedTypeBean;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
@@ -33,7 +32,8 @@ import org.hibernate.type.Type;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserCollectionType;
 
-import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
+import static org.hibernate.internal.util.PropertiesHelper.map;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * @author Steve Ebersole
@@ -51,47 +51,59 @@ public final class MappingHelper {
 			String role,
 			String propertyRef,
 			MetadataImplementor metadata) {
-		final Class<? extends UserCollectionType> userCollectionTypeClass =
-				metadata.getMetadataBuildingOptions().getServiceRegistry()
-						.requireService( ClassLoaderService.class )
-						.classForName( typeName );
+		final ManagedBean<? extends UserCollectionType> userTypeBean =
+				createUserTypeBean( role, classForName( typeName, metadata ), map( typeParameters ), metadata );
+		return new CustomCollectionType( userTypeBean, role, propertyRef );
+	}
 
-		final boolean hasParameters = CollectionHelper.isNotEmpty( typeParameters );
-		final ManagedBean<? extends UserCollectionType> userTypeBean;
+	private static ManagedBean<? extends UserCollectionType> createUserTypeBean(
+			String role,
+			Class<? extends UserCollectionType> userCollectionTypeClass,
+			Map<String, ?> parameters,
+			MetadataImplementor metadata) {
+		return metadata.getMetadataBuildingOptions().isAllowExtensionsInCdi()
+				? createSharedUserTypeBean( role, userCollectionTypeClass, parameters, metadata )
+				: createLocalUserTypeBean( role, userCollectionTypeClass, parameters );
+	}
 
-		if ( !metadata.getMetadataBuildingOptions().isAllowExtensionsInCdi() ) {
-			//noinspection unchecked,rawtypes
-			userTypeBean = createLocalUserCollectionTypeBean(
-					role,
-					userCollectionTypeClass,
-					hasParameters,
-					(Map) typeParameters
-			);
-		}
-		else {
-			final ManagedBean<? extends UserCollectionType> userCollectionTypeBean =
-					getManagedBeanRegistry( metadata ).getBean( userCollectionTypeClass );
+	public static ManagedBean<? extends UserCollectionType> createCustomTypeBean(
+			String role,
+			Class<? extends UserCollectionType> implementation,
+			Map<String, ?> parameters,
+			MetadataBuildingContext context) {
+		// if deferred container access is enabled, we locally create the user-type
+		return context.getBuildingOptions().isAllowExtensionsInCdi()
+				? createSharedUserTypeBean( role, implementation, parameters, context.getMetadataCollector() )
+				: createLocalUserTypeBean( role, implementation, parameters );
+	}
 
-			if ( hasParameters ) {
-				if ( ParameterizedType.class.isAssignableFrom( userCollectionTypeBean.getBeanClass() ) ) {
-					// create a copy of the parameters and create a bean wrapper to delay injecting
-					// the parameters, thereby delaying the need to resolve the instance from the
-					// wrapped bean
-					final Properties copy = new Properties();
-					copy.putAll( typeParameters );
-					userTypeBean = new DelayedParameterizedTypeBean<>( userCollectionTypeBean, copy );
-				}
-				else {
-					throwIgnoredCollectionTypeParameters( role, userCollectionTypeClass );
-					userTypeBean = userCollectionTypeBean;
-				}
+	private static ManagedBean<? extends UserCollectionType> createSharedUserTypeBean(
+			String role,
+			Class<? extends UserCollectionType> userCollectionTypeClass,
+			Map<String, ?> parameters,
+			MetadataImplementor metadata) {
+		final ManagedBean<? extends UserCollectionType> managedBean =
+				getManagedBeanRegistry( metadata ).getBean( userCollectionTypeClass );
+		if ( isNotEmpty( parameters ) ) {
+			if ( ParameterizedType.class.isAssignableFrom( managedBean.getBeanClass() ) ) {
+				// create a copy of the parameters and create a bean wrapper to delay injecting
+				// the parameters, thereby delaying the need to resolve the instance from the
+				// wrapped bean
+				final Properties copy = new Properties();
+				copy.putAll( parameters );
+				return new DelayedParameterizedTypeBean<>( managedBean, copy );
 			}
 			else {
-				userTypeBean = userCollectionTypeBean;
+				throwIgnoredCollectionTypeParameters( role, userCollectionTypeClass );
 			}
 		}
+		return managedBean;
+	}
 
-		return new CustomCollectionType( userTypeBean, role, propertyRef );
+	private static Class<UserCollectionType> classForName(String typeName, MetadataImplementor metadata) {
+		return metadata.getMetadataBuildingOptions().getServiceRegistry()
+				.requireService( ClassLoaderService.class )
+				.classForName( typeName );
 	}
 
 	private static ManagedBeanRegistry getManagedBeanRegistry(MetadataImplementor metadata) {
@@ -109,11 +121,8 @@ public final class MappingHelper {
 			parameterizedType.setParameterValues( parameters == null ? EMPTY_PROPERTIES : parameters );
 		}
 		else if ( parameters != null && !parameters.isEmpty() ) {
-			// TODO: should this throw?
-			MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
-					"UserCollectionType impl does not implement ParameterizedType but parameters were present : `%s`",
-					type.getClass().getName()
-			);
+			throw new MappingException( "'UserType' implementation '" + type.getClass().getName()
+					+ "' does not implement 'ParameterizedType' but parameters were provided" );
 		}
 	}
 
@@ -201,16 +210,14 @@ public final class MappingHelper {
 		);
 	}
 
-	public static ManagedBean<UserCollectionType> createLocalUserCollectionTypeBean(
+	private static ManagedBean<UserCollectionType> createLocalUserTypeBean(
 			String role,
 			Class<? extends UserCollectionType> implementation,
-			boolean hasParameters,
 			Map<String, ?> parameters) {
 		final UserCollectionType userCollectionType =
 				FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( implementation );
-
-		if ( hasParameters ) {
-			// `CollectionType declared parameters - inject them
+		if ( isNotEmpty( parameters ) ) {
+			// CollectionType declared parameters - inject them
 			if ( userCollectionType instanceof ParameterizedType parameterizedType ) {
 				final Properties properties = new Properties();
 				properties.putAll( parameters );
@@ -220,7 +227,6 @@ public final class MappingHelper {
 				throwIgnoredCollectionTypeParameters( role, implementation );
 			}
 		}
-
 		return new ProvidedInstanceManagedBeanImpl<>( userCollectionType );
 	}
 

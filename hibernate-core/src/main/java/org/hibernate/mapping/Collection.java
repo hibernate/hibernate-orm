@@ -760,23 +760,19 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		this.typeName = typeName;
 	}
 
+	@Deprecated(since = "7.0", forRemoval = true)
 	public Properties getTypeParameters() {
 		return typeParameters;
 	}
 
+	@Deprecated(since = "7.0", forRemoval = true)
 	public void setTypeParameters(Properties parameterMap) {
 		this.typeParameters = parameterMap;
 	}
 
-	@SuppressWarnings("rawtypes")
-	public void setTypeParameters(java.util.Map typeParameters) {
-		if ( typeParameters instanceof Properties properties ) {
-			this.typeParameters = properties;
-		}
-		else {
-			this.typeParameters = new Properties();
-			this.typeParameters.putAll( typeParameters );
-		}
+	public void setTypeParameters(java.util.Map<String,String> typeParameters) {
+		this.typeParameters = new Properties();
+		this.typeParameters.putAll( typeParameters );
 	}
 
 	@Override

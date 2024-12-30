@@ -110,9 +110,7 @@ import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.usertype.CompositeUserType;
-import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserCollectionType;
 
 
@@ -174,8 +172,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
-import static org.hibernate.mapping.MappingHelper.createLocalUserCollectionTypeBean;
-import static org.hibernate.mapping.MappingHelper.throwIgnoredCollectionTypeParameters;
+import static org.hibernate.mapping.MappingHelper.createCustomTypeBean;
 
 /**
  * Base class for stateful binders responsible for producing mapping model objects of type {@link Collection}.
@@ -889,7 +886,7 @@ public abstract class CollectionBinder {
 			MetadataBuildingContext buildingContext) {
 		return createBinder(
 				property,
-				() -> createCustomType(
+				() -> createCustomTypeBean(
 						property.getDeclaringType().getName() + "#" + property.getName(),
 						typeRegistration.getImplementation(),
 						typeRegistration.getParameters(),
@@ -898,37 +895,6 @@ public abstract class CollectionBinder {
 				classification,
 				buildingContext
 		);
-	}
-
-	private static ManagedBean<? extends UserCollectionType> createCustomType(
-			String role,
-			Class<? extends UserCollectionType> implementation,
-			Map<String, ?> parameters,
-			MetadataBuildingContext buildingContext) {
-		final boolean hasParameters = isNotEmpty( parameters );
-		if ( !buildingContext.getBuildingOptions().isAllowExtensionsInCdi() ) {
-			// if deferred container access is enabled, we locally create the user-type
-			return createLocalUserCollectionTypeBean( role, implementation, hasParameters, parameters );
-		}
-
-		final ManagedBean<? extends UserCollectionType> managedBean =
-				buildingContext.getBuildingOptions().getServiceRegistry()
-						.requireService( ManagedBeanRegistry.class )
-						.getBean( implementation );
-
-		if ( hasParameters ) {
-			if ( ParameterizedType.class.isAssignableFrom( managedBean.getBeanClass() ) ) {
-				// create a copy of the parameters and create a bean wrapper to delay injecting
-				// the parameters, thereby delaying the need to resolve the instance from the
-				// wrapped bean
-				final Properties copy = new Properties();
-				copy.putAll( parameters );
-				return new DelayedParameterizedTypeBean<>( managedBean, copy );
-			}
-			throwIgnoredCollectionTypeParameters( role, implementation );
-		}
-
-		return managedBean;
 	}
 
 	private static CollectionBinder createBinderFromProperty(MemberDetails property, MetadataBuildingContext context) {
@@ -955,7 +921,7 @@ public abstract class CollectionBinder {
 			MemberDetails property,
 			CollectionType typeAnnotation,
 			MetadataBuildingContext context) {
-		return createCustomType(
+		return createCustomTypeBean(
 				property.getDeclaringType().getName() + "." + property.getName(),
 				typeAnnotation.type(),
 				PropertiesHelper.map( extractParameters( typeAnnotation ) ),

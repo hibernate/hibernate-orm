@@ -6,10 +6,10 @@ package org.hibernate.query.sqm.tree.domain;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
@@ -117,7 +117,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	public void registerReusablePath(SqmPath<?> path) {
 		assert path.getLhs() == this;
 		if ( reusablePaths == null ) {
-			reusablePaths = new HashMap<>();
+			reusablePaths = new ConcurrentHashMap<>();
 		}
 		final String relativeName = path.getNavigablePath().getLocalName();
 		final SqmPath<?> previous = reusablePaths.put( relativeName, path );
@@ -207,7 +207,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		final SqmPathSource<?> intermediatePathSource =
 				getResolvedModel().getIntermediatePathSource( pathSource );
 		if ( reusablePaths == null ) {
-			reusablePaths = new HashMap<>();
+			reusablePaths = new ConcurrentHashMap<>();
 			final SqmPath<X> path = pathSource.createSqmPath( this, intermediatePathSource );
 			reusablePaths.put( attributeName, path );
 			return path;

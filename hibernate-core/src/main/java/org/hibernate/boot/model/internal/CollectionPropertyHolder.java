@@ -12,6 +12,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.MapKeyType;
+import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreMessageLogger;
@@ -79,20 +80,14 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			boolean isComposite,
 			Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap,
 			Map<String,AttributeConversionInfo> keyAttributeConversionInfoMap) {
-		if ( collectionProperty == null ) {
-			// not sure this is valid condition
-			return;
-		}
-
-		collectionProperty.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
-			applyLocalConvert(
-					usage,
-					collectionProperty,
-					isComposite,
-					elementAttributeConversionInfoMap,
-					keyAttributeConversionInfoMap
-			);
-		} );
+		collectionProperty.forEachAnnotationUsage( Convert.class, getSourceModelContext(),
+				usage -> applyLocalConvert(
+						usage,
+						collectionProperty,
+						isComposite,
+						elementAttributeConversionInfoMap,
+						keyAttributeConversionInfoMap
+				) );
 	}
 
 	private void applyLocalConvert(
@@ -102,10 +97,10 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap,
 			Map<String,AttributeConversionInfo> keyAttributeConversionInfoMap) {
 
-		// IMPL NOTE : the rules here are quite more lenient than what JPA says.  For example, JPA says that @Convert
+		// IMPL NOTE : the rules here are quite more lenient than what JPA says. For example, JPA says that @Convert
 		// on a Map of basic types should default to "value" but it should explicitly specify attributeName of "key"
-		// (or prefixed with "key." for embedded paths) to be applied on the key.  However, we try to see if conversion
-		// of either is disabled for whatever reason.  For example, if the Map is annotated with @Enumerated the
+		// (or prefixed with "key." for embedded paths) to be applied on the key. However, we try to see if conversion
+		// of either is disabled for whatever reason. For example, if the Map is annotated with @Enumerated the
 		// elements cannot be converted so any @Convert likely meant the key, so we apply it to the key
 
 		final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, collectionProperty );
@@ -122,9 +117,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 					elementAttributeConversionInfoMap.put( "", info );
 				}
 				else {
-					throw new IllegalStateException(
-							"@Convert placed on Map attribute [" + collection.getRole()
-									+ "] of non-basic types must define attributeName of 'key' or 'value'" );
+					throwMissingAttributeName();
 				}
 			}
 			else if ( canKeyBeConverted ) {
@@ -148,10 +141,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 				if ( keyPath == null && elementPath == null ) {
 					// specified attributeName needs to have 'key.' or 'value.' prefix
-					throw new IllegalStateException(
-							"@Convert placed on Map attribute [" + collection.getRole()
-									+ "] must define attributeName of 'key' or 'value'"
-					);
+					throwMissingAttributeName();
 				}
 			}
 			else if ( canKeyBeConverted ) {
@@ -181,6 +171,11 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 				);
 			}
 		}
+	}
+
+	private void throwMissingAttributeName() {
+		throw new IllegalStateException( "'@Convert' annotation for map [" + collection.getRole()
+									+ "] must specify 'attributeName=\"key\"' or 'attributeName=\"value\"'" );
 	}
 
 	private static void logSpecNoncompliance(String attributeName, String role) {
@@ -392,7 +387,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	public ConverterDescriptor resolveElementAttributeConverterDescriptor(
 			MemberDetails memberDetails,
 			ClassDetails classDetails) {
-		AttributeConversionInfo info = locateAttributeConversionInfo( "element" );
+		final AttributeConversionInfo info = locateAttributeConversionInfo( "element" );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
 				return null;
@@ -406,16 +401,14 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 				}
 			}
 		}
-		return getContext().getMetadataCollector()
-				.getConverterRegistry()
-				.getAttributeConverterAutoApplyHandler()
+		return getAttributeConverterAutoApplyHandler()
 				.findAutoApplyConverterForCollectionElement( memberDetails, getContext() );
 	}
 
 	public ConverterDescriptor mapKeyAttributeConverterDescriptor(
 			MemberDetails memberDetails,
 			TypeDetails keyTypeDetails) {
-		AttributeConversionInfo info = locateAttributeConversionInfo( "key" );
+		final AttributeConversionInfo info = locateAttributeConversionInfo( "key" );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
 				return null;
@@ -429,10 +422,13 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 				}
 			}
 		}
-		return getContext().getMetadataCollector()
-				.getConverterRegistry()
-				.getAttributeConverterAutoApplyHandler()
+		return getAttributeConverterAutoApplyHandler()
 				.findAutoApplyConverterForMapKey( memberDetails, getContext() );
 	}
 
+	private ConverterAutoApplyHandler getAttributeConverterAutoApplyHandler() {
+		return getContext().getMetadataCollector()
+				.getConverterRegistry()
+				.getAttributeConverterAutoApplyHandler();
+	}
 }

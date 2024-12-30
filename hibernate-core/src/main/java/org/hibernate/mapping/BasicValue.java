@@ -422,7 +422,10 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				&& typeParameters.get(DynamicParameterizedType.PARAMETER_TYPE) == null ) {
 			createParameterImpl();
 		}
+		return buildResolution( typeParameters );
+	}
 
+	private Resolution<?> buildResolution(Properties typeParameters) {
 		if ( explicitTypeName != null ) {
 			return interpretExplicitlyNamedType(
 					explicitTypeName,
@@ -451,8 +454,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	}
 
 	private BasicJavaType<?> getExplicitJavaType() {
-		return explicitJavaTypeAccess == null ? null
-				: explicitJavaTypeAccess.apply( getTypeConfiguration() );
+		return explicitJavaTypeAccess == null ? null : explicitJavaTypeAccess.apply( getTypeConfiguration() );
 	}
 
 	private ConverterDescriptor getConverterDescriptor(JavaType<?> javaType) {
@@ -1065,7 +1067,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			}
 		}
 
-		injectParameters( typeInstance, properties);
+		injectParameters( typeInstance, properties );
 		// envers - grr
 		setTypeParameters( properties );
 

@@ -461,7 +461,7 @@ public class EntityBinder {
 				context
 		);
 		if ( !isIdClass ) {
-			setWrapIdsInEmbeddedComponents( elementsToProcess.getIdPropertyCount() > 1 );
+			wrapIdsInEmbeddedComponents = elementsToProcess.getIdPropertyCount() > 1;
 		}
 		return idPropertiesIfIdClass;
 	}
@@ -509,7 +509,7 @@ public class EntityBinder {
 			}
 			else {
 				final boolean ignoreIdAnnotations = isIgnoreIdAnnotations();
-				setIgnoreIdAnnotations( true );
+				this.ignoreIdAnnotations = true;
 				final Component idClassComponent = bindIdClass(
 						inferredData,
 						baseInferredData,
@@ -532,7 +532,7 @@ public class EntityBinder {
 				if ( idClassComponent.isSimpleRecord() ) {
 					mapper.setSimpleRecord( true );
 				}
-				setIgnoreIdAnnotations( ignoreIdAnnotations );
+				this.ignoreIdAnnotations = ignoreIdAnnotations;
 				for ( Property property : mapper.getProperties() ) {
 					idPropertiesIfIdClass.add( property.getName() );
 				}
@@ -748,9 +748,8 @@ public class EntityBinder {
 	}
 
 	private void handleSecondaryTables() {
-		annotatedClass.forEachRepeatedAnnotationUsages( JpaAnnotations.SECONDARY_TABLE, getSourceModelContext(), (usage) -> {
-			addSecondaryTable( usage, null, false );
-		} );
+		annotatedClass.forEachRepeatedAnnotationUsages( JpaAnnotations.SECONDARY_TABLE, getSourceModelContext(),
+				usage -> addSecondaryTable( usage, null, false ) );
 	}
 
 	private void handleClassTable(InheritanceState inheritanceState, PersistentClass superEntity) {
@@ -1328,7 +1327,7 @@ public class EntityBinder {
 		return persistentClass instanceof RootClass;
 	}
 
-	public void bindEntity() {
+	private void bindEntity() {
 		bindEntityAnnotation();
 		bindRowManagement();
 		bindOptimisticLocking();
@@ -1599,7 +1598,7 @@ public class EntityBinder {
 		}
 	}
 
-	public void bindDiscriminatorValue() {
+	private void bindDiscriminatorValue() {
 		final DiscriminatorValue discriminatorValueAnn =
 				annotatedClass.getAnnotationUsage( DiscriminatorValue.class, getSourceModelContext() );
 		if ( discriminatorValueAnn == null ) {
@@ -1626,13 +1625,13 @@ public class EntityBinder {
 		}
 	}
 
-	public void bindProxy() {
+	private void bindProxy() {
 		//needed to allow association lazy loading.
 		lazy = true;
 		proxyClass = annotatedClass;
 	}
 
-	public void bindConcreteProxy() {
+	private void bindConcreteProxy() {
 		final ConcreteProxy annotationUsage =
 				annotatedClass.getAnnotationUsage( ConcreteProxy.class, getSourceModelContext() );
 		if ( annotationUsage != null ) {
@@ -1644,15 +1643,11 @@ public class EntityBinder {
 		}
 	}
 
-	public void bindWhere() {
+	private void bindWhere() {
 		final SQLRestriction restriction = getOverridableAnnotation( annotatedClass, SQLRestriction.class, context );
 		if ( restriction != null ) {
 			this.where = restriction.value();
 		}
-	}
-
-	public void setWrapIdsInEmbeddedComponents(boolean wrapIdsInEmbeddedComponents) {
-		this.wrapIdsInEmbeddedComponents = wrapIdsInEmbeddedComponents;
 	}
 
 	private void bindNaturalIdCache() {
@@ -1820,7 +1815,7 @@ public class EntityBinder {
 		}
 	}
 
-	public void bindTableForDiscriminatedSubclass(String entityName) {
+	private void bindTableForDiscriminatedSubclass(String entityName) {
 		if ( !(persistentClass instanceof SingleTableSubclass) ) {
 			throw new AssertionFailure(
 					"Was expecting a discriminated subclass [" + SingleTableSubclass.class.getName() +
@@ -1841,7 +1836,7 @@ public class EntityBinder {
 		);
 	}
 
-	public void bindTable(
+	private void bindTable(
 			String schema,
 			String catalog,
 			String tableName,
@@ -2248,16 +2243,8 @@ public class EntityBinder {
 		return accessType == null ? null : accessType.getExternalName();
 	}
 
-	public void addFilter(Filter filter) {
-		filters.add( filter );
-	}
-
 	public boolean isIgnoreIdAnnotations() {
 		return ignoreIdAnnotations;
-	}
-
-	public void setIgnoreIdAnnotations(boolean ignoreIdAnnotations) {
-		this.ignoreIdAnnotations = ignoreIdAnnotations;
 	}
 
 	public AccessType getPropertyAccessType() {
@@ -2277,22 +2264,21 @@ public class EntityBinder {
 		return accessType == null ? propertyAccessType : accessType;
 	}
 
-	public AccessType getExplicitAccessType(AnnotationTarget element) {
-		AccessType accessType = null;
+	private AccessType getExplicitAccessType(AnnotationTarget element) {
 		if ( element != null ) {
 			final Access access = element.getAnnotationUsage( Access.class, getSourceModelContext() );
 			if ( access != null ) {
-				accessType = AccessType.getAccessStrategy( access.value() );
+				return AccessType.getAccessStrategy( access.value() );
 			}
 		}
-		return accessType;
+		return null;
 	}
 
 	/**
 	 * Process the filters defined on the given class, as well as all filters
 	 * defined on the MappedSuperclass(es) in the inheritance hierarchy
 	 */
-	public void bindFiltersInHierarchy() {
+	private void bindFiltersInHierarchy() {
 
 		bindFilters( annotatedClass );
 
@@ -2313,12 +2299,12 @@ public class EntityBinder {
 		final Filters filters = getOverridableAnnotation( element, Filters.class, context );
 		if ( filters != null ) {
 			for ( Filter filter : filters.value() ) {
-				addFilter( filter );
+				this.filters.add( filter );
 			}
 		}
 		final Filter filter = element.getDirectAnnotationUsage( Filter.class );
 		if ( filter != null ) {
-			addFilter( filter );
+			this.filters.add( filter );
 		}
 	}
 }

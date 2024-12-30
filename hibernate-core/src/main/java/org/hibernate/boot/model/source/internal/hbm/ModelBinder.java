@@ -1327,7 +1327,7 @@ public class ModelBinder {
 
 		// bind the collection type info
 		String typeName = source.getTypeInformation().getName();
-		Map<Object,Object> typeParameters = new HashMap<>();
+		final Map<String,String> typeParameters = new HashMap<>();
 		if ( typeName != null ) {
 			// see if there is a corresponding type-def
 			final TypeDefinition typeDef = mappingDocument.getMetadataCollector().getTypeDefinition( typeName );

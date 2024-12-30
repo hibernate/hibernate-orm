@@ -145,8 +145,9 @@ public class TypeDefinition implements Serializable {
 
 		// support for AttributeConverter would be nice too
 		if ( isKnownType ) {
-			final T typeInstance = instantiateType( bootstrapContext.getServiceRegistry(),
-					context.getBuildingOptions(), name, typeImplementorClass, instanceProducer );
+			final T typeInstance =
+					instantiateType( bootstrapContext.getServiceRegistry(), context.getBuildingOptions(),
+							name, typeImplementorClass, instanceProducer );
 
 			if ( typeInstance instanceof TypeConfigurationAware configurationAware ) {
 				configurationAware.setTypeConfiguration( typeConfiguration );

@@ -420,7 +420,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		if ( typeParameters != null
 				&& parseBoolean( typeParameters.getProperty(DynamicParameterizedType.IS_DYNAMIC) )
 				&& typeParameters.get(DynamicParameterizedType.PARAMETER_TYPE) == null ) {
-			createParameterImpl();
+			getTypeParameters().put( DynamicParameterizedType.PARAMETER_TYPE, createParameterType() );
 		}
 		return buildResolution( typeParameters );
 	}
@@ -1046,9 +1046,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	private UserType<?> getConfiguredUserTypeBean(Class<? extends UserType<?>> explicitCustomType, Properties properties) {
 		final UserType<?> typeInstance =
-				!getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
-						? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( explicitCustomType )
-						: getUserTypeBean( explicitCustomType, properties ).getBeanInstance();
+				getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
+						? getUserTypeBean( explicitCustomType, properties ).getBeanInstance()
+						: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( explicitCustomType );
 
 		if ( typeInstance instanceof TypeConfigurationAware configurationAware ) {
 			configurationAware.setTypeConfiguration( getTypeConfiguration() );
@@ -1057,7 +1057,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		if ( typeInstance instanceof DynamicParameterizedType ) {
 			if ( parseBoolean( properties.getProperty( DynamicParameterizedType.IS_DYNAMIC ) ) ) {
 				if ( properties.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
-					properties.put( DynamicParameterizedType.PARAMETER_TYPE, makeParameterImpl() );
+					properties.put( DynamicParameterizedType.PARAMETER_TYPE, createParameterType() );
 				}
 			}
 		}
@@ -1071,13 +1071,12 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	private <T> ManagedBean<T> getUserTypeBean(Class<T> explicitCustomType, Properties properties) {
 		final BeanInstanceProducer producer = getBuildingContext().getBootstrapContext().getCustomTypeProducer();
-		final ManagedBeanRegistry registry = getServiceRegistry().requireService( ManagedBeanRegistry.class );
 		if ( isNotEmpty( properties ) ) {
 			final String name = explicitCustomType.getName() + COUNTER++;
-			return registry.getBean( name, explicitCustomType, producer );
+			return getManagedBeanRegistry().getBean( name, explicitCustomType, producer );
 		}
 		else {
-			return registry.getBean( explicitCustomType, producer );
+			return getManagedBeanRegistry().getBean( explicitCustomType, producer );
 		}
 	}
 

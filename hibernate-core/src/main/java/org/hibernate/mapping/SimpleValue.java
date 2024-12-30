@@ -54,6 +54,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 import jakarta.persistence.AttributeConverter;
+import org.hibernate.usertype.DynamicParameterizedType.ParameterType;
 
 import static java.lang.Boolean.parseBoolean;
 import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
@@ -914,54 +915,16 @@ public abstract class SimpleValue implements KeyValue {
 		this.attributeConverterDescriptor = descriptor;
 	}
 
-	protected void createParameterImpl() {
-		try {
-			final String[] columnNames = new String[ columns.size() ];
-			final Long[] columnLengths = new Long[ columns.size() ];
-
-			for ( int i = 0; i < columns.size(); i++ ) {
-				final Selectable selectable = columns.get(i);
-				if ( selectable instanceof Column column ) {
-					columnNames[i] = column.getName();
-					columnLengths[i] = column.getLength();
-				}
-			}
-
-			final MemberDetails attributeMember = (MemberDetails) typeParameters.get( DynamicParameterizedType.XPROPERTY );
-			// todo : not sure this works for handling @MapKeyEnumerated
-			final Annotation[] annotations = getAnnotations( attributeMember );
-			typeParameters.put(
-					DynamicParameterizedType.PARAMETER_TYPE,
-					new ParameterTypeImpl(
-							classLoaderService()
-									.classForTypeName( typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS) ),
-							attributeMember != null ? attributeMember.getType() : null,
-							annotations,
-							table.getCatalog(),
-							table.getSchema(),
-							table.getName(),
-							parseBoolean( typeParameters.getProperty(DynamicParameterizedType.IS_PRIMARY_KEY) ),
-							columnNames,
-							columnLengths
-					)
-			);
-		}
-		catch ( ClassLoadingException e ) {
-			throw new MappingException( "Could not create DynamicParameterizedType for type: " + typeName, e );
-		}
-	}
-
 	private static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
 	private static Annotation[] getAnnotations(MemberDetails memberDetails) {
-		final Collection<? extends Annotation> directAnnotationUsages = memberDetails == null
-				? null
-				: memberDetails.getDirectAnnotationUsages();
-		return directAnnotationUsages == null
-				? NO_ANNOTATIONS
+		final Collection<? extends Annotation> directAnnotationUsages =
+				memberDetails == null ? null
+						: memberDetails.getDirectAnnotationUsages();
+		return directAnnotationUsages == null ? NO_ANNOTATIONS
 				: directAnnotationUsages.toArray( Annotation[]::new );
 	}
 
-	public DynamicParameterizedType.ParameterType makeParameterImpl() {
+	protected ParameterType createParameterType() {
 		try {
 			final String[] columnNames = new String[ columns.size() ];
 			final Long[] columnLengths = new Long[ columns.size() ];
@@ -974,28 +937,31 @@ public abstract class SimpleValue implements KeyValue {
 				}
 			}
 
-			final MemberDetails attributeMember = (MemberDetails) typeParameters.get( DynamicParameterizedType.XPROPERTY );
 			// todo : not sure this works for handling @MapKeyEnumerated
-			final Annotation[] annotations = getAnnotations( attributeMember );
-			return new ParameterTypeImpl(
-					classLoaderService()
-							.classForTypeName( typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS) ),
-					attributeMember != null ? attributeMember.getType() : null,
-					annotations,
-					table.getCatalog(),
-					table.getSchema(),
-					table.getName(),
-					parseBoolean( typeParameters.getProperty(DynamicParameterizedType.IS_PRIMARY_KEY) ),
-					columnNames,
-					columnLengths
-			);
+			return createParameterType( columnNames, columnLengths );
 		}
 		catch ( ClassLoadingException e ) {
 			throw new MappingException( "Could not create DynamicParameterizedType for type: " + typeName, e );
 		}
 	}
 
-	private static final class ParameterTypeImpl implements DynamicParameterizedType.ParameterType {
+	private ParameterType createParameterType(String[] columnNames, Long[] columnLengths) {
+		final MemberDetails attribute = (MemberDetails) typeParameters.get( DynamicParameterizedType.XPROPERTY );
+		return new ParameterTypeImpl(
+				classLoaderService()
+						.classForTypeName( typeParameters.getProperty( DynamicParameterizedType.RETURNED_CLASS ) ),
+				attribute != null ? attribute.getType() : null,
+				getAnnotations( attribute ),
+				table.getCatalog(),
+				table.getSchema(),
+				table.getName(),
+				parseBoolean( typeParameters.getProperty( DynamicParameterizedType.IS_PRIMARY_KEY ) ),
+				columnNames,
+				columnLengths
+		);
+	}
+
+	private static final class ParameterTypeImpl implements ParameterType {
 
 		private final Class<?> returnedClass;
 		private final java.lang.reflect.Type returnedJavaType;

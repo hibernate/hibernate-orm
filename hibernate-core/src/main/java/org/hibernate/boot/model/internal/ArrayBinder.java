@@ -27,6 +27,7 @@ public class ArrayBinder extends ListBinder {
 		super( customTypeBeanResolver, buildingContext );
 	}
 
+	@Override
 	protected Collection createCollection(PersistentClass owner) {
 		return new Array( getCustomTypeBeanResolver(), owner, getBuildingContext() );
 	}

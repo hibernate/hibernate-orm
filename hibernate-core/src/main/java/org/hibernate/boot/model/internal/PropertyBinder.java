@@ -165,7 +165,7 @@ public class PropertyBinder {
 		this.name = name;
 	}
 
-	public void setReturnedClassName(String returnedClassName) {
+	private void setReturnedClassName(String returnedClassName) {
 		this.returnedClassName = returnedClassName;
 	}
 
@@ -219,15 +219,15 @@ public class PropertyBinder {
 		this.memberDetails = memberDetails;
 	}
 
-	public void setReturnedClass(TypeDetails returnedClass) {
+	private void setReturnedClass(TypeDetails returnedClass) {
 		this.returnedClass = returnedClass;
 	}
 
-	public BasicValueBinder getBasicValueBinder() {
+	private BasicValueBinder getBasicValueBinder() {
 		return basicValueBinder;
 	}
 
-	public Value getValue() {
+	private Value getValue() {
 		return value;
 	}
 
@@ -314,7 +314,7 @@ public class PropertyBinder {
 	}
 
 	//used to build everything from scratch
-	public Property makePropertyValueAndBind() {
+	private Property makePropertyValueAndBind() {
 		return bind( makePropertyAndValue() );
 	}
 
@@ -1281,20 +1281,18 @@ public class PropertyBinder {
 		if ( basicAnn != null ) {
 			return basicAnn.optional();
 		}
-
-		if ( attributeMember.isArray() ) {
+		else if ( attributeMember.isArray() ) {
 			return true;
 		}
-
-		if ( propertyHolder != null && propertyHolder.isComponent() ) {
+		else if ( propertyHolder != null && propertyHolder.isComponent() ) {
 			return true;
 		}
-
-		if ( attributeMember.isPlural() ) {
+		else if ( attributeMember.isPlural() ) {
 			return attributeMember.getElementType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
 		}
-
-		return attributeMember.getType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
+		else {
+			return attributeMember.getType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
+		}
 	}
 
 	private static boolean isLazy(MemberDetails property) {

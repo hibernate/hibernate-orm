@@ -148,8 +148,7 @@ public class TypeDefinition implements Serializable {
 			final T typeInstance = instantiateType( bootstrapContext.getServiceRegistry(),
 					context.getBuildingOptions(), name, typeImplementorClass, instanceProducer );
 
-			if ( typeInstance instanceof TypeConfigurationAware ) {
-				final TypeConfigurationAware configurationAware = (TypeConfigurationAware) typeInstance;
+			if ( typeInstance instanceof TypeConfigurationAware configurationAware ) {
 				configurationAware.setTypeConfiguration( typeConfiguration );
 			}
 
@@ -332,11 +331,10 @@ public class TypeDefinition implements Serializable {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !( o instanceof TypeDefinition ) ) {
+		if ( !(o instanceof TypeDefinition that) ) {
 			return false;
 		}
 
-		final TypeDefinition that = (TypeDefinition) o;
 		return Objects.equals( this.name, that.name )
 				&& Objects.equals( this.typeImplementorClass, that.typeImplementorClass )
 				&& Arrays.equals( this.registrationKeys, that.registrationKeys )

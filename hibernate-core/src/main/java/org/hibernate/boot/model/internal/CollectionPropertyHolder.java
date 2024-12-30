@@ -14,7 +14,6 @@ import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Join;
@@ -36,6 +35,7 @@ import jakarta.persistence.MapKeyTemporal;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Temporal;
 
+import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
@@ -44,7 +44,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  * @author Steve Ebersole
  */
 public class CollectionPropertyHolder extends AbstractPropertyHolder {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( CollectionPropertyHolder.class );
+	private static final CoreMessageLogger LOG = messageLogger( CollectionPropertyHolder.class );
 
 	private final Collection collection;
 
@@ -111,11 +111,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, collectionProperty );
 		final String attributeName = info.getAttributeName();
 		if ( collection.isMap() ) {
-			final boolean specCompliant = isNotEmpty( attributeName )
-					&& ( attributeName.startsWith( "key" ) || attributeName.startsWith( "value" ) );
-			if ( !specCompliant ) {
-				log.nonCompliantMapConversion( collection.getRole() );
-			}
+			logSpecNoncompliance( attributeName, collection.getRole() );
 		}
 
 		if ( isEmpty( attributeName ) ) {
@@ -187,6 +183,14 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		}
 	}
 
+	private static void logSpecNoncompliance(String attributeName, String role) {
+		final boolean specCompliant = isNotEmpty( attributeName )
+				&& (attributeName.startsWith( "key" ) || attributeName.startsWith( "value" ) );
+		if ( !specCompliant ) {
+			LOG.nonCompliantMapConversion( role );
+		}
+	}
+
 	/**
 	 * Check if path has the given prefix and remove it.
 	 *
@@ -202,12 +206,12 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		if ( path.equals(prefix) ) {
 			return "";
 		}
-
-		if (path.startsWith(prefix + ".")) {
+		else if ( path.startsWith(prefix + ".") ) {
 			return path.substring( prefix.length() + 1 );
 		}
-
-		return defaultValue;
+		else {
+			return defaultValue;
+		}
 	}
 
 	@Override
@@ -402,14 +406,6 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 				}
 			}
 		}
-
-		log.debugf(
-				"Attempting to locate auto-apply AttributeConverter for collection element [%s]",
-				collection.getRole()
-		);
-
-		// todo : do we need to pass along `XClass elementXClass`?
-
 		return getContext().getMetadataCollector()
 				.getConverterRegistry()
 				.getAttributeConverterAutoApplyHandler()
@@ -433,14 +429,6 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 				}
 			}
 		}
-
-		log.debugf(
-				"Attempting to locate auto-apply AttributeConverter for collection key [%s]",
-				collection.getRole()
-		);
-
-		// todo : do we need to pass along `XClass keyXClass`?
-
 		return getContext().getMetadataCollector()
 				.getConverterRegistry()
 				.getAttributeConverterAutoApplyHandler()

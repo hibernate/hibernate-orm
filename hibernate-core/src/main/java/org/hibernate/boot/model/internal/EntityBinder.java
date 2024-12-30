@@ -5,7 +5,6 @@
 package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -106,8 +105,6 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.spi.NavigablePath;
 
-import org.jboss.logging.Logger;
-
 import jakarta.persistence.Access;
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.AttributeOverride;
@@ -136,6 +133,7 @@ import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.bui
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildInheritanceJoinColumn;
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
+import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.noConstraint;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
@@ -152,6 +150,7 @@ import static org.hibernate.boot.model.internal.TableBinder.bindForeignKey;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.engine.OptimisticLockStyle.fromLockType;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
+import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -170,7 +169,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  */
 public class EntityBinder {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, EntityBinder.class.getName() );
+	private static final CoreMessageLogger LOG = messageLogger( EntityBinder.class );
 	private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
 
 	private final MetadataBuildingContext context;
@@ -217,7 +216,7 @@ public class EntityBinder {
 			Map<ClassDetails, InheritanceState> inheritanceStates,
 			MetadataBuildingContext context) {
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Binding entity from annotated class: %s", clazzToProcess.getName() );
+			LOG.debug( "Binding entity from annotated class: " + clazzToProcess.getName() );
 		}
 
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
@@ -962,10 +961,8 @@ public class EntityBinder {
 			discriminatorColumn.linkWithValue( discriminatorColumnBinding );
 			discriminatorColumnBinding.setTypeName( discriminatorColumn.getDiscriminatorTypeName() );
 			rootClass.setPolymorphic( true );
-			final String rootEntityName = rootClass.getEntityName();
-			LOG.tracev( "Setting discriminator for entity {0}", rootEntityName);
 			getMetadataCollector()
-					.addSecondPass( new DiscriminatorColumnSecondPass( rootEntityName,
+					.addSecondPass( new DiscriminatorColumnSecondPass( rootClass.getEntityName(),
 							context.getMetadataCollector().getDatabase().getDialect() ) );
 		}
 	}
@@ -1045,14 +1042,20 @@ public class EntityBinder {
 		if ( discriminatorColumn != null ) {
 			final boolean ignore = context.getBuildingOptions().ignoreExplicitDiscriminatorsForJoinedInheritance();
 			if ( ignore ) {
-				LOG.debugf( "Ignoring explicit @DiscriminatorColumn annotation on: %s", annotatedClass.getName() );
+				if ( LOG.isDebugEnabled() ) {
+					LOG.debug( "Ignoring explicit @DiscriminatorColumn annotation on: "
+								+ annotatedClass.getName() );
+				}
 			}
 			return !ignore;
 		}
 		else {
 			final boolean createImplicit = context.getBuildingOptions().createImplicitDiscriminatorsForJoinedInheritance();
 			if ( createImplicit ) {
-				LOG.debugf( "Inferring implicit @DiscriminatorColumn using defaults for: %s", annotatedClass.getName() );
+				if ( LOG.isDebugEnabled() ) {
+					LOG.debug( "Inferring implicit @DiscriminatorColumn using defaults for: "
+								+ annotatedClass.getName() );
+				}
 			}
 			return createImplicit;
 		}
@@ -1073,8 +1076,7 @@ public class EntityBinder {
 			if ( !idPropertiesIfIdClass.contains( propertyName ) ) {
 				final MemberDetails property = propertyAnnotatedElement.getAttributeMember();
 				boolean hasIdAnnotation = hasIdAnnotation( property );
-				if ( !idPropertiesIfIdClass.isEmpty() && !isIgnoreIdAnnotations()
-						&& hasIdAnnotation ) {
+				if ( !idPropertiesIfIdClass.isEmpty() && !isIgnoreIdAnnotations() && hasIdAnnotation ) {
 					missingEntityProperties.add( propertyName );
 				}
 				else {
@@ -1082,10 +1084,8 @@ public class EntityBinder {
 							inheritanceState.getType() == SINGLE_TABLE
 									&& inheritanceState.hasParents();
 					if ( !hasIdAnnotation && property.hasAnnotationUsage( GeneratedValue.class, getSourceModelContext() ) ) {
-						throw new AnnotationException(
-								"Property '"
-										+ BinderHelper.getPath( propertyHolder, propertyAnnotatedElement )
-										+ "' is annotated @GeneratedValue but is not part of an identifier" );
+						throw new AnnotationException( "Property '" + getPath( propertyHolder, propertyAnnotatedElement )
+												+ "' is annotated '@GeneratedValue' but is not part of an identifier" );
 					}
 					processElementAnnotations(
 							propertyHolder,
@@ -1194,7 +1194,6 @@ public class EntityBinder {
 					context
 			);
 		}
-		LOG.trace( "Subclass joined column(s) created" );
 		return joinColumns;
 	}
 
@@ -1389,7 +1388,6 @@ public class EntityBinder {
 	}
 
 	private void registerImportName() {
-		LOG.debugf( "Import with entity name %s", name );
 		try {
 			final InFlightMetadataCollector metadataCollector = getMetadataCollector();
 			metadataCollector.addImport( name, persistentClass.getEntityName() );
@@ -1883,7 +1881,6 @@ public class EntityBinder {
 		getMetadataCollector().addEntityTableXref( entityName, logicalName, table, denormalizedSuperTableXref );
 
 		if ( persistentClass instanceof TableOwner tableOwner ) {
-			LOG.debugf( "Bind entity %s on table %s", entityName, table.getName() );
 			tableOwner.setTable( table );
 		}
 		else {
@@ -2163,8 +2160,6 @@ public class EntityBinder {
 
 		// Somehow keep joins() for later.
 		// Has to do the work later because it needs PersistentClass id!
-		LOG.debugf( "Adding secondary table to entity %s -> %s",
-				entityName, join.getTable().getName() );
 
 		handleSecondaryRowManagement( join );
 		processSecondaryTableCustomSql( join );

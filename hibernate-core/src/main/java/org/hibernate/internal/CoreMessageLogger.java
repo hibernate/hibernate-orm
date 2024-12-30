@@ -555,7 +555,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(
 			id = 449,
-			value = "@Convert annotation applied to Map attribute [%s] did not explicitly specify attributeName " +
+			value = "@Convert annotation applied to Map attribute [%s] did not explicitly specify 'attributeName' " +
 					"using 'key'/'value' as required by spec; attempting to DoTheRightThing"
 	)
 	void nonCompliantMapConversion(String collectionRole);

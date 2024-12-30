@@ -96,7 +96,9 @@ public class FilterDefBinder {
 				parameterResolvers
 		);
 
-		LOG.debugf( "Binding filter definition: %s", filterDefinition.getFilterName() );
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug( "Binding filter definition: " + filterDefinition.getFilterName() );
+		}
 		context.getMetadataCollector().addFilterDefinition( filterDefinition );
 	}
 

@@ -299,8 +299,10 @@ public class MapKeyAttributeConverterTest extends BaseNonConfigCoreFunctionalTes
 
 		private ImplicitEnumMapKey enumImplicit;
 		@Enumerated
+		@Convert(disableConversion = true)
 		private ImplicitEnumMapKey enumImplicitOverrideOrdinal;
 		@Enumerated(EnumType.STRING)
+		@Convert(disableConversion = true)
 		private ImplicitEnumMapKey enumImplicitOverrideString;
 
 		@Convert(converter = ImplicitEnumMapKeyOverridedConverter.class)

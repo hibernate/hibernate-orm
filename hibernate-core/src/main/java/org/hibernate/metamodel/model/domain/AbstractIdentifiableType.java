@@ -177,8 +177,8 @@ public abstract class AbstractIdentifiableType<J>
 			if ( idClassAttributes.size() == 1 ) {
 				return idClassAttributes.iterator().next().getType();
 			}
-			else if ( idClassType instanceof SimpleDomainType<?> ) {
-				return (SimpleDomainType<?>) idClassType;
+			else if ( idClassType instanceof SimpleDomainType<?> simpleDomainType ) {
+				return simpleDomainType;
 			}
 		}
 

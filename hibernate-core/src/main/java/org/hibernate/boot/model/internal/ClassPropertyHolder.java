@@ -402,8 +402,8 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 				component.setTypeName( typeName );
 			}
 		}
-		else if ( value instanceof SimpleValue ) {
-			( (SimpleValue) value ).setTypeName( typeName );
+		else if ( value instanceof SimpleValue simpleValue ) {
+			simpleValue.setTypeName( typeName );
 		}
 	}
 

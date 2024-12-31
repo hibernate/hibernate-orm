@@ -5327,9 +5327,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			final BasicValuedPathInterpretation<?> basicPath = (BasicValuedPathInterpretation<?>) expression;
 			final TableGroup tableGroup = basicPath.getTableGroup();
-			final TableGroup elementTableGroup = tableGroup instanceof PluralTableGroup
-					? ( (PluralTableGroup) tableGroup ).getElementTableGroup()
-					: tableGroup;
+			final TableGroup elementTableGroup =
+					tableGroup instanceof PluralTableGroup pluralTableGroup
+							? pluralTableGroup.getElementTableGroup()
+							: tableGroup;
 			final EntityPersister persister = (EntityPersister) elementTableGroup.getModelPart().getPartMappingType();
 			// Only need a case expression around the basic valued path for the parent treat expression
 			// if the column of the basic valued path is shared between subclasses
@@ -5633,7 +5634,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			final MappingModelExpressible<?> inferableExpressible = getInferredValueMapping();
-
 			if ( inferableExpressible instanceof DiscriminatorMapping discriminatorMapping ) {
 				return entityTypeLiteral( literal, discriminatorMapping );
 			}
@@ -5744,8 +5744,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final ForeignKeyDescriptor foreignKeyDescriptor = association.getForeignKeyDescriptor();
 			if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
 				// If the association is the target, we must use the identifier of the EntityMappingType
-				associationKey = association.getAssociatedEntityMappingType().getIdentifierMapping()
-						.getIdentifier( literal.getLiteralValue() );
+				associationKey =
+						association.getAssociatedEntityMappingType().getIdentifierMapping()
+								.getIdentifier( literal.getLiteralValue() );
 				associationKeyPart = association.getAssociatedEntityMappingType().getIdentifierMapping();
 			}
 			else {
@@ -5758,17 +5759,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 		else {
-			final EntityIdentifierMapping identifierMapping = entityValuedModelPart.getEntityMappingType()
-					.getIdentifierMapping();
+			final EntityIdentifierMapping identifierMapping =
+					entityValuedModelPart.getEntityMappingType().getIdentifierMapping();
 			associationKeyPart = identifierMapping;
 			associationKey = identifierMapping.getIdentifier( literal.getLiteralValue() );
 		}
 
-		if ( associationKeyPart instanceof BasicValuedMapping ) {
-			return new QueryLiteral<>(
-					associationKey,
-					(BasicValuedMapping) associationKeyPart
-			);
+		if ( associationKeyPart instanceof BasicValuedMapping basicValuedMapping ) {
+			return new QueryLiteral<>( associationKey, basicValuedMapping );
 		}
 		else {
 			return sqlTuple( associationKeyPart, associationKey );
@@ -6216,16 +6214,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final SqmExpressible<?> paramSqmType = paramType.resolveExpressible( creationContext );
 
-		if ( paramSqmType instanceof SqmPath ) {
-			final MappingModelExpressible<?> modelPart = determineValueMapping( (SqmPath<?>) paramSqmType );
-			if ( modelPart instanceof PluralAttributeMapping ) {
-				return resolveInferredValueMappingForParameter( ( (PluralAttributeMapping) modelPart ).getElementDescriptor() );
+		if ( paramSqmType instanceof SqmPath<?> sqmPath ) {
+			final MappingModelExpressible<?> modelPart = determineValueMapping( sqmPath );
+			if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
+				return resolveInferredValueMappingForParameter( pluralAttributeMapping.getElementDescriptor() );
 			}
 			return modelPart;
 		}
 
-		if ( paramSqmType instanceof BasicValuedMapping ) {
-			return (BasicValuedMapping) paramSqmType;
+		if ( paramSqmType instanceof BasicValuedMapping basicValuedMapping ) {
+			return basicValuedMapping;
 		}
 
 		if ( paramSqmType instanceof CompositeSqmPathSource || paramSqmType instanceof EmbeddableDomainType<?> ) {
@@ -7383,17 +7381,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Object visitEnumLiteral(SqmEnumLiteral<?> sqmEnumLiteral) {
 		final MappingModelExpressible<?> inferred = resolveInferredType();
 		final SqlExpressible inferredType;
-		if ( inferred instanceof PluralAttributeMapping ) {
-			final CollectionPart elementDescriptor = ((PluralAttributeMapping) inferred).getElementDescriptor();
-			if ( elementDescriptor instanceof BasicValuedCollectionPart) {
-				inferredType = (BasicValuedCollectionPart) elementDescriptor;
+		if ( inferred instanceof PluralAttributeMapping pluralAttributeMapping ) {
+			final CollectionPart elementDescriptor = pluralAttributeMapping.getElementDescriptor();
+			if ( elementDescriptor instanceof BasicValuedCollectionPart basicValuedCollectionPart ) {
+				inferredType = basicValuedCollectionPart;
 			}
 			else {
 				inferredType = null;
 			}
 		}
-		else if ( inferred instanceof BasicValuedMapping ) {
-			inferredType = (BasicValuedMapping) inferred;
+		else if ( inferred instanceof BasicValuedMapping basicValuedMapping ) {
+			inferredType = basicValuedMapping;
 		}
 		else {
 			inferredType = null;

@@ -185,18 +185,12 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 								.getSortExpression()
 								.accept( walker );
 				final JdbcMappingContainer expressionType = expression.getExpressionType();
-				if ( expressionType instanceof BasicValuedMapping ) {
-					return (BasicValuedMapping) expressionType;
+				if ( expressionType instanceof BasicValuedMapping basicValuedMapping ) {
+					return basicValuedMapping;
 				}
 				try {
-					return walker.getCreationContext()
-							.getSessionFactory()
-							.getRuntimeMetamodels()
-							.getMappingMetamodel()
-							.resolveMappingExpressible(
-									getNodeType(),
-									walker.getFromClauseAccess()::getTableGroup
-							);
+					return walker.getCreationContext().getSessionFactory().getMappingMetamodel()
+							.resolveMappingExpressible( getNodeType(), walker.getFromClauseAccess()::getTableGroup );
 				}
 				catch (Exception e) {
 					return null; // this works at least approximately

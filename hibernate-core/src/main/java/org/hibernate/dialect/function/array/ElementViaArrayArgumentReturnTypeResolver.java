@@ -9,7 +9,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
@@ -41,26 +40,23 @@ public class ElementViaArrayArgumentReturnTypeResolver implements FunctionReturn
 			@Nullable SqmToSqlAstConverter converter,
 			List<? extends SqmTypedNode<?>> arguments,
 			TypeConfiguration typeConfiguration) {
-		final MappingModelExpressible<?> inferredType = converter == null
-				? null
-				: converter.resolveFunctionImpliedReturnType();
+		final MappingModelExpressible<?> inferredType =
+				converter == null ? null : converter.resolveFunctionImpliedReturnType();
 		if ( inferredType != null ) {
-			if ( inferredType instanceof ReturnableType<?> ) {
-				return (ReturnableType<?>) inferredType;
+			if ( inferredType instanceof ReturnableType<?> returnableType ) {
+				return returnableType;
 			}
-			else if ( inferredType instanceof BasicValuedMapping ) {
-				return (ReturnableType<?>) ( (BasicValuedMapping) inferredType ).getJdbcMapping();
+			else if ( inferredType instanceof BasicValuedMapping basicValuedMapping ) {
+				return (ReturnableType<?>) basicValuedMapping.getJdbcMapping();
 			}
 		}
 		if ( impliedType != null ) {
 			return impliedType;
 		}
 		final SqmExpressible<?> expressible = arguments.get( arrayIndex ).getExpressible();
-		final DomainType<?> type;
-		if ( expressible != null && ( type = expressible.getSqmType() ) instanceof BasicPluralType<?, ?> ) {
-			return ( (BasicPluralType<?, ?>) type ).getElementType();
-		}
-		return null;
+		return expressible != null && expressible.getSqmType() instanceof BasicPluralType<?, ?> type
+				? type.getElementType()
+				: null;
 	}
 
 	@Override

@@ -348,8 +348,8 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 				bindType = (BindableType<T>) type;
 				return changed;
 			}
-			else if ( type instanceof BasicValuedMapping ) {
-				final JdbcMapping jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();
+			else if ( type instanceof BasicValuedMapping basicValuedMapping ) {
+				final JdbcMapping jdbcMapping = basicValuedMapping.getJdbcMapping();
 				if ( jdbcMapping instanceof BindableType<?> ) {
 					final boolean changed = bindType != null && jdbcMapping != bindType;
 					bindType = (BindableType<T>) jdbcMapping;

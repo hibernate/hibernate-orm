@@ -164,8 +164,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 				}
 				count++;
 			}
-			else if ( attributeMapping instanceof ToOneAttributeMapping ) {
-				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+			else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
 				if ( toOneAttributeMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY ) {
 					final ValuedModelPart keyPart = toOneAttributeMapping.getForeignKeyDescriptor().getKeyPart();
 					if ( keyPart instanceof BasicValuedMapping ) {

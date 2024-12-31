@@ -920,7 +920,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		}
 		for ( Property property : getProperties() ) {
 			final Value value = property.getValue();
-			if ( value instanceof BasicValue && ( (BasicValue) value ).isPartitionKey() ) {
+			if ( value instanceof BasicValue basicValue && basicValue.isPartitionKey() ) {
 				return true;
 			}
 		}

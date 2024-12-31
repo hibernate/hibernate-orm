@@ -87,7 +87,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	@Override
 	public ConverterDescriptor resolveAttributeConverterDescriptor(MemberDetails attributeMember) {
-		AttributeConversionInfo info = locateAttributeConversionInfo( attributeMember );
+		final AttributeConversionInfo info = locateAttributeConversionInfo( attributeMember );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
 				return null;

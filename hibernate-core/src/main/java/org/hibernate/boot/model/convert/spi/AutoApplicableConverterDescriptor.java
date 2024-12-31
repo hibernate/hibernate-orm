@@ -13,6 +13,7 @@ import org.hibernate.models.spi.MemberDetails;
  * @author Steve Ebersole
  */
 public interface AutoApplicableConverterDescriptor {
+	boolean isAutoApplicable();
 	ConverterDescriptor getAutoAppliedConverterDescriptorForAttribute(MemberDetails memberDetails, MetadataBuildingContext context);
 	ConverterDescriptor getAutoAppliedConverterDescriptorForCollectionElement(MemberDetails memberDetails, MetadataBuildingContext context);
 	ConverterDescriptor getAutoAppliedConverterDescriptorForMapKey(MemberDetails memberDetails, MetadataBuildingContext context);

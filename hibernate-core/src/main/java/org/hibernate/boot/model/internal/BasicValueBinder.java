@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import jakarta.persistence.Embedded;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -20,35 +21,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.TimeZoneStorageStrategy;
-import org.hibernate.annotations.AnyDiscriminator;
-import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.annotations.AnyKeyJavaType;
-import org.hibernate.annotations.AnyKeyJdbcType;
-import org.hibernate.annotations.AnyKeyJdbcTypeCode;
-import org.hibernate.annotations.CollectionId;
-import org.hibernate.annotations.CollectionIdJavaType;
-import org.hibernate.annotations.CollectionIdJdbcType;
-import org.hibernate.annotations.CollectionIdJdbcTypeCode;
-import org.hibernate.annotations.CollectionIdMutability;
-import org.hibernate.annotations.CollectionIdType;
-import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.ListIndexJavaType;
-import org.hibernate.annotations.ListIndexJdbcType;
-import org.hibernate.annotations.ListIndexJdbcTypeCode;
-import org.hibernate.annotations.MapKeyJavaType;
-import org.hibernate.annotations.MapKeyJdbcType;
-import org.hibernate.annotations.MapKeyJdbcTypeCode;
-import org.hibernate.annotations.MapKeyMutability;
-import org.hibernate.annotations.MapKeyType;
-import org.hibernate.annotations.Mutability;
-import org.hibernate.annotations.Nationalized;
-import org.hibernate.annotations.PartitionKey;
-import org.hibernate.annotations.Target;
-import org.hibernate.annotations.TimeZoneColumn;
-import org.hibernate.annotations.TimeZoneStorage;
-import org.hibernate.annotations.TimeZoneStorageType;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.*;
 import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.spi.AccessType;
@@ -1188,30 +1161,43 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	private void applyJpaConverter(MemberDetails attribute, ConverterDescriptor attributeConverterDescriptor) {
-		disallowConverter( attribute, Id.class );
-		disallowConverter( attribute, Version.class );
+		final boolean autoApply = attributeConverterDescriptor.getAutoApplyDescriptor().isAutoApplicable();
+		disallowConverter( attribute, Id.class, autoApply );
+		disallowConverter( attribute, Version.class, autoApply );
 		if ( kind == Kind.MAP_KEY ) {
 			//noinspection deprecation
-			disallowConverter( attribute, MapKeyTemporal.class );
-			disallowConverter( attribute, MapKeyEnumerated.class );
+			disallowConverter( attribute, MapKeyTemporal.class, autoApply );
+			disallowConverter( attribute, MapKeyEnumerated.class, autoApply );
 		}
 		else {
 			//noinspection deprecation
-			disallowConverter( attribute, Temporal.class );
-			disallowConverter( attribute, Enumerated.class );
-			disallowConverter( attribute, Embedded.class );
-			disallowConverter( attribute, ManyToOne.class );
-			disallowConverter( attribute, OneToOne.class );
-			disallowConverter( attribute, OneToMany.class );
-			disallowConverter( attribute, ManyToMany.class );
+			disallowConverter( attribute, Temporal.class, autoApply );
+			disallowConverter( attribute, Enumerated.class, autoApply );
+			disallowConverter( attribute, ManyToOne.class, autoApply );
+			disallowConverter( attribute, OneToOne.class, autoApply );
+			disallowConverter( attribute, OneToMany.class, autoApply );
+			disallowConverter( attribute, ManyToMany.class, autoApply );
+			// Note that @Convert is only allowed in conjunction with
+			// @Embedded if it specifies a field using attributeName
+			disallowConverter( attribute, Embedded.class, autoApply );
+			disallowConverter( attribute, EmbeddedId.class, autoApply );
 		}
+		// I assume that these do not work with converters (no tests)
+		disallowConverter( attribute, Struct.class, autoApply );
+		disallowConverter( attribute, Array.class, autoApply );
+		disallowConverter( attribute, Any.class, autoApply );
 		this.converterDescriptor = attributeConverterDescriptor;
 	}
 
-	void disallowConverter(MemberDetails attribute, Class<? extends Annotation> annotationType) {
+	void disallowConverter(MemberDetails attribute, Class<? extends Annotation> annotationType, boolean autoApply) {
+		// NOTE: A really faithful reading of the JPA spec is that we should
+		//       just silently ignore any auto-apply converter which matches
+		//       one of the disallowed attribute types, but for now let's be
+		//       a bit more fussy/helpful, and see how many people complain.
 		if ( attribute.hasDirectAnnotationUsage( annotationType ) ) {
 			throw new AnnotationException( "'AttributeConverter' not allowed for attribute '" + attribute.getName()
-											+ "' annotated '@" + annotationType.getName() + "'" );
+											+ "' annotated '@" + annotationType.getName() + "'"
+											+ ( autoApply ? " (use '@Convert(disableConversion=true)' to suppress this error)" : "" ) );
 		}
 	}
 

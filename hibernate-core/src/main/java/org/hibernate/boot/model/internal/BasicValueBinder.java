@@ -61,7 +61,6 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
@@ -1279,49 +1278,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		final InFlightMetadataCollector collector = getMetadataCollector();
 		final AnnotatedColumn firstColumn = columns.getColumns().get(0);
 		if ( !collector.isInSecondPass() && firstColumn.isNameDeferred() && referencedEntityName != null ) {
-			final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
-			joinColumns.setBuildingContext( buildingContext );
-			joinColumns.setPropertyHolder( columns.getPropertyHolder() );
-			joinColumns.setPropertyName( columns.getPropertyName() );
-			//TODO: resetting the parent here looks like a dangerous thing to do
-			//      should we be cloning them first (the legacy code did not)
-			for ( AnnotatedColumn column : columns.getColumns() ) {
-				column.setParent( joinColumns );
-			}
-			collector.addSecondPass(
-					new FkSecondPass() {
-						@Override
-						public SimpleValue getValue() {
-							return basicValue;
-						}
-
-						@Override
-						public String getReferencedEntityName() {
-							return referencedEntityName;
-						}
-
-						@Override
-						public boolean isInPrimaryKey() {
-							// @MapsId is not itself in the primary key,
-							// so it's safe to simply process it after all the primary keys have been processed.
-							return true;
-						}
-
-						@Override
-						public void doSecondPass(Map<String, PersistentClass> persistentClasses) {
-							final PersistentClass referencedEntity = persistentClasses.get( referencedEntityName );
-							if ( referencedEntity == null ) {
-								// TODO: much better error message if this is something that can really happen!
-								throw new AnnotationException( "Unknown entity name '" + referencedEntityName + "'" );
-							}
-							linkJoinColumnWithValueOverridingNameIfImplicit(
-									referencedEntity,
-									referencedEntity.getKey(),
-									joinColumns, basicValue
-							);
-						}
-					}
-			);
+			collector.addSecondPass( new OverriddenFkSecondPass( basicValue, referencedEntityName, columns ) );
 		}
 		else if ( aggregateComponent != null ) {
 			assert columns.getColumns().size() == 1;
@@ -1528,6 +1485,67 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		@Override
 		public Map<String,String> customTypeParameters(MemberDetails attribute, SourceModelBuildingContext context) {
 			return emptyMap();
+		}
+	}
+
+	private static AnnotatedJoinColumns convertToJoinColumns(AnnotatedColumns columns, MetadataBuildingContext context) {
+		final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
+		joinColumns.setBuildingContext( context );
+		joinColumns.setPropertyHolder( columns.getPropertyHolder() );
+		joinColumns.setPropertyName( columns.getPropertyName() );
+		//TODO: resetting the parent here looks like a dangerous thing to do
+		//      should we be cloning them first (the legacy code did not)
+		for ( AnnotatedColumn column : columns.getColumns() ) {
+			column.setParent( joinColumns );
+		}
+		return joinColumns;
+	}
+
+	// used for resolving FK with @MapsId and @IdClass
+	private static class OverriddenFkSecondPass implements FkSecondPass {
+		private final AnnotatedJoinColumns joinColumns;
+		private final BasicValue value;
+		private final String referencedEntityName;
+
+		public OverriddenFkSecondPass(
+				BasicValue value,
+				String referencedEntityName,
+				AnnotatedColumns columns) {
+			this.value = value;
+			this.referencedEntityName = referencedEntityName;
+			this.joinColumns = convertToJoinColumns( columns, value.getBuildingContext() );
+		}
+
+		@Override
+		public BasicValue getValue() {
+			return value;
+		}
+
+		@Override
+		public String getReferencedEntityName() {
+			return referencedEntityName;
+		}
+
+		@Override
+		public boolean isInPrimaryKey() {
+			// @MapsId is not itself in the primary key,
+			// so it's safe to simply process it after all the primary keys have been processed.
+			return true;
+		}
+
+		@Override
+		public void doSecondPass(Map<String, PersistentClass> persistentClasses) {
+			final PersistentClass referencedEntity = persistentClasses.get( referencedEntityName );
+			if ( referencedEntity == null ) {
+				// TODO: much better error message if this is something that can really happen!
+				throw new AnnotationException( "Unknown entity name '" + referencedEntityName + "'" );
+			}
+			linkJoinColumnWithValueOverridingNameIfImplicit(
+					referencedEntity,
+					referencedEntity.getKey(),
+					joinColumns,
+					value
+			);
 		}
 	}
 }

@@ -4,15 +4,18 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.io.Serializable;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import jakarta.persistence.Embedded;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -57,6 +60,8 @@ import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
@@ -92,6 +97,7 @@ import jakarta.persistence.Version;
 
 import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.model.internal.AnnotationHelper.extractParameterMap;
+import static org.hibernate.boot.model.internal.TableBinder.linkJoinColumnWithValueOverridingNameIfImplicit;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
@@ -157,9 +163,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private BasicValue basicValue;
 
 	private String persistentClassName;
-	private String propertyName;
 	private String returnedClassName;
-	private String referencedEntityName;
+	private String referencedEntityName; // only used for @MapsId or @IdClass
 
 	public BasicValueBinder(Kind kind, MetadataBuildingContext buildingContext) {
 		this( kind, null, buildingContext );
@@ -293,12 +298,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		}
 	}
 
-	public void setReferencedEntityName(String referencedEntityName) {
+	void setReferencedEntityName(String referencedEntityName) {
 		this.referencedEntityName = referencedEntityName;
-	}
-
-	public void setPropertyName(String propertyName) {
-		this.propertyName = propertyName;
 	}
 
 	public void setReturnedClassName(String returnedClassName) {
@@ -553,6 +554,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			enumType = mapKeyEnumeratedAnn.value();
 		}
 
+		//noinspection deprecation
 		final MapKeyTemporal mapKeyTemporalAnn =
 				attribute.getDirectAnnotationUsage( MapKeyTemporal.class );
 		if ( mapKeyTemporalAnn != null ) {
@@ -731,12 +733,14 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 						: explicitElementTypeDetails;
 		final ClassDetails rawElementType = elementTypeDetails.determineRawClass();
 		final java.lang.reflect.Type javaType = rawElementType.toJavaClass();
-		final Class<Object> javaTypeClass = ReflectHelper.getClass( javaType );
+		final Class<?> javaTypeClass = ReflectHelper.getClass( javaType );
 
 		implicitJavaTypeAccess = typeConfiguration -> javaType;
 
+		//noinspection deprecation
 		final Temporal temporalAnn = attribute.getDirectAnnotationUsage( Temporal.class );
 		if ( temporalAnn != null ) {
+			//noinspection deprecation
 			DEPRECATION_LOGGER.deprecatedAnnotation( Temporal.class, attribute.getName() );
 			temporalPrecision = temporalAnn.value();
 			if ( temporalPrecision == null ) {
@@ -795,7 +799,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			String declaringClassName,
 			MemberDetails attribute,
 			TypeDetails attributeType) {
-		final Class<Object> javaTypeClass = attributeType.determineRawClass().toJavaClass();
+		final Class<?> javaTypeClass = attributeType.determineRawClass().toJavaClass();
 		implicitJavaTypeAccess = typeConfiguration -> {
 			if ( attributeType.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE ) {
 				return ParameterizedTypeImpl.from( attributeType.asParameterizedType() );
@@ -806,7 +810,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		};
 
 		//noinspection deprecation
-		final var temporalAnn = attribute.getDirectAnnotationUsage( Temporal.class );
+		final Temporal temporalAnn = attribute.getDirectAnnotationUsage( Temporal.class );
 		if ( temporalAnn != null ) {
 			//noinspection deprecation
 			DEPRECATION_LOGGER.deprecatedAnnotation( Temporal.class,
@@ -852,7 +856,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		normalSupplementalDetails( attribute );
 	}
 
-	private boolean canUseEnumerated(TypeDetails javaType, Class<Object> javaTypeClass) {
+	private boolean canUseEnumerated(TypeDetails javaType, Class<?> javaTypeClass) {
 		if ( javaTypeClass.isEnum()
 				|| javaTypeClass.isArray() && javaTypeClass.getComponentType().isEnum() ) {
 			return true;
@@ -1152,6 +1156,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			enumType = enumerated.value();
 		}
 
+		//noinspection deprecation
 		final Temporal temporal = attribute.getDirectAnnotationUsage( Temporal.class );
 		if ( temporal != null ) {
 			temporalPrecision = temporal.value();
@@ -1187,15 +1192,19 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		disallowConverter( attribute, Id.class );
 		disallowConverter( attribute, Version.class );
 		if ( kind == Kind.MAP_KEY ) {
+			//noinspection deprecation
 			disallowConverter( attribute, MapKeyTemporal.class );
 			disallowConverter( attribute, MapKeyEnumerated.class );
 		}
 		else {
+			//noinspection deprecation
 			disallowConverter( attribute, Temporal.class );
 			disallowConverter( attribute, Enumerated.class );
-		}
-		if ( isAssociation() ) {
-			throw new AnnotationException( "'AttributeConverter' not allowed for association '" + attribute.getName() + "'" );
+			disallowConverter( attribute, Embedded.class );
+			disallowConverter( attribute, ManyToOne.class );
+			disallowConverter( attribute, OneToOne.class );
+			disallowConverter( attribute, OneToMany.class );
+			disallowConverter( attribute, ManyToMany.class );
 		}
 		this.converterDescriptor = attributeConverterDescriptor;
 	}
@@ -1205,12 +1214,6 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			throw new AnnotationException( "'AttributeConverter' not allowed for attribute '" + attribute.getName()
 											+ "' annotated '@" + annotationType.getName() + "'" );
 		}
-	}
-
-	private boolean isAssociation() {
-		// todo : this information is only known to caller(s), need to pass that information in somehow.
-		// or, is this enough?
-		return referencedEntityName != null;
 	}
 
 	public BasicValue make() {
@@ -1227,7 +1230,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		basicValue = new BasicValue( buildingContext, table );
 
 		if ( columns.getPropertyHolder().isComponent() ) {
-			final ComponentPropertyHolder propertyHolder = (ComponentPropertyHolder) columns.getPropertyHolder();
+			final ComponentPropertyHolder propertyHolder =
+					(ComponentPropertyHolder) columns.getPropertyHolder();
 			basicValue.setAggregateColumn( propertyHolder.getAggregateColumn() );
 		}
 
@@ -1285,7 +1289,38 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				column.setParent( joinColumns );
 			}
 			collector.addSecondPass(
-					new PkDrivenByDefaultMapsIdSecondPass( referencedEntityName, joinColumns, basicValue )
+					new FkSecondPass() {
+						@Override
+						public SimpleValue getValue() {
+							return basicValue;
+						}
+
+						@Override
+						public String getReferencedEntityName() {
+							return referencedEntityName;
+						}
+
+						@Override
+						public boolean isInPrimaryKey() {
+							// @MapsId is not itself in the primary key,
+							// so it's safe to simply process it after all the primary keys have been processed.
+							return true;
+						}
+
+						@Override
+						public void doSecondPass(Map<String, PersistentClass> persistentClasses) {
+							final PersistentClass referencedEntity = persistentClasses.get( referencedEntityName );
+							if ( referencedEntity == null ) {
+								// TODO: much better error message if this is something that can really happen!
+								throw new AnnotationException( "Unknown entity name '" + referencedEntityName + "'" );
+							}
+							linkJoinColumnWithValueOverridingNameIfImplicit(
+									referencedEntity,
+									referencedEntity.getKey(),
+									joinColumns, basicValue
+							);
+						}
+					}
 			);
 		}
 		else if ( aggregateComponent != null ) {
@@ -1311,7 +1346,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		if ( explicitCustomType != null && DynamicParameterizedType.class.isAssignableFrom( explicitCustomType ) ) {
+		if ( explicitCustomType != null
+				&& DynamicParameterizedType.class.isAssignableFrom( explicitCustomType ) ) {
 			basicValue.setTypeParameters( createDynamicParameterizedTypeParameters() );
 		}
 
@@ -1391,29 +1427,6 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		}
 
 		return parameters;
-	}
-
-	private boolean isEnum() {
-		final Class<?> clazz = getValueClass();
-		return clazz != null && clazz.isEnum();
-	}
-
-	private boolean isSerializable() {
-		final Class<?> clazz = getValueClass();
-		return clazz != null && Serializable.class.isAssignableFrom( clazz );
-	}
-
-	private Class<?> getValueClass() {
-		if ( implicitJavaTypeAccess != null ) {
-			java.lang.reflect.Type type = implicitJavaTypeAccess.apply( getTypeConfiguration() );
-			if ( type instanceof ParameterizedType parameterizedType ) {
-				type = parameterizedType.getRawType();
-			}
-			if ( type instanceof Class<?> cl ) {
-				return cl;
-			}
-		}
-		return null;
 	}
 
 	/**

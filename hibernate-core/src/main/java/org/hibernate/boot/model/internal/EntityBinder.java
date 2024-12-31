@@ -858,16 +858,17 @@ public class EntityBinder {
 	private void joinedInheritance(InheritanceState state, PersistentClass superEntity, PropertyHolder holder) {
 		if ( state.hasParents() ) {
 			final AnnotatedJoinColumns joinColumns = subclassJoinColumns( annotatedClass, superEntity, context );
-			final JoinedSubclass jsc = (JoinedSubclass) persistentClass;
-			final DependantValue key = new DependantValue( context, jsc.getTable(), jsc.getIdentifier() );
-			jsc.setKey( key );
+			final JoinedSubclass joinedSubclass = (JoinedSubclass) persistentClass;
+			final DependantValue key =
+					new DependantValue( context, joinedSubclass.getTable(), joinedSubclass.getIdentifier() );
+			joinedSubclass.setKey( key );
 			handleForeignKeys( annotatedClass, context, key );
 			final OnDelete onDelete = annotatedClass.getAnnotationUsage( OnDelete.class, getSourceModelContext() );
 			key.setOnDeleteAction( onDelete == null ? null : onDelete.action() );
 			//we are never in a second pass at that stage, so queue it
 			final InFlightMetadataCollector metadataCollector = getMetadataCollector();
-			metadataCollector.addSecondPass( new JoinedSubclassFkSecondPass( jsc, joinColumns, key, context) );
-			metadataCollector.addSecondPass( new CreateKeySecondPass( jsc ) );
+			metadataCollector.addSecondPass( new JoinedSubclassFkSecondPass( joinedSubclass, joinColumns, key, context) );
+			metadataCollector.addSecondPass( new CreateKeySecondPass( joinedSubclass ) );
 		}
 
 		final AnnotatedDiscriminatorColumn discriminatorColumn = processJoinedDiscriminatorProperties( state );
@@ -2305,6 +2306,44 @@ public class EntityBinder {
 		final Filter filter = element.getDirectAnnotationUsage( Filter.class );
 		if ( filter != null ) {
 			this.filters.add( filter );
+		}
+	}
+
+	private static class JoinedSubclassFkSecondPass implements FkSecondPass {
+		private final JoinedSubclass entity;
+		private final MetadataBuildingContext buildingContext;
+		private final SimpleValue key;
+		private final AnnotatedJoinColumns columns;
+
+		private JoinedSubclassFkSecondPass(
+				JoinedSubclass entity,
+				AnnotatedJoinColumns inheritanceJoinedColumns,
+				SimpleValue key,
+				MetadataBuildingContext buildingContext) {
+			this.entity = entity;
+			this.buildingContext = buildingContext;
+			this.key = key;
+			this.columns = inheritanceJoinedColumns;
+		}
+
+		@Override
+		public Value getValue() {
+			return key;
+		}
+
+		@Override
+		public String getReferencedEntityName() {
+			return entity.getSuperclass().getEntityName();
+		}
+
+		@Override
+		public boolean isInPrimaryKey() {
+			return true;
+		}
+
+		@Override
+		public void doSecondPass(Map<String, PersistentClass> persistentClasses) {
+			bindForeignKey( entity.getSuperclass(), entity, columns, key, false, buildingContext );
 		}
 	}
 }

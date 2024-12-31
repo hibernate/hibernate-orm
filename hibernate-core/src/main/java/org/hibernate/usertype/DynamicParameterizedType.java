@@ -18,7 +18,12 @@ import java.util.Properties;
  *
  * @author Janario Oliveira
  * @author Yanming Zhou
+ *
+ * @deprecated This very old approach was never properly implemented in all
+ * contexts, and never actually achieved the type safety it aimed for. Just
+ * use {@link ParameterizedType} for now.
  */
+@Deprecated(since = "7.0", forRemoval = true)
 public interface DynamicParameterizedType extends ParameterizedType {
 	String PARAMETER_TYPE = "org.hibernate.type.ParameterType";
 

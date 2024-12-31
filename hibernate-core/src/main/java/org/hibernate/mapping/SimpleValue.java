@@ -816,7 +816,8 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public boolean isSame(Value other) {
-		return this == other || other instanceof SimpleValue && isSame( (SimpleValue) other );
+		return this == other
+			|| other instanceof SimpleValue simpleValue && isSame( simpleValue );
 	}
 
 	protected static boolean isSame(Value v1, Value v2) {

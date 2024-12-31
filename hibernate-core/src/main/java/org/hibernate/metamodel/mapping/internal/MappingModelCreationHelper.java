@@ -1322,8 +1322,7 @@ public class MappingModelCreationHelper {
 		final IndexedCollection indexedCollection = (IndexedCollection) bootValueMapping;
 		final Value bootMapKeyDescriptor = indexedCollection.getIndex();
 
-		if ( bootMapKeyDescriptor instanceof BasicValue ) {
-			final BasicValue basicValue = (BasicValue) bootMapKeyDescriptor;
+		if ( bootMapKeyDescriptor instanceof BasicValue basicValue ) {
 			final boolean insertable;
 			final boolean updatable;
 			if ( indexedCollection instanceof org.hibernate.mapping.Map
@@ -1431,8 +1430,7 @@ public class MappingModelCreationHelper {
 			MappingModelCreationProcess creationProcess) {
 		final Value element = bootDescriptor.getElement();
 
-		if ( element instanceof BasicValue ) {
-			final BasicValue basicElement = (BasicValue) element;
+		if ( element instanceof BasicValue basicElement ) {
 			final SelectableMapping selectableMapping = SelectableMappingImpl.from(
 					tableExpression,
 					basicElement.getSelectables().get(0),

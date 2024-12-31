@@ -286,7 +286,7 @@ public class Property implements Serializable, MetaAttributable {
 
 	public boolean isValid(MappingContext mappingContext) throws MappingException {
 		final Value value = getValue();
-		if ( value instanceof BasicValue && ( (BasicValue) value ).isDisallowedWrapperArray() ) {
+		if ( value instanceof BasicValue basicValue && basicValue.isDisallowedWrapperArray() ) {
 			throw new MappingException(
 					"The property " + persistentClass.getEntityName() + "#" + name +
 							" uses a wrapper type Byte[]/Character[] which indicates an issue in your domain model. " +

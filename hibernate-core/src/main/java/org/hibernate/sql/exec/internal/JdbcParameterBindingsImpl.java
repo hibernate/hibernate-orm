@@ -69,8 +69,8 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 							.getBasicTypeRegistry()
 							.resolve( ( (BasicTypeReference<?>) type ) );
 				}
-				else if ( type instanceof BasicValuedMapping ) {
-					jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();
+				else if ( type instanceof BasicValuedMapping basicValuedMapping ) {
+					jdbcMapping = basicValuedMapping.getJdbcMapping();
 				}
 				else {
 					throw new IllegalArgumentException( "Could not resolve NativeQuery parameter type : `" + param + "`");

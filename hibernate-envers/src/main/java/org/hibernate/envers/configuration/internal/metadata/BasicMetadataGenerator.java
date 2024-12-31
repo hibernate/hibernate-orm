@@ -74,8 +74,8 @@ public final class BasicMetadataGenerator {
 	}
 
 	private boolean isAddNestedType(Value value) {
-		if ( value instanceof SimpleValue ) {
-			return ((SimpleValue) value).getTypeParameters() != null;
+		if ( value instanceof SimpleValue simpleValue ) {
+			return simpleValue.getTypeParameters() != null;
 		}
 		return false;
 	}

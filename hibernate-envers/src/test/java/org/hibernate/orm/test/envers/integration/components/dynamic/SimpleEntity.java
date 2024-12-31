@@ -43,11 +43,9 @@ public class SimpleEntity {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !( o instanceof SimpleEntity ) ) {
+		if ( !( o instanceof SimpleEntity that ) ) {
 			return false;
 		}
-
-		SimpleEntity that = (SimpleEntity) o;
 
 		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
 			return false;

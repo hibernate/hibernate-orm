@@ -2419,8 +2419,8 @@ public class ModelBinder {
 			GenerationTiming timing) {
 		if ( timing != null ) {
 			if ( (timing == GenerationTiming.INSERT || timing == GenerationTiming.UPDATE)
-					&& property.getValue() instanceof SimpleValue
-					&& ((SimpleValue) property.getValue()).isVersion() ) {
+					&& property.getValue() instanceof SimpleValue simpleValue
+					&& simpleValue.isVersion() ) {
 				// this is enforced by DTD, but just make sure
 				throw new MappingException(
 						"'generated' attribute cannot be 'insert' or 'update' for version/timestamp property",
@@ -2685,8 +2685,8 @@ public class ModelBinder {
 
 		if ( CollectionHelper.isNotEmpty( typeResolution.parameters ) ) {
 			simpleValue.setTypeParameters( typeResolution.parameters );
-			if ( simpleValue instanceof BasicValue ) {
-				( (BasicValue) simpleValue ).setExplicitTypeParams( typeResolution.parameters );
+			if ( simpleValue instanceof BasicValue basicValue ) {
+				basicValue.setExplicitTypeParams( typeResolution.parameters );
 			}
 		}
 

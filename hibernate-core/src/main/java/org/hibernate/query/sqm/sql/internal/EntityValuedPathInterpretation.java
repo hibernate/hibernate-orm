@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
@@ -34,6 +35,7 @@ import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -48,10 +50,12 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 
 import jakarta.persistence.criteria.Selection;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T>
 		implements SqlTupleContainer, Assignable {
 	private final Expression sqlExpression;
+	private final @Nullable String affectedTableName;
 
 	public static <T> EntityValuedPathInterpretation<T> from(
 			SqmEntityValuedSimplePath<T> sqmPath,
@@ -422,8 +426,29 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			EntityValuedModelPart mapping) {
+		this( sqlExpression, navigablePath, tableGroup, mapping, determineAffectedTableName( tableGroup, mapping ) );
+	}
+
+	public EntityValuedPathInterpretation(
+			Expression sqlExpression,
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			EntityValuedModelPart mapping,
+			@Nullable String affectedTableName) {
 		super( navigablePath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
+		this.affectedTableName = affectedTableName;
+	}
+
+	private static @Nullable String determineAffectedTableName(TableGroup tableGroup, EntityValuedModelPart mapping) {
+		final ModelPartContainer modelPart = tableGroup.getModelPart();
+		if ( modelPart instanceof EntityAssociationMapping && mapping instanceof ValuedModelPart ) {
+			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) modelPart;
+			if ( !associationMapping.containsTableReference( ( (ValuedModelPart) mapping ).getContainingTableExpression() ) ) {
+				return associationMapping.getAssociatedEntityMappingType().getMappedTableDetails().getTableName();
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -432,7 +457,15 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 	}
 
 	@Override
+	public @Nullable String getAffectedTableName() {
+		return affectedTableName;
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
+		if ( affectedTableName != null && sqlTreeWalker instanceof SqlAstTranslator<?> ) {
+			( (SqlAstTranslator<?>) sqlTreeWalker ).addAffectedTableName( affectedTableName );
+		}
 		sqlExpression.accept( sqlTreeWalker );
 	}
 

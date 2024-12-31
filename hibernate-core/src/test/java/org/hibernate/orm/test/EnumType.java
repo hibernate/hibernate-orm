@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.type;
+package org.hibernate.orm.test;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -18,8 +18,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -30,8 +30,6 @@ import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
-
-import org.jboss.logging.Logger;
 
 import static jakarta.persistence.EnumType.ORDINAL;
 import static jakarta.persistence.EnumType.STRING;
@@ -49,7 +47,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 @Deprecated(since="6.2", forRemoval=true)
 public class EnumType<T extends Enum<T>>
 		implements EnhancedUserType<T>, DynamicParameterizedType, LoggableUserType, TypeConfigurationAware, Serializable {
-	private static final Logger LOG = CoreLogging.logger( EnumType.class );
 
 	public static final String ENUM = "enumClass";
 	public static final String NAMED = "useNamed";
@@ -155,14 +152,6 @@ public class EnumType<T extends Enum<T>>
 			}
 			jdbcType = descriptor.getRecommendedJdbcType( indicators );
 			isOrdinal = indicators.getEnumeratedType() != STRING;
-		}
-
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf(
-					"Using %s-based conversion for Enum %s",
-					isOrdinal() ? "ORDINAL" : "NAMED",
-					enumClass.getName()
-			);
 		}
 	}
 

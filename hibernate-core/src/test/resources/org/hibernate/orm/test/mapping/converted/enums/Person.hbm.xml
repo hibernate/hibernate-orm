@@ -16,20 +16,20 @@
     </id>
 
     <property name="gender" not-null="true">
-		<type name="org.hibernate.type.EnumType">
+		<type name="org.hibernate.orm.test.EnumType">
 			<param name="enumClass">org.hibernate.orm.test.mapping.converted.enums.Gender</param>
 			<param name="type">12</param>
 		</type>
 	</property>
 
     <property name="hairColor" not-null="true">
-		<type name="org.hibernate.type.EnumType">
+		<type name="org.hibernate.orm.test.EnumType">
 			<param name="enumClass">org.hibernate.orm.test.mapping.converted.enums.HairColor</param>
 		</type>
 	</property>
 
     <property name="originalHairColor">
-        <type name="org.hibernate.type.EnumType">
+        <type name="org.hibernate.orm.test.EnumType">
             <param name="enumClass">org.hibernate.orm.test.mapping.converted.enums.HairColor</param>
             <param name="type">12</param>
         </type>

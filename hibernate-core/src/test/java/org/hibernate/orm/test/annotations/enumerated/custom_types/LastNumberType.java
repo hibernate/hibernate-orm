@@ -9,13 +9,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.orm.test.EnumType;
 import org.hibernate.orm.test.annotations.enumerated.enums.LastNumber;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * @author Janario Oliveira
  */
-public class LastNumberType extends org.hibernate.type.EnumType<LastNumber> {
+public class LastNumberType extends EnumType<LastNumber> {
 
 	@Override
 	public int getSqlType() {

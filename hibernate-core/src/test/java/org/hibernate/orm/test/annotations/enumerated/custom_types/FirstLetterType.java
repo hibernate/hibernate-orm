@@ -9,13 +9,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.orm.test.EnumType;
 import org.hibernate.orm.test.annotations.enumerated.enums.FirstLetter;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * @author Janario Oliveira
  */
-public class FirstLetterType extends org.hibernate.type.EnumType<FirstLetter> {
+public class FirstLetterType extends EnumType<FirstLetter> {
 
 	@Override
 	public int getSqlType() {

@@ -6,7 +6,7 @@ package org.hibernate.orm.test.mapping.type.typedef;
 
 import java.util.Properties;
 
-import org.hibernate.type.EnumType;
+import org.hibernate.orm.test.EnumType;
 
 /**
  * A simple user type where we force enums to be saved by name, not ordinal

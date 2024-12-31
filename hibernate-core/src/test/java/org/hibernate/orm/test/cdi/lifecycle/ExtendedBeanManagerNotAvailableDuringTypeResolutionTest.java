@@ -64,7 +64,7 @@ public class ExtendedBeanManagerNotAvailableDuringTypeResolutionTest {
 				"        </id>\n" +
 				"        <property name=\"name\" />\n" +
 				"        <property name=\"myEnum\" >\n" +
-				"            <type name=\"org.hibernate.type.EnumType\">\n" +
+				"            <type name=\"org.hibernate.orm.test.EnumType\">\n" +
 				"                <param name=\"enumClass\">" + MyEnum.class.getName() + "</param>\n" +
 				"            </type>\n" +
 				"        </property>\n" +

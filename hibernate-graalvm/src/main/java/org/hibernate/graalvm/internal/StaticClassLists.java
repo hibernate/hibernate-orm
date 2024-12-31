@@ -6,7 +6,6 @@ package org.hibernate.graalvm.internal;
 
 
 import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor;
-import org.hibernate.type.EnumType;
 
 /**
  * The place to list all "static" types we know of that need to be possible to
@@ -36,9 +35,7 @@ final class StaticClassLists {
 				org.hibernate.id.enhanced.SequenceStyleGenerator.class,
 				org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl.class,
 				org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl.class,
-				EnumType.class,
 				MultiLineSqlScriptExtractor.class,
-
 		};
 	}
 

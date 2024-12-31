@@ -439,12 +439,32 @@ In Hibernate 7, these SQL `UPDATE` statements only occur if the `@OrderColumn` i
 Since Vibur and Proxool are no longer actively developed, support for these connection pools was removed.
 Use Agroal or HikariCP instead.
 
+== Converters incompatible with annotations
+
+JPA ``AttributeConverter``s are incompatible with the annotations `@Id`, `@Version`, `@Enumerated`, `@Embedded`, `@Temporal` and all association-mapping annotations.
+Previously, any converter applied to an attribute with an incompatible annotation was simply ignored.
+Hibernate now reports an error in this situation.
+
+This includes auto-applied converters.
+To suppress the error for an auto-applied converter, use `@Convert(disableConversion=true)`.
+
+== Deprecations
+
+* `@Comment` is deprecated in favor of the JPA 3.2 `comment` members
+* `@Comment` is deprecated in favor of the JPA 3.2 `@CheckConstraint` and `check` members
+* `NullPrecedence` is deprecated in favor of JPA 3.2 `Nulls`
+* `@FractionalSeconds` is deprecated in favor of JPA 3.2 `secondPrecision`
+* `DynamicParameterizedType` is deprecated
+* `Session.get()` is deprecated in favor of `find()`
+* `@Cascade` and `org.hibernate.annotations.CascadeType` are deprecated in favor of JPA `cascade` and `CascadeType`
+* `org.hibernate.annotations.FlushModeType` is deprecated in favor of `QueryFlushMode`
+
 [[cleanup]]
 == Cleanup
 
 * Annotations
 ** Removed `@Persister`
-** Removed `@Proxy` - see <<proxy-annotation>>
+** Removed `@Proxy` -- see <<proxy-annotation>>
 ** Removed `@SelectBeforeUpdate`
 ** Removed `@DynamicInsert#value` and `@DynamicUpdate#value`
 ** Removed `@Loader`

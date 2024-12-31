@@ -34,6 +34,11 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 	}
 
 	@Override
+	public boolean isAutoApplicable() {
+		return true;
+	}
+
+	@Override
 	public ConverterDescriptor getAutoAppliedConverterDescriptorForAttribute(
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
@@ -51,16 +56,16 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 		final ResolvedMember<?> collectionMember = resolveMember( memberDetails, context );
 
 		final ResolvedType elementType;
-		Class<?> erasedType = collectionMember.getType().getErasedType();
+		final Class<?> erasedType = collectionMember.getType().getErasedType();
 		if ( Map.class.isAssignableFrom( erasedType ) ) {
-			List<ResolvedType> typeArguments = collectionMember.getType().typeParametersFor(Map.class);
+			final List<ResolvedType> typeArguments = collectionMember.getType().typeParametersFor(Map.class);
 			if ( typeArguments.size() < 2 ) {
 				return null;
 			}
 			elementType = typeArguments.get( 1 );
 		}
 		else if ( Collection.class.isAssignableFrom( erasedType ) ) {
-			List<ResolvedType> typeArguments = collectionMember.getType().typeParametersFor(Collection.class);
+			final List<ResolvedType> typeArguments = collectionMember.getType().typeParametersFor(Collection.class);
 			if ( typeArguments.isEmpty() ) {
 				return null;
 			}
@@ -87,7 +92,7 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 		final ResolvedType keyType;
 
 		if ( Map.class.isAssignableFrom( collectionMember.getType().getErasedType() ) ) {
-			List<ResolvedType> typeArguments = collectionMember.getType().typeParametersFor(Map.class);
+			final List<ResolvedType> typeArguments = collectionMember.getType().typeParametersFor(Map.class);
 			if ( typeArguments.isEmpty() ) {
 				return null;
 			}

@@ -25,6 +25,11 @@ public class AutoApplicableConverterDescriptorBypassedImpl implements AutoApplic
 	}
 
 	@Override
+	public boolean isAutoApplicable() {
+		return false;
+	}
+
+	@Override
 	public ConverterDescriptor getAutoAppliedConverterDescriptorForAttribute(
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {

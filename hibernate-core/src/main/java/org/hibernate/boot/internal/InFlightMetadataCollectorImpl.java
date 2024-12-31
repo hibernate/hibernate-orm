@@ -1928,7 +1928,7 @@ public class InFlightMetadataCollectorImpl
 		final Set<FkSecondPass> dependencies = isADependencyOf.get( currentTable );
 		if ( dependencies != null ) {
 			for ( FkSecondPass pass : dependencies ) {
-				String dependentTable = pass.getValue().getTable().getQualifiedTableName().render();
+				final String dependentTable = pass.getValue().getTable().getQualifiedTableName().render();
 				if ( dependentTable.compareTo( startTable ) != 0 ) {
 					buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, startTable, dependentTable );
 				}

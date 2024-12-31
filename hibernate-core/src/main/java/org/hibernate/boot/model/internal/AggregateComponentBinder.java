@@ -55,8 +55,8 @@ public final class AggregateComponentBinder {
 			component.setStructColumnNames( determineStructAttributeNames( inferredData, componentClassDetails ) );
 
 			// Determine the aggregate column
-			BasicValueBinder basicValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ATTRIBUTE, component, context );
-			basicValueBinder.setPropertyName( inferredData.getPropertyName() );
+			final BasicValueBinder basicValueBinder =
+					new BasicValueBinder( BasicValueBinder.Kind.ATTRIBUTE, component, context );
 			basicValueBinder.setReturnedClassName( inferredData.getClassOrElementType().getName() );
 			basicValueBinder.setColumns( columns );
 			basicValueBinder.setPersistentClassName( propertyHolder.getClassName() );

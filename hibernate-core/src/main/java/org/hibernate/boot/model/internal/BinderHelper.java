@@ -882,34 +882,6 @@ public class BinderHelper {
 		return qualify( holder.getPath(), property.getPropertyName() );
 	}
 
-	static PropertyData getPropertyOverriddenByMapperOrMapsId(
-			boolean isId,
-			PropertyHolder propertyHolder,
-			String propertyName,
-			MetadataBuildingContext buildingContext) {
-		final ClassDetailsRegistry classDetailsRegistry = buildingContext.getMetadataCollector()
-				.getSourceModelBuildingContext()
-				.getClassDetailsRegistry();
-		final PersistentClass persistentClass = propertyHolder.getPersistentClass();
-		final String name =
-				isEmpty( persistentClass.getClassName() )
-						? persistentClass.getEntityName()
-						: persistentClass.getClassName();
-		final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( name );
-		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
-		if ( propertyHolder.isInIdClass() ) {
-			final PropertyData data = metadataCollector.getPropertyAnnotatedWithIdAndToOne( classDetails, propertyName );
-			if ( data != null ) {
-				return data;
-			}
-			// TODO: is this branch even necessary?
-			else if ( buildingContext.getBuildingOptions().isSpecjProprietarySyntaxEnabled() ) {
-				return metadataCollector.getPropertyAnnotatedWithMapsId( classDetails, propertyName );
-			}
-		}
-		return metadataCollector.getPropertyAnnotatedWithMapsId( classDetails, isId ? "" : propertyName );
-	}
-
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
 		final Map<String,String> ret = new HashMap<>();
 		for ( SqlFragmentAlias aliasAnnotation : aliases ) {

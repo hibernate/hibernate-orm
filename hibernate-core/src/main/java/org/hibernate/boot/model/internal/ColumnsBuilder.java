@@ -34,7 +34,6 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromN
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnsFromAnnotations;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
-import static org.hibernate.boot.model.internal.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
@@ -288,9 +287,7 @@ class ColumnsBuilder {
 	/**
 	 * Useful to override a column either by {@code @MapsId} or by {@code @IdClass}
 	 */
-	AnnotatedColumns overrideColumnFromMapperOrMapsIdProperty(boolean isId) {
-		final PropertyData override =
-				getPropertyOverriddenByMapperOrMapsId( isId, propertyHolder, property.resolveAttributeName(), buildingContext );
+	AnnotatedColumns overrideColumnFromMapperOrMapsIdProperty(PropertyData override) {
 		if ( override != null ) {
 			final AnnotatedJoinColumns joinColumns = buildExplicitJoinColumns( override.getAttributeMember(), override );
 			return joinColumns == null

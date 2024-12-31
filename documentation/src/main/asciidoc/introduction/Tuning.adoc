@@ -870,7 +870,7 @@ StatelessSession ss = getSessionFactory().openStatelessSession();
 
 A stateless session:
 
-- doesn't have a first-level cache (persistence context), nor does it interact with any second-level caches, and
+- doesn't have a first-level cache (persistence context), and
 - doesn't implement transactional write-behind or automatic dirty checking, so all operations are executed immediately when they're explicitly called.
 
 For a stateless session, we're always working with detached objects.

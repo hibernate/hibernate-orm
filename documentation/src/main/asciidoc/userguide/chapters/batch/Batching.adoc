@@ -125,8 +125,7 @@ However, it is good practice to close the `ScrollableResults` explicitly.
 
 Thus, a stateless session is a slightly lower-level abstraction that's closer to the underlying JDBC activity:
 
-* there's no first-level cache,
-* the stateless session does not interact with any second-level or query cache, and
+* there's no first-level cache, and
 * there's no transactional write-behind or automatic dirty checking.
 
 Instead, persistence operations occur synchronously when a method of `StatelessSession` is invoked, and entities returned by a stateless session are always detached.
@@ -140,9 +139,8 @@ With a stateless session, there's no need to explicitly manage the size of the f
 The `StatelessSession` API comes with certain limitations:
 
 * operations performed using a stateless session never cascade to associated instances,
-* collections are ignored by a stateless session,
 * lazy loading of associations is not transparent, and is only available via an explicit operation named `fetch()`, and
-* operations performed via a stateless session bypass Hibernate's event model and interceptors.
+* operations performed via a stateless session bypass Hibernate's event model and action queue.
 
 IMPORTANT: Due to the lack of a first-level cache, stateless sessions are vulnerable to data aliasing effects.
 

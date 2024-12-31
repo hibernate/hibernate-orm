@@ -19,6 +19,7 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.Instantiator;
@@ -146,33 +147,23 @@ public class EmbeddableBinder {
 			PropertyData mapsIdProperty,
 			Class<? extends CompositeUserType<?>> compositeUserType) {
 		if ( isOverridden ) {
-			// careful: not always a @MapsId property, sometimes it's from an @IdClass
-			final String propertyName = mapsIdProperty.getPropertyName();
-			final AnnotatedJoinColumns actualColumns = new AnnotatedJoinColumns();
-			actualColumns.setBuildingContext( context );
-			actualColumns.setPropertyHolder( propertyHolder );
-			actualColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
-			//TODO: resetting the parent here looks like a dangerous thing to do
-			//      should we be cloning them first (the legacy code did not)
-			for ( AnnotatedColumn column : columns.getColumns() ) {
-				column.setParent( actualColumns );
+			if ( compositeUserType != null ) {
+				// I suppose this assertion is correct, but it might not be
+				// Perhaps it was OK that we were just ignoring the CUT
+				throw new AssertionFailure( "CompositeUserType not allowed with @MapsId" );
 			}
-			return bindEmbeddable(
-					inferredData,
+			return bindOverriddenEmbeddable(
 					propertyHolder,
-					entityBinder.getPropertyAccessor( property ),
-					entityBinder,
+					inferredData,
 					isIdentifierMapper,
-					context,
 					isComponentEmbedded,
-					isId,
+					context,
 					inheritanceStatePerClass,
-					mapsIdProperty.getClassOrElementName(),
-					propertyName,
-					determineCustomInstantiator( property, returnedClass, context ),
-					compositeUserType,
-					actualColumns,
-					columns
+					property,
+					columns,
+					returnedClass,
+					isId,
+					mapsIdProperty
 			);
 		}
 		else {
@@ -191,6 +182,44 @@ public class EmbeddableBinder {
 					columns
 			);
 		}
+	}
+
+	private static Component bindOverriddenEmbeddable(
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			boolean isIdentifierMapper,
+			boolean isComponentEmbedded,
+			MetadataBuildingContext context,
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
+			MemberDetails property,
+			AnnotatedColumns columns,
+			ClassDetails returnedClass,
+			boolean isId,
+			PropertyData mapsIdProperty) {
+		// careful: not always a @MapsId property, sometimes it's from an @IdClass
+		final String propertyName = mapsIdProperty.getPropertyName();
+		final AnnotatedJoinColumns actualColumns = new AnnotatedJoinColumns();
+		actualColumns.setBuildingContext( context );
+		actualColumns.setPropertyHolder( propertyHolder );
+		actualColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+		//TODO: resetting the parent here looks like a dangerous thing to do
+		//      should we be cloning them first (the legacy code did not)
+		for ( AnnotatedColumn column : columns.getColumns() ) {
+			column.setParent( actualColumns );
+		}
+		return bindOverriddenEmbeddable(
+				inferredData,
+				propertyHolder,
+				isIdentifierMapper,
+				context,
+				isComponentEmbedded,
+				isId,
+				inheritanceStatePerClass,
+				mapsIdProperty.getClassOrElementName(),
+				propertyName,
+				determineCustomInstantiator( property, returnedClass, context ),
+				actualColumns
+		);
 	}
 
 	static boolean isEmbedded(MemberDetails property, ClassDetails returnedClass) {
@@ -203,64 +232,42 @@ public class EmbeddableBinder {
 		if ( property.hasDirectAnnotationUsage( Embedded.class ) || property.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
 			return true;
 		}
-
-		final ClassDetails returnClassDetails = returnedClass.determineRawClass();
-		return returnClassDetails.hasDirectAnnotationUsage( Embeddable.class )
+		else {
+			final ClassDetails returnClassDetails = returnedClass.determineRawClass();
+			return returnClassDetails.hasDirectAnnotationUsage( Embeddable.class )
 				&& !property.hasDirectAnnotationUsage( Convert.class );
+		}
 	}
 
-	private static Component bindEmbeddable(
+	private static Component bindOverriddenEmbeddable(
 			PropertyData inferredData,
 			PropertyHolder propertyHolder,
-			AccessType propertyAccessor,
-			EntityBinder entityBinder,
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context,
 			boolean isComponentEmbedded,
-			boolean isId, //is an identifier
+			boolean isId, // is an identifier
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
-			String referencedEntityName, //is a component who is overridden by a @MapsId
+			String referencedEntityName, // is a component which is overridden by a @MapsId
 			String propertyName,
 			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
-			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
-			AnnotatedJoinColumns columns,
-			AnnotatedColumns annotatedColumns) {
-		final Component component;
-		if ( referencedEntityName != null ) {
-			component = createEmbeddable(
-					propertyHolder,
-					inferredData,
-					isComponentEmbedded,
-					isIdentifierMapper,
-					customInstantiatorImpl,
-					context
-			);
-			context.getMetadataCollector()
-					.addSecondPass( new CopyIdentifierComponentSecondPass(
-							component,
-							referencedEntityName,
-							propertyName,
-							columns,
-							context
-					) );
-		}
-		else {
-			component = fillEmbeddable(
-					propertyHolder,
-					inferredData,
-					propertyAccessor,
-					!isId,
-					entityBinder,
-					isComponentEmbedded,
-					isIdentifierMapper,
-					context.getMetadataCollector().isInSecondPass(),
-					customInstantiatorImpl,
-					compositeUserTypeClass,
-					annotatedColumns,
-					context,
-					inheritanceStatePerClass
-			);
-		}
+			AnnotatedJoinColumns annotatedJoinColumns) {
+		final Component component = createEmbeddable(
+				propertyHolder,
+				inferredData,
+				isComponentEmbedded,
+				isIdentifierMapper,
+				customInstantiatorImpl,
+				context
+		);
+		context.getMetadataCollector()
+				.addSecondPass( new CopyIdentifierComponentSecondPass(
+						component,
+						referencedEntityName,
+						propertyName,
+						annotatedJoinColumns,
+						context
+				) );
+
 		if ( isId ) {
 			component.setKey( true );
 			checkEmbeddedId( inferredData, propertyHolder, referencedEntityName, component );

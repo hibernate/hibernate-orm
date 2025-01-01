@@ -75,7 +75,7 @@ public class IdPropertyInSubclassIdInMappedSuperclassTest {
 
 			assertEquals(
 					2,
-					session.createQuery( "from Human h where h.id = :id", Human.class )
+					session.createQuery( "from Genius g where g.id = :id", Human.class )
 							.setParameter( "id", 1L )
 							.list()
 							.size()
@@ -83,6 +83,14 @@ public class IdPropertyInSubclassIdInMappedSuperclassTest {
 
 			assertEquals(
 					1,
+					session.createQuery( "from Human h where h.id = :id", Human.class )
+							.setParameter( "id", 1L )
+							.list()
+							.size()
+			);
+
+			assertEquals(
+					0,
 					session.createQuery( "from Human h where h.id is null", Human.class )
 							.list()
 							.size()

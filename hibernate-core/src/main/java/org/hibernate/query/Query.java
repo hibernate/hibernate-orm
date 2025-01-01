@@ -270,7 +270,11 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @param graph The graph to apply.
 	 * @param semantic The semantic to use when applying the graph
+	 *
+	 * @deprecated Use {@link #setEntityGraph(EntityGraph, GraphSemantic)}
+	 *             which is more type safe
 	 */
+	@Deprecated(since = "7.0")
 	Query<R> applyGraph(@SuppressWarnings("rawtypes") RootGraph graph, GraphSemantic semantic);
 
 	/**
@@ -278,7 +282,11 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @apiNote This method calls {@link #applyGraph(RootGraph, GraphSemantic)}
 	 *          using {@link GraphSemantic#FETCH} as the semantic.
+	 *
+	 * @deprecated Use {@link #setEntityGraph(EntityGraph, GraphSemantic)}
+	 *             which is more type safe
 	 */
+	@Deprecated(since = "7.0")
 	default Query<R> applyFetchGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
 		return applyGraph( graph, GraphSemantic.FETCH );
 	}
@@ -288,7 +296,11 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @apiNote This method calls {@link #applyGraph(RootGraph, GraphSemantic)}
 	 *          using {@link GraphSemantic#LOAD} as the semantic.
+	 *
+	 * @deprecated Use {@link #setEntityGraph(EntityGraph, GraphSemantic)}
+	 *             which is more type safe
 	 */
+	@Deprecated(since = "7.0")
 	default Query<R> applyLoadGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
 		return applyGraph( graph, GraphSemantic.LOAD );
 	}

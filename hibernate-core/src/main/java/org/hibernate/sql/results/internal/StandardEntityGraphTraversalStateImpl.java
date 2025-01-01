@@ -65,8 +65,7 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 			fetchStrategy = new FetchStrategy( FetchTiming.IMMEDIATE, true );
 			final Map<? extends Class<?>, ? extends SubGraphImplementor<?>> subgraphMap;
 			final Class<?> subgraphMapKey;
-			if ( fetchable instanceof PluralAttributeMapping ) {
-				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
+			if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
 				if ( exploreKeySubgraph ) {
 					subgraphMap = attributeNode.getKeySubGraphMap();
 					subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getIndexDescriptor() );
@@ -95,17 +94,14 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 	}
 
 	private Class<?> getEntityCollectionPartJavaClass(CollectionPart collectionPart) {
-		if ( collectionPart instanceof EntityCollectionPart ) {
-			EntityCollectionPart entityCollectionPart = (EntityCollectionPart) collectionPart;
-			return entityCollectionPart.getEntityMappingType().getJavaType().getJavaTypeClass();
-		}
-		else {
-			return null;
-		}
+		return collectionPart instanceof EntityCollectionPart entityCollectionPart
+				? entityCollectionPart.getEntityMappingType().getJavaType().getJavaTypeClass()
+				: null;
 	}
 
 	private boolean appliesTo(FetchParent fetchParent) {
-		return currentGraphContext != null && fetchParent.appliesTo( currentGraphContext, metamodel );
+		return currentGraphContext != null
+			&& fetchParent.appliesTo( currentGraphContext, metamodel );
 	}
 
 }

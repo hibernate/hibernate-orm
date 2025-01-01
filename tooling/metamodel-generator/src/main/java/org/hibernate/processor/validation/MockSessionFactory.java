@@ -1024,13 +1024,10 @@ public abstract class MockSessionFactory
 			if (attribute != null) {
 				return attribute;
 			}
-			final String supertype = MockSessionFactory.this.getSupertype(getHibernateEntityName());
-			final PersistentAttribute<? super Object, ?> superattribute
-					= new MockMappedDomainType<>(supertype).findAttribute(name);
-			if (superattribute != null) {
-				return superattribute;
+			else {
+				final String supertype = MockSessionFactory.this.getSupertype( getHibernateEntityName() );
+				return new MockMappedDomainType<>( supertype ).findAttribute( name );
 			}
-			return null;
 		}
 
 		@Override

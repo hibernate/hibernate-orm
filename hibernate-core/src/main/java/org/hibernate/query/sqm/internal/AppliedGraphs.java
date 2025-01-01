@@ -26,12 +26,12 @@ public class AppliedGraphs {
 	}
 
 	private static boolean containsCollectionFetches(GraphImplementor<?> graph) {
-		for ( AttributeNodeImplementor<?> attributeNodeImplementor : graph.getAttributeNodeImplementors() ) {
-			if ( attributeNodeImplementor.getAttributeDescriptor().isCollection() ) {
+		for ( AttributeNodeImplementor<?> node : graph.getAttributeNodeImplementors() ) {
+			if ( node.getAttributeDescriptor().isCollection() ) {
 				return true;
 			}
-			for ( SubGraphImplementor<?> subGraph : attributeNodeImplementor.getSubGraphMap().values() ) {
-				if ( containsCollectionFetches(subGraph) ) {
+			for ( SubGraphImplementor<?> subgraph : node.getSubGraphMap().values() ) {
+				if ( containsCollectionFetches( subgraph ) ) {
 					return true;
 				}
 			}

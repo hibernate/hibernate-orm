@@ -8,17 +8,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+import org.hibernate.AssertionFailure;
 import org.hibernate.graph.AttributeNode;
 import org.hibernate.graph.CannotBecomeEntityGraphException;
-import org.hibernate.graph.CannotContainSubGraphException;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.SubGraph;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -27,6 +28,8 @@ import org.hibernate.query.sqm.SqmPathSource;
 import jakarta.persistence.metamodel.Attribute;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.unmodifiableMap;
 
 /**
  *  Base class for {@link RootGraph} and {@link SubGraph} implementations.
@@ -35,220 +38,290 @@ import static java.util.Collections.emptyList;
  */
 public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements GraphImplementor<J> {
 	private final ManagedDomainType<J> managedType;
-	private Map<PersistentAttribute<?,?>, AttributeNodeImplementor<?>> attrNodeMap;
+	private Map<PersistentAttribute<? super J,?>, AttributeNodeImplementor<?>> attributeNodes;
 
 	public AbstractGraph(ManagedDomainType<J> managedType, boolean mutable) {
 		super( mutable );
 		this.managedType = managedType;
 	}
 
-	protected AbstractGraph(GraphImplementor<J> original, boolean mutable) {
-		this( original.getGraphedType(), mutable );
-		this.attrNodeMap = new ConcurrentHashMap<>( original.getAttributeNodeList().size() );
-		original.visitAttributeNodes(
-				node -> attrNodeMap.put(
-						node.getAttributeDescriptor(),
-						node.makeCopy( mutable )
-				)
-		);
+	protected AbstractGraph(ManagedDomainType<J> managedType, GraphImplementor<? super J> graph, boolean mutable) {
+		this( managedType, mutable );
+		attributeNodes = new HashMap<>( graph.getAttributeNodesByAttribute().size() );
+		graph.getAttributeNodesByAttribute()
+				.forEach( (attribute, node) -> attributeNodes.put( attribute, node.makeCopy( mutable ) ) );
+	}
+
+	protected AbstractGraph(GraphImplementor<J> graph, boolean mutable) {
+		this( graph.getGraphedType(), graph, mutable );
 	}
 
 	@Override
-	public ManagedDomainType<J> getGraphedType() {
+	public final ManagedDomainType<J> getGraphedType() {
 		return managedType;
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public RootGraphImplementor<J> makeRootGraph(String name, boolean mutable) {
 		if ( getGraphedType() instanceof EntityDomainType ) {
 			return new RootGraphImpl<>( name, this, mutable);
 		}
-
-		throw new CannotBecomeEntityGraphException(
-				"Cannot transform Graph to RootGraph - " + getGraphedType() + " is not an EntityType"
-		);
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public void merge(GraphImplementor<? extends J> other) {
-		if ( other == null ) {
-			return;
-		}
-
-		for ( AttributeNodeImplementor<?> attributeNode : other.getAttributeNodeImplementors() ) {
-			final AttributeNodeImplementor<?> localAttributeNode = findAttributeNode(
-					(PersistentAttribute<? super J,?>) attributeNode.getAttributeDescriptor()
+		else {
+			throw new CannotBecomeEntityGraphException(
+					"Cannot transform Graph to RootGraph because '" + getGraphedType() + "' is not an entity type"
 			);
-			if ( localAttributeNode != null ) {
-				// keep the local one, but merge in the incoming one
-				localAttributeNode.merge( attributeNode );
-			}
-			else {
-				addAttributeNode( attributeNode.makeCopy( true ) );
-			}
 		}
-
 	}
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// AttributeNode handling
-
-
 	@Override
-	public <Y> AttributeNodeImplementor<Y> getAttributeNode(String attributeName) {
-		if ( attrNodeMap == null ) {
-			return null;
+	public void merge(GraphImplementor<J> graph) {
+		if ( graph != null ) {
+			verifyMutability();
+			graph.getAttributeNodesByAttribute().forEach( (attribute, node) -> {
+				final AttributeNodeImplementor<?> existingNode = findAttributeNode( attribute );
+				if ( existingNode != null ) {
+					// keep the local one, but merge in the incoming one
+					mergeNode( node, existingNode );
+				}
+				else {
+					addAttributeNode( attribute, node.makeCopy( true ) );
+				}
+			} );
 		}
-		final PersistentAttribute<? super J, ?> attribute = managedType.findAttributeInSuperTypes( attributeName );
-		//noinspection unchecked
-		return (AttributeNodeImplementor<Y>) attrNodeMap.get( attribute );
 	}
 
-	@Override
-	public <Y> AttributeNodeImplementor<Y> getAttributeNode(Attribute<? super J, Y> attribute) {
-		return null;
+	private static <T> void mergeNode(AttributeNodeImplementor<?> node, AttributeNodeImplementor<T> existingNode) {
+		if ( existingNode.getAttributeDescriptor() == node.getAttributeDescriptor() ) {
+			@SuppressWarnings("unchecked") // safe, we just checked
+			final AttributeNodeImplementor<T> castNode = (AttributeNodeImplementor<T>) node;
+			existingNode.merge( castNode );
+		}
+		else {
+			throw new AssertionFailure( "Attributes should have been identical" );
+		}
 	}
 
-	@Override
-	public void visitAttributeNodes(Consumer<AttributeNodeImplementor<?>> consumer) {
-		if ( attrNodeMap != null ) {
-			attrNodeMap.forEach( (attribute, nodeImplementor) -> consumer.accept( nodeImplementor ) );
+	private <T> void addAttributeNode(PersistentAttribute<? super J, ?> attribute, AttributeNodeImplementor<T> node) {
+		final AttributeNodeImplementor<T> attributeNode = getNodeForPut( node.getAttributeDescriptor() );
+		if ( attributeNode == null ) {
+			attributeNodes.put( attribute, node );
+		}
+		else {
+			// we assume the subgraph has been properly copied if needed
+			node.getSubGraphMap().forEach( (subtype, subgraph) -> attributeNode.addSubGraph( subgraph ) );
 		}
 	}
 
 	@Override
 	public List<AttributeNode<?>> getAttributeNodeList() {
-		if ( attrNodeMap == null ) {
-			return emptyList();
-		}
-		else {
-			final List<AttributeNode<?>> result = new ArrayList<>();
-			visitAttributeNodes( result::add );
-			return result;
-		}
+		return attributeNodes == null ? emptyList() : new ArrayList<>( attributeNodes.values() );
 	}
 
 	@Override
-	public AttributeNodeImplementor<?> addAttributeNode(AttributeNodeImplementor<?> incomingAttributeNode) {
-		verifyMutability();
-
-		AttributeNodeImplementor<?> attributeNode = null;
-		if ( attrNodeMap == null ) {
-			attrNodeMap = new HashMap<>();
-		}
-		else {
-			attributeNode = attrNodeMap.get( incomingAttributeNode.getAttributeDescriptor() );
-		}
-
-		if ( attributeNode == null ) {
-			attributeNode = incomingAttributeNode;
-			attrNodeMap.put( incomingAttributeNode.getAttributeDescriptor(), attributeNode );
-		}
-		else {
-			@SuppressWarnings("rawtypes")
-			final AttributeNodeImplementor attributeNodeFinal = attributeNode;
-			incomingAttributeNode.visitSubGraphs(
-					// we assume the subGraph has been properly copied if needed
-					(subType, subGraph) -> attributeNodeFinal.addSubGraph( subGraph )
-			);
-		}
-
-		return attributeNode;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
 	public <AJ> AttributeNodeImplementor<AJ> findAttributeNode(String attributeName) {
-		PersistentAttribute<? super J, ?> attribute = managedType.findAttributeInSuperTypes( attributeName );
-		if ( attribute instanceof SqmPathSource && ( (SqmPathSource<?>) attribute ).isGeneric() ) {
-			attribute = managedType.findConcreteGenericAttribute( attributeName );
-		}
-		return attribute == null ? null : findAttributeNode( (PersistentAttribute<? super J, AJ>) attribute );
+		final PersistentAttribute<? super J, ?> attribute = findAttributeInSupertypes( attributeName );
+		@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
+		final PersistentAttribute<? super J, AJ> result = (PersistentAttribute<? super J, AJ>) attribute;
+		return attribute == null ? null : findAttributeNode( result );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <AJ> AttributeNodeImplementor<AJ> findAttributeNode(PersistentAttribute<? super J, AJ> attribute) {
-		return attrNodeMap == null ? null : (AttributeNodeImplementor<AJ>) attrNodeMap.get( attribute );
+		return attributeNodes == null ? null : getNode( attribute );
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	public List<AttributeNode<?>> getGraphAttributeNodes() {
-		return (List) getAttributeNodeImplementors();
+	public List<jakarta.persistence.AttributeNode<?>> getAttributeNodes() {
+		return attributeNodes == null ? emptyList() : new ArrayList<>( attributeNodes.values() );
 	}
 
 	@Override
 	public List<AttributeNodeImplementor<?>> getAttributeNodeImplementors() {
-		return attrNodeMap == null ? emptyList() : new ArrayList<>( attrNodeMap.values() );
+		return attributeNodes == null ? emptyList() : new ArrayList<>( attributeNodes.values() );
 	}
 
 	@Override
-	public <AJ> AttributeNodeImplementor<AJ> addAttributeNode(String attributeName) throws CannotContainSubGraphException {
+	public Map<PersistentAttribute<? super J, ?>, AttributeNodeImplementor<?>> getAttributeNodesByAttribute() {
+		return attributeNodes == null ? emptyMap() : unmodifiableMap( attributeNodes );
+	}
+
+	@Override
+	public <AJ> AttributeNodeImplementor<AJ> addAttributeNode(String attributeName) {
 		return findOrCreateAttributeNode( attributeName );
 	}
 
 	@Override
-	public <AJ> AttributeNodeImplementor<AJ> addAttributeNode(PersistentAttribute<? super J, AJ> attribute)
-			throws CannotContainSubGraphException {
+	public <AJ> AttributeNodeImplementor<AJ> addAttributeNode(PersistentAttribute<? super J, AJ> attribute) {
 		return findOrCreateAttributeNode( attribute );
 	}
 
 	@Override
 	public <Y> AttributeNodeImplementor<Y> addAttributeNode(Attribute<? super J, Y> attribute) {
-		//noinspection unchecked
-		return (AttributeNodeImplementor<Y>) findOrCreateAttributeNode( (PersistentAttribute<? super J, ?>) attribute );
+		return addAttributeNode( (PersistentAttribute<? super J, Y>) attribute  );
 	}
 
 	@Override
 	public void addAttributeNodes(String... attributeNames) {
-		for ( int i = 0; i < attributeNames.length; i++ ) {
-			addAttributeNode( attributeNames[i] );
+		for ( String attributeName : attributeNames ) {
+			addAttributeNode( attributeName );
 		}
 	}
 
 	@Override @SafeVarargs
 	public final void addAttributeNodes(Attribute<? super J, ?>... attributes) {
-		for ( int i = 0; i < attributes.length; i++ ) {
-			addAttributeNode( attributes[i] );
+		for ( Attribute<? super J, ?> attribute : attributes ) {
+			addAttributeNode( attribute );
 		}
 	}
 
 	@Override
 	public void removeAttributeNode(String attributeName) {
-		final PersistentAttribute<? super J, ?> attribute = managedType.findAttribute( attributeName );
-		attrNodeMap.remove( attribute );
+		attributeNodes.remove( managedType.findAttribute( attributeName ) );
 	}
 
 	@Override
 	public void removeAttributeNode(Attribute<? super J, ?> attribute) {
-		attrNodeMap.remove( (PersistentAttribute<? super J, ?>) attribute );
+		attributeNodes.remove( (PersistentAttribute<? super J, ?>) attribute );
 	}
 
 	@Override
-	public void removeAttributeNodes(Attribute.PersistentAttributeType nodeTypes) {
-		attrNodeMap.entrySet().removeIf( entry -> entry.getKey().getPersistentAttributeType() == nodeTypes );
+	public void removeAttributeNodes(Attribute.PersistentAttributeType nodeType) {
+		attributeNodes.keySet().removeIf( entry -> entry.getPersistentAttributeType() == nodeType );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <AJ> AttributeNodeImplementor<AJ> findOrCreateAttributeNode(PersistentAttribute<? super J, AJ> attribute) {
 		verifyMutability();
-
-		AttributeNodeImplementor<AJ> attrNode = null;
-		if ( attrNodeMap == null ) {
-			attrNodeMap = new HashMap<>();
+		final AttributeNodeImplementor<AJ> node = getNodeForPut( attribute );
+		if ( node == null ) {
+			final AttributeNodeImpl<AJ> newAttrNode = new AttributeNodeImpl<>( attribute, isMutable() );
+			attributeNodes.put( attribute, newAttrNode );
+			return newAttrNode;
 		}
 		else {
-			attrNode = (AttributeNodeImplementor<AJ>) attrNodeMap.get( attribute );
+			return node;
 		}
+	}
 
-		if ( attrNode == null ) {
-			attrNode = new AttributeNodeImpl<>(attribute, isMutable());
-			attrNodeMap.put( attribute, attrNode );
+	@Override
+	public <AJ> AttributeNodeImplementor<AJ> findOrCreateAttributeNode(String attributeName) {
+		final PersistentAttribute<? super J, ?> attribute = getAttribute( attributeName );
+		@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
+		final PersistentAttribute<? super J, AJ> persistentAttribute = (PersistentAttribute<? super J, AJ>) attribute;
+		return findOrCreateAttributeNode( persistentAttribute );
+	}
+
+	private PersistentAttribute<? super J, ?> findAttributeInSupertypes(String attributeName) {
+		final PersistentAttribute<? super J, ?> attribute = managedType.findAttributeInSuperTypes( attributeName );
+		return attribute instanceof SqmPathSource<?> sqmPathSource && sqmPathSource.isGeneric()
+				? managedType.findConcreteGenericAttribute( attributeName )
+				: attribute;
+	}
+
+	private PersistentAttribute<? super J, ?> getAttribute(String attributeName) {
+		final PersistentAttribute<? super J, ?> attribute = managedType.getAttribute( attributeName );
+		return attribute instanceof SqmPathSource<?> sqmPathSource && sqmPathSource.isGeneric()
+				? managedType.findConcreteGenericAttribute( attributeName )
+				: attribute;
+	}
+
+	private <AJ> AttributeNodeImplementor<AJ> getNodeForPut(PersistentAttribute<?, AJ> attribute) {
+		if ( attributeNodes == null ) {
+			attributeNodes = new HashMap<>();
+			return null;
 		}
+		else {
+			return getNode( attribute );
+		}
+	}
 
-		return attrNode;
+	@SuppressWarnings("unchecked")
+	private <T> AttributeNodeImplementor<T> getNode(PersistentAttribute<?, ? extends T> attribute) {
+		return (AttributeNodeImplementor<T>) attributeNodes.get( attribute );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
+	public <AJ> SubGraphImplementor<AJ> addSubGraph(String attributeName)  {
+		return (SubGraphImplementor<AJ>) findOrCreateAttributeNode( attributeName ).makeSubGraph();
+	}
+
+	@Override
+	public <AJ> SubGraphImplementor<AJ> addSubGraph(String attributeName, Class<AJ> subType) {
+		return findOrCreateAttributeNode( attributeName ).makeSubGraph( subType );
+	}
+
+	@Override
+	public <AJ> SubGraphImplementor<AJ> addSubGraph(PersistentAttribute<? super J, AJ> attribute) {
+		return findOrCreateAttributeNode( attribute ).makeSubGraph();
+	}
+
+	@Override
+	public <AJ> SubGraphImplementor<AJ> addSubGraph(
+			PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> subType) {
+		return findOrCreateAttributeNode( attribute ).makeSubGraph( subType );
+	}
+
+	@Override
+	public <Y> SubGraphImplementor<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type) {
+		// TODO Test this it's probably not right!
+		final ManagedDomainType<Y> managedDomainType = getGraphedType().getMetamodel().managedType( type );
+		return new SubGraphImpl<>( managedDomainType,false );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
+	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName) {
+		return (SubGraphImplementor<AJ>) findOrCreateAttributeNode( attributeName ).makeKeySubGraph();
+	}
+
+	@Override
+	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName, Class<AJ> subtype) {
+		return findOrCreateAttributeNode( attributeName ).makeKeySubGraph( subtype );
+	}
+
+	@Override
+	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(PersistentAttribute<? super J, AJ> attribute) {
+		return findOrCreateAttributeNode( attribute ).makeKeySubGraph();
+	}
+
+	@Override
+	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(
+			PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> subType) {
+		return findOrCreateAttributeNode( attribute ).makeKeySubGraph( subType );
+	}
+
+	////////////////// TODO //////////////////
+
+	@Override
+	public <E> SubGraphImplementor<E> addTreatedElementSubgraph(
+			PluralAttribute<? super J, ?, ? super E> attribute,
+			Class<E> type) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <K> SubGraphImplementor<K> addTreatedMapKeySubgraph(MapAttribute<? super J, ? super K, ?> attribute, Class<K> type) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <E> SubGraphImplementor<E> addElementSubgraph(PluralAttribute<? super J, ?, E> attribute) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <X> SubGraphImplementor<X> addElementSubgraph(String attributeName) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <X> SubGraphImplementor<X> addElementSubgraph(String attributeName, Class<X> type) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <K> SubGraphImplementor<K> addMapKeySubgraph(MapAttribute<? super J, K, ?> attribute) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 }

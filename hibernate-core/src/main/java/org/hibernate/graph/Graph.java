@@ -58,14 +58,20 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 * @param mutable controls whether the resulting {@code Graph} is mutable
 	 *
 	 * @throws CannotBecomeEntityGraphException If the named attribute is not entity-valued
+	 *
+	 * @deprecated This will be removed
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	RootGraph<J> makeRootGraph(String name, boolean mutable)
 			throws CannotBecomeEntityGraphException;
 
 	/**
 	 * Create a new (mutable or immutable) {@link SubGraph} rooted at
 	 * this {@link Graph}.
+	 *
+	 * @deprecated This will be removed
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	SubGraph<J> makeSubGraph(boolean mutable);
 
 	@Override
@@ -76,39 +82,63 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	// AttributeNode handling
 
 	/**
-	 * Ultimately only needed for implementing
-	 * {@link jakarta.persistence.EntityGraph#getAttributeNodes()}
-	 * and {@link jakarta.persistence.Subgraph#getAttributeNodes()}
-	 */
-	List<AttributeNode<?>> getGraphAttributeNodes();
-
-	/**
 	 * Find an already existing AttributeNode by attributeName within
 	 * this container
+	 *
+	 * @see #getAttributeNode(String)
 	 */
 	<AJ> AttributeNode<AJ> findAttributeNode(String attributeName);
+
+	@Override
+	default <Y> jakarta.persistence.AttributeNode<Y> getAttributeNode(String attributeName) {
+		return findAttributeNode( attributeName );
+	}
 
 	/**
 	 * Find an already existing AttributeNode by corresponding attribute
 	 * reference, within this container.
+	 *
+	 * @see #getAttributeNode(Attribute)
 	 */
 	<AJ> AttributeNode<AJ> findAttributeNode(PersistentAttribute<? super J, AJ> attribute);
 
-	/**
-	 * Get a list of all existing AttributeNodes within this container.
-	 */
-	List<AttributeNode<?>> getAttributeNodeList();
+	@Override
+	default <Y> jakarta.persistence.AttributeNode<Y> getAttributeNode(Attribute<? super J, Y> attribute) {
+		return findAttributeNode( (PersistentAttribute<? super J, Y>) attribute );
+	}
 
 	/**
 	 * Add an {@link AttributeNode} (with no associated {@link SubGraph})
 	 * to this container by attribute reference.
+	 *
+	 * @see #addAttributeNode(Attribute)
 	 */
-	<AJ> AttributeNode<AJ> addAttributeNode(PersistentAttribute<? super J,AJ> attribute);
+	<AJ> AttributeNode<AJ> addAttributeNode(PersistentAttribute<? super J,AJ> attribute)
+			throws CannotContainSubGraphException;
 
+	@Override
+	default <Y> jakarta.persistence.AttributeNode<Y> addAttributeNode(Attribute<? super J, Y> attribute) {
+		return addAttributeNode( (PersistentAttribute<? super J,Y>) attribute );
+	}
+
+	/**
+	 * Get a list of all existing AttributeNodes within this container.
+	 *
+	 * @see #getAttributeNodes
+	 */
+	List<AttributeNode<?>> getAttributeNodeList();
+
+	/**
+	 * @deprecated Use {@link #getAttributeNodeList}
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
+	default List<AttributeNode<?>> getGraphAttributeNodes() {
+		return getAttributeNodeList();
+	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// sub graph nodes
+	// Subgraph nodes
 
 	/**
 	 * Create and return a new (mutable) {@link SubGraph} associated with
@@ -116,11 +146,9 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @apiNote If no such AttributeNode exists yet, it is created.
 	 */
-	<AJ> SubGraph<AJ> addSubGraph(String attributeName)
-			throws CannotContainSubGraphException;
+	<AJ> SubGraph<AJ> addSubGraph(String attributeName);
 
-	<AJ> SubGraph<AJ> addSubGraph(String attributeName, Class<AJ> type)
-			throws CannotContainSubGraphException;
+	<AJ> SubGraph<AJ> addSubGraph(String attributeName, Class<AJ> type);
 
 	/**
 	 * Create and return a new (mutable) {@link SubGraph} associated with
@@ -128,32 +156,65 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @apiNote If no such AttributeNode exists yet, it is created.
 	 */
-	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, AJ> attribute)
-			throws CannotContainSubGraphException;
+	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, AJ> attribute);
 
-	<AJ> SubGraph<? extends AJ> addSubGraph(PersistentAttribute<? super J, AJ> attribute, Class<? extends AJ> type)
-			throws CannotContainSubGraphException;
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// key sub graph nodes
-
-	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName)
-			throws CannotContainSubGraphException;
-	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName, Class<AJ> type)
-			throws CannotContainSubGraphException;
-
-	<AJ> SubGraph<AJ> addKeySubGraph(PersistentAttribute<? super J,AJ> attribute)
-			throws CannotContainSubGraphException;
-	<AJ> SubGraph<? extends AJ> addKeySubGraph(PersistentAttribute<? super J,AJ> attribute, Class<? extends AJ> type)
-			throws CannotContainSubGraphException;
-
+	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> type);
 
 	@Override
-	<Y> SubGraph<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type);
+	default <Y> SubGraph<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type) {
+		return addSubGraph( (PersistentAttribute<? super J, ? super Y>) attribute, type );
+	}
+
+	@Override
+	default <X> SubGraph<X> addSubgraph(Attribute<? super J, X> attribute) {
+		return addSubGraph( (PersistentAttribute<? super J, X>) attribute );
+	}
+
+	@Override
+	default <X> SubGraph<? extends X> addSubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
+		return addSubGraph( (PersistentAttribute<? super J, X>) attribute, type );
+	}
+
+	@Override
+	default <X> SubGraph<X> addSubgraph(String name) {
+		return addSubGraph( name );
+	}
+
+	@Override
+	default <X> SubGraph<X> addSubgraph(String name, Class<X> type) {
+		return addSubGraph( name, type );
+	}
+
+	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName);
+	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName, Class<AJ> type);
+
+	<AJ> SubGraph<AJ> addKeySubGraph(PersistentAttribute<? super J,AJ> attribute);
+	<AJ> SubGraph<AJ> addKeySubGraph(PersistentAttribute<? super J,? super AJ> attribute, Class<AJ> type);
+
+	@Override
+	default <X> SubGraph<X> addKeySubgraph(Attribute<? super J, X> attribute) {
+		return addKeySubGraph( (PersistentAttribute<? super J, X>) attribute );
+	}
+
+	@Override
+	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
+		return addKeySubGraph( (PersistentAttribute<? super J, X>) attribute, type );
+	}
+
+	@Override
+	default <X> SubGraph<X> addKeySubgraph(String name) {
+		return addKeySubGraph( name );
+	}
+
+	@Override
+	default <X> SubGraph<X> addKeySubgraph(String name, Class<X> type) {
+		return addKeySubGraph( name, type );
+	}
 
 	@Override
 	<E> SubGraph<E> addTreatedElementSubgraph(PluralAttribute<? super J, ?, ? super E> attribute, Class<E> type);
 
 	@Override
 	<K> SubGraph<K> addTreatedMapKeySubgraph(MapAttribute<? super J, ? super K, ?> attribute, Class<K> type);
+
 }

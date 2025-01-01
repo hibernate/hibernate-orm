@@ -31,6 +31,8 @@ public interface ManagedDomainType<J> extends SqmExpressible<J>, DomainType<J>, 
 	 */
 	String getTypeName();
 
+	JpaMetamodel getMetamodel();
+
 	RepresentationMode getRepresentationMode();
 
 	/**
@@ -54,7 +56,14 @@ public interface ManagedDomainType<J> extends SqmExpressible<J>, DomainType<J>, 
 	PersistentAttribute<? super J,?> findAttribute(String name);
 
 	PersistentAttribute<?, ?> findSubTypesAttribute(String name);
-	PersistentAttribute<? super J, ?> findAttributeInSuperTypes(String name);
+
+	/**
+	 * @deprecated Use {@link #findAttribute(String)}
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
+	default PersistentAttribute<? super J, ?> findAttributeInSuperTypes(String name) {
+		return findAttribute( name );
+	}
 
 	SingularPersistentAttribute<? super J,?> findSingularAttribute(String name);
 	PluralPersistentAttribute<? super J, ?,?> findPluralAttribute(String name);

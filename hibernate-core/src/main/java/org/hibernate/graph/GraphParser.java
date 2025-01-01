@@ -22,7 +22,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
  * The {@link #parse} methods all create a root {@link jakarta.persistence.EntityGraph}
  * based on the passed entity class and parse the graph string into that root graph.
  * <p>
- * The {@link #parseInto} methods parse the graph string into a passed graph, which may be a sub-graph
+ * The {@link #parseInto} methods parse the graph string into a passed graph, which may be a subgraph
  * <p>
  * Multiple graphs made for the same entity type can be merged.  See {@link EntityGraphs#merge(SessionImplementor, Class, GraphImplementor...)}.
  *

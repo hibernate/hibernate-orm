@@ -31,40 +31,38 @@ public final class EntityGraphs {
 	 * Merges multiple entity graphs into a single graph that specifies the
 	 * fetching/loading of all attributes the input graphs specify.
 	 *
-	 * @param <T>      Root entity type of the query and graph.
+	 * @param <T> Root entity type of the query and graph.
 	 *
-	 * @param em       EntityManager to use to create the new merged graph.
+	 * @param entityManager EntityManager to use to create the new merged graph.
 	 * @param rootType Root type of the entity for which the graph is being merged.
-	 * @param graphs   Graphs to merge.
+	 * @param graphs Graphs to merge.
 	 *
-	 * @return         The merged graph.
+	 * @return The merged graph.
 	 */
-	@SuppressWarnings("unchecked")
-	public static <T> EntityGraph<T> merge(EntityManager em, Class<T> rootType, EntityGraph<T>... graphs) {
-		return merge( (SessionImplementor) em, rootType, (Object[]) graphs );
+	@SafeVarargs
+	public static <T> EntityGraph<T> merge(EntityManager entityManager, Class<T> rootType, EntityGraph<T>... graphs) {
+		return mergeInternal( (SessionImplementor) entityManager, rootType, graphs );
 	}
 
 	@SafeVarargs
 	public static <T> EntityGraph<T> merge(Session session, Class<T> rootType, Graph<T>... graphs) {
-		return merge( (SessionImplementor) session, rootType, (Object[]) graphs );
+		return mergeInternal( (SessionImplementor) session, rootType, graphs );
 	}
 
 	@SafeVarargs
 	public static <T> EntityGraph<T> merge(SessionImplementor session, Class<T> rootType, GraphImplementor<T>... graphs) {
-		return merge( session, rootType, (Object[]) graphs );
+		return mergeInternal( session, rootType, graphs );
 	}
 
-	@SuppressWarnings("unchecked")
-	private static <T> EntityGraph<T> merge(SessionImplementor session, Class<T> rootType, Object... graphs) {
-		RootGraphImplementor<T> merged = session.createEntityGraph( rootType );
-
+	private static <T> EntityGraph<T> mergeInternal(
+			SessionImplementor session, Class<T> rootType, jakarta.persistence.Graph<T>[] graphs) {
+		final RootGraphImplementor<T> merged = session.createEntityGraph( rootType );
 		if ( graphs != null ) {
-			for ( Object graph : graphs ) {
+			for ( jakarta.persistence.Graph<T> graph : graphs ) {
 				merged.merge( (GraphImplementor<T>) graph );
 			}
 
 		}
-
 		return merged;
 	}
 
@@ -75,12 +73,14 @@ public final class EntityGraphs {
 	 * @param query The JPA Query
 	 * @param graph The graph to apply
 	 * @param semantic The semantic to use when applying the graph
+	 *
+	 * @deprecated Use {@link org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, GraphSemantic)}
 	 */
-	@SuppressWarnings("unchecked")
-	public static List executeList(Query query, EntityGraph graph, GraphSemantic semantic) {
+	@Deprecated(since = "7.0")
+	public static @SuppressWarnings("rawtypes") List executeList(Query query, EntityGraph<?> graph, GraphSemantic semantic) {
 		return query.unwrap( org.hibernate.query.Query.class )
-				.applyGraph( (RootGraph) graph, semantic )
-				.list();
+				.applyGraph( (RootGraph<?>) graph, semantic )
+				.getResultList();
 	}
 
 	/**
@@ -94,10 +94,14 @@ public final class EntityGraphs {
 	 * @apiNote This signature assumes that the Query's return is an entity and that
 	 *          the graph applies to that entity's type. JPA does not necessarily
 	 *          require that, but it is by far the most common usage.
+	 *
+	 * @deprecated Use {@link org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, GraphSemantic)}
 	 */
-	@SuppressWarnings({"unused", "unchecked"})
+	@Deprecated(since = "7.0")
 	public static <R> List<R> executeList(TypedQuery<R> query, EntityGraph<R> graph, GraphSemantic semantic) {
-		return executeList( (Query) query, graph, semantic );
+		@SuppressWarnings("unchecked")
+		org.hibernate.query.Query<R> unwrapped = query.unwrap( org.hibernate.query.Query.class );
+		return unwrapped.setEntityGraph( graph, semantic ).getResultList();
 	}
 
 	/**
@@ -110,12 +114,12 @@ public final class EntityGraphs {
 	 * @param semanticJpaHintName See {@link GraphSemantic#fromHintName}
 	 *
 	 * @return The result list
+	 *
+	 * @deprecated Use {@link org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, GraphSemantic)}
 	 */
-	@SuppressWarnings({"unused", "unchecked"})
-	public static List executeList(Query query, EntityGraph graph, String semanticJpaHintName) {
-		return query.unwrap( org.hibernate.query.Query.class )
-				.applyGraph( (RootGraph) graph, GraphSemantic.fromHintName( semanticJpaHintName ) )
-				.list();
+	@Deprecated(since = "7.0")
+	public static @SuppressWarnings("rawtypes") List executeList(Query query, EntityGraph<?> graph, String semanticJpaHintName) {
+		return executeList( query, graph, GraphSemantic.fromHintName( semanticJpaHintName ) );
 	}
 
 	/**
@@ -129,10 +133,12 @@ public final class EntityGraphs {
 	 * @apiNote This signature assumes that the Query's return is an entity and that
 	 *          the graph applies to that entity's type. JPA does not necessarily
 	 *          require that, but it is by far the most common usage.
+	 *
+	 * @deprecated Use {@link org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, GraphSemantic)}
 	 */
-	@SuppressWarnings({"unused", "unchecked"})
+	@Deprecated(since = "7.0")
 	public static <R> List<R> executeList(TypedQuery<R> query, EntityGraph<R> graph, String semanticJpaHintName) {
-		return executeList( (Query) query, graph, semanticJpaHintName );
+		return executeList( query, graph, GraphSemantic.fromHintName( semanticJpaHintName ) );
 	}
 
 	/**
@@ -146,12 +152,12 @@ public final class EntityGraphs {
 	 *          entity graph applied to a query is {@link GraphSemantic#FETCH}.
 	 *          This is simply knowledge from JPA EG discussions, nothing that
 	 *          is specifically mentioned or discussed in the spec.
+	 *
+	 * @deprecated Use {@link org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, GraphSemantic)}
 	 */
-	@SuppressWarnings({"unused", "unchecked"})
-	public static List executeList(Query query, EntityGraph graph) {
-		return query.unwrap( org.hibernate.query.Query.class )
-				.applyFetchGraph( (RootGraph) graph )
-				.list();
+	@Deprecated(since = "7.0")
+	public static @SuppressWarnings("rawtypes") List executeList(Query query, EntityGraph<?> graph) {
+		return executeList( query, graph, GraphSemantic.FETCH );
 	}
 
 	/**
@@ -164,15 +170,13 @@ public final class EntityGraphs {
 	 * @apiNote This signature assumes that the Query's return is an entity and that
 	 *          the graph applies to that entity's type. JPA does not necessarily
 	 *          require that, but it is by far the most common usage.
+	 *
+	 * @deprecated Use {@link org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, GraphSemantic)}
 	 */
-	@SuppressWarnings("unused")
+	@Deprecated(since = "7.0")
 	public static <R> List<R> executeList(TypedQuery<R> query, EntityGraph<R> graph) {
 		return executeList( query, graph, GraphSemantic.FETCH );
 	}
-
-	// todo : ? - we could add JPA's other Query execution methods
-	//		but really, I think unwrapping as Hibernate's Query and using our
-	//		"proprietary" methods is better (this class is "proprietary" too).
 
 	/**
 	 * Compares two entity graphs and returns {@code true} if they are equal,
@@ -191,8 +195,8 @@ public final class EntityGraphs {
 			return false;
 		}
 
-		List<AttributeNode<?>> aNodes = a.getAttributeNodes();
-		List<AttributeNode<?>> bNodes = b.getAttributeNodes();
+		final List<AttributeNode<?>> aNodes = a.getAttributeNodes();
+		final List<AttributeNode<?>> bNodes = b.getAttributeNodes();
 
 		if ( aNodes.size() != bNodes.size() ) {
 			return false;
@@ -226,7 +230,8 @@ public final class EntityGraphs {
 			return false;
 		}
 		if ( a.getAttributeName().equals( b.getAttributeName() ) ) {
-			return areEqual( a.getSubgraphs(), b.getSubgraphs() ) && areEqual( a.getKeySubgraphs(), b.getKeySubgraphs() );
+			return areEqual( a.getSubgraphs(), b.getSubgraphs() )
+				&& areEqual( a.getKeySubgraphs(), b.getKeySubgraphs() );
 		}
 		else {
 			return false;
@@ -237,7 +242,9 @@ public final class EntityGraphs {
 	 * Compares two entity subgraph maps and returns {@code true} if they are equal,
 	 * ignoring order.
 	 */
-	public static boolean areEqual(@SuppressWarnings("rawtypes") Map<Class, Subgraph> a, @SuppressWarnings("rawtypes") Map<Class, Subgraph> b) {
+	public static boolean areEqual(
+			@SuppressWarnings("rawtypes") Map<Class, Subgraph> a,
+			@SuppressWarnings("rawtypes") Map<Class, Subgraph> b) {
 		if ( a == b ) {
 			return true;
 		}
@@ -246,9 +253,9 @@ public final class EntityGraphs {
 		}
 
 		@SuppressWarnings("rawtypes")
-		Set<Class> aKeys = a.keySet();
+		final Set<Class> aKeys = a.keySet();
 		@SuppressWarnings("rawtypes")
-		Set<Class> bKeys = b.keySet();
+		final Set<Class> bKeys = b.keySet();
 
 		if ( aKeys.equals( bKeys ) ) {
 			for ( Class<?> clazz : aKeys ) {
@@ -282,16 +289,16 @@ public final class EntityGraphs {
 		}
 
 		@SuppressWarnings("unchecked")
-		List<AttributeNode<?>> aNodes = a.getAttributeNodes();
+		final List<AttributeNode<?>> aNodes = a.getAttributeNodes();
 		@SuppressWarnings("unchecked")
-		List<AttributeNode<?>> bNodes = b.getAttributeNodes();
+		final List<AttributeNode<?>> bNodes = b.getAttributeNodes();
 
 		if ( aNodes.size() != bNodes.size() ) {
 			return false;
 		}
 
 		for ( AttributeNode<?> aNode : aNodes ) {
-			String attributeName = aNode.getAttributeName();
+			final String attributeName = aNode.getAttributeName();
 			AttributeNode<?> bNode = null;
 			for ( AttributeNode<?> bCandidate : bNodes ) {
 				if ( attributeName.equals( bCandidate.getAttributeName() ) ) {

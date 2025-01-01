@@ -378,11 +378,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	@Override
 	public <T> void addNamedEntityGraph(String graphName, RootGraphImplementor<T> entityGraph) {
-		final EntityGraph<?> old = entityGraphMap.put(
-				graphName,
-				entityGraph.makeImmutableCopy( graphName )
-		);
-
+		final EntityGraph<?> old = entityGraphMap.put( graphName, entityGraph.makeImmutableCopy( graphName ) );
 		if ( old != null ) {
 			log.debugf( "EntityGraph being replaced on EntityManagerFactory for name %s", graphName );
 		}
@@ -623,7 +619,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			if ( !matchingDescriptors.isEmpty() ) {
 				final SqmPolymorphicRootDescriptor<T> descriptor = new SqmPolymorphicRootDescriptor<>(
 						typeConfiguration.getJavaTypeRegistry().resolveDescriptor( javaType ),
-						matchingDescriptors
+						matchingDescriptors,
+						this
 				);
 				polymorphicEntityReferenceMap.putIfAbsent( javaType, descriptor );
 				return descriptor;

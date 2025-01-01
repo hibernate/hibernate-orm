@@ -19,9 +19,12 @@ public interface RootGraphImplementor<J> extends RootGraph<J>, GraphImplementor<
 	boolean appliesTo(EntityDomainType<?> entityType);
 
 	@Override
+	RootGraphImplementor<J> makeCopy(boolean mutable);
+
+	@Override @Deprecated(forRemoval = true)
 	RootGraphImplementor<J> makeRootGraph(String name, boolean mutable);
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	SubGraphImplementor<J> makeSubGraph(boolean mutable);
 
 	/**
@@ -31,7 +34,5 @@ public interface RootGraphImplementor<J> extends RootGraph<J>, GraphImplementor<
 	 *
 	 * @return The immutable copy
 	 */
-	default RootGraphImplementor<J> makeImmutableCopy(String name) {
-		return makeRootGraph( name, false );
-	}
+	RootGraphImplementor<J> makeImmutableCopy(String name);
 }

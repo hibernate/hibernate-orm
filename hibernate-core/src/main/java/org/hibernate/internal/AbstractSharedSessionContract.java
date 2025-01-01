@@ -1527,10 +1527,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public RootGraphImplementor<?> createEntityGraph(String graphName) {
 		checkOpen();
 		final RootGraphImplementor<?> named = getFactory().findEntityGraphByName( graphName );
-		if ( named == null ) {
-			return null;
-		}
-		return named.makeRootGraph( graphName, true );
+		return named == null ? null : named.makeCopy( true );
 	}
 
 	@Override

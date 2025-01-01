@@ -228,11 +228,6 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public IdentifiableDomainType<? super J> getSuperType() {
-		return super.getSuperType();
-	}
-
-	@Override
 	public Collection<? extends EntityDomainType<? extends J>> getSubTypes() {
 		//noinspection unchecked
 		return (Collection<? extends EntityDomainType<? extends J>>) super.getSubTypes();

@@ -5,12 +5,14 @@
 package org.hibernate.graph.spi;
 
 import java.util.Map;
-import java.util.function.BiConsumer;
+
 import jakarta.persistence.Subgraph;
 
 import org.hibernate.graph.AttributeNode;
 import org.hibernate.graph.SubGraph;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+
+import static java.util.Collections.unmodifiableMap;
 
 /**
  * Integration version of the {@link AttributeNode} contract
@@ -19,39 +21,28 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
  * @author Steve Ebersole
  */
 public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNodeImplementor<J> {
+
 	Map<Class<? extends J>, SubGraphImplementor<? extends J>> getSubGraphMap();
 	Map<Class<? extends J>, SubGraphImplementor<? extends J>> getKeySubGraphMap();
 
-	default void visitSubGraphs(BiConsumer<Class<? extends J>, SubGraphImplementor<? extends J>> consumer) {
-		getSubGraphMap().forEach( consumer );
-	}
-
-	default void visitKeySubGraphs(BiConsumer<Class<? extends J>, SubGraphImplementor<? extends J>> consumer) {
-		getKeySubGraphMap().forEach( consumer );
+	@Override
+	default Map<Class<? extends J>, ? extends SubGraph<? extends J>> getSubGraphs() {
+		return unmodifiableMap( getSubGraphMap() );
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	default Map<Class<? extends J>, SubGraph<? extends J>> getSubGraphs() {
-		return (Map) getSubGraphMap();
+	default Map<Class<? extends J>, ? extends SubGraph<? extends J>> getKeySubGraphs() {
+		return unmodifiableMap( getKeySubGraphMap() );
 	}
 
-	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	default Map<Class<? extends J>, SubGraph<? extends J>> getKeySubGraphs() {
-		return (Map) getKeySubGraphMap();
+	@Override // JPA API uses raw types
+	default @SuppressWarnings("rawtypes") Map<Class, Subgraph> getSubgraphs() {
+		return unmodifiableMap( getSubGraphMap() );
 	}
 
-	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	default Map<Class, Subgraph> getSubgraphs() {
-		return (Map) getSubGraphMap();
-	}
-
-	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	default Map<Class, Subgraph> getKeySubgraphs() {
-		return (Map) getKeySubGraphMap();
+	@Override // JPA API uses raw types
+	default @SuppressWarnings("rawtypes") Map<Class, Subgraph> getKeySubgraphs() {
+		return unmodifiableMap( getKeySubGraphMap() );
 	}
 
 	@Override
@@ -73,7 +64,7 @@ public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNode
 
 	<S extends J> SubGraphImplementor<S> makeKeySubGraph(ManagedDomainType<S> subtype);
 
-	void merge(AttributeNodeImplementor<?> attributeNode);
+	void merge(AttributeNodeImplementor<J> other);
 
-	void addSubGraph(SubGraphImplementor<? extends J> subGraph);
+	void addSubGraph(SubGraphImplementor<? extends J> subgraph);
 }

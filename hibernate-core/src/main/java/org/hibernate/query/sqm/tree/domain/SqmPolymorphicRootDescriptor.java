@@ -4,16 +4,39 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import jakarta.persistence.metamodel.*;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.CollectionAttribute;
+import jakarta.persistence.metamodel.ListAttribute;
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.SetAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.model.domain.*;
+import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Consumer;
 
 import static java.util.Collections.unmodifiableMap;
+import static java.util.Comparator.comparing;
 
 /**
  * Acts as the {@link EntityDomainType} for a "polymorphic query" grouping.
@@ -25,15 +48,22 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	private final Map<String, PersistentAttribute<? super T,?>> commonAttributes;
 
 	private final JavaType<T> polymorphicJavaType;
+	private final JpaMetamodel jpaMetamodel;
 
 	public SqmPolymorphicRootDescriptor(
 			JavaType<T> polymorphicJavaType,
-			Set<EntityDomainType<? extends T>> implementors) {
+			Set<EntityDomainType<? extends T>> implementors,
+			JpaMetamodel jpaMetamodel) {
 		this.polymorphicJavaType = polymorphicJavaType;
-		TreeSet<EntityDomainType<? extends T>> treeSet = new TreeSet<>( Comparator.comparing(EntityDomainType::getTypeName) );
-		treeSet.addAll( implementors );
-		this.implementors = treeSet;
+		this.jpaMetamodel = jpaMetamodel;
+		this.implementors = new TreeSet<>( comparing(EntityDomainType::getTypeName) );
+		this.implementors.addAll( implementors );
 		this.commonAttributes = unmodifiableMap( inferCommonAttributes( implementors ) );
+	}
+
+	@Override
+	public JpaMetamodel getMetamodel() {
+		return jpaMetamodel;
 	}
 
 	/**
@@ -155,12 +185,6 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	@Override
 	public PersistentAttribute<?, ?> findSubTypesAttribute(String name) {
 		return commonAttributes.get( name );
-	}
-
-	@Override
-	public PersistentAttribute<? super T, ?> findAttributeInSuperTypes(String name) {
-		// there are effectively no super-types
-		return null;
 	}
 
 	@Override

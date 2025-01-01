@@ -6,7 +6,6 @@ package org.hibernate.graph.internal;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
@@ -161,9 +160,9 @@ public class AttributeNodeImpl<J>
 			return null;
 		}
 		else {
-			return nodeMap.entrySet().stream()
-					.map(entry -> Map.entry( entry.getKey(), entry.getValue().makeCopy( mutable ) ))
-					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+			final HashMap<Class<? extends U>, SubGraphImplementor<? extends V>> map = new HashMap<>( nodeMap.size() );
+			nodeMap.forEach( (attribute, subgraph) -> map.put( attribute, subgraph.makeCopy( mutable ) ) );
+			return map;
 		}
 	}
 
@@ -194,15 +193,13 @@ public class AttributeNodeImpl<J>
 	}
 
 	private <T> SubGraphImplementor<T> getSubgraphForPut(SubGraphImplementor<T> subgraph) {
-		final SubGraphImplementor<T> existing;
 		if ( subgraphMap == null ) {
 			subgraphMap = new HashMap<>();
-			existing = null;
+			return null;
 		}
 		else {
-			existing = getSubgraph( subgraph.getClassType() );
+			return getSubgraph( subgraph.getClassType() );
 		}
-		return existing;
 	}
 
 	private <T> SubGraphImplementor<T> getKeySubgraphForPut(SubGraphImplementor<T> subgraph) {

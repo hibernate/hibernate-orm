@@ -176,7 +176,7 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 		RootGraphImplementor<GraphParsingTestEntity> graph = parseGraph( "linkToOne(name, description), linkToOne(GraphParsingTestSubEntity: sub)" );
 		assertNotNull( graph );
 
-		List<AttributeNodeImplementor<?>> attrs = graph.getAttributeNodeImplementors();
+		List<? extends AttributeNodeImplementor<?>> attrs = graph.getAttributeNodeList();
 		assertNotNull( attrs );
 		assertEquals( 1, attrs.size() );
 

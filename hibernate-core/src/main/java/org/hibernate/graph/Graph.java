@@ -7,9 +7,9 @@ package org.hibernate.graph;
 import java.util.List;
 
 import jakarta.persistence.metamodel.Attribute;
-import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
@@ -32,18 +32,11 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 
 	/**
-	 * Add a subgraph rooted at a plural attribute, allowing further
-	 * nodes to be added to the subgraph.
+	 * Get a list of all existing AttributeNodes within this container.
 	 *
-	 * @apiNote This method is missing in JPA, and nodes cannot be
-	 *          added in a typesafe way to subgraphs representing
-	 *          fetched collections
-	 *
-	 * @since 6.3
+	 * @see #getAttributeNodes
 	 */
-	default <AJ> SubGraph<AJ> addPluralSubgraph(PluralAttribute<? super J, ?, AJ> attribute) {
-		return addSubGraph( attribute.getName() );
-	}
+	List<? extends AttributeNode<?>> getAttributeNodeList();
 
 	/**
 	 * Graphs apply only to {@link jakarta.persistence.metamodel.ManagedType}s.
@@ -89,11 +82,6 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 */
 	<AJ> AttributeNode<AJ> findAttributeNode(String attributeName);
 
-	@Override
-	default <Y> jakarta.persistence.AttributeNode<Y> getAttributeNode(String attributeName) {
-		return findAttributeNode( attributeName );
-	}
-
 	/**
 	 * Find an already existing AttributeNode by corresponding attribute
 	 * reference, within this container.
@@ -103,8 +91,23 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	<AJ> AttributeNode<AJ> findAttributeNode(PersistentAttribute<? super J, AJ> attribute);
 
 	@Override
-	default <Y> jakarta.persistence.AttributeNode<Y> getAttributeNode(Attribute<? super J, Y> attribute) {
+	default <Y> AttributeNode<Y> getAttributeNode(String attributeName) {
+		return findAttributeNode( attributeName );
+	}
+
+	@Override
+	default <Y> AttributeNode<Y> getAttributeNode(Attribute<? super J, Y> attribute) {
 		return findAttributeNode( (PersistentAttribute<? super J, Y>) attribute );
+	}
+
+	@Override
+	default boolean hasAttributeNode(String attributeName) {
+		return getAttributeNode( attributeName ) != null;
+	}
+
+	@Override
+	default boolean hasAttributeNode(Attribute<? super J, ?> attribute) {
+		return getAttributeNode( attribute ) != null;
 	}
 
 	/**
@@ -117,28 +120,15 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 			throws CannotContainSubGraphException;
 
 	@Override
-	default <Y> jakarta.persistence.AttributeNode<Y> addAttributeNode(Attribute<? super J, Y> attribute) {
+	default <Y> AttributeNode<Y> addAttributeNode(Attribute<? super J, Y> attribute) {
 		return addAttributeNode( (PersistentAttribute<? super J,Y>) attribute );
-	}
-
-	/**
-	 * Get a list of all existing AttributeNodes within this container.
-	 *
-	 * @see #getAttributeNodes
-	 */
-	List<AttributeNode<?>> getAttributeNodeList();
-
-	/**
-	 * @deprecated Use {@link #getAttributeNodeList}
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	default List<AttributeNode<?>> getGraphAttributeNodes() {
-		return getAttributeNodeList();
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Subgraph nodes
+
+	<Y extends J> SubGraph<Y> addTreatedSubGraph(Class<Y> type);
 
 	/**
 	 * Create and return a new (mutable) {@link SubGraph} associated with
@@ -146,6 +136,7 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @apiNote If no such AttributeNode exists yet, it is created.
 	 */
+	@Deprecated
 	<AJ> SubGraph<AJ> addSubGraph(String attributeName);
 
 	<AJ> SubGraph<AJ> addSubGraph(String attributeName, Class<AJ> type);
@@ -159,6 +150,15 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, AJ> attribute);
 
 	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> type);
+
+	<AJ> SubGraph<AJ> addSubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, ManagedDomainType<AJ> type);
+
+	@Deprecated
+	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName);
+
+	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName, Class<AJ> type);
+
+	<AJ> SubGraph<AJ> addKeySubGraph(PersistentAttribute<? super J, ? super AJ> attribute, ManagedDomainType<AJ> type);
 
 	@Override
 	default <Y> SubGraph<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type) {
@@ -185,19 +185,6 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 		return addSubGraph( name, type );
 	}
 
-	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName);
-	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName, Class<AJ> type);
-
-	@Override @Deprecated(forRemoval = true)
-	default <X> SubGraph<X> addKeySubgraph(Attribute<? super J, X> attribute) {
-		throw new UnsupportedOperationException("This operation will be removed in JPA 4");
-	}
-
-	@Override @Deprecated(forRemoval = true)
-	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
-		throw new UnsupportedOperationException("This operation will be removed in JPA 4");
-	}
-
 	@Override
 	default <X> SubGraph<X> addKeySubgraph(String name) {
 		return addKeySubGraph( name );
@@ -208,10 +195,28 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 		return addKeySubGraph( name, type );
 	}
 
-	@Override
-	<E> SubGraph<E> addTreatedElementSubgraph(PluralAttribute<? super J, ?, ? super E> attribute, Class<E> type);
+	/**
+	 * Add a subgraph rooted at a plural attribute, allowing further nodes
+	 * to be added to the subgraph.
+	 *
+	 * @apiNote {@link #addElementSubgraph(PluralAttribute)} was added
+	 *          in JPA 3.2, and so this method is no longer really needed
+	 *
+	 * @since 6.3
+	 *
+	 * @see #addElementSubgraph(PluralAttribute)
+	 */
+	default <AJ> SubGraph<AJ> addPluralSubgraph(PluralAttribute<? super J, ?, AJ> attribute) {
+		return addSubGraph( attribute.getName(), attribute.getBindableJavaType() );
+	}
 
-	@Override
-	<K> SubGraph<K> addTreatedMapKeySubgraph(MapAttribute<? super J, ? super K, ?> attribute, Class<K> type);
+	@Override @Deprecated(forRemoval = true)
+	default <X> SubGraph<X> addKeySubgraph(Attribute<? super J, X> attribute) {
+		throw new UnsupportedOperationException("This operation will be removed in JPA 4");
+	}
 
+	@Override @Deprecated(forRemoval = true)
+	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
+		throw new UnsupportedOperationException("This operation will be removed in JPA 4");
+	}
 }

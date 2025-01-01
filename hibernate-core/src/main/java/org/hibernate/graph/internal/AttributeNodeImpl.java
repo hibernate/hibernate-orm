@@ -79,44 +79,59 @@ public class AttributeNodeImpl<J>
 	public <S> SubGraphImplementor<S> makeSubGraph(ManagedDomainType<S> subtype) {
 		verifyMutability();
 		assert subtype != null;
-		if ( !attribute.getValueGraphType().getBindableJavaType().isAssignableFrom( subtype.getJavaType() ) ) {
-			throw new IllegalArgumentException( "Not a subtype: " + subtype.getJavaType() );
+		final Class<S> javaType = subtype.getJavaType();
+		if ( !attribute.getValueGraphType().getBindableJavaType().isAssignableFrom( javaType ) ) {
+			throw new IllegalArgumentException( "Not a subtype: " + javaType.getName() );
 		}
-		final SubGraphImplementor<S> subGraph = new SubGraphImpl<>( subtype, true );
-		addSubGraph( subGraph );
-		return subGraph;
+		final SubGraphImplementor<S> existing = subgraphMap == null ? null : getSubgraph( javaType );
+		if ( existing != null ) {
+			return existing;
+		}
+		else {
+			final SubGraphImplementor<S> subGraph = new SubGraphImpl<>( subtype, true );
+			addSubGraph( subGraph );
+			return subGraph;
+		}
 	}
 
 	@Override
 	public void addSubGraph(SubGraphImplementor<?> subgraph) {
+		addSubgraph( subgraph );
+	}
+
+	private <T> void addSubgraph(SubGraphImplementor<T> subgraph) {
 		if ( subgraphMap == null ) {
 			subgraphMap = new HashMap<>();
 			subgraphMap.put( subgraph.getClassType(), subgraph );
 		}
 		else {
-			final SubGraphImplementor<?> existing = subgraphMap.get( subgraph.getClassType() );
+			final SubGraphImplementor<T> existing = getSubgraph( subgraph.getClassType() );
 			if ( existing == null ) {
 				subgraphMap.put( subgraph.getClassType(), subgraph );
 			}
 			else {
-				existing.merge( (SubGraphImplementor) subgraph );
+				existing.merge( subgraph );
 			}
 		}
 	}
 
 	@Override
 	public void addKeySubGraph(SubGraphImplementor<?> subgraph) {
+		addKeySubgraph( subgraph );
+	}
+
+	private <T> void addKeySubgraph(SubGraphImplementor<T> subgraph) {
 		if ( keySubgraphMap == null ) {
 			keySubgraphMap = new HashMap<>();
 			keySubgraphMap.put( subgraph.getClassType(), subgraph );
 		}
 		else {
-			final SubGraphImplementor<?> existing = keySubgraphMap.get( subgraph.getClassType() );
+			final SubGraphImplementor<T> existing = getKeySubgraph( subgraph.getClassType() );
 			if ( existing == null ) {
 				keySubgraphMap.put( subgraph.getClassType(), subgraph );
 			}
 			else {
-				existing.merge( (SubGraphImplementor) subgraph );
+				existing.merge( subgraph );
 			}
 		}
 	}
@@ -135,12 +150,19 @@ public class AttributeNodeImpl<J>
 	public <S> SubGraphImplementor<S> makeKeySubGraph(ManagedDomainType<S> subtype) {
 		verifyMutability();
 		assert subtype != null;
-		if ( !attribute.getKeyGraphType().getBindableJavaType().isAssignableFrom( subtype.getJavaType() ) ) {
-			throw new IllegalArgumentException( "Not a key subtype: " + subtype.getJavaType() );
+		final Class<S> javaType = subtype.getJavaType();
+		if ( !attribute.getKeyGraphType().getBindableJavaType().isAssignableFrom( javaType ) ) {
+			throw new IllegalArgumentException( "Not a key subtype: " + javaType.getName() );
 		}
-		final SubGraphImplementor<S> subgraph = new SubGraphImpl<>( subtype, true );
-		addKeySubGraph( subgraph );
-		return subgraph;
+		final SubGraphImplementor<S> existing = keySubgraphMap == null ? null : getKeySubgraph( javaType );
+		if ( existing != null ) {
+			return existing;
+		}
+		else {
+			final SubGraphImplementor<S> subgraph = new SubGraphImpl<>( subtype, true );
+			addKeySubGraph( subgraph );
+			return subgraph;
+		}
 	}
 
 	@Override

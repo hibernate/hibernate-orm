@@ -12,7 +12,6 @@ import java.util.Map;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import org.hibernate.AssertionFailure;
-import org.hibernate.graph.AttributeNode;
 import org.hibernate.graph.CannotBecomeEntityGraphException;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.SubGraph;
@@ -22,6 +21,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 
@@ -40,6 +40,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 
 	private final ManagedDomainType<J> managedType;
 	private Map<PersistentAttribute<? super J,?>, AttributeNodeImplementor<?>> attributeNodes;
+	private List<SubGraphImplementor<? extends J>> subgraphs;
 
 	public AbstractGraph(ManagedDomainType<J> managedType, boolean mutable) {
 		super( mutable );
@@ -115,7 +116,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public List<AttributeNode<?>> getAttributeNodeList() {
+	public List<AttributeNodeImplementor<?>> getAttributeNodeList() {
 		return attributeNodes == null ? emptyList() : new ArrayList<>( attributeNodes.values() );
 	}
 
@@ -123,8 +124,20 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	public <AJ> AttributeNodeImplementor<AJ> findAttributeNode(String attributeName) {
 		final PersistentAttribute<? super J, ?> attribute = findAttributeInSupertypes( attributeName );
 		@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
-		final PersistentAttribute<? super J, AJ> result = (PersistentAttribute<? super J, AJ>) attribute;
-		return attribute == null ? null : findAttributeNode( result );
+		final PersistentAttribute<? super J, AJ> persistentAttribute = (PersistentAttribute<? super J, AJ>) attribute;
+		final AttributeNodeImplementor<AJ> node = attribute == null ? null : findAttributeNode( persistentAttribute );
+		if ( node == null && subgraphs != null ) {
+			for ( SubGraphImplementor<? extends J> subgraph : subgraphs ) {
+				final AttributeNodeImplementor<AJ> subgraphNode = subgraph.findAttributeNode( attributeName );
+				if ( subgraphNode != null ) {
+					return subgraphNode;
+				}
+			}
+			return null;
+		}
+		else {
+			return node;
+		}
 	}
 
 	@Override
@@ -134,11 +147,6 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 
 	@Override
 	public List<jakarta.persistence.AttributeNode<?>> getAttributeNodes() {
-		return attributeNodes == null ? emptyList() : new ArrayList<>( attributeNodes.values() );
-	}
-
-	@Override
-	public List<AttributeNodeImplementor<?>> getAttributeNodeImplementors() {
 		return attributeNodes == null ? emptyList() : new ArrayList<>( attributeNodes.values() );
 	}
 
@@ -243,7 +251,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
+	@SuppressWarnings("unchecked") // The API is unsafe by nature
 	public <AJ> SubGraphImplementor<AJ> addSubGraph(String attributeName)  {
 		return (SubGraphImplementor<AJ>) findOrCreateAttributeNode( attributeName ).makeSubGraph();
 	}
@@ -259,20 +267,22 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public <AJ> SubGraphImplementor<AJ> addSubGraph(
-			PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> subtype) {
+	public <AJ> SubGraphImplementor<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> subtype) {
 		return findOrCreateAttributeNode( attribute ).makeSubGraph( subtype );
 	}
 
 	@Override
-	public <Y> SubGraphImplementor<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type) {
-		// TODO Test this it's probably not right!
-		final ManagedDomainType<Y> managedDomainType = getGraphedType().getMetamodel().managedType( type );
-		return new SubGraphImpl<>( managedDomainType,false );
+	public <AJ> SubGraphImplementor<AJ> addSubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, ManagedDomainType<AJ> subtype) {
+		return findOrCreateAttributeNode( attribute ).makeSubGraph( subtype );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
+	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(PersistentAttribute<? super J, ? super AJ> attribute, ManagedDomainType<AJ> subtype) {
+		return findOrCreateAttributeNode( attribute ).makeKeySubGraph( subtype );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked") // The API is unsafe by nature
 	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName) {
 		return (SubGraphImplementor<AJ>) findOrCreateAttributeNode( attributeName ).makeKeySubGraph();
 	}
@@ -282,37 +292,49 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 		return findOrCreateAttributeNode( attributeName ).makeKeySubGraph( subtype );
 	}
 
-	////////////////// TODO //////////////////
+	@Override
+	public <K> SubGraphImplementor<K> addMapKeySubgraph(MapAttribute<? super J, K, ?> attribute) {
+		return findOrCreateAttributeNode( attribute.getName() ).makeKeySubGraph( attribute.getKeyJavaType() );
+	}
+
+	@Override
+	public <K> SubGraphImplementor<K> addTreatedMapKeySubgraph(
+			MapAttribute<? super J, ? super K, ?> attribute,
+			Class<K> type) {
+		return addMapKeySubgraph( attribute ).addTreatedSubGraph( type );
+	}
+
+	@Override @SuppressWarnings("unchecked") // The JPA API is unsafe by nature
+	public <X> SubGraphImplementor<X> addElementSubgraph(String attributeName) {
+		return (SubGraphImplementor<X>) findOrCreateAttributeNode( attributeName ).makeSubGraph();
+	}
+
+	@Override
+	public <E> SubGraphImplementor<E> addElementSubgraph(PluralAttribute<? super J, ?, E> attribute) {
+		return findOrCreateAttributeNode( attribute.getName() )
+				.makeSubGraph( (ManagedDomainType<E>) attribute.getElementType() );
+	}
+
+	@Override
+	public <X> SubGraphImplementor<X> addElementSubgraph(String attributeName, Class<X> type) {
+		return findOrCreateAttributeNode( attributeName ).makeSubGraph( type);
+	}
 
 	@Override
 	public <E> SubGraphImplementor<E> addTreatedElementSubgraph(
 			PluralAttribute<? super J, ?, ? super E> attribute,
 			Class<E> type) {
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		return addElementSubgraph( attribute ).addTreatedSubGraph( type );
 	}
 
 	@Override
-	public <K> SubGraphImplementor<K> addTreatedMapKeySubgraph(MapAttribute<? super J, ? super K, ?> attribute, Class<K> type) {
-		throw new UnsupportedOperationException( "Not yet implemented" );
-	}
-
-	@Override
-	public <E> SubGraphImplementor<E> addElementSubgraph(PluralAttribute<? super J, ?, E> attribute) {
-		throw new UnsupportedOperationException( "Not yet implemented" );
-	}
-
-	@Override
-	public <X> SubGraphImplementor<X> addElementSubgraph(String attributeName) {
-		throw new UnsupportedOperationException( "Not yet implemented" );
-	}
-
-	@Override
-	public <X> SubGraphImplementor<X> addElementSubgraph(String attributeName, Class<X> type) {
-		throw new UnsupportedOperationException( "Not yet implemented" );
-	}
-
-	@Override
-	public <K> SubGraphImplementor<K> addMapKeySubgraph(MapAttribute<? super J, K, ?> attribute) {
-		throw new UnsupportedOperationException( "Not yet implemented" );
+	public <S extends J> SubGraphImplementor<S> addTreatedSubGraph(Class<S> type) {
+		final ManagedDomainType<S> managedDomainType = getGraphedType().getMetamodel().managedType( type );
+		final SubGraphImpl<S> subgraph = new SubGraphImpl<>( managedDomainType, this, true );
+		if ( subgraphs == null ) {
+			subgraphs = new ArrayList<>( 1 );
+		}
+		subgraphs.add( subgraph );
+		return subgraph;
 	}
 }

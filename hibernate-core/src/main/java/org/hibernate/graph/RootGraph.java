@@ -29,7 +29,8 @@ public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 	 * @deprecated Planned for removal in JPA 4
 	 */
 	@Override @Deprecated(forRemoval = true)
-	default <T1> SubGraph<? extends T1> addSubclassSubgraph(Class<? extends T1> type) {
-		throw new UnsupportedOperationException("This operation will be removed in JPA 4");
+	@SuppressWarnings("unchecked") // The JPA method was defined with an incorrect generic signature
+	default <T> SubGraph<? extends T> addSubclassSubgraph(Class<? extends T> type) {
+		return (SubGraph<? extends T>) addTreatedSubgraph( (Class<? extends J>) type );
 	}
 }

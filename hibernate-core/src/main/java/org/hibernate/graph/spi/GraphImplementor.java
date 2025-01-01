@@ -84,10 +84,4 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 
 	@Override
 	<AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName, Class<AJ> subtype);
-
-	@Override
-	<AJ> SubGraphImplementor<AJ> addKeySubGraph(PersistentAttribute<? super J, AJ> attribute);
-
-	@Override
-	<AJ> SubGraphImplementor<AJ> addKeySubGraph(PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> subtype);
 }

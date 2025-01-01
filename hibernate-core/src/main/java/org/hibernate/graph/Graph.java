@@ -188,17 +188,14 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName);
 	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName, Class<AJ> type);
 
-	<AJ> SubGraph<AJ> addKeySubGraph(PersistentAttribute<? super J,AJ> attribute);
-	<AJ> SubGraph<AJ> addKeySubGraph(PersistentAttribute<? super J,? super AJ> attribute, Class<AJ> type);
-
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	default <X> SubGraph<X> addKeySubgraph(Attribute<? super J, X> attribute) {
-		return addKeySubGraph( (PersistentAttribute<? super J, X>) attribute );
+		throw new UnsupportedOperationException("This operation will be removed in JPA 4");
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
-		return addKeySubGraph( (PersistentAttribute<? super J, X>) attribute, type );
+		throw new UnsupportedOperationException("This operation will be removed in JPA 4");
 	}
 
 	@Override

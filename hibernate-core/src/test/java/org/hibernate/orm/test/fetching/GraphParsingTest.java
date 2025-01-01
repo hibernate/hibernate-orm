@@ -177,7 +177,7 @@ public class GraphParsingTest extends AbstractEntityGraphTest {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Some entities for illustrating key sub-graphs
+	// Some entities for illustrating key subgraphs
 	//
 	// NOTE : for the moment I do not add named (sub)graph annotations because
 	//		this is only used for discussing graph parsing

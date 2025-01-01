@@ -108,7 +108,7 @@ class EntityPropertyMapping {
 	private void logIncompatibleRegistration(String path, Type existingType, Type type) {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
-					"Skipped adding attribute [{1}] to base-type [{0}] as more than one sub-type defined the attribute using incompatible types (strictly speaking the attributes are not inherited); existing type = [{2}], incoming type = [{3}]",
+					"Skipped adding attribute [{1}] to base type [{0}] as more than one subtype defined the attribute using incompatible types (strictly speaking the attributes are not inherited); existing type = [{2}], incoming type = [{3}]",
 					getEntityName(),
 					path,
 					existingType,

@@ -7,7 +7,7 @@ package org.hibernate.boot.model.source.spi;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 
 /**
- * Common contract for composite identifiers.  Specific sub-types include aggregated
+ * Common contract for composite identifiers. Specific subtypes include aggregated
  * (think {@link jakarta.persistence.EmbeddedId}) and non-aggregated (think
  * {@link jakarta.persistence.IdClass}).
  *

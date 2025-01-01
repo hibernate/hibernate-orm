@@ -387,12 +387,13 @@ public class CteInsertHandler implements InsertHandler {
 						generator.determineBulkInsertionIdentifierGenerationSelectFragment(
 								sessionFactory.getSqlStringGenerationContext()
 						);
+
+				Expression databaseValue = new SelfRenderingSqlFragmentExpression( fragment );
 				rowsWithSequenceQuery.getSelectClause().addSqlSelection(
-						new SqlSelectionImpl(
-								1,
-								new SelfRenderingSqlFragmentExpression( fragment )
-						)
+						new SqlSelectionImpl( 1,
+								optimizer.createLowValueExpression( databaseValue, sessionFactory ) )
 				);
+
 				rowsWithSequenceQuery.applyPredicate(
 						new ComparisonPredicate(
 								rowNumberMinusOneModuloIncrement,

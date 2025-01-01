@@ -787,7 +787,7 @@ public class AttributeFactory {
 				);
 			}
 			else {
-				throw new IllegalArgumentException( "Unexpected sub-type: " + persistenceType );
+				throw new IllegalArgumentException( "Unexpected subtype: " + persistenceType );
 			}
 		}
 	}

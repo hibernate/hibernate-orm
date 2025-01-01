@@ -2655,7 +2655,7 @@ public class ModelBinder {
 				throw new AssertionFailure(
 						String.format(
 								Locale.ENGLISH,
-								"Unexpected AttributeSource sub-type [%s] as part of composite [%s]",
+								"Unexpected AttributeSource subtype [%s] as part of composite [%s]",
 								attributeSource.getClass().getName(),
 								attributeSource.getAttributeRole().getFullPath()
 						)

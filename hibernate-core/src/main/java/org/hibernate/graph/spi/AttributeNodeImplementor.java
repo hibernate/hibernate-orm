@@ -22,16 +22,16 @@ import static java.util.Collections.unmodifiableMap;
  */
 public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNodeImplementor<J> {
 
-	Map<Class<? extends J>, SubGraphImplementor<? extends J>> getSubGraphMap();
-	Map<Class<? extends J>, SubGraphImplementor<? extends J>> getKeySubGraphMap();
+	Map<Class<?>, SubGraphImplementor<?>> getSubGraphMap();
+	Map<Class<?>, SubGraphImplementor<?>> getKeySubGraphMap();
 
 	@Override
-	default Map<Class<? extends J>, ? extends SubGraph<? extends J>> getSubGraphs() {
+	default Map<Class<?>, ? extends SubGraph<?>> getSubGraphs() {
 		return unmodifiableMap( getSubGraphMap() );
 	}
 
 	@Override
-	default Map<Class<? extends J>, ? extends SubGraph<? extends J>> getKeySubGraphs() {
+	default Map<Class<?>, ? extends SubGraph<?>> getKeySubGraphs() {
 		return unmodifiableMap( getKeySubGraphMap() );
 	}
 
@@ -49,22 +49,26 @@ public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNode
 	AttributeNodeImplementor<J> makeCopy(boolean mutable);
 
 	@Override
-	SubGraphImplementor<J> makeSubGraph();
+	SubGraphImplementor<?> makeSubGraph();
 
 	@Override
-	SubGraphImplementor<J> makeKeySubGraph();
+	SubGraphImplementor<?> makeKeySubGraph();
 
 	@Override
-	<S extends J> SubGraphImplementor<S> makeSubGraph(Class<S> subtype);
+	<S> SubGraphImplementor<S> makeSubGraph(Class<S> type);
 
 	@Override
-	<S extends J> SubGraphImplementor<S> makeKeySubGraph(Class<S> subtype);
+	<S> SubGraphImplementor<S> makeKeySubGraph(Class<S> type);
 
-	<S extends J> SubGraphImplementor<S> makeSubGraph(ManagedDomainType<S> subtype);
+	@Override
+	<S> SubGraphImplementor<S> makeSubGraph(ManagedDomainType<S> subtype);
 
-	<S extends J> SubGraphImplementor<S> makeKeySubGraph(ManagedDomainType<S> subtype);
+	@Override
+	<S> SubGraphImplementor<S> makeKeySubGraph(ManagedDomainType<S> subtype);
 
 	void merge(AttributeNodeImplementor<J> other);
 
-	void addSubGraph(SubGraphImplementor<? extends J> subgraph);
+	void addSubGraph(SubGraphImplementor<?> subgraph);
+
+	void addKeySubGraph(SubGraphImplementor<?> subgraph);
 }

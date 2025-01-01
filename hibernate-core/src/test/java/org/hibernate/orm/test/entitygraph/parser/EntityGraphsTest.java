@@ -14,14 +14,15 @@ import org.junit.Test;
 
 public class EntityGraphsTest extends AbstractEntityGraphTest {
 
-	private final <T> void checkMerge(Class<T> rootType, EntityGraph<T> expected, @SuppressWarnings("unchecked") EntityGraph<T>... graphs) {
+	@SafeVarargs
+	private <T> void checkMerge(Class<T> rootType, EntityGraph<T> expected, EntityGraph<T>... graphs) {
 		EntityManager entityManager = getOrCreateEntityManager();
 		EntityGraph<T> actual = EntityGraphs.merge( entityManager, rootType, graphs );
 		Assert.assertTrue( EntityGraphs.areEqual( expected, actual ) );
 	}
 
 	@SafeVarargs
-	private final void checkMerge(EntityGraph<GraphParsingTestEntity> expected, EntityGraph<GraphParsingTestEntity>... graphs) {
+	private void checkMerge(EntityGraph<GraphParsingTestEntity> expected, EntityGraph<GraphParsingTestEntity>... graphs) {
 		checkMerge( GraphParsingTestEntity.class, expected, graphs );
 	}
 

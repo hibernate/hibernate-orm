@@ -6,6 +6,7 @@ package org.hibernate.graph;
 
 import java.util.Map;
 
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
@@ -19,15 +20,16 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 
 	PersistentAttribute<?, J> getAttributeDescriptor();
 
-	Map<Class<? extends J>, ? extends SubGraph<? extends J>> getSubGraphs();
-	Map<Class<? extends J>, ? extends SubGraph<? extends J>> getKeySubGraphs();
+	Map<Class<?>, ? extends SubGraph<?>> getSubGraphs();
+	Map<Class<?>, ? extends SubGraph<?>> getKeySubGraphs();
 
-	<S extends J> void addSubGraph(Class<S> subType, SubGraph<S> subGraph);
-	<S extends J> void addKeySubGraph(Class<S> subType, SubGraph<S> subGraph);
+	SubGraph<?> makeSubGraph();
+	SubGraph<?> makeKeySubGraph();
 
-	SubGraph<J> makeSubGraph();
-	SubGraph<J> makeKeySubGraph();
+	<S> SubGraph<S> makeSubGraph(Class<S> type);
+	<S> SubGraph<S> makeKeySubGraph(Class<S> type);
 
-	<S extends J> SubGraph<S> makeSubGraph(Class<S> subtype);
-	<S extends J> SubGraph<S> makeKeySubGraph(Class<S> subtype);
+	<S> SubGraph<S> makeSubGraph(ManagedDomainType<S> subtype);
+	<S> SubGraph<S> makeKeySubGraph(ManagedDomainType<S> subtype);
+
 }

@@ -37,6 +37,7 @@ import static java.util.Collections.unmodifiableMap;
  * @author Steve Ebersole
  */
 public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements GraphImplementor<J> {
+
 	private final ManagedDomainType<J> managedType;
 	private Map<PersistentAttribute<? super J,?>, AttributeNodeImplementor<?>> attributeNodes;
 
@@ -109,6 +110,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 		else {
 			// we assume the subgraph has been properly copied if needed
 			node.getSubGraphMap().forEach( (subtype, subgraph) -> attributeNode.addSubGraph( subgraph ) );
+			node.getKeySubGraphMap().forEach( (subtype, subgraph) -> attributeNode.addKeySubGraph( subgraph ) );
 		}
 	}
 
@@ -247,19 +249,19 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public <AJ> SubGraphImplementor<AJ> addSubGraph(String attributeName, Class<AJ> subType) {
-		return findOrCreateAttributeNode( attributeName ).makeSubGraph( subType );
+	public <AJ> SubGraphImplementor<AJ> addSubGraph(String attributeName, Class<AJ> subtype) {
+		return findOrCreateAttributeNode( attributeName ).makeSubGraph( subtype );
 	}
 
 	@Override
 	public <AJ> SubGraphImplementor<AJ> addSubGraph(PersistentAttribute<? super J, AJ> attribute) {
-		return findOrCreateAttributeNode( attribute ).makeSubGraph();
+		return findOrCreateAttributeNode( attribute ).makeSubGraph( attribute.getJavaType() );
 	}
 
 	@Override
 	public <AJ> SubGraphImplementor<AJ> addSubGraph(
-			PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> subType) {
-		return findOrCreateAttributeNode( attribute ).makeSubGraph( subType );
+			PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> subtype) {
+		return findOrCreateAttributeNode( attribute ).makeSubGraph( subtype );
 	}
 
 	@Override
@@ -278,17 +280,6 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	@Override
 	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName, Class<AJ> subtype) {
 		return findOrCreateAttributeNode( attributeName ).makeKeySubGraph( subtype );
-	}
-
-	@Override
-	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(PersistentAttribute<? super J, AJ> attribute) {
-		return findOrCreateAttributeNode( attribute ).makeKeySubGraph();
-	}
-
-	@Override
-	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(
-			PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> subType) {
-		return findOrCreateAttributeNode( attribute ).makeKeySubGraph( subType );
 	}
 
 	////////////////// TODO //////////////////

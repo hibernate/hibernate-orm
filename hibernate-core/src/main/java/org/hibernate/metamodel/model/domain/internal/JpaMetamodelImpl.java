@@ -320,16 +320,20 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		if ( enumJavaType != null ) {
 			return enumJavaType;
 		}
-		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		try {
-			final Class<Object> clazz = classLoaderService.classForName( className );
-			if ( clazz == null || !clazz.isEnum() ) {
-				return null;
+		else {
+			final ClassLoaderService classLoaderService =
+					serviceRegistry.requireService( ClassLoaderService.class );
+			try {
+				final Class<?> clazz = classLoaderService.classForName( className );
+				if ( clazz == null || !clazz.isEnum() ) {
+					return null;
+				}
+				//noinspection rawtypes,unchecked
+				return new EnumJavaType( clazz );
 			}
-			return new EnumJavaType( clazz );
-		}
-		catch (ClassLoadingException e) {
-			throw new RuntimeException( e );
+			catch (ClassLoadingException e) {
+				throw new RuntimeException( e );
+			}
 		}
 	}
 

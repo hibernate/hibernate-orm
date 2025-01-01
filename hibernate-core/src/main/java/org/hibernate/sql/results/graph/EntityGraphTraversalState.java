@@ -6,7 +6,6 @@ package org.hibernate.sql.results.graph;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.graph.AttributeNode;
 import org.hibernate.graph.spi.GraphImplementor;
 
 /**
@@ -59,14 +58,8 @@ public interface EntityGraphTraversalState {
 	}
 
 	/**
-	 * Traverses to the next part of the Jakarta Persistence entity graph relating to the
-	 * given fetchable.
-	 * <p>
-	 *
-	 * The {@link AttributeNode} corresponding to the given `fetchable` is resolved.
-	 *
-	 * Depending on `exploreKeySubgraph`, either {@link AttributeNode#getSubGraphs()}
-	 * or {@link AttributeNode#getKeySubGraphs()} will be used
+	 * Traverses to the next part of the Jakarta Persistence entity graph relating to
+	 * the given {@link Fetchable}.
 	 */
 	TraversalResult traverse(FetchParent parent, Fetchable fetchable, boolean exploreKeySubgraph);
 

@@ -6,6 +6,7 @@ package org.hibernate.graph.spi;
 
 import java.util.Map;
 import java.util.function.BiConsumer;
+
 import jakarta.persistence.Subgraph;
 
 import org.hibernate.graph.AttributeNode;
@@ -20,7 +21,10 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
  */
 public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNodeImplementor<J> {
 	Map<Class<? extends J>, SubGraphImplementor<? extends J>> getSubGraphMap();
+
 	Map<Class<? extends J>, SubGraphImplementor<? extends J>> getKeySubGraphMap();
+
+	SubGraphImplementor<J> getSubgraph();
 
 	default void visitSubGraphs(BiConsumer<Class<? extends J>, SubGraphImplementor<? extends J>> consumer) {
 		getSubGraphMap().forEach( consumer );

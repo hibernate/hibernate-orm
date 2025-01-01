@@ -5,6 +5,7 @@
 package org.hibernate.graph.spi;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.graph.AttributeNode;
@@ -27,6 +28,13 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 
 	void merge(GraphImplementor<? extends J> other);
 
+	<S extends J> SubGraphImplementor<S> getSubclassSubgraph(Class<S> subType);
+
+	Map<Class<? extends J>, SubGraphImplementor<? extends J>> getSubclassSubgraphs();
+
+	<S extends J> SubGraphImplementor<S> addTreatedSubgraph(Class<S> subType);
+
+	<Y> SubGraphImplementor<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant returns
@@ -88,7 +96,7 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 	@SuppressWarnings("unchecked")
 	default <AJ> AttributeNodeImplementor<AJ> findOrCreateAttributeNode(String name) {
 		PersistentAttribute<? super J, ?> attribute = getGraphedType().getAttribute( name );
-		if ( attribute instanceof SqmPathSource && ( (SqmPathSource<?>) attribute ).isGeneric() ) {
+		if ( attribute instanceof SqmPathSource && ((SqmPathSource<?>) attribute).isGeneric() ) {
 			attribute = getGraphedType().findConcreteGenericAttribute( name );
 		}
 

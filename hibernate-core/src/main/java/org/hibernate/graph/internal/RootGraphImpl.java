@@ -10,7 +10,6 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
-import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 
@@ -63,18 +62,6 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements RootGraphImple
 	}
 
 	@Override
-	public <S extends J> SubGraphImplementor<S> addTreatedSubgraph(Class<S> type) {
-		//noinspection unchecked,rawtypes
-		return new SubGraphImpl(this, false );
-	}
-
-	@Override
-	public <Y> SubGraphImplementor<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type) {
-		//noinspection unchecked
-		return (SubGraphImplementor<Y>) super.makeRootGraph( name, false );
-	}
-
-	@Override
 	public <E> SubGraphImplementor<E> addTreatedElementSubgraph(
 			PluralAttribute<? super J, ?, ? super E> attribute,
 			Class<E> type) {
@@ -88,7 +75,7 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements RootGraphImple
 
 	@Override
 	public <T1> SubGraphImplementor<? extends T1> addSubclassSubgraph(Class<? extends T1> type) {
-		throw new UnsupportedOperationException();
+		return addTreatedSubgraph( (Class) type );
 	}
 
 	@Override

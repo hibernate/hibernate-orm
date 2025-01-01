@@ -4,10 +4,10 @@
  */
 package org.hibernate.graph.internal;
 
+import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
-import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 
@@ -18,17 +18,24 @@ import jakarta.persistence.metamodel.PluralAttribute;
  */
 public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImplementor<J> {
 
+	private GraphImplementor<J> parent = null;
+
 	public SubGraphImpl(ManagedDomainType<J> managedType, boolean mutable) {
 		super( managedType, mutable );
 	}
 
 	public SubGraphImpl(AbstractGraph<J> original, boolean mutable) {
-		super(original, mutable);
+		super( original, mutable );
+	}
+
+	protected SubGraphImpl(ManagedDomainType<J> managedType, GraphImplementor<J> parent, boolean mutable) {
+		this( managedType, mutable );
+		this.parent = parent;
 	}
 
 	@Override
 	public SubGraphImplementor<J> makeCopy(boolean mutable) {
-		return new SubGraphImpl<>(this, mutable);
+		return new SubGraphImpl<>( this, mutable );
 	}
 
 	@Override
@@ -39,11 +46,6 @@ public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImpleme
 	@Override
 	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName) {
 		return super.addKeySubGraph( attributeName );
-	}
-
-	@Override
-	public <Y> SubGraphImplementor<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type) {
-		return null;
 	}
 
 	@Override

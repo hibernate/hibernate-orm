@@ -9,9 +9,10 @@ import java.util.Map;
 
 import org.hibernate.graph.CannotBecomeEntityGraphException;
 import org.hibernate.graph.Graph;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
-import jakarta.persistence.metamodel.Attribute;
 
 /**
  * Integration version of the {@link Graph} contract
@@ -35,16 +36,7 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 	GraphImplementor<J> makeCopy(boolean mutable);
 
 	@Override
-	default boolean hasAttributeNode(String attributeName) {
-		return getAttributeNode( attributeName ) != null;
-	}
-
-	@Override
-	default boolean hasAttributeNode(Attribute<? super J, ?> attribute) {
-		return getAttributeNode( attribute ) != null;
-	}
-
-	List<AttributeNodeImplementor<?>> getAttributeNodeImplementors();
+	List<? extends AttributeNodeImplementor<?>> getAttributeNodeList();
 
 	Map<PersistentAttribute<? super J, ?>, AttributeNodeImplementor<?>> getAttributeNodesByAttribute();
 
@@ -57,12 +49,6 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 	<AJ> AttributeNodeImplementor<AJ> findOrCreateAttributeNode(String name);
 
 	<AJ> AttributeNodeImplementor<AJ> findOrCreateAttributeNode(PersistentAttribute<? super J, AJ> attribute);
-
-	@Override
-	<AJ> AttributeNodeImplementor<AJ> addAttributeNode(String attributeName);
-
-	@Override
-	<Y> AttributeNodeImplementor<Y> addAttributeNode(Attribute<? super J, Y> attribute);
 
 	@Override
 	<AJ> AttributeNodeImplementor<AJ> addAttributeNode(PersistentAttribute<? super J, AJ> attribute);
@@ -84,4 +70,13 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 
 	@Override
 	<AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName, Class<AJ> subtype);
+
+	@Override
+	<AJ> SubGraphImplementor<AJ> addSubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, ManagedDomainType<AJ> subtype);
+
+	@Override
+	<AJ> SubGraphImplementor<AJ> addKeySubGraph(PersistentAttribute<? super J, ? super AJ> attribute, ManagedDomainType<AJ> subtype);
+
+	@Override
+	<Y extends J> SubGraphImplementor<Y> addTreatedSubGraph(Class<Y> type);
 }

@@ -73,6 +73,7 @@ public final class CollectionEntry implements Serializable {
 		collection.clearDirty();
 
 		snapshot = persister.isMutable() ? collection.getSnapshot( persister ) : null;
+		role = persister.getRole();
 		collection.setSnapshot( loadedKey, role, snapshot );
 	}
 

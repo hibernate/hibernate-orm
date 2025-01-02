@@ -105,9 +105,8 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 			return new RootGraphImpl<>( name, this, mutable);
 		}
 		else {
-			throw new CannotBecomeEntityGraphException(
-					"Cannot transform Graph to RootGraph because '" + getGraphedType() + "' is not an entity type"
-			);
+			throw new CannotBecomeEntityGraphException( "Graph cannot be a root graph because '"
+														+ getGraphedType() + "' is not an entity type" );
 		}
 	}
 
@@ -253,7 +252,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 		verifyMutability();
 		final AttributeNodeImplementor<AJ> node = getNodeForPut( attribute );
 		if ( node == null ) {
-			final AttributeNodeImplementor<AJ> newAttrNode = new AttributeNodeImpl<>( attribute, isMutable() );
+			final AttributeNodeImplementor<AJ> newAttrNode = AttributeNodeImpl.create( attribute, isMutable() );
 			attributeNodes.put( attribute, newAttrNode );
 			return newAttrNode;
 		}
@@ -407,7 +406,24 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 			return managedDomainType;
 		}
 		else {
-			throw new CannotContainSubGraphException( "Not a managed domain type: " + domainType.getJavaType().getName() );
+			throw new CannotContainSubGraphException( "Type '" + domainType.getJavaType().getName()
+														+ "' is not a managed type" );
 		}
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder builder = new StringBuilder( "Graph[" ).append( managedType.getTypeName() );
+		if ( attributeNodes != null ) {
+			builder.append( ", nodes=" )
+					.append( attributeNodes.values().stream()
+							.map( node -> node.getAttributeDescriptor().getName() ).toList() );
+		}
+		if ( treatedSubgraphs != null ) {
+			builder.append( ", subgraphs=" )
+					.append( treatedSubgraphs.values().stream()
+							.map( subgraph -> subgraph.getGraphedType().getTypeName() ).toList() );
+		}
+		return builder.append( ']' ).toString();
 	}
 }

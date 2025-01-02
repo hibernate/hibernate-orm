@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence/orm https://jakarta.ee/xml/ns/persistence/orm/orm_3_1.xsd"
+                 version="3.1">
+    <entity class="org.hibernate.orm.test.columndiscriminator.Book" access="FIELD">
+        <attributes>
+            <id name="id">
+                <generated-value strategy="AUTO"/>
+            </id>
+
+            <embedded name="details"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.columndiscriminator.Author" access="FIELD">
+        <attributes>
+            <id name="id">
+                <generated-value strategy="AUTO"/>
+            </id>
+
+            <one-to-many name="books" orphan-removal="true">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <embeddable class="org.hibernate.orm.test.columndiscriminator.BookDetails" access="FIELD"/>
+    <embeddable class="org.hibernate.orm.test.columndiscriminator.SpecialBookDetails" access="FIELD"/>
+    <embeddable class="org.hibernate.orm.test.columndiscriminator.BoringBookDetails" access="FIELD"/>
+</entity-mappings>

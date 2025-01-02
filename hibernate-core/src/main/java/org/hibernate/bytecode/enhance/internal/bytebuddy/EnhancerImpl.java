@@ -131,7 +131,7 @@ public class EnhancerImpl implements Enhancer {
 			return byteBuddyState.rewrite( typePool, safeClassName, byteBuddy -> doEnhance(
 					() -> byteBuddy.ignore( isDefaultFinalizer() )
 							.redefine( typeDescription, typePool.asClassFileLocator() )
-							.annotateType( constants.HIBERNATE_VERSION_ANNOTATION ),
+							,
 					typeDescription
 			) );
 		}
@@ -193,6 +193,7 @@ public class EnhancerImpl implements Enhancer {
 
 			log.debugf( "Enhancing [%s] as Entity", managedCtClass.getName() );
 			DynamicType.Builder<?> builder = builderSupplier.get();
+			builder = builder.annotateType( constants.HIBERNATE_VERSION_ANNOTATION );
 			builder = builder.implement( ManagedEntity.class )
 					.defineMethod( EnhancerConstants.ENTITY_INSTANCE_GETTER_NAME, constants.TypeObject, constants.methodModifierPUBLIC )
 					.intercept( FixedValue.self() );
@@ -358,6 +359,7 @@ public class EnhancerImpl implements Enhancer {
 			log.debugf( "Enhancing [%s] as Composite", managedCtClass.getName() );
 
 			DynamicType.Builder<?> builder = builderSupplier.get();
+			builder = builder.annotateType( constants.HIBERNATE_VERSION_ANNOTATION );
 			builder = builder.implement( ManagedComposite.class );
 			builder = addInterceptorHandling( builder, managedCtClass );
 
@@ -396,12 +398,14 @@ public class EnhancerImpl implements Enhancer {
 			log.debugf( "Enhancing [%s] as MappedSuperclass", managedCtClass.getName() );
 
 			DynamicType.Builder<?> builder = builderSupplier.get();
+			builder = builder.annotateType( constants.HIBERNATE_VERSION_ANNOTATION );
 			builder = builder.implement( ManagedMappedSuperclass.class );
 			return createTransformer( managedCtClass ).applyTo( builder );
 		}
 		else if ( enhancementContext.doExtendedEnhancement( managedCtClass ) ) {
 			log.debugf( "Extended enhancement of [%s]", managedCtClass.getName() );
-			return createTransformer( managedCtClass ).applyExtended( builderSupplier.get() );
+			return createTransformer( managedCtClass ).applyExtended( builderSupplier.get() )
+					.annotateType( constants.HIBERNATE_VERSION_ANNOTATION );
 		}
 		else {
 			log.debugf( "Skipping enhancement of [%s]: not entity or composite", managedCtClass.getName() );

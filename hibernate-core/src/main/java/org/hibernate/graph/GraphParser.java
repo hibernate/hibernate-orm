@@ -24,7 +24,8 @@ import org.hibernate.graph.spi.RootGraphImplementor;
  * <p>
  * The {@link #parseInto} methods parse the graph string into a passed graph, which may be a subgraph
  * <p>
- * Multiple graphs made for the same entity type can be merged.  See {@link EntityGraphs#merge(SessionImplementor, Class, GraphImplementor...)}.
+ * Multiple graphs made for the same entity type can be merged.
+ * See {@link EntityGraphs#merge(EntityManager, Class, jakarta.persistence.Graph...)}.
  *
  * @author asusnjar
  */

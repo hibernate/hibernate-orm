@@ -4,6 +4,7 @@
  */
 package org.hibernate.graph.internal;
 
+import jakarta.persistence.metamodel.ManagedType;
 import org.hibernate.graph.CannotContainSubGraphException;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
@@ -93,21 +94,21 @@ public class AttributeNodeImpl<J,V,K>
 		}
 		@SuppressWarnings("unchecked")
 		final Class<? extends V> castSuptype = (Class<? extends V>) subtype;
-		final SubGraphImplementor<? extends V> result = makeSubGraph().addTreatedSubGraph( castSuptype );
+		final SubGraphImplementor<? extends V> result = makeSubGraph().addTreatedSubgraph( castSuptype );
 		//noinspection unchecked
 		return (SubGraphImplementor<S>) result;
 	}
 
 	@Override
-	public <S> SubGraphImplementor<S> makeSubGraph(ManagedDomainType<S> subtype) {
+	public <S> SubGraphImplementor<S> makeSubGraph(ManagedType<S> subtype) {
 		final ManagedDomainType<V> managedType = asManagedType( valueGraphType );
-		final Class<S> javaType = subtype.getBindableJavaType();
+		final Class<S> javaType = subtype.getJavaType();
 		if ( !managedType.getBindableJavaType().isAssignableFrom( javaType ) ) {
 			throw new IllegalArgumentException( "Not a subtype: " + javaType.getName() );
 		}
 		@SuppressWarnings("unchecked")
 		final ManagedDomainType<? extends V> castType = (ManagedDomainType<? extends V>) subtype;
-		final SubGraphImplementor<? extends V> result = makeSubGraph().addTreatedSubGraph( castType );
+		final SubGraphImplementor<? extends V> result = makeSubGraph().addTreatedSubgraph( castType );
 		//noinspection unchecked
 		return (SubGraphImplementor<S>) result;
 	}
@@ -131,22 +132,22 @@ public class AttributeNodeImpl<J,V,K>
 		}
 		@SuppressWarnings("unchecked")
 		final Class<? extends K> castType = (Class<? extends K>) subtype;
-		final SubGraphImplementor<? extends K> result = makeKeySubGraph().addTreatedSubGraph( castType );
+		final SubGraphImplementor<? extends K> result = makeKeySubGraph().addTreatedSubgraph( castType );
 		//noinspection unchecked
 		return (SubGraphImplementor<S>) result;
 	}
 
 	@Override
-	public <S> SubGraphImplementor<S> makeKeySubGraph(ManagedDomainType<S> subtype) {
+	public <S> SubGraphImplementor<S> makeKeySubGraph(ManagedType<S> subtype) {
 		checkMap();
 		final ManagedDomainType<K> type = asManagedType( keyGraphType );
-		final Class<S> javaType = subtype.getBindableJavaType();
+		final Class<S> javaType = subtype.getJavaType();
 		if ( !type.getBindableJavaType().isAssignableFrom( javaType ) ) {
 			throw new IllegalArgumentException( "Not a key subtype: " + javaType.getName() );
 		}
 		@SuppressWarnings("unchecked")
 		final ManagedDomainType<? extends K> castType = (ManagedDomainType<? extends K>) subtype;
-		final SubGraphImplementor<? extends K> result = makeKeySubGraph().addTreatedSubGraph( castType );
+		final SubGraphImplementor<? extends K> result = makeKeySubGraph().addTreatedSubgraph( castType );
 		//noinspection unchecked
 		return (SubGraphImplementor<S>) result;
 	}

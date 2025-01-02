@@ -6,7 +6,8 @@ package org.hibernate.graph;
 
 
 import jakarta.persistence.Subgraph;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import jakarta.persistence.metamodel.ManagedType;
+import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 import java.util.Map;
@@ -51,6 +52,8 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 
 	/**
 	 * All value subgraphs rooted at this node.
+	 * <p>
+	 * Includes treated subgraphs.
 	 *
 	 * @see jakarta.persistence.AttributeNode#getSubgraphs
 	 */
@@ -58,6 +61,8 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 
 	/**
 	 * All key subgraphs rooted at this node.
+	 * <p>
+	 * Includes treated subgraphs.
 	 *
 	 * @see jakarta.persistence.AttributeNode#getKeySubgraphs
 	 */
@@ -89,6 +94,11 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 * Create and return a new value {@link SubGraph} rooted at this node,
 	 * with the given type, which may be a subtype of the value type,
 	 * or return an existing such {@link SubGraph} if there is one.
+	 * <p>
+	 * If the given type is a proper subtype of the value type, the result
+	 * is a treated subgraph.
+	 *
+	 * @param subtype The type or treated type of the value type
 	 */
 	<S> SubGraph<S> makeSubGraph(Class<S> subtype);
 
@@ -96,6 +106,11 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 * Create and return a new value {@link SubGraph} rooted at this node,
 	 * with the given type, which may be a subtype of the key type,
 	 * or return an existing such {@link SubGraph} if there is one.
+	 * <p>
+	 * If the given type is a proper subtype of the key type, the result
+	 * is a treated subgraph.
+	 *
+	 * @param subtype The type or treated type of the key type
 	 */
 	<S> SubGraph<S> makeKeySubGraph(Class<S> subtype);
 
@@ -103,13 +118,25 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 * Create and return a new value {@link SubGraph} rooted at this node,
 	 * with the given type, which may be a subtype of the value type,
 	 * or return an existing such {@link SubGraph} if there is one.
+	 * <p>
+	 * If the given type is a proper subtype of the value type, the result
+	 * is a treated subgraph.
+	 *
+	 * @param subtype The type or treated type of the value type
 	 */
-	<S> SubGraph<S> makeSubGraph(ManagedDomainType<S> subtype);
+	@Incubating
+	<S> SubGraph<S> makeSubGraph(ManagedType<S> subtype);
 
 	/**
 	 * Create and return a new value {@link SubGraph} rooted at this node,
 	 * with the given type, which may be a subtype of the key type,
 	 * or return an existing such {@link SubGraph} if there is one.
+	 * <p>
+	 * If the given type is a proper subtype of the key type, the result
+	 * is a treated subgraph.
+	 *
+	 * @param subtype The type or treated type of the key type
 	 */
-	<S> SubGraph<S> makeKeySubGraph(ManagedDomainType<S> subtype);
+	@Incubating
+	<S> SubGraph<S> makeKeySubGraph(ManagedType<S> subtype);
 }

@@ -33,9 +33,4 @@ public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 	default <T> SubGraph<? extends T> addSubclassSubgraph(Class<? extends T> type) {
 		return (SubGraph<? extends T>) addTreatedSubgraph( (Class<? extends J>) type );
 	}
-
-	@Override
-	default <S extends J> SubGraph<S> addTreatedSubgraph(Class<S> type) {
-		return addTreatedSubGraph( type );
-	}
 }

@@ -522,6 +522,10 @@ public final class ArrayHelper {
 		}
 	}
 
+	/**
+	 * @deprecated Use {@link Array#newInstance(Class, int)} instead.
+	 */
+	@Deprecated
 	@SuppressWarnings("unchecked")
 	@AllowReflection
 	public static <T> T[] newInstance(Class<T> elementType, int length) {

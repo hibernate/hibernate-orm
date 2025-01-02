@@ -141,7 +141,7 @@ public final class EntityGraphs {
 	 * @since 7.0
 	 */
 	public <S> Subgraph<S> addTreatedSubgraph(Graph<? super S> graph, Class<S> subtype) {
-		return ((org.hibernate.graph.Graph<? super S>) graph).addTreatedSubGraph( subtype );
+		return ((org.hibernate.graph.Graph<? super S>) graph).addTreatedSubgraph( subtype );
 	}
 
 	/**

@@ -4,8 +4,8 @@
  */
 package org.hibernate.graph.spi;
 
+import jakarta.persistence.metamodel.ManagedType;
 import org.hibernate.graph.AttributeNode;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
 import java.util.Map;
 
@@ -34,10 +34,10 @@ public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNode
 	<S> SubGraphImplementor<S> makeKeySubGraph(Class<S> subtype);
 
 	@Override
-	<S> SubGraphImplementor<S> makeSubGraph(ManagedDomainType<S> subtype);
+	<S> SubGraphImplementor<S> makeSubGraph(ManagedType<S> subtype);
 
 	@Override
-	<S> SubGraphImplementor<S> makeKeySubGraph(ManagedDomainType<S> subtype);
+	<S> SubGraphImplementor<S> makeKeySubGraph(ManagedType<S> subtype);
 
 	void merge(AttributeNodeImplementor<J> other);
 

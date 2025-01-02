@@ -7,12 +7,13 @@ package org.hibernate.graph;
 import java.util.List;
 
 import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
+import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 
 /**
  * Represents a {@link jakarta.persistence.metamodel.ManagedType managed type} in an
@@ -26,10 +27,9 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
  * A treated (narrowed) subgraph allows fetching to be specified for any attribute of
  * any subtype of the type represented by this graph. The usual way to create a treated
  * subgraph is by calling {@link jakarta.persistence.EntityGraph#addTreatedSubgraph(Class)}
- * or {@link #addTreatedSubGraph(Class)}. There are various shortcut operations such as
- * {@link jakarta.persistence.EntityGraph#addTreatedSubgraph(Attribute, Class)} and
- * {@link #addSubGraph(PersistentAttribute, Class)} which combine creation of a subgraph
- * with creation of a treated subgraph.
+ * or {@link #addTreatedSubgraph(Class)}. There are various shortcut operations such as
+ * {@link jakarta.persistence.EntityGraph#addTreatedSubgraph(Attribute, Class)} which
+ * combine creation of a subgraph with creation of a treated subgraph.
  * <p>
  * Extends the JPA-defined {@link jakarta.persistence.Graph} with additional operations.
  *
@@ -99,57 +99,45 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	List<? extends AttributeNode<?>> getAttributeNodeList();
 
 	/**
-	 * Find an already existing AttributeNode by attributeName within
-	 * this container
-	 *
-	 * @see #getAttributeNode(String)
+	 * Find an existing {@link AttributeNode} by name within this container.
 	 */
+	@Override
+	<Y> AttributeNode<Y> getAttributeNode(String attributeName);
+
+	/**
+	 * Find an existing {@link AttributeNode} by corresponding attribute
+	 * reference, within this container.
+	 */
+	@Override
+	<Y> AttributeNode<Y> getAttributeNode(Attribute<? super J, Y> attribute);
+
+	/**
+	 * Find an existing {@link AttributeNode} by name within this container.
+	 *
+	 * @deprecated Use {@link #getAttributeNode(String)}
+	 */
+	@Deprecated(since = "7.0")
 	<AJ> AttributeNode<AJ> findAttributeNode(String attributeName);
 
 	/**
-	 * Find an already existing AttributeNode by corresponding attribute
+	 * Find an existing {@link AttributeNode} by corresponding attribute
 	 * reference, within this container.
 	 *
-	 * @see #getAttributeNode(Attribute)
+	 * @deprecated Use {@link #getAttributeNode(Attribute)}
 	 */
+	@Deprecated(since = "7.0")
 	<AJ> AttributeNode<AJ> findAttributeNode(PersistentAttribute<? super J, AJ> attribute);
 
-	@Override
-	default <Y> AttributeNode<Y> getAttributeNode(String attributeName) {
-		return findAttributeNode( attributeName );
-	}
-
-	@Override
-	default <Y> AttributeNode<Y> getAttributeNode(Attribute<? super J, Y> attribute) {
-		return findAttributeNode( (PersistentAttribute<? super J, Y>) attribute );
-	}
-
-	@Override
-	default boolean hasAttributeNode(String attributeName) {
-		return getAttributeNode( attributeName ) != null;
-	}
-
-	@Override
-	default boolean hasAttributeNode(Attribute<? super J, ?> attribute) {
-		return getAttributeNode( attribute ) != null;
-	}
-
 	/**
-	 * Add an {@link AttributeNode} representing the given {@link PersistentAttribute}
-	 * to this node of the graph without creating any associated {@link SubGraph}.
-	 *
-	 * @see #addAttributeNode(Attribute)
+	 * Add an {@link AttributeNode} representing the given {@link Attribute} to
+	 * this node of the graph without creating any associated {@link SubGraph}.
 	 */
-	<AJ> AttributeNode<AJ> addAttributeNode(PersistentAttribute<? super J,AJ> attribute);
-
 	@Override
-	default <Y> AttributeNode<Y> addAttributeNode(Attribute<? super J, Y> attribute) {
-		return addAttributeNode( (PersistentAttribute<? super J,Y>) attribute );
-	}
+	<Y> AttributeNode<Y> addAttributeNode(Attribute<? super J, Y> attribute);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Subgraphs
+	// Treated subgraphs
 
 	/**
 	 * Create and return a new (mutable) {@link SubGraph} representing
@@ -158,23 +146,57 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @see jakarta.persistence.EntityGraph#addTreatedSubgraph(Class)
 	 */
-	<Y extends J> SubGraph<Y> addTreatedSubGraph(Class<Y> type);
+	<Y extends J> SubGraph<Y> addTreatedSubgraph(Class<Y> type);
 
 	/**
 	 * Create and return a new (mutable) {@link SubGraph} representing
 	 * the given subtype of the type of this node, or return an existing
 	 * such {@link SubGraph} if there is one.
 	 */
-	<Y extends J> SubGraph<Y> addTreatedSubGraph(ManagedDomainType<Y> type);
+	@Incubating
+	<Y extends J> SubGraph<Y> addTreatedSubgraph(ManagedType<Y> type);
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Attribute subgraphs
 
 	/**
 	 * Create and return a new (mutable) {@link SubGraph} associated with
 	 * the named {@link Attribute}, or return an existing such {@link SubGraph}
 	 * if there is one.
 	 *
-	 * @see #addSubgraph(String)
+	 * @param attributeName The name of an attribute of the represented type
 	 */
-	@Deprecated
+	@Override
+	default <X> SubGraph<X> addSubgraph(String attributeName) {
+		return addSubGraph( attributeName );
+	}
+
+	/**
+	 * Create and return a new (mutable) {@link SubGraph} associated with
+	 * the named {@link Attribute}, and with the given type, which may be
+	 * a subtype of the attribute type, or return an existing such
+	 * {@link SubGraph} if there is one.
+	 * <p>
+	 * If the given type is a proper subtype of the attribute type, the
+	 * result is a treated subgraph.
+	 *
+	 * @param attributeName The name of an attribute of the represented type
+	 * @param type A subtype of the attribute type
+	 */
+	@Override
+	<X> SubGraph<X> addSubgraph(String attributeName, Class<X> type);
+
+	/**
+	 * Create and return a new (mutable) {@link SubGraph} associated with
+	 * the named {@link Attribute}, or return an existing such {@link SubGraph}
+	 * if there is one.
+	 *
+	 * @param attributeName The name of an attribute of the represented type
+	 *
+	 * @deprecated Use {@link #addSubgraph(String)}
+	 */
+	@Deprecated(since = "7.0")
 	<AJ> SubGraph<AJ> addSubGraph(String attributeName)
 			throws CannotContainSubGraphException;
 
@@ -183,19 +205,78 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 * the named {@link Attribute}, and with the given type, which may be
 	 * a subtype of the attribute type, or return an existing such
 	 * {@link SubGraph} if there is one.
+	 * <p>
+	 * If the given type is a proper subtype of the attribute type, the
+	 * result is a treated subgraph.
 	 *
-	 * @see #addSubgraph(String, Class)
+	 * @param attributeName The name of an attribute of the represented type
+	 * @param type A subtype of the attribute type
+	 *
+	 * @deprecated Use {@link #addSubgraph(String, Class)}
 	 */
+	@Deprecated(since = "7.0")
 	<AJ> SubGraph<AJ> addSubGraph(String attributeName, Class<AJ> type)
 			throws CannotContainSubGraphException;
 
 	/**
 	 * Create and return a new (mutable) {@link SubGraph} associated with
-	 * the given {@link PersistentAttribute}, or return an existing such
-	 * {@link SubGraph} if there is one.
+	 * the given {@link Attribute} of the represented type, or return an
+	 * existing such {@link SubGraph} if there is one.
+	 *
+	 * @param attribute An attribute of the represented type
 	 *
 	 * @see #addSubgraph(Attribute)
 	 */
+	@Override
+	<X> SubGraph<X> addSubgraph(Attribute<? super J, X> attribute)
+			throws CannotContainSubGraphException;
+
+	/**
+	 * Create and return a new (mutable) {@link SubGraph} associated with
+	 * the given {@link Attribute}, and with the given type, which may be
+	 * a subtype of the attribute type, or return an existing such
+	 * {@link SubGraph} if there is one.
+	 * <p>
+	 * If the given type is a proper subtype of the attribute type, the
+	 * result is a treated subgraph.
+	 *
+	 * @param attribute An attribute of the represented type
+	 * @param type A subtype of the attribute type
+	 *
+	 * @see #addSubgraph(Attribute, Class)
+	 */
+	@Override
+	<Y> SubGraph<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type)
+			throws CannotContainSubGraphException;
+
+	/**
+	 * Create and return a new (mutable) {@link SubGraph} associated with
+	 * the given {@link Attribute}, and with the given type, which may be
+	 * a subtype of the attribute type, or return an existing such
+	 * {@link SubGraph} if there is one.
+	 * <p>
+	 * If the given type is a proper subtype of the attribute type, the
+	 * result is a treated subgraph.
+	 *
+	 * @param attribute An attribute of the represented type
+	 * @param type A subtype of the attribute type
+	 */
+	@Incubating
+	<AJ> SubGraph<AJ> addTreatedSubgraph(Attribute<? super J, ? super AJ> attribute, ManagedType<AJ> type)
+			throws CannotContainSubGraphException;
+
+	/**
+	 * Create and return a new (mutable) {@link SubGraph} associated with
+	 * the given {@link Attribute} of the represented type, or return an
+	 * existing such {@link SubGraph} if there is one.
+	 *
+	 * @param attribute An attribute of the represented type
+	 *
+	 * @see #addSubgraph(Attribute)
+	 *
+	 * @deprecated Use {@link #addSubgraph(Attribute)}
+	 */
+	@Deprecated(since = "7.0")
 	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, AJ> attribute)
 			throws CannotContainSubGraphException;
 
@@ -204,30 +285,76 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 * the given {@link PersistentAttribute}, and with the given type,
 	 * which may be a subtype of the attribute type, or return an existing
 	 * such {@link SubGraph} if there is one.
+	 * <p>
+	 * If the given type is a proper subtype of the attribute type, the
+	 * result is a treated subgraph.
+	 *
+	 * @param attribute An attribute of the represented type
+	 * @param type A subtype of the attribute type
 	 *
 	 * @see #addSubgraph(Attribute, Class)
+	 *
+	 * @deprecated Use {@link #addTreatedSubgraph(Attribute, Class)}
 	 */
+	@Deprecated(since = "7.0")
 	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> type)
 			throws CannotContainSubGraphException;
 
-	/**
-	 * Create and return a new (mutable) {@link SubGraph} associated with
-	 * the given {@link PersistentAttribute}, and with the given type,
-	 * which may be a subtype of the attribute type, or return an existing
-	 * such {@link SubGraph} if there is one.
-	 */
-	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, ManagedDomainType<AJ> type)
-			throws CannotContainSubGraphException;
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Element subgraphs
 
 	/**
 	 * Create and return a new (mutable) {@link SubGraph} associated with
-	 * the element of the given collection, and with the given type, which
-	 * may be a subtype of the attribute type, or return an existing such
+	 * the element of the named {@link PluralAttribute}, or return an
+	 * existing such {@link SubGraph} if there is one.
+	 *
+	 * @param attributeName The name of a collection-valued attribute of the
+	 *                      represented type
+	 */
+	@Override
+	<X> SubGraph<X> addElementSubgraph(String attributeName);
+
+	/**
+	 * Create and return a new (mutable) {@link SubGraph} associated with
+	 * the element of the named {@link PluralAttribute}, and with the given
+	 * type, which may be a subtype of the element type, or return an existing
+	 * such {@link SubGraph} if there is one.
+	 * <p>
+	 * If the given type is a proper subtype of the attribute type, the
+	 * result is a treated subgraph.
+	 *
+	 * @param attributeName The name of a collection-valued attribute of the
+	 *                      represented type
+	 * @param type A subtype of the element type
+	 */
+	@Override
+	<X> SubGraph<X> addElementSubgraph(String attributeName, Class<X> type);
+
+	/**
+	 * Create and return a new (mutable) {@link SubGraph} associated with
+	 * the element of the given collection, or return an existing such
 	 * {@link SubGraph} if there is one.
 	 *
-	 * @see #addTreatedElementSubgraph(PluralAttribute, Class)
+	 * @param attribute A collection-valued attribute of the represented type
 	 */
-	<AJ> SubGraph<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, Class<AJ> type)
+	@Override
+	<E> SubGraph<E> addElementSubgraph(PluralAttribute<? super J, ?, E> attribute);
+
+	/**
+	 * Create and return a new (mutable) {@link SubGraph} associated with
+	 * the element of the given collection, and with the given type, which
+	 * may be a subtype of the element type, or return an existing such
+	 * {@link SubGraph} if there is one.
+	 * <p>
+	 * If the given type is a proper subtype of the element type, the result
+	 * is a treated subgraph.
+	 *
+	 * @param attribute A collection-valued attribute of the represented type
+	 * @param type A subtype of the element type
+	 */
+	@Override
+	<E> SubGraph<E> addTreatedElementSubgraph(PluralAttribute<? super J, ?, ? super E> attribute, Class<E> type)
 			throws CannotContainSubGraphException;
 
 	/**
@@ -235,18 +362,54 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 * the element of the given collection, and with the given type, which
 	 * may be a subtype of the attribute type, or return an existing such
 	 * {@link SubGraph} if there is one.
+	 * <p>
+	 * If the given type is a proper subtype of the element type, the result
+	 * is a treated subgraph.
+	 *
+	 * @param attribute A collection-valued attribute of the represented type
+	 * @param type A subtype of the element type
 	 */
-	<AJ> SubGraph<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, ManagedDomainType<AJ> type)
+	@Incubating
+	<AJ> SubGraph<AJ> addTreatedElementSubgraph(PluralAttribute<? super J, ?, ? super AJ> attribute, ManagedType<AJ> type)
 			throws CannotContainSubGraphException;
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Key subgraphs
 
 	/**
 	 * Create and return a new (mutable) {@link SubGraph} associated with
 	 * the key of the named map or return an existing such {@link SubGraph}
 	 * if there is one.
 	 *
-	 * @see #addKeySubgraph(String)
+	 * @param attributeName The name of an attribute of the represented type
 	 */
-	@Deprecated
+	@Override
+	<X> SubGraph<X> addKeySubgraph(String attributeName);
+
+	/**
+	 * Create and return a new (mutable) {@link SubGraph} associated with
+	 * the key of the named map, and with the given type, which may be a
+	 * subtype of the attribute type, or return an existing such
+	 * {@link SubGraph} if there is one.
+	 *
+	 * @param attributeName The name of a map-valued attribute of the
+	 *                     represented type
+	 * @param type A subtype of the key type
+	 */
+	@Override
+	<X> SubGraph<X> addKeySubgraph(String attributeName, Class<X> type);
+
+	/**
+	 * Create and return a new (mutable) {@link SubGraph} associated with
+	 * the key of the named map or return an existing such {@link SubGraph}
+	 * if there is one.
+	 *
+	 * @param attributeName The name of an attribute of the represented type
+	 *
+	 * @deprecated Use {@link #addKeySubgraph(String)}
+	 */
+	@Deprecated(since = "7.0")
 	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName)
 			throws CannotContainSubGraphException;
 
@@ -255,21 +418,59 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 * the key of the named map, and with the given type, which may be a
 	 * subtype of the attribute type, or return an existing such
 	 * {@link SubGraph} if there is one.
+	 * <p>
+	 * If the given type is a proper subtype of the key type, the result
+	 * is a treated subgraph.
 	 *
-	 * @see #addKeySubgraph(String, Class)
+	 * @param attributeName The name of a map-valued attribute of the
+	 *                      represented type
+	 * @param type A subtype of the key type
+	 *
+	 * @deprecated Use {@link #addKeySubgraph(String, Class)}
 	 */
+	@Deprecated(since = "7.0")
 	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName, Class<AJ> type)
 			throws CannotContainSubGraphException;
 
 	/**
 	 * Create and return a new (mutable) {@link SubGraph} associated with
+	 * the key of the named map, or return an existing such {@link SubGraph}
+	 * if there is one.
+	 *
+	 * @param attribute A map-valued attribute of the represented type
+	 */
+	@Override
+	<K> SubGraph<K> addMapKeySubgraph(MapAttribute<? super J, K, ?> attribute);
+
+	/**
+	 * Create and return a new (mutable) {@link SubGraph} associated with
 	 * the key of the named map, and with the given type, which may be a
 	 * subtype of the attribute type, or return an existing such
 	 * {@link SubGraph} if there is one.
+	 * <p>
+	 * If the given type is a proper subtype of the key type, the result
+	 * is a treated subgraph.
 	 *
-	 * @see #addTreatedMapKeySubgraph(MapAttribute, Class)
+	 * @param attribute A map-valued attribute of the represented type
+	 * @param type A subtype of the key type
 	 */
-	<AJ> SubGraph<AJ> addKeySubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, Class<AJ> type)
+	@Override
+	<K> SubGraph<K> addTreatedMapKeySubgraph(MapAttribute<? super J, ? super K, ?> attribute, Class<K> type);
+
+	/**
+	 * Create and return a new (mutable) {@link SubGraph} associated with
+	 * the key of the named map, and with the given type, which may be a
+	 * subtype of the attribute type, or return an existing such
+	 * {@link SubGraph} if there is one.
+	 * <p>
+	 * If the given type is a proper subtype of the key type, the result
+	 * is a treated subgraph.
+	 *
+	 * @param attribute A map-valued attribute of the represented type
+	 * @param type A subtype of the key type
+	 */
+	@Incubating
+	<AJ> SubGraph<AJ> addTreatedMapKeySubgraph(MapAttribute<? super J, ? super AJ, ?> attribute, ManagedType<AJ> type)
 			throws CannotContainSubGraphException;
 
 	/**
@@ -277,58 +478,43 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 * the key of the named map, and with the given type, which may be a
 	 * subtype of the attribute type, or return an existing such
 	 * {@link SubGraph} if there is one.
+	 * <p>
+	 * If the given type is a proper subtype of the key type, the result
+	 * is a treated subgraph.
+	 *
+	 * @param attribute A map-valued attribute of the represented type
+	 * @param type A subtype of the key type
+	 *
+	 * @deprecated Use {@link #addTreatedMapKeySubgraph(MapAttribute, Class)}
 	 */
-	<AJ> SubGraph<AJ> addKeySubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, ManagedDomainType<AJ> type)
+	@Deprecated(since = "7.0")
+	<AJ> SubGraph<AJ> addKeySubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, Class<AJ> type)
 			throws CannotContainSubGraphException;
 
-	@Override
-	default <Y> SubGraph<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type) {
-		return addSubGraph( (PersistentAttribute<? super J, ? super Y>) attribute ).addTreatedSubGraph( type );
-	}
 
-	@Override
-	default <X> SubGraph<X> addSubgraph(Attribute<? super J, X> attribute) {
-		return addSubGraph( (PersistentAttribute<? super J, X>) attribute );
-	}
-
-	@Override
-	default <X> SubGraph<? extends X> addSubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
-		return addSubGraph( (PersistentAttribute<? super J, X>) attribute ).addTreatedSubGraph( type );
-	}
-
-	@Override
-	default <X> SubGraph<X> addSubgraph(String name) {
-		return addSubGraph( name );
-	}
-
-	@Override
-	default <X> SubGraph<X> addSubgraph(String name, Class<X> type) {
-		return addSubGraph( name ).addTreatedSubGraph( type );
-	}
-
-	@Override
-	default <X> SubGraph<X> addKeySubgraph(String name) {
-		return addKeySubGraph( name );
-	}
-
-	@Override
-	default <X> SubGraph<X> addKeySubgraph(String name, Class<X> type) {
-		return addKeySubGraph( name ).addTreatedSubGraph( type );
-	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Misc deprecated
 
 	/**
-	 * Add a subgraph rooted at a plural attribute, allowing further nodes
-	 * to be added to the subgraph.
+	 * Create and return a new (mutable) {@link SubGraph} associated with
+	 * the element of the given collection, or return an existing such
+	 * {@link SubGraph} if there is one.
 	 *
-	 * @apiNote {@link #addElementSubgraph(PluralAttribute)} was added
-	 *          in JPA 3.2, and so this method is no longer really needed
+	 * @deprecated {@link #addElementSubgraph(PluralAttribute)} was added
+	 *             in JPA 3.2, and so this method is no longer needed
 	 *
 	 * @since 6.3
 	 *
 	 * @see #addElementSubgraph(PluralAttribute)
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	default <AJ> SubGraph<AJ> addPluralSubgraph(PluralAttribute<? super J, ?, AJ> attribute) {
 		return addSubGraph( attribute.getName(), attribute.getBindableJavaType() );
+	}
+
+	@Override @Deprecated(forRemoval = true)
+	default <X> SubGraph<? extends X> addSubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
+		return addSubGraph( (PersistentAttribute<? super J, X>) attribute ).addTreatedSubgraph( type );
 	}
 
 	@Override @Deprecated(forRemoval = true)

@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.Type;
@@ -306,7 +307,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public <AJ> SubGraphImplementor<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, ManagedDomainType<AJ> subtype) {
+	public <AJ> SubGraphImplementor<AJ> addTreatedSubgraph(PersistentAttribute<? super J, ? super AJ> attribute, ManagedType<AJ> subtype) {
 		return findOrCreateAttributeNode( attribute ).makeSubGraph( subtype );
 	}
 
@@ -316,7 +317,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public <AJ> SubGraphImplementor<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, ManagedDomainType<AJ> type) {
+	public <AJ> SubGraphImplementor<AJ> addTreatedElementSubgraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, ManagedType<AJ> type) {
 		return findOrCreateAttributeNode( attribute ).makeSubGraph( type );
 	}
 
@@ -326,7 +327,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, ManagedDomainType<AJ> subtype) {
+	public <AJ> SubGraphImplementor<AJ> addTreatedMapKeySubgraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, ManagedType<AJ> subtype) {
 		return findOrCreateAttributeNode( attribute ).makeKeySubGraph( subtype );
 	}
 
@@ -350,7 +351,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	public <K> SubGraphImplementor<K> addTreatedMapKeySubgraph(
 			MapAttribute<? super J, ? super K, ?> attribute,
 			Class<K> type) {
-		return addMapKeySubgraph( attribute ).addTreatedSubGraph( type );
+		return addMapKeySubgraph( attribute ).addTreatedSubgraph( type );
 	}
 
 	@Override @SuppressWarnings("unchecked") // The JPA API is unsafe by nature
@@ -373,11 +374,16 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	public <E> SubGraphImplementor<E> addTreatedElementSubgraph(
 			PluralAttribute<? super J, ?, ? super E> attribute,
 			Class<E> type) {
-		return addElementSubgraph( attribute ).addTreatedSubGraph( type );
+		return addElementSubgraph( attribute ).addTreatedSubgraph( type );
 	}
 
 	@Override
-	public <S extends J> SubGraphImplementor<S> addTreatedSubGraph(ManagedDomainType<S> type) {
+	public <Y> SubGraphImplementor<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type) {
+		return addSubgraph( attribute ).addTreatedSubgraph( type );
+	}
+
+	@Override
+	public <S extends J> SubGraphImplementor<S> addTreatedSubgraph(ManagedType<S> type) {
 		verifyMutability();
 		if ( getGraphedType().equals( type ) ) {
 			//noinspection unchecked
@@ -387,7 +393,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 			final Class<S> javaType = type.getJavaType();
 			final SubGraphImplementor<S> castSubgraph = getTreatedSubgraphForPut( javaType );
 			if ( castSubgraph == null ) {
-				final SubGraphImpl<S> subgraph = new SubGraphImpl<>( type, true );
+				final SubGraphImpl<S> subgraph = new SubGraphImpl<>( (ManagedDomainType<S>) type, true );
 				treatedSubgraphs.put( javaType, subgraph );
 				return subgraph;
 			}
@@ -398,8 +404,8 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public <S extends J> SubGraphImplementor<S> addTreatedSubGraph(Class<S> type) {
-		return addTreatedSubGraph( getGraphedType().getMetamodel().managedType( type ) );
+	public <S extends J> SubGraphImplementor<S> addTreatedSubgraph(Class<S> type) {
+		return addTreatedSubgraph( getGraphedType().getMetamodel().managedType( type ) );
 	}
 
 	@Override

@@ -7,6 +7,7 @@ package org.hibernate.graph.spi;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Internal;
 import org.hibernate.graph.CannotBecomeEntityGraphException;
 import org.hibernate.graph.Graph;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -24,9 +25,10 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
  */
 public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 
-	void merge(GraphImplementor<? super J> other);
+	void merge(GraphImplementor<J> other);
 
-	void merge(GraphImplementor<? super J> other, boolean mutable);
+	@Internal
+	void mergeInternal(GraphImplementor<J> graph);
 
 	@Override @Deprecated(forRemoval = true)
 	RootGraphImplementor<J> makeRootGraph(String name, boolean mutable)
@@ -41,7 +43,7 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 	@Override
 	List<? extends AttributeNodeImplementor<?>> getAttributeNodeList();
 
-	Map<PersistentAttribute<? super J, ?>, AttributeNodeImplementor<?>> getAttributeNodesByAttribute();
+	Map<PersistentAttribute<? super J, ?>, AttributeNodeImplementor<?>> getNodes();
 
 	@Override
 	<AJ> AttributeNodeImplementor<AJ> findAttributeNode(String attributeName);
@@ -89,5 +91,5 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 
 	<Y extends J> SubGraphImplementor<Y> addTreatedSubGraph(ManagedDomainType<Y> type);
 
-	Map<Class<?>, SubGraphImplementor<?>> getSubGraphMap();
+	Map<Class<? extends J>, SubGraphImplementor<? extends J>> getSubGraphs();
 }

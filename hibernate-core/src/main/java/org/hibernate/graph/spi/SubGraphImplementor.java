@@ -25,5 +25,4 @@ public interface SubGraphImplementor<J> extends SubGraph<J>, GraphImplementor<J>
 	@Override @Deprecated(forRemoval = true)
 	RootGraphImplementor<J> makeRootGraph(String name, boolean mutable)
 			throws CannotBecomeEntityGraphException;
-
 }

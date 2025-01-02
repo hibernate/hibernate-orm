@@ -67,17 +67,17 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 			final Class<?> subgraphMapKey;
 			if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
 				if ( exploreKeySubgraph ) {
-					subgraphMap = attributeNode.getKeySubGraphMap();
+					subgraphMap = attributeNode.getKeySubGraphs();
 					subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getIndexDescriptor() );
 				}
 				else {
-					subgraphMap = attributeNode.getSubGraphMap();
+					subgraphMap = attributeNode.getSubGraphs();
 					subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getElementDescriptor() );
 				}
 			}
 			else {
 				assert !exploreKeySubgraph;
-				subgraphMap = attributeNode.getSubGraphMap();
+				subgraphMap = attributeNode.getSubGraphs();
 				subgraphMapKey = fetchable.getJavaType().getJavaTypeClass();
 			}
 			if ( subgraphMap != null && subgraphMapKey != null ) {

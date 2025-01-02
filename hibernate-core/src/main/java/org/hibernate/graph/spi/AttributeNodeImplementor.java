@@ -5,10 +5,10 @@
 package org.hibernate.graph.spi;
 
 import org.hibernate.graph.AttributeNode;
-import org.hibernate.graph.SubGraph;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
 import java.util.Map;
+
 
 /**
  * Integration version of the {@link AttributeNode} contract
@@ -39,23 +39,15 @@ public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNode
 	@Override
 	<S> SubGraphImplementor<S> makeKeySubGraph(ManagedDomainType<S> subtype);
 
-	void merge(AttributeNodeImplementor<J> other, boolean mutable);
+	void merge(AttributeNodeImplementor<J> other);
 
 	SubGraphImplementor<?> getSubGraph();
 
 	SubGraphImplementor<?> getKeySubGraph();
 
-	Map<Class<?>, SubGraphImplementor<?>> getSubGraphMap();
-
-	Map<Class<?>, SubGraphImplementor<?>> getKeySubGraphMap();
+	@Override
+	Map<Class<?>, SubGraphImplementor<?>> getSubGraphs();
 
 	@Override
-	default Map<Class<?>, ? extends SubGraph<?>> getSubGraphs() {
-		return getSubGraphMap();
-	}
-
-	@Override
-	default Map<Class<?>, ? extends SubGraph<?>> getKeySubGraphs() {
-		return getKeySubGraphMap();
-	}
+	Map<Class<?>, SubGraphImplementor<?>> getKeySubGraphs();
 }

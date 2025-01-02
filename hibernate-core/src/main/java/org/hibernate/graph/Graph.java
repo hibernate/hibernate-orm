@@ -117,8 +117,7 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @see #addAttributeNode(Attribute)
 	 */
-	<AJ> AttributeNode<AJ> addAttributeNode(PersistentAttribute<? super J,AJ> attribute)
-			throws CannotContainSubGraphException;
+	<AJ> AttributeNode<AJ> addAttributeNode(PersistentAttribute<? super J,AJ> attribute);
 
 	@Override
 	default <Y> AttributeNode<Y> addAttributeNode(Attribute<? super J, Y> attribute) {
@@ -140,9 +139,11 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 * @apiNote If no such AttributeNode exists yet, it is created.
 	 */
 	@Deprecated
-	<AJ> SubGraph<AJ> addSubGraph(String attributeName);
+	<AJ> SubGraph<AJ> addSubGraph(String attributeName)
+			throws CannotContainSubGraphException;
 
-	<AJ> SubGraph<AJ> addSubGraph(String attributeName, Class<AJ> type);
+	<AJ> SubGraph<AJ> addSubGraph(String attributeName, Class<AJ> type)
+			throws CannotContainSubGraphException;
 
 	/**
 	 * Create and return a new (mutable) {@link SubGraph} associated with
@@ -150,22 +151,30 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @apiNote If no such AttributeNode exists yet, it is created.
 	 */
-	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, AJ> attribute);
+	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, AJ> attribute)
+			throws CannotContainSubGraphException;
 
-	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> type);
+	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> type)
+			throws CannotContainSubGraphException;
 
-	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, ManagedDomainType<AJ> type);
+	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, ManagedDomainType<AJ> type)
+			throws CannotContainSubGraphException;
 
-	<AJ> SubGraph<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, Class<AJ> type);
+	<AJ> SubGraph<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, Class<AJ> type)
+			throws CannotContainSubGraphException;
 
-	<AJ> SubGraph<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, ManagedDomainType<AJ> type);
+	<AJ> SubGraph<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, ManagedDomainType<AJ> type)
+			throws CannotContainSubGraphException;
 
 	@Deprecated
-	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName);
+	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName)
+			throws CannotContainSubGraphException;
 
-	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName, Class<AJ> type);
+	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName, Class<AJ> type)
+			throws CannotContainSubGraphException;
 
-	<AJ> SubGraph<AJ> addKeySubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, ManagedDomainType<AJ> type);
+	<AJ> SubGraph<AJ> addKeySubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, ManagedDomainType<AJ> type)
+			throws CannotContainSubGraphException;
 
 	@Override
 	default <Y> SubGraph<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type) {
@@ -219,11 +228,11 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 
 	@Override @Deprecated(forRemoval = true)
 	default <X> SubGraph<X> addKeySubgraph(Attribute<? super J, X> attribute) {
-		throw new UnsupportedOperationException("This operation will be removed in JPA 4");
+		throw new UnsupportedOperationException( "This operation will be removed in JPA 4" );
 	}
 
 	@Override @Deprecated(forRemoval = true)
 	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
-		throw new UnsupportedOperationException("This operation will be removed in JPA 4");
+		throw new UnsupportedOperationException( "This operation will be removed in JPA 4" );
 	}
 }

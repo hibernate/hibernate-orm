@@ -78,6 +78,8 @@ public interface PersistenceSettings {
 	 * @see #SESSION_FACTORY_NAME_IS_JNDI
 	 * @see org.hibernate.internal.SessionFactoryRegistry
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyName(String)
+	 *
+	 * @since 7.0
 	 */
 	String SESSION_FACTORY_JNDI_NAME = "hibernate.session_factory_jndi_name";
 

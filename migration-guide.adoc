@@ -466,7 +466,7 @@ To suppress the error for an auto-applied converter, use `@Convert(disableConver
 == `org.hibernate.graph` package
 
 The `EntityGraph` API was enhanced in JPA 3.2, and made much more useful.
-The package `org.hibernate.graph` contains extensions to that API, which have been significantly impacted by the migration to JPA 3.2, and by the additional of new functionality.
+The incubating package `org.hibernate.graph` contains extensions to that API, which have been significantly impacted by the migration to JPA 3.2, and by the additional of new functionality.
 Furthermore, some legacy operations were declared with incorrect generic type signatures (by both JPA, and by Hibernate).
 
 This package has been significantly re-engineered, and the impact of this effort includes:

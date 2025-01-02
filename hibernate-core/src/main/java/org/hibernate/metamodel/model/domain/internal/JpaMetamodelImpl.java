@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.query.NamedQueryDefinition;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -501,7 +502,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			}
 
 			final NamedEntityGraph namedEntityGraph = definition.getAnnotation();
-			final RootGraphImpl<?> entityGraph =
+			final RootGraphImplementor<?> entityGraph =
 					createEntityGraph(
 							namedEntityGraph,
 							definition.getRegisteredName(),
@@ -513,24 +514,26 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		}
 	}
 
-	private <T> RootGraphImpl<T> createEntityGraph(
+	private <T> RootGraphImplementor<T> createEntityGraph(
 			NamedEntityGraph namedEntityGraph,
 			String registeredName,
 			EntityDomainType<T> entityType,
 			boolean includeAllAttributes) {
-		final RootGraphImpl<T> entityGraph =
+		final RootGraphImplementor<T> entityGraph =
 				createRootGraph( registeredName, entityType, includeAllAttributes );
 
 		if ( namedEntityGraph.subclassSubgraphs() != null ) {
-			for ( var subclassSubgraph : namedEntityGraph.subclassSubgraphs() ) {
-				GraphImplementor<?> subgraph = (GraphImplementor<?>) entityGraph.addTreatedSubgraph(
-						(Class) subclassSubgraph.type() );
-
-				applyNamedAttributeNodes(
-						subclassSubgraph.attributeNodes(),
-						namedEntityGraph,
-						subgraph
-				);
+			for ( NamedSubgraph subclassSubgraph : namedEntityGraph.subclassSubgraphs() ) {
+				final Class<?> subgraphType = subclassSubgraph.type();
+				final Class<T> graphJavaType = entityGraph.getGraphedType().getJavaType();
+				if ( !graphJavaType.isAssignableFrom( subgraphType ) ) {
+					throw new AnnotationException( "Named subgraph type '" + subgraphType.getName()
+							+ "' is not a subtype of the graph type '" + graphJavaType.getName() + "'" );
+				}
+				@SuppressWarnings("unchecked") // Safe, because we just checked
+				final Class<? extends T> subtype = (Class<? extends T>) subgraphType;
+				final GraphImplementor<? extends T> subgraph = entityGraph.addTreatedSubgraph( subtype );
+				applyNamedAttributeNodes( subclassSubgraph.attributeNodes(), namedEntityGraph, subgraph );
 			}
 		}
 
@@ -541,7 +544,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		return entityGraph;
 	}
 
-	private static <T> RootGraphImpl<T> createRootGraph(
+	private static <T> RootGraphImplementor<T> createRootGraph(
 			String name, EntityDomainType<T> entityType, boolean includeAllAttributes) {
 		final RootGraphImpl<T> entityGraph = new RootGraphImpl<>( name, entityType );
 		if ( includeAllAttributes ) {
@@ -558,8 +561,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			GraphImplementor<?> graphNode) {
 		for ( NamedAttributeNode namedAttributeNode : namedAttributeNodes ) {
 			final String value = namedAttributeNode.value();
-			final AttributeNodeImplementor<?> attributeNode = (AttributeNodeImplementor<?>) graphNode.addAttributeNode(
-					value );
+			final AttributeNodeImplementor<?> attributeNode =
+					(AttributeNodeImplementor<?>) graphNode.addAttributeNode( value );
 
 			if ( isNotEmpty( namedAttributeNode.subgraph() ) ) {
 				applyNamedSubgraphs(
@@ -580,43 +583,36 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		}
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private <T> void applyNamedSubgraphs(
 			NamedEntityGraph namedEntityGraph,
 			String subgraphName,
-			AttributeNodeImplementor<T> attributeNode, Boolean isKeySubGraph) {
+			AttributeNodeImplementor<T> attributeNode,
+			boolean isKeySubGraph) {
 		for ( NamedSubgraph namedSubgraph : namedEntityGraph.subgraphs() ) {
 			if ( subgraphName.equals( namedSubgraph.name() ) ) {
-				final var isDefaultSubgraphType = namedSubgraph.type().equals( void.class );
-				final Class subGraphType = isDefaultSubgraphType ? null : namedSubgraph.type();
-
-				final SubGraphImplementor<?> subgraph = makeAttributeNodeSubgraph(
-						attributeNode, isKeySubGraph,
-						subGraphType
-				);
-
-				applyNamedAttributeNodes(
-						namedSubgraph.attributeNodes(),
-						namedEntityGraph,
-						subgraph
-				);
+				final boolean isDefaultSubgraphType = namedSubgraph.type().equals( void.class );
+				final Class<?> subGraphType = isDefaultSubgraphType ? null : namedSubgraph.type();
+				final SubGraphImplementor<?> subgraph =
+						makeAttributeNodeSubgraph( attributeNode, isKeySubGraph, subGraphType );
+				applyNamedAttributeNodes( namedSubgraph.attributeNodes(), namedEntityGraph, subgraph );
 			}
 		}
 	}
 
 	private static <T> SubGraphImplementor<?> makeAttributeNodeSubgraph(
 			AttributeNodeImplementor<T> attributeNode,
-			Boolean isKeySubGraph,
-			Class<T> subGraphType) {
-
+			boolean isKeySubGraph,
+			Class<?> subGraphType) {
 		if ( isKeySubGraph ) {
-			return subGraphType != null ? attributeNode.makeKeySubGraph( subGraphType )
+			return subGraphType != null
+					? attributeNode.makeKeySubGraph( subGraphType )
 					: attributeNode.makeKeySubGraph();
 		}
-
-		return subGraphType != null ?
-				attributeNode.makeSubGraph( subGraphType ) :
-				attributeNode.makeSubGraph();
+		else {
+			return subGraphType != null
+					? attributeNode.makeSubGraph( subGraphType )
+					: attributeNode.makeSubGraph();
+		}
 	}
 
 	private <X> Class<X> resolveRequestedClass(String entityName) {
@@ -783,30 +779,11 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	private void populateStaticMetamodel(MetadataImplementor bootMetamodel, MetadataContext context) {
 		bootMetamodel.visitNamedHqlQueryDefinitions( definition
-															-> injectTypedQueryReference(
-				definition,
-				namedQueryMetamodelClass(
-						definition,
-						context
-				)
-		) );
+				-> injectTypedQueryReference( definition, namedQueryMetamodelClass( definition, context ) ) );
 		bootMetamodel.visitNamedNativeQueryDefinitions( definition
-																-> injectTypedQueryReference(
-				definition,
-				namedQueryMetamodelClass(
-						definition,
-						context
-				)
-		) );
+				-> injectTypedQueryReference( definition, namedQueryMetamodelClass( definition, context ) ) );
 		bootMetamodel.getNamedEntityGraphs().values().forEach( definition
-																	-> injectEntityGraph(
-				definition,
-				graphMetamodelClass(
-						definition,
-						context
-				),
-				this
-		) );
+				-> injectEntityGraph( definition, graphMetamodelClass( definition, context ), this ) );
 	}
 
 	private Class<?> namedQueryMetamodelClass(NamedQueryDefinition<?> definition, MetadataContext context) {

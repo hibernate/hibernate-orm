@@ -23,6 +23,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 
 import jakarta.persistence.metamodel.Attribute;
@@ -39,8 +40,8 @@ import static java.util.Collections.unmodifiableMap;
 public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements GraphImplementor<J> {
 
 	private final ManagedDomainType<J> managedType;
+	private final Map<Class<?>, SubGraphImplementor<?>> subgraphs = new HashMap<>(1);
 	private Map<PersistentAttribute<? super J,?>, AttributeNodeImplementor<?>> attributeNodes;
-	private List<SubGraphImplementor<? extends J>> subgraphs;
 
 	public AbstractGraph(ManagedDomainType<J> managedType, boolean mutable) {
 		super( mutable );
@@ -50,8 +51,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	protected AbstractGraph(ManagedDomainType<J> managedType, GraphImplementor<? super J> graph, boolean mutable) {
 		this( managedType, mutable );
 		attributeNodes = new HashMap<>( graph.getAttributeNodesByAttribute().size() );
-		graph.getAttributeNodesByAttribute()
-				.forEach( (attribute, node) -> attributeNodes.put( attribute, node.makeCopy( mutable ) ) );
+		mergeInternal( graph, mutable );
 	}
 
 	protected AbstractGraph(GraphImplementor<J> graph, boolean mutable) {
@@ -76,42 +76,61 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public void merge(GraphImplementor<J> graph) {
+	public void merge(GraphImplementor<? super J> graph) {
+		merge( graph, true );
+	}
+
+	@Override
+	public void merge(GraphImplementor<? super J> graph, boolean mutable) {
 		if ( graph != null ) {
 			verifyMutability();
-			graph.getAttributeNodesByAttribute().forEach( (attribute, node) -> {
-				final AttributeNodeImplementor<?> existingNode = findAttributeNode( attribute );
-				if ( existingNode != null ) {
-					// keep the local one, but merge in the incoming one
-					mergeNode( node, existingNode );
-				}
-				else {
-					addAttributeNode( attribute, node.makeCopy( true ) );
-				}
-			} );
+			mergeInternal( graph, mutable );
 		}
 	}
 
-	private static <T> void mergeNode(AttributeNodeImplementor<?> node, AttributeNodeImplementor<T> existingNode) {
+	private void mergeInternal(GraphImplementor<? super J> graph, boolean mutable) {
+		graph.getAttributeNodesByAttribute().forEach( (attribute, node) -> {
+			final AttributeNodeImplementor<?> existingNode = findAttributeNode( attribute );
+			if ( existingNode != null ) {
+				// keep the local one, but merge in the incoming one
+				mergeNode( node, existingNode, mutable );
+			}
+			else {
+				addAttributeNode( attribute, node.makeCopy( mutable ), mutable );
+			}
+		} );
+		graph.getSubGraphMap().forEach( (type, subgraph) -> {
+			final SubGraphImplementor<?> existing = subgraphs.get( type );
+			if ( existing != null ) {
+				existing.merge( (SubGraphImplementor) subgraph, mutable );
+			}
+			else {
+				subgraphs.put( type, subgraph.makeCopy( mutable ) );
+			}
+		} );
+	}
+
+	private static <T> void mergeNode(
+			AttributeNodeImplementor<?> node, AttributeNodeImplementor<T> existingNode, boolean mutable) {
 		if ( existingNode.getAttributeDescriptor() == node.getAttributeDescriptor() ) {
 			@SuppressWarnings("unchecked") // safe, we just checked
 			final AttributeNodeImplementor<T> castNode = (AttributeNodeImplementor<T>) node;
-			existingNode.merge( castNode );
+			existingNode.merge( castNode, mutable );
 		}
 		else {
 			throw new AssertionFailure( "Attributes should have been identical" );
 		}
 	}
 
-	private <T> void addAttributeNode(PersistentAttribute<? super J, ?> attribute, AttributeNodeImplementor<T> node) {
+	private <T> void addAttributeNode(
+			PersistentAttribute<? super J, ?> attribute, AttributeNodeImplementor<T> node, boolean mutable) {
 		final AttributeNodeImplementor<T> attributeNode = getNodeForPut( node.getAttributeDescriptor() );
 		if ( attributeNode == null ) {
 			attributeNodes.put( attribute, node );
 		}
 		else {
 			// we assume the subgraph has been properly copied if needed
-			node.getSubGraphMap().forEach( (subtype, subgraph) -> attributeNode.addSubGraph( subgraph ) );
-			node.getKeySubGraphMap().forEach( (subtype, subgraph) -> attributeNode.addKeySubGraph( subgraph ) );
+			node.merge( attributeNode, mutable );
 		}
 	}
 
@@ -126,8 +145,8 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 		@SuppressWarnings("unchecked") // The JPA API is unsafe by nature
 		final PersistentAttribute<? super J, AJ> persistentAttribute = (PersistentAttribute<? super J, AJ>) attribute;
 		final AttributeNodeImplementor<AJ> node = attribute == null ? null : findAttributeNode( persistentAttribute );
-		if ( node == null && subgraphs != null ) {
-			for ( SubGraphImplementor<? extends J> subgraph : subgraphs ) {
+		if ( node == null ) {
+			for ( SubGraphImplementor<?> subgraph : subgraphs.values() ) {
 				final AttributeNodeImplementor<AJ> subgraphNode = subgraph.findAttributeNode( attributeName );
 				if ( subgraphNode != null ) {
 					return subgraphNode;
@@ -272,12 +291,22 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public <AJ> SubGraphImplementor<AJ> addSubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, ManagedDomainType<AJ> subtype) {
+	public <AJ> SubGraphImplementor<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, ManagedDomainType<AJ> subtype) {
 		return findOrCreateAttributeNode( attribute ).makeSubGraph( subtype );
 	}
 
 	@Override
-	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(PersistentAttribute<? super J, ? super AJ> attribute, ManagedDomainType<AJ> subtype) {
+	public <AJ> SubGraphImplementor<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, Class<AJ> type) {
+		return findOrCreateAttributeNode( attribute ).makeSubGraph( type );
+	}
+
+	@Override
+	public <AJ> SubGraphImplementor<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, ManagedDomainType<AJ> type) {
+		return findOrCreateAttributeNode( attribute ).makeSubGraph( type );
+	}
+
+	@Override
+	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, ManagedDomainType<AJ> subtype) {
 		return findOrCreateAttributeNode( attribute ).makeKeySubGraph( subtype );
 	}
 
@@ -328,13 +357,44 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public <S extends J> SubGraphImplementor<S> addTreatedSubGraph(Class<S> type) {
-		final ManagedDomainType<S> managedDomainType = getGraphedType().getMetamodel().managedType( type );
-		final SubGraphImpl<S> subgraph = new SubGraphImpl<>( managedDomainType, this, true );
-		if ( subgraphs == null ) {
-			subgraphs = new ArrayList<>( 1 );
+	public <S extends J> SubGraphImplementor<S> addTreatedSubGraph(ManagedDomainType<S> type) {
+		if ( getGraphedType().equals( type ) ) {
+			//noinspection unchecked
+			return (SubGraphImplementor<S>) this;
 		}
-		subgraphs.add( subgraph );
-		return subgraph;
+		else {
+			final Class<S> javaType = type.getJavaType();
+			final SubGraphImplementor<S> castSubgraph = subgraph( javaType );
+			if ( castSubgraph == null ) {
+				final SubGraphImpl<S> subgraph = new SubGraphImpl<>( type, true );
+				subgraphs.put( javaType, subgraph );
+				return subgraph;
+			}
+			else {
+				return castSubgraph;
+			}
+		}
+	}
+
+	private <S extends J> SubGraphImplementor<S> subgraph(Class<S> javaType) {
+		final SubGraphImplementor<?> existing = subgraphs.get( javaType );
+		if ( existing != null ) {
+			@SuppressWarnings("unchecked")
+			final SubGraphImplementor<S> castSubgraph = (SubGraphImplementor<S>) existing;
+			return castSubgraph;
+		}
+		else {
+			return null;
+		}
+	}
+
+	@Override
+	public <S extends J> SubGraphImplementor<S> addTreatedSubGraph(Class<S> type) {
+		return addTreatedSubGraph( getGraphedType().getMetamodel().managedType( type ) );
+	}
+
+	@Override
+	public Map<Class<?>, SubGraphImplementor<?>> getSubGraphMap() {
+		return subgraphs;
 	}
 }

@@ -4,10 +4,11 @@
  */
 package org.hibernate.graph;
 
-import java.util.Map;
 
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
+
+import java.util.Map;
 
 /**
  * Extends the JPA-defined {@link AttributeNode} with additional operations.
@@ -26,8 +27,8 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	SubGraph<?> makeSubGraph();
 	SubGraph<?> makeKeySubGraph();
 
-	<S> SubGraph<S> makeSubGraph(Class<S> type);
-	<S> SubGraph<S> makeKeySubGraph(Class<S> type);
+	<S> SubGraph<S> makeSubGraph(Class<S> subtype);
+	<S> SubGraph<S> makeKeySubGraph(Class<S> subtype);
 
 	<S> SubGraph<S> makeSubGraph(ManagedDomainType<S> subtype);
 	<S> SubGraph<S> makeKeySubGraph(ManagedDomainType<S> subtype);

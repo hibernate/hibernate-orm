@@ -22,10 +22,6 @@ public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImpleme
 		super( original, mutable );
 	}
 
-	public SubGraphImpl(ManagedDomainType<J> managedDomainType, AbstractGraph<? super J> original, boolean mutable) {
-		super( managedDomainType, original, mutable );
-	}
-
 	@Override
 	public SubGraphImplementor<J> makeCopy(boolean mutable) {
 		return new SubGraphImpl<>( this, mutable );

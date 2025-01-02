@@ -12,6 +12,7 @@ import org.hibernate.graph.Graph;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 
 
 /**
@@ -23,7 +24,9 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
  */
 public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 
-	void merge(GraphImplementor<J> other);
+	void merge(GraphImplementor<? super J> other);
+
+	void merge(GraphImplementor<? super J> other, boolean mutable);
 
 	@Override @Deprecated(forRemoval = true)
 	RootGraphImplementor<J> makeRootGraph(String name, boolean mutable)
@@ -72,11 +75,19 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 	<AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName, Class<AJ> subtype);
 
 	@Override
-	<AJ> SubGraphImplementor<AJ> addSubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, ManagedDomainType<AJ> subtype);
+	<AJ> SubGraphImplementor<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, ManagedDomainType<AJ> subtype);
+
+	<AJ> SubGraphImplementor<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, Class<AJ> type);
+
+	<AJ> SubGraphImplementor<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, ManagedDomainType<AJ> type);
 
 	@Override
-	<AJ> SubGraphImplementor<AJ> addKeySubGraph(PersistentAttribute<? super J, ? super AJ> attribute, ManagedDomainType<AJ> subtype);
+	<AJ> SubGraphImplementor<AJ> addKeySubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, ManagedDomainType<AJ> subtype);
 
 	@Override
 	<Y extends J> SubGraphImplementor<Y> addTreatedSubGraph(Class<Y> type);
+
+	<Y extends J> SubGraphImplementor<Y> addTreatedSubGraph(ManagedDomainType<Y> type);
+
+	Map<Class<?>, SubGraphImplementor<?>> getSubGraphMap();
 }

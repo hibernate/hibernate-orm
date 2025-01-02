@@ -11,6 +11,7 @@ import jakarta.persistence.metamodel.PluralAttribute;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 
 /**
  * A container for {@link AttributeNode} references.
@@ -130,6 +131,8 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 
 	<Y extends J> SubGraph<Y> addTreatedSubGraph(Class<Y> type);
 
+	<Y extends J> SubGraph<Y> addTreatedSubGraph(ManagedDomainType<Y> type);
+
 	/**
 	 * Create and return a new (mutable) {@link SubGraph} associated with
 	 * the named {@link AttributeNode}.
@@ -151,18 +154,22 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 
 	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> type);
 
-	<AJ> SubGraph<AJ> addSubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, ManagedDomainType<AJ> type);
+	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, ManagedDomainType<AJ> type);
+
+	<AJ> SubGraph<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, Class<AJ> type);
+
+	<AJ> SubGraph<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, ManagedDomainType<AJ> type);
 
 	@Deprecated
 	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName);
 
 	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName, Class<AJ> type);
 
-	<AJ> SubGraph<AJ> addKeySubGraph(PersistentAttribute<? super J, ? super AJ> attribute, ManagedDomainType<AJ> type);
+	<AJ> SubGraph<AJ> addKeySubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, ManagedDomainType<AJ> type);
 
 	@Override
 	default <Y> SubGraph<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type) {
-		return addSubGraph( (PersistentAttribute<? super J, ? super Y>) attribute, type );
+		return addSubGraph( (PersistentAttribute<? super J, ? super Y>) attribute ).addTreatedSubGraph( type );
 	}
 
 	@Override
@@ -172,7 +179,7 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 
 	@Override
 	default <X> SubGraph<? extends X> addSubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
-		return addSubGraph( (PersistentAttribute<? super J, X>) attribute, type );
+		return addSubGraph( (PersistentAttribute<? super J, X>) attribute ).addTreatedSubGraph( type );
 	}
 
 	@Override
@@ -182,7 +189,7 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 
 	@Override
 	default <X> SubGraph<X> addSubgraph(String name, Class<X> type) {
-		return addSubGraph( name, type );
+		return addSubGraph( name ).addTreatedSubGraph( type );
 	}
 
 	@Override
@@ -192,7 +199,7 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 
 	@Override
 	default <X> SubGraph<X> addKeySubgraph(String name, Class<X> type) {
-		return addKeySubGraph( name, type );
+		return addKeySubGraph( name ).addTreatedSubGraph( type );
 	}
 
 	/**

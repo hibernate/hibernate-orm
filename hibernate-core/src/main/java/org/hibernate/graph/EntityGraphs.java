@@ -61,7 +61,6 @@ public final class EntityGraphs {
 			for ( jakarta.persistence.Graph<T> graph : graphs ) {
 				merged.merge( (GraphImplementor<T>) graph );
 			}
-
 		}
 		return merged;
 	}

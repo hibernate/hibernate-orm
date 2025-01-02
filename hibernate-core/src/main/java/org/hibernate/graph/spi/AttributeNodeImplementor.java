@@ -4,15 +4,11 @@
  */
 package org.hibernate.graph.spi;
 
-import java.util.Map;
-
-import jakarta.persistence.Subgraph;
-
 import org.hibernate.graph.AttributeNode;
 import org.hibernate.graph.SubGraph;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
-import static java.util.Collections.unmodifiableMap;
+import java.util.Map;
 
 /**
  * Integration version of the {@link AttributeNode} contract
@@ -21,29 +17,6 @@ import static java.util.Collections.unmodifiableMap;
  * @author Steve Ebersole
  */
 public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNodeImplementor<J> {
-
-	Map<Class<?>, SubGraphImplementor<?>> getSubGraphMap();
-	Map<Class<?>, SubGraphImplementor<?>> getKeySubGraphMap();
-
-	@Override
-	default Map<Class<?>, ? extends SubGraph<?>> getSubGraphs() {
-		return unmodifiableMap( getSubGraphMap() );
-	}
-
-	@Override
-	default Map<Class<?>, ? extends SubGraph<?>> getKeySubGraphs() {
-		return unmodifiableMap( getKeySubGraphMap() );
-	}
-
-	@Override // JPA API uses raw types
-	default @SuppressWarnings("rawtypes") Map<Class, Subgraph> getSubgraphs() {
-		return unmodifiableMap( getSubGraphMap() );
-	}
-
-	@Override // JPA API uses raw types
-	default @SuppressWarnings("rawtypes") Map<Class, Subgraph> getKeySubgraphs() {
-		return unmodifiableMap( getKeySubGraphMap() );
-	}
 
 	@Override
 	AttributeNodeImplementor<J> makeCopy(boolean mutable);
@@ -55,10 +28,10 @@ public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNode
 	SubGraphImplementor<?> makeKeySubGraph();
 
 	@Override
-	<S> SubGraphImplementor<S> makeSubGraph(Class<S> type);
+	<S> SubGraphImplementor<S> makeSubGraph(Class<S> subtype);
 
 	@Override
-	<S> SubGraphImplementor<S> makeKeySubGraph(Class<S> type);
+	<S> SubGraphImplementor<S> makeKeySubGraph(Class<S> subtype);
 
 	@Override
 	<S> SubGraphImplementor<S> makeSubGraph(ManagedDomainType<S> subtype);
@@ -66,9 +39,23 @@ public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNode
 	@Override
 	<S> SubGraphImplementor<S> makeKeySubGraph(ManagedDomainType<S> subtype);
 
-	void merge(AttributeNodeImplementor<J> other);
+	void merge(AttributeNodeImplementor<J> other, boolean mutable);
 
-	void addSubGraph(SubGraphImplementor<?> subgraph);
+	SubGraphImplementor<?> getSubGraph();
 
-	void addKeySubGraph(SubGraphImplementor<?> subgraph);
+	SubGraphImplementor<?> getKeySubGraph();
+
+	Map<Class<?>, SubGraphImplementor<?>> getSubGraphMap();
+
+	Map<Class<?>, SubGraphImplementor<?>> getKeySubGraphMap();
+
+	@Override
+	default Map<Class<?>, ? extends SubGraph<?>> getSubGraphs() {
+		return getSubGraphMap();
+	}
+
+	@Override
+	default Map<Class<?>, ? extends SubGraph<?>> getKeySubGraphs() {
+		return getKeySubGraphMap();
+	}
 }

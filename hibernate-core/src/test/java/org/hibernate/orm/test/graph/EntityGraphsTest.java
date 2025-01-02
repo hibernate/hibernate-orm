@@ -25,7 +25,7 @@ public class EntityGraphsTest extends AbstractEntityGraphTest {
 	}
 
 	@SafeVarargs
-	private final void checkMerge(EntityGraph<GraphParsingTestEntity> expected, EntityGraph<GraphParsingTestEntity>... graphs) {
+	private void checkMerge(EntityGraph<GraphParsingTestEntity> expected, EntityGraph<GraphParsingTestEntity>... graphs) {
 		checkMerge( GraphParsingTestEntity.class, expected, graphs );
 	}
 

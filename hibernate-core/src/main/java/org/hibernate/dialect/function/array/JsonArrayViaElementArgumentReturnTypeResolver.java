@@ -8,6 +8,7 @@ import java.lang.reflect.Array;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -78,6 +79,7 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 		return null;
 	}
 
+	@AllowReflection
 	public static <T> BasicType<?> resolveJsonArrayType(DomainType<T> elementType, TypeConfiguration typeConfiguration) {
 		final Class<?> arrayClass = Array.newInstance( elementType.getBindableJavaType(), 0 ).getClass();
 		@SuppressWarnings("unchecked")

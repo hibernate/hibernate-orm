@@ -18,6 +18,7 @@ import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -34,6 +35,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 @Incubating
+@AllowReflection // We need the ability to create arrays of the same type as in the model.
 public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PersistentArrayHolder.class );
 

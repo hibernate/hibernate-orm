@@ -22,6 +22,7 @@ import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
 import org.hibernate.event.service.spi.JpaBootstrapSensitive;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 
@@ -350,6 +351,7 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	@SuppressWarnings("unchecked")
+	@AllowReflection // Possible array types are registered in org.hibernate.graalvm.internal.StaticClassLists.typesNeedingArrayCopy
 	private T[] createListenerArrayForWrite(int len) {
 		return (T[]) Array.newInstance( eventType.baseListenerInterface(), len );
 	}

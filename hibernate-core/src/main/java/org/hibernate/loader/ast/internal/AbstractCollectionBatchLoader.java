@@ -11,6 +11,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -126,6 +127,7 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 
 	}
 
+	@AllowReflection
 	Object[] resolveKeysToInitialize(Object keyBeingLoaded, SharedSessionContractImplementor session) {
 		final int length = getDomainBatchSize();
 		final Object[] keysToInitialize = (Object[]) Array.newInstance(

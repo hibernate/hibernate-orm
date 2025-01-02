@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerData;
@@ -130,6 +131,7 @@ public class StandardRowReader<T> implements RowReader<T> {
 	}
 
 	@Override
+	@AllowReflection
 	public T readRow(RowProcessingState rowProcessingState) {
 		coordinateInitializers( rowProcessingState );
 

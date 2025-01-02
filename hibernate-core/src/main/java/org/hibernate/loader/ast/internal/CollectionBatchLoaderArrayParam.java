@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -51,6 +52,7 @@ public class CollectionBatchLoaderArrayParam
 	private final SelectStatement sqlSelect;
 	private final JdbcOperationQuerySelect jdbcSelectOperation;
 
+	@AllowReflection
 	public CollectionBatchLoaderArrayParam(
 			int domainBatchSize,
 			LoadQueryInfluencers loadQueryInfluencers,
@@ -115,6 +117,7 @@ public class CollectionBatchLoaderArrayParam
 
 	}
 
+	@AllowReflection
 	private PersistentCollection<?> loadEmbeddable(
 			Object keyBeingLoaded,
 			SharedSessionContractImplementor session,
@@ -216,6 +219,7 @@ public class CollectionBatchLoaderArrayParam
 	}
 
 	@Override
+	@AllowReflection
 	Object[] resolveKeysToInitialize(Object keyBeingLoaded, SharedSessionContractImplementor session) {
 		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
 		if( keyDescriptor.isEmbedded()){

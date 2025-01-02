@@ -9,6 +9,7 @@ import java.util.Map;
 
 import jakarta.persistence.PersistenceException;
 
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.MapBackedClassValue;
 import org.hibernate.internal.util.collections.ReadOnlyMap;
@@ -168,6 +169,7 @@ final class CallbackRegistryImpl implements CallbackRegistry {
 		private final Map<Class<?>, Callback[]> postUpdates = new HashMap<>();
 		private final Map<Class<?>, Callback[]> postLoads = new HashMap<>();
 
+		@AllowReflection
 		public void registerCallbacks(Class<?> entityClass, Callback[] callbacks) {
 			if ( callbacks != null ) {
 				for ( Callback callback : callbacks ) {

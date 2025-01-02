@@ -11,6 +11,7 @@ import java.util.Locale;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -58,6 +59,7 @@ public class EntityBatchLoaderArrayParam<T>
 	 * {@link EntityIdentifierMapping} is not available at that time.  On first use, we know we
 	 * have it available
 	 */
+	@AllowReflection
 	public EntityBatchLoaderArrayParam(
 			int domainBatchSize,
 			EntityMappingType entityDescriptor,
@@ -106,6 +108,7 @@ public class EntityBatchLoaderArrayParam<T>
 		return domainBatchSize;
 	}
 
+	@AllowReflection
 	protected Object[] resolveIdsToInitialize(Object pkValue, SharedSessionContractImplementor session) {
 		//TODO: should this really be different to EntityBatchLoaderInPredicate impl?
 		final Class<?> idType = identifierMapping.getJavaType().getJavaTypeClass();

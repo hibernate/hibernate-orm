@@ -11,6 +11,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.internal.CacheLoadHelper.PersistenceContextEntry;
@@ -42,6 +43,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 	private final EntityIdentifierMapping identifierMapping;
 	protected final Object[] idArray;
 
+	@AllowReflection
 	public AbstractMultiIdEntityLoader(EntityMappingType entityDescriptor, SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
 		this.sessionFactory = sessionFactory;

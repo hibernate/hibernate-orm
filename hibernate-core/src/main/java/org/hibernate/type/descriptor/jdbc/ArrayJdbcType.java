@@ -17,6 +17,7 @@ import org.hibernate.dialect.StructAttributeValues;
 import org.hibernate.dialect.StructHelper;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -40,6 +41,7 @@ import static org.hibernate.dialect.StructHelper.instantiate;
  * @author Christian Beikov
  * @author Jordan Gigov
  */
+@AllowReflection // See https://hibernate.atlassian.net/browse/HHH-16809
 public class ArrayJdbcType implements JdbcType {
 
 	private final JdbcType elementJdbcType;

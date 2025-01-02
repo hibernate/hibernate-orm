@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -24,6 +25,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 public class DdlTypeHelper {
 	@SuppressWarnings("unchecked")
+	@AllowReflection
 	public static BasicType<?> resolveArrayType(DomainType<?> elementType, TypeConfiguration typeConfiguration) {
 		@SuppressWarnings("unchecked") final BasicPluralJavaType<Object> arrayJavaType = (BasicPluralJavaType<Object>) typeConfiguration.getJavaTypeRegistry()
 				.getDescriptor(

@@ -16,6 +16,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -24,6 +25,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Christian Beikov
  */
+@AllowReflection // Needed for arbitrary array wrapping/unwrapping
 public class FloatPrimitiveArrayJavaType extends AbstractArrayJavaType<float[], Float> {
 
 	public static final FloatPrimitiveArrayJavaType INSTANCE = new FloatPrimitiveArrayJavaType();

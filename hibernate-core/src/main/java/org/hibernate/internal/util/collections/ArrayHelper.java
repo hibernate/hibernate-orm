@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.type.Type;
 
 public final class ArrayHelper {
@@ -59,6 +60,7 @@ public final class ArrayHelper {
 	}
 
 	@SuppressWarnings("unchecked")
+	@AllowReflection
 	public static <T> T[] filledArray(T value, Class<T> valueJavaType, int size) {
 		final T[] array = (T[]) Array.newInstance( valueJavaType, size );
 		Arrays.fill( array, value );
@@ -202,6 +204,7 @@ public final class ArrayHelper {
 	}
 
 	@SuppressWarnings("unchecked")
+	@AllowReflection
 	public static <T> T[] join(T[] x, T... y) {
 		T[] result = (T[]) Array.newInstance( x.getClass().getComponentType(), x.length + y.length );
 		System.arraycopy( x, 0, result, 0, x.length );
@@ -520,6 +523,7 @@ public final class ArrayHelper {
 	}
 
 	@SuppressWarnings("unchecked")
+	@AllowReflection
 	public static <T> T[] newInstance(Class<T> elementType, int length) {
 		return (T[]) Array.newInstance( elementType, length );
 	}

@@ -123,10 +123,14 @@ tasks.forbiddenApisMain {
     //bundledSignatures += ["jdk-system-out", "jdk-non-portable", "jdk-unsafe-${jdkVersions.baseline}"]
     bundledSignatures += ["jdk-system-out", "jdk-non-portable"]
 
+    signaturesFiles += rootProject.files('rules/forbidden-apis.txt')
+    ignoreSignaturesOfMissingClasses = true
+
     suppressAnnotations += [
             "org.hibernate.internal.build.AllowSysOut",
             "org.hibernate.internal.build.AllowPrintStacktrace",
-            "org.hibernate.internal.build.AllowNonPortable"
+            "org.hibernate.internal.build.AllowNonPortable",
+            "org.hibernate.internal.build.AllowReflection"
     ]
 }
 

@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
+import org.hibernate.internal.build.AllowReflection;
+
 import java.lang.reflect.Array;
 
 /**
@@ -15,6 +17,7 @@ public class ArrayMutabilityPlan<T> extends MutableMutabilityPlan<T> {
 	public static final ArrayMutabilityPlan INSTANCE = new ArrayMutabilityPlan();
 
 	@SuppressWarnings({ "unchecked", "SuspiciousSystemArraycopy" })
+	@AllowReflection
 	public T deepCopyNotNull(T value) {
 		if ( ! value.getClass().isArray() ) {
 			// ugh!  cannot find a way to properly define the type signature here

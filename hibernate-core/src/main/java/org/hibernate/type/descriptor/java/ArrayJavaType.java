@@ -14,6 +14,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicPluralType;
@@ -29,6 +30,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Christian Beikov
  * @author Jordan Gigov
  */
+@AllowReflection
 public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 
 	public ArrayJavaType(BasicType<T> baseDescriptor) {
@@ -376,6 +378,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		}
 	}
 
+	@AllowReflection
 	private static class ArrayMutabilityPlan<T> implements MutabilityPlan<T[]> {
 
 		private final Class<T> componentClass;

@@ -41,7 +41,6 @@ import static org.hibernate.dialect.StructHelper.instantiate;
  * @author Christian Beikov
  * @author Jordan Gigov
  */
-@AllowReflection // See https://hibernate.atlassian.net/browse/HHH-16809
 public class ArrayJdbcType implements JdbcType {
 
 	private final JdbcType elementJdbcType;
@@ -69,9 +68,8 @@ public class ArrayJdbcType implements JdbcType {
 				scale,
 				typeConfiguration
 		);
-		final JavaType<Object> javaType = typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
-				Array.newInstance( elementJavaType.getJavaTypeClass(), 0 ).getClass()
-		);
+		final JavaType<Object> javaType = typeConfiguration.getJavaTypeRegistry()
+				.resolveDescriptor( elementJavaType.getArrayType() );
 		if ( javaType instanceof BasicPluralType<?, ?> ) {
 			//noinspection unchecked
 			return (JavaType<T>) javaType;

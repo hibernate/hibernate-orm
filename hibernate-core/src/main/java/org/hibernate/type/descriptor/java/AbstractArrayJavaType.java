@@ -4,11 +4,8 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import java.lang.reflect.Array;
-
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.descriptor.converter.internal.ArrayConverter;
 import org.hibernate.type.BasicArrayType;
@@ -21,7 +18,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
-@AllowReflection
 public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<T>
 		implements BasicPluralJavaType<E> {
 
@@ -86,8 +82,7 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 			ColumnTypeInformation columnTypeInformation,
 			JdbcTypeIndicators stdIndicators,
 			BasicValueConverter<E, F> valueConverter) {
-		final Class<F> convertedElementClass = valueConverter.getRelationalJavaType().getJavaTypeClass();
-		final Class<?> convertedArrayClass = Array.newInstance( convertedElementClass, 0 ).getClass();
+		final Class<?> convertedArrayClass = valueConverter.getRelationalJavaType().getArrayType();
 		final JavaType<?> relationalJavaType = typeConfiguration.getJavaTypeRegistry().getDescriptor( convertedArrayClass );
 		return new ConvertedBasicArrayType<>(
 				elementType,

@@ -5,6 +5,7 @@
 package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Comparator;
@@ -326,6 +327,28 @@ public interface JavaType<T> extends Serializable {
 	@Incubating
 	default JavaType<T> createJavaType(ParameterizedType parameterizedType, TypeConfiguration typeConfiguration) {
 		return this;
+	}
+
+	/**
+	 * Creates a typed array, as opposed to a generic {@code Object[]} that holds the typed values.
+	 * <p>
+	 * The array type necessarily extends {@code Object[]}: it will never be an array of primitives like {@code int[]}.
+	 *
+	 * @param numberOfElements The size of the array to create
+	 */
+	@SuppressWarnings("unchecked")
+	default T[] createTypedArray(int numberOfElements) {
+		return (T[]) Array.newInstance( getJavaTypeClass(), numberOfElements );
+	}
+
+	/**
+	 * Get the Java type (the {@link Class} object) representing an array with elements of this {@code JavaType}.
+	 * <p>
+	 * The array type necessarily extends {@code Object[]}: it will never be an array of primitives like {@code int[]}.
+	 */
+	@SuppressWarnings("unchecked")
+	default Class<T[]> getArrayType() {
+		return (Class<T[]>) createTypedArray( 0 ).getClass();
 	}
 
 	/**

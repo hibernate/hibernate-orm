@@ -24,11 +24,11 @@ public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImpleme
 
 	@Override
 	public SubGraphImplementor<J> makeCopy(boolean mutable) {
-		return new SubGraphImpl<>( this, mutable );
+		return !mutable && !isMutable() ? this : new SubGraphImpl<>( this, mutable );
 	}
 
 	@Override @Deprecated(forRemoval = true)
 	public SubGraphImplementor<J> makeSubGraph(boolean mutable) {
-		return !mutable && !isMutable() ? this : makeCopy( true );
+		return makeCopy( mutable );
 	}
 }

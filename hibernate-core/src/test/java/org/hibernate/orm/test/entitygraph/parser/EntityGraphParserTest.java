@@ -186,7 +186,7 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 
 		assertNullOrEmpty( linkToOneNode.getKeySubgraphs() );
 
-		final SubGraphImplementor<?> subgraph = linkToOneNode.getSubGraphMap().get( GraphParsingTestSubEntity.class );
+		final SubGraphImplementor<?> subgraph = linkToOneNode.getSubGraphs().get( GraphParsingTestSubEntity.class );
 		assertNotNull( subgraph );
 
 		assertBasicAttributes( subgraph, "sub" );

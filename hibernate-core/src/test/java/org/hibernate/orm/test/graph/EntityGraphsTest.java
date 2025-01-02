@@ -86,7 +86,6 @@ public class EntityGraphsTest extends AbstractEntityGraphTest {
 	}
 
 	@Test
-	@Ignore("Cannot run due to Hibernate bug: https://hibernate.atlassian.net/browse/HHH-10378")
 	public void testDifferentLinksEqual3() {
 		EntityGraph<GraphParsingTestEntity> a = parseGraph( "linkToOne(name), linkToOne:MockSubentity(description)" );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "linkToOne(name, description)" );

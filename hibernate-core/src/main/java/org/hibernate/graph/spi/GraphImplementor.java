@@ -71,17 +71,22 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 	<AJ> SubGraphImplementor<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, Class<AJ> subtype);
 
 	@Override
+	<AJ> SubGraphImplementor<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, ManagedDomainType<AJ> subtype);
+
+	@Override
+	<AJ> SubGraphImplementor<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, Class<AJ> type);
+
+	@Override
+	<AJ> SubGraphImplementor<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, ManagedDomainType<AJ> type);
+
+	@Override
 	<AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName);
 
 	@Override
 	<AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName, Class<AJ> subtype);
 
 	@Override
-	<AJ> SubGraphImplementor<AJ> addSubGraph(PersistentAttribute<? super J, ? super AJ> attribute, ManagedDomainType<AJ> subtype);
-
-	<AJ> SubGraphImplementor<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, Class<AJ> type);
-
-	<AJ> SubGraphImplementor<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, ManagedDomainType<AJ> type);
+	<AJ> SubGraphImplementor<AJ> addKeySubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, Class<AJ> subtype);
 
 	@Override
 	<AJ> SubGraphImplementor<AJ> addKeySubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, ManagedDomainType<AJ> subtype);

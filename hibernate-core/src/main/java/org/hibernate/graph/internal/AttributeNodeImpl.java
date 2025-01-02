@@ -22,6 +22,7 @@ import static java.util.Collections.emptyMap;
  * Implementation of {@link jakarta.persistence.AttributeNode}.
  *
  * @author Steve Ebersole
+ * @author Gavin King
  */
 public class AttributeNodeImpl<J,V,K>
 		extends AbstractGraphNode<J>

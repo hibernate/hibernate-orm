@@ -14,17 +14,53 @@ import java.util.Map;
 import static java.util.Collections.unmodifiableMap;
 
 /**
- * Extends the JPA-defined {@link AttributeNode} with additional operations.
+ * Represents a fetched {@linkplain jakarta.persistence.metamodel.Attribute attribute} in an
+ * {@linkplain Graph entity graph}.
+ * <p>
+ * An {@code AttributeNode} representing an attribute whose type is a managed type or collection
+ * of some managed type may have an associated <em>value subgraph</em>, which is represented by
+ * an instance of {@link SubGraph}.
+ * <ul>
+ * <li>For a {@linkplain jakarta.persistence.metamodel.SingularAttribute singular attribute},
+ *     the value type is the type of the attribute.
+ * <li>For a {@linkplain jakarta.persistence.metamodel.PluralAttribute plural attribute}, the
+ *     value type is the collection element type.
+ * </ul>
+ * <p>
+ * Or, if the represented attribute is a {@link Map}, the {@code AttributeNode} maye have an
+ * associated <em>key subgraph</em>, similarly represented by a {@link SubGraph}.
+ * <p>
+ * Not every attribute node has a subgraph.
+ * <p>
+ * Extends the JPA-defined {@link jakarta.persistence.AttributeNode} with additional operations.
+ *
+ * @apiNote Historically, this interface declared operations with incorrect generic types,
+ * leading to unsound code. This was in Hibernate 7, with possible breakage to older code.
  *
  * @author Strong Liu
  * @author Steve Ebersole
  * @author Andrea Boriero
+ * @author Gavin King
  */
 public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.AttributeNode<J> {
 
+	/**
+	 * The {@link PersistentAttribute} represented by this node.
+	 */
 	PersistentAttribute<?, J> getAttributeDescriptor();
 
+	/**
+	 * All value subgraphs rooted at this node.
+	 *
+	 * @see jakarta.persistence.AttributeNode#getSubgraphs
+	 */
 	Map<Class<?>, ? extends SubGraph<?>> getSubGraphs();
+
+	/**
+	 * All key subgraphs rooted at this node.
+	 *
+	 * @see jakarta.persistence.AttributeNode#getKeySubgraphs
+	 */
 	Map<Class<?>, ? extends SubGraph<?>> getKeySubGraphs();
 
 	@Override
@@ -37,13 +73,43 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 		return unmodifiableMap( getKeySubGraphs() );
 	}
 
+	/**
+	 * Create and return a new value {@link SubGraph} rooted at this node,
+	 * or return an existing such {@link SubGraph} if there is one.
+	 */
 	SubGraph<?> makeSubGraph();
+
+	/**
+	 * Create and return a new key {@link SubGraph} rooted at this node,
+	 * or return an existing such {@link SubGraph} if there is one.
+	 */
 	SubGraph<?> makeKeySubGraph();
 
+	/**
+	 * Create and return a new value {@link SubGraph} rooted at this node,
+	 * with the given type, which may be a subtype of the value type,
+	 * or return an existing such {@link SubGraph} if there is one.
+	 */
 	<S> SubGraph<S> makeSubGraph(Class<S> subtype);
+
+	/**
+	 * Create and return a new value {@link SubGraph} rooted at this node,
+	 * with the given type, which may be a subtype of the key type,
+	 * or return an existing such {@link SubGraph} if there is one.
+	 */
 	<S> SubGraph<S> makeKeySubGraph(Class<S> subtype);
 
+	/**
+	 * Create and return a new value {@link SubGraph} rooted at this node,
+	 * with the given type, which may be a subtype of the value type,
+	 * or return an existing such {@link SubGraph} if there is one.
+	 */
 	<S> SubGraph<S> makeSubGraph(ManagedDomainType<S> subtype);
-	<S> SubGraph<S> makeKeySubGraph(ManagedDomainType<S> subtype);
 
+	/**
+	 * Create and return a new value {@link SubGraph} rooted at this node,
+	 * with the given type, which may be a subtype of the key type,
+	 * or return an existing such {@link SubGraph} if there is one.
+	 */
+	<S> SubGraph<S> makeKeySubGraph(ManagedDomainType<S> subtype);
 }

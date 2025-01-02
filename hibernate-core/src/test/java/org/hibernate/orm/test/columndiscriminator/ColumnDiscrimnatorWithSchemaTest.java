@@ -8,7 +8,9 @@ package org.hibernate.orm.test.columndiscriminator;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.SchemaToolingSettings;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportSchemaCreation;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -21,7 +23,15 @@ import org.junit.jupiter.api.Test;
 		@Setting(name = SchemaToolingSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, value = "true")
 })
 @SessionFactory
+@RequiresDialectFeature(feature = SupportSchemaCreation.class)
 class ColumnDiscrimnatorWithSchemaTest {
+
+	private ColumnDiscrimnatorWithSchemaTest() {
+	}
+
+	static ColumnDiscrimnatorWithSchemaTest createColumnDiscrimnatorWithSchemaTest() {
+		return new ColumnDiscrimnatorWithSchemaTest();
+	}
 
 	@Test
 	void testIt(SessionFactoryScope scope) {

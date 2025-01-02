@@ -12,13 +12,14 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.util.NullnessHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.interpretIsolation;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 
 /**
  * Standard implementation of {@link DatabaseConnectionInfo}
@@ -122,7 +123,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	}
 
 	private static String handleEmpty(String value) {
-		return StringHelper.isNotEmpty( value ) ? value : DEFAULT;
+		return isNotEmpty( value ) ? value : DEFAULT;
 	}
 
 	private static String handleEmpty(DatabaseVersion dialectVersion) {
@@ -141,23 +142,23 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	@SuppressWarnings("deprecation")
 	private static String determineUrl(Map<String, Object> settings) {
 		return NullnessHelper.coalesceSuppliedValues(
-				() -> ConfigurationHelper.getString( JdbcSettings.JAKARTA_JDBC_URL, settings ),
-				() -> ConfigurationHelper.getString( JdbcSettings.URL, settings ),
-				() -> ConfigurationHelper.getString( JdbcSettings.JPA_JDBC_URL, settings )
+				() -> getString( JdbcSettings.JAKARTA_JDBC_URL, settings ),
+				() -> getString( JdbcSettings.URL, settings ),
+				() -> getString( JdbcSettings.JPA_JDBC_URL, settings )
 		);
 	}
 
 	@SuppressWarnings("deprecation")
 	private static String determineDriver(Map<String, Object> settings) {
 		return NullnessHelper.coalesceSuppliedValues(
-				() -> ConfigurationHelper.getString( JdbcSettings.JAKARTA_JDBC_DRIVER, settings ),
-				() -> ConfigurationHelper.getString( JdbcSettings.DRIVER, settings ),
-				() -> ConfigurationHelper.getString( JdbcSettings.JPA_JDBC_DRIVER, settings )
+				() -> getString( JdbcSettings.JAKARTA_JDBC_DRIVER, settings ),
+				() -> getString( JdbcSettings.DRIVER, settings ),
+				() -> getString( JdbcSettings.JPA_JDBC_DRIVER, settings )
 		);
 	}
 
 	private static String determineAutoCommitMode(Map<String, Object> settings) {
-		return ConfigurationHelper.getString( JdbcSettings.AUTOCOMMIT, settings );
+		return getString( JdbcSettings.AUTOCOMMIT, settings );
 	}
 
 	private static String determineIsolationLevel(Map<String, Object> settings) {

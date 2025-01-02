@@ -71,13 +71,10 @@ public class CteTable {
 		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount();
 		final List<CteColumn> columns = new ArrayList<>( numberOfColumns );
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-		final String idName;
-		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-			idName = ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName();
-		}
-		else {
-			idName = "id";
-		}
+		final String idName =
+				identifierMapping instanceof SingleAttributeIdentifierMapping
+						? identifierMapping.getAttributeName()
+						: "id";
 		forEachCteColumn( idName, identifierMapping, columns::add );
 		return new CteTable( cteName, columns );
 	}
@@ -122,14 +119,12 @@ public class CteTable {
 	}
 
 	public static void forEachCteColumn(String prefix, ModelPart modelPart, Consumer<CteColumn> consumer) {
-		if ( modelPart instanceof BasicValuedMapping ) {
-			consumer.accept( new CteColumn( prefix, ( (BasicValuedMapping) modelPart ).getJdbcMapping() ) );
+		if ( modelPart instanceof BasicValuedMapping basicValuedMapping ) {
+			consumer.accept( new CteColumn( prefix, basicValuedMapping.getJdbcMapping() ) );
 		}
-		else if ( modelPart instanceof EntityValuedModelPart ) {
-			final EntityValuedModelPart entityPart = ( EntityValuedModelPart ) modelPart;
+		else if ( modelPart instanceof EntityValuedModelPart entityPart ) {
 			final ModelPart targetPart;
-			if ( modelPart instanceof Association ) {
-				final Association association = (Association) modelPart;
+			if ( modelPart instanceof Association association ) {
 				if ( association.getForeignKeyDescriptor() == null ) {
 					// This is expected to happen when processing a
 					// PostInitCallbackEntry because the callbacks
@@ -149,8 +144,7 @@ public class CteTable {
 			}
 			forEachCteColumn( prefix + "_" + entityPart.getPartName(), targetPart, consumer );
 		}
-		else if ( modelPart instanceof DiscriminatedAssociationModelPart ) {
-			final DiscriminatedAssociationModelPart discriminatedPart = (DiscriminatedAssociationModelPart) modelPart;
+		else if ( modelPart instanceof DiscriminatedAssociationModelPart discriminatedPart ) {
 			final String newPrefix = prefix + "_" + discriminatedPart.getPartName() + "_";
 			forEachCteColumn(
 					newPrefix + "discriminator",
@@ -217,8 +211,7 @@ public class CteTable {
 			}
 			return determineModelPartStartIndex( offset, keyPart, modelPartToFind );
 		}
-		else if ( modelPart instanceof EmbeddableValuedModelPart ) {
-			final EmbeddableValuedModelPart embeddablePart = ( EmbeddableValuedModelPart ) modelPart;
+		else if ( modelPart instanceof EmbeddableValuedModelPart embeddablePart ) {
 			final AttributeMappingsList attributeMappings = embeddablePart.getEmbeddableTypeDescriptor().getAttributeMappings();
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping mapping = attributeMappings.get( i );

@@ -114,7 +114,6 @@ public class StaticClassListsTest {
 						org.hibernate.id.enhanced.SequenceStyleGenerator.class,
 						org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl.class,
 						org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl.class,
-						org.hibernate.type.EnumType.class,
 						org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor.class
 				);
 			}

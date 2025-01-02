@@ -91,8 +91,8 @@ public class DependantValue extends SimpleValue implements Resolvable, SortableV
 
 	@Override
 	public BasicValue.Resolution<?> resolve() {
-		if ( wrappedValue instanceof BasicValue ) {
-			return ( (BasicValue) wrappedValue ).resolve();
+		if ( wrappedValue instanceof BasicValue basicValue ) {
+			return basicValue.resolve();
 		}
 		// not sure it is ever possible
 		throw new UnsupportedOperationException("Trying to resolve the wrapped value but it is non a BasicValue");

@@ -1238,16 +1238,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected boolean isStruct(JdbcMappingContainer expressionType) {
-		if ( expressionType instanceof EmbeddableValuedModelPart ) {
-			final EmbeddableMappingType embeddableMappingType = ( (EmbeddableValuedModelPart) expressionType ).getEmbeddableTypeDescriptor();
+		if ( expressionType instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+			final EmbeddableMappingType embeddableMappingType = embeddableValuedModelPart.getEmbeddableTypeDescriptor();
 			return embeddableMappingType.getAggregateMapping() != null && embeddableMappingType.getAggregateMapping()
 					.getJdbcMapping()
 					.getJdbcType()
 					.getDefaultSqlTypeCode() == SqlTypes.STRUCT;
 		}
-		else if ( expressionType instanceof BasicValuedMapping ) {
-			final JdbcMapping jdbcMapping = ( (BasicValuedMapping) expressionType ).getJdbcMapping();
-			return jdbcMapping.getJdbcType().getDefaultSqlTypeCode() == SqlTypes.STRUCT;
+		else if ( expressionType instanceof BasicValuedMapping basicValuedMapping ) {
+			return basicValuedMapping.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() == SqlTypes.STRUCT;
 		}
 		return false;
 	}

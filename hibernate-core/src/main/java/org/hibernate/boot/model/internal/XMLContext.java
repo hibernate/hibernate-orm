@@ -121,25 +121,27 @@ public class XMLContext implements Serializable {
 
 	private void addClass(List<? extends JaxbManagedType> managedTypes, String packageName, Default defaults, List<String> addedClasses) {
 		for ( JaxbManagedType element : managedTypes) {
-			String className = buildSafeClassName( element.getClazz(), packageName );
+			final String className = buildSafeClassName( element.getClazz(), packageName );
 			if ( managedTypeOverride.containsKey( className ) ) {
 				//maybe switch it to warn?
 				throw new IllegalStateException( "Duplicate XML entry for " + className );
 			}
 			addedClasses.add( className );
 			managedTypeOverride.put( className, element );
-			Default mergedDefaults = new Default();
+			final Default mergedDefaults = new Default();
 			// Apply entity mapping defaults
 			mergedDefaults.overrideWithCatalogAndSchema( defaults );
 			// ... then apply entity settings
-			Default fileDefaults = new Default();
+			final Default fileDefaults = new Default();
 			fileDefaults.setMetadataComplete( element.isMetadataComplete() );
 			fileDefaults.setAccess( element.getAccess() );
 			mergedDefaults.overrideWithCatalogAndSchema( fileDefaults );
 			// ... and we get the merged defaults for that entity
 			defaultsOverride.put( className, mergedDefaults );
 
-			LOG.debugf( "Adding XML overriding information for %s", className );
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debug( "Adding XML overriding information for class: " + className );
+			}
 			if ( element instanceof JaxbEntityImpl ) {
 				addEntityListenerClasses( ( (JaxbEntityImpl) element ).getEntityListenerContainer(), packageName, addedClasses );
 			}
@@ -150,20 +152,23 @@ public class XMLContext implements Serializable {
 	}
 
 	private List<String> addEntityListenerClasses(JaxbEntityListenerContainerImpl listeners, String packageName, List<String> addedClasses) {
-		List<String> localAddedClasses = new ArrayList<>();
+		final List<String> localAddedClasses = new ArrayList<>();
 		if ( listeners != null ) {
-			List<JaxbEntityListenerImpl> elements = listeners.getEntityListeners();
+			final List<JaxbEntityListenerImpl> elements = listeners.getEntityListeners();
 			for ( JaxbEntityListenerImpl listener : elements ) {
-				String listenerClassName = buildSafeClassName( listener.getClazz(), packageName );
+				final String listenerClassName = buildSafeClassName( listener.getClazz(), packageName );
 				if ( entityListenerOverride.containsKey( listenerClassName ) ) {
 					LOG.duplicateListener( listenerClassName );
-					continue;
 				}
-				localAddedClasses.add( listenerClassName );
-				entityListenerOverride.put( listenerClassName, listener );
+				else {
+					localAddedClasses.add( listenerClassName );
+					entityListenerOverride.put( listenerClassName, listener );
+				}
 			}
 		}
-		LOG.debugf( "Adding XML overriding information for listeners: %s", localAddedClasses );
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug( "Adding XML overriding information for entity listener classes: " + localAddedClasses );
+		}
 		addedClasses.addAll( localAddedClasses );
 		return localAddedClasses;
 	}

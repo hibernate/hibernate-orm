@@ -13,10 +13,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -83,10 +82,15 @@ public class MultiNaturalIdLoadingBatcher {
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory =
 				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory();
 		this.jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
-				.translate( null, QueryOptions.NONE );
+				.translate( null, new QueryOptionsAdapter() {
+					@Override
+					public LockOptions getLockOptions() {
+						return lockOptions;
+					}
+				} );
 	}
 
-	public <E> List<E> multiLoad(Object[] naturalIdValues, MultiNaturalIdLoadOptions options, SharedSessionContractImplementor session) {
+	public <E> List<E> multiLoad(Object[] naturalIdValues, SharedSessionContractImplementor session) {
 		final ArrayList<E> multiLoadResults = CollectionHelper.arrayList( naturalIdValues.length );
 		final JdbcParameterBindingsImpl jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 

@@ -19,19 +19,26 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.Instantiator;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.binder.TypeBinder;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
+import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
@@ -54,13 +61,13 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
-import static org.hibernate.boot.model.internal.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
@@ -73,6 +80,7 @@ import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * A binder responsible for interpreting {@link Embeddable} classes and producing
@@ -92,64 +100,125 @@ public class EmbeddableBinder {
 			MemberDetails property,
 			AnnotatedColumns columns,
 			ClassDetails returnedClass,
-			PropertyBinder propertyBinder,
+			boolean isId,
 			boolean isOverridden,
+			PropertyData mapsIdProperty,
 			Class<? extends CompositeUserType<?>> compositeUserType) {
-		final String referencedEntityName;
-		final String propertyName;
-		final AnnotatedJoinColumns actualColumns;
-		if ( isOverridden ) {
-			// careful: not always a @MapsId property, sometimes it's from an @IdClass
-			final PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
-					propertyBinder.isId(),
-					propertyHolder,
-					property.resolveAttributeName(),
-					context
-			);
-			referencedEntityName = mapsIdProperty.getClassOrElementName();
-			propertyName = mapsIdProperty.getPropertyName();
-			final AnnotatedJoinColumns parent = new AnnotatedJoinColumns();
-			parent.setBuildingContext( context );
-			parent.setPropertyHolder( propertyHolder );
-			parent.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
-			//TODO: resetting the parent here looks like a dangerous thing to do
-			//      should we be cloning them first (the legacy code did not)
-			for ( AnnotatedColumn column : columns.getColumns() ) {
-				column.setParent( parent );
-			}
-			actualColumns = parent;
-		}
-		else {
-			referencedEntityName = null;
-			propertyName = null;
-			actualColumns = null;
-		}
-
 		return createEmbeddedProperty(
 				inferredData,
 				propertyHolder,
 				entityBinder,
 				context,
 				isComponentEmbedded,
-				propertyBinder.isId(),
+				isId,
 				inheritanceStatePerClass,
-				bindEmbeddable(
-						inferredData,
+				createEmbeddable(
 						propertyHolder,
-						entityBinder.getPropertyAccessor( property ),
+						inferredData,
 						entityBinder,
 						isIdentifierMapper,
-						context,
 						isComponentEmbedded,
-						propertyBinder.isId(),
+						context,
 						inheritanceStatePerClass,
-						referencedEntityName,
-						propertyName,
-						determineCustomInstantiator( property, returnedClass, context ),
-						compositeUserType,
-						actualColumns,
-						columns
+						property,
+						columns,
+						returnedClass,
+						isId,
+						isOverridden,
+						mapsIdProperty,
+						compositeUserType
 				)
+		);
+	}
+
+	private static Component createEmbeddable(
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			EntityBinder entityBinder,
+			boolean isIdentifierMapper,
+			boolean isComponentEmbedded,
+			MetadataBuildingContext context,
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
+			MemberDetails property,
+			AnnotatedColumns columns,
+			ClassDetails returnedClass,
+			boolean isId,
+			boolean isOverridden,
+			PropertyData mapsIdProperty,
+			Class<? extends CompositeUserType<?>> compositeUserType) {
+		if ( isOverridden ) {
+			if ( compositeUserType != null ) {
+				// I suppose this assertion is correct, but it might not be
+				// Perhaps it was OK that we were just ignoring the CUT
+				throw new AssertionFailure( "CompositeUserType not allowed with @MapsId" );
+			}
+			return bindOverriddenEmbeddable(
+					propertyHolder,
+					inferredData,
+					isIdentifierMapper,
+					isComponentEmbedded,
+					context,
+					inheritanceStatePerClass,
+					property,
+					columns,
+					returnedClass,
+					isId,
+					mapsIdProperty
+			);
+		}
+		else {
+			return bindEmbeddable(
+					inferredData,
+					propertyHolder,
+					entityBinder.getPropertyAccessor( property ),
+					entityBinder,
+					isIdentifierMapper,
+					context,
+					isComponentEmbedded,
+					isId,
+					inheritanceStatePerClass,
+					determineCustomInstantiator( property, returnedClass, context ),
+					compositeUserType,
+					columns
+			);
+		}
+	}
+
+	private static Component bindOverriddenEmbeddable(
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			boolean isIdentifierMapper,
+			boolean isComponentEmbedded,
+			MetadataBuildingContext context,
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
+			MemberDetails property,
+			AnnotatedColumns columns,
+			ClassDetails returnedClass,
+			boolean isId,
+			PropertyData mapsIdProperty) {
+		// careful: not always a @MapsId property, sometimes it's from an @IdClass
+		final String propertyName = mapsIdProperty.getPropertyName();
+		final AnnotatedJoinColumns actualColumns = new AnnotatedJoinColumns();
+		actualColumns.setBuildingContext( context );
+		actualColumns.setPropertyHolder( propertyHolder );
+		actualColumns.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+		//TODO: resetting the parent here looks like a dangerous thing to do
+		//      should we be cloning them first (the legacy code did not)
+		for ( AnnotatedColumn column : columns.getColumns() ) {
+			column.setParent( actualColumns );
+		}
+		return bindOverriddenEmbeddable(
+				inferredData,
+				propertyHolder,
+				isIdentifierMapper,
+				context,
+				isComponentEmbedded,
+				isId,
+				inheritanceStatePerClass,
+				mapsIdProperty.getClassOrElementName(),
+				propertyName,
+				determineCustomInstantiator( property, returnedClass, context ),
+				actualColumns
 		);
 	}
 
@@ -163,13 +232,51 @@ public class EmbeddableBinder {
 		if ( property.hasDirectAnnotationUsage( Embedded.class ) || property.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
 			return true;
 		}
-
-		final ClassDetails returnClassDetails = returnedClass.determineRawClass();
-		return returnClassDetails.hasDirectAnnotationUsage( Embeddable.class )
+		else {
+			final ClassDetails returnClassDetails = returnedClass.determineRawClass();
+			return returnClassDetails.hasDirectAnnotationUsage( Embeddable.class )
 				&& !property.hasDirectAnnotationUsage( Convert.class );
+		}
 	}
 
-	public static Component bindEmbeddable(
+	private static Component bindOverriddenEmbeddable(
+			PropertyData inferredData,
+			PropertyHolder propertyHolder,
+			boolean isIdentifierMapper,
+			MetadataBuildingContext context,
+			boolean isComponentEmbedded,
+			boolean isId, // is an identifier
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
+			String referencedEntityName, // is a component which is overridden by a @MapsId
+			String propertyName,
+			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
+			AnnotatedJoinColumns annotatedJoinColumns) {
+		final Component component = createEmbeddable(
+				propertyHolder,
+				inferredData,
+				isComponentEmbedded,
+				isIdentifierMapper,
+				customInstantiatorImpl,
+				context
+		);
+		context.getMetadataCollector()
+				.addSecondPass( new CopyIdentifierComponentSecondPass(
+						component,
+						referencedEntityName,
+						propertyName,
+						annotatedJoinColumns,
+						context
+				) );
+
+		if ( isId ) {
+			component.setKey( true );
+			checkEmbeddedId( inferredData, propertyHolder, referencedEntityName, component );
+		}
+		callTypeBinders( component, context, inferredData.getPropertyType() );
+		return component;
+	}
+
+	static Component bindEmbeddable(
 			PropertyData inferredData,
 			PropertyHolder propertyHolder,
 			AccessType propertyAccessor,
@@ -179,50 +286,27 @@ public class EmbeddableBinder {
 			boolean isComponentEmbedded,
 			boolean isId, //is an identifier
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
-			String referencedEntityName, //is a component who is overridden by a @MapsId
-			String propertyName,
 			Class<? extends EmbeddableInstantiator> customInstantiatorImpl,
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
-			AnnotatedJoinColumns columns,
 			AnnotatedColumns annotatedColumns) {
-		final Component component;
-		if ( referencedEntityName != null ) {
-			component = createEmbeddable(
-					propertyHolder,
-					inferredData,
-					isComponentEmbedded,
-					isIdentifierMapper,
-					customInstantiatorImpl,
-					context
-			);
-			context.getMetadataCollector().addSecondPass( new CopyIdentifierComponentSecondPass(
-					component,
-					referencedEntityName,
-					propertyName,
-					columns,
-					context
-			) );
-		}
-		else {
-			component = fillEmbeddable(
-					propertyHolder,
-					inferredData,
-					propertyAccessor,
-					!isId,
-					entityBinder,
-					isComponentEmbedded,
-					isIdentifierMapper,
-					context.getMetadataCollector().isInSecondPass(),
-					customInstantiatorImpl,
-					compositeUserTypeClass,
-					annotatedColumns,
-					context,
-					inheritanceStatePerClass
-			);
-		}
+		final Component component = fillEmbeddable(
+				propertyHolder,
+				inferredData,
+				propertyAccessor,
+				!isId,
+				entityBinder,
+				isComponentEmbedded,
+				isIdentifierMapper,
+				context.getMetadataCollector().isInSecondPass(),
+				customInstantiatorImpl,
+				compositeUserTypeClass,
+				annotatedColumns,
+				context,
+				inheritanceStatePerClass
+		);
 		if ( isId ) {
 			component.setKey( true );
-			checkEmbeddedId( inferredData, propertyHolder, referencedEntityName, component );
+			checkEmbeddedId( inferredData, propertyHolder, null, component );
 		}
 		callTypeBinders( component, context, inferredData.getPropertyType() );
 		return component;
@@ -364,7 +448,9 @@ public class EmbeddableBinder {
 		);
 
 		final String subpath = getPath( propertyHolder, inferredData );
-		LOG.tracev( "Binding component with path: {0}", subpath );
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug( "Binding component with path: " + subpath );
+		}
 		final PropertyHolder subholder = buildPropertyHolder(
 				component,
 				subpath,
@@ -602,7 +688,6 @@ public class EmbeddableBinder {
 			PropertyHolder holder,
 			MetadataBuildingContext context) {
 		assert component.getDiscriminator() == null;
-		LOG.tracev( "Setting discriminator for embeddable {0}", component.getComponentClassName() );
 		final AnnotatedColumns columns = new AnnotatedColumns();
 		columns.setPropertyHolder( holder );
 		columns.setBuildingContext( context );
@@ -965,4 +1050,236 @@ public class EmbeddableBinder {
 		return null;
 	}
 
+	private static class CopyIdentifierComponentSecondPass implements FkSecondPass {
+		private final String referencedEntityName;
+		private final String propertyName;
+		private final Component component;
+		private final MetadataBuildingContext buildingContext;
+		private final AnnotatedJoinColumns joinColumns;
+
+		private CopyIdentifierComponentSecondPass(
+				Component component,
+				String referencedEntityName, String propertyName,
+				AnnotatedJoinColumns joinColumns,
+				MetadataBuildingContext buildingContext) {
+			this.component = component;
+			this.referencedEntityName = referencedEntityName;
+			this.propertyName = propertyName;
+			this.buildingContext = buildingContext;
+			this.joinColumns = joinColumns;
+		}
+
+		@Override
+		public Value getValue() {
+			return component;
+		}
+
+		@Override
+		public String getReferencedEntityName() {
+			return referencedEntityName;
+		}
+
+		@Override
+		public boolean isInPrimaryKey() {
+			// This second pass is apparently only ever used to initialize composite identifiers
+			return true;
+		}
+
+		@Override
+		public void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
+			final PersistentClass referencedPersistentClass = persistentClasses.get( referencedEntityName );
+			final Component referencedComponent = getReferencedComponent( referencedPersistentClass );
+
+			//prepare column name structure
+			boolean isExplicitReference = true;
+			final List<AnnotatedJoinColumn> columns = joinColumns.getJoinColumns();
+			final Map<String, AnnotatedJoinColumn> columnByReferencedName = mapOfSize( columns.size() );
+			for ( AnnotatedJoinColumn joinColumn : columns ) {
+				if ( !joinColumn.isReferenceImplicit() ) {
+					//JPA 2 requires referencedColumnNames to be case-insensitive
+					columnByReferencedName.put( joinColumn.getReferencedColumn().toLowerCase( Locale.ROOT), joinColumn );
+				}
+			}
+			//try default column orientation
+			if ( columnByReferencedName.isEmpty() ) {
+				isExplicitReference = false;
+				for (int i = 0; i < columns.size(); i++ ) {
+					columnByReferencedName.put( String.valueOf( i ), columns.get(i) );
+				}
+			}
+
+			final MutableInteger index = new MutableInteger();
+			for ( Property referencedProperty : referencedComponent.getProperties() ) {
+				final Property property;
+				if ( referencedProperty.isComposite() ) {
+					property = createComponentProperty(
+							isExplicitReference,
+							columnByReferencedName,
+							index,
+							referencedProperty
+					);
+				}
+				else {
+					property = createSimpleProperty(
+							referencedPersistentClass,
+							isExplicitReference,
+							columnByReferencedName,
+							index,
+							referencedProperty
+					);
+				}
+				component.addProperty( property );
+			}
+		}
+
+		private Component getReferencedComponent(PersistentClass referencedPersistentClass) {
+			if ( referencedPersistentClass == null ) {
+				// TODO: much better error message if this is something that can really happen!
+				throw new AnnotationException( "Unknown entity name '" + referencedEntityName + "'");
+			}
+			if ( referencedPersistentClass.getIdentifier() instanceof Component id ) {
+				return id;
+			}
+			else {
+				// The entity with the @MapsId annotation has a composite
+				// id type, but the referenced entity has a basic-typed id.
+				// Therefore, the @MapsId annotation should have specified
+				// a property of the composite id that has the foreign key
+				throw new AnnotationException(
+						"Missing 'value' in '@MapsId' annotation of association '" + propertyName
+								+ "' of entity '" + component.getOwner().getEntityName()
+								+ "' with composite identifier type"
+								+ " ('@MapsId' must specify a property of the '@EmbeddedId' class which has the foreign key of '"
+								+ referencedEntityName + "')"
+				);
+			}
+		}
+
+		private Property createComponentProperty(
+				boolean isExplicitReference,
+				Map<String, AnnotatedJoinColumn> columnByReferencedName,
+				MutableInteger index,
+				Property referencedProperty ) {
+			final Property property = new Property();
+			property.setName( referencedProperty.getName() );
+			//FIXME set optional?
+			//property.setOptional( property.isOptional() );
+			property.setPersistentClass( component.getOwner() );
+			property.setPropertyAccessorName( referencedProperty.getPropertyAccessorName() );
+			Component value = new Component( buildingContext, component.getOwner() );
+
+			property.setValue( value );
+			final Component referencedValue = (Component) referencedProperty.getValue();
+			value.setTypeName( referencedValue.getTypeName() );
+			value.setTypeParameters( referencedValue.getTypeParameters() );
+			value.setComponentClassName( referencedValue.getComponentClassName() );
+
+
+			for ( Property referencedComponentProperty : referencedValue.getProperties() ) {
+				if ( referencedComponentProperty.isComposite() ) {
+					value.addProperty( createComponentProperty(
+							isExplicitReference,
+							columnByReferencedName,
+							index,
+							referencedComponentProperty
+					) );
+				}
+				else {
+					value.addProperty( createSimpleProperty(
+							referencedValue.getOwner(),
+							isExplicitReference,
+							columnByReferencedName,
+							index,
+							referencedComponentProperty
+					) );
+				}
+			}
+
+			return property;
+		}
+
+
+		private Property createSimpleProperty(
+				PersistentClass referencedPersistentClass,
+				boolean isExplicitReference,
+				Map<String, AnnotatedJoinColumn> columnByReferencedName,
+				MutableInteger index,
+				Property referencedProperty ) {
+			final Property property = new Property();
+			property.setName( referencedProperty.getName() );
+			//FIXME set optional?
+			//property.setOptional( property.isOptional() );
+			property.setPersistentClass( component.getOwner() );
+			property.setPropertyAccessorName( referencedProperty.getPropertyAccessorName() );
+			final SimpleValue value = new BasicValue( buildingContext, component.getTable() );
+			property.setValue( value );
+			final SimpleValue referencedValue = (SimpleValue) referencedProperty.getValue();
+			value.copyTypeFrom( referencedValue );
+
+			//TODO: this bit is nasty, move up to AnnotatedJoinColumns
+			final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
+			if ( firstColumn.isNameDeferred() ) {
+				firstColumn.copyReferencedStructureAndCreateDefaultJoinColumns(
+						referencedPersistentClass,
+						referencedValue,
+						value
+				);
+			}
+			else {
+				for ( Selectable selectable : referencedValue.getSelectables() ) {
+					if ( selectable instanceof org.hibernate.mapping.Column column ) {
+						final AnnotatedJoinColumn joinColumn;
+						final String logicalColumnName;
+						if ( isExplicitReference ) {
+							logicalColumnName = column.getName();
+							//JPA 2 requires referencedColumnNames to be case-insensitive
+							joinColumn = columnByReferencedName.get( logicalColumnName.toLowerCase( Locale.ROOT ) );
+						}
+						else {
+							logicalColumnName = null;
+							joinColumn = columnByReferencedName.get( String.valueOf( index.get() ) );
+							index.getAndIncrement();
+						}
+						if ( joinColumn == null && !firstColumn.isNameDeferred() ) {
+							throw new AnnotationException(
+									"Property '" + propertyName
+									+ "' of entity '" + component.getOwner().getEntityName()
+									+ "' must have a '@JoinColumn' which references the foreign key column '"
+									+ logicalColumnName + "'"
+							);
+						}
+						final String columnName =
+								joinColumn == null || joinColumn.isNameDeferred()
+										? "tata_" + column.getName()
+										: joinColumn.getName();
+
+						final Database database = buildingContext.getMetadataCollector().getDatabase();
+						final String physicalName =
+								buildingContext.getBuildingOptions().getPhysicalNamingStrategy()
+										.toPhysicalColumnName( database.toIdentifier( columnName ),
+												database.getJdbcEnvironment() )
+										.render( database.getDialect() );
+						value.addColumn( new org.hibernate.mapping.Column( physicalName ) );
+						if ( joinColumn != null ) {
+							applyComponentColumnSizeValueToJoinColumn( column, joinColumn );
+							joinColumn.linkWithValue( value );
+						}
+						column.setValue( value );
+					}
+					else {
+						//FIXME take care of Formula
+					}
+				}
+			}
+			return property;
+		}
+
+		private void applyComponentColumnSizeValueToJoinColumn(org.hibernate.mapping.Column column, AnnotatedJoinColumn joinColumn) {
+			final org.hibernate.mapping.Column mappingColumn = joinColumn.getMappingColumn();
+			mappingColumn.setLength( column.getLength() );
+			mappingColumn.setPrecision( column.getPrecision() );
+			mappingColumn.setScale( column.getScale() );
+			mappingColumn.setArrayLength( column.getArrayLength() );
+		}
+	}
 }

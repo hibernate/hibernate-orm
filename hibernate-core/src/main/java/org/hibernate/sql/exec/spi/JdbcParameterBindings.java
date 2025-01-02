@@ -73,15 +73,10 @@ public interface JdbcParameterBindings {
 			Bindable bindable,
 			JdbcParametersList jdbcParameters,
 			SharedSessionContractImplementor session) {
-		final Object valueToBind;
-		if ( bindable instanceof BasicValuedMapping ) {
-			valueToBind = ( (BasicValuedMapping) bindable ).getJdbcMapping().getMappedJavaType().wrap( value, session );
-		}
-		else {
-			valueToBind = value;
-		}
 		return bindable.forEachJdbcValue(
-				valueToBind,
+				bindable instanceof BasicValuedMapping basicValuedMapping
+						? basicValuedMapping.getJdbcMapping().getMappedJavaType().wrap( value, session )
+						: value,
 				offset,
 				jdbcParameters,
 				session.getFactory().getTypeConfiguration(),

@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,11 +38,10 @@ import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 
-import org.jboss.logging.Logger;
-
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
+import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -69,7 +67,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  */
 public class AnnotatedColumn {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, AnnotatedColumn.class.getName() );
+	private static final CoreMessageLogger LOG = messageLogger( AnnotatedColumn.class );
 
 	private Column mappingColumn;
 	private boolean insertable = true;
@@ -244,7 +242,9 @@ public class AnnotatedColumn {
 
 	public void bind() {
 		if ( isNotEmpty( formulaString ) ) {
-			LOG.debugf( "Binding formula %s", formulaString );
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debug( "Binding formula: " + formulaString );
+			}
 			formula = new Formula();
 			formula.setFormula( formulaString );
 		}
@@ -277,7 +277,7 @@ public class AnnotatedColumn {
 				mappingColumn.setGeneratedAs( generatedAs );
 			}
 			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( "Binding column: %s", toString() );
+				LOG.debug( "Binding column: " + logicalColumnName );
 			}
 		}
 	}
@@ -709,7 +709,9 @@ public class AnnotatedColumn {
 						+ " '@AttributeOverride's but the overridden property has " + overriddenCols.length
 						+ " columns (every column must have exactly one '@AttributeOverride')" );
 			}
-			LOG.debugf( "Column(s) overridden for property %s", inferredData.getPropertyName() );
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debug( "Column mapping overridden for property: " + inferredData.getPropertyName() );
+			}
 			return isEmpty( overriddenCols ) ? null : overriddenCols;
 		}
 		else {
@@ -1020,14 +1022,11 @@ public class AnnotatedColumn {
 	public String toString() {
 		final StringBuilder string = new StringBuilder();
 		string.append( getClass().getSimpleName() ).append( "(" );
-		if ( isNotEmpty( logicalColumnName ) ) {
-			string.append( "column='" ).append( logicalColumnName ).append( "'," );
-		}
 		if ( isNotEmpty( formulaString ) ) {
-			string.append( "formula='" ).append( formulaString ).append( "'," );
+			string.append( "formula='" ).append( formulaString );
 		}
-		if ( string.charAt( string.length()-1 ) == ',' ) {
-			string.setLength( string.length()-1 );
+		else if ( isNotEmpty( logicalColumnName ) ) {
+			string.append( "column='" ).append( logicalColumnName );
 		}
 		string.append( ")" );
 		return string.toString();

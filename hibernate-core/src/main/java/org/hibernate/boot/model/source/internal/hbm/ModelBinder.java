@@ -27,7 +27,6 @@ import org.hibernate.boot.model.source.spi.Caching;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.internal.FkSecondPass;
-import org.hibernate.boot.model.internal.SimpleToOneFkSecondPass;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
@@ -1327,7 +1326,7 @@ public class ModelBinder {
 
 		// bind the collection type info
 		String typeName = source.getTypeInformation().getName();
-		Map<Object,Object> typeParameters = new HashMap<>();
+		final Map<String,String> typeParameters = new HashMap<>();
 		if ( typeName != null ) {
 			// see if there is a corresponding type-def
 			final TypeDefinition typeDef = mappingDocument.getMetadataCollector().getTypeDefinition( typeName );
@@ -1841,17 +1840,12 @@ public class ModelBinder {
 
 		// Defer the creation of the foreign key as we need the associated entity persister to be initialized
 		// so that we can observe the properties/columns of a possible component in the correct order
-		metadataBuildingContext.getMetadataCollector().addSecondPass( new SimpleToOneFkSecondPass( oneToOneBinding ) );
+		metadataBuildingContext.getMetadataCollector().addSecondPass( new OneToOneFkSecondPass( oneToOneBinding ) );
 
-		Property prop = new Property();
-		prop.setValue( oneToOneBinding );
-		bindProperty(
-				sourceDocument,
-				oneToOneSource,
-				prop
-		);
-
-		return prop;
+		final Property property = new Property();
+		property.setValue( oneToOneBinding );
+		bindProperty( sourceDocument, oneToOneSource, property );
+		return property;
 	}
 
 	private void handlePropertyReference(
@@ -2281,16 +2275,16 @@ public class ModelBinder {
 			try {
 				final Object typeInstance = typeInstance( typeName, classLoaderService.classForName( typeName ) );
 
-				if ( typeInstance instanceof ParameterizedType ) {
+				if ( typeInstance instanceof ParameterizedType parameterizedType ) {
 					if ( parameters != null ) {
-						Properties properties = new Properties();
+						final Properties properties = new Properties();
 						properties.putAll( parameters );
-						( (ParameterizedType) typeInstance ).setParameterValues( properties );
+						parameterizedType.setParameterValues( properties );
 					}
 				}
 
-				if ( typeInstance instanceof UserType ) {
-					return new CustomType<>( (UserType<?>) typeInstance, typeConfiguration);
+				if ( typeInstance instanceof UserType<?> userType ) {
+					return new CustomType<>( userType, typeConfiguration);
 				}
 
 				return (BasicType<?>) typeInstance;
@@ -2425,8 +2419,8 @@ public class ModelBinder {
 			GenerationTiming timing) {
 		if ( timing != null ) {
 			if ( (timing == GenerationTiming.INSERT || timing == GenerationTiming.UPDATE)
-					&& property.getValue() instanceof SimpleValue
-					&& ((SimpleValue) property.getValue()).isVersion() ) {
+					&& property.getValue() instanceof SimpleValue simpleValue
+					&& simpleValue.isVersion() ) {
 				// this is enforced by DTD, but just make sure
 				throw new MappingException(
 						"'generated' attribute cannot be 'insert' or 'update' for version/timestamp property",
@@ -2691,8 +2685,8 @@ public class ModelBinder {
 
 		if ( CollectionHelper.isNotEmpty( typeResolution.parameters ) ) {
 			simpleValue.setTypeParameters( typeResolution.parameters );
-			if ( simpleValue instanceof BasicValue ) {
-				( (BasicValue) simpleValue ).setExplicitTypeParams( typeResolution.parameters );
+			if ( simpleValue instanceof BasicValue basicValue ) {
+				basicValue.setExplicitTypeParams( typeResolution.parameters );
 			}
 		}
 
@@ -3002,7 +2996,6 @@ public class ModelBinder {
 			}
 		}
 	}
-
 
 	private abstract class AbstractPluralAttributeSecondPass implements SecondPass {
 		private final MappingDocument mappingDocument;
@@ -3935,21 +3928,18 @@ public class ModelBinder {
 		}
 	}
 
-	private static class ManyToOneFkSecondPass extends FkSecondPass {
+	private static class ManyToOneFkSecondPass implements FkSecondPass {
 		private final MappingDocument mappingDocument;
 		private final ManyToOne manyToOneBinding;
 
 		private final String referencedEntityName;
 		private final String referencedEntityAttributeName;
 
-
-		public ManyToOneFkSecondPass(
+		private ManyToOneFkSecondPass(
 				MappingDocument mappingDocument,
 				SingularAttributeSourceManyToOne manyToOneSource,
 				ManyToOne manyToOneBinding,
 				String referencedEntityName) {
-			super( manyToOneBinding, null );
-
 			if ( referencedEntityName == null ) {
 				throw new MappingException(
 						"entity name referenced by many-to-one required [" + manyToOneSource.getAttributeRole().getFullPath() + "]",
@@ -3959,8 +3949,12 @@ public class ModelBinder {
 			this.mappingDocument = mappingDocument;
 			this.manyToOneBinding = manyToOneBinding;
 			this.referencedEntityName = referencedEntityName;
-
 			this.referencedEntityAttributeName = manyToOneSource.getReferencedEntityAttributeName();
+		}
+
+		@Override
+		public Value getValue() {
+			return manyToOneBinding;
 		}
 
 		@Override
@@ -3993,6 +3987,34 @@ public class ModelBinder {
 					mappingDocument.getMetadataCollector().getEntityBinding( referencedEntityName );
 			return referencedEntityBinding != null && referencedEntityAttributeName != null;
 
+		}
+	}
+
+	private static class OneToOneFkSecondPass implements FkSecondPass {
+		private final OneToOne oneToOneBinding;
+
+		private OneToOneFkSecondPass(OneToOne oneToOneBinding) {
+			this.oneToOneBinding = oneToOneBinding;
+		}
+
+		@Override
+		public Value getValue() {
+			return oneToOneBinding;
+		}
+
+		@Override
+		public String getReferencedEntityName() {
+			return oneToOneBinding.getReferencedEntityName();
+		}
+
+		@Override
+		public boolean isInPrimaryKey() {
+			return false;
+		}
+
+		@Override
+		public void doSecondPass(Map<String, PersistentClass> persistentClasses) {
+			oneToOneBinding.createForeignKey();
 		}
 	}
 

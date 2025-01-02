@@ -5,7 +5,6 @@
 package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -43,7 +42,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
@@ -59,13 +58,13 @@ import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ArrayTypeDetails;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeVariableScope;
 import org.hibernate.usertype.CompositeUserType;
 
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
@@ -85,11 +84,11 @@ import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.boot.model.internal.AnyBinder.bindAny;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
-import static org.hibernate.boot.model.internal.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.prepareActualProperty;
 import static org.hibernate.boot.model.internal.CollectionBinder.bindCollection;
+import static org.hibernate.boot.model.internal.EmbeddableBinder.bindEmbeddable;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.createCompositeBinder;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.createEmbeddable;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.determineCustomInstantiator;
@@ -110,7 +109,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
  * @author Emmanuel Bernard
  */
 public class PropertyBinder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, PropertyBinder.class.getName() );
 
 	private MetadataBuildingContext buildingContext;
 
@@ -132,13 +130,13 @@ public class PropertyBinder {
 	private boolean embedded;
 	private EntityBinder entityBinder;
 	private boolean toMany;
-	private String referencedEntityName;
+	private String referencedEntityName; // only used for @MapsId or @IdClass
 
 	protected SourceModelBuildingContext getSourceModelContext() {
 		return buildingContext.getMetadataCollector().getSourceModelBuildingContext();
 	}
 
-	public void setReferencedEntityName(String referencedEntityName) {
+	private void setReferencedEntityName(String referencedEntityName) {
 		this.referencedEntityName = referencedEntityName;
 	}
 
@@ -169,7 +167,7 @@ public class PropertyBinder {
 		this.name = name;
 	}
 
-	public void setReturnedClassName(String returnedClassName) {
+	private void setReturnedClassName(String returnedClassName) {
 		this.returnedClassName = returnedClassName;
 	}
 
@@ -198,7 +196,7 @@ public class PropertyBinder {
 		this.value = value;
 	}
 
-	public void setComponentElement(Component componentElement) {
+	private void setComponentElement(Component componentElement) {
 		this.componentElement = componentElement;
 	}
 
@@ -223,15 +221,15 @@ public class PropertyBinder {
 		this.memberDetails = memberDetails;
 	}
 
-	public void setReturnedClass(TypeDetails returnedClass) {
+	private void setReturnedClass(TypeDetails returnedClass) {
 		this.returnedClass = returnedClass;
 	}
 
-	public BasicValueBinder getBasicValueBinder() {
+	private BasicValueBinder getBasicValueBinder() {
 		return basicValueBinder;
 	}
 
-	public Value getValue() {
+	private Value getValue() {
 		return value;
 	}
 
@@ -260,12 +258,10 @@ public class PropertyBinder {
 	private Property makePropertyAndValue() {
 		validateBind();
 
-		LOG.debugf( "MetadataSourceProcessor property %s with lazy=%s", name, lazy );
 		final String containerClassName = holder.getClassName();
 		holder.startingProperty( memberDetails );
 
 		basicValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ATTRIBUTE, buildingContext );
-		basicValueBinder.setPropertyName( name );
 		basicValueBinder.setReturnedClassName( returnedClassName );
 		basicValueBinder.setColumns( columns );
 		basicValueBinder.setPersistentClassName( containerClassName );
@@ -305,8 +301,9 @@ public class PropertyBinder {
 					binder.bind( metaAnnotatedTarget, buildingContext, persistentClass, property );
 				}
 				catch ( Exception e ) {
-					throw new AnnotationException( "error processing @AttributeBinderType annotation '" +
-							metaAnnotatedDescriptor.getAnnotationType().getName() + "'", e );
+					throw new AnnotationException( "error processing @AttributeBinderType annotation '"
+							+ metaAnnotatedDescriptor.getAnnotationType().getName() + "' for property '"
+							+ qualify( holder.getPath(), name ) + "'", e );
 				}
 			}
 		}
@@ -318,7 +315,7 @@ public class PropertyBinder {
 	}
 
 	//used to build everything from scratch
-	public Property makePropertyValueAndBind() {
+	private Property makePropertyValueAndBind() {
 		return bind( makePropertyAndValue() );
 	}
 
@@ -333,9 +330,7 @@ public class PropertyBinder {
 		else {
 			holder.addProperty( property, memberDetails, columns, declaringClass );
 		}
-
 		callAttributeBindersInSecondPass( property );
-
 		return property;
 	}
 
@@ -364,10 +359,10 @@ public class PropertyBinder {
 				rootClass.setEmbeddedIdentifier( true );
 			}
 			else {
-				rootClass.setIdentifierProperty(property);
+				rootClass.setIdentifierProperty( property );
 				final MappedSuperclass superclass =
 						getMappedSuperclassOrNull( declaringClass, inheritanceStatePerClass, buildingContext );
-				setDeclaredIdentifier( rootClass, superclass, property);
+				setDeclaredIdentifier( rootClass, superclass, property );
 			}
 		}
 	}
@@ -427,7 +422,6 @@ public class PropertyBinder {
 	public Property makeProperty() {
 		validateMake();
 		validateAnnotationsAgainstType();
-		LOG.debugf( "Building property %s", name );
 		Property property = new Property();
 		property.setName( name );
 		property.setValue( value );
@@ -443,7 +437,6 @@ public class PropertyBinder {
 		handleMutability( property );
 		handleOptional( property );
 		inferOptimisticLocking( property );
-		LOG.tracev( "Cascading {0} with {1}", name, cascade );
 		return property;
 	}
 
@@ -534,11 +527,12 @@ public class PropertyBinder {
 
 	private void validateAnnotationsAgainstType() {
 		if ( memberDetails != null ) {
-			if ( !(memberDetails.getType() instanceof ArrayTypeDetails) ) {
+			final TypeDetails type = memberDetails.getType();
+			if ( !(type instanceof ArrayTypeDetails) ) {
 				checkAnnotation( OrderColumn.class, List.class );
 				if ( memberDetails.hasDirectAnnotationUsage( OrderBy.class )
-						&& !memberDetails.getType().isImplementor( Collection.class )
-						&& !memberDetails.getType().isImplementor( Map.class ) ) {
+						&& !type.isImplementor( Collection.class )
+						&& !type.isImplementor( Map.class ) ) {
 					throw new AnnotationException( "Property '" + qualify( holder.getPath(), name )
 							+ "' is annotated '@OrderBy' but is not of type 'Collection' or 'Map'" );
 				}
@@ -653,13 +647,9 @@ public class PropertyBinder {
 		final Id existingIdProperty = attributeMember.getDirectAnnotationUsage( Id.class );
 		if ( incomingIdProperty != null && existingIdProperty == null ) {
 			throw new MappingException(
-					String.format(
-							"You cannot override the [%s] non-identifier property from the [%s] base class or @MappedSuperclass and make it an identifier in the [%s] subclass",
-							attributeMember.getName(),
-							attributeMember.getDeclaringType().getName(),
-							property.getDeclaringType().getName()
-					)
-			);
+					"Attribute '" + attributeMember.getName()
+					+ "' is declared by '" + attributeMember.getDeclaringType().getName()
+					+ "' and may not be redeclared as an '@Id' by '" + property.getDeclaringType().getName() + "'" );
 		}
 	}
 
@@ -702,13 +692,10 @@ public class PropertyBinder {
 	}
 
 	private static boolean isJoinColumnPresent(String columnName, MemberDetails property, SourceModelBuildingContext modelContext) {
-		//The detection of a configured individual JoinColumn differs between Annotation
-		//and XML configuration processing.
-		final JoinColumn[] joinColumnAnnotations = property.getRepeatedAnnotationUsages(
-				JpaAnnotations.JOIN_COLUMN,
-				modelContext
-		);
-		for ( JoinColumn joinColumnAnnotation : joinColumnAnnotations ) {
+		// The detection of a configured individual JoinColumn differs
+		// between Annotation and XML configuration processing.
+		for ( JoinColumn joinColumnAnnotation :
+				property.getRepeatedAnnotationUsages( JpaAnnotations.JOIN_COLUMN, modelContext ) ) {
 			if ( joinColumnAnnotation.name().equals( columnName ) ) {
 				return true;
 			}
@@ -735,26 +722,10 @@ public class PropertyBinder {
 			MetadataBuildingContext context,
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass) throws MappingException {
 
-		if ( alreadyProcessedBySuper( propertyHolder, inferredData, entityBinder ) ) {
-			LOG.debugf(
-					"Skipping attribute [%s : %s] as it was already processed as part of super hierarchy",
-					inferredData.getClassOrElementName(),
-					inferredData.getPropertyName()
-			);
-		}
-		else {
+		if ( !alreadyProcessedBySuper( propertyHolder, inferredData, entityBinder ) ) {
 			// inSecondPass can only be used to apply right away the second pass of a composite-element
 			// Because it's a value type, there is no bidirectional association, hence second pass
 			// ordering does not matter
-
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Processing annotations of {0}.{1}" ,
-						propertyHolder.getEntityName(),
-						inferredData.getPropertyName()
-				);
-			}
-
 			final MemberDetails property = inferredData.getAttributeMember();
 			if ( property.hasDirectAnnotationUsage( Parent.class ) ) {
 				handleParentProperty( propertyHolder, inferredData, property );
@@ -812,6 +783,53 @@ public class PropertyBinder {
 				new ColumnsBuilder( propertyHolder, nullability, property, inferredData, entityBinder, context )
 						.extractMetadata();
 
+		final PropertyBinder propertyBinder = propertyBinder(
+				propertyHolder,
+				inferredData,
+				entityBinder,
+				isIdentifierMapper,
+				context,
+				inheritanceStatePerClass,
+				property,
+				attributeTypeDetails
+		);
+
+		if ( isPropertyOfRegularEmbeddable( propertyHolder, isComponentEmbedded )
+				&& property.hasDirectAnnotationUsage(Id.class)) {
+			throw new AnnotationException("Member '" + property.getName()
+					+ "' of embeddable class " + propertyHolder.getClassName() + " is annotated '@Id'");
+		}
+
+		final LazyGroup lazyGroupAnnotation = property.getDirectAnnotationUsage( LazyGroup.class );
+		if ( lazyGroupAnnotation != null ) {
+			propertyBinder.setLazyGroup( lazyGroupAnnotation.value() );
+		}
+
+		final AnnotatedJoinColumns joinColumns = columnsBuilder.getJoinColumns();
+		final AnnotatedColumns columns = propertyBinder.bindProperty(
+				propertyHolder,
+				nullability,
+				inferredData,
+				entityBinder,
+				isIdentifierMapper,
+				isComponentEmbedded,
+				inSecondPass,
+				property,
+				attributeClassDetails,
+				columnsBuilder
+		);
+		addNaturalIds( inSecondPass, property, columns, joinColumns, context );
+	}
+
+	private static PropertyBinder propertyBinder(
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			EntityBinder entityBinder,
+			boolean isIdentifierMapper,
+			MetadataBuildingContext context,
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
+			MemberDetails property,
+			TypeDetails attributeTypeDetails) {
 		final PropertyBinder propertyBinder = new PropertyBinder();
 		propertyBinder.setName( inferredData.getPropertyName() );
 		propertyBinder.setReturnedClassName( inferredData.getTypeName() );
@@ -828,35 +846,7 @@ public class PropertyBinder {
 		propertyBinder.setEntityBinder( entityBinder );
 		propertyBinder.setInheritanceStatePerClass( inheritanceStatePerClass );
 		propertyBinder.setId( !entityBinder.isIgnoreIdAnnotations() && hasIdAnnotation( property ) );
-
-		if ( isPropertyOfRegularEmbeddable( propertyHolder, isComponentEmbedded )
-				&& property.hasDirectAnnotationUsage(Id.class)) {
-			throw new AnnotationException("Member '" + property.getName()
-					+ "' of embeddable class " + propertyHolder.getClassName() + " is annotated '@Id'");
-		}
-
-		final LazyGroup lazyGroupAnnotation = property.getDirectAnnotationUsage( LazyGroup.class );
-		if ( lazyGroupAnnotation != null ) {
-			propertyBinder.setLazyGroup( lazyGroupAnnotation.value() );
-		}
-
-		final AnnotatedJoinColumns joinColumns = columnsBuilder.getJoinColumns();
-		final AnnotatedColumns columns = bindProperty(
-				propertyHolder,
-				nullability,
-				inferredData,
-				entityBinder,
-				isIdentifierMapper,
-				isComponentEmbedded,
-				inSecondPass,
-				context,
-				inheritanceStatePerClass,
-				property,
-				attributeClassDetails,
-				columnsBuilder,
-				propertyBinder
-		);
-		addNaturalIds( inSecondPass, property, columns, joinColumns, context );
+		return propertyBinder;
 	}
 
 	private static boolean isPropertyOfRegularEmbeddable(PropertyHolder propertyHolder, boolean isComponentEmbedded) {
@@ -865,7 +855,7 @@ public class PropertyBinder {
 			&& !isComponentEmbedded; // it's not an entity field matching a field of the id class
 	}
 
-	private static AnnotatedColumns bindProperty(
+	private AnnotatedColumns bindProperty(
 			PropertyHolder propertyHolder,
 			Nullability nullability,
 			PropertyData inferredData,
@@ -873,21 +863,15 @@ public class PropertyBinder {
 			boolean isIdentifierMapper,
 			boolean isComponentEmbedded,
 			boolean inSecondPass,
-			MetadataBuildingContext context,
-			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
 			MemberDetails property,
 			ClassDetails returnedClass,
-			ColumnsBuilder columnsBuilder,
-			PropertyBinder propertyBinder) {
+			ColumnsBuilder columnsBuilder) {
 		if ( isVersion( property ) ) {
 			bindVersionProperty(
 					propertyHolder,
 					inferredData,
 					isIdentifierMapper,
-					context,
-					inheritanceStatePerClass,
-					columnsBuilder.getColumns(),
-					propertyBinder
+					columnsBuilder.getColumns()
 			);
 		}
 		else if ( isManyToOne( property ) ) {
@@ -896,10 +880,10 @@ public class PropertyBinder {
 					inferredData,
 					isIdentifierMapper,
 					inSecondPass,
-					context,
+					buildingContext,
 					property,
 					columnsBuilder.getJoinColumns(),
-					propertyBinder
+					this
 			);
 		}
 		else if ( isOneToOne( property ) ) {
@@ -908,10 +892,10 @@ public class PropertyBinder {
 					inferredData,
 					isIdentifierMapper,
 					inSecondPass,
-					context,
+					buildingContext,
 					property,
 					columnsBuilder.getJoinColumns(),
-					propertyBinder
+					this
 			);
 		}
 		else if ( isAny( property ) ) {
@@ -921,7 +905,7 @@ public class PropertyBinder {
 					inferredData,
 					entityBinder,
 					isIdentifierMapper,
-					context,
+					buildingContext,
 					property,
 					columnsBuilder.getJoinColumns()
 			);
@@ -933,29 +917,26 @@ public class PropertyBinder {
 					inferredData,
 					entityBinder,
 					isIdentifierMapper,
-					context,
+					buildingContext,
 					inheritanceStatePerClass,
 					property,
 					columnsBuilder.getJoinColumns()
 			);
 		}
 		//Either a regular property or a basic @Id or @EmbeddedId while not ignoring id annotations
-		else if ( !propertyBinder.isId() || !entityBinder.isIgnoreIdAnnotations() ) {
+		else if ( !isId() || !entityBinder.isIgnoreIdAnnotations() ) {
 			// returns overridden columns
-			return bindBasic(
+			return bindBasicOrComposite(
 					propertyHolder,
 					nullability,
 					inferredData,
 					entityBinder,
 					isIdentifierMapper,
 					isComponentEmbedded,
-					context,
-					inheritanceStatePerClass,
 					property,
 					columnsBuilder,
 					columnsBuilder.getColumns(),
-					returnedClass,
-					propertyBinder
+					returnedClass
 			);
 		}
 		return columnsBuilder.getColumns();
@@ -984,32 +965,26 @@ public class PropertyBinder {
 			|| property.hasDirectAnnotationUsage( ManyToAny.class );
 	}
 
-	private static void bindVersionProperty(
+	private void bindVersionProperty(
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			boolean isIdentifierMapper,
-			MetadataBuildingContext context,
-			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
-			AnnotatedColumns columns,
-			PropertyBinder propertyBinder) {
+			AnnotatedColumns columns) {
 		checkVersionProperty( propertyHolder, isIdentifierMapper );
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "{0} is a version property", inferredData.getPropertyName() );
-		}
 		final RootClass rootClass = (RootClass) propertyHolder.getPersistentClass();
-		propertyBinder.setColumns( columns );
-		final Property property = propertyBinder.makePropertyValueAndBind();
-		propertyBinder.getBasicValueBinder().setVersion( true );
+		setColumns( columns );
+		final Property property = makePropertyValueAndBind();
+		getBasicValueBinder().setVersion( true );
 		rootClass.setVersion( property );
 
 		//If version is on a mapped superclass, update the mapping
 		final ClassDetails declaringClass = inferredData.getDeclaringClass();
-		final org.hibernate.mapping.MappedSuperclass superclass =
-				getMappedSuperclassOrNull( declaringClass, inheritanceStatePerClass, context );
-		if ( superclass != null ) {
+		final MappedSuperclass mappedSuperclass =
+				getMappedSuperclassOrNull( declaringClass, inheritanceStatePerClass, buildingContext );
+		if ( mappedSuperclass != null ) {
 			// Don't overwrite an existing version property
-			if ( superclass.getDeclaredVersion() == null ) {
-				superclass.setDeclaredVersion( property );
+			if ( mappedSuperclass.getDeclaredVersion() == null ) {
+				mappedSuperclass.setDeclaredVersion( property );
 			}
 		}
 		else {
@@ -1018,12 +993,6 @@ public class PropertyBinder {
 		}
 
 		rootClass.setOptimisticLockStyle( OptimisticLockStyle.VERSION );
-		if ( LOG.isTraceEnabled() ) {
-			final SimpleValue versionValue = (SimpleValue) rootClass.getVersion().getValue();
-			LOG.tracev( "Version name: {0}, unsavedValue: {1}",
-					rootClass.getVersion().getName(),
-					versionValue.getNullValue() );
-		}
 	}
 
 	private static void checkVersionProperty(PropertyHolder propertyHolder, boolean isIdentifierMapper) {
@@ -1042,149 +1011,169 @@ public class PropertyBinder {
 		}
 	}
 
-	private static AnnotatedColumns bindBasic(
+	private AnnotatedColumns bindBasicOrComposite(
 			PropertyHolder propertyHolder,
 			Nullability nullability,
 			PropertyData inferredData,
 			EntityBinder entityBinder,
 			boolean isIdentifierMapper,
 			boolean isComponentEmbedded,
-			MetadataBuildingContext context,
-			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
 			MemberDetails property,
 			ColumnsBuilder columnsBuilder,
 			AnnotatedColumns columns,
-			ClassDetails returnedClass,
-			PropertyBinder propertyBinder) {
+			ClassDetails returnedClass) {
 
 		// overrides from @MapsId or @IdClass if needed
-		final boolean isComposite;
-		final boolean isOverridden;
+		final PropertyData overridingProperty =
+				overridingProperty( propertyHolder, isIdentifierMapper, property );
 		final AnnotatedColumns actualColumns;
-		if ( isIdentifierMapper
-				|| propertyBinder.isId()
-				|| propertyHolder.isOrWithinEmbeddedId()
-				|| propertyHolder.isInIdClass() ) {
-			// the associated entity could be using an @IdClass making the overridden property a component
-			final PropertyData overridingProperty = getPropertyOverriddenByMapperOrMapsId(
-					propertyBinder.isId(),
-					propertyHolder,
-					property.resolveAttributeName(),
-					context
-			);
-			if ( overridingProperty != null ) {
-				isOverridden = true;
-				isComposite = isComposite( inheritanceStatePerClass, property, returnedClass, overridingProperty );
-				//Get the new column
-				actualColumns = columnsBuilder.overrideColumnFromMapperOrMapsIdProperty( propertyBinder.isId() );
-			}
-			else {
-				isOverridden = false;
-				isComposite = isEmbedded( property, returnedClass );
-				actualColumns = columns;
-			}
+		final boolean isComposite;
+		if ( overridingProperty != null ) {
+			setReferencedEntityName( overridingProperty.getClassOrElementName() );
+			actualColumns = columnsBuilder.overrideColumnFromMapperOrMapsIdProperty( overridingProperty );
+			isComposite = isComposite( property, returnedClass, overridingProperty );
 		}
 		else {
-			isOverridden = false;
-			isComposite = isEmbedded( property, returnedClass );
 			actualColumns = columns;
+			isComposite = isEmbedded( property, returnedClass );
 		}
 
+		final PropertyBinder propertyBinder = propertyBinder(
+				propertyHolder,
+				nullability,
+				inferredData,
+				entityBinder,
+				isComposite,
+				isIdentifierMapper,
+				isComponentEmbedded,
+				property,
+				columns,
+				returnedClass,
+				actualColumns,
+				overridingProperty
+		);
+		propertyBinder.handleGenerators(
+				propertyHolder,
+				inferredData,
+				isIdentifierMapper,
+				overridingProperty != null,
+				overridingProperty
+		);
+		return actualColumns;
+	}
+
+	private PropertyData overridingProperty(
+			PropertyHolder propertyHolder,
+			boolean isIdentifierMapper,
+			MemberDetails property) {
+		if ( isIdentifierMapper
+			|| isId
+			|| propertyHolder.isOrWithinEmbeddedId()
+			|| propertyHolder.isInIdClass() ) {
+			// the associated entity could be using an @IdClass making the overridden property a component
+			return getPropertyOverriddenByMapperOrMapsId(
+					isId,
+					propertyHolder,
+					property.resolveAttributeName(),
+					buildingContext
+			);
+		}
+		else {
+			return null;
+		}
+	}
+
+	private PropertyBinder propertyBinder(
+			PropertyHolder propertyHolder,
+			Nullability nullability,
+			PropertyData inferredData,
+			EntityBinder entityBinder,
+			boolean isComposite,
+			boolean isIdentifierMapper,
+			boolean isComponentEmbedded,
+			MemberDetails property,
+			AnnotatedColumns columns,
+			ClassDetails returnedClass,
+			AnnotatedColumns actualColumns,
+			PropertyData overridingProperty) {
+
 		final Class<? extends CompositeUserType<?>> compositeUserType =
-				resolveCompositeUserType( inferredData, context );
+				resolveCompositeUserType( inferredData, buildingContext );
 
 		if ( isComposite || compositeUserType != null ) {
 			if ( property.isArray() && property.getElementType() != null
 					&& isEmbedded( property, property.getElementType() ) ) {
 				// This is a special kind of basic aggregate component array type
-				propertyBinder.setComponentElement(
-						EmbeddableBinder.bindEmbeddable(
-								inferredData,
-								propertyHolder,
-								entityBinder.getPropertyAccessor( property ),
-								entityBinder,
-								isIdentifierMapper,
-								context,
-								isComponentEmbedded,
-								propertyBinder.isId(),
-								inheritanceStatePerClass,
-								null,
-								null,
-								determineCustomInstantiator( property, returnedClass, context ),
-								compositeUserType,
-								null,
-								columns
-						)
-				);
-				propertyBinder.setColumns( actualColumns );
-				propertyBinder.makePropertyValueAndBind();
-			}
-			else {
-				propertyBinder = createCompositeBinder(
+				aggregateBinder(
 						propertyHolder,
 						inferredData,
 						entityBinder,
 						isIdentifierMapper,
 						isComponentEmbedded,
-						context,
+						property,
+						columns,
+						returnedClass,
+						compositeUserType,
+						actualColumns
+				);
+			}
+			else {
+				return createCompositeBinder(
+						propertyHolder,
+						inferredData,
+						entityBinder,
+						isIdentifierMapper,
+						isComponentEmbedded,
+						buildingContext,
 						inheritanceStatePerClass,
 						property,
 						actualColumns,
 						returnedClass,
-						propertyBinder,
-						isOverridden,
+						isId(),
+						overridingProperty != null,
+						overridingProperty,
 						compositeUserType
 				);
 			}
 		}
-		else if ( property.isPlural()
-				&& property.getElementType() != null
-				&& isEmbedded( property, property.getElementType() ) ) {
+		else if ( property.isPlural() && property.getElementType() != null
+					&& isEmbedded( property, property.getElementType() ) ) {
 			// This is a special kind of basic aggregate component array type
-			propertyBinder.setComponentElement(
-					EmbeddableBinder.bindEmbeddable(
-							inferredData,
-							propertyHolder,
-							entityBinder.getPropertyAccessor( property ),
-							entityBinder,
-							isIdentifierMapper,
-							context,
-							isComponentEmbedded,
-							propertyBinder.isId(),
-							inheritanceStatePerClass,
-							null,
-							null,
-							determineCustomInstantiator( property, property.getElementType().determineRawClass(), context ),
-							compositeUserType,
-							null,
-							columns
-					)
+			aggregateBinder(
+					propertyHolder,
+					inferredData,
+					entityBinder,
+					isIdentifierMapper,
+					isComponentEmbedded,
+					property,
+					columns,
+					property.getElementType().determineRawClass(),
+					null,
+					actualColumns
 			);
-			propertyBinder.setColumns( actualColumns );
-			propertyBinder.makePropertyValueAndBind();
 		}
 		else {
-			createBasicBinder(
+			basicBinder(
 					propertyHolder,
 					inferredData,
 					nullability,
-					context,
 					property,
-					actualColumns,
-					propertyBinder,
-					isOverridden
+					actualColumns
 			);
 		}
+		return this;
+	}
+
+	private void handleGenerators(
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			boolean isIdentifierMapper,
+			boolean isOverridden,
+			PropertyData overridingProperty) {
 		if ( isOverridden ) {
-			handleGeneratorsForOverriddenId(
-					propertyHolder,
-//					classGenerators,
-					context,
-					property,
-					propertyBinder
-			);
+			handleGeneratorsForOverriddenId( propertyHolder, overridingProperty );
 		}
-		else if ( propertyBinder.isId() ) {
+		else if ( isId() ) {
 			if ( isIdentifierMapper ) {
 				throw new AnnotationException( "Property '"+ getPath( propertyHolder, inferredData )
 						+ "' belongs to an '@IdClass' and may not be annotated '@Id' or '@EmbeddedId'" );
@@ -1193,15 +1182,45 @@ public class PropertyBinder {
 			createIdGeneratorsFromGeneratorAnnotations(
 					propertyHolder,
 					inferredData,
-					(SimpleValue) propertyBinder.getValue(),
-					context
+					(SimpleValue) getValue(),
+					buildingContext
 			);
 		}
-		return actualColumns;
 	}
 
-	private static boolean isComposite(
-			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
+	private void aggregateBinder(
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			EntityBinder entityBinder,
+			boolean isIdentifierMapper,
+			boolean isComponentEmbedded,
+			MemberDetails property,
+			AnnotatedColumns columns,
+			ClassDetails returnedClass,
+			Class<? extends CompositeUserType<?>> compositeUserType,
+			AnnotatedColumns actualColumns) {
+		// This is a special kind of basic aggregate component array type
+		setComponentElement(
+				bindEmbeddable(
+						inferredData,
+						propertyHolder,
+						entityBinder.getPropertyAccessor( property ),
+						entityBinder,
+						isIdentifierMapper,
+						buildingContext,
+						isComponentEmbedded,
+						isId(),
+						inheritanceStatePerClass,
+						determineCustomInstantiator( property, returnedClass, buildingContext ),
+						compositeUserType,
+						columns
+				)
+		);
+		setColumns( actualColumns );
+		makePropertyValueAndBind();
+	}
+
+	private boolean isComposite(
 			MemberDetails property,
 			ClassDetails returnedClass,
 			PropertyData overridingProperty) {
@@ -1210,19 +1229,10 @@ public class PropertyBinder {
 		return state != null ? state.hasIdClassOrEmbeddedId() : isEmbedded( property, returnedClass );
 	}
 
-	private static void handleGeneratorsForOverriddenId(
+	private void handleGeneratorsForOverriddenId(
 			PropertyHolder propertyHolder,
-//			Map<String, IdentifierGeneratorDefinition> classGenerators,
-			MetadataBuildingContext context,
-			MemberDetails property,
-			PropertyBinder propertyBinder) {
-		final PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
-				propertyBinder.isId(),
-				propertyHolder,
-				property.resolveAttributeName(),
-				context
-		);
-		final SimpleValue idValue = (SimpleValue) propertyBinder.getValue();
+			PropertyData mapsIdProperty) {
+		final SimpleValue idValue = (SimpleValue) getValue();
 		final RootClass rootClass = propertyHolder.getPersistentClass().getRootClass();
 		final String propertyName = mapsIdProperty.getPropertyName();
 		final String entityName = rootClass.getEntityName();
@@ -1248,41 +1258,27 @@ public class PropertyBinder {
 		);
 	}
 
-	private static void createBasicBinder(
+	private void basicBinder(
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			Nullability nullability,
-			MetadataBuildingContext context,
 			MemberDetails property,
-			AnnotatedColumns columns,
-			PropertyBinder propertyBinder,
-			boolean isOverridden) {
-		if ( shouldForceNotNull( nullability, propertyBinder, isExplicitlyOptional( property ) ) ) {
-			forceColumnsNotNull( propertyHolder, inferredData, columns, propertyBinder );
+			AnnotatedColumns columns) {
+		if ( shouldForceNotNull( nullability, isExplicitlyOptional( property ) ) ) {
+			forceColumnsNotNull( propertyHolder, inferredData, columns );
 		}
 
-		propertyBinder.setLazy( isLazy( property ) );
-		propertyBinder.setColumns( columns );
-		if ( isOverridden ) {
-			final PropertyData mapsIdProperty = getPropertyOverriddenByMapperOrMapsId(
-					propertyBinder.isId(),
-					propertyHolder,
-					property.resolveAttributeName(),
-					context
-			);
-			propertyBinder.setReferencedEntityName( mapsIdProperty.getClassOrElementName() );
-		}
-
-		propertyBinder.makePropertyValueAndBind();
+		setLazy( isLazy( property ) );
+		setColumns( columns );
+		makePropertyValueAndBind();
 	}
 
-	private static void forceColumnsNotNull(
+	private void forceColumnsNotNull(
 			PropertyHolder holder,
 			PropertyData data,
-			AnnotatedColumns columns,
-			PropertyBinder binder) {
+			AnnotatedColumns columns) {
 		for ( AnnotatedColumn column : columns.getColumns() ) {
-			if ( binder.isId() && column.isFormula() ) {
+			if ( isId() && column.isFormula() ) {
 				throw new CannotForceNonNullableException( "Identifier property '"
 						+ getPath( holder, data ) + "' cannot map to a '@Formula'" );
 			}
@@ -1290,8 +1286,8 @@ public class PropertyBinder {
 		}
 	}
 
-	private static boolean shouldForceNotNull(Nullability nullability, PropertyBinder binder, boolean optional) {
-		return binder.isId()
+	private boolean shouldForceNotNull(Nullability nullability, boolean optional) {
+		return isId()
 			|| !optional && nullability != Nullability.FORCED_NULL;
 	}
 
@@ -1320,20 +1316,18 @@ public class PropertyBinder {
 		if ( basicAnn != null ) {
 			return basicAnn.optional();
 		}
-
-		if ( attributeMember.isArray() ) {
+		else if ( attributeMember.isArray() ) {
 			return true;
 		}
-
-		if ( propertyHolder != null && propertyHolder.isComponent() ) {
+		else if ( propertyHolder != null && propertyHolder.isComponent() ) {
 			return true;
 		}
-
-		if ( attributeMember.isPlural() ) {
+		else if ( attributeMember.isPlural() ) {
 			return attributeMember.getElementType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
 		}
-
-		return attributeMember.getType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
+		else {
+			return attributeMember.getType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
+		}
 	}
 
 	private static boolean isLazy(MemberDetails property) {
@@ -1372,4 +1366,34 @@ public class PropertyBinder {
 
 		return null;
 	}
+
+	private static PropertyData getPropertyOverriddenByMapperOrMapsId(
+			boolean isId,
+			PropertyHolder propertyHolder,
+			String propertyName,
+			MetadataBuildingContext buildingContext) {
+		final ClassDetailsRegistry classDetailsRegistry =
+				buildingContext.getMetadataCollector().getSourceModelBuildingContext()
+						.getClassDetailsRegistry();
+		final PersistentClass persistentClass = propertyHolder.getPersistentClass();
+		final String name =
+				StringHelper.isEmpty( persistentClass.getClassName() )
+						? persistentClass.getEntityName()
+						: persistentClass.getClassName();
+		final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( name );
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+		if ( propertyHolder.isInIdClass() ) {
+			final PropertyData data =
+					metadataCollector.getPropertyAnnotatedWithIdAndToOne( classDetails, propertyName );
+			if ( data != null ) {
+				return data;
+			}
+			// TODO: is this branch even necessary?
+			else if ( buildingContext.getBuildingOptions().isSpecjProprietarySyntaxEnabled() ) {
+				return metadataCollector.getPropertyAnnotatedWithMapsId( classDetails, propertyName );
+			}
+		}
+		return metadataCollector.getPropertyAnnotatedWithMapsId( classDetails, isId ? "" : propertyName );
+	}
+
 }

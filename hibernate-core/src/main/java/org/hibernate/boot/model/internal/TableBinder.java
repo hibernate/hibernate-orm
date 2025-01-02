@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.hibernate.AnnotationException;
@@ -20,7 +19,6 @@ import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
@@ -38,8 +36,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 
-import org.jboss.logging.Logger;
-
 import jakarta.persistence.Index;
 import jakarta.persistence.UniqueConstraint;
 
@@ -56,7 +52,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  * @author Emmanuel Bernard
  */
 public class TableBinder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, TableBinder.class.getName() );
 
 	private MetadataBuildingContext buildingContext;
 
@@ -809,7 +804,6 @@ public class TableBinder {
 	}
 
 	private static List<Column> mappedByColumns(PersistentClass associatedClass, String mappedByProperty) {
-		LOG.debugf( "Retrieving property %s.%s", associatedClass.getEntityName(), mappedByProperty );
 		final Value value = associatedClass.getRecursiveProperty( mappedByProperty ).getValue();
 		if ( value instanceof Collection ) {
 			final Value element = ((Collection) value).getElement();

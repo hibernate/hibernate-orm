@@ -46,6 +46,7 @@ import jakarta.persistence.Table;
 
 import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.ENTITY;
+import static org.hibernate.boot.model.internal.EntityBinder.bindEntityClass;
 import static org.hibernate.boot.model.internal.FilterDefBinder.bindFilterDefs;
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretSequenceGenerator;
 import static org.hibernate.boot.model.internal.GeneratorParameters.interpretTableGenerator;
@@ -79,7 +80,7 @@ public final class AnnotationBinder {
 			interpretSequenceGenerator( generatorRegistration.configuration(), definitionBuilder );
 			final IdentifierGeneratorDefinition idGenDef = definitionBuilder.build();
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracef( "Adding global sequence generator with name: %s", name );
+				LOG.trace( "Adding global sequence generator with name: " + name );
 			}
 			context.getMetadataCollector().addDefaultIdentifierGenerator( idGenDef );
 		} );
@@ -89,7 +90,7 @@ public final class AnnotationBinder {
 			interpretTableGenerator( generatorRegistration.configuration(), definitionBuilder );
 			final IdentifierGeneratorDefinition idGenDef = definitionBuilder.build();
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracef( "Adding global table generator with name: %s", name );
+				LOG.trace( "Adding global table generator with name: " + name );
 			}
 			context.getMetadataCollector().addDefaultIdentifierGenerator( idGenDef );
 		} );
@@ -217,7 +218,7 @@ public final class AnnotationBinder {
 		// try to find class level generators
 //		GeneratorBinder.registerGlobalGenerators( classDetails, context );
 		if ( context.getMetadataCollector().getClassType( classDetails ) == ENTITY ) {
-			EntityBinder.bindEntityClass( classDetails, inheritanceStatePerClass, context );
+			bindEntityClass( classDetails, inheritanceStatePerClass, context );
 		}
 	}
 

@@ -134,6 +134,17 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * <li>a parameter of type {@link org.hibernate.query.KeyedPage}.
  * </ul>
  * <p>
+ * Finally, a method might have a parameter of type
+ * {@link org.hibernate.query.restriction.Restriction Restriction<? super E>},
+ * allowing the caller to apply an arbitrary filtering criterion to
+ * the query results.
+ * <p>
+ * For example:
+ * <pre>
+ * &#064;HQL("from Book")
+ * List&lt;Book&gt; findBooks(Restriction&lt;Book&gt; filter, List&lt;Order&lt;Book&gt;&gt; order);
+ * </pre>
+ * <p>
  * Queries specified using this annotation are always validated by
  * the Metamodel Generator, and so it isn't necessary to specify the
  * {@link CheckHQL} annotation.

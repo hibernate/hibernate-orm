@@ -919,11 +919,13 @@ It's even possible to transform a HQL query string to a criteria query, and modi
 ----
 HibernateCriteriaBuilder builder = sessionFactory.getCriteriaBuilder();
 var query = builder.createQuery("from Book where year(publicationDate) > 2000", Book.class);
-var root = (Root<Book>) query.getRootList().get(0);
+var root = query.getRoot(0, Book.class);
 query.where(builder.like(root.get(Book_.title), builder.literal("Hibernate%")));
 query.orderBy(builder.asc(root.get(Book_.title)), builder.desc(root.get(Book_.isbn)));
 List<Book> matchingBooks = session.createSelectionQuery(query).getResultList();
 ----
+This is starting to get a bit messy.
+In Hibernate 7, we can often use <<restrictions-and-ordering,`Restriction`>> instead.
 ====
 
 Do you find some of the code above a bit too verbose?
@@ -1034,8 +1036,70 @@ List<Book> books =
 You can call stored procedures using `createStoredProcedureQuery()` or `createStoredProcedureCall()`.
 ====
 
+[[restrictions-and-ordering]]
+=== Restrictions and ordering
+
+We've already seen how the JPA <<criteria-queries,Criteria Query API>> can be used to construct a query completely programmatically.
+The Criteria API is powerful, but for the most common scenarios it's at least arguably overkill.
+The <<criteria-definition,`CriteriaDefinition`>> class helps a bit, but it doesn't completely eliminate the verbosity of programmatic query definition.
+
+In Hibernate 7, there's a new option, a very ergonomic API for programmatically adding restrictions or ordering to an existing query before executing it.
+(Actually, the ordering part of this was introduced in Hibernate 6.5.)
+This new API:
+
+- isn't part of the Criteria Query API, and so we don't need a `CriteriaQuery` object to make use of it,
+- works with both HQL and Criteria queries, and even with <<named-queries,named HQL queries>>, and
+- is optimized for the case of a query which returns its single root entity.
+
+[source,java]
+----
+var query = session.createSelectionQuery("from Book where year(publicationDate) > 2000", Book.class);
+if (titlePattern != null) {
+    query.addRestriction(Restriction.like(Book_.title, namePattern));
+}
+if (isbns != null && !isbns.isEmpty()) {
+    query.addRestriction(Restriction.in(Book_.isbn, isbns))
+}
+query.setOrder(List.of(Order.asc(Book_.title), Order.asc(Book_.isbn)));
+List<Book> matchingBooks = query.getResultList();
+
+----
+
+Notice that:
+
+- The link:{doc-javadoc-url}org/hibernate/query/restriction/Restriction.html[`Restriction`] interface has static methods for constructing a variety of different kinds of restriction in a completely typesafe way.
+- Similarly, the link:{doc-javadoc-url}org/hibernate/query/Order.html[`Order`] class has a variety of static methods for constructing different kinds of ordering criteria.
+
+We need the following methods of `SelectionQuery`:
+
+.Methods for query restriction and ordering
+[%breakable,cols="30,~,^15"]
+|===
+| Method name | Purpose | JPA-standard
+
+| `addRestriction()` | Add a restriction on the query results | &#10006;
+| `setOrder()` | Specify how the query results should be ordered | &#10006;
+|===
+
+Unfortunately, `Restriction` and `Order` can't be used with JPA's `TypedQuery` interface, and JPA has no built-in alternative, so if we're using `EntityManager`, we need to call `unwrap()` to obtain a `SelectionQuery`.
+
+Alternatively, `Restriction` and `Order` can be used with <<paging-and-ordering,generated query or finder methods>>, and even with link:{doc-data-repositories-url}[Jakarta Data repositories].
+
+The interface link:{doc-javadoc-url}org/hibernate/query/restriction/Path.html[`Path`] may be used to express restrictions on fields of an embedded or associated entity class.
+
+[source,java]
+----
+List<Book> booksForPublisher =
+        session.createSelectionQuery("from Book", Book.class)
+                .addRestriction(Path.from(Book.class).to(Book_.publisher).to(Publisher_.name)
+                                .equalTo(publisherName))
+                .getResultList();
+----
+
+Programmatic restrictions, and especially programmatic ordering, are often used together with pagination.
+
 [[pagination]]
-=== Limits, pagination, and ordering
+=== Limits and pagination
 
 If a query might return more results than we can handle at one time, we may specify:
 
@@ -1099,10 +1163,21 @@ long pages = results / MAX_RESULTS + (results % MAX_RESULTS == 0 ? 0 : 1);
 List<Book> books = query.setMaxResults(MAX_RESULTS).getResultList();
 ----
 
-A closely-related issue is ordering.
-It's quite common for pagination to be combined with the need to order query results by a field that's determined at runtime.
-So, as an alternative to the HQL `order by` clause, `SelectionQuery` offers the ability to specify that the query results should be ordered by one or more fields of the entity type returned by the query:
+.Methods for query limits, pagination, and ordering
+[%breakable,cols="30,~,^15"]
+|===
+| Method name | Purpose | JPA-standard
 
+| `setMaxResults()` | Set a limit on the number of results returned by a query | &#10004;
+| `setFirstResult()` | Set an offset on the results returned by a query | &#10004;
+| `setPage()` | Set the limit and offset by specifying a `Page` object | &#10006;
+| `getResultCount()` | Determine how many results the query would return in the absence of any limit or offset | &#10006;
+|===
+
+It's quite common for pagination to be combined with the need to order query results by a field that's determined at runtime.
+The `Order` class we just met <<restrictions-and-ordering,above>> provides the ability to specify that the query results should be ordered by one or more fields of the entity type returned by the query:
+
+[[query-order-example]]
 [source,java]
 ----
 List<Book> books =
@@ -1112,20 +1187,6 @@ List<Book> books =
             .setMaxResults(MAX_RESULTS)
             .getResultList();
 ----
-
-Unfortunately, there's no way to do this using JPA's `TypedQuery` interface.
-
-.Methods for query limits, pagination, and ordering
-[%breakable,cols="30,~,^15"]
-|===
-| Method name | Purpose | JPA-standard
-
-| `setMaxResults()` | Set a limit on the number of results returned by a query | &#10004;
-| `setFirstResult()` | Set an offset on the results returned by a query | &#10004;
-| `setPage()` | Set the limit and offset by specifying a `Page` object | &#10006;
-| `setOrder()` | Specify how the query results should be ordered | &#10006;
-| `getResultCount()` | Determine how many results the query would return in the absence of any limit or offset | &#10006;
-|===
 
 The approach to pagination we've just seen is sometimes called _offset-based pagination_.
 Since Hibernate 6.5, there's an alternative approach, which offers some advantages, though it's a little more difficult to use.

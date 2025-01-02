@@ -395,10 +395,10 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
-	public SqmQuerySpec<T> setGroupingExpressions(List<? extends JpaExpression<?>> groupExpressions) {
+	public SqmQuerySpec<T> setGroupingExpressions(List<? extends Expression<?>> groupExpressions) {
 		this.hasPositionalGroupItem = false;
 		this.groupByClauseExpressions = new ArrayList<>( groupExpressions.size() );
-		for ( JpaExpression<?> groupExpression : groupExpressions ) {
+		for ( Expression<?> groupExpression : groupExpressions ) {
 			if ( groupExpression instanceof SqmAliasedNodeRef ) {
 				this.hasPositionalGroupItem = true;
 			}
@@ -408,10 +408,10 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
-	public SqmQuerySpec<T> setGroupingExpressions(JpaExpression<?>... groupExpressions) {
+	public SqmQuerySpec<T> setGroupingExpressions(Expression<?>... groupExpressions) {
 		this.hasPositionalGroupItem = false;
 		this.groupByClauseExpressions = new ArrayList<>( groupExpressions.length );
-		for ( JpaExpression<?> groupExpression : groupExpressions ) {
+		for ( Expression<?> groupExpression : groupExpressions ) {
 			if ( groupExpression instanceof SqmAliasedNodeRef ) {
 				this.hasPositionalGroupItem = true;
 			}

@@ -1,7 +1,7 @@
 description = 'Maven plugin to integrate aspects of Hibernate into your build.'
 
-apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 apply from: rootProject.file( 'gradle/java-module.gradle' )
+apply from: rootProject.file( 'gradle/publishing.gradle' )
 
 apply plugin: 'org.hibernate.build.maven-embedder'
 
@@ -21,63 +21,60 @@ dependencies {
     implementation "org.apache.maven.shared:file-management:3.1.0"
 }
 
-publishing {
-    publications {
-        publishedArtifacts(MavenPublication) {
-            from components.java
-            pom.withXml {
-                asNode()
-                        .version
-                        .plus {
-                            packaging('maven-plugin')
-                        }
-                asNode()
-                        .dependencies
-                        .dependency
-                        .findAll { dependency ->
-                            dependency.groupId.text().startsWith('org.apache.maven')
-                        }
-                        .each { dependency ->
-                            if (dependency.groupId.text().startsWith('org.apache.maven.shared')) {
-                                dependency.scope*.value = 'compile'
-                            } else {
-                                dependency.scope*.value = 'provided'
-                            }
-                        }
-                asNode()
-                        .dependencies
-                        .dependency
-                        .findAll { dependency ->
-                            dependency.groupId.text().startsWith('org.hibernate.orm')
-                        }
-                        .each { dependency ->
-                            dependency.scope*.value = 'compile'
-                        }
-                asNode()
-                        .dependencies
-                        .plus {
-                            def plugins = build().appendNode('plugins')
-                            def pluginPlugin = plugins.appendNode('plugin')
-                            pluginPlugin.appendNode('groupId', 'org.apache.maven.plugins')
-                            pluginPlugin.appendNode('artifactId', 'maven-plugin-plugin')
-                            pluginPlugin.appendNode('version', '3.15.0')
-                            def pluginConfiguration = pluginPlugin.appendNode('configuration')
-                            pluginConfiguration.appendNode('goalPrefix', 'plugin')
-                            pluginConfiguration.appendNode('outputDirectory', layout.buildDirectory.dir('generated/sources/plugin-descriptors/META-INF/maven').get().getAsFile().getAbsolutePath() )
-                            def invokerPlugin = plugins.appendNode('plugin');
-                            invokerPlugin.appendNode('groupId', 'org.apache.maven.plugins')
-                            invokerPlugin.appendNode('artifactId', 'maven-invoker-plugin')
-                            invokerPlugin.appendNode('version', '3.8.0')
-                            def invokerConfiguration = invokerPlugin.appendNode('configuration');
-                            invokerConfiguration.appendNode('debug', 'true');
-                            invokerConfiguration.appendNode('mavenExecutable', 'mvnw');
-                            def scriptVariables = invokerConfiguration.appendNode('scriptVariables');
-                            scriptVariables.appendNode('hibernateCoreJarPath', layout.buildDirectory.file('maven-embedder/maven-local/org/hibernate/orm/hibernate-core/' + project.version + '/hibernate-core-' + project.version + '.jar').get().getAsFile().getAbsolutePath())
-                        }
-            }
-        }
-    }
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+publishingExtension.publications.named("publishedArtifacts") {
+    from components.java
 
+    pom.withXml {
+        asNode()
+                .version
+                .plus {
+                    packaging('maven-plugin')
+                }
+        asNode()
+                .dependencies
+                .dependency
+                .findAll { dependency ->
+                    dependency.groupId.text().startsWith('org.apache.maven')
+                }
+                .each { dependency ->
+                    if (dependency.groupId.text().startsWith('org.apache.maven.shared')) {
+                        dependency.scope*.value = 'compile'
+                    } else {
+                        dependency.scope*.value = 'provided'
+                    }
+                }
+        asNode()
+                .dependencies
+                .dependency
+                .findAll { dependency ->
+                    dependency.groupId.text().startsWith('org.hibernate.orm')
+                }
+                .each { dependency ->
+                    dependency.scope*.value = 'compile'
+                }
+        asNode()
+                .dependencies
+                .plus {
+                    def plugins = build().appendNode('plugins')
+                    def pluginPlugin = plugins.appendNode('plugin')
+                    pluginPlugin.appendNode('groupId', 'org.apache.maven.plugins')
+                    pluginPlugin.appendNode('artifactId', 'maven-plugin-plugin')
+                    pluginPlugin.appendNode('version', '3.15.0')
+                    def pluginConfiguration = pluginPlugin.appendNode('configuration')
+                    pluginConfiguration.appendNode('goalPrefix', 'plugin')
+                    pluginConfiguration.appendNode('outputDirectory', layout.buildDirectory.dir('generated/sources/plugin-descriptors/META-INF/maven').get().getAsFile().getAbsolutePath() )
+                    def invokerPlugin = plugins.appendNode('plugin');
+                    invokerPlugin.appendNode('groupId', 'org.apache.maven.plugins')
+                    invokerPlugin.appendNode('artifactId', 'maven-invoker-plugin')
+                    invokerPlugin.appendNode('version', '3.8.0')
+                    def invokerConfiguration = invokerPlugin.appendNode('configuration');
+                    invokerConfiguration.appendNode('debug', 'true');
+                    invokerConfiguration.appendNode('mavenExecutable', 'mvnw');
+                    def scriptVariables = invokerConfiguration.appendNode('scriptVariables');
+                    scriptVariables.appendNode('hibernateCoreJarPath', layout.buildDirectory.file('maven-embedder/maven-local/org/hibernate/orm/hibernate-core/' + project.version + '/hibernate-core-' + project.version + '.jar').get().getAsFile().getAbsolutePath())
+                }
+    }
 }
 
 // Following tasks need to be performed:

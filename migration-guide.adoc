@@ -381,6 +381,19 @@ must be explicitly set to true.
 
 The signature of the `Configurable#configure` method changed from accepting just a `ServiceRegistry` instance to the new `GeneratorCreationContext` interface, which exposes a lot more useful information when configuring the generator itself. The old signature has been deprecated for removal, so you should migrate any custom `Configurable` generator implementation to the new one.
 
+[[stateless-session-cache]]
+== `StatelessSession` and second-level cache
+
+Previously, stateless sessions never interacted with the second-level cache.
+This reflected their original intended role in bulk processing.
+With the advent of Jakarta Data and Hibernate Data Repositories, the responsibilities of `StatelessSession` have now expanded, and this behavior is no longer appropriate.
+
+Thus, a stateless session now makes use of the second-level cache by default.
+To completely bypass the second-level cache, recovering the previous behavior, call `setCacheMode(CacheMode.IGNORE)`.
+
+It's often important to explicitly disable puts to the second-level cache in code which performs bulk processing.
+Set the cache mode to `GET` or configure `jakarta.persistence.cache.storeMode` to `BYPASS`.
+
 [[stateless-session-jdbc-batching]]
 == JDBC batching with `StatelessSession`
 
@@ -439,12 +452,32 @@ In Hibernate 7, these SQL `UPDATE` statements only occur if the `@OrderColumn` i
 Since Vibur and Proxool are no longer actively developed, support for these connection pools was removed.
 Use Agroal or HikariCP instead.
 
+== Converters incompatible with annotations
+
+JPA ``AttributeConverter``s are incompatible with the annotations `@Id`, `@Version`, `@Enumerated`, `@Embedded`, `@Temporal` and all association-mapping annotations.
+Previously, any converter applied to an attribute with an incompatible annotation was simply ignored.
+Hibernate now reports an error in this situation.
+
+This includes auto-applied converters.
+To suppress the error for an auto-applied converter, use `@Convert(disableConversion=true)`.
+
+== Deprecations
+
+* `@Comment` is deprecated in favor of the JPA 3.2 `comment` members
+* `@Comment` is deprecated in favor of the JPA 3.2 `@CheckConstraint` and `check` members
+* `NullPrecedence` is deprecated in favor of JPA 3.2 `Nulls`
+* `@FractionalSeconds` is deprecated in favor of JPA 3.2 `secondPrecision`
+* `DynamicParameterizedType` is deprecated
+* `Session.get()` is deprecated in favor of `find()`
+* `@Cascade` and `org.hibernate.annotations.CascadeType` are deprecated in favor of JPA `cascade` and `CascadeType`
+* `org.hibernate.annotations.FlushModeType` is deprecated in favor of `QueryFlushMode`
+
 [[cleanup]]
 == Cleanup
 
 * Annotations
 ** Removed `@Persister`
-** Removed `@Proxy` - see <<proxy-annotation>>
+** Removed `@Proxy` -- see <<proxy-annotation>>
 ** Removed `@SelectBeforeUpdate`
 ** Removed `@DynamicInsert#value` and `@DynamicUpdate#value`
 ** Removed `@Loader`

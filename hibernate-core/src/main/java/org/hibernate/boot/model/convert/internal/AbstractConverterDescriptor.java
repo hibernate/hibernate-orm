@@ -47,10 +47,9 @@ public abstract class AbstractConverterDescriptor implements ConverterDescriptor
 	}
 
 	private AutoApplicableConverterDescriptor resolveAutoApplicableDescriptor(
-			Class<? extends AttributeConverter> converterClass,
+			Class<? extends AttributeConverter<?,?>> converterClass,
 			Boolean forceAutoApply) {
 		final boolean autoApply;
-
 		if ( forceAutoApply != null ) {
 			// if the caller explicitly specified whether to auto-apply, honor that
 			autoApply = forceAutoApply;

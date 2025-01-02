@@ -66,9 +66,9 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 
 	List<? extends JpaExpression<?>> getGroupingExpressions();
 
-	JpaQueryStructure<T> setGroupingExpressions(List<? extends JpaExpression<?>> grouping);
+	JpaQueryStructure<T> setGroupingExpressions(List<? extends Expression<?>> grouping);
 
-	JpaQueryStructure<T> setGroupingExpressions(JpaExpression<?>... grouping);
+	JpaQueryStructure<T> setGroupingExpressions(Expression<?>... grouping);
 
 	JpaPredicate getGroupRestriction();
 

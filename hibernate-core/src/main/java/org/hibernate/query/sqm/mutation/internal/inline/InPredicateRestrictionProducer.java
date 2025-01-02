@@ -49,8 +49,7 @@ public class InPredicateRestrictionProducer implements MatchingIdRestrictionProd
 	public List<Expression> produceIdExpressionList(List<Object> idsAndFks, EntityMappingType entityDescriptor) {
 		final List<Expression> inListExpressions = new ArrayList<>( idsAndFks.size() );
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-		if ( identifierMapping instanceof BasicValuedModelPart ) {
-			final BasicValuedModelPart basicValuedModelPart = (BasicValuedModelPart) identifierMapping;
+		if ( identifierMapping instanceof BasicValuedModelPart basicValuedModelPart ) {
 			for ( int i = 0; i < idsAndFks.size(); i++ ) {
 				inListExpressions.add( new QueryLiteral<>( idsAndFks.get( i ), basicValuedModelPart ) );
 			}

@@ -6,13 +6,15 @@ package org.hibernate.query.sqm.tree.from;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Contract representing a from clause.
@@ -50,7 +52,7 @@ public class SqmFromClause implements Serializable {
 	 * mutate the roots
 	 */
 	public List<SqmRoot<?>> getRoots() {
-		return domainRoots == null ? Collections.emptyList() : Collections.unmodifiableList( domainRoots );
+		return domainRoots == null ? emptyList() : unmodifiableList( domainRoots );
 	}
 
 	/**

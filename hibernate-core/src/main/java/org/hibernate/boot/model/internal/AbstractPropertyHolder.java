@@ -21,7 +21,6 @@ import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
@@ -29,8 +28,6 @@ import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
-
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.AttributeOverride;
@@ -53,7 +50,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  * @author Emmanuel Bernard
  */
 public abstract class AbstractPropertyHolder implements PropertyHolder {
-	private static final Logger log = CoreLogging.logger( AbstractPropertyHolder.class );
 
 	private final String path;
 	protected final AbstractPropertyHolder parent;
@@ -91,7 +87,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	@Override
 	public ConverterDescriptor resolveAttributeConverterDescriptor(MemberDetails attributeMember) {
-		AttributeConversionInfo info = locateAttributeConversionInfo( attributeMember );
+		final AttributeConversionInfo info = locateAttributeConversionInfo( attributeMember );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
 				return null;
@@ -105,8 +101,6 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 				}
 			}
 		}
-
-		log.debugf( "Attempting to locate auto-apply AttributeConverter for attributeMember [%s:%s]", path, attributeMember.getName() );
 
 		return context.getMetadataCollector()
 				.getConverterRegistry()

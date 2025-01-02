@@ -75,7 +75,10 @@ configurations {
 	}
 
 	javadocSources {
-		description = 'Source files to be built by the javadoc tool'
+		description = 'All Java sources for the aggregated Javadocs'
+		canBeConsumed = false
+		canBeResolved = true
+		visible = false
 	}
 }
 
@@ -145,6 +148,7 @@ dependencies {
 	testing project( ':hibernate-testing' )
 
 	spatial project( ':hibernate-spatial' )
+	javadocSources project( path: ':hibernate-spatial', configuration: 'javadocSources' )
 
 	agroal project( ':hibernate-agroal' )
 

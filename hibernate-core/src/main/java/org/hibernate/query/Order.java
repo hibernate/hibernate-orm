@@ -51,6 +51,7 @@ import static org.hibernate.query.SortDirection.DESCENDING;
  *
  * @see SelectionQuery#setOrder(Order)
  * @see SelectionQuery#setOrder(java.util.List)
+ * @see org.hibernate.query.restriction.Restriction
  *
  * @author Gavin King
  *
@@ -158,7 +159,7 @@ public class Order<X> {
 
 	/**
 	 * An order where an entity is sorted by the given attribute,
-	 * with smaller values first. If the give attribute is of textual
+	 * with smaller values first. If the given attribute is of textual
 	 * type, the ordering is case-sensitive.
 	 */
 	public static <T> Order<T> asc(SingularAttribute<T,?> attribute) {
@@ -167,7 +168,7 @@ public class Order<X> {
 
 	/**
 	 * An order where an entity is sorted by the given attribute,
-	 * with larger values first. If the give attribute is of textual
+	 * with larger values first. If the given attribute is of textual
 	 * type, the ordering is case-sensitive.
 	 */
 	public static <T> Order<T> desc(SingularAttribute<T,?> attribute) {
@@ -176,7 +177,7 @@ public class Order<X> {
 
 	/**
 	 * An order where an entity is sorted by the given attribute,
-	 * in the given direction. If the give attribute is of textual
+	 * in the given direction. If the given attribute is of textual
 	 * type, the ordering is case-sensitive.
 	 */
 	public static <T> Order<T> by(SingularAttribute<T,?> attribute, SortDirection direction) {
@@ -194,7 +195,7 @@ public class Order<X> {
 	/**
 	 * An order where an entity is sorted by the given attribute,
 	 * in the given direction, with the specified precedence for
-	 * null values. If the give attribute is of textual type, the
+	 * null values. If the given attribute is of textual type, the
 	 * ordering is case-sensitive.
 	 */
 	public static <T> Order<T> by(SingularAttribute<T,?> attribute, SortDirection direction, Nulls nullPrecedence) {

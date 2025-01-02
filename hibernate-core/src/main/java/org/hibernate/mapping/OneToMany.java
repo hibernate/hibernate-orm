@@ -13,7 +13,7 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.type.MappingContext;
 
@@ -56,20 +56,6 @@ public class OneToMany implements Value {
 	@Override
 	public ServiceRegistry getServiceRegistry() {
 		return buildingContext.getBuildingOptions().getServiceRegistry();
-	}
-
-	private EntityType getEntityType() {
-		return MappingHelper.manyToOne(
-				getReferencedEntityName(),
-				true,
-				null,
-				null,
-				false,
-				false,
-				isIgnoreNotFound(),
-				false,
-				buildingContext
-		);
 	}
 
 	public PersistentClass getAssociatedClass() {
@@ -121,7 +107,17 @@ public class OneToMany implements Value {
 
 	@Override
 	public Type getType() {
-		return getEntityType();
+		return new ManyToOneType(
+				buildingContext.getBootstrapContext().getTypeConfiguration(),
+				getReferencedEntityName(),
+				true,
+				null,
+				null,
+				false,
+				isIgnoreNotFound(),
+				false,
+				false
+		);
 	}
 
 	@Override

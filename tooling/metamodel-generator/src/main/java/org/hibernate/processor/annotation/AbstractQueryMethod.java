@@ -19,6 +19,8 @@ import static org.hibernate.processor.util.Constants.HIB_KEYED_RESULT_LIST;
 import static org.hibernate.processor.util.Constants.HIB_ORDER;
 import static org.hibernate.processor.util.Constants.HIB_PAGE;
 import static org.hibernate.processor.util.Constants.HIB_QUERY;
+import static org.hibernate.processor.util.Constants.HIB_RANGE;
+import static org.hibernate.processor.util.Constants.HIB_RESTRICTION;
 import static org.hibernate.processor.util.Constants.HIB_SELECTION_QUERY;
 import static org.hibernate.processor.util.Constants.HIB_SORT_DIRECTION;
 import static org.hibernate.processor.util.Constants.JD_CURSORED_PAGE;
@@ -286,6 +288,43 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		}
 	}
 
+	void handleRestrictionParameters(
+			StringBuilder declaration, List<String> paramTypes) {
+		for ( int i = 0; i < paramNames.size(); i ++ ) {
+			final String paramName = paramNames.get(i);
+			final String paramType = paramTypes.get(i);
+			if ( isRestrictionParam(paramType) ) {
+				if ( paramType.startsWith(LIST) || paramType.endsWith("[]") ) {
+					declaration
+							.append( "\t\t\t.addRestriction(" )
+							.append( annotationMetaEntity.importType(HIB_RESTRICTION) )
+							.append( ".all(" )
+							.append( paramName )
+							.append( "))\n" );
+
+				}
+				else {
+					declaration
+							.append( "\t\t\t.addRestriction(" )
+							.append( paramName )
+							.append( ")\n" );
+				}
+			}
+			else if ( isRangeParam(paramType) ) {
+				declaration
+						.append("\t\t\t.addRestriction(")
+						.append(annotationMetaEntity.importType(HIB_RESTRICTION))
+						.append(".restrict(")
+						.append(annotationMetaEntity.importType(returnTypeName + '_'))
+						.append('.')
+						.append(paramName)
+						.append(", ")
+						.append(paramName)
+						.append("))\n");
+			}
+		}
+	}
+
 	void convertExceptions(StringBuilder declaration) {
 		if ( dataRepository ) {
 			if ( !isReactive() ) {
@@ -329,6 +368,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 
 	static boolean isSpecialParam(String parameterType) {
 		return isPageParam(parameterType)
+			|| isRestrictionParam(parameterType)
+			|| isRangeParam(parameterType)
 			|| isOrderParam(parameterType)
 			|| isKeyedPageParam(parameterType)
 			|| isSessionParameter(parameterType);
@@ -348,7 +389,16 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		return parameterType.startsWith(HIB_ORDER)
 			|| parameterType.startsWith(LIST + "<" + HIB_ORDER)
 			|| parameterType.startsWith(JD_SORT)
-			|| parameterType.startsWith(JD_ORDER);
+			|| parameterType.startsWith(JD_ORDER) && !parameterType.endsWith("[]");
+	}
+
+	static boolean isRestrictionParam(String parameterType) {
+		return parameterType.startsWith(HIB_RESTRICTION)
+			|| parameterType.startsWith(LIST + "<" + HIB_RESTRICTION);
+	}
+
+	static boolean isRangeParam(String parameterType) {
+		return parameterType.startsWith(HIB_RANGE);
 	}
 
 	static boolean isJakartaCursoredPage(@Nullable String containerType) {

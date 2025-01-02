@@ -12,6 +12,8 @@ import java.util.Properties;
  * may be set by using a nested type element for the property element in the mapping
  * file, or by defining a typedef.
  *
+ * @see org.hibernate.annotations.Type#parameters
+ *
  * @author Michael Gloegl
  */
 public interface ParameterizedType {

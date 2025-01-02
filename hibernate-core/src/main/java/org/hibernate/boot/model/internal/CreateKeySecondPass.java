@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
+
 import java.util.Map;
 
 import org.hibernate.boot.spi.SecondPass;

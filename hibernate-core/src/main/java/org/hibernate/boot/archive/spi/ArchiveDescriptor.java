@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.archive.spi;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Models a logical archive, which might be <ul>
  *     <li>a jar file</li>
@@ -24,4 +26,6 @@ public interface ArchiveDescriptor {
 	 * @param archiveContext The visitation context
 	 */
 	void visitArchive(ArchiveContext archiveContext);
+
+	@Nullable ArchiveEntry findEntry(String path);
 }

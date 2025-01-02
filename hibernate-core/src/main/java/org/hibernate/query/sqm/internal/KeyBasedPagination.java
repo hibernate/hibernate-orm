@@ -111,7 +111,7 @@ public class KeyBasedPagination {
 		return builder.construct( resultClass, asList( selected, builder.construct(List.class, newItems ) ) );
 	}
 
-	@SuppressWarnings({"rawtypes", "unchecked"})
+	@SuppressWarnings("rawtypes")
 	private static <C extends Comparable<? super C>> SqmPredicate keyPredicate(
 			Expression<? extends C> key, C keyValue, SortDirection direction,
 			List<SqmPath<?>> previousKeys, List<Comparable<?>> keyValues,

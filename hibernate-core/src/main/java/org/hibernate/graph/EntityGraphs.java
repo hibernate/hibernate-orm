@@ -4,65 +4,144 @@
  */
 package org.hibernate.graph;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
+
 import jakarta.persistence.AttributeNode;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Graph;
 import jakarta.persistence.Query;
 import jakarta.persistence.Subgraph;
 import jakarta.persistence.TypedQuery;
 
-import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.query.SelectionQuery;
 
 /**
  * A collection of {@link EntityGraph} utilities.
  *
- * @apiNote These methods really belong inside other classes that we cannot modify.
+ * @apiNote These operations are things which are arguably missing from JPA.
  *
  * @author asusnjar
+ * @author Gavin King
  */
 public final class EntityGraphs {
+
 	/**
 	 * Merges multiple entity graphs into a single graph that specifies the
 	 * fetching/loading of all attributes the input graphs specify.
 	 *
 	 * @param <T> Root entity type of the query and graph.
 	 *
-	 * @param entityManager EntityManager to use to create the new merged graph.
-	 * @param rootType Root type of the entity for which the graph is being merged.
+	 * @param entityManager {@code EntityManager} to use to create the new merged graph.
+	 * @param root Root type of the entity for which the graph is being merged.
 	 * @param graphs Graphs to merge.
 	 *
 	 * @return The merged graph.
 	 */
 	@SafeVarargs
-	public static <T> EntityGraph<T> merge(EntityManager entityManager, Class<T> rootType, EntityGraph<T>... graphs) {
-		return mergeInternal( (SessionImplementor) entityManager, rootType, graphs );
+	public static <T> EntityGraph<T> merge(EntityManager entityManager, Class<T> root, Graph<T>... graphs) {
+		return merge( entityManager, root, Arrays.stream(graphs) );
 	}
 
-	@SafeVarargs
-	public static <T> EntityGraph<T> merge(Session session, Class<T> rootType, Graph<T>... graphs) {
-		return mergeInternal( (SessionImplementor) session, rootType, graphs );
+	/**
+	 * Merges multiple entity graphs into a single graph that specifies the
+	 * fetching/loading of all attributes the input graphs specify.
+	 *
+	 * @param <T> Root entity type of the query and graph.
+	 *
+	 * @param entityManager {@code EntityManager} to use to create the new merged graph.
+	 * @param root Root type of the entity for which the graph is being merged.
+	 * @param graphs Graphs to merge.
+	 *
+	 * @return The merged graph.
+	 *
+	 * @since 7.0
+	 */
+	public static <T> EntityGraph<T> merge(EntityManager entityManager, Class<T> root, List<? extends Graph<T>> graphs) {
+		return merge( entityManager, root, graphs.stream() );
 	}
 
-	@SafeVarargs
-	public static <T> EntityGraph<T> merge(SessionImplementor session, Class<T> rootType, GraphImplementor<T>... graphs) {
-		return mergeInternal( session, rootType, graphs );
-	}
-
-	private static <T> EntityGraph<T> mergeInternal(
-			SessionImplementor session, Class<T> rootType, jakarta.persistence.Graph<T>[] graphs) {
-		final RootGraphImplementor<T> merged = session.createEntityGraph( rootType );
-		if ( graphs != null ) {
-			for ( jakarta.persistence.Graph<T> graph : graphs ) {
-				merged.merge( (GraphImplementor<T>) graph );
-			}
-		}
+	/**
+	 * Merges multiple entity graphs into a single graph that specifies the
+	 * fetching/loading of all attributes the input graphs specify.
+	 *
+	 * @param <T> Root entity type of the query and graph.
+	 *
+	 * @param entityManager {@code EntityManager} to use to create the new merged graph.
+	 * @param root Root type of the entity for which the graph is being merged.
+	 * @param graphs Graphs to merge.
+	 *
+	 * @return The merged graph.
+	 *
+	 * @since 7.0
+	 */
+	public static <T> EntityGraph<T> merge(EntityManager entityManager, Class<T> root, Stream<? extends Graph<T>> graphs) {
+		final RootGraphImplementor<T> merged = ((SessionImplementor) entityManager).createEntityGraph( root );
+		graphs.forEach( graph -> merged.merge( (GraphImplementor<T>) graph ) );
 		return merged;
+	}
+
+	/**
+	 * Convenience method to apply the given graph to the given query
+	 * without the need for a cast when working with JPA API.
+	 *
+	 * @param query The JPA {@link TypedQuery}
+	 * @param graph The JPA {@link EntityGraph} to apply
+	 * @param semantic The semantic to use when applying the graph
+	 *
+	 * @see SelectionQuery#setEntityGraph(EntityGraph, GraphSemantic)
+	 *
+	 * @since 7.0
+	 */
+	public static <R> void setGraph(TypedQuery<R> query, EntityGraph<R> graph, GraphSemantic semantic) {
+		((org.hibernate.query.Query<R>) query).setEntityGraph( graph, semantic );
+	}
+
+	/**
+	 * Convenience method to apply the given load graph to the given
+	 * query without the need for a cast when working with JPA API.
+	 *
+	 * @param query The JPA {@link TypedQuery}
+	 * @param graph The JPA {@link EntityGraph} to apply
+	 *
+	 * @since 7.0
+	 */
+	public static <R> void setLoadGraph(TypedQuery<R> query, EntityGraph<R> graph) {
+		setGraph( query, graph, GraphSemantic.LOAD );
+	}
+
+	/**
+	 * Convenience method to apply the given fetch graph to the given
+	 * query without the need for a cast when working with JPA API.
+	 *
+	 * @param query The JPA {@link TypedQuery}
+	 * @param graph The JPA {@link EntityGraph} to apply
+	 *
+	 * @since 7.0
+	 */
+	public static <R> void setFetchGraph(TypedQuery<R> query, EntityGraph<R> graph) {
+		setGraph( query, graph, GraphSemantic.FETCH );
+	}
+
+	/**
+	 * Allows a treated subgraph to ve created for a {@link Subgraph}, since the
+	 * JPA-standard operation {@link EntityGraph#addTreatedSubgraph(Class)} is
+	 * declared by {@link EntityGraph}.
+	 *
+	 * @param graph any {@linkplain Graph root graph or subgraph}
+	 * @param subtype the treated (narrowed) type
+	 *
+	 * @since 7.0
+	 */
+	public <S> Subgraph<S> addTreatedSubgraph(Graph<? super S> graph, Class<S> subtype) {
+		return ((org.hibernate.graph.Graph<? super S>) graph).addTreatedSubGraph( subtype );
 	}
 
 	/**
@@ -73,7 +152,7 @@ public final class EntityGraphs {
 	 * @param graph The graph to apply
 	 * @param semantic The semantic to use when applying the graph
 	 *
-	 * @deprecated Use {@link org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, GraphSemantic)}
+	 * @deprecated Since it is not type safe and returns a raw type
 	 */
 	@Deprecated(since = "7.0")
 	public static @SuppressWarnings("rawtypes") List executeList(Query query, EntityGraph<?> graph, GraphSemantic semantic) {
@@ -94,7 +173,7 @@ public final class EntityGraphs {
 	 *          the graph applies to that entity's type. JPA does not necessarily
 	 *          require that, but it is by far the most common usage.
 	 *
-	 * @deprecated Use {@link org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, GraphSemantic)}
+	 * @deprecated Use {@link #setGraph(TypedQuery, EntityGraph, GraphSemantic)} instead
 	 */
 	@Deprecated(since = "7.0")
 	public static <R> List<R> executeList(TypedQuery<R> query, EntityGraph<R> graph, GraphSemantic semantic) {
@@ -114,7 +193,7 @@ public final class EntityGraphs {
 	 *
 	 * @return The result list
 	 *
-	 * @deprecated Use {@link org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, GraphSemantic)}
+	 * @deprecated Since it is not type safe, returns a raw type, and accepts a string
 	 */
 	@Deprecated(since = "7.0")
 	public static @SuppressWarnings("rawtypes") List executeList(Query query, EntityGraph<?> graph, String semanticJpaHintName) {
@@ -133,7 +212,7 @@ public final class EntityGraphs {
 	 *          the graph applies to that entity's type. JPA does not necessarily
 	 *          require that, but it is by far the most common usage.
 	 *
-	 * @deprecated Use {@link org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, GraphSemantic)}
+	 * @deprecated Since it accepts a string instead of {@link GraphSemantic}
 	 */
 	@Deprecated(since = "7.0")
 	public static <R> List<R> executeList(TypedQuery<R> query, EntityGraph<R> graph, String semanticJpaHintName) {
@@ -152,7 +231,7 @@ public final class EntityGraphs {
 	 *          This is simply knowledge from JPA EG discussions, nothing that
 	 *          is specifically mentioned or discussed in the spec.
 	 *
-	 * @deprecated Use {@link org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, GraphSemantic)}
+	 * @deprecated Since it is not type safe and returns a raw type
 	 */
 	@Deprecated(since = "7.0")
 	public static @SuppressWarnings("rawtypes") List executeList(Query query, EntityGraph<?> graph) {
@@ -170,7 +249,7 @@ public final class EntityGraphs {
 	 *          the graph applies to that entity's type. JPA does not necessarily
 	 *          require that, but it is by far the most common usage.
 	 *
-	 * @deprecated Use {@link org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, GraphSemantic)}
+	 * @deprecated Use {@link #setFetchGraph(TypedQuery, EntityGraph)} instead
 	 */
 	@Deprecated(since = "7.0")
 	public static <R> List<R> executeList(TypedQuery<R> query, EntityGraph<R> graph) {
@@ -276,7 +355,9 @@ public final class EntityGraphs {
 	 * Compares two entity subgraphs and returns {@code true} if they are equal,
 	 * ignoring attribute order.
 	 */
-	public static boolean areEqual(@SuppressWarnings("rawtypes") Subgraph a, @SuppressWarnings("rawtypes") Subgraph b) {
+	public static boolean areEqual(
+			@SuppressWarnings("rawtypes") Subgraph a,
+			@SuppressWarnings("rawtypes") Subgraph b) {
 		if ( a == b ) {
 			return true;
 		}

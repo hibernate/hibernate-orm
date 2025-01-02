@@ -38,6 +38,7 @@ import static java.util.Collections.unmodifiableMap;
  *  Base class for {@link RootGraph} and {@link SubGraph} implementations.
  *
  * @author Steve Ebersole
+ * @author Gavin King
  */
 public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements GraphImplementor<J> {
 
@@ -317,6 +318,11 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	@Override
 	public <AJ> SubGraphImplementor<AJ> addElementSubGraph(PluralPersistentAttribute<? super J, ?, ? super AJ> attribute, ManagedDomainType<AJ> type) {
 		return findOrCreateAttributeNode( attribute ).makeSubGraph( type );
+	}
+
+	@Override
+	public <AJ> SubGraphImplementor<AJ> addKeySubGraph(MapPersistentAttribute<? super J, ? super AJ, ?> attribute, Class<AJ> subtype) {
+		return findOrCreateAttributeNode( attribute ).makeKeySubGraph( subtype );
 	}
 
 	@Override

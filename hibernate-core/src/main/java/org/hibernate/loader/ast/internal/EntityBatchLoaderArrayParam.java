@@ -59,7 +59,6 @@ public class EntityBatchLoaderArrayParam<T>
 	 * {@link EntityIdentifierMapping} is not available at that time.  On first use, we know we
 	 * have it available
 	 */
-	@AllowReflection
 	public EntityBatchLoaderArrayParam(
 			int domainBatchSize,
 			EntityMappingType entityDescriptor,
@@ -77,11 +76,10 @@ public class EntityBatchLoaderArrayParam<T>
 		}
 
 		identifierMapping = (BasicEntityIdentifierMapping) getLoadable().getIdentifierMapping();
-		final Class<?> arrayClass =
-				Array.newInstance( identifierMapping.getJavaType().getJavaTypeClass(), 0 ).getClass();
+		final Class<?> idClass = identifierMapping.getJavaType().getJavaTypeClass();
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				identifierMapping.getJdbcMapping(),
-				arrayClass,
+				idClass,
 				sessionFactory
 		);
 

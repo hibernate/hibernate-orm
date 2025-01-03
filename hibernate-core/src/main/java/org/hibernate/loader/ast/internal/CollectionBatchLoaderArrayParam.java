@@ -51,7 +51,6 @@ public class CollectionBatchLoaderArrayParam
 	private final SelectStatement sqlSelect;
 	private final JdbcOperationQuerySelect jdbcSelectOperation;
 
-	@AllowReflection
 	public CollectionBatchLoaderArrayParam(
 			int domainBatchSize,
 			LoadQueryInfluencers loadQueryInfluencers,
@@ -69,13 +68,12 @@ public class CollectionBatchLoaderArrayParam
 
 		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
 		final JdbcMapping jdbcMapping = keyDescriptor.getSingleJdbcMapping();
-		final Class<?> jdbcArrayClass = Array.newInstance( jdbcMapping.getJdbcJavaType().getJavaTypeClass(), 0 )
-				.getClass();
+		final Class<?> jdbcJavaTypeClass = jdbcMapping.getJdbcJavaType().getJavaTypeClass();
 		keyDomainType = getKeyType( keyDescriptor.getKeyPart() );
 
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				jdbcMapping,
-				jdbcArrayClass,
+				jdbcJavaTypeClass,
 				getSessionFactory()
 		);
 

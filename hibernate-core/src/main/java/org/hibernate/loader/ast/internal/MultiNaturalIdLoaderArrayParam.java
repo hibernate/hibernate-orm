@@ -29,15 +29,14 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
  */
 public class MultiNaturalIdLoaderArrayParam<E> implements MultiNaturalIdLoader<E>, SqlArrayMultiKeyLoader {
 	private final EntityMappingType entityDescriptor;
-	private final Class<?> keyArrayClass;
+	private final Class<?> keyClass;
 
 	public MultiNaturalIdLoaderArrayParam(EntityMappingType entityDescriptor) {
 		assert entityDescriptor.getNaturalIdMapping() instanceof SimpleNaturalIdMapping;
 
 		this.entityDescriptor = entityDescriptor;
 
-		final Class<?> keyClass = entityDescriptor.getNaturalIdMapping().getJavaType().getJavaTypeClass();
-		this.keyArrayClass = LoaderHelper.createTypedArray( keyClass, 0 ).getClass();
+		this.keyClass = entityDescriptor.getNaturalIdMapping().getJavaType().getJavaTypeClass();
 	}
 
 	@Override
@@ -77,7 +76,7 @@ public class MultiNaturalIdLoaderArrayParam<E> implements MultiNaturalIdLoader<E
 
 		final JdbcMapping arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				getNaturalIdMapping().getSingleJdbcMapping(),
-				keyArrayClass,
+				keyClass,
 				sessionFactory
 		);
 		final JdbcParameter jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );

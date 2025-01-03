@@ -80,7 +80,7 @@ public @interface NamedNativeQuery {
 	 *
 	 * @deprecated use {@link #flush()}
 	 */
-	@Deprecated(since = "7")
+	@Deprecated(since = "7", forRemoval = true)
 	FlushModeType flushMode() default FlushModeType.PERSISTENCE_CONTEXT;
 
 	/**
@@ -182,6 +182,6 @@ public @interface NamedNativeQuery {
 	 *
 	 * @see org.hibernate.jpa.HibernateHints#HINT_CALLABLE_FUNCTION
 	 */
-	@Deprecated( since = "6.0" )
+	@Deprecated(since = "6.0", forRemoval = true)
 	boolean callable() default false;
 }

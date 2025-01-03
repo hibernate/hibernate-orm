@@ -15,10 +15,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * A list of {@link Check}s.
  *
+ * @deprecated since {@link Check} is deprecated.
+ *
  * @author Gavin King
  */
 @Target({TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
+@Deprecated(since = "7")
 public @interface Checks {
 	Check[] value();
 }

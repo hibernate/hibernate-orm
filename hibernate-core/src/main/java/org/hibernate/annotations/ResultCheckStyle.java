@@ -24,7 +24,7 @@ import org.hibernate.jdbc.Expectation;
  *
  * @deprecated Use an {@link Expectation} class instead.
  */
-@Deprecated(since = "6.5")
+@Deprecated(since = "6.5", forRemoval = true)
 public enum ResultCheckStyle {
 	/**
 	 * No return code checking. Might mean that no checks are required, or that

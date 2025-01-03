@@ -47,7 +47,7 @@ public @interface SQLDeleteAll {
 	 *
 	 * @deprecated use {@link #verify()} with an {@link Expectation} class
 	 */
-	@Deprecated(since = "6.5")
+	@Deprecated(since = "6.5", forRemoval = true)
 	ResultCheckStyle check() default ResultCheckStyle.NONE;
 
 	/**

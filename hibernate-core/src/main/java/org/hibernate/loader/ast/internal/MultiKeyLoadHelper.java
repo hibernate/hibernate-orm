@@ -28,10 +28,10 @@ public class MultiKeyLoadHelper {
 
 	public static JdbcMapping resolveArrayJdbcMapping(
 			JdbcMapping keyMapping,
-			Class<?> arrayClass,
+			Class<?> elementClass,
 			SessionFactoryImplementor sessionFactory) {
 		BasicType<?> arrayBasicType = sessionFactory.getTypeConfiguration().getBasicTypeRegistry()
-				.getRegisteredType( arrayClass );
+				.getRegisteredArrayType( elementClass );
 		if ( arrayBasicType != null ) {
 			return arrayBasicType;
 		}
@@ -39,9 +39,9 @@ public class MultiKeyLoadHelper {
 		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 
-		final JavaType<Object> rawArrayJavaType = javaTypeRegistry.resolveDescriptor( arrayClass );
-		if ( !(rawArrayJavaType instanceof BasicPluralJavaType<?> arrayJavaType) ) {
-			throw new IllegalArgumentException( "Expecting BasicPluralJavaType for array class `" + arrayClass.getName() + "`, but got `" + rawArrayJavaType + "`" );
+		final JavaType<?> rawArrayJavaType = javaTypeRegistry.resolveArrayDescriptor( elementClass );
+		if ( !(rawArrayJavaType instanceof BasicPluralJavaType<?> arrayJavaType ) ) {
+			throw new IllegalArgumentException( "Expecting BasicPluralJavaType for array class `" + elementClass.getTypeName() + "[]`, but got `" + rawArrayJavaType + "`" );
 		}
 
 		//noinspection unchecked,rawtypes

@@ -23,8 +23,6 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeRegistry;
 
 /**
  * Standard MultiNaturalIdLoader implementation
@@ -77,10 +75,7 @@ public class MultiNaturalIdLoaderArrayParam<E> implements MultiNaturalIdLoader<E
 						? LockOptions.NONE
 						: loadOptions.getLockOptions();
 
-		final BasicTypeRegistry basicTypeRegistry = sessionFactory.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<?> arrayBasicType = basicTypeRegistry.getRegisteredType( keyArrayClass );
 		final JdbcMapping arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
-				arrayBasicType,
 				getNaturalIdMapping().getSingleJdbcMapping(),
 				keyArrayClass,
 				sessionFactory

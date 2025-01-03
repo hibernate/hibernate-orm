@@ -16,6 +16,8 @@ public final class JacksonIntegration {
 	private static final JacksonXmlFormatMapper XML_FORMAT_MAPPER = JACKSON_XML_AVAILABLE ? new JacksonXmlFormatMapper() : null;
 	private static final JacksonXmlFormatMapper XML_FORMAT_MAPPER_PORTABLE = JACKSON_XML_AVAILABLE ? new JacksonXmlFormatMapper( false ) : null;
 	private static final JacksonJsonFormatMapper JSON_FORMAT_MAPPER = JACKSON_JSON_AVAILABLE ? new JacksonJsonFormatMapper() : null;
+	private static final JacksonJsonFormatMapper OSON_FORMAT_MAPPER = JACKSON_OSON_AVAILABLE ? new JacksonOsonFormatMapper() : null;
+
 
 	private JacksonIntegration() {
 		//To not be instantiated: static helpers only
@@ -45,6 +47,9 @@ public final class JacksonIntegration {
 
 	public static FormatMapper getJsonJacksonFormatMapperOrNull() {
 		return JSON_FORMAT_MAPPER;
+	}
+	public static FormatMapper getOsonJacksonFormatMapperOrNull() {
+		return OSON_FORMAT_MAPPER;
 	}
 
 	/**

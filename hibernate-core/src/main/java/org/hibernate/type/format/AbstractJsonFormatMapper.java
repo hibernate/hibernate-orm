@@ -40,12 +40,12 @@ public abstract class AbstractJsonFormatMapper implements FormatMapper {
 
 	@Override
 	public boolean supportsSourceType(Class<?> sourceType) {
-		return false;
+		return CharSequence.class.isAssignableFrom(sourceType);
 	}
 
 	@Override
 	public boolean supportsTargetType(Class<?> targetType) {
-		return false;
+		return String.class.isAssignableFrom( targetType );
 	}
 
 	@Override

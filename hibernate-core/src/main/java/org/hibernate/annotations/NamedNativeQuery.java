@@ -80,7 +80,7 @@ public @interface NamedNativeQuery {
 	 *
 	 * @deprecated use {@link #flush()}
 	 */
-	@Deprecated(since = "7")
+	@Deprecated(since = "7", forRemoval = true)
 	FlushModeType flushMode() default FlushModeType.PERSISTENCE_CONTEXT;
 
 	/**

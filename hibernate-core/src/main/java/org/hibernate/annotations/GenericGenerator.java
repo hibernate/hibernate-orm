@@ -66,7 +66,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({PACKAGE, TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
 @Repeatable(GenericGenerators.class)
-@Deprecated(since = "6.5")
+@Deprecated(since = "6.5", forRemoval = true)
 public @interface GenericGenerator {
 	/**
 	 * The name of the identifier generator. This is the name that may be specified by

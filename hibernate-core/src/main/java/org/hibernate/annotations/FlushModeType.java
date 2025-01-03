@@ -17,9 +17,10 @@ import org.hibernate.query.QueryFlushMode;
  * @see NamedQuery#flushMode
  * @see NamedNativeQuery#flushMode
  *
- * @deprecated use {@link QueryFlushMode}
+ * @deprecated Use {@link QueryFlushMode}. This enumeration will be removed to alleviate
+ *             the duplication in naming with {@link jakarta.persistence.FlushModeType}.
  */
-@Deprecated(since="7")
+@Deprecated(since="7", forRemoval = true)
 public enum FlushModeType {
 	/**
 	 * Corresponds to {@link org.hibernate.FlushMode#ALWAYS}.

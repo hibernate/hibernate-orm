@@ -32,7 +32,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.type.BasicType;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
@@ -74,11 +73,7 @@ public class CollectionBatchLoaderArrayParam
 				.getClass();
 		keyDomainType = getKeyType( keyDescriptor.getKeyPart() );
 
-		final BasicType<?> arrayBasicType = getSessionFactory().getTypeConfiguration()
-				.getBasicTypeRegistry()
-				.getRegisteredType( jdbcArrayClass );
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
-				arrayBasicType,
 				jdbcMapping,
 				jdbcArrayClass,
 				getSessionFactory()

@@ -68,11 +68,29 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 */
 	Map<Class<?>, ? extends SubGraph<?>> getKeySubGraphs();
 
+	/**
+	 * All value subgraphs rooted at this node.
+	 * <p>
+	 * Includes treated subgraphs.
+	 *
+	 * @apiNote This operation is declared with raw types by JPA
+	 *
+	 * @see #getSubGraphs()
+	 */
 	@Override
 	default @SuppressWarnings("rawtypes") Map<Class, Subgraph> getSubgraphs() {
 		return unmodifiableMap( getSubGraphs() );
 	}
 
+	/**
+	 * All key subgraphs rooted at this node.
+	 * <p>
+	 * Includes treated subgraphs.
+	 *
+	 * @apiNote This operation is declared with raw types by JPA
+	 *
+	 * @see #getKeySubGraphs()
+	 */
 	@Override
 	default @SuppressWarnings("rawtypes") Map<Class, Subgraph> getKeySubgraphs() {
 		return unmodifiableMap( getKeySubGraphs() );
@@ -81,12 +99,22 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	/**
 	 * Create and return a new value {@link SubGraph} rooted at this node,
 	 * or return an existing such {@link SubGraph} if there is one.
+	 * <p>
+	 * Note that {@code graph.addAttributeNode(att).makeSubGraph()} is a
+	 * synonym for {@code graph.addSubgraph(att)}.
+	 *
+	 * @see Graph#addSubgraph(jakarta.persistence.metamodel.Attribute)
 	 */
 	SubGraph<?> makeSubGraph();
 
 	/**
 	 * Create and return a new key {@link SubGraph} rooted at this node,
 	 * or return an existing such {@link SubGraph} if there is one.
+	 * <p>
+	 * Note that {@code graph.addAttributeNode(att).makeKeySubGraph()} is a
+	 * synonym for {@code graph.addMapKeySubgraph(att)}.
+	 *
+	 * @see Graph#addMapKeySubgraph(jakarta.persistence.metamodel.MapAttribute)
 	 */
 	SubGraph<?> makeKeySubGraph();
 
@@ -97,8 +125,13 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 * <p>
 	 * If the given type is a proper subtype of the value type, the result
 	 * is a treated subgraph.
+	 * <p>
+	 * Note that {@code graph.addAttributeNode(att).makeSubGraph(cl)}
+	 * is a synonym for {@code graph.addTreatedSubgraph(att,cl)}.
 	 *
 	 * @param subtype The type or treated type of the value type
+	 *
+	 * @see Graph#addTreatedSubgraph(jakarta.persistence.metamodel.Attribute, Class)
 	 */
 	<S> SubGraph<S> makeSubGraph(Class<S> subtype);
 
@@ -109,8 +142,13 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 * <p>
 	 * If the given type is a proper subtype of the key type, the result
 	 * is a treated subgraph.
+	 * <p>
+	 * Note that {@code graph.addAttributeNode(att).makeKeySubGraph(cl)}
+	 * is a synonym for {@code graph.addTreatedMapKeySubgraph(att,cl)}.
 	 *
 	 * @param subtype The type or treated type of the key type
+	 *
+	 * @see Graph#addTreatedMapKeySubgraph(jakarta.persistence.metamodel.MapAttribute,Class)
 	 */
 	<S> SubGraph<S> makeKeySubGraph(Class<S> subtype);
 
@@ -123,6 +161,8 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 * is a treated subgraph.
 	 *
 	 * @param subtype The type or treated type of the value type
+	 *
+	 * @since 7.0
 	 */
 	@Incubating
 	<S> SubGraph<S> makeSubGraph(ManagedType<S> subtype);
@@ -136,6 +176,8 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 * is a treated subgraph.
 	 *
 	 * @param subtype The type or treated type of the key type
+	 *
+	 * @since 7.0
 	 */
 	@Incubating
 	<S> SubGraph<S> makeKeySubGraph(ManagedType<S> subtype);

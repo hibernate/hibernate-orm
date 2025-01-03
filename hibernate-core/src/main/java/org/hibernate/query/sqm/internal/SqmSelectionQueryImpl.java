@@ -236,9 +236,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	}
 
 	private <T> void setBindValues(QueryParameter<?> parameter, QueryParameterBinding<T> binding) {
-		final QueryParameterBinding<?> paramBinding = parameterBindings.getBinding( parameter );
-		//noinspection unchecked
-		final QueryParameterBinding<T> parameterBinding = (QueryParameterBinding<T>) paramBinding;
+		final QueryParameterBinding<T> parameterBinding = parameterBindings.getBinding( binding.getQueryParameter() );
 		final TemporalType explicitTemporalPrecision = binding.getExplicitTemporalPrecision();
 		if ( explicitTemporalPrecision != null ) {
 			if ( binding.isMultiValued() ) {
@@ -297,15 +295,15 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	}
 
 	private <T> void bindCriteriaParameter(SqmJpaCriteriaParameterWrapper<T> sqmParameter) {
-		final JpaCriteriaParameter<T> jpaCriteriaParameter = sqmParameter.getJpaCriteriaParameter();
-		final T value = jpaCriteriaParameter.getValue();
+		final JpaCriteriaParameter<T> criteriaParameter = sqmParameter.getJpaCriteriaParameter();
+		final T value = criteriaParameter.getValue();
 		// We don't set a null value, unless the type is also null which
 		// is the case when using HibernateCriteriaBuilder.value
-		if ( value != null || jpaCriteriaParameter.getNodeType() == null ) {
+		if ( value != null || criteriaParameter.getNodeType() == null ) {
 			// Use the anticipated type for binding the value if possible
 			getQueryParameterBindings()
-					.getBinding( jpaCriteriaParameter )
-					.setBindValue( value, jpaCriteriaParameter.getAnticipatedType() );
+					.getBinding( criteriaParameter )
+					.setBindValue( value, criteriaParameter.getAnticipatedType() );
 		}
 	}
 
@@ -343,16 +341,6 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	public String getQueryString() {
 		return hql;
 	}
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// convenience methods
-
-//	@Override
-//	public SelectionQuery<R> setPage(int pageSize, int pageNumber) {
-//		setFirstResult( pageNumber * pageSize );
-//		setMaxResults( pageSize );
-//		return this;
-//	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// execution
@@ -413,7 +401,6 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	private DomainQueryExecutionContext executionContext(boolean hasLimit, boolean containsCollectionFetches) {
 		if ( hasLimit && containsCollectionFetches ) {
 			errorOrLogForPaginationWithCollectionFetch();
-
 			final MutableQueryOptions originalQueryOptions = getQueryOptions();
 			final QueryOptions normalizedQueryOptions = omitSqlQueryOptions( originalQueryOptions, true, false );
 			if ( originalQueryOptions == normalizedQueryOptions ) {

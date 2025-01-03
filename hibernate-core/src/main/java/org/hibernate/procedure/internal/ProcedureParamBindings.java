@@ -75,8 +75,9 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 
 	@Override
 	public <P> ProcedureParameterBinding<P> getBinding(String name) {
-		final ProcedureParameterImplementor<P> parameter = (ProcedureParameterImplementor<P>) parameterMetadata
-				.getQueryParameter( name );
+		//noinspection unchecked
+		final ProcedureParameterImplementor<P> parameter =
+				(ProcedureParameterImplementor<P>) parameterMetadata.getQueryParameter( name );
 		if ( parameter == null ) {
 			throw new IllegalArgumentException( "Parameter does not exist: " + name );
 		}
@@ -85,8 +86,9 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 
 	@Override
 	public <P> ProcedureParameterBinding<P> getBinding(int position) {
-		final ProcedureParameterImplementor<P> parameter = (ProcedureParameterImplementor<P>) parameterMetadata
-				.getQueryParameter( position );
+		//noinspection unchecked
+		final ProcedureParameterImplementor<P> parameter =
+				(ProcedureParameterImplementor<P>) parameterMetadata.getQueryParameter( position );
 		if ( parameter == null ) {
 			throw new IllegalArgumentException( "Parameter at position " + position + "does not exist" );
 		}
@@ -95,28 +97,23 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 
 	@Override
 	public void validate() {
-		parameterMetadata.visitRegistrations(
-				queryParameter -> {
-					final ProcedureParameterImplementor procParam = (ProcedureParameterImplementor) queryParameter;
-					if ( procParam.getMode() == ParameterMode.IN
-							|| procParam.getMode() == ParameterMode.INOUT ) {
-						if ( !getBinding( procParam ).isBound() ) {
-							// depending on "pass nulls" this might be ok...
-							//  for now, just log a warning
-							if ( procParam.getPosition() != null ) {
-								LOG.debugf(
-										"Procedure parameter at position %s is not bound",
-										procParam.getPosition()
-								);
+		parameterMetadata.visitRegistrations( parameter -> validate( (ProcedureParameterImplementor<?>) parameter ) );
+	}
 
-							}
-							else {
-								LOG.debugf( "Procedure parameter %s is not bound", procParam.getName() );
-							}
-						}
-					}
+	private <T> void validate(ProcedureParameterImplementor<T> procParam) {
+		final ParameterMode mode = procParam.getMode();
+		if ( mode == ParameterMode.IN || mode == ParameterMode.INOUT ) {
+			if ( !getBinding( procParam ).isBound() ) {
+				// depending on "pass nulls" this might be OK - for now, just log a warning
+				if ( procParam.getPosition() != null ) {
+					LOG.debugf( "Procedure parameter at position %s is not bound", procParam.getPosition() );
+
 				}
-		);
+				else {
+					LOG.debugf( "Procedure parameter %s is not bound", procParam.getName() );
+				}
+			}
+		}
 	}
 
 	@Override

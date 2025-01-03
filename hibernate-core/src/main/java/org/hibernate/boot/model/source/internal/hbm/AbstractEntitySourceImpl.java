@@ -57,7 +57,7 @@ public abstract class AbstractEntitySourceImpl
 	private final AttributeRole attributeRoleBase;
 	private final AttributePath attributePathBase;
 
-	private List<IdentifiableTypeSource> subclassEntitySources = new ArrayList<>();
+	private final List<IdentifiableTypeSource> subclassEntitySources = new ArrayList<>();
 
 	private int inLineViewCount = 0;
 
@@ -114,8 +114,7 @@ public abstract class AbstractEntitySourceImpl
 
 	private FilterSource[] buildFilterSources() {
 		//todo for now, i think all EntityElement should support this.
-		if ( jaxbEntityMapping() instanceof JaxbHbmRootEntityType ) {
-			final JaxbHbmRootEntityType jaxbClassElement = (JaxbHbmRootEntityType) jaxbEntityMapping();
+		if ( jaxbEntityMapping() instanceof JaxbHbmRootEntityType jaxbClassElement ) {
 			final int size = jaxbClassElement.getFilter().size();
 			if ( size == 0 ) {
 				return NO_FILTER_SOURCES;

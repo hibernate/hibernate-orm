@@ -191,7 +191,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			scale = column.getScale();
 			temporalPrecision = column.getTemporalPrecision();
 
-			isNullable = forceNotNullable ? false : column.isNullable();
+			isNullable = !forceNotNullable && column.isNullable();
 			isLob = column.isSqlTypeLob( creationContext.getMetadata() );
 			selectableName = column.getQuotedName( dialect );
 		}

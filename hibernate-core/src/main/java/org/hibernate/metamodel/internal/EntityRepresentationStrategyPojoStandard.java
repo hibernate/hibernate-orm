@@ -333,13 +333,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 				strategy = strategySelector.resolveStrategy( PropertyAccessStrategy.class, propertyAccessorName );
 			}
 			else {
-				if ( bootAttributeDescriptor instanceof Backref ) {
-					final Backref backref = (Backref) bootAttributeDescriptor;
+				if ( bootAttributeDescriptor instanceof Backref backref ) {
 					strategy = new PropertyAccessStrategyBackRefImpl( backref.getCollectionRole(), backref
 							.getEntityName() );
 				}
-				else if ( bootAttributeDescriptor instanceof IndexBackref ) {
-					final IndexBackref indexBackref = (IndexBackref) bootAttributeDescriptor;
+				else if ( bootAttributeDescriptor instanceof IndexBackref indexBackref ) {
 					strategy = new PropertyAccessStrategyIndexBackRefImpl(
 							indexBackref.getCollectionRole(),
 							indexBackref.getEntityName()

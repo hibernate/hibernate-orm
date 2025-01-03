@@ -456,6 +456,7 @@ import static org.hibernate.query.sqm.internal.SqmMappingModelHelper.resolveMapp
 import static org.hibernate.query.sqm.internal.SqmUtil.isFkOptimizationAllowed;
 import static org.hibernate.query.sqm.sql.AggregateColumnAssignmentHandler.forEntityDescriptor;
 import static org.hibernate.sql.ast.spi.SqlAstTreeHelper.combinePredicates;
+import static org.hibernate.type.spi.TypeConfiguration.getSqlTemporalType;
 import static org.hibernate.type.spi.TypeConfiguration.isDuration;
 
 /**
@@ -488,7 +489,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private boolean deduplicateSelectionItems;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private SqmStatement<?> currentSqmStatement;
-	private Stack<SqmQueryPart> sqmQueryPartStack = new StandardStack<>();
+	private final Stack<SqmQueryPart> sqmQueryPartStack = new StandardStack<>();
 	private CteContainer cteContainer;
 	/**
 	 * A map from {@link SqmCteTable#getCteName()} to the final SQL name.
@@ -6658,9 +6659,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		inferrableTypeAccessStack.pop();
 
 		final boolean durationToRight = isDuration( rightOperand.getNodeType() );
-		final TypeConfiguration typeConfiguration = getCreationContext().getMappingMetamodel().getTypeConfiguration();
-		final TemporalType temporalTypeToLeft = typeConfiguration.getSqlTemporalType( leftOperandType );
-		final TemporalType temporalTypeToRight = typeConfiguration.getSqlTemporalType( rightOperandType );
+		final TemporalType temporalTypeToLeft = getSqlTemporalType( leftOperandType );
+		final TemporalType temporalTypeToRight = getSqlTemporalType( rightOperandType );
 		final boolean temporalTypeSomewhereToLeft = adjustedTimestamp != null || temporalTypeToLeft != null;
 
 		if ( temporalTypeToLeft != null && durationToRight ) {
@@ -8373,7 +8373,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Fetch visitIdentifierFetch(EntityResultGraphNode fetchParent) {
 		final EntityIdentifierMapping identifierMapping = fetchParent.getReferencedMappingContainer()
 				.getIdentifierMapping();
-		return createFetch( fetchParent, (Fetchable) identifierMapping, false );
+		return createFetch( fetchParent, identifierMapping, false );
 	}
 
 	private Fetch createFetch(FetchParent fetchParent, Fetchable fetchable, Boolean isKeyFetchable) {

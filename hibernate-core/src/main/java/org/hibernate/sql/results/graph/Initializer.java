@@ -281,6 +281,6 @@ public interface Initializer<Data extends InitializerData> {
 		MISSING,
 		KEY_RESOLVED,
 		RESOLVED,
-		INITIALIZED;
+		INITIALIZED
 	}
 }

@@ -41,7 +41,7 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 			if ( tm == null ) {
 				throw new HibernateException(
 						"DdlTransactionIsolatorJtaImpl could not locate TransactionManager to suspend any current transaction; " +
-								"base JtaPlatform impl (" + jtaPlatform.toString() + ")?"
+						"base JtaPlatform impl (" + jtaPlatform + ")?"
 				);
 			}
 			log.tracef( "DdlTransactionIsolatorJtaImpl#prepare: TransactionManager -> %s", tm );

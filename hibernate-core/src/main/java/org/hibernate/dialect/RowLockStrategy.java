@@ -21,5 +21,5 @@ public enum RowLockStrategy {
 	/**
 	 * No support for specifying rows to lock.
 	 */
-	NONE;
+	NONE
 }

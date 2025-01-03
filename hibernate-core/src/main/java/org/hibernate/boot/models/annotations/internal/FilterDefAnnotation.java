@@ -38,7 +38,7 @@ public class FilterDefAnnotation implements FilterDef {
 		this.name = annotation.name();
 		this.defaultCondition = annotation.defaultCondition();
 		this.autoEnabled = annotation.autoEnabled();
-		this.applyToLoadByKey = annotation.applyToLoadByKey();;
+		this.applyToLoadByKey = annotation.applyToLoadByKey();
 		this.parameters = extractJdkValue( annotation, HibernateAnnotations.FILTER_DEF, "parameters", modelContext );
 	}
 

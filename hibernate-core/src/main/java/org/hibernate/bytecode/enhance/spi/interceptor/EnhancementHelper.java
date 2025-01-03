@@ -56,8 +56,7 @@ public class EnhancementHelper {
 		// NOTE : we make the (potentially untrue) assumption here that
 		// if the owner is enhanced, then all classes are enhanced..
 
-		if ( value instanceof ToOne ) {
-			final ToOne toOne = (ToOne) value;
+		if ( value instanceof ToOne toOne ) {
 
 			if ( ! toOne.isLazy() ) {
 				// its not lazy... select it

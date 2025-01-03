@@ -128,8 +128,7 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		return resolveDescriptor(
 				javaType,
 				() -> {
-					if ( javaType instanceof ParameterizedType ) {
-						final ParameterizedType parameterizedType = (ParameterizedType) javaType;
+					if ( javaType instanceof ParameterizedType parameterizedType ) {
 						final JavaType<J> rawType = findDescriptor( parameterizedType.getRawType() );
 						if ( rawType != null ) {
 							return rawType.createJavaType( parameterizedType, typeConfiguration );

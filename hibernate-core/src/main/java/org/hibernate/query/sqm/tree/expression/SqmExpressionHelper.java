@@ -155,8 +155,7 @@ public class SqmExpressionHelper {
 		if ( expression instanceof SqmPath<?> ) {
 			return (SqmPath<?>) expression;
 		}
-		else if ( expression instanceof SqmBinaryArithmetic<?> ) {
-			final SqmBinaryArithmetic<?> binaryArithmetic = (SqmBinaryArithmetic<?>) expression;
+		else if ( expression instanceof SqmBinaryArithmetic<?> binaryArithmetic ) {
 			final SqmPath<?> lhs = findPath( binaryArithmetic.getLeftHandOperand(), nodeType );
 			if ( lhs != null ) {
 				return lhs;

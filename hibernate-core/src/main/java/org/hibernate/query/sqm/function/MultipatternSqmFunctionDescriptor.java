@@ -29,7 +29,7 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
  */
 public class MultipatternSqmFunctionDescriptor extends AbstractSqmFunctionDescriptor {
 
-	private SqmFunctionDescriptor[] functions;
+	private final SqmFunctionDescriptor[] functions;
 	private String argumentListSignature;
 
 	private static int first(SqmFunctionDescriptor[] functions) {

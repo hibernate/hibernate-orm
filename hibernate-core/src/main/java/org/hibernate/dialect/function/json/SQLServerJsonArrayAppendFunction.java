@@ -6,6 +6,7 @@ package org.hibernate.dialect.function.json;
 
 import java.util.List;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -49,9 +50,11 @@ public class SQLServerJsonArrayAppendFunction extends AbstractJsonArrayAppendFun
 			if ( lastPathElement instanceof JsonPathHelper.JsonIndexAccess indexAccess ) {
 				terminalKey = String.valueOf( indexAccess.index() );
 			}
+			else if (lastPathElement instanceof JsonPathHelper.JsonAttribute attribute) {
+				terminalKey = attribute.attribute();
+			}
 			else {
-				assert lastPathElement instanceof JsonPathHelper.JsonAttribute;
-				terminalKey = ( (JsonPathHelper.JsonAttribute) lastPathElement ).attribute();
+				throw new AssertionFailure( "Unrecognized json path element: " + lastPathElement );
 			}
 
 			sqlAppender.appendSql( "(select 1 from openjson(t.d," );

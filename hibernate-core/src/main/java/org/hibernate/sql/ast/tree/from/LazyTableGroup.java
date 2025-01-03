@@ -270,7 +270,7 @@ public class LazyTableGroup extends DelegatingTableGroup {
 		return getTableGroup().getTableReference( navigablePath, modelPart, tableExpression, resolve );
 	}
 
-	public static interface ParentTableGroupUseChecker {
+	public interface ParentTableGroupUseChecker {
 		boolean canUseParentTableGroup(TableGroupProducer producer, NavigablePath navigablePath, ValuedModelPart valuedModelPart);
 	}
 }

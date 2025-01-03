@@ -32,12 +32,11 @@ public class OracleArrayConstructorFunction extends ArrayConstructorFunction {
 			);
 		}
 		final DomainType<?> type = returnType.getSqmType();
-		if ( !( type instanceof BasicPluralType<?, ?> ) ) {
+		if ( !(type instanceof BasicPluralType<?, ?> pluralType) ) {
 			throw new SemanticException(
 					"Oracle array constructor emulation requires a basic plural return type, but resolved return type was: " + type
 			);
 		}
-		final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) type;
 		final String arrayTypeName = DdlTypeHelper.getCastTypeName(
 				pluralType,
 				walker.getSessionFactory().getTypeConfiguration()

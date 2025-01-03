@@ -153,11 +153,10 @@ public class IdentifierGeneratorDefinition implements Serializable {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !( o instanceof IdentifierGeneratorDefinition ) ) {
+		if ( !(o instanceof IdentifierGeneratorDefinition that) ) {
 			return false;
 		}
 
-		IdentifierGeneratorDefinition that = (IdentifierGeneratorDefinition) o;
 		return Objects.equals(name, that.name)
 			&& Objects.equals(strategy, that.strategy)
 			&& Objects.equals(parameters, that.parameters);

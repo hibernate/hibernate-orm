@@ -289,8 +289,7 @@ public class AnonymousTupleEntityValuedModelPart
 
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
 
-		if ( delegate instanceof OneToManyCollectionPart ) {
-			final OneToManyCollectionPart oneToMany = (OneToManyCollectionPart) delegate;
+		if ( delegate instanceof OneToManyCollectionPart oneToMany ) {
 			final PluralAttributeMapping pluralAttribute = oneToMany.getCollectionDescriptor().getAttributeMapping();
 
 			final ModelPart keyPart = pluralAttribute.getKeyDescriptor().getKeyPart();
@@ -481,9 +480,7 @@ public class AnonymousTupleEntityValuedModelPart
 	@Override
 	public boolean canUseParentTableGroup(TableGroupProducer producer, NavigablePath navigablePath, ValuedModelPart valuedModelPart) {
 		final ModelPart foreignKeyPart = getForeignKeyPart();
-		if ( foreignKeyPart instanceof AnonymousTupleNonAggregatedEntityIdentifierMapping ) {
-			final AnonymousTupleNonAggregatedEntityIdentifierMapping identifierMapping =
-					(AnonymousTupleNonAggregatedEntityIdentifierMapping) foreignKeyPart;
+		if ( foreignKeyPart instanceof AnonymousTupleNonAggregatedEntityIdentifierMapping identifierMapping ) {
 			final int numberOfFetchables = identifierMapping.getNumberOfFetchables();
 			for ( int i = 0; i< numberOfFetchables; i++ ) {
 				if ( valuedModelPart == identifierMapping.getFetchable( i ) ) {

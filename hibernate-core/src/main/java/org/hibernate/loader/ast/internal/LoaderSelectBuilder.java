@@ -184,8 +184,7 @@ public class LoaderSelectBuilder {
 		);
 
 
-		if ( loadable instanceof PluralAttributeMapping ) {
-			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
+		if ( loadable instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			builder.applyFiltering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
 			builder.applyOrdering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
 		}
@@ -383,8 +382,7 @@ public class LoaderSelectBuilder {
 		this.entityGraphTraversalState = entityGraphTraversalState;
 		this.forceIdentifierSelection = forceIdentifierSelection;
 		this.jdbcParameterConsumer = jdbcParameterConsumer;
-		if ( loadable instanceof PluralAttributeMapping ) {
-			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
+		if ( loadable instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			if ( pluralAttributeMapping.getMappedType()
 					.getCollectionSemantics()
 					.getCollectionClassification() == CollectionClassification.BAG ) {
@@ -521,8 +519,7 @@ public class LoaderSelectBuilder {
 			);
 		}
 
-		if ( loadable instanceof PluralAttributeMapping ) {
-			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
+		if ( loadable instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			applyFiltering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
 			applyOrdering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
 		}
@@ -539,8 +536,7 @@ public class LoaderSelectBuilder {
 		for ( ModelPart part : partsToSelect ) {
 			final NavigablePath navigablePath = rootNavigablePath.append( part.getPartName() );
 			final TableGroup tableGroup;
-			if ( part instanceof TableGroupJoinProducer ) {
-				final TableGroupJoinProducer tableGroupJoinProducer = (TableGroupJoinProducer) part;
+			if ( part instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
 				final TableGroupJoin tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 						navigablePath,
 						rootTableGroup,
@@ -816,8 +812,7 @@ public class LoaderSelectBuilder {
 
 			if ( isKeyFetchable ) {
 				final EntityIdentifierMapping identifierMapping;
-				if ( fetchParent instanceof BiDirectionalFetch ) {
-					final BiDirectionalFetch parentAsBiDirectionalFetch = (BiDirectionalFetch) fetchParent;
+				if ( fetchParent instanceof BiDirectionalFetch parentAsBiDirectionalFetch ) {
 					final Fetchable biDirectionalFetchedMapping = parentAsBiDirectionalFetch.getFetchedMapping();
 					if ( biDirectionalFetchedMapping instanceof EntityValuedFetchable ) {
 						identifierMapping = ( (EntityValuedFetchable) biDirectionalFetchedMapping )
@@ -830,8 +825,7 @@ public class LoaderSelectBuilder {
 				}
 				else {
 					final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
-					if ( fetchableContainer instanceof EntityValuedModelPart ) {
-						final EntityValuedModelPart entityValuedModelPart = (EntityValuedModelPart) fetchableContainer;
+					if ( fetchableContainer instanceof EntityValuedModelPart entityValuedModelPart ) {
 						identifierMapping = entityValuedModelPart.getEntityMappingType().getIdentifierMapping();
 					}
 					else {
@@ -1165,8 +1159,7 @@ public class LoaderSelectBuilder {
 	}
 
 	private void registerPluralTableGroupParts(FromClauseAccess fromClauseAccess, TableGroup tableGroup) {
-		if ( tableGroup instanceof PluralTableGroup ) {
-			final PluralTableGroup pluralTableGroup = (PluralTableGroup) tableGroup;
+		if ( tableGroup instanceof PluralTableGroup pluralTableGroup ) {
 			if ( pluralTableGroup.getElementTableGroup() != null ) {
 				fromClauseAccess.registerTableGroup(
 						pluralTableGroup.getElementTableGroup().getNavigablePath(),

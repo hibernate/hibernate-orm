@@ -19,8 +19,8 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  * @author Gavin King
  */
 public class ExtractUnit implements Expression, SqlAstNode {
-	private TemporalUnit unit;
-	private BasicValuedMapping type;
+	private final TemporalUnit unit;
+	private final BasicValuedMapping type;
 
 	public ExtractUnit(TemporalUnit unit, BasicValuedMapping type) {
 		this.unit = unit;

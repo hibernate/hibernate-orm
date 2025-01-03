@@ -22,7 +22,7 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 	public static final String SUBCLASS_KEY = "_subclass";
 	public static final String VERSION_KEY = "_version";
 
-	private EntityPersister persister;
+	private final EntityPersister persister;
 
 	/**
 	 * Constructs a StructuredCacheEntry strategy

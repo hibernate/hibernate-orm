@@ -632,8 +632,8 @@ public class MetadataSources implements Serializable {
 	 * processing the contained mapping documents.
 	 */
 	public MetadataSources addDirectory(File dir) {
-		File[] files = dir.listFiles();
-		if ( files != null && files.length > 0 ) {
+		final File[] files = dir.listFiles();
+		if ( files != null ) {
 			for ( File file : files ) {
 				if ( file.isDirectory() ) {
 					addDirectory( file );

@@ -83,9 +83,8 @@ public class EmbeddableForeignKeyResultImpl<T>
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final boolean shouldSelect;
-		if ( fetchable instanceof ToOneAttributeMapping ) {
+		if ( fetchable instanceof ToOneAttributeMapping toOne ) {
 			// We need to make sure to-ones are always delayed to avoid cycles while resolving entity keys
-			final ToOneAttributeMapping toOne = (ToOneAttributeMapping) fetchable;
 			shouldSelect = selected && !creationState.isAssociationKeyVisited(
 					toOne.getForeignKeyDescriptor().getAssociationKey()
 			) && !ForeignKeyDescriptor.PART_NAME.equals( getNavigablePath().getLocalName() )

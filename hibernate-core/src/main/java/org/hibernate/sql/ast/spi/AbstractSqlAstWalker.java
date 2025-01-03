@@ -107,13 +107,11 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 	@Override
 	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
-		if ( expression instanceof FunctionExpression ) {
-			final FunctionExpression functionExpression = (FunctionExpression) expression;
+		if ( expression instanceof FunctionExpression functionExpression ) {
 			for ( SqlAstNode argument : functionExpression.getArguments() ) {
 				argument.accept( this );
 			}
-			if ( expression instanceof AggregateFunctionExpression ) {
-				final AggregateFunctionExpression aggregateFunctionExpression = (AggregateFunctionExpression) expression;
+			if ( expression instanceof AggregateFunctionExpression aggregateFunctionExpression ) {
 				if ( aggregateFunctionExpression.getFilter() != null ) {
 					aggregateFunctionExpression.getFilter().accept( this );
 				}

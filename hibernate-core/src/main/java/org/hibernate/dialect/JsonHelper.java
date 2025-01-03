@@ -502,7 +502,8 @@ public class JsonHelper {
 							final SelectableMapping selectable = embeddableMappingType.getJdbcValueSelectable(
 									selectableIndex
 							);
-							if ( !( selectable.getJdbcMapping().getJdbcType() instanceof AggregateJdbcType ) ) {
+							if ( !( selectable.getJdbcMapping().getJdbcType()
+									instanceof AggregateJdbcType aggregateJdbcType) ) {
 								throw new IllegalArgumentException(
 										String.format(
 												"JSON starts sub-object for a non-aggregate type at index %d. Selectable [%s] is of type [%s]",
@@ -512,7 +513,6 @@ public class JsonHelper {
 										)
 								);
 							}
-							final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) selectable.getJdbcMapping().getJdbcType();
 							final EmbeddableMappingType subMappingType = aggregateJdbcType.getEmbeddableMappingType();
 							// This encoding is only possible if the JDBC type is JSON again
 							assert aggregateJdbcType.getJdbcTypeCode() == SqlTypes.JSON
@@ -550,7 +550,7 @@ public class JsonHelper {
 									selectableIndex
 							);
 							final JdbcMapping jdbcMapping = selectable.getJdbcMapping();
-							if ( !( jdbcMapping instanceof BasicPluralType<?, ?> ) ) {
+							if ( !(jdbcMapping instanceof BasicPluralType<?, ?> pluralType) ) {
 								throw new IllegalArgumentException(
 										String.format(
 												"JSON starts array for a non-plural type at index %d. Selectable [%s] is of type [%s]",
@@ -560,7 +560,6 @@ public class JsonHelper {
 										)
 								);
 							}
-							final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) jdbcMapping;
 							final BasicType<?> elementType = pluralType.getElementType();
 							final CustomArrayList arrayList = new CustomArrayList();
 							i = fromArrayString( string, returnEmbeddable, options, i, arrayList, elementType ) - 1;

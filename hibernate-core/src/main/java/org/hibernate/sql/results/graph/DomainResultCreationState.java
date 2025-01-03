@@ -92,7 +92,7 @@ public interface DomainResultCreationState {
 		final EntityIdentifierMapping identifierMapping = fetchParent.getReferencedMappingContainer()
 				.getIdentifierMapping();
 		return fetchParent.generateFetchableFetch(
-				(Fetchable) identifierMapping,
+				identifierMapping,
 				new EntityIdentifierNavigablePath( fetchParent.getNavigablePath(), attributeName( identifierMapping ) ),
 				FetchTiming.IMMEDIATE,
 				true,

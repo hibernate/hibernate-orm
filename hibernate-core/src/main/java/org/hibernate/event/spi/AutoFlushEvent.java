@@ -14,7 +14,7 @@ public class AutoFlushEvent extends FlushEvent {
 
 	private Set<String> querySpaces;
 	private boolean flushRequired;
-	private boolean skipPreFlush;
+	private final boolean skipPreFlush;
 
 	public AutoFlushEvent(Set<String> querySpaces, EventSource source) {
 		this( querySpaces, false, source );

@@ -904,8 +904,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 					return true;
 				}
 			}
-			else if ( value instanceof org.hibernate.mapping.Collection ) {
-				final org.hibernate.mapping.Collection collection = (org.hibernate.mapping.Collection) value;
+			else if ( value instanceof org.hibernate.mapping.Collection collection ) {
 				if ( !( (CollectionType) collection.getType() ).useLHSPrimaryKey() ) {
 					return true;
 				}

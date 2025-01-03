@@ -176,7 +176,7 @@ public class TemporaryTableHelper {
 	}
 
 
-	private static SqlExceptionHelper.WarningHandler WARNING_HANDLER = new SqlExceptionHelper.WarningHandlerLoggingSupport() {
+	private static final SqlExceptionHelper.WarningHandler WARNING_HANDLER = new SqlExceptionHelper.WarningHandlerLoggingSupport() {
 		public boolean doProcess() {
 			return log.isDebugEnabled();
 		}

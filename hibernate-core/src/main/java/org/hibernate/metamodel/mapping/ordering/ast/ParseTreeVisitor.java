@@ -89,8 +89,7 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 		}
 		if ( parsedSpec.getChildCount() > i ) {
 			final ParseTree parseTree = parsedSpec.getChild( i );
-			if ( parseTree instanceof OrderingParser.DirectionContext ) {
-				final OrderingParser.DirectionContext directionCtx = (OrderingParser.DirectionContext) parseTree;
+			if ( parseTree instanceof OrderingParser.DirectionContext directionCtx ) {
 				if ( ( (TerminalNode) directionCtx.getChild( 0 ) ).getSymbol().getType() == OrderingParser.ASC ) {
 					result.setSortOrder( SortDirection.ASCENDING );
 				}
@@ -102,8 +101,7 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 		}
 		if ( parsedSpec.getChildCount() > i ) {
 			final ParseTree parseTree = parsedSpec.getChild( i );
-			if ( parseTree instanceof OrderingParser.NullsPrecedenceContext ) {
-				final OrderingParser.NullsPrecedenceContext nullsCtx = (OrderingParser.NullsPrecedenceContext) parseTree;
+			if ( parseTree instanceof OrderingParser.NullsPrecedenceContext nullsCtx ) {
 				if ( ( (TerminalNode) nullsCtx.getChild( 1 ) ).getSymbol().getType() == OrderingParser.FIRST ) {
 					result.setNullPrecedence( NullPrecedence.FIRST );
 				}

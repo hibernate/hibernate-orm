@@ -22,5 +22,5 @@ public enum JdbcLockStrategy {
 	/**
 	 * Do not apply locks.
 	 */
-	NONE;
+	NONE
 }

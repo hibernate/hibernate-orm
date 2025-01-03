@@ -524,8 +524,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 		if ( expression instanceof Literal ) {
 			appendSql( "()" );
 		}
-		else if ( expression instanceof Summarization ) {
-			Summarization summarization = (Summarization) expression;
+		else if ( expression instanceof Summarization summarization ) {
 			renderCommaSeparated( summarization.getGroupings() );
 			appendSql( " with " );
 			appendSql( summarization.getKind().sqlText() );
@@ -562,7 +561,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	enum OffsetFetchClauseMode {
 		STANDARD,
 		TOP_ONLY,
-		EMULATED;
+		EMULATED
 	}
 
 	protected void renderMergeStatement(OptionalTableUpdate optionalTableUpdate) {

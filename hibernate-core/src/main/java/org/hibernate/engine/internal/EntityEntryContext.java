@@ -48,7 +48,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
 public class EntityEntryContext {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( EntityEntryContext.class );
 
-	private transient PersistenceContext persistenceContext;
+	private final transient PersistenceContext persistenceContext;
 
 	private transient IdentityHashMap<ManagedEntity,ImmutableManagedEntityHolder> immutableManagedEntityXref;
 

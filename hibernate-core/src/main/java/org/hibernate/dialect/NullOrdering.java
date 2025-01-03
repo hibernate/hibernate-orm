@@ -28,5 +28,5 @@ public enum NullOrdering {
 	/**
 	 * Null is always ordered last.
 	 */
-	LAST;
+	LAST
 }

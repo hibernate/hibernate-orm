@@ -35,7 +35,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 
 	protected void errorIfClosed() {
 		if ( !isOpen() ) {
-			throw new IllegalStateException( this.toString() + " is closed" );
+			throw new IllegalStateException( this + " is closed" );
 		}
 	}
 

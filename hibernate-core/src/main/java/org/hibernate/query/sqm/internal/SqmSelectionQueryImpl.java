@@ -217,13 +217,13 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		// Just use the original parameter bindings since this object is never going to be mutated
 		this.parameterBindings = parameterMetadata.createBindings( original.getSession().getSessionFactory() );
 		// Don't remove this cast. This is here to work around this bug: https://bugs.openjdk.org/browse/JDK-8340443
-		(( DomainQueryExecutionContext) original ).getQueryParameterBindings().visitBindings(
+		//noinspection RedundantCast
+		final QueryParameterBindings bindings = ((DomainQueryExecutionContext) original).getQueryParameterBindings();
+		bindings.visitBindings(
 				(parameter, binding) -> {
 					//noinspection unchecked
 					final QueryParameterBinding<Object> parameterBinding =
 							(QueryParameterBinding<Object>) this.parameterBindings.getBinding( parameter );
-					//noinspection unchecked
-					final BindableType<Object> bindType = (BindableType<Object>) binding.getBindType();
 					final TemporalType explicitTemporalPrecision = binding.getExplicitTemporalPrecision();
 					if ( explicitTemporalPrecision != null ) {
 						if ( binding.isMultiValued() ) {
@@ -238,6 +238,8 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 						}
 					}
 					else {
+						//noinspection unchecked
+						final BindableType<Object> bindType = (BindableType<Object>) binding.getBindType();
 						if ( binding.isMultiValued() ) {
 							parameterBinding.setBindValues( binding.getBindValues(), bindType );
 						}

@@ -326,7 +326,7 @@ public class DB2JsonTableFunction extends JsonTableFunction {
 				sqlAppender.appendSql( ") " );
 				sqlAppender.appendSql( existsColumnDefinition.name() );
 			}
-			else if ( columnDefinition instanceof JsonTableOrdinalityColumnDefinition ordinalityColumnDefinition) {
+			else if ( columnDefinition instanceof JsonTableOrdinalityColumnDefinition ordinalityColumnDefinition ) {
 				// DB2 doesn't support the for ordinality syntax in json_table() since it has no support for array either
 				if ( isArray ) {
 					// If the document is an array, a series table with alias `i` is joined to emulate array support.

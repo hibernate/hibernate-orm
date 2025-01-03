@@ -21,5 +21,5 @@ public enum SelectItemReferenceStrategy {
 	/**
 	 * Refer to the item via its position.
 	 */
-	POSITION;
+	POSITION
 }

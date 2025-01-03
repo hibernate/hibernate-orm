@@ -342,7 +342,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 						parts[parts.length - 1].getSelectableName(),
 						new BasicJsonWriteExpression(
 								column,
-								aggregateSupport.jsonCustomWriteExpression(
+								jsonCustomWriteExpression(
 										customWriteExpression,
 										column.getJdbcMapping()
 								)

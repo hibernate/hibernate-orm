@@ -37,8 +37,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 			List<JdbcParameter> jdbcParameters,
 			MappingModelExpressible<?> valueMapping) {
 
-		if ( valueMapping instanceof EntityAssociationMapping ) {
-			final EntityAssociationMapping mapping = (EntityAssociationMapping) valueMapping;
+		if ( valueMapping instanceof EntityAssociationMapping mapping ) {
 			this.valueMapping = mapping.getForeignKeyDescriptor().getPart( mapping.getSideNature() );
 		}
 		else if ( valueMapping instanceof EntityValuedModelPart ) {

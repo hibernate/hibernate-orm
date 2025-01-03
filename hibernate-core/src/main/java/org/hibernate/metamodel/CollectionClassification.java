@@ -132,8 +132,7 @@ public enum CollectionClassification {
 		else if ( value instanceof CollectionClassification ) {
 			return (CollectionClassification) value;
 		}
-		else if ( value instanceof String ) {
-			final String string = (String) value;
+		else if ( value instanceof String string ) {
 			for ( CollectionClassification collectionClassification : values() ) {
 				if ( collectionClassification.name().equalsIgnoreCase( string ) ) {
 					return collectionClassification;

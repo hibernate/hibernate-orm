@@ -195,8 +195,7 @@ public class TypeHelper {
 					copied[i] = types[i].replace( currentOriginal, target[i], session, owner, copyCache, foreignKeyDirection );
 				}
 				else {
-					if ( type instanceof ComponentType ) {
-						final ComponentType compositeType = (ComponentType) type;
+					if ( type instanceof ComponentType compositeType ) {
 						if ( target[i] != null ) {
 							// need to extract the component values and check for subtype replacements...
 							final Object[] objects = replaceCompositeAssociations(

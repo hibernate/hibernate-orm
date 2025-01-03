@@ -13,10 +13,10 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Gavin King
  */
 public class PostInsertEvent extends AbstractEvent {
-	private Object entity;
-	private EntityPersister persister;
-	private Object[] state;
-	private Object id;
+	private final Object entity;
+	private final EntityPersister persister;
+	private final Object[] state;
+	private final Object id;
 
 	public PostInsertEvent(
 			Object entity,

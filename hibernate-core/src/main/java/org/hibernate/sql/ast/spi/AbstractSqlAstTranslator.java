@@ -7625,13 +7625,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// Most databases do not support boolean expressions in a predicate context, so we render `expr=true`
 		booleanExpressionPredicate.getExpression().accept( this );
 		appendSql( '=' );
-		if ( booleanExpressionPredicate.isNegated() ) {
-			dialect.appendBooleanValueString( this, false );
-
-		}
-		else {
-			dialect.appendBooleanValueString( this, true );
-		}
+		dialect.appendBooleanValueString( this, !booleanExpressionPredicate.isNegated() );
 	}
 
 	@Override
@@ -8640,7 +8634,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected enum LockStrategy {
 		CLAUSE,
 		FOLLOW_ON,
-		NONE;
+		NONE
 	}
 
 	protected static class ForUpdateClause {

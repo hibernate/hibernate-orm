@@ -60,8 +60,7 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 			}
 		}
 
-		if ( sqmPath instanceof SqmAttributeJoin ) {
-			final SqmAttributeJoin sqmJoin = (SqmAttributeJoin) sqmPath;
+		if ( sqmPath instanceof SqmAttributeJoin<?,?> sqmJoin ) {
 			if ( sqmJoin.isFetched() ) {
 				registerJoinFetch( sqmJoin, identifierForTableGroup );
 			}

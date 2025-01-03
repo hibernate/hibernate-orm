@@ -103,7 +103,7 @@ public class CustomVersionOneStrategy implements UUIDGenerationStrategy, UuidVal
 
 
 			UUID uuid = new UUID( strategy.mostSignificantBits, leastSignificantBits );
-			System.out.println( "  uuid : " + uuid.toString() );
+			System.out.println( "  uuid : " + uuid );
 			System.out.println( "  variant : " + uuid.variant() );
 			System.out.println( "  version : " + uuid.version() );
 			if ( uuid.variant() != 2 ) {

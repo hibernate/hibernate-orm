@@ -431,12 +431,50 @@ public final class ArrayHelper {
 		return i;
 	}
 
+	/**
+	 * Reverse the elements of the incoming array
+	 *
+	 * @return New array with all elements in reversed order
+	 */
 	public static String[] reverse(String[] source) {
 		final int length = source.length;
 		final String[] destination = new String[length];
 		for ( int i = 0; i < length; i++ ) {
-			final int x = length - i - 1;
-			destination[x] = source[i];
+			destination[length - i - 1] = source[i];
+		}
+		return destination;
+	}
+
+	/**
+	 * Reverse the first n elements of the incoming array
+	 *
+	 * @return New array with the first n elements in reversed order
+	 */
+	public static String[] reverseFirst(String[] objects, int n) {
+		final int length = objects.length;
+		final String[] destination = new String[length];
+		for ( int i = 0; i < n; i++ ) {
+			destination[i] = objects[n - i - 1];
+		}
+		for ( int i = n; i < length; i++ ) {
+			destination[i] = objects[i];
+		}
+		return destination;
+	}
+
+	/**
+	 * Reverse the first n elements of the incoming array
+	 *
+	 * @return New array with the first n elements in reversed order
+	 */
+	public static String[][] reverseFirst(String[][] objects, int n) {
+		final int length = objects.length;
+		final String[][] destination = new String[length][];
+		for ( int i = 0; i < n; i++ ) {
+			destination[i] = objects[n - i - 1];
+		}
+		for ( int i = n; i < length; i++ ) {
+			destination[i] = objects[i];
 		}
 		return destination;
 	}
@@ -485,4 +523,5 @@ public final class ArrayHelper {
 	public static <T> T[] newInstance(Class<T> elementType, int length) {
 		return (T[]) Array.newInstance( elementType, length );
 	}
+
 }

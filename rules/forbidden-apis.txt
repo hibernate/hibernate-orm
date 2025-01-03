@@ -11,8 +11,6 @@
 
 java.lang.reflect.Array#newInstance(java.lang.Class, int)
 java.lang.reflect.Array#newInstance(java.lang.Class, int[])
-org.hibernate.internal.util.collections.ArrayHelper#newInstance(java.lang.Class, int)
-org.hibernate.internal.util.collections.ArrayHelper#filledArray(java.lang.Object, java.lang.Class, int)
 org.hibernate.internal.util.collections.ArrayHelper#join(java.lang.Object[], java.lang.Object[])
 
 ################################################################################################################

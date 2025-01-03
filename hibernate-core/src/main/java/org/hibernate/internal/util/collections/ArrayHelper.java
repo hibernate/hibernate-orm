@@ -59,14 +59,6 @@ public final class ArrayHelper {
 		return -1;
 	}
 
-	@SuppressWarnings("unchecked")
-	@AllowReflection
-	public static <T> T[] filledArray(T value, Class<T> valueJavaType, int size) {
-		final T[] array = (T[]) Array.newInstance( valueJavaType, size );
-		Arrays.fill( array, value );
-		return array;
-	}
-
 	public static String[] toStringArray(Object[] objects) {
 		int length = objects.length;
 		String[] result = new String[length];
@@ -521,15 +513,4 @@ public final class ArrayHelper {
 			consumer.accept( array[ i ] );
 		}
 	}
-
-	/**
-	 * @deprecated Use {@link Array#newInstance(Class, int)} instead.
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	@AllowReflection
-	public static <T> T[] newInstance(Class<T> elementType, int length) {
-		return (T[]) Array.newInstance( elementType, length );
-	}
-
 }

@@ -85,11 +85,14 @@ public class BasicFormatterImpl implements Formatter {
 					case "`":
 					case "\"":
 						String t;
+						StringBuilder sb = new StringBuilder();
+						sb.append(this.token);
 						do {
 							t = tokens.nextToken();
-							token += t;
+							sb.append(t);
 						}
 						while ( !lcToken.equals( t ) && tokens.hasMoreTokens() );
+						this.token = sb.toString();
 						lcToken = token;
 						misc();
 						break;
@@ -97,11 +100,14 @@ public class BasicFormatterImpl implements Formatter {
 					// see SQLServerDialect.openQuote and SQLServerDialect.closeQuote
 					case "[":
 						String tt;
+						StringBuilder sb2 = new StringBuilder();
+						sb2.append(this.token);
 						do {
 							tt = tokens.nextToken();
-							token += tt;
+							sb2.append(tt);
 						}
 						while ( !"]".equals( tt ) && tokens.hasMoreTokens() );
+						this.token = sb2.toString();
 						lcToken = token;
 						misc();
 						break;
@@ -390,8 +396,8 @@ public class BasicFormatterImpl implements Formatter {
 			newline();
 			afterBeginBeforeEnd = false;
 			afterByOrSetOrFromOrSelect = "by".equals( lcToken )
-					|| "set".equals( lcToken )
-					|| "from".equals( lcToken );
+										 || "set".equals( lcToken )
+										 || "from".equals( lcToken );
 		}
 
 		private void beginNewClause() {

@@ -17,6 +17,7 @@ import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.xsd.XmlValidationMode;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
@@ -537,4 +538,10 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	public boolean isPreferJdbcDatetimeTypesInNativeQueriesEnabled() {
 		return delegate.isPreferJdbcDatetimeTypesInNativeQueriesEnabled();
 	}
+
+	@Override
+	public XmlValidationMode getXmlValidationMode() {
+		return delegate.getXmlValidationMode();
+	}
+
 }

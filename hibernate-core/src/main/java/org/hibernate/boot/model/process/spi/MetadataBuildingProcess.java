@@ -103,6 +103,7 @@ import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.AttributeConverter;
 
+import static org.hibernate.boot.xsd.XmlValidationMode.DISABLED;
 import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForDuration;
@@ -497,7 +498,7 @@ public class MetadataBuildingProcess {
 		final AdditionalMappingContributionsImpl contributions = new AdditionalMappingContributionsImpl(
 				metadataCollector,
 				options,
-				options.isXmlMappingEnabled() ? new MappingBinder( classLoaderService, () -> false ) : null,
+				options.isXmlMappingEnabled() ? new MappingBinder( classLoaderService, () -> DISABLED ) : null,
 				rootMetadataBuildingContext
 		);
 

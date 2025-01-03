@@ -24,7 +24,7 @@ public final class XMLMappingHelper {
 	private final MappingBinder binder;
 
 	public XMLMappingHelper() {
-		binder = new MappingBinder( ClassLoaderServiceTestingImpl.INSTANCE, MappingBinder.VALIDATING );
+		binder = new MappingBinder( ClassLoaderServiceTestingImpl.INSTANCE, MappingBinder.DEFAULT_VALIDATING );
 	}
 
 	public JaxbEntityMappingsImpl readOrmXmlMappings(String name) throws IOException {

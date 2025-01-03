@@ -10,6 +10,7 @@ import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.xsd.XmlValidationMode;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
@@ -480,11 +481,24 @@ public interface MappingSettings {
 	/**
 	 * Whether XML should be validated against their schema as Hibernate reads them.
 	 *
-	 * @settingDefault {@code true}
+	 * @settingDefault {@code true}.
 	 *
-	 * @since 6.1
+	 * @deprecated Instead use {@link org.hibernate.boot.xsd.XmlValidationMode#EXTENDED} for the default 'true' setting, or
+	 * {@link org.hibernate.boot.xsd.XmlValidationMode#DISABLED} for false.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	String VALIDATE_XML = "hibernate.validate_xml";
+
+	/**
+	 * Indicates what kind of validation should be applied to XML.
+	 *
+	 * @settingDefault {@link org.hibernate.boot.xsd.XmlValidationMode#EXTENDED}
+	 * @apiNote If present, this setting prevails over the deprecated former VALIDATE_XML setting.
+	 *
+	 * @since 7.0
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyXmlValidationMode(XmlValidationMode)
+	 */
+	String XML_VALIDATION_MODE = "hibernate.xml_validation_mode";
 
 	/**
 	 * Enables processing {@code hbm.xml} mappings by transforming them to {@code mapping.xml} and using

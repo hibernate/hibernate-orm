@@ -5,13 +5,13 @@
 package org.hibernate.boot.jaxb.internal;
 
 import java.io.InputStream;
+import java.util.function.Consumer;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.Source;
-import javax.xml.validation.Schema;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.ResourceStreamLocator;
@@ -21,6 +21,7 @@ import org.hibernate.boot.jaxb.internal.stax.BufferedXMLEventReader;
 import org.hibernate.boot.jaxb.internal.stax.LocalXmlResourceResolver;
 import org.hibernate.boot.jaxb.spi.Binder;
 import org.hibernate.boot.jaxb.spi.Binding;
+import org.hibernate.boot.xsd.XmlValidationMode;
 import org.hibernate.internal.util.StringHelper;
 
 import org.jboss.logging.Logger;
@@ -37,15 +38,18 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 
 	private final LocalXmlResourceResolver xmlResourceResolver;
 
+	protected InputStreamAccess streamAccess;
+
 	protected AbstractBinder(ResourceStreamLocator resourceStreamLocator) {
 		this.xmlResourceResolver = new LocalXmlResourceResolver( resourceStreamLocator );
 	}
 
-	public abstract boolean isValidationEnabled();
+	public abstract XmlValidationMode getXmlValidationMode();
 
 	@Override
-	public <X extends T> Binding<X> bind(InputStreamAccess stream, Origin origin) {
-		final XMLEventReader eventReader = createReader( stream.accessInputStream(), origin );
+	public <X extends T> Binding<X> bind(InputStreamAccess streamAccess, Origin origin) {
+		this.streamAccess = streamAccess;
+		final XMLEventReader eventReader = createReader( streamAccess.accessInputStream(), origin );
 		try {
 			return doBind( eventReader, origin );
 		}
@@ -147,17 +151,19 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 		return StringHelper.isNotEmpty( startElement.getName().getNamespaceURI() );
 	}
 
-	protected <X extends T> X jaxb(XMLEventReader reader, Schema xsd, JAXBContext jaxbContext, Origin origin) {
+	protected void validateXml(Unmarshaller unmarshaller, Consumer<Unmarshaller> validationAction) {
+		// handled by subclasses if needed/applicable
+		validationAction.accept(unmarshaller);
+	}
+
+	protected <X extends T> X jaxb(XMLEventReader reader, JAXBContext jaxbContext, Origin origin, Consumer<Unmarshaller> validationAction) {
 		final ContextProvidingValidationEventHandler handler = new ContextProvidingValidationEventHandler();
 
 		try {
 			final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-			if ( isValidationEnabled() ) {
-				unmarshaller.setSchema( xsd );
-			}
-			else {
-				unmarshaller.setSchema( null );
-			}
+
+			validateXml( unmarshaller, validationAction );
+
 			unmarshaller.setEventHandler( handler );
 
 			//noinspection unchecked

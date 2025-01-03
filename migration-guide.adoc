@@ -474,6 +474,8 @@ This package has been significantly re-engineered, and the impact of this effort
 - some breaking changes to type signatures, and
 - a number of deprecations of legacy operations which are now covered by JPA.
 
+Also, a key subgraph now always refers to a `Map` key, and never to an entity id.
+
 We encourage migration to the use of the new JPA-standard operations.
 
 == Deprecations

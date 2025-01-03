@@ -264,16 +264,11 @@ include::{extrasdir}/fetching-strategies-dynamic-fetching-entity-subgraph-exampl
 ----
 ====
 
-Specifying a subgraph is only valid for an attribute (or its "key") whose type is a ManagedType.  So
-while an EntityGraph must correspond to an EntityType, a Subgraph is legal for any ManagedType.  An
-attribute's key is defined as either:
+Specifying a subgraph is only valid for an attribute (or its "key") whose type is a ManagedType.
+So while an EntityGraph must correspond to an EntityType, a Subgraph is legal for any ManagedType.
 
-* For a singular attribute, the attribute's type must be an IdentifiableType and that IdentifiableType must
-	have a composite identifier.  The "key subgraph" is applied to the identifier type.  The
-	non-key subgraph applies to the attribute's value, which must be a ManagedType.
-* For a plural attribute, the attribute must be a Map and the Map's key value must be a ManagedType.
-	The "key subgraph" is applied to the Map's key type.  In this case, the non-key subgraph applies
-	to the plural attribute's value/element.
+If the attribute is a Map and the Map's key is a ManagedType, the "key subgraph" is applied to the Map's key type.
+In this case, the non-key subgraph applies to the Map value/element.
 
 
 [[fetching-strategies-dynamic-fetching-entity-subgraph-subtype]]
@@ -314,14 +309,6 @@ just using a parsed graph rather than a named graph.
 
 The syntax also supports defining "key subgraphs".  To specify a key subgraph, `.key` is added
 to the end of the attribute name.
-
-.Parsing an entity key graph
-====
-[source, java, indent=0]
-----
-include::{example-dir-fetching}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-key-example-1]
-----
-====
 
 .Parsing a map key graph
 ====

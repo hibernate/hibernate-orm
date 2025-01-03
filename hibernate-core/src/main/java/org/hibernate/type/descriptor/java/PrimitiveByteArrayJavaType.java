@@ -28,9 +28,8 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 		implements VersionJavaType<byte[]> {
 	public static final PrimitiveByteArrayJavaType INSTANCE = new PrimitiveByteArrayJavaType();
 
-	@SuppressWarnings("unchecked")
 	public PrimitiveByteArrayJavaType() {
-		super( byte[].class, ArrayMutabilityPlan.INSTANCE, RowVersionComparator.INSTANCE );
+		super( byte[].class, new ArrayMutabilityPlan(), RowVersionComparator.INSTANCE );
 	}
 
 	@Override
@@ -159,5 +158,12 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 			Integer precision,
 			Integer scale, SharedSessionContractImplementor session) {
 		return current;
+	}
+
+	private static class ArrayMutabilityPlan extends MutableMutabilityPlan<byte[]> {
+		@Override
+		protected byte[] deepCopyNotNull(byte[] value) {
+			return value.clone();
+		}
 	}
 }

@@ -11,6 +11,7 @@ package org.hibernate.annotations;
  * @see CurrentTimestamp#source()
  * @see UpdateTimestamp#source()
  * @see CreationTimestamp#source()
+ * @see SoftDeleteTimestamp#source()
  * @see Source
  *
  * @author Hardy Ferentschik

@@ -25,6 +25,7 @@ import org.hibernate.models.spi.AnnotationDescriptor;
  * for unused because
  *
  * @author Steve Ebersole
+ * @author Yongjun Hong
  */
 @SuppressWarnings({ "deprecation", "removal", "unused" })
 public interface HibernateAnnotations {
@@ -510,6 +511,10 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<SoftDelete,SoftDeleteAnnotation> SOFT_DELETE = new OrmAnnotationDescriptor<>(
 			SoftDelete.class,
 			SoftDeleteAnnotation.class
+	);
+	OrmAnnotationDescriptor<SoftDeleteTimestamp,SoftDeleteTimeStampAnnotation> SOFT_DELETE_TIMESTAMP = new OrmAnnotationDescriptor<>(
+			SoftDeleteTimestamp.class,
+			SoftDeleteTimeStampAnnotation.class
 	);
 	OrmAnnotationDescriptor<SortComparator,SortComparatorAnnotation> SORT_COMPARATOR = new OrmAnnotationDescriptor<>(
 			SortComparator.class,

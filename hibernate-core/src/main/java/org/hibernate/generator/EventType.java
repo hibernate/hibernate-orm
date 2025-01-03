@@ -13,6 +13,7 @@ package org.hibernate.generator;
  * even though there are only two types.
  *
  * @author Gavin King
+ * @author Yongjun Hong
  *
  * @since 6.2
  *
@@ -35,5 +36,13 @@ public enum EventType {
 	 * This indicates, for example, that a version number should be
 	 * incremented.
 	 */
-	UPDATE;
+	UPDATE,
+
+	/**
+	 * An event that occurs when any {@code update} statements needed
+	 * to soft-delete an entity instance are executed.
+	 * This indicates, for example, that a soft-delete flag should be
+	 * set to true or a deletion timestamp should be recorded.
+	 */
+	SOFT_DELETE;
 }

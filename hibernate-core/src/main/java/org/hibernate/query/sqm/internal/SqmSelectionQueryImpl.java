@@ -29,7 +29,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.internal.util.collections.IdentitySet;
-import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.Order;
@@ -150,22 +149,23 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 			Class<R> expectedResultType,
 			SharedSessionContractImplementor session) {
 		super( session );
-		this.hql = CRITERIA_HQL_STRING;
+		this.expectedResultType = expectedResultType;
+		hql = CRITERIA_HQL_STRING;
 		if ( session.isCriteriaCopyTreeEnabled() ) {
-			this.sqm = criteria.copy( SqmCopyContext.simpleContext() );
+			sqm = criteria.copy( SqmCopyContext.simpleContext() );
 		}
 		else {
-			this.sqm = criteria;
+			sqm = criteria;
 			// Cache immutable query plans by default
 			setQueryPlanCacheable( true );
 		}
 
-		this.domainParameterXref = DomainParameterXref.from( sqm );
-		this.parameterMetadata = domainParameterXref.hasParameters()
+		domainParameterXref = DomainParameterXref.from( sqm );
+		parameterMetadata = domainParameterXref.hasParameters()
 				? new ParameterMetadataImpl( domainParameterXref.getQueryParameters() )
 				: ParameterMetadataImpl.EMPTY;
 
-		this.parameterBindings = parameterMetadata.createBindings( session.getFactory() );
+		parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
 		for ( SqmParameter<?> sqmParameter : domainParameterXref.getParameterResolutions().getSqmParameters() ) {
@@ -174,8 +174,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 			}
 		}
 
-		this.expectedResultType = expectedResultType;
-		this.resultType = determineResultType( sqm, expectedResultType );
+		resultType = determineResultType( sqm, expectedResultType );
 
 		final SqmQueryPart<R> queryPart = sqm.getQueryPart();
 		// For criteria queries, we have to validate the fetch structure here
@@ -185,7 +184,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 
 		setComment( hql );
 
-		this.tupleMetadata = buildTupleMetadata( sqm, expectedResultType );
+		tupleMetadata = buildTupleMetadata( sqm, expectedResultType );
 	}
 
 	<E> SqmSelectionQueryImpl(AbstractSqmSelectionQuery<?> original, KeyedPage<E> keyedPage) {
@@ -199,7 +198,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 						? Order.reverse( keyDefinition ) : keyDefinition;
 
 		//noinspection unchecked
-		this.sqm = (SqmSelectStatement<R>) paginate(
+		sqm = (SqmSelectStatement<R>) paginate(
 				appliedKeyDefinition,
 				key,
 				// Change the query source to CRITERIA, because we will change the query and introduce parameters
@@ -207,67 +206,63 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 						.copy( noParamCopyContext( SqmQuerySource.CRITERIA ) ),
 				original.getSqmStatement().nodeBuilder()
 		);
-		this.hql = CRITERIA_HQL_STRING;
+		hql = CRITERIA_HQL_STRING;
 
-		this.domainParameterXref = DomainParameterXref.from( sqm );
-		this.parameterMetadata = domainParameterXref.hasParameters()
+		domainParameterXref = DomainParameterXref.from( sqm );
+		parameterMetadata = domainParameterXref.hasParameters()
 				? new ParameterMetadataImpl( domainParameterXref.getQueryParameters() )
 				: ParameterMetadataImpl.EMPTY;
 
 		// Just use the original parameter bindings since this object is never going to be mutated
-		this.parameterBindings = parameterMetadata.createBindings( original.getSession().getSessionFactory() );
-		// Don't remove this cast. This is here to work around this bug: https://bugs.openjdk.org/browse/JDK-8340443
-		//noinspection RedundantCast
-		final QueryParameterBindings bindings = ((DomainQueryExecutionContext) original).getQueryParameterBindings();
-		bindings.visitBindings(
-				(parameter, binding) -> {
-					//noinspection unchecked
-					final QueryParameterBinding<Object> parameterBinding =
-							(QueryParameterBinding<Object>) this.parameterBindings.getBinding( parameter );
-					final TemporalType explicitTemporalPrecision = binding.getExplicitTemporalPrecision();
-					if ( explicitTemporalPrecision != null ) {
-						if ( binding.isMultiValued() ) {
-							parameterBinding.setBindValues(
-									binding.getBindValues(),
-									explicitTemporalPrecision,
-									getSessionFactory().getTypeConfiguration()
-							);
-						}
-						else {
-							parameterBinding.setBindValue( binding.getBindValue(), explicitTemporalPrecision );
-						}
-					}
-					else {
-						//noinspection unchecked
-						final BindableType<Object> bindType = (BindableType<Object>) binding.getBindType();
-						if ( binding.isMultiValued() ) {
-							parameterBinding.setBindValues( binding.getBindValues(), bindType );
-						}
-						else {
-							parameterBinding.setBindValue( binding.getBindValue(), bindType );
-						}
-					}
-					//noinspection unchecked
-					parameterBinding.setType( (MappingModelExpressible<Object>) binding.getType() );
-				}
-		);
+		parameterBindings = parameterMetadata.createBindings( original.getSession().getSessionFactory() );
+		original.getQueryParameterBindings().visitBindings( this::setBindValues );
 
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
 		for ( SqmParameter<?> sqmParameter : domainParameterXref.getParameterResolutions().getSqmParameters() ) {
-			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
-				bindCriteriaParameter( (SqmJpaCriteriaParameterWrapper<?>) sqmParameter );
+			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> parameterWrapper ) {
+				bindCriteriaParameter( parameterWrapper );
 			}
 		}
 
 		//noinspection unchecked
-		this.expectedResultType = (Class<R>) KeyedResult.class;
-		this.resultType = determineResultType( sqm, expectedResultType );
-		this.tupleMetadata = null;
+		expectedResultType = (Class<R>) KeyedResult.class;
+		resultType = determineResultType( sqm, expectedResultType );
+		tupleMetadata = null;
 
 		setMaxResults( page.getMaxResults() + 1 );
 		if ( key == null ) {
 			setFirstResult( page.getFirstResult() );
 		}
+	}
+
+	private <T> void setBindValues(QueryParameter<?> parameter, QueryParameterBinding<T> binding) {
+		final QueryParameterBinding<?> paramBinding = parameterBindings.getBinding( parameter );
+		//noinspection unchecked
+		final QueryParameterBinding<T> parameterBinding = (QueryParameterBinding<T>) paramBinding;
+		final TemporalType explicitTemporalPrecision = binding.getExplicitTemporalPrecision();
+		if ( explicitTemporalPrecision != null ) {
+			if ( binding.isMultiValued() ) {
+				parameterBinding.setBindValues(
+						binding.getBindValues(),
+						explicitTemporalPrecision,
+						getSessionFactory().getTypeConfiguration()
+				);
+			}
+			else {
+				parameterBinding.setBindValue( binding.getBindValue(), explicitTemporalPrecision );
+			}
+		}
+		else {
+			//noinspection unchecked
+			final BindableType<T> bindType = (BindableType<T>) binding.getBindType();
+			if ( binding.isMultiValued() ) {
+				parameterBinding.setBindValues( binding.getBindValues(), bindType );
+			}
+			else {
+				parameterBinding.setBindValue( binding.getBindValue(), bindType );
+			}
+		}
+		parameterBinding.setType( binding.getType() );
 	}
 
 

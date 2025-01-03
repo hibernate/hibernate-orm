@@ -169,6 +169,16 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 	}
 
 	@Override
+	public LocalDateTime[] newArray(int numberOfElements) {
+		return new LocalDateTime[numberOfElements];
+	}
+
+	@Override
+	public Class<LocalDateTime[]> getArrayClass() {
+		return LocalDateTime[].class;
+	}
+
+	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return dialect.getDefaultTimestampPrecision();
 	}

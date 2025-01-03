@@ -97,6 +97,11 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 	}
 
 	@Override
+	public Character[] newArray(int numberOfElements) {
+		return new Character[numberOfElements];
+	}
+
+	@Override
 	public Class<Character[]> getArrayClass() {
 		return Character[].class;
 	}

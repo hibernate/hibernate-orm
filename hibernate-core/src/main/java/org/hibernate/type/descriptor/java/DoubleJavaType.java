@@ -122,6 +122,11 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 	}
 
 	@Override
+	public Double[] newArray(int numberOfElements) {
+		return new Double[numberOfElements];
+	}
+
+	@Override
 	public Class<Double[]> getArrayClass() {
 		return Double[].class;
 	}

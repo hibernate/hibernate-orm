@@ -189,6 +189,16 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 	}
 
 	@Override
+	public Instant[] newArray(int numberOfElements) {
+		return new Instant[numberOfElements];
+	}
+
+	@Override
+	public Class<Instant[]> getArrayClass() {
+		return Instant[].class;
+	}
+
+	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return dialect.getDefaultTimestampPrecision();
 	}

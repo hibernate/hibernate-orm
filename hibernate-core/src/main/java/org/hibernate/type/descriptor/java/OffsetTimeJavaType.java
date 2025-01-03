@@ -243,6 +243,16 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 	}
 
 	@Override
+	public OffsetTime[] newArray(int numberOfElements) {
+		return new OffsetTime[numberOfElements];
+	}
+
+	@Override
+	public Class<OffsetTime[]> getArrayClass() {
+		return OffsetTime[].class;
+	}
+
+	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		// times represent repeating events - they
 		// almost never come equipped with seconds,

@@ -229,6 +229,16 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 	}
 
 	@Override
+	public OffsetDateTime[] newArray(int numberOfElements) {
+		return new OffsetDateTime[numberOfElements];
+	}
+
+	@Override
+	public Class<OffsetDateTime[]> getArrayClass() {
+		return OffsetDateTime[].class;
+	}
+
+	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return dialect.getDefaultTimestampPrecision();
 	}

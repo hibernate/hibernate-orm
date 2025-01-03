@@ -211,6 +211,16 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	@Override
+	public Date[] newArray(int numberOfElements) {
+		return new Date[numberOfElements];
+	}
+
+	@Override
+	public Class<Date[]> getArrayClass() {
+		return Date[].class;
+	}
+
+	@Override
 	public String toString(Date value) {
 		if ( value instanceof java.sql.Date ) {
 			return LITERAL_FORMATTER.format( ( (java.sql.Date) value ).toLocalDate() );

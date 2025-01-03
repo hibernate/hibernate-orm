@@ -170,4 +170,14 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 		};
 	}
 
+	@Override
+	public LocalDate[] newArray(int numberOfElements) {
+		return new LocalDate[numberOfElements];
+	}
+
+	@Override
+	public Class<LocalDate[]> getArrayClass() {
+		return LocalDate[].class;
+	}
+
 }

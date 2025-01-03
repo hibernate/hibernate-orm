@@ -104,6 +104,11 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 	}
 
 	@Override
+	public Short[] newArray(int numberOfElements) {
+		return new Short[numberOfElements];
+	}
+
+	@Override
 	public Class<Short[]> getArrayClass() {
 		return Short[].class;
 	}

@@ -120,6 +120,11 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 	}
 
 	@Override
+	public Float[] newArray(int numberOfElements) {
+		return new Float[numberOfElements];
+	}
+
+	@Override
 	public Class<Float[]> getArrayClass() {
 		return Float[].class;
 	}

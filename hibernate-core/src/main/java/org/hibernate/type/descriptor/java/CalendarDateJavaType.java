@@ -137,6 +137,16 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 	}
 
 	@Override
+	public Calendar[] newArray(int numberOfElements) {
+		return new Calendar[numberOfElements];
+	}
+
+	@Override
+	public Class<Calendar[]> getArrayClass() {
+		return Calendar[].class;
+	}
+
+	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return 0;
 	}

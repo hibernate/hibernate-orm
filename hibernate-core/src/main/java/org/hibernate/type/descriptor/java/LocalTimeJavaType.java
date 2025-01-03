@@ -180,6 +180,16 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 	}
 
 	@Override
+	public LocalTime[] newArray(int numberOfElements) {
+		return new LocalTime[numberOfElements];
+	}
+
+	@Override
+	public Class<LocalTime[]> getArrayClass() {
+		return LocalTime[].class;
+	}
+
+	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		// times represent repeating events - they
 		// almost never come equipped with seconds,

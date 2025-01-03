@@ -168,6 +168,11 @@ public class LongJavaType extends AbstractClassJavaType<Long>
 	}
 
 	@Override
+	public Long[] newArray(int numberOfElements) {
+		return new Long[numberOfElements];
+	}
+
+	@Override
 	public Class<Long[]> getArrayClass() {
 		return Long[].class;
 	}

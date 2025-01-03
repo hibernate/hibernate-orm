@@ -198,6 +198,16 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	}
 
 	@Override
+	public Date[] newArray(int numberOfElements) {
+		return new Date[numberOfElements];
+	}
+
+	@Override
+	public Class<Date[]> getArrayClass() {
+		return Date[].class;
+	}
+
+	@Override
 	public String toString(Date value) {
 		return LITERAL_FORMATTER.format( value.toInstant() );
 	}

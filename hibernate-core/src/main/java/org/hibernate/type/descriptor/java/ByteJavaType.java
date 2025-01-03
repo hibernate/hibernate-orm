@@ -97,6 +97,11 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 	}
 
 	@Override
+	public Byte[] newArray(int numberOfElements) {
+		return new Byte[numberOfElements];
+	}
+
+	@Override
 	public Class<Byte[]> getArrayClass() {
 		return Byte[].class;
 	}

@@ -113,6 +113,11 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 	}
 
 	@Override
+	public Integer[] newArray(int numberOfElements) {
+		return new Integer[numberOfElements];
+	}
+
+	@Override
 	public Class<Integer[]> getArrayClass() {
 		return Integer[].class;
 	}

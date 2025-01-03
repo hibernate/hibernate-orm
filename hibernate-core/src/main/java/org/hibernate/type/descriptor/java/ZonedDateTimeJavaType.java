@@ -191,6 +191,16 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 	}
 
 	@Override
+	public ZonedDateTime[] newArray(int numberOfElements) {
+		return new ZonedDateTime[numberOfElements];
+	}
+
+	@Override
+	public Class<ZonedDateTime[]> getArrayClass() {
+		return ZonedDateTime[].class;
+	}
+
+	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return dialect.getDefaultTimestampPrecision();
 	}

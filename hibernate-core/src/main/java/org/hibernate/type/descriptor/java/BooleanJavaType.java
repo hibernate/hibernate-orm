@@ -157,6 +157,11 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	}
 
 	@Override
+	public Boolean[] newArray(int numberOfElements) {
+		return new Boolean[numberOfElements];
+	}
+
+	@Override
 	public Class<Boolean[]> getArrayClass() {
 		return Boolean[].class;
 	}

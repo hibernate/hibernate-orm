@@ -175,6 +175,16 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 	}
 
 	@Override
+	public Date[] newArray(int numberOfElements) {
+		return new Date[numberOfElements];
+	}
+
+	@Override
+	public Class<Date[]> getArrayClass() {
+		return Date[].class;
+	}
+
+	@Override
 	public Date next(
 			Date current,
 			Long length,

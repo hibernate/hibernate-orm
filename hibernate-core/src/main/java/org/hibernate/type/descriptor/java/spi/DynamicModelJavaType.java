@@ -43,4 +43,15 @@ public class DynamicModelJavaType implements JavaType<Map<?,?>> {
 		//noinspection unchecked,rawtypes
 		return (Class) Map.class;
 	}
+
+	@Override
+	public Map<?, ?>[] newArray(int numberOfElements) {
+		return new Map[numberOfElements];
+	}
+
+	@Override
+	@SuppressWarnings({"unchecked", "rawtypes", "RedundantCast"})
+	public Class<Map<?, ?>[]> getArrayClass() {
+		return (Class<Map<?, ?>[]>) (Class) Map[].class;
+	}
 }

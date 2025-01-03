@@ -139,6 +139,16 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 	}
 
 	@Override
+	public Calendar[] newArray(int numberOfElements) {
+		return new Calendar[numberOfElements];
+	}
+
+	@Override
+	public Class<Calendar[]> getArrayClass() {
+		return Calendar[].class;
+	}
+
+	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		// times represent repeating events - they
 		// almost never come equipped with seconds,

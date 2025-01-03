@@ -15,23 +15,23 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 public enum PathQualifierType {
 
 	KEY( (attributeNode, subtypeName, sessionFactory) -> subtypeName == null
-			? attributeNode.makeKeySubGraph()
-			: attributeNode.makeKeySubGraph( getSubtype( subtypeName, sessionFactory ) )
+			? attributeNode.addKeySubgraph()
+			: attributeNode.addKeySubgraph().addTreatedSubgraph( managedType( subtypeName, sessionFactory ) )
 	),
 
 	VALUE( (attributeNode, subtypeName, sessionFactory) -> subtypeName == null
-			? attributeNode.makeSubGraph()
-			: attributeNode.makeSubGraph( getSubtype( subtypeName, sessionFactory ) )
+			? attributeNode.addValueSubgraph()
+			: attributeNode.addValueSubgraph().addTreatedSubgraph( managedType( subtypeName, sessionFactory ) )
 	);
 
-	private static ManagedDomainType<?> getSubtype(String subtypeName, SessionFactoryImplementor sessionFactory) {
+	private static <T> ManagedDomainType<T> managedType(String subtypeName, SessionFactoryImplementor sessionFactory) {
 		final JpaMetamodel metamodel = sessionFactory.getJpaMetamodel();
-		ManagedDomainType<?> managedType = metamodel.findManagedType( subtypeName );
+		ManagedDomainType<T> managedType = metamodel.findManagedType( subtypeName );
 		if ( managedType == null ) {
 			managedType = metamodel.getHqlEntityReference( subtypeName );
 		}
 		if ( managedType == null ) {
-			throw new IllegalArgumentException( "Unknown type " + subtypeName );
+			throw new IllegalArgumentException( "Unknown managed type: " + subtypeName );
 		}
 		return managedType;
 	}

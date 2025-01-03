@@ -55,7 +55,7 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 		}
 
 		final GraphImplementor<?> previousContextRoot = currentGraphContext;
-		final AttributeNodeImplementor<?> attributeNode = appliesTo( fetchParent )
+		final AttributeNodeImplementor<?,?,?> attributeNode = appliesTo( fetchParent )
 				? currentGraphContext.findAttributeNode( fetchable.getFetchableName() )
 				: null;
 

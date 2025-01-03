@@ -19,4 +19,7 @@ public interface MapPersistentAttribute<D,K,V> extends MapAttribute<D, K, V>, Pl
 
 	@Override
 	SimpleDomainType<K> getKeyType();
+
+	@Override
+	SimpleDomainType<K> getKeyGraphType();
 }

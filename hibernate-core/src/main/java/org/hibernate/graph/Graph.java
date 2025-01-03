@@ -176,9 +176,7 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 * @param attributeName The name of an attribute of the represented type
 	 */
 	@Override
-	default <X> SubGraph<X> addSubgraph(String attributeName) {
-		return addSubGraph( attributeName );
-	}
+	<X> SubGraph<X> addSubgraph(String attributeName);
 
 	/**
 	 * Create and return a new (mutable) {@link SubGraph} associated with

@@ -14,7 +14,7 @@ import org.hibernate.graph.spi.SubGraphImplementor;
 @FunctionalInterface
 public interface SubGraphGenerator {
 	SubGraphImplementor<?> createSubGraph(
-			AttributeNodeImplementor<?> attributeNode,
+			AttributeNodeImplementor<?,?,?> attributeNode,
 			String subTypeName,
 			SessionFactoryImplementor sessionFactory);
 }

@@ -70,7 +70,7 @@ public class BasicFormatterImpl implements Formatter {
 			while ( tokens.hasMoreTokens() ) {
 				token = tokens.nextToken();
 
-				if ( "-".equals(token) && result.toString().endsWith("-") ) {
+				if ( "-".equals( token ) && result.toString().endsWith( "-" ) ) {
 					do {
 						result.append( token );
 						token = tokens.nextToken();
@@ -78,18 +78,21 @@ public class BasicFormatterImpl implements Formatter {
 					while ( !"\n".equals( token ) && tokens.hasMoreTokens() );
 				}
 
-				lcToken = token.toLowerCase(Locale.ROOT);
-				switch (lcToken) {
+				lcToken = token.toLowerCase( Locale.ROOT );
+				switch ( lcToken ) {
 
 					case "'":
 					case "`":
 					case "\"":
 						String t;
+						StringBuilder sb = new StringBuilder();
+						sb.append( this.token );
 						do {
 							t = tokens.nextToken();
-							token += t;
+							sb.append( t );
 						}
 						while ( !lcToken.equals( t ) && tokens.hasMoreTokens() );
+						this.token = sb.toString();
 						lcToken = token;
 						misc();
 						break;
@@ -97,11 +100,14 @@ public class BasicFormatterImpl implements Formatter {
 					// see SQLServerDialect.openQuote and SQLServerDialect.closeQuote
 					case "[":
 						String tt;
+						StringBuilder sb2 = new StringBuilder();
+						sb2.append( this.token );
 						do {
 							tt = tokens.nextToken();
-							token += tt;
+							sb2.append( tt );
 						}
 						while ( !"]".equals( tt ) && tokens.hasMoreTokens() );
+						this.token = sb2.toString();
 						lcToken = token;
 						misc();
 						break;
@@ -238,7 +244,7 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void comma() {
-			if ( afterByOrSetOrFromOrSelect && inFunction==0 ) {
+			if ( afterByOrSetOrFromOrSelect && inFunction == 0 ) {
 				commaAfterByOrFromOrSelect();
 			}
 //			else if ( afterOn && inFunction==0 ) {
@@ -313,7 +319,7 @@ public class BasicFormatterImpl implements Formatter {
 
 		private void misc() {
 			out();
-			if ( afterInsert && inFunction==0 ) {
+			if ( afterInsert && inFunction == 0 ) {
 				newline();
 				afterInsert = false;
 			}
@@ -329,7 +335,7 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void updateOrInsertOrDelete() {
-			if ( indent>1  ) {
+			if ( indent > 1 ) {
 				//probably just the insert SQL function
 				out();
 			}
@@ -367,7 +373,7 @@ public class BasicFormatterImpl implements Formatter {
 
 		private void out() {
 			if ( result.charAt( result.length() - 1 ) == ',' ) {
-				result.append(" ");
+				result.append( " " );
 			}
 			result.append( token );
 		}
@@ -507,7 +513,7 @@ public class BasicFormatterImpl implements Formatter {
 
 		private void newline() {
 			result.append( System.lineSeparator() )
-					.append( INDENT_STRING.repeat(indent) );
+					.append( INDENT_STRING.repeat( indent ) );
 			beginLine = true;
 		}
 	}

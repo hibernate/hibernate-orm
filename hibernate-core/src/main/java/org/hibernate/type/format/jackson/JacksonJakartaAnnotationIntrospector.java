@@ -73,7 +73,8 @@ public class JacksonJakartaAnnotationIntrospector extends JacksonAnnotationIntro
 					}
 				}
 			}
-		} else if (member instanceof AnnotatedMethod) {
+		}
+		else if (member instanceof AnnotatedMethod) {
 			Embeddable embeddable = member.getType().getRawClass().getAnnotation(Embeddable.class);
 			if (embeddable != null) {
 				String propName = getFieldNameFromGetterName(member.getName());

@@ -59,7 +59,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	public QueryParameterBindingImpl(
 			QueryParameter<T> queryParameter,
 			SessionFactoryImplementor sessionFactory,
-			BindableType<T> bindType) {
+			BindableType<? super T> bindType) {
 		this.queryParameter = queryParameter;
 		this.sessionFactory = sessionFactory;
 		this.bindType = bindType;

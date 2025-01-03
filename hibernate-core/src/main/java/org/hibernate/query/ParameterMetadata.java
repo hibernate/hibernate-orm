@@ -71,9 +71,7 @@ public interface ParameterMetadata {
 	 */
 	<P> QueryParameter<P> resolve(Parameter<P> param);
 
-	default <T> BindableType<T> getInferredParameterType(QueryParameter<T> parameter) {
-		return null;
-	}
+	<T> BindableType<T> getInferredParameterType(QueryParameter<T> parameter);
 
 	/**
 	 * Is this parameter reference registered in this collection?
@@ -85,7 +83,7 @@ public interface ParameterMetadata {
 	/**
 	 * General purpose visitation using functional
 	 */
-	void visitRegistrations(Consumer<? extends QueryParameter<?>> action);
+	void visitRegistrations(Consumer<QueryParameter<?>> action);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`

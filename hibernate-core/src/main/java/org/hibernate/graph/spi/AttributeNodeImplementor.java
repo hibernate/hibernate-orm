@@ -4,46 +4,66 @@
  */
 package org.hibernate.graph.spi;
 
-import jakarta.persistence.metamodel.ManagedType;
 import org.hibernate.graph.AttributeNode;
 
 import java.util.Map;
 
 
 /**
- * Integration version of the {@link AttributeNode} contract
+ * Integration version of the {@link AttributeNode} contract.
+ *
+ * @param <J> The type of the attribute
+ * @param <E> The element type, if this node represents a
+ *        {@linkplain jakarta.persistence.metamodel.PluralAttribute plural attribute}
+ * @param <K> The map key type, if this node represents a
+ *        {@linkplain jakarta.persistence.metamodel.MapAttribute map attribute}
  *
  * @author Strong Liu
  * @author Steve Ebersole
+ * @author Gavin King
  */
-public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNodeImplementor<J> {
+public interface AttributeNodeImplementor<J, E, K> extends AttributeNode<J>, GraphNodeImplementor<J> {
 
 	@Override
-	AttributeNodeImplementor<J> makeCopy(boolean mutable);
+	AttributeNodeImplementor<J, E,K> makeCopy(boolean mutable);
 
-	@Override
+	/**
+	 * Create a value subgraph, without knowing whether it represents a singular value or
+	 * plural element, rooted at this attribute node.
+	 *
+	 * @apiNote This version is more lenient and is therefore disfavored. Prefer the use
+	 *          of {@link #addSingularSubgraph()} and {@link #addElementSubgraph()}.
+	 */
+	SubGraphImplementor<E> addValueSubgraph();
+
+	/**
+	 * Create a value subgraph representing a singular value rooted at this attribute node.
+	 */
+	SubGraphImplementor<J> addSingularSubgraph();
+
+	/**
+	 * Create a value subgraph representing a plural element rooted at this attribute node.
+	 */
+	SubGraphImplementor<E> addElementSubgraph();
+
+	/**
+	 * Create a key subgraph rooted at this attribute node.
+	 */
+	SubGraphImplementor<K> addKeySubgraph();
+
+	@Override @Deprecated
 	SubGraphImplementor<?> makeSubGraph();
 
-	@Override
+	@Override @Deprecated
 	SubGraphImplementor<?> makeKeySubGraph();
 
-	@Override
+	@Override @Deprecated
 	<S> SubGraphImplementor<S> makeSubGraph(Class<S> subtype);
 
-	@Override
+	@Override @Deprecated
 	<S> SubGraphImplementor<S> makeKeySubGraph(Class<S> subtype);
 
-	@Override
-	<S> SubGraphImplementor<S> makeSubGraph(ManagedType<S> subtype);
-
-	@Override
-	<S> SubGraphImplementor<S> makeKeySubGraph(ManagedType<S> subtype);
-
-	void merge(AttributeNodeImplementor<J> other);
-
-	SubGraphImplementor<?> getSubGraph();
-
-	SubGraphImplementor<?> getKeySubGraph();
+	void merge(AttributeNodeImplementor<J,E,K> other);
 
 	@Override
 	Map<Class<?>, SubGraphImplementor<?>> getSubGraphs();

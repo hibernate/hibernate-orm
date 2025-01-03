@@ -561,8 +561,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			GraphImplementor<?> graphNode) {
 		for ( NamedAttributeNode namedAttributeNode : namedAttributeNodes ) {
 			final String value = namedAttributeNode.value();
-			final AttributeNodeImplementor<?> attributeNode =
-					(AttributeNodeImplementor<?>) graphNode.addAttributeNode( value );
+			final AttributeNodeImplementor<?,?,?> attributeNode =
+					(AttributeNodeImplementor<?,?,?>) graphNode.addAttributeNode( value );
 
 			if ( isNotEmpty( namedAttributeNode.subgraph() ) ) {
 				applyNamedSubgraphs(
@@ -583,36 +583,52 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		}
 	}
 
-	private <T> void applyNamedSubgraphs(
+	private <T,E,K> void applyNamedSubgraphs(
 			NamedEntityGraph namedEntityGraph,
 			String subgraphName,
-			AttributeNodeImplementor<T> attributeNode,
+			AttributeNodeImplementor<T,E,K> attributeNode,
 			boolean isKeySubGraph) {
 		for ( NamedSubgraph namedSubgraph : namedEntityGraph.subgraphs() ) {
 			if ( subgraphName.equals( namedSubgraph.name() ) ) {
-				final boolean isDefaultSubgraphType = namedSubgraph.type().equals( void.class );
-				final Class<?> subGraphType = isDefaultSubgraphType ? null : namedSubgraph.type();
-				final SubGraphImplementor<?> subgraph =
-						makeAttributeNodeSubgraph( attributeNode, isKeySubGraph, subGraphType );
+				final Class<?> subgraphType = namedSubgraph.type();
+				final SubGraphImplementor<?> subgraph;
+				if ( subgraphType.equals( void.class ) ) { // unspecified
+					subgraph = attributeNode.addValueSubgraph();
+				}
+				else {
+					subgraph = isKeySubGraph
+							? makeAttributeNodeKeySubgraph( attributeNode, subgraphType )
+							: makeAttributeNodeValueSubgraph( attributeNode, subgraphType );
+				}
 				applyNamedAttributeNodes( namedSubgraph.attributeNodes(), namedEntityGraph, subgraph );
 			}
 		}
 	}
 
-	private static <T> SubGraphImplementor<?> makeAttributeNodeSubgraph(
-			AttributeNodeImplementor<T> attributeNode,
-			boolean isKeySubGraph,
-			Class<?> subGraphType) {
-		if ( isKeySubGraph ) {
-			return subGraphType != null
-					? attributeNode.makeKeySubGraph( subGraphType )
-					: attributeNode.makeKeySubGraph();
+	private static <T, E, K> SubGraphImplementor<?> makeAttributeNodeValueSubgraph(
+			AttributeNodeImplementor<T, E, K> attributeNode, Class<?> subgraphType) {
+		final Class<?> attributeValueType =
+				attributeNode.getAttributeDescriptor().getValueGraphType().getBindableJavaType();
+		if ( !attributeValueType.isAssignableFrom( subgraphType ) ) {
+			throw new AnnotationException( "Named subgraph type '" + subgraphType.getName()
+					+ "' is not a subtype of the value type '" + attributeValueType.getName() + "'" );
 		}
-		else {
-			return subGraphType != null
-					? attributeNode.makeSubGraph( subGraphType )
-					: attributeNode.makeSubGraph();
+		@SuppressWarnings("unchecked") // Safe, because we just checked
+		final Class<? extends E> castType = (Class<? extends E>) subgraphType;
+		return attributeNode.addValueSubgraph().addTreatedSubgraph( castType );
+	}
+
+	private static <T, E, K> SubGraphImplementor<?> makeAttributeNodeKeySubgraph(
+			AttributeNodeImplementor<T, E, K> attributeNode, Class<?> subgraphType) {
+		final Class<?> attributeKeyType =
+				attributeNode.getAttributeDescriptor().getKeyGraphType().getBindableJavaType();
+		if ( !attributeKeyType.isAssignableFrom( subgraphType ) ) {
+			throw new AnnotationException( "Named subgraph type '" + subgraphType.getName()
+					+ "' is not a subtype of the key type '" + attributeKeyType.getName() + "'" );
 		}
+		@SuppressWarnings("unchecked") // Safe, because we just checked
+		final Class<? extends K> castType = (Class<? extends K>) subgraphType;
+		return attributeNode.addKeySubgraph().addTreatedSubgraph( castType );
 	}
 
 	private <X> Class<X> resolveRequestedClass(String entityName) {

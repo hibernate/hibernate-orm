@@ -12,13 +12,13 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
  *
  * @author Steve Ebersole
  */
-public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImplementor<J> {
+public class SubGraphImpl<J> extends GraphImpl<J> implements SubGraphImplementor<J> {
 
 	public SubGraphImpl(ManagedDomainType<J> managedType, boolean mutable) {
 		super( managedType, mutable );
 	}
 
-	public SubGraphImpl(AbstractGraph<J> original, boolean mutable) {
+	public SubGraphImpl(GraphImpl<J> original, boolean mutable) {
 		super( original, mutable );
 	}
 

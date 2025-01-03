@@ -6,8 +6,6 @@ package org.hibernate.graph;
 
 
 import jakarta.persistence.Subgraph;
-import jakarta.persistence.metamodel.ManagedType;
-import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 import java.util.Map;
@@ -37,6 +35,8 @@ import static java.util.Collections.unmodifiableMap;
  *
  * @apiNote Historically, this interface declared operations with incorrect generic types,
  * leading to unsound code. This was in Hibernate 7, with possible breakage to older code.
+ *
+ * @param <J> The type of the {@linkplain #getAttributeDescriptor attribute}
  *
  * @author Strong Liu
  * @author Steve Ebersole
@@ -99,23 +99,27 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	/**
 	 * Create and return a new value {@link SubGraph} rooted at this node,
 	 * or return an existing such {@link SubGraph} if there is one.
-	 * <p>
+	 *
+	 * @deprecated This operation is not properly type safe.
 	 * Note that {@code graph.addAttributeNode(att).makeSubGraph()} is a
 	 * synonym for {@code graph.addSubgraph(att)}.
 	 *
 	 * @see Graph#addSubgraph(jakarta.persistence.metamodel.Attribute)
 	 */
+	@Deprecated(since = "7.0")
 	SubGraph<?> makeSubGraph();
 
 	/**
 	 * Create and return a new key {@link SubGraph} rooted at this node,
 	 * or return an existing such {@link SubGraph} if there is one.
-	 * <p>
+	 *
+	 * @deprecated This operation is not properly type safe.
 	 * Note that {@code graph.addAttributeNode(att).makeKeySubGraph()} is a
 	 * synonym for {@code graph.addMapKeySubgraph(att)}.
 	 *
 	 * @see Graph#addMapKeySubgraph(jakarta.persistence.metamodel.MapAttribute)
 	 */
+	@Deprecated(since = "7.0")
 	SubGraph<?> makeKeySubGraph();
 
 	/**
@@ -125,7 +129,8 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 * <p>
 	 * If the given type is a proper subtype of the value type, the result
 	 * is a treated subgraph.
-	 * <p>
+	 *
+	 * @deprecated This operation is not properly type safe.
 	 * Note that {@code graph.addAttributeNode(att).makeSubGraph(cl)}
 	 * is a synonym for {@code graph.addTreatedSubgraph(att,cl)}.
 	 *
@@ -133,6 +138,7 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 *
 	 * @see Graph#addTreatedSubgraph(jakarta.persistence.metamodel.Attribute, Class)
 	 */
+	@Deprecated(since = "7.0")
 	<S> SubGraph<S> makeSubGraph(Class<S> subtype);
 
 	/**
@@ -142,7 +148,8 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 * <p>
 	 * If the given type is a proper subtype of the key type, the result
 	 * is a treated subgraph.
-	 * <p>
+	 *
+	 * @deprecated This operation is not properly type safe.
 	 * Note that {@code graph.addAttributeNode(att).makeKeySubGraph(cl)}
 	 * is a synonym for {@code graph.addTreatedMapKeySubgraph(att,cl)}.
 	 *
@@ -150,35 +157,6 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	 *
 	 * @see Graph#addTreatedMapKeySubgraph(jakarta.persistence.metamodel.MapAttribute,Class)
 	 */
+	@Deprecated(since = "7.0")
 	<S> SubGraph<S> makeKeySubGraph(Class<S> subtype);
-
-	/**
-	 * Create and return a new value {@link SubGraph} rooted at this node,
-	 * with the given type, which may be a subtype of the value type,
-	 * or return an existing such {@link SubGraph} if there is one.
-	 * <p>
-	 * If the given type is a proper subtype of the value type, the result
-	 * is a treated subgraph.
-	 *
-	 * @param subtype The type or treated type of the value type
-	 *
-	 * @since 7.0
-	 */
-	@Incubating
-	<S> SubGraph<S> makeSubGraph(ManagedType<S> subtype);
-
-	/**
-	 * Create and return a new value {@link SubGraph} rooted at this node,
-	 * with the given type, which may be a subtype of the key type,
-	 * or return an existing such {@link SubGraph} if there is one.
-	 * <p>
-	 * If the given type is a proper subtype of the key type, the result
-	 * is a treated subgraph.
-	 *
-	 * @param subtype The type or treated type of the key type
-	 *
-	 * @since 7.0
-	 */
-	@Incubating
-	<S> SubGraph<S> makeKeySubGraph(ManagedType<S> subtype);
 }

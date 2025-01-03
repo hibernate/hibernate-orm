@@ -167,7 +167,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 			);
 		}
 
-		final AttributeNodeImplementor<?> attributeNode = attributeNodeStack.getCurrent();
+		final AttributeNodeImplementor<?,?,?> attributeNode = attributeNodeStack.getCurrent();
 		final SubGraphGenerator subGraphCreator = graphSourceStack.getCurrent();
 
 		final SubGraphImplementor<?> subGraph = subGraphCreator.createSubGraph(

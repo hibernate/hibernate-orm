@@ -16,7 +16,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
  *
  * @author Steve Ebersole
  */
-public class RootGraphImpl<J> extends AbstractGraph<J> implements RootGraphImplementor<J> {
+public class RootGraphImpl<J> extends GraphImpl<J> implements RootGraphImplementor<J> {
 
 	private final String name;
 

@@ -26,7 +26,7 @@ public class AppliedGraphs {
 	}
 
 	private static boolean containsCollectionFetches(GraphImplementor<?> graph) {
-		for ( AttributeNodeImplementor<?> node : graph.getNodes().values() ) {
+		for ( AttributeNodeImplementor<?,?,?> node : graph.getNodes().values() ) {
 			if ( node.getAttributeDescriptor().isCollection() ) {
 				return true;
 			}

@@ -65,6 +65,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyMap;
+import static org.hibernate.internal.util.collections.ArrayHelper.reverseFirst;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
@@ -341,12 +342,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		// the first table as it will the driving table.
 		// tableNames -> CLIENT, PERSON
 
-		this.tableNames = reverse( naturalOrderTableNames, coreTableSpan );
-		tableKeyColumns = reverse( naturalOrderTableKeyColumns, coreTableSpan );
-		tableKeyColumnReaders = reverse( naturalOrderTableKeyColumnReaders, coreTableSpan );
-		tableKeyColumnReaderTemplates = reverse( naturalOrderTableKeyColumnReaderTemplates, coreTableSpan );
-		subclassTableNameClosure = reverse( naturalOrderSubclassTableNameClosure, coreTableSpan );
-		subclassTableKeyColumnClosure = reverse( naturalOrderSubclassTableKeyColumnClosure, coreTableSpan );
+		this.tableNames = reverseFirst( naturalOrderTableNames, coreTableSpan );
+		tableKeyColumns = reverseFirst( naturalOrderTableKeyColumns, coreTableSpan );
+		tableKeyColumnReaders = reverseFirst( naturalOrderTableKeyColumnReaders, coreTableSpan );
+		tableKeyColumnReaderTemplates = reverseFirst( naturalOrderTableKeyColumnReaderTemplates, coreTableSpan );
+		subclassTableNameClosure = reverseFirst( naturalOrderSubclassTableNameClosure, coreTableSpan );
+		subclassTableKeyColumnClosure = reverseFirst( naturalOrderSubclassTableKeyColumnClosure, coreTableSpan );
 
 		spaces = ArrayHelper.join( this.tableNames, toStringArray( persistentClass.getSynchronizedTables() ) );
 
@@ -798,46 +799,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public boolean isPropertyOfTable(int property, int j) {
 		return naturalOrderPropertyTableNumbers[property] == j;
-	}
-
-	/**
-	 * Reverse the first n elements of the incoming array
-	 *
-	 * @return New array with the first n elements in reversed order
-	 */
-	private static String[] reverse(String[] objects, int n) {
-
-		int size = objects.length;
-		String[] temp = new String[size];
-
-		for ( int i = 0; i < n; i++ ) {
-			temp[i] = objects[n - i - 1];
-		}
-
-		for ( int i = n; i < size; i++ ) {
-			temp[i] = objects[i];
-		}
-
-		return temp;
-	}
-
-	/**
-	 * Reverse the first n elements of the incoming array
-	 *
-	 * @return New array with the first n elements in reversed order
-	 */
-	private static String[][] reverse(String[][] objects, int n) {
-		int size = objects.length;
-		String[][] temp = new String[size][];
-		for ( int i = 0; i < n; i++ ) {
-			temp[i] = objects[n - i - 1];
-		}
-
-		for ( int i = n; i < size; i++ ) {
-			temp[i] = objects[i];
-		}
-
-		return temp;
 	}
 
 	@Override

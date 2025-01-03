@@ -4,7 +4,6 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -13,7 +12,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.internal.build.AllowReflection;
@@ -185,27 +183,10 @@ public class IntegerPrimitiveArrayJavaType extends AbstractArrayJavaType<int[], 
 		throw unknownWrap( value.getClass() );
 	}
 
-	private static class ArrayMutabilityPlan implements MutabilityPlan<int[]> {
-
+	private static class ArrayMutabilityPlan extends MutableMutabilityPlan<int[]> {
 		@Override
-		public boolean isMutable() {
-			return true;
+		protected int[] deepCopyNotNull(int[] value) {
+			return value.clone();
 		}
-
-		@Override
-		public int[] deepCopy(int[] value) {
-			return value == null ? null : value.clone();
-		}
-
-		@Override
-		public Serializable disassemble(int[] value, SharedSessionContract session) {
-			return deepCopy( value );
-		}
-
-		@Override
-		public int[] assemble(Serializable cached, SharedSessionContract session) {
-			return deepCopy( (int[]) cached );
-		}
-
 	}
 }

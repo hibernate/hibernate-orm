@@ -304,7 +304,28 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				}
 			}
 		}
-		return new ArrayList<>( orderedClasses );
+
+		// order the hierarchy
+		ArrayList<XClass> workingCopy = new ArrayList<>( orderedClasses );
+		List<XClass> newList = new ArrayList<>( orderedClasses.size() );
+		while ( !workingCopy.isEmpty() ) {
+			XClass clazz = workingCopy.get( 0 );
+			orderHierarchy( workingCopy, newList, orderedClasses, clazz );
+		}
+		return newList;
+	}
+
+	private void orderHierarchy(List<XClass> copy, List<XClass> newList, LinkedHashSet<XClass> original, XClass clazz) {
+		if ( clazz != null && !Object.class.getName().equals( clazz.getName() ) ) {
+			//process superclass first
+			orderHierarchy( copy, newList, original, clazz.getSuperclass() );
+			if ( original.contains( clazz ) ) {
+				if ( !newList.contains( clazz ) ) {
+					newList.add( clazz );
+				}
+				copy.remove( clazz );
+			}
+		}
 	}
 
 	@Override

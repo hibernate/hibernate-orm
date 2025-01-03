@@ -36,10 +36,9 @@ useSameVersion:: Specifies whether to have the plugin inject an `implementation`
 sourceSet:: The source-set containing the project's domain model.  Only one source-set is supported, although all languages (Java, Kotlin, etc)
     within that source-set are considered.
 
-It additionally defines 3 nested DSL extensions related to:
+It additionally defines 2 nested DSL extensions related to:
 
 * <<enhance>>
-* <<jpa-metamodel>>
 * <<hbm-xml>>
 
 
@@ -71,46 +70,6 @@ hibernate {
   }
 }
 ----
-
-
-[[jpa-metamodel]]
-== JPA Static Metamodel generation
-
-The plugin can also generate the JPA static metamodel classes based on the application's domain model.  To enable
-the generation, simply refer to the DSL extension:
-
-[source,groovy]
-----
-hibernate {
-    jpaMetamodel
-}
-----
-
-The generation accepts a number of options:
-
-[source,groovy]
-----
-hibernate {
-    jpaMetamodel {
-        // directory where the generated metamodel source files should be written
-        //      - defaults to `${buildDir}/generated/sources/jpaMetamodel
-        generationOutputDirectory = "some/other/dir"
-
-        // directory where the compiled generated metamodel classes should be written
-        //      - defaults to `${buildDir}/classes/java/jpaMetamodel
-        compileOutputDirectory = "special/classes/dir"
-
-        // should the `jakarta.annotation.Generated` annotation be applied?
-        //      - defaults to true
-        applyGeneratedAnnotation = true
-
-        // error suppressions to be added to the generated source files
-        //      - default is ["raw", "deprecation"]
-        suppressions = ...
-    }
-}
-----
-
 
 [[hbm-xml]]
 == Legacy `hbm.xml` Transformation

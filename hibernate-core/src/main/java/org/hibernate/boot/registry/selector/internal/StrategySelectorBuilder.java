@@ -46,6 +46,7 @@ import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoo
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.format.jackson.JacksonJsonFormatMapper;
+import org.hibernate.type.format.jackson.JacksonOsonFormatMapper;
 import org.hibernate.type.format.jackson.JacksonXmlFormatMapper;
 import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 import org.hibernate.type.format.jakartajson.JsonBJsonFormatMapper;
@@ -310,6 +311,11 @@ public class StrategySelectorBuilder {
 				FormatMapper.class,
 				JsonBJsonFormatMapper.SHORT_NAME,
 				JsonBJsonFormatMapper.class
+		);
+		strategySelector.registerStrategyImplementor(
+				FormatMapper.class,
+				JacksonOsonFormatMapper.SHORT_NAME,
+				JacksonOsonFormatMapper.class
 		);
 	}
 

@@ -198,7 +198,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	@Override
-	public void visitBindings(@SuppressWarnings("rawtypes") BiConsumer action) {
+	public void visitBindings(BiConsumer<? super QueryParameter<?>, ? super QueryParameterBinding<?>> action) {
 		parameterBindingMap.forEach( action );
 	}
 

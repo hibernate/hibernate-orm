@@ -80,11 +80,12 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 
 			private <X> byte[] toOson(X value, JavaType<X> javaType, WrapperOptions options) throws Exception {
 
-				// TODO : We should rely on
-				//       FormatMapper fm = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
-				//
-				//     But this do not let use inject our ObjectMapper. For now create our own instance
-				FormatMapper mapper = new JacksonOsonFormatMapper(objectMapper,getEmbeddableMappingType());
+				FormatMapper mapper = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
+				// TODO : we should not have to do this.
+				//    for now we have to inject the objectMapper.
+				//    As this is not a validated architectural decision, we do not
+				//     modify the interface yet.
+				((JacksonOsonFormatMapper)mapper).setJacksonObjectMapper(objectMapper, getEmbeddableMappingType());
 
 				if(getEmbeddableMappingType()!= null) {
 					return ((JacksonOsonFormatMapper)mapper).toOson(value,javaType,options);
@@ -135,11 +136,13 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 
 			private X fromOson(byte[] osonBytes, WrapperOptions options) throws Exception {
-				// TODO : We should rely on
-				//       FormatMapper fm = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
-				//
-				//     But this do not let use inject our ObjectMapper. For now create our own instance
-				FormatMapper mapper = new JacksonOsonFormatMapper(objectMapper, getEmbeddableMappingType());
+
+				FormatMapper mapper = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
+				// TODO : we should not have to do this.
+				//    for now we have to inject the objectMapper.
+				//    As this is not a validated architectural decision, we do not
+				//     modify the interface yet.
+				((JacksonOsonFormatMapper)mapper).setJacksonObjectMapper(objectMapper, getEmbeddableMappingType() );
 
 				if (getEmbeddableMappingType() != null &&
 						getJavaType().getJavaTypeClass() == Object[].class) {

@@ -30,7 +30,7 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 
 	@SuppressWarnings("unchecked")
 	public ByteArrayJavaType() {
-		super( Byte[].class, ArrayMutabilityPlan.INSTANCE, IncomparableComparator.INSTANCE );
+		super( Byte[].class, ImmutableObjectArrayMutabilityPlan.get(), IncomparableComparator.INSTANCE );
 	}
 	@Override
 	public boolean areEqual(Byte[] one, Byte[] another) {

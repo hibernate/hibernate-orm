@@ -12,7 +12,12 @@ import java.lang.reflect.Array;
  * are immutable, a shallow copy is enough.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link ImmutableObjectArrayMutabilityPlan#get()} for object arrays,
+ * or implement a dedicated mutability plan for primitive arrays
+ * (see for example {@link ShortPrimitiveArrayJavaType}'s mutability plan).
  */
+@Deprecated
 public class ArrayMutabilityPlan<T> extends MutableMutabilityPlan<T> {
 	public static final ArrayMutabilityPlan INSTANCE = new ArrayMutabilityPlan();
 

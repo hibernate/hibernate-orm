@@ -133,7 +133,7 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			);
 		}
 		else {
-			final Class<?> arrayClass = valueConverter.getRelationalJavaType().getArrayType();
+			final Class<?> arrayClass = valueConverter.getRelationalJavaType().getArrayClass();
 			final JavaType<Object> relationalJavaType =
 					typeConfiguration.getJavaTypeRegistry().resolveDescriptor( arrayClass );
 			//noinspection unchecked,rawtypes

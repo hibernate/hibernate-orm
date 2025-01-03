@@ -17,7 +17,6 @@ import org.hibernate.dialect.StructAttributeValues;
 import org.hibernate.dialect.StructHelper;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -69,7 +68,7 @@ public class ArrayJdbcType implements JdbcType {
 				typeConfiguration
 		);
 		final JavaType<Object> javaType = typeConfiguration.getJavaTypeRegistry()
-				.resolveDescriptor( elementJavaType.getArrayType() );
+				.resolveDescriptor( elementJavaType.getArrayClass() );
 		if ( javaType instanceof BasicPluralType<?, ?> ) {
 			//noinspection unchecked
 			return (JavaType<T>) javaType;

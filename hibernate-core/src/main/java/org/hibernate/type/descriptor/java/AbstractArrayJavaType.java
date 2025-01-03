@@ -82,7 +82,7 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 			ColumnTypeInformation columnTypeInformation,
 			JdbcTypeIndicators stdIndicators,
 			BasicValueConverter<E, F> valueConverter) {
-		final Class<?> convertedArrayClass = valueConverter.getRelationalJavaType().getArrayType();
+		final Class<?> convertedArrayClass = valueConverter.getRelationalJavaType().getArrayClass();
 		final JavaType<?> relationalJavaType = typeConfiguration.getJavaTypeRegistry().getDescriptor( convertedArrayClass );
 		return new ConvertedBasicArrayType<>(
 				elementType,

@@ -48,7 +48,7 @@ public class CollectionConverter<X extends Collection<Object>, Y> implements Bas
 		if ( domainForm == null ) {
 			return null;
 		}
-		final Object[] relationalArray = elementConverter.getRelationalJavaType().createTypedArray( domainForm.size() );
+		final Object[] relationalArray = elementConverter.getRelationalJavaType().newArray( domainForm.size() );
 		int i = 0;
 		for ( Object domainValue : domainForm ) {
 			relationalArray[i++] = elementConverter.toRelationalValue( domainValue );

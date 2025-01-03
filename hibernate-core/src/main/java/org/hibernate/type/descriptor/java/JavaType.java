@@ -330,14 +330,14 @@ public interface JavaType<T> extends Serializable {
 	}
 
 	/**
-	 * Creates a typed array, as opposed to a generic {@code Object[]} that holds the typed values.
+	 * Creates a typed object array, as opposed to a generic {@code Object[]} that holds the typed values.
 	 * <p>
 	 * The array type necessarily extends {@code Object[]}: it will never be an array of primitives like {@code int[]}.
 	 *
 	 * @param numberOfElements The size of the array to create
 	 */
 	@SuppressWarnings("unchecked")
-	default T[] createTypedArray(int numberOfElements) {
+	default T[] newArray(int numberOfElements) {
 		return (T[]) Array.newInstance( getJavaTypeClass(), numberOfElements );
 	}
 
@@ -347,8 +347,8 @@ public interface JavaType<T> extends Serializable {
 	 * The array type necessarily extends {@code Object[]}: it will never be an array of primitives like {@code int[]}.
 	 */
 	@SuppressWarnings("unchecked")
-	default Class<T[]> getArrayType() {
-		return (Class<T[]>) createTypedArray( 0 ).getClass();
+	default Class<T[]> getArrayClass() {
+		return (Class<T[]>) newArray( 0 ).getClass();
 	}
 
 	/**

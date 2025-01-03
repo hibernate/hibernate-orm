@@ -80,7 +80,6 @@ public class EntityBatchLoaderArrayParam<T>
 		final Class<?> arrayClass =
 				Array.newInstance( identifierMapping.getJavaType().getJavaTypeClass(), 0 ).getClass();
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
-				sessionFactory.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( arrayClass ),
 				identifierMapping.getJdbcMapping(),
 				arrayClass,
 				sessionFactory

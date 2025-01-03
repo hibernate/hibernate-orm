@@ -27,10 +27,11 @@ public class MultiKeyLoadHelper {
 	}
 
 	public static JdbcMapping resolveArrayJdbcMapping(
-			BasicType<?> arrayBasicType,
 			JdbcMapping keyMapping,
 			Class<?> arrayClass,
 			SessionFactoryImplementor sessionFactory) {
+		BasicType<?> arrayBasicType = sessionFactory.getTypeConfiguration().getBasicTypeRegistry()
+				.getRegisteredType( arrayClass );
 		if ( arrayBasicType != null ) {
 			return arrayBasicType;
 		}

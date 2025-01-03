@@ -20,7 +20,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target({PACKAGE, TYPE})
 @Retention(RUNTIME)
-@Deprecated(since = "6.5")
+@Deprecated(since = "6.5", forRemoval = true)
 public @interface GenericGenerators {
 	/**
 	 * The aggregated generators.

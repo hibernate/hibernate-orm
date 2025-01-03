@@ -30,9 +30,11 @@ import org.hibernate.ReplicationMode;
  * @see Cascade
  *
  * @deprecated Use the JPA-defined
- *             {@link jakarta.persistence.CascadeType}
+ *             {@link jakarta.persistence.CascadeType}.
+ *             This enumeration will be removed to alleviate the
+ *             duplication in naming.
  */
-@Deprecated(since = "7")
+@Deprecated(since = "7", forRemoval = true)
 public enum CascadeType {
 	/**
 	 * Includes all types listed here.

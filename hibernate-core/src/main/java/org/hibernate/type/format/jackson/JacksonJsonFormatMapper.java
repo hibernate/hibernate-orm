@@ -4,9 +4,6 @@
  */
 package org.hibernate.type.format.jackson;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.format.AbstractJsonFormatMapper;
@@ -56,32 +53,28 @@ public class JacksonJsonFormatMapper extends AbstractJsonFormatMapper {
 	}
 
 	@Override
-	public boolean supportsSourceType(Class<?> sourceType) {
-		return false;
-	}
-
-	@Override
-	public boolean supportsTargetType(Class<?> targetType) {
-		return false;
-	}
-
-	@Override
 	public <T> void writeToTarget(T value, JavaType<T> javaType, Object target, WrapperOptions options)
 			throws IOException {
 
-		ObjectWriter writer = objectMapper.writerFor( objectMapper.constructType( javaType.getJavaType() ) );
-		writer.writeValue( (JsonGenerator) target, value);
-
+		try {
+			objectMapper.writerFor(
+					objectMapper.constructType( javaType.getJavaType() ) ).writeValueAsString( value );
+		}
+		catch (JsonProcessingException e) {
+			throw new IllegalArgumentException( "Could not serialize object of java type: " + javaType.getJavaType(), e );
+		}
 
 	}
 
 	@Override
 	public <T> T readFromSource(JavaType<T> javaType, Object source, WrapperOptions options) throws IOException {
 
-		JsonParser osonParser = objectMapper.getFactory().createParser( (byte[]) source );
+		try {
+			return objectMapper.readValue( ((CharSequence)source).toString(), objectMapper.constructType( javaType.getJavaType() ) );
+		}
+		catch (JsonProcessingException e) {
+			throw new IllegalArgumentException( "Could not deserialize string to java type: " + javaType.getJavaType(), e );
+		}
 
-		T t = objectMapper.readValue( osonParser, objectMapper.constructType( javaType.getJavaType()) );
-
-		return t;
 	}
 }

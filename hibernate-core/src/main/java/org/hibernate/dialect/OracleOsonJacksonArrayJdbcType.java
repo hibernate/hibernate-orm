@@ -15,7 +15,6 @@ import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.format.FormatMapper;
-import org.hibernate.type.format.jackson.JacksonJsonFormatMapper;
 import org.hibernate.type.format.jackson.JacksonOsonFormatMapper;
 
 import java.io.ByteArrayInputStream;
@@ -73,11 +72,12 @@ public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
 		return new BasicBinder<>( javaType, this ) {
 
 			private <X> InputStream toOson(X value, JavaType<X> javaType, WrapperOptions options) throws Exception {
-				// TODO : We should rely on
-				//       FormatMapper fm = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
-				//
-				//     But this do not let use inject our ObjectMapper. For now create our own instance
-				FormatMapper mapper = new JacksonJsonFormatMapper(objectMapper);
+				FormatMapper mapper = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
+				// TODO : we should not have to do this.
+				//    for now we have to inject the objectMapper.
+				//    As this is not a validated architectural decision, we do not
+				//     modify the interface yet.
+				((JacksonOsonFormatMapper)mapper).setJacksonObjectMapper(objectMapper, null );
 
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -126,11 +126,13 @@ public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 
 			private X fromOson(byte[] osonBytes, WrapperOptions options) throws Exception {
-				// TODO : We should rely on
-				//       FormatMapper fm = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
-				//
-				//     But this do not let use inject our ObjectMapper. For now create our own instance
-				FormatMapper mapper = new JacksonOsonFormatMapper(objectMapper);
+				FormatMapper mapper = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
+				// TODO : we should not have to do this.
+				//    for now we have to inject the objectMapper.
+				//    As this is not a validated architectural decision, we do not
+				//     modify the interface yet.
+				((JacksonOsonFormatMapper)mapper).setJacksonObjectMapper(objectMapper, null );
+
 				return mapper.readFromSource(  getJavaType(), osonBytes, options);
 			}
 

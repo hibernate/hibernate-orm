@@ -49,10 +49,10 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 			EntityMappingType entityDescriptor,
 			SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
-		final Class<?> idArrayClass = idArray.getClass();
+		final Class<?> idClass = idArray.getClass().getComponentType();
 		arrayJdbcMapping = resolveArrayJdbcMapping(
 				getIdentifierMapping().getJdbcMapping(),
-				idArrayClass,
+				idClass,
 				getSessionFactory()
 		);
 		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );

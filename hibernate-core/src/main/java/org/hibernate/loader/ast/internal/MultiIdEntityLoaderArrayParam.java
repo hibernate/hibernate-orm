@@ -49,10 +49,9 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 			EntityMappingType entityDescriptor,
 			SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
-		final Class<?> idClass = idArray.getClass().getComponentType();
 		arrayJdbcMapping = resolveArrayJdbcMapping(
 				getIdentifierMapping().getJdbcMapping(),
-				idClass,
+				identifierMapping.getJavaType().getJavaTypeClass(),
 				getSessionFactory()
 		);
 		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
@@ -117,7 +116,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(1);
 		jdbcParameterBindings.addBinding( jdbcParameter,
-				new JdbcParameterBindingImpl( arrayJdbcMapping, idsInBatch.toArray( idArray ) ) );
+				new JdbcParameterBindingImpl( arrayJdbcMapping, idsInBatch ) );
 
 		getJdbcSelectExecutor().executeQuery(
 				getSqlAstTranslatorFactory().buildSelectTranslator( getSessionFactory(), sqlAst )

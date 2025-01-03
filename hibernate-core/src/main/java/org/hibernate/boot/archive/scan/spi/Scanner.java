@@ -32,6 +32,10 @@ public interface Scanner {
 	 */
 	ScanResult scan(ScanEnvironment environment, ScanOptions options, ScanParameters params);
 
+	/**
+	 * @deprecated (since 7.0) Not used; no replacement.
+	 */
+	@Deprecated
 	default void setArchiveDescriptorFactory(ArchiveDescriptorFactory archiveDescriptorFactory){
 		throw new UnsupportedOperationException();
 	}

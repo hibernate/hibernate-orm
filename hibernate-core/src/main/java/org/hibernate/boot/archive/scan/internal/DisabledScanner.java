@@ -24,8 +24,11 @@ import org.hibernate.boot.archive.spi.ArchiveEntry;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 
 /**
- * Implementation of Scanner that does nothing. Used for optimizing startup
- * time when metadata scanning is not needed.
+ * Implementation of Scanner that does no scanning.
+ * It simply searches for {@code META-INF/orm.xml} path(s) relative
+ * to the {@linkplain ScanEnvironment#getRootUrl() root} and
+ * {@linkplain ScanEnvironment#getNonRootUrls() non-root} URLs.
+ * Used for optimizing startup time when full scanning is not needed.
  *
  * @author Petteri Pitkanen
  */

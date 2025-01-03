@@ -24,7 +24,7 @@ public class PrimitiveCharacterArrayJavaType extends AbstractClassJavaType<char[
 
 	@SuppressWarnings("unchecked")
 	protected PrimitiveCharacterArrayJavaType() {
-		super( char[].class, ArrayMutabilityPlan.INSTANCE, IncomparableComparator.INSTANCE );
+		super( char[].class, new ArrayMutabilityPlan(), IncomparableComparator.INSTANCE );
 	}
 
 	public String toString(char[] value) {
@@ -102,5 +102,12 @@ public class PrimitiveCharacterArrayJavaType extends AbstractClassJavaType<char[
 	@Override
 	public <X> char[] coerce(X value, CoercionContext coercionContext) {
 		return wrap( value, null );
+	}
+
+	private static class ArrayMutabilityPlan extends MutableMutabilityPlan<char[]> {
+		@Override
+		protected char[] deepCopyNotNull(char[] value) {
+			return value.clone();
+		}
 	}
 }

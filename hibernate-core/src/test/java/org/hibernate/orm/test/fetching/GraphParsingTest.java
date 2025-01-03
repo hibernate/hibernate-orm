@@ -99,7 +99,7 @@ public class GraphParsingTest extends AbstractEntityGraphTest {
 		//tag::fetching-strategies-dynamic-fetching-entity-graph-parsing-key-example-2[]
 		final EntityGraph<Ticket> graph = GraphParser.parse(
 				Ticket.class,
-				"showing.key(movie(cast))",
+				"showing(id(movie(cast)))",
 				entityManager
 		);
 		//end::fetching-strategies-dynamic-fetching-entity-graph-parsing-key-example-2[]
@@ -199,7 +199,7 @@ public class GraphParsingTest extends AbstractEntityGraphTest {
 
 		@ElementCollection
 //		@OneToMany
-				Map<Person,String> cast;
+		Map<Person,String> cast;
 	}
 
 	@Entity(name = "Theater")

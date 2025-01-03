@@ -32,7 +32,7 @@ public interface SingularPersistentAttribute<D,J>
 	 * attribute type
 	 */
 	@Override
-	default DomainType<?> getValueGraphType() {
+	default DomainType<J> getValueGraphType() {
 		return getType();
 	}
 

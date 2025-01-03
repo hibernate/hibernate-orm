@@ -14,7 +14,8 @@ import java.util.Map;
  *
  * @param <J> The type of the attribute
  * @param <E> The element type, if this node represents a
- *        {@linkplain jakarta.persistence.metamodel.PluralAttribute plural attribute}
+ *        {@linkplain jakarta.persistence.metamodel.PluralAttribute plural attribute},
+ *        or the type of the singular attribute, if it doesn't
  * @param <K> The map key type, if this node represents a
  *        {@linkplain jakarta.persistence.metamodel.MapAttribute map attribute}
  *
@@ -25,7 +26,7 @@ import java.util.Map;
 public interface AttributeNodeImplementor<J, E, K> extends AttributeNode<J>, GraphNodeImplementor<J> {
 
 	@Override
-	AttributeNodeImplementor<J, E,K> makeCopy(boolean mutable);
+	AttributeNodeImplementor<J, E, K> makeCopy(boolean mutable);
 
 	/**
 	 * Create a value subgraph, without knowing whether it represents a singular value or
@@ -70,4 +71,8 @@ public interface AttributeNodeImplementor<J, E, K> extends AttributeNode<J>, Gra
 
 	@Override
 	Map<Class<?>, SubGraphImplementor<?>> getKeySubGraphs();
+
+	SubGraphImplementor<E> getValueSubgraph();
+
+	SubGraphImplementor<K> getKeySubgraph();
 }

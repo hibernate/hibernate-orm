@@ -151,7 +151,7 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 		private String implicitDiscriminatorColumnName;
 		private String implicitPackageName;
 		private boolean autoImportEnabled;
-		private EnumSet<CascadeType> implicitCascadeTypes;
+		private final EnumSet<CascadeType> implicitCascadeTypes;
 		private jakarta.persistence.AccessType implicitPropertyAccessType;
 		private String implicitPropertyAccessorName;
 		private boolean entitiesImplicitlyLazy;

@@ -238,9 +238,8 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		final PersistentClass persistentClass = getPropertyHolder().getPersistentClass();
 		final KeyValue identifier = persistentClass.getIdentifier();
 		try {
-			if ( identifier instanceof Component) {
+			if ( identifier instanceof Component embeddedIdType ) {
 				// an @EmbeddedId
-				final Component embeddedIdType = (Component) identifier;
 				return embeddedIdType.getProperty( getMapsId() );
 			}
 			else {
@@ -606,7 +605,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 				);
 			}
 			final Selectable selectable = value.getSelectables().get( 0 );
-			if ( !( selectable instanceof Column ) ) {
+			if ( !(selectable instanceof Column column) ) {
 				throw new AnnotationException(
 						String.format(
 								Locale.ENGLISH,
@@ -628,7 +627,6 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 						)
 				);
 			}
-			final Column column = (Column) selectable;
 			return column.getNameIdentifier( getBuildingContext() );
 		}
 

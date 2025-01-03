@@ -217,9 +217,8 @@ public class BootstrapServiceRegistryImpl
 		destroy( integratorServiceBinding );
 
 		if ( childRegistries != null ) {
-			for(ServiceRegistry serviceRegistry : childRegistries) {
-				if(serviceRegistry instanceof ServiceRegistryImplementor) {
-					ServiceRegistryImplementor serviceRegistryImplementor = (ServiceRegistryImplementor) serviceRegistry;
+			for ( ServiceRegistry serviceRegistry : childRegistries ) {
+				if ( serviceRegistry instanceof ServiceRegistryImplementor serviceRegistryImplementor ) {
 					serviceRegistryImplementor.destroy();
 				}
 			}

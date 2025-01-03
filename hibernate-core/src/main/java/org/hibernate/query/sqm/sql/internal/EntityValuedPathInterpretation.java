@@ -61,12 +61,10 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				.getFromClauseAccess()
 				.findTableGroup( sqmPath.getNavigablePath() );
 		final EntityValuedModelPart pathMapping = (EntityValuedModelPart) tableGroup.getModelPart();
-		if ( inferredMapping instanceof EntityAssociationMapping ) {
-			final EntityAssociationMapping inferredAssociation = (EntityAssociationMapping) inferredMapping;
-			if ( pathMapping instanceof EntityAssociationMapping && inferredMapping != pathMapping ) {
+		if ( inferredMapping instanceof EntityAssociationMapping inferredAssociation ) {
+			if ( pathMapping instanceof EntityAssociationMapping pathAssociation && inferredMapping != pathMapping ) {
 				// In here, the inferred mapping and the actual path mapping are association mappings,
 				// but for different associations, so we have to check if both associations point to the same target
-				final EntityAssociationMapping pathAssociation = (EntityAssociationMapping) pathMapping;
 				final ModelPart pathTargetPart = pathAssociation.getForeignKeyDescriptor()
 						.getPart( pathAssociation.getSideNature().inverse() );
 				final ModelPart inferredTargetPart = inferredAssociation.getForeignKeyDescriptor()
@@ -158,8 +156,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		final TableGroup resultTableGroup;
 		// For association mappings where the FK optimization i.e. use of the parent table group is allowed,
 		// we try to make use of it and the FK model part if possible based on the inferred mapping
-		if ( mapping instanceof EntityAssociationMapping ) {
-			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mapping;
+		if ( mapping instanceof EntityAssociationMapping associationMapping ) {
 			final ModelPart keyTargetMatchPart = associationMapping.getForeignKeyDescriptor().getPart(
 					associationMapping.getSideNature()
 			);
@@ -376,8 +373,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 	}
 
 	private static boolean selectionContains(Selection<?> selection, NavigablePath path, NavigablePath tableGroupPath) {
-		if ( selection instanceof SqmPath<?> ) {
-			final SqmPath<?> sqmPath = (SqmPath<?>) selection;
+		if ( selection instanceof SqmPath<?> sqmPath ) {
 			// Expansion is needed if the table group is null, i.e. we're in a top level query where EVPs are always
 			// expanded to all columns, or if the selection is on the same table (lhs) as the group by expression ...
 			return ( tableGroupPath == null || sqmPath.getLhs() != null && sqmPath.getLhs().getNavigablePath().equals( tableGroupPath ) )

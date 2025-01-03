@@ -89,7 +89,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		final ExtractedDatabaseMetaDataImpl.Builder metaDataBuilder =
 				new ExtractedDatabaseMetaDataImpl.Builder( this, false, null );
 
-		this.identifierHelper = identifierHelper( dialect, identifierHelperBuilder, metaDataBuilder );;
+		this.identifierHelper = identifierHelper( dialect, identifierHelperBuilder, metaDataBuilder );
 
 		this.extractedMetaDataSupport = metaDataBuilder.build();
 

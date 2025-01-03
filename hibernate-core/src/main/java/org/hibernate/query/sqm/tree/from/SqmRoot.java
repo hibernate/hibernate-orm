@@ -192,7 +192,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 
 	@Override
 	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(Class<S> treatJavaType) throws PathException {
-		return (SqmTreatedFrom<E, E, S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
 	@Override

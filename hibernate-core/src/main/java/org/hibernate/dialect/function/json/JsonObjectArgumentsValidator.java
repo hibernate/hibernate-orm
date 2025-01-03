@@ -50,8 +50,7 @@ public class JsonObjectArgumentsValidator implements ArgumentsValidator {
 						: nodeType.getRelationalJavaType();
 				if ( !isUnknown( javaType ) ) {
 					final DomainType<?> domainType = key.getExpressible().getSqmType();
-					if ( domainType instanceof JdbcMapping ) {
-						final JdbcMapping jdbcMapping = (JdbcMapping) domainType;
+					if ( domainType instanceof JdbcMapping jdbcMapping ) {
 						checkArgumentType(
 								i,
 								functionName,
@@ -79,8 +78,7 @@ public class JsonObjectArgumentsValidator implements ArgumentsValidator {
 			checkArgumentsCount( argumentsCount );
 			for ( int i = 0; i < argumentsCount; i += 2 ) {
 				final SqlAstNode argument = arguments.get( i );
-				if ( argument instanceof Expression ) {
-					final Expression expression = (Expression) argument;
+				if ( argument instanceof Expression expression ) {
 					final JdbcMappingContainer expressionType = expression.getExpressionType();
 					if ( expressionType != null && !isUnknownExpressionType( expressionType ) ) {
 						final JdbcMapping mapping = expressionType.getSingleJdbcMapping();

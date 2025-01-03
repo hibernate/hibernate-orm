@@ -34,7 +34,7 @@ public interface FunctionRenderer {
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> walker) {
-		render( sqlAppender, sqlAstArguments, (ReturnableType<?>) null, walker );
+		render( sqlAppender, sqlAstArguments, null, walker );
 	}
 
 	void render(

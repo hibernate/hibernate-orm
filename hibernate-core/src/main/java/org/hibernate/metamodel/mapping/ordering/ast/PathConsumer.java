@@ -24,7 +24,7 @@ public class PathConsumer {
 
 	private final SequencePart rootSequencePart;
 
-	private StringBuilder pathSoFar = new StringBuilder();
+	private final StringBuilder pathSoFar = new StringBuilder();
 	private SequencePart currentPart;
 
 	public PathConsumer(

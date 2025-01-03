@@ -27,8 +27,7 @@ public class AnyDiscriminatorPathInterpretation<T> extends AbstractSqmPathInterp
 		final ModelPart subPart = tableGroup.getModelPart();
 
 		final DiscriminatedAssociationModelPart mapping;
-		if ( subPart instanceof PluralAttributeMapping ) {
-			PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) subPart;
+		if ( subPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			mapping = (DiscriminatedAssociationModelPart) pluralAttributeMapping.getElementDescriptor();
 		}
 		else {

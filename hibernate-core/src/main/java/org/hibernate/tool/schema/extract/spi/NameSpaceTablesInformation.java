@@ -15,7 +15,7 @@ import org.hibernate.mapping.Table;
  */
 public class NameSpaceTablesInformation {
 	private final IdentifierHelper identifierHelper;
-	private Map<String, TableInformation> tables = new HashMap<>();
+	private final Map<String, TableInformation> tables = new HashMap<>();
 
 	public NameSpaceTablesInformation(IdentifierHelper identifierHelper) {
 		this.identifierHelper = identifierHelper;

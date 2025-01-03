@@ -143,8 +143,7 @@ public class LoadedConfig {
 	}
 
 	private static CacheRegionDefinition parseCacheRegionDefinition(Object cacheDeclaration) {
-		if ( cacheDeclaration instanceof JaxbCfgEntityCacheType ) {
-			final JaxbCfgEntityCacheType jaxbClassCache = (JaxbCfgEntityCacheType) cacheDeclaration;
+		if ( cacheDeclaration instanceof JaxbCfgEntityCacheType jaxbClassCache ) {
 			return new CacheRegionDefinition(
 					CacheRegionDefinition.CacheRegionType.ENTITY,
 					jaxbClassCache.getClazz(),

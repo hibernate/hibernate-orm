@@ -310,9 +310,8 @@ public final class Cascade {
 					// We first have to extract the component object and then ask the component type
 					// recursively to give us the value of the sub-property of that object
 					final Type propertyType = entry.getPersister().getPropertyType( componentPath.get(0) );
-					if ( propertyType instanceof ComponentType ) {
+					if ( propertyType instanceof ComponentType componentType ) {
 						loadedValue = entry.getLoadedValue( componentPath.get( 0 ) );
-						ComponentType componentType = (ComponentType) propertyType;
 						if ( componentPath.size() != 1 ) {
 							for ( int i = 1; i < componentPath.size(); i++ ) {
 								final int subPropertyIndex = componentType.getPropertyIndex( componentPath.get( i ) );

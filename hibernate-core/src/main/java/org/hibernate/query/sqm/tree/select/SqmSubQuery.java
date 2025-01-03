@@ -503,8 +503,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 
 	@Override
 	public <X, Y> SqmCorrelatedJoin<X, Y> correlate(Join<X, Y> join) {
-		if ( join instanceof PluralJoin<?, ?, ?> ) {
-			final PluralJoin<?, ?, ?> pluralJoin = (PluralJoin<?, ?, ?>) join;
+		if ( join instanceof PluralJoin<?, ?, ?> pluralJoin ) {
 			switch ( pluralJoin.getModel().getCollectionType() ) {
 				case COLLECTION:
 					return correlate( (CollectionJoin<X, Y>) join );
@@ -576,7 +575,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 			if ( root instanceof SqmCorrelation<?, ?> ) {
 				for ( SqmJoin<?, ?> sqmJoin : root.getSqmJoins() ) {
 					if ( sqmJoin instanceof SqmCorrelation<?, ?> && sqmJoin instanceof Join<?, ?> ) {
-						correlatedJoins.add( (Join<?, ?>) sqmJoin );
+						correlatedJoins.add( sqmJoin );
 					}
 				}
 			}

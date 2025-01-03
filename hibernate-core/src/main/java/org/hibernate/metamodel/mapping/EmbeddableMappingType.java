@@ -153,8 +153,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		int count = 0;
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final AttributeMapping attributeMapping = getAttributeMapping( i );
-			if ( attributeMapping instanceof DiscriminatedAssociationAttributeMapping ) {
-				final DiscriminatedAssociationAttributeMapping discriminatedAssociationAttributeMapping = (DiscriminatedAssociationAttributeMapping) attributeMapping;
+			if ( attributeMapping instanceof DiscriminatedAssociationAttributeMapping discriminatedAssociationAttributeMapping ) {
 				if ( count == columnIndex ) {
 					return discriminatedAssociationAttributeMapping.getDiscriminatorMapping();
 				}
@@ -186,8 +185,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 					}
 				}
 			}
-			else if ( attributeMapping instanceof EmbeddableValuedModelPart ) {
-				final EmbeddableValuedModelPart embeddableValuedModelPart = (EmbeddableValuedModelPart) attributeMapping;
+			else if ( attributeMapping instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 				final EmbeddableMappingType embeddableMappingType = embeddableValuedModelPart.getMappedType();
 				final SelectableMapping aggregateMapping = embeddableMappingType.getAggregateMapping();
 				if ( aggregateMapping == null ) {
@@ -227,8 +225,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final AttributeMapping attributeMapping = getAttributeMapping( i );
 			final MappingType mappedType = attributeMapping.getMappedType();
-			if ( mappedType instanceof EmbeddableMappingType ) {
-				final EmbeddableMappingType embeddableMappingType = (EmbeddableMappingType) mappedType;
+			if ( mappedType instanceof EmbeddableMappingType embeddableMappingType ) {
 				final SelectableMapping aggregateMapping = embeddableMappingType.getAggregateMapping();
 				if ( aggregateMapping != null ) {
 					if ( aggregateMapping.getSelectableName().equals( selectableName ) ) {

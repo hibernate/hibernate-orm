@@ -37,9 +37,8 @@ public class SqlScriptVisitor extends SqlScriptParserBaseVisitor<Object> {
 		final StringBuilder commandBuffer = new StringBuilder();
 		for ( int i = 0; i < children.size(); i++ ) {
 			final ParseTree parseTree = children.get( i );
-			if ( parseTree instanceof SqlScriptParser.CommandBlockContext ) {
+			if ( parseTree instanceof SqlScriptParser.CommandBlockContext blockContext ) {
 				commandBuffer.setLength( 0 );
-				final SqlScriptParser.CommandBlockContext blockContext = (SqlScriptParser.CommandBlockContext) parseTree;
 				final List<ParseTree> terminalNodes = blockContext.command().children;
 				for ( int j = 0; j < terminalNodes.size(); j++ ) {
 					final TerminalNode terminalNode = (TerminalNode) terminalNodes.get( j );

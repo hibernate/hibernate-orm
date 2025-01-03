@@ -40,5 +40,5 @@ public enum TemporaryTableKind {
 	 * or {@value org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy#DROP_ID_TABLES} are
 	 * disabled.
 	 */
-	GLOBAL;
+	GLOBAL
 }

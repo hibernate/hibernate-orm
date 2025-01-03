@@ -58,9 +58,7 @@ public class AuxiliaryDatabaseObjectBinder {
 		}
 
 		if ( !auxDbObjectMapping.getDialectScope().isEmpty() ) {
-			if ( auxDbObject instanceof AuxiliaryDatabaseObject.Expandable ) {
-				final AuxiliaryDatabaseObject.Expandable expandable
-						= (AuxiliaryDatabaseObject.Expandable) auxDbObject;
+			if ( auxDbObject instanceof AuxiliaryDatabaseObject.Expandable expandable ) {
 				for ( JaxbHbmDialectScopeType dialectScopeBinding : auxDbObjectMapping.getDialectScope() ) {
 					expandable.addDialectScope( dialectScopeBinding.getName() );
 				}

@@ -112,13 +112,11 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 			return true;
 		}
 
-		if ( one instanceof PersistentCollection<?> ) {
-			final PersistentCollection<?> pc = (PersistentCollection<?>) one;
+		if ( one instanceof PersistentCollection<?> pc ) {
 			return pc.wasInitialized() && ( pc.isWrapper( another ) || pc.isDirectlyProvidedCollection( another ) );
 		}
 
-		if ( another instanceof PersistentCollection<?> ) {
-			final PersistentCollection<?> pc = (PersistentCollection<?>) another;
+		if ( another instanceof PersistentCollection<?> pc ) {
 			return pc.wasInitialized() && ( pc.isWrapper( one ) || pc.isDirectlyProvidedCollection( one ) );
 		}
 

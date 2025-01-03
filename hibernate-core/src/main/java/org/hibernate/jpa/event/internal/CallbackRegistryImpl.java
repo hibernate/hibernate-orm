@@ -169,18 +169,16 @@ final class CallbackRegistryImpl implements CallbackRegistry {
 		private final Map<Class<?>, Callback[]> postLoads = new HashMap<>();
 
 		public void registerCallbacks(Class<?> entityClass, Callback[] callbacks) {
-			if ( callbacks == null || callbacks.length == 0 ) {
-				return;
-			}
-
-			for ( Callback callback : callbacks ) {
-				final Map<Class<?>, Callback[]> map = determineAppropriateCallbackMap( callback.getCallbackType() );
-				Callback[] entityCallbacks = map.get( entityClass );
-				if ( entityCallbacks == null ) {
-					entityCallbacks = new Callback[0];
+			if ( callbacks != null ) {
+				for ( Callback callback : callbacks ) {
+					final Map<Class<?>, Callback[]> map = determineAppropriateCallbackMap( callback.getCallbackType() );
+					Callback[] entityCallbacks = map.get( entityClass );
+					if ( entityCallbacks == null ) {
+						entityCallbacks = new Callback[0];
+					}
+					entityCallbacks = ArrayHelper.join( entityCallbacks, callback );
+					map.put( entityClass, entityCallbacks );
 				}
-				entityCallbacks = ArrayHelper.join( entityCallbacks, callback );
-				map.put( entityClass, entityCallbacks );
 			}
 		}
 

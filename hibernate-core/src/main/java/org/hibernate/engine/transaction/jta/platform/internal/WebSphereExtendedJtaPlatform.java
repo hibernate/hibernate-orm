@@ -75,8 +75,7 @@ public class WebSphereExtendedJtaPlatform extends AbstractJtaPlatform {
 				Class extendedJTATransactionClass = Class.forName( "com.ibm.websphere.jtaextensions.ExtendedJTATransaction" );
 				registerSynchronizationMethod = extendedJTATransactionClass.getMethod(
 						"registerSynchronizationCallbackForCurrentTran",
-						new Class[] { synchronizationCallbackClass }
-				);
+						synchronizationCallbackClass );
 				getLocalIdMethod = extendedJTATransactionClass.getMethod( "getLocalId", (Class[]) null );
 			}
 			catch ( ClassNotFoundException cnfe ) {
@@ -188,10 +187,9 @@ public class WebSphereExtendedJtaPlatform extends AbstractJtaPlatform {
 
 			@Override
 			public boolean equals(@Nullable Object other) {
-				if ( !(other instanceof TransactionAdapter) ) {
+				if ( !(other instanceof TransactionAdapter that) ) {
 					return false;
 				}
-				TransactionAdapter that = (TransactionAdapter) other;
 				return getLocalId().equals( that.getLocalId() );
 			}
 

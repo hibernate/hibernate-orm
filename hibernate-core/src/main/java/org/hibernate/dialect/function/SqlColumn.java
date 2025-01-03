@@ -44,12 +44,10 @@ public class SqlColumn extends AbstractSqmSelfRenderingFunctionDescriptor  {
 			SqlAstTranslator<?> walker) {
 		final SqlAstNode sqlAstNode = arguments.get(0);
 		final ColumnReference reference;
-		if ( sqlAstNode instanceof Assignable ) {
-			final Assignable assignable = (Assignable) sqlAstNode;
+		if ( sqlAstNode instanceof Assignable assignable ) {
 			reference = assignable.getColumnReferences().get(0);
 		}
-		else if ( sqlAstNode instanceof Expression ) {
-			final Expression expression = (Expression) sqlAstNode;
+		else if ( sqlAstNode instanceof Expression expression ) {
 			reference = expression.getColumnReference();
 		}
 		else {

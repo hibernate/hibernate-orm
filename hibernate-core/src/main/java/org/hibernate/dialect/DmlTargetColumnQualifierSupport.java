@@ -26,5 +26,5 @@ public enum DmlTargetColumnQualifierSupport {
 	/**
 	 * No need to explicitly qualify the column.
 	 */
-	NONE;
+	NONE
 }

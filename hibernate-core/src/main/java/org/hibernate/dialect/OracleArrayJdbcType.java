@@ -165,8 +165,7 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 	}
 
 	private static String converterClassName(BasicValueConverter<?, ?> converter) {
-		if ( converter instanceof JpaAttributeConverter<?, ?> ) {
-			final JpaAttributeConverter<?, ?> jpaConverter  = (JpaAttributeConverter<?, ?>) converter;
+		if ( converter instanceof JpaAttributeConverter<?, ?> jpaConverter ) {
 			return jpaConverter.getConverterJavaType().getJavaTypeClass().getSimpleName();
 		}
 		else {

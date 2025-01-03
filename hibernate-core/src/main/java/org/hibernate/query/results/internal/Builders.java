@@ -169,8 +169,7 @@ public class Builders {
 			throw new IllegalArgumentException( "Could not locate attribute mapping : " + fullEntityName + "." + attributePath );
 		}
 
-		if ( attributeMapping instanceof SingularAttributeMapping ) {
-			final SingularAttributeMapping singularAttributeMapping = (SingularAttributeMapping) attributeMapping;
+		if ( attributeMapping instanceof SingularAttributeMapping singularAttributeMapping ) {
 			return new DynamicResultBuilderAttribute( singularAttributeMapping, columnAlias, fullEntityName, attributePath );
 		}
 
@@ -277,13 +276,11 @@ public class Builders {
 			return new ImplicitFetchBuilderBasic( fetchPath, basicValuedFetchable, creationState );
 		}
 
-		if ( fetchable instanceof EmbeddableValuedFetchable ) {
-			final EmbeddableValuedFetchable embeddableValuedFetchable = (EmbeddableValuedFetchable) fetchable;
+		if ( fetchable instanceof EmbeddableValuedFetchable embeddableValuedFetchable ) {
 			return new ImplicitFetchBuilderEmbeddable( fetchPath, embeddableValuedFetchable, creationState );
 		}
 
-		if ( fetchable instanceof ToOneAttributeMapping ) {
-			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) fetchable;
+		if ( fetchable instanceof ToOneAttributeMapping toOneAttributeMapping ) {
 			return new ImplicitFetchBuilderEntity( fetchPath, toOneAttributeMapping, creationState );
 		}
 

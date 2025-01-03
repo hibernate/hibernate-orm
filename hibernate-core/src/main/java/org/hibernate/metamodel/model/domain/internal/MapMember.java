@@ -13,7 +13,7 @@ import java.lang.reflect.Modifier;
  * @author Brad Koehn
  */
 public class MapMember implements Member {
-	private String name;
+	private final String name;
 	private final Class<?> type;
 
 	public MapMember(String name, Class<?> type) {

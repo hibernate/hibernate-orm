@@ -134,8 +134,7 @@ public class PostgreSQLIntervalSecondJdbcType implements AdjustableJdbcType {
 			}
 
 			private Object getValue(Object value) {
-				if ( value instanceof PGInterval ) {
-					final PGInterval interval = (PGInterval) value;
+				if ( value instanceof PGInterval interval ) {
 					final long seconds = ( (long) interval.getSeconds() )
 							+ SECONDS_PER_DAY * ( (long) interval.getDays() )
 							+ SECONDS_PER_HOUR * ( (long) interval.getHours() )

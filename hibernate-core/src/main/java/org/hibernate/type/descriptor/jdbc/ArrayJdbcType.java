@@ -171,8 +171,7 @@ public class ArrayJdbcType implements JdbcType {
 	}
 
 	protected <X> X getArray(BasicExtractor<X> extractor, java.sql.Array array, WrapperOptions options) throws SQLException {
-		if ( array != null && getElementJdbcType() instanceof AggregateJdbcType ) {
-			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) getElementJdbcType();
+		if ( array != null && getElementJdbcType() instanceof AggregateJdbcType aggregateJdbcType ) {
 			final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 			final Object rawArray = array.getArray();
 			final Object[] domainObjects = new Object[Array.getLength( rawArray )];

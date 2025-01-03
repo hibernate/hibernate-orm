@@ -115,8 +115,7 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 	}
 
 	private void appendJunctionHqlString(SqmPredicate p, StringBuilder sb) {
-		if ( p instanceof SqmJunctionPredicate ) {
-			final SqmJunctionPredicate junction = (SqmJunctionPredicate) p;
+		if ( p instanceof SqmJunctionPredicate junction ) {
 			// If we have the same nature, or if this is a disjunction and the operand is a conjunction,
 			// then we don't need parenthesis, because the AND operator binds stronger
 			if ( booleanOperator == junction.getOperator() || booleanOperator == BooleanOperator.OR ) {

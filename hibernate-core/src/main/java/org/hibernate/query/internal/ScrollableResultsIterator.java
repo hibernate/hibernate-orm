@@ -33,6 +33,6 @@ public class ScrollableResultsIterator<T> implements CloseableIterator<T> {
 
 	@Override
 	public T next() {
-		return (T) scrollableResults.get();
+		return scrollableResults.get();
 	}
 }

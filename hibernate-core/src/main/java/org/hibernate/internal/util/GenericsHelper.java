@@ -31,8 +31,7 @@ public class GenericsHelper {
 
 		for ( Type type : types ) {
 			type = resolveType( type, base );
-			if ( type instanceof ParameterizedType ) {
-				final ParameterizedType parameterizedType = (ParameterizedType) type;
+			if ( type instanceof ParameterizedType parameterizedType ) {
 				if ( AttributeConverter.class.equals( parameterizedType.getRawType() ) ) {
 					return parameterizedType;
 				}

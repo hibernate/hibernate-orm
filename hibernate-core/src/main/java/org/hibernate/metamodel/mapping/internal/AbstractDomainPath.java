@@ -90,8 +90,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			}
 			return resolve( subPart, ast, tableGroup, modelPartName, creationState );
 		}
-		else if ( referenceModelPart instanceof EmbeddableValuedModelPart ) {
-			final EmbeddableValuedModelPart embeddableValuedModelPart = (EmbeddableValuedModelPart) referenceModelPart;
+		else if ( referenceModelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 			if ( embeddableValuedModelPart.getFetchableName()
 					.equals( modelPartName ) || ELEMENT_TOKEN.equals( modelPartName ) ) {
 				final int size = embeddableValuedModelPart.getNumberOfFetchables();

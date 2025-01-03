@@ -20,7 +20,7 @@ public class FetchCharacteristicsPluralAttributeImpl implements FetchCharacteris
 	private final FetchStyle fetchStyle;
 
 	private final Integer batchSize;
-	private boolean extraLazy;
+	private final boolean extraLazy;
 
 	public FetchCharacteristicsPluralAttributeImpl(
 			FetchTiming fetchTiming,

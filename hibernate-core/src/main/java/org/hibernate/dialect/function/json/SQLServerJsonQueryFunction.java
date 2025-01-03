@@ -103,9 +103,8 @@ public class SQLServerJsonQueryFunction extends JsonQueryFunction {
 			final JsonPathHelper.JsonPathElement jsonPathElement = jsonPathElements.get( index );
 			if ( jsonPathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
 				sqlAppender.appendSql( "'strict $." );
-				final String name = attribute.attribute();
-				for ( int i = 0; i < name.length(); i++ ) {
-					final char c = name.charAt( i );
+				for ( int i = 0; i < attribute.attribute().length(); i++ ) {
+					final char c = attribute.attribute().charAt( i );
 					if ( c == '\'' ) {
 						sqlAppender.append( '\'' );
 					}

@@ -168,8 +168,7 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 			final EntityCollectionPart elementPart = (EntityCollectionPart) getCollectionDescriptor().getAttributeMapping().getElementDescriptor();
 			final EntityMappingType elementEntity = elementPart.getAssociatedEntityMappingType();
 			final AttributeMapping mapKeyAttribute = elementEntity.findAttributeMapping( mapKeyPropertyName );
-			if ( mapKeyAttribute instanceof ToOneAttributeMapping ) {
-				final ToOneAttributeMapping toOne = (ToOneAttributeMapping) mapKeyAttribute;
+			if ( mapKeyAttribute instanceof ToOneAttributeMapping toOne ) {
 				final NavigablePath mapKeyPropertyPath = navigablePath.append( mapKeyPropertyName );
 				final TableGroupJoin tableGroupJoin = toOne.createTableGroupJoin(
 						mapKeyPropertyPath,

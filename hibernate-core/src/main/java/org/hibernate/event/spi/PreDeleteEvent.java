@@ -16,7 +16,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class PreDeleteEvent extends AbstractPreDatabaseOperationEvent {
 
-	private Object[] deletedState;
+	private final Object[] deletedState;
 
 	/**
 	 * Constructs an event containing the pertinent information.

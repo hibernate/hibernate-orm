@@ -63,9 +63,8 @@ public class PostgreSQLArrayJdbcType extends ArrayJdbcType {
 				final Object[] objects;
 
 				final JdbcType elementJdbcType = arrayJdbcType.getElementJdbcType();
-				if ( elementJdbcType instanceof AggregateJdbcType ) {
+				if ( elementJdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
 					// The PostgreSQL JDBC driver does not support arrays of structs, which contain byte[]
-					final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) elementJdbcType;
 					final Object[] domainObjects = getJavaType().unwrap(
 							value,
 							Object[].class,

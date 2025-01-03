@@ -172,8 +172,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 								"Select items of the same index must have the same java type across all query parts"
 						);
 					}
-					if ( firstSqmSelection instanceof SqmFrom<?, ?> ) {
-						final SqmFrom<?, ?> firstFrom = (SqmFrom<?, ?>) firstSqmSelection;
+					if ( firstSqmSelection instanceof SqmFrom<?, ?> firstFrom ) {
 						final SqmFrom<?, ?> from = (SqmFrom<?, ?>) selections.get( j ).getSelectableNode();
 						validateFetchesMatch( firstFrom, from );
 					}
@@ -187,14 +186,12 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		final Iterator<? extends SqmJoin<?, ?>> joinIter = from.getSqmJoins().iterator();
 		while ( firstJoinIter.hasNext() ) {
 			final SqmJoin<?, ?> firstSqmJoin = firstJoinIter.next();
-			if ( firstSqmJoin instanceof SqmAttributeJoin<?, ?> ) {
-				final SqmAttributeJoin<?, ?> firstAttrJoin = (SqmAttributeJoin<?, ?>) firstSqmJoin;
+			if ( firstSqmJoin instanceof SqmAttributeJoin<?, ?> firstAttrJoin ) {
 				if ( firstAttrJoin.isFetched() ) {
 					SqmAttributeJoin<?, ?> matchingAttrJoin = null;
 					while ( joinIter.hasNext() ) {
 						final SqmJoin<?, ?> sqmJoin = joinIter.next();
-						if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
-							final SqmAttributeJoin<?, ?> attrJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
+						if ( sqmJoin instanceof SqmAttributeJoin<?, ?> attrJoin ) {
 							if ( attrJoin.isFetched() ) {
 								matchingAttrJoin = attrJoin;
 								break;
@@ -213,8 +210,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		// At this point, the other iterator should only contain non-fetch joins
 		while ( joinIter.hasNext() ) {
 			final SqmJoin<?, ?> sqmJoin = joinIter.next();
-			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
-				final SqmAttributeJoin<?, ?> attrJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
+			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> attrJoin ) {
 				if ( attrJoin.isFetched() ) {
 					throw new SemanticException(
 							"All query parts in a query group must have the same join fetches in the same order"

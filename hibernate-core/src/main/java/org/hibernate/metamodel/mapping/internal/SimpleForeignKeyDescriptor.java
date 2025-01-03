@@ -432,10 +432,9 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public boolean isSimpleJoinPredicate(Predicate predicate) {
-		if ( !( predicate instanceof ComparisonPredicate ) ) {
+		if ( !(predicate instanceof ComparisonPredicate comparisonPredicate) ) {
 			return false;
 		}
-		final ComparisonPredicate comparisonPredicate = (ComparisonPredicate) predicate;
 		if ( comparisonPredicate.getOperator() != ComparisonOperator.EQUAL ) {
 			return false;
 		}

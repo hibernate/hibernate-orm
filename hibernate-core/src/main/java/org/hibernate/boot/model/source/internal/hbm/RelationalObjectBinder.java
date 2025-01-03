@@ -80,8 +80,7 @@ public class RelationalObjectBinder {
 			boolean areColumnsNullableByDefault,
 			ColumnNamingDelegate columnNamingDelegate) {
 		for ( RelationalValueSource relationalValueSource : relationalValueSources ) {
-			if ( relationalValueSource instanceof ColumnSource ) {
-				final ColumnSource columnSource = (ColumnSource) relationalValueSource;
+			if ( relationalValueSource instanceof ColumnSource columnSource ) {
 				bindColumn(
 						sourceDocument,
 						columnSource,

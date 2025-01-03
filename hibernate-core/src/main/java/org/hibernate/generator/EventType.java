@@ -35,5 +35,5 @@ public enum EventType {
 	 * This indicates, for example, that a version number should be
 	 * incremented.
 	 */
-	UPDATE;
+	UPDATE
 }

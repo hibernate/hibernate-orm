@@ -73,8 +73,7 @@ public class OracleBaseStructJdbcType extends StructJdbcType {
 		StringBuilder sb = null;
 		for ( Column column : udt.getColumns() ) {
 			final Type columnType = column.getValue().getType();
-			if ( columnType instanceof JdbcMapping ) {
-				final JdbcMapping jdbcMapping = (JdbcMapping) columnType;
+			if ( columnType instanceof JdbcMapping jdbcMapping ) {
 				final String extraCreateTableInfo = jdbcMapping.getJdbcType().getExtraCreateTableInfo(
 						jdbcMapping.getJavaTypeDescriptor(),
 						columnName + "." + column.getName(),

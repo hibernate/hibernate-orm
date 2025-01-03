@@ -323,8 +323,7 @@ public class RelationalValueSourceHelper {
 			validateUseOfColumnOrFormulaNestedElements( mappingDocument, columnsAndFormulasSource );
 
 			for ( Object selectable : columnsAndFormulasSource.getColumnOrFormulaElements() ) {
-				if ( selectable instanceof JaxbHbmColumnType ) {
-					final JaxbHbmColumnType columnElement = (JaxbHbmColumnType) selectable;
+				if ( selectable instanceof JaxbHbmColumnType columnElement ) {
 					result.add(
 							new ColumnSourceImpl(
 									mappingDocument,

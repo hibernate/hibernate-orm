@@ -70,8 +70,7 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 		}
 		else {
 			modelPartContainer = tableGroup.getModelPart();
-			if ( jpaQueryComplianceEnabled && lhs.getNodeType() instanceof EntityDomainType<?> ) {
-				final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) lhs.getNodeType();
+			if ( jpaQueryComplianceEnabled && lhs.getNodeType() instanceof EntityDomainType<?> entityDomainType ) {
 				final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext()
 						.getSessionFactory()
 						.getRuntimeMetamodels()

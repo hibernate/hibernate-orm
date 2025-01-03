@@ -122,9 +122,8 @@ public class SqmCreationHelper {
 
 		final SqmJunctionPredicate combinedPredicate;
 
-		if ( baseRestriction instanceof SqmJunctionPredicate ) {
+		if ( baseRestriction instanceof SqmJunctionPredicate junction ) {
 			// we already had multiple before
-			final SqmJunctionPredicate junction = (SqmJunctionPredicate) baseRestriction;
 			if ( junction.getPredicates().isEmpty() ) {
 				return incomingRestriction;
 			}

@@ -33,7 +33,7 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 	private final AttributeClassification attributeClassification;
 
 	private final DomainType<B> valueType;
-	private transient Member member;
+	private final transient Member member;
 
 	protected AbstractAttribute(
 			ManagedDomainType<D> declaringType,

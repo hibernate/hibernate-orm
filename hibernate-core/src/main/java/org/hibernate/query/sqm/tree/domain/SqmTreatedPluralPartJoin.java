@@ -108,31 +108,31 @@ public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTr
 	@Override
 	public SqmTreatedPluralPartJoin treatAs(EntityDomainType treatTarget) {
 		//noinspection unchecked
-		return (SqmTreatedPluralPartJoin) super.treatAs( treatTarget );
+		return super.treatAs( treatTarget );
 	}
 
 	@Override
 	public SqmTreatedPluralPartJoin treatAs(Class treatJavaType, String alias) {
 		//noinspection unchecked
-		return (SqmTreatedPluralPartJoin) super.treatAs( treatJavaType, alias );
+		return super.treatAs( treatJavaType, alias );
 	}
 
 	@Override
 	public SqmTreatedPluralPartJoin treatAs(EntityDomainType treatTarget, String alias) {
 		//noinspection unchecked
-		return (SqmTreatedPluralPartJoin) super.treatAs( treatTarget, alias );
+		return super.treatAs( treatTarget, alias );
 	}
 
 	@Override
 	public SqmTreatedPluralPartJoin treatAs(Class treatJavaType, String alias, boolean fetch) {
 		//noinspection unchecked
-		return (SqmTreatedPluralPartJoin) super.treatAs( treatJavaType, alias, fetch );
+		return super.treatAs( treatJavaType, alias, fetch );
 	}
 
 	@Override
 	public SqmTreatedPluralPartJoin treatAs(EntityDomainType treatTarget, String alias, boolean fetch) {
 		//noinspection unchecked
-		return (SqmTreatedPluralPartJoin) super.treatAs( treatTarget, alias, fetch );
+		return super.treatAs( treatTarget, alias, fetch );
 	}
 
 

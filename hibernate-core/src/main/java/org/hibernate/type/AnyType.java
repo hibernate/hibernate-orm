@@ -494,8 +494,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 
 		public boolean equals(Object object) {
-			if ( object instanceof ObjectTypeCacheEntry ) {
-				final ObjectTypeCacheEntry objectTypeCacheEntry = (ObjectTypeCacheEntry) object;
+			if ( object instanceof ObjectTypeCacheEntry objectTypeCacheEntry ) {
 				return Objects.equals( objectTypeCacheEntry.entityName, entityName )
 					&& Objects.equals( objectTypeCacheEntry.id, id );
 			}

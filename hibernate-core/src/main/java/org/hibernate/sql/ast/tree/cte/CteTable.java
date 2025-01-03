@@ -85,7 +85,7 @@ public class CteTable {
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
 		final String idName;
 		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-			idName = ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName();
+			idName = identifierMapping.getAttributeName();
 		}
 		else {
 			idName = "id";

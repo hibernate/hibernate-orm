@@ -12,7 +12,7 @@ import org.hibernate.boot.model.source.spi.DerivedValueSource;
 class FormulaImpl
 		extends AbstractHbmSourceNode
 		implements DerivedValueSource {
-	private String tableName;
+	private final String tableName;
 	private final String expression;
 
 	FormulaImpl(MappingDocument mappingDocument, String tableName, String expression) {

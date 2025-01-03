@@ -102,8 +102,7 @@ public class AggregateFunctionChecker extends AbstractSqlAstWalker {
 		// Only need to visit the expression over which the window is created as the window definition can't have aggregates
 		// If the expression is an aggregate function, this means the aggregate is used as window function, which is fine
 		// We only care about actually aggregating functions, which might be an argument of this function though
-		if ( over.getExpression() instanceof AggregateFunctionExpression ) {
-			final AggregateFunctionExpression aggregate = (AggregateFunctionExpression) over.getExpression();
+		if ( over.getExpression() instanceof AggregateFunctionExpression aggregate ) {
 			for ( SqlAstNode argument : aggregate.getArguments() ) {
 				argument.accept( this );
 			}

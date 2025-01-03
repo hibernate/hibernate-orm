@@ -6,6 +6,7 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -2299,9 +2300,7 @@ public class EntityBinder {
 	private void bindFilters(AnnotationTarget element) {
 		final Filters filters = getOverridableAnnotation( element, Filters.class, context );
 		if ( filters != null ) {
-			for ( Filter filter : filters.value() ) {
-				this.filters.add( filter );
-			}
+			Collections.addAll( this.filters, filters.value() );
 		}
 		final Filter filter = element.getDirectAnnotationUsage( Filter.class );
 		if ( filter != null ) {

@@ -217,7 +217,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		// Just use the original parameter bindings since this object is never going to be mutated
 		this.parameterBindings = parameterMetadata.createBindings( original.getSession().getSessionFactory() );
 		// Don't remove this cast. This is here to work around this bug: https://bugs.openjdk.org/browse/JDK-8340443
-		(( DomainQueryExecutionContext) original ).getQueryParameterBindings().visitBindings(
+		original.getQueryParameterBindings().visitBindings(
 				(parameter, binding) -> {
 					//noinspection unchecked
 					final QueryParameterBinding<Object> parameterBinding =

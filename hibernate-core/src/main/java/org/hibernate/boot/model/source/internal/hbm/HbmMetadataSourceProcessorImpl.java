@@ -27,11 +27,11 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	private static final Logger log = Logger.getLogger( HbmMetadataSourceProcessorImpl.class );
 
 	private final MetadataBuildingContext rootBuildingContext;
-	private Collection<MappingDocument> mappingDocuments;
+	private final Collection<MappingDocument> mappingDocuments;
 
 	private final ModelBinder modelBinder;
 
-	private List<EntityHierarchySourceImpl> entityHierarchies;
+	private final List<EntityHierarchySourceImpl> entityHierarchies;
 
 	public HbmMetadataSourceProcessorImpl(
 			ManagedResources managedResources,

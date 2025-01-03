@@ -7,7 +7,7 @@ package org.hibernate.internal.util.collections;
 public interface ReadOnlyMap<K, V> {
 
 	//To help saving memory
-	public static final ReadOnlyMap EMPTY = new EmptyReadOnlyMap();
+	ReadOnlyMap EMPTY = new EmptyReadOnlyMap();
 
 	/**
 	 * The main operation.

@@ -49,7 +49,7 @@ public class SequenceInformationExtractorTiDBDatabaseImpl extends SequenceInform
 
 		try (
 				final Statement statement = extractionContext.getJdbcConnection().createStatement();
-				final ResultSet resultSet = statement.executeQuery( lookupSql );
+				final ResultSet resultSet = statement.executeQuery( lookupSql )
 		) {
 			while ( resultSet.next() ) {
 				sequenceNames.add( resultSetSequenceName( resultSet ) );
@@ -68,7 +68,7 @@ public class SequenceInformationExtractorTiDBDatabaseImpl extends SequenceInform
 
 			try (
 					final Statement statement = extractionContext.getJdbcConnection().createStatement();
-					final ResultSet resultSet = statement.executeQuery( sequenceInfoQueryBuilder.toString() );
+					final ResultSet resultSet = statement.executeQuery( sequenceInfoQueryBuilder.toString() )
 			) {
 
 				while ( resultSet.next() ) {

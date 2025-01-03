@@ -20,6 +20,7 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -134,7 +135,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 	 * An option specifying which Java reference type should be used to refer
 	 * to a key and/or value.
 	 */
-	public static enum ReferenceType {
+	public enum ReferenceType {
 		/**
 		 * Indicates a normal Java strong reference should be used
 		 */
@@ -150,7 +151,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 	}
 
 
-	public static enum Option {
+	public enum Option {
 		/**
 		 * Indicates that referential-equality (== instead of .equals()) should
 		 * be used when locating keys. This offers similar behavior to {@link java.util.IdentityHashMap}
@@ -287,12 +288,12 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		public final int keyHash() {
+		public int keyHash() {
 			return hash;
 		}
 
 		@Override
-		public final Object keyRef() {
+		public Object keyRef() {
 			return this;
 		}
 	}
@@ -309,12 +310,12 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		public final int keyHash() {
+		public int keyHash() {
 			return hash;
 		}
 
 		@Override
-		public final Object keyRef() {
+		public Object keyRef() {
 			return this;
 		}
 	}
@@ -330,12 +331,12 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		public final int keyHash() {
+		public int keyHash() {
 			return hash;
 		}
 
 		@Override
-		public final Object keyRef() {
+		public Object keyRef() {
 			return keyRef;
 		}
 	}
@@ -351,12 +352,12 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		public final int keyHash() {
+		public int keyHash() {
 			return hash;
 		}
 
 		@Override
-		public final Object keyRef() {
+		public Object keyRef() {
 			return keyRef;
 		}
 	}
@@ -389,7 +390,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 			this.valueRef = newValueReference( value, valueType, refQueue );
 		}
 
-		final Object newKeyReference(
+		Object newKeyReference(
 				K key, ReferenceType keyType,
 				ReferenceQueue<Object> refQueue) {
 			if ( keyType == ReferenceType.WEAK ) {
@@ -402,7 +403,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 			return key;
 		}
 
-		final Object newValueReference(
+		Object newValueReference(
 				V value, ReferenceType valueType,
 				ReferenceQueue<Object> refQueue) {
 			if ( valueType == ReferenceType.WEAK ) {
@@ -416,7 +417,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@SuppressWarnings("unchecked")
-		final K key() {
+		K key() {
 			if ( keyRef instanceof KeyReference ) {
 				return ( (Reference<K>) keyRef ).get();
 			}
@@ -424,12 +425,12 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 			return (K) keyRef;
 		}
 
-		final V value() {
+		V value() {
 			return dereferenceValue( valueRef );
 		}
 
 		@SuppressWarnings("unchecked")
-		final V dereferenceValue(Object value) {
+		V dereferenceValue(Object value) {
 			if ( value instanceof KeyReference ) {
 				return ( (Reference<V>) value ).get();
 			}
@@ -437,12 +438,12 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 			return (V) value;
 		}
 
-		final void setValue(V value, ReferenceType valueType, ReferenceQueue<Object> refQueue) {
+		void setValue(V value, ReferenceType valueType, ReferenceQueue<Object> refQueue) {
 			this.valueRef = newValueReference( value, valueType, refQueue );
 		}
 
 		@SuppressWarnings("unchecked")
-		static final <K, V> HashEntry<K, V>[] newArray(int i) {
+		static <K, V> HashEntry<K, V>[] newArray(int i) {
 			return new HashEntry[i];
 		}
 	}
@@ -551,7 +552,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@SuppressWarnings("unchecked")
-		static final <K, V> Segment<K, V>[] newArray(int i) {
+		static <K, V> Segment<K, V>[] newArray(int i) {
 			return new Segment[i];
 		}
 
@@ -861,7 +862,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 			}
 		}
 
-		final void removeStale() {
+		void removeStale() {
 			KeyReference ref;
 			while ( ( ref = (KeyReference) refQueue.poll() ) != null ) {
 				remove( ref.keyRef(), ref.keyHash(), null, true );
@@ -1675,11 +1676,9 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public boolean equals(Object o) {
-			if ( !( o instanceof Map.Entry ) ) {
+			if ( !(o instanceof @SuppressWarnings("unchecked")Entry e) ) {
 				return false;
 			}
-			@SuppressWarnings("unchecked")
-			Entry e = (Entry) o;
 			return eq( key, e.getKey() ) && eq( value, e.getValue() );
 		}
 
@@ -1695,7 +1694,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		}
 
 		private static boolean eq(Object o1, Object o2) {
-			return o1 == null ? o2 == null : o1.equals( o2 );
+			return Objects.equals( o1, o2 );
 		}
 	}
 
@@ -1808,20 +1807,18 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public boolean contains(Object o) {
-			if ( !( o instanceof Map.Entry ) ) {
+			if ( !(o instanceof Entry<?, ?> e) ) {
 				return false;
 			}
-			Entry<?, ?> e = (Entry<?, ?>) o;
 			V v = ConcurrentReferenceHashMap.this.get( e.getKey() );
 			return v != null && v.equals( e.getValue() );
 		}
 
 		@Override
 		public boolean remove(Object o) {
-			if ( !( o instanceof Map.Entry ) ) {
+			if ( !(o instanceof Entry<?, ?> e) ) {
 				return false;
 			}
-			Entry<?, ?> e = (Entry<?, ?>) o;
 			return ConcurrentReferenceHashMap.this.remove( e.getKey(), e.getValue() );
 		}
 

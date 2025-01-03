@@ -6,6 +6,7 @@ package org.hibernate.dialect.function.json;
 
 import java.util.List;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -99,9 +100,11 @@ public class SQLServerJsonExistsFunction extends JsonExistsFunction {
 			if ( lastPathElement instanceof JsonPathHelper.JsonIndexAccess indexAccess ) {
 				terminalKey = String.valueOf( indexAccess.index() );
 			}
+			else if (lastPathElement instanceof JsonPathHelper.JsonAttribute attribute) {
+				terminalKey = attribute.attribute();
+			}
 			else {
-				assert lastPathElement instanceof JsonPathHelper.JsonAttribute;
-				terminalKey = ( (JsonPathHelper.JsonAttribute) lastPathElement ).attribute();
+				throw new AssertionFailure( "Unrecognized json path element: " + lastPathElement );
 			}
 
 			sqlAppender.appendSql( "(select 1 from openjson(" );

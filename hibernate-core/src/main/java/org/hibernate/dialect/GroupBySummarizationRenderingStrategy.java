@@ -21,5 +21,5 @@ public enum GroupBySummarizationRenderingStrategy {
 	/**
 	 * Use the rollup or cube functions like specified in the SQL standard.
 	 */
-	FUNCTION;
+	FUNCTION
 }

@@ -78,8 +78,7 @@ public class PluralAttributePath extends AbstractDomainPath {
 		// the above checks for explicit element or index descriptor references
 		// 		try also as an implicit element or index sub-part reference...
 
-		if ( pluralAttributeMapping.getElementDescriptor() instanceof EmbeddableValuedModelPart ) {
-			final EmbeddableValuedModelPart elementDescriptor = (EmbeddableValuedModelPart) pluralAttributeMapping.getElementDescriptor();
+		if ( pluralAttributeMapping.getElementDescriptor() instanceof EmbeddableValuedModelPart elementDescriptor ) {
 			final ModelPart elementSubPart = elementDescriptor.findSubPart( name, null );
 			if ( elementSubPart != null ) {
 				// create the CollectionSubPath to use as the `lhs` for the element sub-path
@@ -96,8 +95,7 @@ public class PluralAttributePath extends AbstractDomainPath {
 			}
 		}
 
-		if ( pluralAttributeMapping.getIndexDescriptor() instanceof EmbeddableValuedModelPart ) {
-			final EmbeddableValuedModelPart indexDescriptor = (EmbeddableValuedModelPart) pluralAttributeMapping.getIndexDescriptor();
+		if ( pluralAttributeMapping.getIndexDescriptor() instanceof EmbeddableValuedModelPart indexDescriptor ) {
 			final ModelPart indexSubPart = indexDescriptor.findSubPart( name, null );
 			if ( indexSubPart != null ) {
 				// create the CollectionSubPath to use as the `lhs` for the element sub-path

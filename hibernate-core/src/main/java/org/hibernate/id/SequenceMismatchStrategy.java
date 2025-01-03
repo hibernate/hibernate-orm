@@ -60,8 +60,7 @@ public enum SequenceMismatchStrategy {
 		else if ( sequenceMismatchStrategy instanceof SequenceMismatchStrategy ) {
 			return (SequenceMismatchStrategy) sequenceMismatchStrategy;
 		}
-		else if ( sequenceMismatchStrategy instanceof String ) {
-			String sequenceMismatchStrategyString = (String) sequenceMismatchStrategy;
+		else if ( sequenceMismatchStrategy instanceof String sequenceMismatchStrategyString ) {
 			for ( SequenceMismatchStrategy value : values() ) {
 				if ( value.name().equalsIgnoreCase( sequenceMismatchStrategyString ) ) {
 					return value;

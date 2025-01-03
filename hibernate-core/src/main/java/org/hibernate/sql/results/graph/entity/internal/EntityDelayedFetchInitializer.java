@@ -262,11 +262,8 @@ public class EntityDelayedFetchInitializer
 		if ( appliedGraph != null && appliedGraph.getSemantic() == GraphSemantic.FETCH ) {
 			final AttributeNodeImplementor<?,?,?> attributeNode =
 					appliedGraph.getGraph().findAttributeNode( navigablePath.getLocalName() );
-			if ( attributeNode != null
-					&& attributeNode.getAttributeDescriptor() == getInitializedPart().asAttributeMapping() ) {
-				return false;
-			}
-			return true;
+			return attributeNode == null
+				|| attributeNode.getAttributeDescriptor() != getInitializedPart().asAttributeMapping();
 		}
 		return false;
 	}

@@ -30,7 +30,7 @@ public class TupleResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 			int[] jdbcValuesArrayPositions,
 			String resultVariable,
 			JavaType<T> javaType) {
-		this( jdbcValuesArrayPositions, resultVariable, javaType, (NavigablePath) null );
+		this( jdbcValuesArrayPositions, resultVariable, javaType, null );
 	}
 
 	public TupleResult(

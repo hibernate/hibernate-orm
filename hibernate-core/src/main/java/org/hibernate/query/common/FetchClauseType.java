@@ -25,5 +25,5 @@ public enum FetchClauseType {
 	/**
 	 * Also fetches ties if the last value is not unique {@code FETCH FIRST n PERCENT ROWS WITH TIES}.
 	 */
-	PERCENT_WITH_TIES;
+	PERCENT_WITH_TIES
 }

@@ -36,7 +36,7 @@ import java.util.List;
 public class DynamicFetchBuilderStandard
 		implements DynamicFetchBuilder, NativeQuery.ReturnProperty {
 
-	private Fetchable fetchable;
+	private final Fetchable fetchable;
 	private final List<String> columnNames;
 
 	public DynamicFetchBuilderStandard(Fetchable fetchable) {

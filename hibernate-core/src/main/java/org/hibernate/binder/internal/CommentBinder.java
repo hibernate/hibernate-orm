@@ -34,8 +34,7 @@ public class CommentBinder implements AttributeBinder<Comment>, TypeBinder<Comme
 			throw new AnnotationException( "One to many association '" + property.getName()
 					+ "' was annotated '@Comment'");
 		}
-		else if ( value instanceof Collection ) {
-			Collection collection = (Collection) value;
+		else if ( value instanceof Collection collection ) {
 			Table table = collection.getTable();
 			// by default, the comment goes on the table
 			if ( on.isEmpty() || table.getName().equalsIgnoreCase( on ) ) {

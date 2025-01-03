@@ -166,8 +166,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		while ( !fromNodes.isEmpty() ) {
 			final SqmFrom<?, ?> fromNode = fromNodes.remove( fromNodes.size() - 1 );
 			for ( SqmJoin<?, ?> sqmJoin : fromNode.getSqmJoins() ) {
-				if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
-					final SqmAttributeJoin<?, ?> join = (SqmAttributeJoin<?, ?>) sqmJoin;
+				if ( sqmJoin instanceof SqmAttributeJoin<?, ?> join ) {
 					if ( join.getAttribute().isCollection() ) {
 						// Collections joins always alter cardinality
 						return false;
@@ -189,8 +188,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		while ( !fromNodes.isEmpty() ) {
 			final SqmFrom<?, ?> fromNode = fromNodes.remove( fromNodes.size() - 1 );
 			for ( SqmJoin<?, ?> sqmJoin : fromNode.getSqmJoins() ) {
-				if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
-					final SqmAttributeJoin<?, ?> join = (SqmAttributeJoin<?, ?>) sqmJoin;
+				if ( sqmJoin instanceof SqmAttributeJoin<?, ?> join ) {
 					if ( join.isFetched() && join.getAttribute().isCollection() ) {
 						return true;
 					}
@@ -502,14 +500,12 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	private void collectSelectedFromSet(Set<SqmFrom<?, ?>> selectedFromSet, SqmSelectableNode<?> selectableNode) {
-		if ( selectableNode instanceof SqmJpaCompoundSelection<?> ) {
-			final SqmJpaCompoundSelection<?> compoundSelection = (SqmJpaCompoundSelection<?>) selectableNode;
+		if ( selectableNode instanceof SqmJpaCompoundSelection<?> compoundSelection ) {
 			for ( SqmSelectableNode<?> selectionItem : compoundSelection.getSelectionItems() ) {
 				collectSelectedFromSet( selectedFromSet, selectionItem );
 			}
 		}
-		else if ( selectableNode instanceof SqmDynamicInstantiation<?> ) {
-			final SqmDynamicInstantiation<?> instantiation = (SqmDynamicInstantiation<?>) selectableNode;
+		else if ( selectableNode instanceof SqmDynamicInstantiation<?> instantiation ) {
 			for ( SqmDynamicInstantiationArgument<?> selectionItem : instantiation.getArguments() ) {
 				collectSelectedFromSet( selectedFromSet, selectionItem.getSelectableNode() );
 			}
@@ -517,15 +513,13 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		else if ( selectableNode instanceof SqmFrom<?, ?> ) {
 			collectSelectedFromSet( selectedFromSet, (SqmFrom<?, ?>) selectableNode );
 		}
-		else if ( selectableNode instanceof SqmEntityValuedSimplePath<?> ) {
-			final SqmEntityValuedSimplePath<?> path = (SqmEntityValuedSimplePath<?>) selectableNode;
+		else if ( selectableNode instanceof SqmEntityValuedSimplePath<?> path ) {
 			if ( CollectionPart.Nature.fromNameExact( path.getReferencedPathSource().getPathName() ) != null
 					&& path.getLhs() instanceof SqmFrom<?, ?> ) {
 				collectSelectedFromSet( selectedFromSet, (SqmFrom<?, ?>) path.getLhs() );
 			}
 		}
-		else if ( selectableNode instanceof SqmEmbeddedValuedSimplePath<?> ) {
-			final SqmEmbeddedValuedSimplePath<?> path = (SqmEmbeddedValuedSimplePath<?>) selectableNode;
+		else if ( selectableNode instanceof SqmEmbeddedValuedSimplePath<?> path ) {
 			assertEmbeddableCollections( path.getNavigablePath(), (EmbeddableDomainType<?>) path.getSqmType() );
 		}
 	}
@@ -545,8 +539,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	private void validateFetchOwners(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> joinContainer) {
 		for ( SqmJoin<?, ?> sqmJoin : joinContainer.getSqmJoins() ) {
-			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
-				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
+			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> attributeJoin ) {
 				if ( attributeJoin.isFetched() ) {
 					assertFetchOwner( selectedFromSet, attributeJoin.getLhs(), sqmJoin );
 					// Only need to check the first level
@@ -554,8 +547,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 				}
 			}
 			for ( SqmFrom<?, ?> sqmTreat : sqmJoin.getSqmTreats() ) {
-				if ( sqmTreat instanceof SqmAttributeJoin<?, ?> ) {
-					final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmTreat;
+				if ( sqmTreat instanceof SqmAttributeJoin<?, ?> attributeJoin ) {
 					if ( attributeJoin.isFetched() ) {
 						assertFetchOwner( selectedFromSet, attributeJoin.getLhs(), attributeJoin );
 						// Only need to check the first level

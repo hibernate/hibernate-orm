@@ -122,9 +122,9 @@ public final class CacheKeyImplementation implements Serializable {
 						Objects.deepEquals( this.id, o.id );
 			}
 			else {
-				return this.id.equals( o.id ) &&
-						entityOrRoleName.equals( o.entityOrRoleName ) &&
-						( this.tenantId != null ? this.tenantId.equals( o.tenantId ) : o.tenantId == null );
+				return this.id.equals( o.id )
+					&& entityOrRoleName.equals( o.entityOrRoleName )
+					&& Objects.equals( this.tenantId, o.tenantId );
 			}
 		}
 	}

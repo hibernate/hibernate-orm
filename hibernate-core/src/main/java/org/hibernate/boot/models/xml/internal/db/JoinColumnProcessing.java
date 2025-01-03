@@ -85,10 +85,7 @@ public class JoinColumnProcessing {
 			List<Serializable> jaxbJoinColumnsOrFormulas,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbJoinColumnsOrFormulas ) ) {
-			return;
-		}
-		else {
+		if ( !CollectionHelper.isEmpty( jaxbJoinColumnsOrFormulas ) ) {
 			memberDetails.removeAnnotationUsage( JpaAnnotations.JOIN_COLUMN );
 			memberDetails.removeAnnotationUsage( JpaAnnotations.JOIN_COLUMNS );
 			final JoinColumnsOrFormulasAnnotation joinColumnsOrFormulasUsage = (JoinColumnsOrFormulasAnnotation) memberDetails.replaceAnnotationUsage(

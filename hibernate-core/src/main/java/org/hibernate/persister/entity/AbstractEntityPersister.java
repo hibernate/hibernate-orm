@@ -1175,8 +1175,7 @@ public abstract class AbstractEntityPersister
 	private static List<UniqueKeyEntry> initUniqueKeyEntries(final AbstractEntityPersister aep) {
 		final ArrayList<UniqueKeyEntry> uniqueKeys = new ArrayList<>();
 		for ( Type propertyType : aep.getPropertyTypes() ) {
-			if ( propertyType instanceof AssociationType ) {
-				final AssociationType associationType = (AssociationType) propertyType;
+			if ( propertyType instanceof AssociationType associationType ) {
 				final String ukName = associationType.getLHSPropertyName();
 				if ( ukName != null ) {
 					final AttributeMapping attributeMapping = aep.findAttributeMapping( ukName );
@@ -1444,10 +1443,9 @@ public abstract class AbstractEntityPersister
 
 		if ( hasCollections() ) {
 			final Type type = getPropertyType( fieldName );
-			if ( type instanceof CollectionType ) {
+			if ( type instanceof CollectionType collectionType ) {
 				// we have a condition where a collection attribute is being access via enhancement:
 				// 		we can circumvent all the rest and just return the PersistentCollection
-				final CollectionType collectionType = (CollectionType) type;
 				final CollectionPersister persister = factory.getRuntimeMetamodels()
 						.getMappingMetamodel()
 						.getCollectionDescriptor( collectionType.getRole() );
@@ -1951,8 +1949,7 @@ public abstract class AbstractEntityPersister
 						continue;
 					}
 				}
-				else if ( fetchable instanceof Association ) {
-					final Association association = (Association) fetchable;
+				else if ( fetchable instanceof Association association ) {
 					// Ignore the fetchable if the FK is on the other side
 					if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
 						continue;
@@ -5219,8 +5216,7 @@ public abstract class AbstractEntityPersister
 			MappingModelCreationProcess creationProcess) {
 		final Type idType = getIdentifierType();
 
-		if ( idType instanceof CompositeType ) {
-			final CompositeType cidType = (CompositeType) idType;
+		if ( idType instanceof CompositeType cidType ) {
 
 			// NOTE: the term `isEmbedded` here uses Hibernate's older (pre-JPA) naming for its "non-aggregated"
 			// composite-id support.  It unfortunately conflicts with the JPA usage of "embedded".  Here we normalize
@@ -5475,12 +5471,10 @@ public abstract class AbstractEntityPersister
 					creationProcess
 			);
 		}
-		else if ( attrType instanceof AnyType ) {
+		else if ( attrType instanceof AnyType anyType ) {
 			final JavaType<Object> baseAssociationJtd =
 					creationContext.getTypeConfiguration().getJavaTypeRegistry()
 							.getDescriptor( Object.class );
-
-			final AnyType anyType = (AnyType) attrType;
 
 			final MutabilityPlan<?> mutabilityPlan = new DiscriminatedAssociationAttributeMapping.MutabilityPlanImpl( anyType );
 			final SimpleAttributeMetadata attributeMetadataAccess = new SimpleAttributeMetadata(
@@ -5503,7 +5497,7 @@ public abstract class AbstractEntityPersister
 					bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE,
 					propertyAccess,
 					bootProperty,
-					(AnyType) attrType,
+					anyType,
 					(Any) value,
 					creationProcess
 			);
@@ -5819,8 +5813,7 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			for ( AttributeMapping attribute : declaredAttributeMappings.valueIterator() ) {
-				if ( attribute instanceof EmbeddableValuedModelPart && attribute instanceof VirtualModelPart ) {
-					EmbeddableValuedModelPart part = (EmbeddableValuedModelPart) attribute;
+				if ( attribute instanceof EmbeddableValuedModelPart part && attribute instanceof VirtualModelPart ) {
 					final ModelPart subPart = part.findSubPart( name, null );
 					if ( subPart != null ) {
 						return subPart;
@@ -6136,9 +6129,8 @@ public abstract class AbstractEntityPersister
 		}
 
 		// aliases for composite-id's
-		if ( getIdentifierType() instanceof ComponentType ) {
+		if ( getIdentifierType() instanceof ComponentType componentId ) {
 			// Fetch embedded identifiers property names from the "virtual" identifier component
-			final ComponentType componentId = (ComponentType) getIdentifierType();
 			final String[] idPropertyNames = componentId.getPropertyNames();
 			final String[] idAliases = getIdentifierAliases();
 

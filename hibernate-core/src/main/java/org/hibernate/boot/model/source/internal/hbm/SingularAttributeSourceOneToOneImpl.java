@@ -44,7 +44,7 @@ class SingularAttributeSourceOneToOneImpl
 
 	private final FetchCharacteristicsSingularAssociationImpl fetchCharacteristics;
 
-	private ToolingHintContext toolingHintContext;
+	private final ToolingHintContext toolingHintContext;
 
 	SingularAttributeSourceOneToOneImpl(
 			MappingDocument mappingDocument,

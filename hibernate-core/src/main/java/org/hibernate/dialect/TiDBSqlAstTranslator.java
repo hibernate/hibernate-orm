@@ -272,8 +272,7 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		if ( expression instanceof Literal ) {
 			appendSql( "'0'" );
 		}
-		else if ( expression instanceof Summarization ) {
-			Summarization summarization = (Summarization) expression;
+		else if ( expression instanceof Summarization summarization ) {
 			renderCommaSeparated( summarization.getGroupings() );
 			appendSql( " with " );
 			appendSql( summarization.getKind().sqlText() );

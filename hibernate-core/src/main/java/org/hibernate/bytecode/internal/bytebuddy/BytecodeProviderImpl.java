@@ -437,8 +437,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				MethodDescription instrumentedMethod) {
 			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
 			final Class<?> type;
-			if ( getterMember instanceof Method ) {
-				final Method getter = (Method) getterMember;
+			if ( getterMember instanceof Method getter ) {
 				type = getter.getReturnType();
 				methodVisitor.visitMethodInsn(
 						getter.getDeclaringClass().isInterface() ?
@@ -495,8 +494,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				MethodDescription instrumentedMethod) {
 			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
 			final Class<?> type;
-			if ( setterMember instanceof Method ) {
-				final Method setter = (Method) setterMember;
+			if ( setterMember instanceof Method setter ) {
 				type = setter.getParameterTypes()[0];
 				methodVisitor.visitVarInsn( getLoadOpCode( type ), 1 );
 				methodVisitor.visitMethodInsn(
@@ -728,8 +726,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 					methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, Type.getInternalName( clazz ) );
 
 					final Class<?> type;
-					if ( getterMember instanceof Method ) {
-						final Method getter = (Method) getterMember;
+					if ( getterMember instanceof Method getter ) {
 						type = getter.getReturnType();
 						methodVisitor.visitMethodInsn(
 								getter.getDeclaringClass().isInterface() ?
@@ -741,8 +738,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 								getter.getDeclaringClass().isInterface()
 						);
 					}
-					else if ( getterMember instanceof Field ) {
-						final Field getter = (Field) getterMember;
+					else if ( getterMember instanceof Field getter ) {
 						type = getter.getType();
 						methodVisitor.visitFieldInsn(
 								Opcodes.GETFIELD,
@@ -755,8 +751,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						assert getterMember instanceof ForeignPackageMember;
 						final ForeignPackageMember foreignPackageMember = (ForeignPackageMember) getterMember;
 						final Member underlyingMember = foreignPackageMember.getMember();
-						if ( underlyingMember instanceof Method ) {
-							final Method getter = (Method) underlyingMember;
+						if ( underlyingMember instanceof Method getter ) {
 							type = getter.getReturnType();
 						}
 						else {
@@ -891,19 +886,16 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 					);
 				}
 				final Class<?> type;
-				if ( setterMember instanceof Method ) {
-					final Method setter = (Method) setterMember;
+				if ( setterMember instanceof Method setter ) {
 					type = setter.getParameterTypes()[0];
 				}
-				else if ( setterMember instanceof Field ) {
-					final Field field = (Field) setterMember;
+				else if ( setterMember instanceof Field field ) {
 					type = field.getType();
 				}
 				else {
 					final ForeignPackageMember foreignPackageMember = (ForeignPackageMember) setterMember;
 					final Member underlyingMember = foreignPackageMember.getMember();
-					if ( underlyingMember instanceof Method ) {
-						final Method setter = (Method) underlyingMember;
+					if ( underlyingMember instanceof Method setter ) {
 						type = setter.getParameterTypes()[0];
 					}
 					else {
@@ -926,8 +918,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 							Type.getInternalName( type )
 					);
 				}
-				if ( setterMember instanceof Method ) {
-					final Method setter = (Method) setterMember;
+				if ( setterMember instanceof Method setter ) {
 					methodVisitor.visitMethodInsn(
 							setter.getDeclaringClass().isInterface() ?
 									Opcodes.INVOKEINTERFACE :
@@ -950,8 +941,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						}
 					}
 				}
-				else if ( setterMember instanceof Field ) {
-					final Field field = (Field) setterMember;
+				else if ( setterMember instanceof Field field ) {
 					methodVisitor.visitFieldInsn(
 							Opcodes.PUTFIELD,
 							Type.getInternalName( field.getDeclaringClass() ),

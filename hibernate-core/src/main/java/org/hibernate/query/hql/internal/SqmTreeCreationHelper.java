@@ -201,8 +201,7 @@ public class SqmTreeCreationHelper {
 		}
 
 		final ParseTree lastChild = ctx.getChild( ctx.getChildCount() - 1 );
-		if ( lastChild instanceof HqlParser.IdentifierContext ) {
-			final HqlParser.IdentifierContext identifierContext = (HqlParser.IdentifierContext) lastChild;
+		if ( lastChild instanceof HqlParser.IdentifierContext identifierContext ) {
 			// in this branch, the alias could be a reserved word ("keyword as identifier")
 			// which JPA disallows...
 			if ( sqmBuilder.getCreationOptions().useStrictJpaCompliance() ) {

@@ -134,13 +134,12 @@ public class H2JsonValueFunction extends JsonValueFunction {
 		for ( int i = 0; i < jsonPathElements.size(); i++ ) {
 			final JsonPathHelper.JsonPathElement jsonPathElement = jsonPathElements.get( i );
 			if ( jsonPathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
-				final String attributeName = attribute.attribute();
 				sqlAppender.appendSql( "." );
-				sqlAppender.appendDoubleQuoteEscapedString( attributeName );
+				sqlAppender.appendDoubleQuoteEscapedString( attribute.attribute() );
 			}
-			else if ( jsonPathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
+			else if ( jsonPathElement instanceof JsonPathHelper.JsonParameterIndexAccess parameterIndexAccess ) {
 				assert passingClause != null;
-				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) jsonPathElement ).parameterName();
+				final String parameterName = parameterIndexAccess.parameterName();
 				final Expression expression = passingClause.getPassingExpressions().get( parameterName );
 				if ( expression == null ) {
 					throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
@@ -180,13 +179,12 @@ public class H2JsonValueFunction extends JsonValueFunction {
 		for ( int i = 0; i < jsonPathElements.size(); i++ ) {
 			final JsonPathHelper.JsonPathElement jsonPathElement = jsonPathElements.get( i );
 			if ( jsonPathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
-				final String attributeName = attribute.attribute();
 				sb.append( "." );
-				QuotingHelper.appendDoubleQuoteEscapedString( sb, attributeName );
+				QuotingHelper.appendDoubleQuoteEscapedString( sb, attribute.attribute() );
 			}
-			else if ( jsonPathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
+			else if ( jsonPathElement instanceof JsonPathHelper.JsonParameterIndexAccess parameterIndexAccess ) {
 				assert passingClause != null;
-				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) jsonPathElement ).parameterName();
+				final String parameterName = parameterIndexAccess.parameterName();
 				final Expression expression = passingClause.getPassingExpressions().get( parameterName );
 				if ( expression == null ) {
 					throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );

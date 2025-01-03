@@ -2124,20 +2124,18 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public boolean contains(Object o) {
-			if ( !( o instanceof Map.Entry ) ) {
+			if ( !(o instanceof Entry<?, ?> e) ) {
 				return false;
 			}
-			Entry<?, ?> e = (Entry<?, ?>) o;
 			V v = BoundedConcurrentHashMap.this.get( e.getKey() );
 			return v != null && v.equals( e.getValue() );
 		}
 
 		@Override
 		public boolean remove(Object o) {
-			if ( !( o instanceof Map.Entry ) ) {
+			if ( !(o instanceof Entry<?, ?> e) ) {
 				return false;
 			}
-			Entry<?, ?> e = (Entry<?, ?>) o;
 			return BoundedConcurrentHashMap.this.remove( e.getKey(), e.getValue() );
 		}
 

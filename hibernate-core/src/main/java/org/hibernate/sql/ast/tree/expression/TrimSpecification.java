@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  * @author Gavin King
  */
 public class TrimSpecification implements SqlExpressible, SqlAstNode {
-	private TrimSpec trimSpec;
+	private final TrimSpec trimSpec;
 
 	public TrimSpecification(TrimSpec trimSpec) {
 		this.trimSpec = trimSpec;

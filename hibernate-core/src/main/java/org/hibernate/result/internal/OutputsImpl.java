@@ -179,7 +179,7 @@ public class OutputsImpl implements Outputs {
 		try {
 
 			//noinspection unchecked
-			final RowReader<Object> rowReader = (RowReader<Object>) ResultsHelper.createRowReader(
+			final RowReader<Object> rowReader = ResultsHelper.createRowReader(
 					getSessionFactory(),
 					RowTransformerStandardImpl.instance(),
 					null,

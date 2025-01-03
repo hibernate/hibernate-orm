@@ -4130,7 +4130,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <T> SqmExpression<Integer> arrayLength(Expression<T[]> arrayExpression) {
 		return getFunctionDescriptor( "array_length" ).generateSqmExpression(
-				asList( (SqmExpression<?>) arrayExpression ),
+				Collections.singletonList( (SqmExpression<?>) arrayExpression ),
 				null,
 				queryEngine
 		);
@@ -4727,7 +4727,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public SqmExpression<Integer> collectionLength(Expression<? extends Collection<?>> collectionExpression) {
 		return getFunctionDescriptor( "array_length" ).generateSqmExpression(
-				asList( (SqmExpression<?>) collectionExpression ),
+				Collections.singletonList( (SqmExpression<?>) collectionExpression ),
 				null,
 				queryEngine
 		);
@@ -5745,7 +5745,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public SqmExpression<String> xmlpi(String elementName) {
 		return getFunctionDescriptor( "xmlpi" ).generateSqmExpression(
-				asList( literal( elementName ) ),
+				Collections.singletonList( literal( elementName ) ),
 				null,
 				queryEngine
 		);
@@ -5819,7 +5819,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <E> SqmSetReturningFunction<E> unnestArray(Expression<E[]> array) {
 		return getSetReturningFunctionDescriptor( "unnest" ).generateSqmExpression(
-				asList( (SqmTypedNode<?>) array ),
+				Collections.singletonList( (SqmTypedNode<?>) array ),
 				queryEngine
 		);
 	}
@@ -5827,7 +5827,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <E> SqmSetReturningFunction<E> unnestCollection(Expression<? extends Collection<E>> collection) {
 		return getSetReturningFunctionDescriptor( "unnest" ).generateSqmExpression(
-				asList( (SqmTypedNode<?>) collection ),
+				Collections.singletonList( (SqmTypedNode<?>) collection ),
 				queryEngine
 		);
 	}
@@ -5955,7 +5955,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	public SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument, @Nullable Expression<String> jsonPath) {
 		return (SqmJsonTableFunction<?>) getSetReturningFunctionDescriptor( "json_table" ).generateSqmExpression(
 				jsonPath == null
-						? asList( (SqmTypedNode<?>) jsonDocument )
+						? Collections.singletonList( (SqmTypedNode<?>) jsonDocument )
 						: asList( (SqmTypedNode<?>) jsonDocument, (SqmTypedNode<?>) jsonPath ),
 				queryEngine
 		);

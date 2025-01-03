@@ -144,12 +144,11 @@ public class SqmSortSpecification implements JpaOrder {
 		if ( this == o ) {
 			return true;
 		}
-		else if ( !(o instanceof SqmSortSpecification) ) {
+		else if ( !(o instanceof SqmSortSpecification that) ) {
 			return false;
 		}
 		else {
 			// used in SqmInterpretationsKey.equals()
-			SqmSortSpecification that = (SqmSortSpecification) o;
 			return Objects.equals( sortExpression, that.sortExpression )
 				&& sortOrder == that.sortOrder
 				&& nullPrecedence == that.nullPrecedence;

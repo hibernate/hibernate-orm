@@ -1914,7 +1914,7 @@ public class HbmXmlTransformer {
 			}
 			target.setOrderBy( map.getOrderBy() );
 
-			transferMapKey( (JaxbHbmMapType) source, target );
+			transferMapKey( map, target );
 			target.setClassification( LimitedCollectionClassification.MAP );
 		}
 		else if ( source instanceof JaxbHbmIdBagCollectionType ) {

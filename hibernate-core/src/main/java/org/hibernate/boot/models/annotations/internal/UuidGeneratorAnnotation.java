@@ -15,7 +15,7 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
 public class UuidGeneratorAnnotation implements UuidGenerator {
 	private org.hibernate.annotations.UuidGenerator.Style style;
-	private Class<? extends UuidValueGenerator> algorithm;
+	private final Class<? extends UuidValueGenerator> algorithm;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)

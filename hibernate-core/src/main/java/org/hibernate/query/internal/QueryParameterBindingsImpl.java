@@ -263,8 +263,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			return type;
 		}
 
-		if ( bindType instanceof JavaTypedExpressible) {
-			final JavaTypedExpressible<?> javaTypedExpressible = (JavaTypedExpressible<?>) bindType;
+		if ( bindType instanceof JavaTypedExpressible<?> javaTypedExpressible ) {
 			final JavaType<?> jtd = javaTypedExpressible.getExpressibleJavaType();
 			if ( jtd.getJavaTypeClass() != null ) {
 				// avoid dynamic models

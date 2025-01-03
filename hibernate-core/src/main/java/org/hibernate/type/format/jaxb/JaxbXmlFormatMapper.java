@@ -566,7 +566,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 		return marshaller;
 	}
 
-	public static interface ManagedMapWrapper {
+	public interface ManagedMapWrapper {
 		int size();
 	}
 
@@ -637,7 +637,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 		}
 	}
 
-	private static interface JAXBElementTransformer {
+	private interface JAXBElementTransformer {
 		JAXBElement<?> toJAXBElement(Object o);
 		Object fromJAXBElement(Object element, Unmarshaller unmarshaller) throws JAXBException;
 		Object fromXmlContent(String content);

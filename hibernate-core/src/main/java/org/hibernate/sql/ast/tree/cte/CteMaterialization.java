@@ -22,5 +22,5 @@ public enum CteMaterialization {
 	/**
 	 * Do not materialize the CTE if possible.
 	 */
-	NOT_MATERIALIZED;
+	NOT_MATERIALIZED
 }

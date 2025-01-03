@@ -252,8 +252,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 			if ( existingType != null ) {
 				return existingType;
 			}
-			if ( jdbcType instanceof SqlTypedJdbcType ) {
-				final SqlTypedJdbcType sqlTypedJdbcType = (SqlTypedJdbcType) jdbcType;
+			if ( jdbcType instanceof SqlTypedJdbcType sqlTypedJdbcType ) {
 				sqlTypedDescriptorMap.put( sqlTypedJdbcType.getSqlTypeName().toLowerCase( Locale.ROOT ), sqlTypedJdbcType );
 			}
 			return jdbcType;

@@ -197,8 +197,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 			if ( value instanceof Component c ) {
 				validateComponent( c, qualify( basePath, property.getName() ), inArray );
 			}
-			else if ( value instanceof ToOne ) {
-				final ToOne toOne = (ToOne) value;
+			else if ( value instanceof ToOne toOne ) {
 				if ( inArray && toOne.getReferencedPropertyName() != null ) {
 					throw new AnnotationException(
 							"Property '" + qualify( basePath, property.getName() )
@@ -210,8 +209,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 					);
 				}
 			}
-			else if ( value instanceof Collection ) {
-				final Collection collection = (Collection) value;
+			else if ( value instanceof Collection collection ) {
 				if ( inArray && collection.getMappedByProperty() != null ) {
 					throw new AnnotationException(
 							"Property '" + qualify( basePath, property.getName() )
@@ -310,8 +308,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 	}
 
 	private static void addColumns(ArrayList<Column> orderedColumns, Value value) {
-		if ( value instanceof Component ) {
-			final Component subComponent = (Component) value;
+		if ( value instanceof Component subComponent ) {
 			if ( subComponent.getAggregateColumn() == null ) {
 				for ( Property property : subComponent.getProperties() ) {
 					addColumns( orderedColumns, property.getValue() );
@@ -329,8 +326,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 	private static boolean addColumns(ArrayList<Column> orderedColumns, Component component, String structColumnName) {
 		for ( Property property : component.getProperties() ) {
 			final Value value = property.getValue();
-			if ( value instanceof Component ) {
-				final Component subComponent = (Component) value;
+			if ( value instanceof Component subComponent ) {
 				if ( subComponent.getAggregateColumn() == null ) {
 					if ( addColumns( orderedColumns, subComponent, structColumnName ) ) {
 						return true;
@@ -363,8 +359,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 	private void validateSupportedColumnTypes(String basePath, Component component) {
 		for ( Property property : component.getProperties() ) {
 			final Value value = property.getValue();
-			if ( value instanceof Component ) {
-				final Component subComponent = (Component) value;
+			if ( value instanceof Component subComponent ) {
 				if ( subComponent.getAggregateColumn() == null ) {
 					validateSupportedColumnTypes( qualify( basePath, property.getName() ), subComponent );
 				}

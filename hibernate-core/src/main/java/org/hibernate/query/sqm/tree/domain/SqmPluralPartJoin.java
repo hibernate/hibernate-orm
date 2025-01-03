@@ -67,7 +67,7 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmFrom<?, O> lhsCopy = (SqmFrom<?, O>) getLhs().copy( context );
+		final SqmFrom<?, O> lhsCopy = getLhs().copy( context );
 		final SqmPluralPartJoin<O, T> path = context.registerCopy(
 				this,
 				new SqmPluralPartJoin<>(

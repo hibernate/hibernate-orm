@@ -70,6 +70,6 @@ public interface AttributeAnalysis {
 		boolean isDirty() {
 			return true;
 		}
-	};
+	}
 
 }

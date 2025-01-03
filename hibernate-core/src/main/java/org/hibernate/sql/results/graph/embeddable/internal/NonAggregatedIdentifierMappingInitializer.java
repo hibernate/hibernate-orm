@@ -387,9 +387,8 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 				if ( hasIdClass ) {
 					final AttributeMapping virtualIdAttribute = virtualIdEmbeddable.getAttributeMapping( i );
 					final AttributeMapping mappedIdAttribute = representationEmbeddable.getAttributeMapping( i );
-					if ( virtualIdAttribute instanceof ToOneAttributeMapping
-							&& !( mappedIdAttribute instanceof ToOneAttributeMapping ) ) {
-						final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) virtualIdAttribute;
+					if ( virtualIdAttribute instanceof ToOneAttributeMapping toOneAttributeMapping
+						&& !( mappedIdAttribute instanceof ToOneAttributeMapping ) ) {
 						final ForeignKeyDescriptor fkDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
 						final Object associationKey = fkDescriptor.getAssociationKeyFromSide(
 								data.virtualIdState[i],

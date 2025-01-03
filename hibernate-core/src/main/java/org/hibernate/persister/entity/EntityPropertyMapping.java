@@ -153,9 +153,7 @@ class EntityPropertyMapping {
 							logIncompatibleRegistration( path, existingType, type );
 						}
 					}
-					else if ( type instanceof EntityType && existingType instanceof EntityType ) {
-						EntityType entityType1 = (EntityType) existingType;
-						EntityType entityType2 = (EntityType) type;
+					else if ( type instanceof EntityType entityType2 && existingType instanceof EntityType entityType1 ) {
 
 						if ( entityType1.getAssociatedEntityName().equals( entityType2.getAssociatedEntityName() ) ) {
 							logDuplicateRegistration( path, existingType, type );
@@ -205,16 +203,13 @@ class EntityPropertyMapping {
 		}
 
 		// Create a copy of the type but with the common class
-		if ( entityType1 instanceof ManyToOneType ) {
-			ManyToOneType t = (ManyToOneType) entityType1;
+		if ( entityType1 instanceof ManyToOneType t ) {
 			return new ManyToOneType( t, commonClass.getEntityName() );
 		}
-		else if ( entityType1 instanceof SpecialOneToOneType ) {
-			SpecialOneToOneType t = (SpecialOneToOneType) entityType1;
+		else if ( entityType1 instanceof SpecialOneToOneType t ) {
 			return new SpecialOneToOneType( t, commonClass.getEntityName() );
 		}
-		else if ( entityType1 instanceof OneToOneType ) {
-			OneToOneType t = (OneToOneType) entityType1;
+		else if ( entityType1 instanceof OneToOneType t ) {
 			return new OneToOneType( t, commonClass.getEntityName() );
 		}
 		else {
@@ -274,8 +269,7 @@ class EntityPropertyMapping {
 			addPropertyPath( path, type, columns, columnReaders, columnReaderTemplates, factory );
 		}
 
-		if ( type instanceof AnyType ) {
-			AnyType actype = (AnyType) type;
+		if ( type instanceof AnyType actype ) {
 			initComponentPropertyPaths(
 					path,
 					actype,
@@ -286,8 +280,7 @@ class EntityPropertyMapping {
 					factory
 			);
 		}
-		else if ( type instanceof ComponentType ) {
-			ComponentType actype = (ComponentType) type;
+		else if ( type instanceof ComponentType actype ) {
 			initComponentPropertyPaths(
 					path,
 					actype,

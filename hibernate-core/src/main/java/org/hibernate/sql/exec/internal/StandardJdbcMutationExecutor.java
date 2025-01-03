@@ -103,8 +103,7 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 					e,
 					"JDBC exception executing SQL [" + finalSql + "]"
 			);
-			if ( exception instanceof ConstraintViolationException && jdbcMutation instanceof JdbcOperationQueryInsert ) {
-				final ConstraintViolationException constraintViolationException = (ConstraintViolationException) exception;
+			if ( exception instanceof ConstraintViolationException constraintViolationException && jdbcMutation instanceof JdbcOperationQueryInsert ) {
 				if ( constraintViolationException.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE ) {
 					final JdbcOperationQueryInsert jdbcInsert = (JdbcOperationQueryInsert) jdbcMutation;
 					final String uniqueConstraintNameThatMayFail = jdbcInsert.getUniqueConstraintNameThatMayFail();

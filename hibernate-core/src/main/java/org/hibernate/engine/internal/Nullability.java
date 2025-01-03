@@ -151,9 +151,8 @@ public final class Nullability {
 			return checkComponentNullability( value, (ComponentType) propertyType );
 		}
 
-		if ( propertyType instanceof CollectionType ) {
+		if ( propertyType instanceof CollectionType collectionType ) {
 			// persistent collections may have components
-			final CollectionType collectionType = (CollectionType) propertyType;
 			final Type collectionElementType = collectionType.getElementType( session.getFactory() );
 
 			if ( collectionElementType instanceof ComponentType || collectionElementType instanceof AnyType ) {

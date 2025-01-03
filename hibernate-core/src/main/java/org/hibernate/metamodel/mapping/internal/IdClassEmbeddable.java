@@ -181,9 +181,8 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				}
 			}
 			//JPA 2 @MapsId + @IdClass points to the pk of the entity
-			else if ( attributeMapping instanceof ToOneAttributeMapping
+			else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping
 					&& !( getAttributeMapping( i ) instanceof ToOneAttributeMapping ) ) {
-				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
 				final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
 						toOneAttributeMapping.getSideNature().inverse()
 				);
@@ -216,8 +215,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				(position, virtualIdAttribute) -> {
 					final AttributeMapping idClassAttribute = attributeMappings.get( position );
 					Object o = idClassAttribute.getValue( id );
-					if ( virtualIdAttribute instanceof ToOneAttributeMapping && !( idClassAttribute instanceof ToOneAttributeMapping ) ) {
-						final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) virtualIdAttribute;
+					if ( virtualIdAttribute instanceof ToOneAttributeMapping toOneAttributeMapping && !( idClassAttribute instanceof ToOneAttributeMapping ) ) {
 						final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
 								.getEntityPersister();
 						final EntityKey entityKey = session.generateEntityKey( o, entityPersister );

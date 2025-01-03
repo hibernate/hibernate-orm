@@ -22,11 +22,11 @@ import org.jboss.logging.Logger;
 public class WebSphereJtaPlatform extends AbstractJtaPlatform {
 	private static final Logger log = Logger.getLogger( WebSphereJtaPlatform.class );
 
-	private final Class transactionManagerAccessClass;
+	private final Class<?> transactionManagerAccessClass;
 	private final WebSphereEnvironment webSphereEnvironment;
 
 	public WebSphereJtaPlatform() {
-		Class tmAccessClass = null;
+		Class<?> tmAccessClass = null;
 		WebSphereEnvironment webSphereEnvironment = null;
 
 		for ( WebSphereEnvironment check : WebSphereEnvironment.values() ) {
@@ -49,13 +49,12 @@ public class WebSphereJtaPlatform extends AbstractJtaPlatform {
 		this.webSphereEnvironment = webSphereEnvironment;
 	}
 
-	public WebSphereJtaPlatform(Class transactionManagerAccessClass, WebSphereEnvironment webSphereEnvironment) {
+	public WebSphereJtaPlatform(Class<?> transactionManagerAccessClass, WebSphereEnvironment webSphereEnvironment) {
 		this.transactionManagerAccessClass = transactionManagerAccessClass;
 		this.webSphereEnvironment = webSphereEnvironment;
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked"})
 	protected TransactionManager locateTransactionManager() {
 		try {
 			final Method method = transactionManagerAccessClass.getMethod( "getTransactionManager" );
@@ -73,7 +72,7 @@ public class WebSphereJtaPlatform extends AbstractJtaPlatform {
 		return (UserTransaction) jndiService().locate( utName );
 	}
 
-	public static enum WebSphereEnvironment {
+	public enum WebSphereEnvironment {
 		WS_4_0( "4.x", "com.ibm.ejs.jts.jta.JTSXA", "jta/usertransaction" ),
 		WS_5_0( "5.0", "com.ibm.ejs.jts.jta.TransactionManagerFactory", "java:comp/UserTransaction" ),
 		WS_5_1( "5.1", "com.ibm.ws.Transaction.TransactionManagerFactory", "java:comp/UserTransaction" )
@@ -83,7 +82,7 @@ public class WebSphereJtaPlatform extends AbstractJtaPlatform {
 		private final String tmAccessClassName;
 		private final String utName;
 
-		private WebSphereEnvironment(String webSphereVersion, String tmAccessClassName, String utName) {
+		WebSphereEnvironment(String webSphereVersion, String tmAccessClassName, String utName) {
 			this.webSphereVersion = webSphereVersion;
 			this.tmAccessClassName = tmAccessClassName;
 			this.utName = utName;

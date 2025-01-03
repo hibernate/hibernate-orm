@@ -100,6 +100,8 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 
 	/**
 	 * Find an existing {@link AttributeNode} by name within this container.
+	 *
+	 * @since 7.0
 	 */
 	@Override
 	<Y> AttributeNode<Y> getAttributeNode(String attributeName);
@@ -107,6 +109,8 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	/**
 	 * Find an existing {@link AttributeNode} by corresponding attribute
 	 * reference, within this container.
+	 *
+	 * @since 7.0
 	 */
 	@Override
 	<Y> AttributeNode<Y> getAttributeNode(Attribute<? super J, Y> attribute);
@@ -145,6 +149,8 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 * such {@link SubGraph} if there is one.
 	 *
 	 * @see jakarta.persistence.EntityGraph#addTreatedSubgraph(Class)
+	 *
+	 * @since 7.0
 	 */
 	<Y extends J> SubGraph<Y> addTreatedSubgraph(Class<Y> type);
 
@@ -152,6 +158,8 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 * Create and return a new (mutable) {@link SubGraph} representing
 	 * the given subtype of the type of this node, or return an existing
 	 * such {@link SubGraph} if there is one.
+	 *
+	 * @since 7.0
 	 */
 	@Incubating
 	<Y extends J> SubGraph<Y> addTreatedSubgraph(ManagedType<Y> type);
@@ -244,6 +252,8 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 * @param type A subtype of the attribute type
 	 *
 	 * @see #addSubgraph(Attribute, Class)
+	 *
+	 * @since 7.0
 	 */
 	@Override
 	<Y> SubGraph<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type)
@@ -260,6 +270,8 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @param attribute An attribute of the represented type
 	 * @param type A subtype of the attribute type
+	 *
+	 * @since 7.0
 	 */
 	@Incubating
 	<AJ> SubGraph<AJ> addTreatedSubgraph(Attribute<? super J, ? super AJ> attribute, ManagedType<AJ> type)
@@ -337,6 +349,8 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 * {@link SubGraph} if there is one.
 	 *
 	 * @param attribute A collection-valued attribute of the represented type
+	 *
+	 * @since 7.0
 	 */
 	@Override
 	<E> SubGraph<E> addElementSubgraph(PluralAttribute<? super J, ?, E> attribute);
@@ -352,6 +366,8 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @param attribute A collection-valued attribute of the represented type
 	 * @param type A subtype of the element type
+	 *
+	 * @since 7.0
 	 */
 	@Override
 	<E> SubGraph<E> addTreatedElementSubgraph(PluralAttribute<? super J, ?, ? super E> attribute, Class<E> type)
@@ -368,6 +384,8 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @param attribute A collection-valued attribute of the represented type
 	 * @param type A subtype of the element type
+	 *
+	 * @since 7.0
 	 */
 	@Incubating
 	<AJ> SubGraph<AJ> addTreatedElementSubgraph(PluralAttribute<? super J, ?, ? super AJ> attribute, ManagedType<AJ> type)
@@ -468,6 +486,8 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @param attribute A map-valued attribute of the represented type
 	 * @param type A subtype of the key type
+	 *
+	 * @since 7.0
 	 */
 	@Incubating
 	<AJ> SubGraph<AJ> addTreatedMapKeySubgraph(MapAttribute<? super J, ? super AJ, ?> attribute, ManagedType<AJ> type)

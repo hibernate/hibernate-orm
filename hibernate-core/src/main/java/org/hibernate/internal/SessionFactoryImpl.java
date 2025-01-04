@@ -284,7 +284,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			runtimeMetamodels = runtimeMetamodelsImpl;
 			final MappingMetamodelImpl mappingMetamodelImpl = new MappingMetamodelImpl( typeConfiguration, serviceRegistry );
 			runtimeMetamodelsImpl.setMappingMetamodel( mappingMetamodelImpl );
-			fastSessionServices = new FastSessionServices( this );
+			fastSessionServices = new FastSessionServices( serviceRegistry, sessionFactoryOptions );
 			mappingMetamodelImpl.finishInitialization(
 					new ModelCreationContext( bootstrapContext, bootMetamodel, mappingMetamodelImpl, typeConfiguration ) );
 			runtimeMetamodelsImpl.setJpaMetamodel( mappingMetamodelImpl.getJpaMetamodel() );
@@ -317,7 +317,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 				close();
 			}
 			catch (Exception closeException) {
-				LOG.debugf( "Eating error closing the SessionFactory after a failed attempt to start it" );
+				LOG.debug( "Eating error closing the SessionFactory after a failed attempt to start it" );
 			}
 			throw e;
 		}
@@ -342,7 +342,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			SessionFactoryImplementor self) {
 		return options.getServiceRegistry()
 				.requireService( SessionFactoryServiceRegistryFactory.class )
-				// it is not great how we pass in an instance to
+				// it is not great how we pass a reference to
 				// an incompletely-initialized instance here:
 				.buildServiceRegistry( self, options );
 	}

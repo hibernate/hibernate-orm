@@ -5,12 +5,12 @@
 package org.hibernate.internal;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.monitor.internal.EmptyEventMonitor;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
@@ -42,7 +42,7 @@ import java.util.Collection;
  *
  * @author Sanne Grinovero
  */
-public final class FastSessionServices extends EventListenerGroups {
+public class FastSessionServices extends EventListenerGroups {
 
 	private final ConnectionProvider connectionProvider;
 	private final MultiTenantConnectionProvider<Object> multiTenantConnectionProvider;
@@ -57,9 +57,8 @@ public final class FastSessionServices extends EventListenerGroups {
 	private final ManagedBeanRegistry managedBeanRegistry;
 	private final ConfigurationService configurationService;
 
-	FastSessionServices(SessionFactoryImplementor sessionFactory) {
-		super( sessionFactory.getServiceRegistry() );
-		final ServiceRegistry serviceRegistry = sessionFactory.getServiceRegistry();
+	FastSessionServices(ServiceRegistry serviceRegistry, SessionFactoryOptions factoryOptions) {
+		super( serviceRegistry );
 
 		//Some "hot" services:
 		classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
@@ -72,7 +71,7 @@ public final class FastSessionServices extends EventListenerGroups {
 		managedBeanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
 		configurationService = serviceRegistry.getService( ConfigurationService.class );
 
-		final boolean multiTenancyEnabled = sessionFactory.getSessionFactoryOptions().isMultiTenancyEnabled();
+		final boolean multiTenancyEnabled = factoryOptions.isMultiTenancyEnabled();
 		connectionProvider =
 				multiTenancyEnabled ? null : serviceRegistry.getService( ConnectionProvider.class );
 		multiTenantConnectionProvider =

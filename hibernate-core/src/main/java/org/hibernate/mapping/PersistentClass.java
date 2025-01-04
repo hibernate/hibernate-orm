@@ -50,7 +50,9 @@ import static org.hibernate.sql.Template.collectColumnNames;
  *
  * @author Gavin King
  */
-public abstract class PersistentClass implements IdentifiableTypeClass, AttributeContainer, Filterable, MetaAttributable, Contributable, Serializable {
+public abstract sealed class PersistentClass
+		implements IdentifiableTypeClass, AttributeContainer, Filterable, MetaAttributable, Contributable, Serializable
+		permits RootClass, Subclass {
 
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 

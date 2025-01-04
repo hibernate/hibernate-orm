@@ -15,7 +15,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
  *
  * @author Gavin King
  */
-public class UnionSubclass extends Subclass implements TableOwner {
+public final class UnionSubclass extends Subclass implements TableOwner {
 	private Table table;
 
 	public UnionSubclass(PersistentClass superclass, MetadataBuildingContext buildingContext) {

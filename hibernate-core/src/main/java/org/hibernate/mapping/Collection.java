@@ -44,7 +44,11 @@ import static org.hibernate.mapping.MappingHelper.createUserTypeBean;
  *
  * @author Gavin King
  */
-public abstract class Collection implements Fetchable, Value, Filterable, SoftDeletable {
+public abstract sealed class Collection
+		implements Fetchable, Value, Filterable, SoftDeletable
+		permits Set, Bag,
+				IndexedCollection, // List, Map
+				IdentifierCollection { // IdentifierBag only built-in implementation
 
 	public static final String DEFAULT_ELEMENT_COLUMN_NAME = "elt";
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";

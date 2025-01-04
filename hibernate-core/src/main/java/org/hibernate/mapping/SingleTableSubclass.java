@@ -18,7 +18,7 @@ import org.hibernate.internal.util.collections.JoinedList;
  *
  * @author Gavin King
  */
-public class SingleTableSubclass extends Subclass {
+public final class SingleTableSubclass extends Subclass {
 
 	public SingleTableSubclass(PersistentClass superclass, MetadataBuildingContext buildingContext) {
 		super( superclass, buildingContext );

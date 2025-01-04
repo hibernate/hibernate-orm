@@ -23,7 +23,10 @@ import static org.hibernate.boot.model.internal.BinderHelper.findReferencedColum
  *
  * @author Gavin King
  */
-public abstract class ToOne extends SimpleValue implements Fetchable, SortableValue {
+public abstract sealed class ToOne
+		extends SimpleValue implements Fetchable, SortableValue
+		permits OneToOne, ManyToOne {
+
 	private FetchMode fetchMode;
 	protected String referencedPropertyName;
 	private String referencedEntityName;

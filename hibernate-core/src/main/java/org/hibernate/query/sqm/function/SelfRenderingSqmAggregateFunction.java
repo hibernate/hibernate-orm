@@ -48,26 +48,28 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 		if ( existing != null ) {
 			return existing;
 		}
-		final List<SqmTypedNode<?>> arguments = new ArrayList<>( getArguments().size() );
-		for ( SqmTypedNode<?> argument : getArguments() ) {
-			arguments.add( argument.copy( context ) );
+		else {
+			final List<SqmTypedNode<?>> arguments = new ArrayList<>( getArguments().size() );
+			for ( SqmTypedNode<?> argument : getArguments() ) {
+				arguments.add( argument.copy( context ) );
+			}
+			final SelfRenderingSqmAggregateFunction<T> expression = context.registerCopy(
+					this,
+					new SelfRenderingSqmAggregateFunction<>(
+							getFunctionDescriptor(),
+							getFunctionRenderer(),
+							arguments,
+							filter == null ? null : filter.copy( context ),
+							getImpliedResultType(),
+							getArgumentsValidator(),
+							getReturnTypeResolver(),
+							nodeBuilder(),
+							getFunctionName()
+					)
+			);
+			copyTo( expression, context );
+			return expression;
 		}
-		final SelfRenderingSqmAggregateFunction<T> expression = context.registerCopy(
-				this,
-				new SelfRenderingSqmAggregateFunction<>(
-						getFunctionDescriptor(),
-						getFunctionRenderer(),
-						arguments,
-						filter == null ? null : filter.copy( context ),
-						getImpliedResultType(),
-						getArgumentsValidator(),
-						getReturnTypeResolver(),
-						nodeBuilder(),
-						getFunctionName()
-				)
-		);
-		copyTo( expression, context );
-		return expression;
 	}
 
 	@Override
@@ -79,7 +81,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 		if ( argumentsValidator != null ) {
 			argumentsValidator.validateSqlTypes( arguments, getFunctionName() );
 		}
-		return new SelfRenderingAggregateFunctionSqlAstExpression(
+		return new SelfRenderingAggregateFunctionSqlAstExpression<>(
 				getFunctionName(),
 				getFunctionRenderer(),
 				arguments,

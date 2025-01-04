@@ -125,7 +125,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 			final Expression expression = subSelections.get( i ).getExpression();
 			final Expression finalExpression;
 			if ( expression == windowFunction ) {
-				finalExpression = new SelfRenderingAggregateFunctionSqlAstExpression(
+				finalExpression = new SelfRenderingAggregateFunctionSqlAstExpression<>(
 						"min",
 						(sqlAppender, sqlAstArguments, returnType, walker1) -> {
 							sqlAppender.appendSql( "min(" );

@@ -21,7 +21,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
  *
  * @author Christian Beikov
  */
-public class SelfRenderingAggregateFunctionSqlAstExpression extends SelfRenderingFunctionSqlAstExpression
+public class SelfRenderingAggregateFunctionSqlAstExpression<T> extends SelfRenderingFunctionSqlAstExpression<T>
 		implements AggregateFunctionExpression {
 
 	private final Predicate filter;
@@ -31,7 +31,7 @@ public class SelfRenderingAggregateFunctionSqlAstExpression extends SelfRenderin
 			FunctionRenderer renderer,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
-			ReturnableType<?> type,
+			ReturnableType<T> type,
 			JdbcMappingContainer expressible) {
 		super( functionName, renderer, sqlAstArguments, type, expressible );
 		this.filter = filter;

@@ -153,8 +153,10 @@ public class SourceModelTestHelper {
 	public static SourceModelBuildingContext createBuildingContext(
 			ManagedResources managedResources,
 			StandardServiceRegistry serviceRegistry) {
-		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
-		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl( serviceRegistry, metadataBuildingOptions );
+		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions =
+				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
+		final BootstrapContextImpl bootstrapContext =
+				new BootstrapContextImpl( serviceRegistry, metadataBuildingOptions );
 		metadataBuildingOptions.setBootstrapContext( bootstrapContext );
 		return createBuildingContext(
 				managedResources,
@@ -190,7 +192,7 @@ public class SourceModelTestHelper {
 				metadataBuildingOptions
 		);
 
-		final ConfigurationService configurationService = bootstrapContext.getServiceRegistry().requireService( ConfigurationService.class );
+		final ConfigurationService configurationService = bootstrapContext.getConfigurationService();
 		final boolean doTransformation = configurationService.getSetting( MappingSettings.TRANSFORM_HBM_XML, BOOLEAN, false );
 		if ( doTransformation ) {
 			final Collection<Binding<JaxbBindableMappingDescriptor>> xmlMappingBindings = managedResources.getXmlMappingBindings();
@@ -212,7 +214,6 @@ public class SourceModelTestHelper {
 			final List<Binding<JaxbEntityMappingsImpl>> transformed = HbmXmlTransformer.transform(
 					hbmXmlBindings,
 					domainModel,
-					bootstrapContext.getServiceRegistry(),
 					UnsupportedFeatureHandling.fromSetting(
 							configurationService.getSettings().get( AvailableSettings.TRANSFORM_HBM_XML_FEATURE_HANDLING ),
 							UnsupportedFeatureHandling.ERROR

@@ -180,7 +180,6 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.CustomType;
@@ -224,11 +223,11 @@ public class HbmXmlTransformer {
 	public static List<Binding<JaxbEntityMappingsImpl>> transform(
 			List<Binding<JaxbHbmHibernateMapping>> hbmXmlBindings,
 			MetadataImplementor bootModel,
-			ServiceRegistry serviceRegistry,
 			UnsupportedFeatureHandling unsupportedFeatureHandling) {
 		// perform a first pass over the hbm.xml bindings building much of the transformation-state
 		final TransformationState transformationState = new TransformationState();
-		final List<Binding<JaxbEntityMappingsImpl>> transformations = XmlPreprocessor.preprocessHbmXml( hbmXmlBindings, transformationState );
+		final List<Binding<JaxbEntityMappingsImpl>> transformations =
+				XmlPreprocessor.preprocessHbmXml( hbmXmlBindings, transformationState );
 
 		// build and perform a pass over the boot model building the rest of the transformation-state
 		BootModelPreprocessor.preprocessBooModel( bootModel, transformationState );

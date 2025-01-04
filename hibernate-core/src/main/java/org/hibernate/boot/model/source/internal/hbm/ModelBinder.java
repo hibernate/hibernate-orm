@@ -2269,8 +2269,7 @@ public class ModelBinder {
 			return resolution.getLegacyResolvedBasicType();
 		}
 		else {
-			final ClassLoaderService classLoaderService =
-					bootstrapContext.getClassLoaderService();
+			final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
 			try {
 				final Object typeInstance = typeInstance( typeName, classLoaderService.classForName( typeName ) );
 

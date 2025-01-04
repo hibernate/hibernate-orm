@@ -263,10 +263,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@SuppressWarnings( "unchecked" )
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
 		this.serviceRegistry = serviceRegistry;
-		this.jpaBootstrap = context.isJpaBootstrap();
+		jpaBootstrap = context.isJpaBootstrap();
+
+		// we cannot use context.getConfigurationService() here because it might be missing some settings
+		// (the StandardServiceRegistry passed in here does not need to be the bootstrap service registry)
+		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
 
 		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
-		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		final JdbcServices jdbcServices = serviceRegistry.requireService( JdbcServices.class );
 
 		final Dialect dialect = jdbcServices.getJdbcEnvironment().getDialect();
@@ -275,7 +278,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		settings.putAll( map( dialect.getDefaultProperties() ) );
 		settings.putAll( configurationService.getSettings() );
 
-		this.beanManagerReference = NullnessHelper.coalesceSuppliedValues(
+		beanManagerReference = NullnessHelper.coalesceSuppliedValues(
 				() -> settings.get( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER ),
 				() -> {
 					final Object value = settings.get( AvailableSettings.CDI_BEAN_MANAGER );
@@ -289,68 +292,67 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				}
 		);
 
-		this.validatorFactoryReference = settings.getOrDefault(
+		validatorFactoryReference = settings.getOrDefault(
 				AvailableSettings.JPA_VALIDATION_FACTORY,
 				settings.get( AvailableSettings.JAKARTA_VALIDATION_FACTORY )
 		);
 
-		this.jsonFormatMapper = determineJsonFormatMapper(
+		jsonFormatMapper = determineJsonFormatMapper(
 				settings.get( AvailableSettings.JSON_FORMAT_MAPPER ),
 				strategySelector
 		);
-		this.xmlFormatMapper = determineXmlFormatMapper(
+		xmlFormatMapper = determineXmlFormatMapper(
 				settings.get( AvailableSettings.XML_FORMAT_MAPPER ),
 				strategySelector,
-				this.xmlFormatMapperLegacyFormatEnabled =
+				xmlFormatMapperLegacyFormatEnabled =
 						context.getMetadataBuildingOptions().isXmlFormatMapperLegacyFormatEnabled()
 		);
 
-		this.sessionFactoryName = (String) settings.get( SESSION_FACTORY_NAME );
-		this.sessionFactoryNameAlsoJndiName =
+		sessionFactoryName = (String) settings.get( SESSION_FACTORY_NAME );
+		sessionFactoryNameAlsoJndiName =
 				configurationService.getSetting( SESSION_FACTORY_NAME_IS_JNDI, BOOLEAN, true );
-		this.jtaTransactionAccessEnabled =
+		jtaTransactionAccessEnabled =
 				configurationService.getSetting( ALLOW_JTA_TRANSACTION_ACCESS, BOOLEAN, true );
 
-		this.flushBeforeCompletionEnabled =
+		flushBeforeCompletionEnabled =
 				configurationService.getSetting( FLUSH_BEFORE_COMPLETION, BOOLEAN, true );
-		this.autoCloseSessionEnabled =
+		autoCloseSessionEnabled =
 				configurationService.getSetting( AUTO_CLOSE_SESSION, BOOLEAN, false );
 
-		this.statisticsEnabled =
+		statisticsEnabled =
 				configurationService.getSetting( GENERATE_STATISTICS, BOOLEAN, false );
 
-		this.interceptor = determineInterceptor( settings, strategySelector );
-		this.statelessInterceptorSupplier = determineStatelessInterceptor( settings, strategySelector );
+		interceptor = determineInterceptor( settings, strategySelector );
+		statelessInterceptorSupplier = determineStatelessInterceptor( settings, strategySelector );
 
-		this.statementInspector =
+		statementInspector =
 				strategySelector.resolveStrategy( StatementInspector.class,
 						settings.get( STATEMENT_INSPECTOR ) );
 
 
-		this.baselineSessionEventsListenerBuilder =
-				new BaselineSessionEventsListenerBuilder(
-						getAutoSessionEventsListener( settings, strategySelector ) );
+		baselineSessionEventsListenerBuilder =
+				new BaselineSessionEventsListenerBuilder( getAutoSessionEventsListener( settings, strategySelector ) );
 
-		this.customEntityDirtinessStrategy =
+		customEntityDirtinessStrategy =
 				strategySelector.resolveDefaultableStrategy( CustomEntityDirtinessStrategy.class,
 						settings.get( CUSTOM_ENTITY_DIRTINESS_STRATEGY ),
 						DefaultCustomEntityDirtinessStrategy.INSTANCE );
 
-		this.entityNotFoundDelegate = StandardEntityNotFoundDelegate.INSTANCE;
+		entityNotFoundDelegate = StandardEntityNotFoundDelegate.INSTANCE;
 
-		this.identifierRollbackEnabled =
+		identifierRollbackEnabled =
 				configurationService.getSetting( USE_IDENTIFIER_ROLLBACK, BOOLEAN, false );
-		this.checkNullability =
+		checkNullability =
 				configurationService.getSetting( CHECK_NULLABILITY, BOOLEAN, true );
-		this.initializeLazyStateOutsideTransactions =
+		initializeLazyStateOutsideTransactions =
 				configurationService.getSetting( ENABLE_LAZY_LOAD_NO_TRANS, BOOLEAN, false );
 
-		this.multiTenancyEnabled = JdbcEnvironmentImpl.isMultiTenancyEnabled( serviceRegistry );
-		this.currentTenantIdentifierResolver =
+		multiTenancyEnabled = JdbcEnvironmentImpl.isMultiTenancyEnabled( serviceRegistry );
+		currentTenantIdentifierResolver =
 				strategySelector.resolveStrategy( CurrentTenantIdentifierResolver.class,
 						settings.get( MULTI_TENANT_IDENTIFIER_RESOLVER ) );
-		if ( this.currentTenantIdentifierResolver == null ) {
-			this.currentTenantIdentifierResolver = Helper.getBean(
+		if ( currentTenantIdentifierResolver == null ) {
+			currentTenantIdentifierResolver = Helper.getBean(
 				Helper.getBeanContainer( serviceRegistry ),
 				CurrentTenantIdentifierResolver.class,
 				true,
@@ -359,92 +361,91 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			);
 		}
 
-		this.delayBatchFetchLoaderCreations =
+		delayBatchFetchLoaderCreations =
 				configurationService.getSetting( DELAY_ENTITY_LOADER_CREATIONS, BOOLEAN, true );
 
-		this.defaultBatchFetchSize = getInt( DEFAULT_BATCH_FETCH_SIZE, settings, -1 );
-		this.subselectFetchEnabled = getBoolean( USE_SUBSELECT_FETCH, settings );
-		this.maximumFetchDepth = getInteger( MAX_FETCH_DEPTH, settings );
+		defaultBatchFetchSize = getInt( DEFAULT_BATCH_FETCH_SIZE, settings, -1 );
+		subselectFetchEnabled = getBoolean( USE_SUBSELECT_FETCH, settings );
+		maximumFetchDepth = getInteger( MAX_FETCH_DEPTH, settings );
 
-		this.defaultNullPrecedence = getDefaultNullPrecedence( settings.get( DEFAULT_NULL_ORDERING ) );
+		defaultNullPrecedence = getDefaultNullPrecedence( settings.get( DEFAULT_NULL_ORDERING ) );
 
-		this.orderUpdatesEnabled = getBoolean( ORDER_UPDATES, settings );
-		this.orderInsertsEnabled = getBoolean( ORDER_INSERTS, settings );
+		orderUpdatesEnabled = getBoolean( ORDER_UPDATES, settings );
+		orderInsertsEnabled = getBoolean( ORDER_INSERTS, settings );
 
-		this.callbacksEnabled = getBoolean( JPA_CALLBACKS_ENABLED, settings, true );
+		callbacksEnabled = getBoolean( JPA_CALLBACKS_ENABLED, settings, true );
 
-		this.jtaTrackByThread = configurationService.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
+		jtaTrackByThread = configurationService.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
 
 		final String hqlTranslatorImplFqn =
 				extractPropertyValue( AvailableSettings.SEMANTIC_QUERY_PRODUCER, settings );
-		this.hqlTranslator = resolveHqlTranslator( hqlTranslatorImplFqn, serviceRegistry, strategySelector );
+		hqlTranslator = resolveHqlTranslator( hqlTranslatorImplFqn, serviceRegistry, strategySelector );
 
 		final String sqmTranslatorFactoryImplFqn =
 				extractPropertyValue( AvailableSettings.SEMANTIC_QUERY_TRANSLATOR, settings );
-		this.sqmTranslatorFactory = resolveSqmTranslator( sqmTranslatorFactoryImplFqn, strategySelector );
+		sqmTranslatorFactory = resolveSqmTranslator( sqmTranslatorFactoryImplFqn, strategySelector );
 
 		final String sqmMutationStrategyImplName =
 				extractPropertyValue( AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY, settings );
-		this.sqmMultiTableMutationStrategy =
+		sqmMultiTableMutationStrategy =
 				resolveSqmMutationStrategy( sqmMutationStrategyImplName, serviceRegistry, strategySelector );
 		final String sqmInsertStrategyImplName =
 				extractPropertyValue( AvailableSettings.QUERY_MULTI_TABLE_INSERT_STRATEGY, settings );
-		this.sqmMultiTableInsertStrategy =
+		sqmMultiTableInsertStrategy =
 				resolveSqmInsertStrategy( sqmInsertStrategyImplName, serviceRegistry, strategySelector );
 
-		this.useOfJdbcNamedParametersEnabled =
+		useOfJdbcNamedParametersEnabled =
 				configurationService.getSetting( CALLABLE_NAMED_PARAMS_ENABLED, BOOLEAN, true );
 
-		this.namedQueryStartupCheckingEnabled =
+		namedQueryStartupCheckingEnabled =
 				configurationService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
 
-		this.preferJavaTimeJdbcTypes = MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configurationService );
-		this.preferNativeEnumTypes = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );
-		this.preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );
-		this.preferredSqlTypeCodeForDuration = ConfigurationHelper.getPreferredSqlTypeCodeForDuration( serviceRegistry );
-		this.preferredSqlTypeCodeForUuid = ConfigurationHelper.getPreferredSqlTypeCodeForUuid( serviceRegistry );
-		this.preferredSqlTypeCodeForInstant = ConfigurationHelper.getPreferredSqlTypeCodeForInstant( serviceRegistry );
-		this.preferredSqlTypeCodeForArray = ConfigurationHelper.getPreferredSqlTypeCodeForArray( serviceRegistry );
-		this.defaultTimeZoneStorageStrategy = context.getMetadataBuildingOptions().getDefaultTimeZoneStorage();
+		preferJavaTimeJdbcTypes = MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configurationService );
+		preferNativeEnumTypes = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );
+		preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );
+		preferredSqlTypeCodeForDuration = ConfigurationHelper.getPreferredSqlTypeCodeForDuration( serviceRegistry );
+		preferredSqlTypeCodeForUuid = ConfigurationHelper.getPreferredSqlTypeCodeForUuid( serviceRegistry );
+		preferredSqlTypeCodeForInstant = ConfigurationHelper.getPreferredSqlTypeCodeForInstant( serviceRegistry );
+		preferredSqlTypeCodeForArray = ConfigurationHelper.getPreferredSqlTypeCodeForArray( serviceRegistry );
+		defaultTimeZoneStorageStrategy = context.getMetadataBuildingOptions().getDefaultTimeZoneStorage();
 
 		final RegionFactory regionFactory = serviceRegistry.getService( RegionFactory.class );
 		if ( !(regionFactory instanceof NoCachingRegionFactory) ) {
-			this.secondLevelCacheEnabled =
+			secondLevelCacheEnabled =
 					configurationService.getSetting( USE_SECOND_LEVEL_CACHE, BOOLEAN, true );
-			this.queryCacheEnabled =
+			queryCacheEnabled =
 					configurationService.getSetting( USE_QUERY_CACHE, BOOLEAN, false );
-			this.cacheRegionPrefix = extractPropertyValue( CACHE_REGION_PREFIX, settings );
-			this.queryCacheLayout =
+			cacheRegionPrefix = extractPropertyValue( CACHE_REGION_PREFIX, settings );
+			queryCacheLayout =
 					configurationService.getSetting( QUERY_CACHE_LAYOUT,
 							value -> CacheLayout.valueOf( value.toString().toUpperCase( Locale.ROOT ) ),
 							CacheLayout.FULL );
-			this.timestampsCacheFactory =
+			timestampsCacheFactory =
 					strategySelector.resolveDefaultableStrategy( TimestampsCacheFactory.class,
 							settings.get( QUERY_CACHE_FACTORY ), StandardTimestampsCacheFactory.INSTANCE );
-			this.minimalPutsEnabled =
+			minimalPutsEnabled =
 					configurationService.getSetting( USE_MINIMAL_PUTS, BOOLEAN, regionFactory.isMinimalPutsEnabledByDefault() );
-			this.structuredCacheEntriesEnabled =
+			structuredCacheEntriesEnabled =
 					configurationService.getSetting( USE_STRUCTURED_CACHE, BOOLEAN, false );
-			this.directReferenceCacheEntriesEnabled =
+			directReferenceCacheEntriesEnabled =
 					configurationService.getSetting( USE_DIRECT_REFERENCE_CACHE_ENTRIES, BOOLEAN, false );
-			this.autoEvictCollectionCache =
+			autoEvictCollectionCache =
 					configurationService.getSetting( AUTO_EVICT_COLLECTION_CACHE, BOOLEAN, false );
 		}
 		else {
-			this.secondLevelCacheEnabled = false;
-			this.queryCacheEnabled = false;
-			this.queryCacheLayout = CacheLayout.AUTO;
-			this.timestampsCacheFactory = null;
-			this.cacheRegionPrefix = null;
-			this.minimalPutsEnabled = false;
-			this.structuredCacheEntriesEnabled = false;
-			this.directReferenceCacheEntriesEnabled = false;
-			this.autoEvictCollectionCache = false;
+			secondLevelCacheEnabled = false;
+			queryCacheEnabled = false;
+			queryCacheLayout = CacheLayout.AUTO;
+			timestampsCacheFactory = null;
+			cacheRegionPrefix = null;
+			minimalPutsEnabled = false;
+			structuredCacheEntriesEnabled = false;
+			directReferenceCacheEntriesEnabled = false;
+			autoEvictCollectionCache = false;
 		}
 
 		try {
-			this.schemaAutoTooling =
-					SchemaAutoTooling.interpret( (String) settings.get( AvailableSettings.HBM2DDL_AUTO ) );
+			schemaAutoTooling = SchemaAutoTooling.interpret( (String) settings.get( AvailableSettings.HBM2DDL_AUTO ) );
 		}
 		catch (Exception e) {
 			log.warn( e.getMessage() + "  Ignoring" );
@@ -452,88 +453,87 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		final ExtractedDatabaseMetaData meta = jdbcServices.getExtractedMetaDataSupport();
 		if ( meta.doesDataDefinitionCauseTransactionCommit() ) {
-			this.tempTableDdlTransactionHandling =
+			tempTableDdlTransactionHandling =
 					meta.supportsDataDefinitionInTransaction()
 							? TempTableDdlTransactionHandling.ISOLATE_AND_TRANSACT
 							: TempTableDdlTransactionHandling.ISOLATE;
 		}
 		else {
-			this.tempTableDdlTransactionHandling = TempTableDdlTransactionHandling.NONE;
+			tempTableDdlTransactionHandling = TempTableDdlTransactionHandling.NONE;
 		}
 
-		this.jdbcBatchSize = disallowBatchUpdates( dialect, meta ) ? 0
+		jdbcBatchSize = disallowBatchUpdates( dialect, meta ) ? 0
 				: getInt( STATEMENT_BATCH_SIZE, settings, 1 );
 
-		this.jdbcBatchVersionedData = getBoolean( BATCH_VERSIONED_DATA, settings, true );
+		jdbcBatchVersionedData = getBoolean( BATCH_VERSIONED_DATA, settings, true );
 
-		this.scrollableResultSetsEnabled =
+		scrollableResultSetsEnabled =
 				getBoolean( USE_SCROLLABLE_RESULTSET, settings, meta.supportsScrollableResults() );
-		this.getGeneratedKeysEnabled =
+		getGeneratedKeysEnabled =
 				getBoolean( USE_GET_GENERATED_KEYS, settings, meta.supportsGetGeneratedKeys() );
 
-		this.jdbcFetchSize = getInteger( STATEMENT_FETCH_SIZE, settings );
+		jdbcFetchSize = getInteger( STATEMENT_FETCH_SIZE, settings );
 
-		this.connectionHandlingMode = interpretConnectionHandlingMode( settings, serviceRegistry );
+		connectionHandlingMode = interpretConnectionHandlingMode( settings, serviceRegistry );
 
-		this.connectionProviderDisablesAutoCommit =
+		connectionProviderDisablesAutoCommit =
 				getBoolean( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, settings, false );
 
-		this.commentsEnabled = getBoolean( USE_SQL_COMMENTS, settings );
+		commentsEnabled = getBoolean( USE_SQL_COMMENTS, settings );
 
-		this.preferUserTransaction = getBoolean( PREFER_USER_TRANSACTION, settings  );
+		preferUserTransaction = getBoolean( PREFER_USER_TRANSACTION, settings  );
 
-		this.allowOutOfTransactionUpdateOperations = getBoolean( ALLOW_UPDATE_OUTSIDE_TRANSACTION, settings );
+		allowOutOfTransactionUpdateOperations = getBoolean( ALLOW_UPDATE_OUTSIDE_TRANSACTION, settings );
 
-		this.releaseResourcesOnCloseEnabled = getBoolean( DISCARD_PC_ON_CLOSE, settings );
+		releaseResourcesOnCloseEnabled = getBoolean( DISCARD_PC_ON_CLOSE, settings );
 
-		this.jdbcTimeZone = getJdbcTimeZone( settings.get( JDBC_TIME_ZONE ) );
+		jdbcTimeZone = getJdbcTimeZone( settings.get( JDBC_TIME_ZONE ) );
 
-		this.criteriaValueHandlingMode = ValueHandlingMode.interpret( settings.get( CRITERIA_VALUE_HANDLING_MODE ) );
-		this.criteriaCopyTreeEnabled = getBoolean( AvailableSettings.CRITERIA_COPY_TREE, settings, jpaBootstrap );
+		criteriaValueHandlingMode = ValueHandlingMode.interpret( settings.get( CRITERIA_VALUE_HANDLING_MODE ) );
+		criteriaCopyTreeEnabled = getBoolean( AvailableSettings.CRITERIA_COPY_TREE, settings, jpaBootstrap );
 
-		this.nativeJdbcParametersIgnored =
+		nativeJdbcParametersIgnored =
 				getBoolean( AvailableSettings.NATIVE_IGNORE_JDBC_PARAMETERS, settings, false );
 
 		// added the boolean parameter in case we want to define some form of "all" as discussed
-		this.jpaCompliance = context.getJpaCompliance();
+		jpaCompliance = context.getJpaCompliance();
 
-		this.failOnPaginationOverCollectionFetchEnabled =
-				getBoolean( FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH, settings );
+		failOnPaginationOverCollectionFetchEnabled = getBoolean( FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH, settings );
 
-		this.immutableEntityUpdateQueryHandlingMode =
+		immutableEntityUpdateQueryHandlingMode =
 				ImmutableEntityUpdateQueryHandlingMode.interpret(
 						settings.get( IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE ) );
 
-		this.defaultCatalog = getString( DEFAULT_CATALOG, settings );
-		this.defaultSchema = getString( DEFAULT_SCHEMA, settings );
+		defaultCatalog = getString( DEFAULT_CATALOG, settings );
+		defaultSchema = getString( DEFAULT_SCHEMA, settings );
 
-		this.inClauseParameterPaddingEnabled = getBoolean( IN_CLAUSE_PARAMETER_PADDING, settings );
+		inClauseParameterPaddingEnabled = getBoolean( IN_CLAUSE_PARAMETER_PADDING, settings );
 
-		this.portableIntegerDivisionEnabled = getBoolean( PORTABLE_INTEGER_DIVISION, settings );
+		portableIntegerDivisionEnabled = getBoolean( PORTABLE_INTEGER_DIVISION, settings );
 
-		this.jsonFunctionsEnabled = getBoolean( JSON_FUNCTIONS_ENABLED, settings );
-		this.xmlFunctionsEnabled = getBoolean( XML_FUNCTIONS_ENABLED, settings );
+		jsonFunctionsEnabled = getBoolean( JSON_FUNCTIONS_ENABLED, settings );
+		xmlFunctionsEnabled = getBoolean( XML_FUNCTIONS_ENABLED, settings );
 
-		this.queryStatisticsMaxSize =
+		queryStatisticsMaxSize =
 				getInt( QUERY_STATISTICS_MAX_SIZE, settings, Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE );
 
-		this.unownedAssociationTransientCheck =
+		unownedAssociationTransientCheck =
 				getBoolean( UNOWNED_ASSOCIATION_TRANSIENT_CHECK, settings, isJpaBootstrap() );
 
-		this.passProcedureParameterNames =
+		passProcedureParameterNames =
 				getBoolean( AvailableSettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES, settings, false );
 
-		this.preferJdbcDatetimeTypes =
+		preferJdbcDatetimeTypes =
 				getBoolean( AvailableSettings.NATIVE_PREFER_JDBC_DATETIME_TYPES, settings, false );
 
-		this.defaultSessionProperties = initializeDefaultSessionProperties( configurationService );
+		defaultSessionProperties = initializeDefaultSessionProperties( configurationService );
 
-		this.defaultCacheStoreMode = defaultCacheStoreMode( defaultSessionProperties );
-		this.defaultCacheRetrieveMode = defaultCacheRetrieveMode( defaultSessionProperties );
-		this.initialSessionCacheMode = interpretCacheMode( defaultCacheStoreMode, defaultCacheRetrieveMode );
+		defaultCacheStoreMode = defaultCacheStoreMode( defaultSessionProperties );
+		defaultCacheRetrieveMode = defaultCacheRetrieveMode( defaultSessionProperties );
+		initialSessionCacheMode = interpretCacheMode( defaultCacheStoreMode, defaultCacheRetrieveMode );
 
-		this.defaultLockOptions = defaultLockOptions( defaultSessionProperties );
-		this.initialSessionFlushMode = defaultFlushMode( defaultSessionProperties );
+		defaultLockOptions = defaultLockOptions( defaultSessionProperties );
+		initialSessionFlushMode = defaultFlushMode( defaultSessionProperties );
 	}
 
 	private TimeZone getJdbcTimeZone(Object jdbcTimeZoneValue) {
@@ -805,7 +805,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public String getUuid() {
-		return this.uuid;
+		return uuid;
 	}
 
 	@Override
@@ -901,12 +901,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public boolean isUseOfJdbcNamedParametersEnabled() {
-		return this.useOfJdbcNamedParametersEnabled;
+		return useOfJdbcNamedParametersEnabled;
 	}
 
 	@Override
 	public SqmFunctionRegistry getCustomSqmFunctionRegistry() {
-		return this.sqmFunctionRegistry;
+		return sqmFunctionRegistry;
 	}
 
 	@Override
@@ -1081,7 +1081,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public void setCheckNullability(boolean enabled) {
-		this.checkNullability = enabled;
+		checkNullability = enabled;
 	}
 
 	@Override
@@ -1121,7 +1121,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public TimeZone getJdbcTimeZone() {
-		return this.jdbcTimeZone;
+		return jdbcTimeZone;
 	}
 
 	@Override
@@ -1156,12 +1156,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public boolean isFailOnPaginationOverCollectionFetchEnabled() {
-		return this.failOnPaginationOverCollectionFetchEnabled;
+		return failOnPaginationOverCollectionFetchEnabled;
 	}
 
 	@Override
 	public boolean inClauseParameterPaddingEnabled() {
-		return this.inClauseParameterPaddingEnabled;
+		return inClauseParameterPaddingEnabled;
 	}
 
 	@Override

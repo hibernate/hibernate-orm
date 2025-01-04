@@ -165,7 +165,6 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 		final List<Binding<JaxbEntityMappingsImpl>> transformedBindings = HbmXmlTransformer.transform(
 				hbmBindings,
 				(MetadataImplementor) metadataSources.buildMetadata(),
-				serviceRegistry,
 				unsupportedFeatures.get()
 		);
 

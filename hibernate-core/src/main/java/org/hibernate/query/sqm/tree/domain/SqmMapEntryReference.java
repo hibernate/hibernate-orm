@@ -135,10 +135,10 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "entry(" );
-		mapPath.appendHqlString( sb );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "entry(" );
+		mapPath.appendHqlString( hql );
+		hql.append( ')' );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

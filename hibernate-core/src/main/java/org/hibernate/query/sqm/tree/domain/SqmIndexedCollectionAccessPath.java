@@ -91,10 +91,10 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		getLhs().appendHqlString( sb );
-		sb.append( '[' );
-		selectorExpression.appendHqlString( sb );
-		sb.append( ']' );
+	public void appendHqlString(StringBuilder hql) {
+		getLhs().appendHqlString( hql );
+		hql.append( '[' );
+		selectorExpression.appendHqlString( hql );
+		hql.append( ']' );
 	}
 }

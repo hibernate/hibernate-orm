@@ -221,15 +221,15 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		appendQueryPart( queryParts.get( 0 ), sb );
+	public void appendHqlString(StringBuilder hql) {
+		appendQueryPart( queryParts.get( 0 ), hql );
 		for ( int i = 1; i < queryParts.size(); i++ ) {
-			sb.append( ' ' );
-			sb.append( setOperator.sqlString() );
-			sb.append( ' ' );
-			appendQueryPart( queryParts.get( i ), sb );
+			hql.append( ' ' );
+			hql.append( setOperator.sqlString() );
+			hql.append( ' ' );
+			appendQueryPart( queryParts.get( i ), hql );
 		}
-		super.appendHqlString( sb );
+		super.appendHqlString( hql );
 	}
 
 	private static void appendQueryPart(SqmQueryPart<?> queryPart, StringBuilder sb) {

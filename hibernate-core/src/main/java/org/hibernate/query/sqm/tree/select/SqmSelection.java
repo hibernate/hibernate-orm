@@ -61,10 +61,10 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		selectableNode.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		selectableNode.appendHqlString( hql );
 		if ( alias != null ) {
-			sb.append( " as " ).append( alias );
+			hql.append( " as " ).append( alias );
 		}
 	}
 }

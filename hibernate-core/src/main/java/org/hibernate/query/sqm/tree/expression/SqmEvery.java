@@ -57,9 +57,9 @@ public class SqmEvery<T> extends AbstractSqmExpression<T> {
 		return walker.visitEvery( this );
 	}
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "all " );
-		subquery.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "all " );
+		subquery.appendHqlString( hql );
 	}
 
 }

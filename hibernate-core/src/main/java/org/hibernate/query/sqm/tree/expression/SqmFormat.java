@@ -74,7 +74,7 @@ public class SqmFormat extends SqmLiteral<String> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( getLiteralValue() );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( getLiteralValue() );
 	}
 }

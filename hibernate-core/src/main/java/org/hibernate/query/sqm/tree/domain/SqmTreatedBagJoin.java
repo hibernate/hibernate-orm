@@ -118,12 +118,12 @@ public class SqmTreatedBagJoin<L, R, R1 extends R> extends SqmBagJoin<L, R1> imp
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "treat(" );
-		wrappedPath.appendHqlString( sb );
-		sb.append( " as " );
-		sb.append( treatTarget.getTypeName() );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "treat(" );
+		wrappedPath.appendHqlString( hql );
+		hql.append( " as " );
+		hql.append( treatTarget.getTypeName() );
+		hql.append( ')' );
 	}
 
 	@Override

@@ -50,7 +50,7 @@ public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( unit );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( unit );
 	}
 }

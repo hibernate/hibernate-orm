@@ -51,7 +51,7 @@ public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNod
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( specification );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( specification );
 	}
 }

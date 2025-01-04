@@ -53,8 +53,8 @@ public class SqmDistinct<T> extends AbstractSqmNode implements SqmTypedNode<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "distinct " );
-		expression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "distinct " );
+		expression.appendHqlString( hql );
 	}
 }

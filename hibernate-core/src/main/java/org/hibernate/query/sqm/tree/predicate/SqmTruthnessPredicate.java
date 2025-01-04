@@ -55,13 +55,13 @@ public class SqmTruthnessPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		expression.appendHqlString( sb );
-		sb.append(" is ");
+	public void appendHqlString(StringBuilder hql) {
+		expression.appendHqlString( hql );
+		hql.append(" is ");
 		if ( isNegated() ) {
-			sb.append( "not " );
+			hql.append( "not " );
 		}
-		sb.append( getBooleanValue() );
+		hql.append( getBooleanValue() );
 	}
 
 	@Override

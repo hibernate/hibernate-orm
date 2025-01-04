@@ -54,9 +54,9 @@ public class SqmNamedExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		expression.appendHqlString( sb );
-		sb.append( " as " );
-		sb.append( name );
+	public void appendHqlString(StringBuilder hql) {
+		expression.appendHqlString( hql );
+		hql.append( " as " );
+		hql.append( name );
 	}
 }

@@ -50,12 +50,12 @@ public enum SqmJsonObjectAggUniqueKeysBehavior implements SqmTypedNode<Object> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql) {
 		if ( this == WITH ) {
-			sb.append( " with unique keys" );
+			hql.append( " with unique keys" );
 		}
 		else {
-			sb.append( " without unique keys" );
+			hql.append( " without unique keys" );
 		}
 	}
 }

@@ -59,14 +59,14 @@ public class SqmExistsPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql) {
 		if ( isNegated() ) {
-			sb.append( "not exists " );
+			hql.append( "not exists " );
 		}
 		else {
-			sb.append( "exists " );
+			hql.append( "exists " );
 		}
-		expression.appendHqlString( sb );
+		expression.appendHqlString( hql );
 	}
 
 	@Override

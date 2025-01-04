@@ -80,15 +80,15 @@ public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql) {
 		String separator = "xmlattributes(";
 		for ( Map.Entry<String, SqmExpression<?>> entry : attributes.entrySet() ) {
-			sb.append( separator );
-			entry.getValue().appendHqlString( sb );
-			sb.append( " as " );
-			sb.append( entry.getKey() );
+			hql.append( separator );
+			entry.getValue().appendHqlString( hql );
+			hql.append( " as " );
+			hql.append( entry.getKey() );
 			separator = ", ";
 		}
-		sb.append( ')' );
+		hql.append( ')' );
 	}
 }

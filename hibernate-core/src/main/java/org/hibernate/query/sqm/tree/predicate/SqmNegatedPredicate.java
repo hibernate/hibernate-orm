@@ -67,10 +67,10 @@ public class SqmNegatedPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "not (" );
-		wrappedPredicate.appendHqlString( sb );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "not (" );
+		wrappedPredicate.appendHqlString( hql );
+		hql.append( ')' );
 	}
 
 	@Override

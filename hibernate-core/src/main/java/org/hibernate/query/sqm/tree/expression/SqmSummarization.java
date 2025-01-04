@@ -65,15 +65,15 @@ public class SqmSummarization<T> extends AbstractSqmExpression<T> {
 		CUBE
 	}
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( kind );
-		sb.append( " (" );
-		groupings.get( 0 ).appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( kind );
+		hql.append( " (" );
+		groupings.get( 0 ).appendHqlString( hql );
 		for ( int i = 1; i < groupings.size(); i++ ) {
-			sb.append(", ");
-			groupings.get( i ).appendHqlString( sb );
+			hql.append(", ");
+			groupings.get( i ).appendHqlString( hql );
 		}
-		sb.append( ')' );
+		hql.append( ')' );
 	}
 
 }

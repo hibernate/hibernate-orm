@@ -198,27 +198,27 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql) {
 		boolean needsWhitespace = false;
 		if ( !this.partitions.isEmpty() ) {
 			needsWhitespace = true;
-			sb.append( "partition by " );
-			this.partitions.get( 0 ).appendHqlString( sb );
+			hql.append( "partition by " );
+			this.partitions.get( 0 ).appendHqlString( hql );
 			for ( int i = 1; i < this.partitions.size(); i++ ) {
-				sb.append( ',' );
-				this.partitions.get( i ).appendHqlString( sb );
+				hql.append( ',' );
+				this.partitions.get( i ).appendHqlString( hql );
 			}
 		}
 		if ( !orderList.isEmpty() ) {
 			if ( needsWhitespace ) {
-				sb.append( ' ' );
+				hql.append( ' ' );
 			}
 			needsWhitespace = true;
-			sb.append( "order by " );
-			orderList.get( 0 ).appendHqlString( sb );
+			hql.append( "order by " );
+			orderList.get( 0 ).appendHqlString( hql );
 			for ( int i = 1; i < orderList.size(); i++ ) {
-				sb.append( ',' );
-				orderList.get( i ).appendHqlString( sb );
+				hql.append( ',' );
+				orderList.get( i ).appendHqlString( hql );
 			}
 		}
 		if ( mode == RANGE && startKind == UNBOUNDED_PRECEDING && endKind == CURRENT_ROW && exclusion == NO_OTHERS ) {
@@ -226,37 +226,37 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 		}
 		else {
 			if ( needsWhitespace ) {
-				sb.append( ' ' );
+				hql.append( ' ' );
 			}
 			switch ( mode ) {
 				case GROUPS:
-					sb.append( "groups " );
+					hql.append( "groups " );
 					break;
 				case RANGE:
-					sb.append( "range " );
+					hql.append( "range " );
 					break;
 				case ROWS:
-					sb.append( "rows " );
+					hql.append( "rows " );
 					break;
 			}
 			if ( endKind == CURRENT_ROW ) {
-				renderFrameKind( sb, startKind, startExpression );
+				renderFrameKind( hql, startKind, startExpression );
 			}
 			else {
-				sb.append( "between " );
-				renderFrameKind( sb, startKind, startExpression );
-				sb.append( " and " );
-				renderFrameKind( sb, endKind, endExpression );
+				hql.append( "between " );
+				renderFrameKind( hql, startKind, startExpression );
+				hql.append( " and " );
+				renderFrameKind( hql, endKind, endExpression );
 			}
 			switch ( exclusion ) {
 				case TIES:
-					sb.append( " exclude ties" );
+					hql.append( " exclude ties" );
 					break;
 				case CURRENT_ROW:
-					sb.append( " exclude current row" );
+					hql.append( " exclude current row" );
 					break;
 				case GROUP:
-					sb.append( " exclude group" );
+					hql.append( " exclude group" );
 					break;
 			}
 		}

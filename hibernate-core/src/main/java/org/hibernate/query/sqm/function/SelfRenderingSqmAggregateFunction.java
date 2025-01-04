@@ -95,29 +95,29 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql) {
 		final List<? extends SqmTypedNode<?>> arguments = getArguments();
-		sb.append( getFunctionName() );
-		sb.append( '(' );
+		hql.append( getFunctionName() );
+		hql.append( '(' );
 		int i = 1;
 		if ( arguments.get( 0 ) instanceof SqmDistinct<?> ) {
-			arguments.get( 0 ).appendHqlString( sb );
+			arguments.get( 0 ).appendHqlString( hql );
 			if ( arguments.size() > 1 ) {
-				sb.append( ' ' );
-				arguments.get( 1 ).appendHqlString( sb );
+				hql.append( ' ' );
+				arguments.get( 1 ).appendHqlString( hql );
 				i = 2;
 			}
 		}
 		for ( ; i < arguments.size(); i++ ) {
-			sb.append(", ");
-			arguments.get( i ).appendHqlString( sb );
+			hql.append(", ");
+			arguments.get( i ).appendHqlString( hql );
 		}
 
-		sb.append( ')' );
+		hql.append( ')' );
 		if ( filter != null ) {
-			sb.append( " filter (where " );
-			filter.appendHqlString( sb );
-			sb.append( ')' );
+			hql.append( " filter (where " );
+			filter.appendHqlString( hql );
+			hql.append( ')' );
 		}
 	}
 }

@@ -108,11 +108,11 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		leftHandExpression.appendHqlString( sb );
-		sb.append( ' ' );
-		sb.append( operator.sqlText() );
-		sb.append( ' ' );
-		rightHandExpression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		leftHandExpression.appendHqlString( hql );
+		hql.append( ' ' );
+		hql.append( operator.sqlText() );
+		hql.append( ' ' );
+		rightHandExpression.appendHqlString( hql );
 	}
 }

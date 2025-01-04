@@ -34,12 +34,12 @@ public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implem
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql) {
 		if ( getLhs() != null ) {
-			getLhs().appendHqlString( sb );
-			sb.append( '.' );
+			getLhs().appendHqlString( hql );
+			hql.append( '.' );
 		}
-		sb.append( getReferencedPathSource().getPathName() );
+		hql.append( getReferencedPathSource().getPathName() );
 	}
 
 	@Override

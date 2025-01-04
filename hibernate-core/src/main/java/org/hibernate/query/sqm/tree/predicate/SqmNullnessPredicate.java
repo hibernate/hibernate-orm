@@ -52,13 +52,13 @@ public class SqmNullnessPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		expression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		expression.appendHqlString( hql );
 		if ( isNegated() ) {
-			sb.append( " is not null" );
+			hql.append( " is not null" );
 		}
 		else {
-			sb.append( " is null" );
+			hql.append( " is null" );
 		}
 	}
 

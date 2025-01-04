@@ -117,8 +117,8 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		jpaCriteriaParameter.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		jpaCriteriaParameter.appendHqlString( hql );
 	}
 
 	@Override

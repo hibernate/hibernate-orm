@@ -126,16 +126,16 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		matchExpression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		matchExpression.appendHqlString( hql );
 		if ( isNegated() ) {
-			sb.append( " not" );
+			hql.append( " not" );
 		}
-		sb.append( " like " );
-		pattern.appendHqlString( sb );
+		hql.append( " like " );
+		pattern.appendHqlString( hql );
 		if ( escapeCharacter != null ) {
-			sb.append( " escape " );
-			escapeCharacter.appendHqlString( sb );
+			hql.append( " escape " );
+			escapeCharacter.appendHqlString( hql );
 		}
 	}
 

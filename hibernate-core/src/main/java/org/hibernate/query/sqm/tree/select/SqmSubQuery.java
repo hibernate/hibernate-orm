@@ -771,10 +771,10 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( '(' );
-		super.appendHqlString( sb );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( '(' );
+		super.appendHqlString( hql );
+		hql.append( ')' );
 	}
 
 }

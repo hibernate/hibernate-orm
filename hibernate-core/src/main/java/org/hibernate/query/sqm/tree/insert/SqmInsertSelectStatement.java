@@ -171,13 +171,13 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		super.appendHqlString( sb );
-		sb.append( ' ' );
-		selectQueryPart.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		super.appendHqlString( hql );
+		hql.append( ' ' );
+		selectQueryPart.appendHqlString( hql );
 		final SqmConflictClause conflictClause = getConflictClause();
 		if ( conflictClause != null ) {
-			conflictClause.appendHqlString( sb );
+			conflictClause.appendHqlString( hql );
 		}
 	}
 }

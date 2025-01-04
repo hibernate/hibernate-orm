@@ -53,7 +53,7 @@ public class SqmLiteralNull<T> extends SqmLiteral<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "null" );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "null" );
 	}
 }

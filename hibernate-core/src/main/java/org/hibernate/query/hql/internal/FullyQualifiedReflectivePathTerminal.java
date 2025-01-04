@@ -152,10 +152,10 @@ public class FullyQualifiedReflectivePathTerminal<E>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( getParent().getFullPath() );
-		sb.append( '.' );
-		sb.append( getLocalName() );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( getParent().getFullPath() );
+		hql.append( '.' );
+		hql.append( getLocalName() );
 	}
 
 	@Override

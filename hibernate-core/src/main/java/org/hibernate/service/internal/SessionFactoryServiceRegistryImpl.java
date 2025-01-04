@@ -50,7 +50,8 @@ public class SessionFactoryServiceRegistryImpl
 			List<ProvidedService<?>> providedServices,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions sessionFactoryOptions) {
-		SessionFactoryServiceRegistryImpl instance = new SessionFactoryServiceRegistryImpl( parent, sessionFactory, sessionFactoryOptions);
+		final SessionFactoryServiceRegistryImpl instance =
+				new SessionFactoryServiceRegistryImpl( parent, sessionFactory, sessionFactoryOptions );
 		instance.initialize( initiators, providedServices );
 		return instance;
 	}

@@ -45,7 +45,6 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.relational.SchemaManager;
@@ -381,16 +380,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public boolean isOpen() {
 		return delegate.isOpen();
-	}
-
-	@Override @Deprecated
-	public <T> BindableType<? super T> resolveParameterBindType(T bindValue) {
-		return delegate.resolveParameterBindType( bindValue );
-	}
-
-	@Override @Deprecated
-	public <T> BindableType<T> resolveParameterBindType(Class<T> clazz) {
-		return delegate.resolveParameterBindType( clazz );
 	}
 
 	@Override

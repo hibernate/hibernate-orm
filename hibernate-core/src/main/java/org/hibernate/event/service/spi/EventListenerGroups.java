@@ -50,7 +50,7 @@ import java.util.Objects;
  * @since 7.0
  */
 @Internal @Incubating
-public class EventListenerGroups {
+public final class EventListenerGroups {
 
 	// All session events need to be iterated frequently;
 	// CollectionAction and EventAction also need most of these very frequently:

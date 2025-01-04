@@ -50,7 +50,7 @@ public interface MappingMetamodelImplementor extends MappingMetamodel, QueryPara
 	 *
 	 * @return All the entity names
 	 */
-	default String[] getAllCollectionRoles(){
+	default String[] getAllCollectionRoles() {
 		return streamCollectionDescriptors()
 				.map( CollectionPersister::getRole )
 				.toArray( String[]::new );

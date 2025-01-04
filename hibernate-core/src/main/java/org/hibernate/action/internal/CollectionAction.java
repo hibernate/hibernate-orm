@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.service.spi.EventListenerGroups;
-import org.hibernate.internal.FastSessionServices;
+
 import org.hibernate.persister.collection.CollectionPersister;
 
 import static org.hibernate.internal.util.StringHelper.unqualify;
@@ -203,14 +203,5 @@ public abstract class CollectionAction implements ComparableExecutable {
 	protected EventListenerGroups getEventListenerGroups() {
 		return session.getFactory().getEventListenerGroups();
 	}
-
-	/**
-	 * @deprecated This is a layer-breaker
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	protected FastSessionServices getFastSessionServices() {
-		return session.getFactory().getFastSessionServices();
-	}
-
 
 }

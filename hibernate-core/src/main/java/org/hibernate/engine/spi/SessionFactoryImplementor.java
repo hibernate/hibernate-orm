@@ -23,7 +23,6 @@ import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
-import org.hibernate.internal.FastSessionServices;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -164,15 +163,6 @@ public interface SessionFactoryImplementor
 	 */
 	@Internal @Incubating
 	EventListenerGroups getEventListenerGroups();
-
-	/**
-	 * @return the {@link FastSessionServices} instance associated with this factory
-	 *
-	 * @deprecated {@link FastSessionServices} belongs to an internal non-SPI package,
-	 *             and so this operation is a layer-breaker
-	 */
-	@Internal @Deprecated(since = "7.0", forRemoval = true)
-	FastSessionServices getFastSessionServices();
 
 	/**
 	 * @since 7.0

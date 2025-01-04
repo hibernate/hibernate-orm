@@ -44,7 +44,6 @@ import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.FastSessionServices;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
@@ -444,12 +443,6 @@ public abstract class MockSessionFactory
 	public boolean isXmlFormatMapperLegacyFormatEnabled() {
 		return false;
 	}
-
-	@Override
-	public FastSessionServices getFastSessionServices() {
-		throw new UnsupportedOperationException("operation not supported");
-	}
-
 
 	@Override
 	public void close() {}

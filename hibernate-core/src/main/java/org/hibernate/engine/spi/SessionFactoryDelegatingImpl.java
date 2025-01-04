@@ -41,7 +41,6 @@ import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
-import org.hibernate.internal.FastSessionServices;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
@@ -302,11 +301,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public JavaType<Object> getTenantIdentifierJavaType() {
 		return delegate.getTenantIdentifierJavaType();
-	}
-
-	@Override
-	public FastSessionServices getFastSessionServices() {
-		return delegate.getFastSessionServices();
 	}
 
 	@Override

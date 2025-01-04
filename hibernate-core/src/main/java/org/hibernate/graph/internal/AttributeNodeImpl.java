@@ -34,9 +34,12 @@ import static java.util.Collections.emptyMap;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public abstract class AttributeNodeImpl<J, E, K>
+public abstract sealed class AttributeNodeImpl<J, E, K>
 		extends AbstractGraphNode<J>
-		implements AttributeNodeImplementor<J, E, K> {
+		implements AttributeNodeImplementor<J, E, K>
+		permits AttributeNodeImpl.SingularAttributeNodeImpl,
+				AttributeNodeImpl.PluralAttributeNodeImpl,
+				AttributeNodeImpl.MapAttributeNodeImpl {
 
 	protected final PersistentAttribute<?, J> attribute;
 	protected final DomainType<E> valueGraphType;
@@ -100,7 +103,7 @@ public abstract class AttributeNodeImpl<J, E, K>
 		keySubgraph = that.keySubgraph == null ? null : that.keySubgraph.makeCopy( mutable );
 	}
 
-	private static class SingularAttributeNodeImpl<J> extends AttributeNodeImpl<J, J, Void> {
+	static final class SingularAttributeNodeImpl<J> extends AttributeNodeImpl<J, J, Void> {
 		private SingularAttributeNodeImpl(
 				SingularPersistentAttribute<?,J> attribute,
 				boolean mutable,
@@ -128,7 +131,7 @@ public abstract class AttributeNodeImpl<J, E, K>
 		}
 	}
 
-	private static class PluralAttributeNodeImpl<J,E> extends AttributeNodeImpl<J, E, Void> {
+	static final class PluralAttributeNodeImpl<J,E> extends AttributeNodeImpl<J, E, Void> {
 		private PluralAttributeNodeImpl(
 				PluralPersistentAttribute<?,J,E> attribute,
 				boolean mutable,
@@ -156,7 +159,7 @@ public abstract class AttributeNodeImpl<J, E, K>
 		}
 	}
 
-	static class MapAttributeNodeImpl<J,K,V> extends AttributeNodeImpl<J, V, K> {
+	static final class MapAttributeNodeImpl<J,K,V> extends AttributeNodeImpl<J, V, K> {
 		private MapAttributeNodeImpl(
 				PluralPersistentAttribute<?,J,V> pluralAttribute,
 				@SuppressWarnings("unused") // a "witness" that this is really a Map

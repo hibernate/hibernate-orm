@@ -166,7 +166,7 @@ import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DEL
  * @author Steve Ebersole
  * @author Chris Cranford
  */
-public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl implements SessionFactoryImplementor {
+public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryImpl.class );
 
 	private final String name;

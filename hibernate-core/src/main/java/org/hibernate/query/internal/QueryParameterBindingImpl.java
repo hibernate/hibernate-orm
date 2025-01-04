@@ -16,6 +16,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
@@ -65,6 +66,10 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		this.bindType = bindType;
 	}
 
+	private QueryParameterBindingTypeResolver getParameterBindingTypeResolver() {
+		return sessionFactory.getMappingMetamodel();
+	}
+
 	@Override
 	public BindableType<? super T> getBindType() {
 		return bindType;
@@ -105,47 +110,18 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 
 	@Override
 	public void setBindValue(T value, boolean resolveJdbcTypeIfNecessary) {
-		if ( handleAsMultiValue( value, null ) ) {
-			return;
-		}
+		if ( !handleAsMultiValue( value, null ) ) {
+			final Object coerced = coerceIfNotJpa( value );
+			validate( coerced );
 
-		final Object coerced;
-		if ( ! sessionFactory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
-			try {
-				if ( canValueBeCoerced( bindType) ) {
-					coerced = coerce( value, bindType );
-				}
-				else if ( canValueBeCoerced( queryParameter.getHibernateType() ) ) {
-					coerced = coerce( value, queryParameter.getHibernateType() );
-				}
-				else {
-					coerced = value;
-				}
+			if ( value == null ) {
+				// needed when setting a null value to the parameter of a native SQL query
+				// TODO: this does not look like a very disciplined way to handle this
+				bindNull( resolveJdbcTypeIfNecessary );
 			}
-			catch (HibernateException ce) {
-				throw new IllegalArgumentException(
-						String.format(
-								"Parameter value [%s] did not match expected type [%s]",
-								value,
-								bindType
-						),
-						ce
-				);
+			else {
+				bindValue( coerced );
 			}
-		}
-		else {
-			coerced = value;
-		}
-
-		validate( coerced );
-
-		if ( value == null ) {
-			// needed when setting a null value to the parameter of a native SQL query
-			// TODO: this does not look like a very disciplined way to handle this
-			bindNull( resolveJdbcTypeIfNecessary );
-		}
-		else {
-			bindValue( coerced );
 		}
 	}
 
@@ -155,16 +131,6 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		if ( resolveJdbcTypeIfNecessary && bindType == null ) {
 			bindType = getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( "null" );
 		}
-	}
-
-	private Object coerce(T value, BindableType<? super T> parameterType) {
-		if ( value == null ) {
-			return null;
-		}
-
-		final SqmExpressible<? super T> sqmExpressible = parameterType.resolveExpressible( sessionFactory );
-		assert sqmExpressible != null;
-		return sqmExpressible.getExpressibleJavaType().coerce( value, this );
 	}
 
 	private boolean handleAsMultiValue(T value, BindableType<T> bindableType) {
@@ -190,81 +156,36 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		isBound = true;
 		bindValue = value;
 		if ( canBindValueBeSet( value, bindType ) ) {
-			bindType = sessionFactory.getMappingMetamodel().resolveParameterBindType( value );
+			bindType = getParameterBindingTypeResolver().resolveParameterBindType( value );
 		}
 	}
 
 	@Override
 	public void setBindValue(T value, BindableType<T> clarifiedType) {
-		if ( handleAsMultiValue( value, clarifiedType ) ) {
-			return;
-		}
+		if ( !handleAsMultiValue( value, clarifiedType ) ) {
+			if ( clarifiedType != null ) {
+				bindType = clarifiedType;
+			}
 
-		if ( clarifiedType != null ) {
-			bindType = clarifiedType;
+			final Object coerced = coerce( value );
+			validate( coerced, clarifiedType );
+			bindValue( coerced );
 		}
-
-		final Object coerced;
-		if ( canValueBeCoerced( bindType ) ) {
-			coerced = coerce( value, bindType );
-		}
-		else if ( canValueBeCoerced( queryParameter.getHibernateType() ) ) {
-			coerced = coerce( value, queryParameter.getHibernateType() );
-		}
-		else {
-			coerced = value;
-		}
-
-		validate( coerced, clarifiedType );
-
-		bindValue( coerced );
 	}
 
 	@Override
 	public void setBindValue(T value, TemporalType temporalTypePrecision) {
-		if ( handleAsMultiValue( value, null ) ) {
-			return;
-		}
-
-		if ( bindType == null ) {
-			bindType = queryParameter.getHibernateType();
-		}
-
-		final Object coerced;
-		if ( ! sessionFactory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
-			if (canValueBeCoerced( bindType ) ) {
-				try {
-					coerced = coerce( value, bindType );
-				}
-				catch (HibernateException ex) {
-					throw new IllegalArgumentException(
-							String.format(
-									"Parameter value [%s] did not match expected type [%s (%s)]",
-									value,
-									bindType,
-									temporalTypePrecision == null ? "n/a" : temporalTypePrecision.name()
-							),
-							ex
-					);
-				}
+		if ( !handleAsMultiValue( value, null ) ) {
+			if ( bindType == null ) {
+				bindType = queryParameter.getHibernateType();
 			}
-			else if ( canValueBeCoerced( queryParameter.getHibernateType() ) ) {
-				coerced = coerce( value, queryParameter.getHibernateType() );
-			}
-			else {
-				coerced = value;
-			}
-		}
-		else {
-			coerced = value;
-		}
 
-		validate( coerced, temporalTypePrecision );
-
-		bindValue( coerced );
-		setExplicitTemporalPrecision( temporalTypePrecision );
+			final Object coerced = coerceIfNotJpa( value );
+			validate( coerced, temporalTypePrecision );
+			bindValue( coerced );
+			setExplicitTemporalPrecision( temporalTypePrecision );
+		}
 	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// multi-valued binding support
@@ -274,7 +195,6 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		if ( !isMultiValued ) {
 			throw new IllegalStateException( "Binding is not multi-valued; illegal call to #getBindValues" );
 		}
-
 		return bindValues;
 	}
 
@@ -299,14 +219,14 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		}
 
 		if ( canBindValueBeSet( value, bindType ) ) {
-			bindType = sessionFactory.getMappingMetamodel().resolveParameterBindType( value );
+			bindType = getParameterBindingTypeResolver().resolveParameterBindType( value );
 		}
 	}
 
 	@Override
 	public void setBindValues(Collection<? extends T> values, BindableType<T> clarifiedType) {
 		if ( clarifiedType != null ) {
-			this.bindType = clarifiedType;
+			bindType = clarifiedType;
 		}
 		setBindValues( values );
 	}
@@ -345,14 +265,14 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		if ( bindType == null || bindType.getBindableJavaType() == Object.class || type instanceof ModelPart ) {
 			if ( type instanceof BindableType<?> ) {
 				final boolean changed = bindType != null && type != bindType;
-				bindType = (BindableType<T>) type;
+				bindType = (BindableType<? super T>) type;
 				return changed;
 			}
 			else if ( type instanceof BasicValuedMapping basicValuedMapping ) {
 				final JdbcMapping jdbcMapping = basicValuedMapping.getJdbcMapping();
 				if ( jdbcMapping instanceof BindableType<?> ) {
 					final boolean changed = bindType != null && jdbcMapping != bindType;
-					bindType = (BindableType<T>) jdbcMapping;
+					bindType = (BindableType<? super T>) jdbcMapping;
 					return changed;
 				}
 			}
@@ -375,6 +295,47 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return sessionFactory.getTypeConfiguration();
+	}
+
+	private Object coerceIfNotJpa(T value) {
+		return sessionFactory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled()
+				? value
+				: coerce( value );
+	}
+
+	private Object coerce(T value) {
+		try {
+			if ( canValueBeCoerced( bindType ) ) {
+				return coerce( value, bindType );
+			}
+			else if ( canValueBeCoerced( queryParameter.getHibernateType() ) ) {
+				return coerce( value, queryParameter.getHibernateType() );
+			}
+			else {
+				return value;
+			}
+		}
+		catch (HibernateException ex) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Parameter value [%s] did not match expected type [%s]",
+							value,
+							bindType
+					),
+					ex
+			);
+		}
+	}
+
+	private Object coerce(T value, BindableType<? super T> parameterType) {
+		if ( value == null ) {
+			return null;
+		}
+		else {
+			final SqmExpressible<? super T> sqmExpressible = parameterType.resolveExpressible( sessionFactory );
+			assert sqmExpressible != null;
+			return sqmExpressible.getExpressibleJavaType().coerce( value, this );
+		}
 	}
 
 	private static boolean canValueBeCoerced(BindableType<?> bindType) {

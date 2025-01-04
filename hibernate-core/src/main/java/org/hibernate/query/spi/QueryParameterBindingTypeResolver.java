@@ -23,6 +23,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 public interface QueryParameterBindingTypeResolver {
 	<T> BindableType<? super T> resolveParameterBindType(T bindValue);
 	<T> BindableType<T> resolveParameterBindType(Class<T> clazz);
+
+	@Deprecated(since = "7.0", forRemoval = true)
 	TypeConfiguration getTypeConfiguration();
+	@Deprecated(since = "7.0", forRemoval = true)
 	MappingMetamodel getMappingMetamodel();
 }

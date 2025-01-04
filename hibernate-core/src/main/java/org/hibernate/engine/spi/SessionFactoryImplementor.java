@@ -26,7 +26,6 @@ import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -51,8 +50,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public interface SessionFactoryImplementor
-		extends MappingContext, SessionFactory, SqmCreationContext, SqlAstCreationContext,
-				QueryParameterBindingTypeResolver { //deprecated extension, use MappingMetamodel
+		extends MappingContext, SessionFactory, SqmCreationContext, SqlAstCreationContext {
 	/**
 	 * Get the UUID for this {@code SessionFactory}.
 	 * <p>

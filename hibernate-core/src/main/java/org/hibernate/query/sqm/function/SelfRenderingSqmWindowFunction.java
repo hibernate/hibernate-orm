@@ -87,7 +87,7 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 		if ( argumentsValidator != null ) {
 			argumentsValidator.validateSqlTypes( arguments, getFunctionName() );
 		}
-		return new SelfRenderingWindowFunctionSqlAstExpression(
+		return new SelfRenderingWindowFunctionSqlAstExpression<>(
 				getFunctionName(),
 				getFunctionRenderer(),
 				arguments,

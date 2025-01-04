@@ -21,7 +21,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
  *
  * @author Christian Beikov
  */
-public class SelfRenderingWindowFunctionSqlAstExpression extends SelfRenderingFunctionSqlAstExpression
+public class SelfRenderingWindowFunctionSqlAstExpression<T> extends SelfRenderingFunctionSqlAstExpression<T>
 		implements WindowFunctionExpression {
 
 	private final Predicate filter;
@@ -35,7 +35,7 @@ public class SelfRenderingWindowFunctionSqlAstExpression extends SelfRenderingFu
 			Predicate filter,
 			Boolean respectNulls,
 			Boolean fromFirst,
-			ReturnableType<?> type,
+			ReturnableType<T> type,
 			JdbcMappingContainer expressible) {
 		super( functionName, renderer, sqlAstArguments, type, expressible );
 		this.filter = filter;

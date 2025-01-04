@@ -489,10 +489,13 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public void initSessionFactory(SessionFactoryImplementor sessionFactory) {
+		// must not use BootstrapContext services here
 		final ServiceRegistryImplementor sessionFactoryServiceRegistry = sessionFactory.getServiceRegistry();
 		assert sessionFactoryServiceRegistry != null;
-		final ConfigurationService configurationService = bootstrapContext.getConfigurationService();
-		final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
+		final ConfigurationService configurationService =
+				sessionFactoryServiceRegistry.requireService( ConfigurationService.class );
+		final ClassLoaderService classLoaderService =
+				sessionFactoryServiceRegistry.requireService( ClassLoaderService.class );
 		final EventListenerRegistry eventListenerRegistry =
 				sessionFactoryServiceRegistry.requireService( EventListenerRegistry.class );
 		for ( Map.Entry<String,Object> entry : configurationService.getSettings().entrySet() ) {

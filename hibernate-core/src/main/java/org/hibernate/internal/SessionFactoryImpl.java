@@ -278,8 +278,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		schemaManager = new SchemaManagerImpl( this, bootMetamodel );
 
 		// used for initializing the MappingMetamodelImpl
-		classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		jdbcValuesMappingProducerProvider = serviceRegistry.getService( JdbcValuesMappingProducerProvider.class );
+		classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
+		jdbcValuesMappingProducerProvider = serviceRegistry.requireService( JdbcValuesMappingProducerProvider.class );
 
 		final IntegratorObserver integratorObserver = new IntegratorObserver();
 		observer.addObserver( integratorObserver );
@@ -323,15 +323,15 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			currentSessionContext = buildCurrentSessionContext();
 
 			// cache references to some "hot" services:
-			transactionCoordinatorBuilder = serviceRegistry.getService( TransactionCoordinatorBuilder.class );
+			transactionCoordinatorBuilder = serviceRegistry.requireService( TransactionCoordinatorBuilder.class );
 			entityCopyObserverFactory = serviceRegistry.requireService( EntityCopyObserverFactory.class );
-			parameterMarkerStrategy = serviceRegistry.getService( ParameterMarkerStrategy.class );
-			batchBuilder = serviceRegistry.getService( BatchBuilder.class );
+			parameterMarkerStrategy = serviceRegistry.requireService( ParameterMarkerStrategy.class );
+			batchBuilder = serviceRegistry.requireService( BatchBuilder.class );
 			managedBeanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
 
 			final boolean multiTenancyEnabled = options.isMultiTenancyEnabled();
 			connectionProvider =
-					multiTenancyEnabled ? null : serviceRegistry.getService( ConnectionProvider.class );
+					multiTenancyEnabled ? null : serviceRegistry.requireService( ConnectionProvider.class );
 			multiTenantConnectionProvider =
 					multiTenancyEnabled ? serviceRegistry.requireService( MultiTenantConnectionProvider.class ) : null;
 

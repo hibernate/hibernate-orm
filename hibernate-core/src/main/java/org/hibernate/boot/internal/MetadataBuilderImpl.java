@@ -182,61 +182,61 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applyImplicitNamingStrategy(ImplicitNamingStrategy namingStrategy) {
-		this.options.implicitNamingStrategy = namingStrategy;
+		options.implicitNamingStrategy = namingStrategy;
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyPhysicalNamingStrategy(PhysicalNamingStrategy namingStrategy) {
-		this.options.physicalNamingStrategy = namingStrategy;
+		options.physicalNamingStrategy = namingStrategy;
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy) {
-		this.options.columnOrderingStrategy = columnOrderingStrategy;
+		options.columnOrderingStrategy = columnOrderingStrategy;
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applySharedCacheMode(SharedCacheMode sharedCacheMode) {
-		this.options.sharedCacheMode = sharedCacheMode;
+		options.sharedCacheMode = sharedCacheMode;
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyAccessType(AccessType implicitCacheAccessType) {
-		this.options.mappingDefaults.implicitCacheAccessType = implicitCacheAccessType;
+		options.mappingDefaults.implicitCacheAccessType = implicitCacheAccessType;
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyIndexView(Object jandexView) {
-		this.bootstrapContext.injectJandexView( jandexView );
+		bootstrapContext.injectJandexView( jandexView );
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyScanOptions(ScanOptions scanOptions) {
-		this.bootstrapContext.injectScanOptions( scanOptions );
+		bootstrapContext.injectScanOptions( scanOptions );
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyScanEnvironment(ScanEnvironment scanEnvironment) {
-		this.bootstrapContext.injectScanEnvironment( scanEnvironment );
+		bootstrapContext.injectScanEnvironment( scanEnvironment );
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyScanner(Scanner scanner) {
-		this.bootstrapContext.injectScanner( scanner );
+		bootstrapContext.injectScanner( scanner );
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyArchiveDescriptorFactory(ArchiveDescriptorFactory factory) {
-		this.bootstrapContext.injectArchiveDescriptorFactory( factory );
+		bootstrapContext.injectArchiveDescriptorFactory( factory );
 		return this;
 	}
 
@@ -333,23 +333,23 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applyCacheRegionDefinition(CacheRegionDefinition cacheRegionDefinition) {
-		this.bootstrapContext.addCacheRegionDefinition( cacheRegionDefinition );
+		bootstrapContext.addCacheRegionDefinition( cacheRegionDefinition );
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyTempClassLoader(ClassLoader tempClassLoader) {
-		this.bootstrapContext.injectJpaTempClassLoader( tempClassLoader );
+		bootstrapContext.injectJpaTempClassLoader( tempClassLoader );
 		return this;
 	}
 
 	public MetadataBuilder allowSpecjSyntax() {
-		this.options.specjProprietarySyntaxEnabled = true;
+		options.specjProprietarySyntaxEnabled = true;
 		return this;
 	}
 
 	public MetadataBuilder noConstraintByDefault() {
-		this.options.noConstraintByDefault = true;
+		options.noConstraintByDefault = true;
 		return this;
 	}
 
@@ -376,19 +376,19 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applySqlFunction(String functionName, SqmFunctionDescriptor function) {
-		this.bootstrapContext.addSqlFunction( functionName, function );
+		bootstrapContext.addSqlFunction( functionName, function );
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
-		this.bootstrapContext.addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
+		bootstrapContext.addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder applyAttributeConverter(ConverterDescriptor descriptor) {
-		this.bootstrapContext.addAttributeConverterDescriptor( descriptor );
+		bootstrapContext.addAttributeConverterDescriptor( descriptor );
 		return this;
 	}
 
@@ -402,7 +402,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public <O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass, boolean autoApply) {
-		this.bootstrapContext.addAttributeConverterDescriptor(
+		bootstrapContext.addAttributeConverterDescriptor(
 				new ClassBasedConverterDescriptor(
 						attributeConverterClass,
 						autoApply,
@@ -442,8 +442,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		final MetadataImplementor bootModel = MetadataBuildingProcess.build( sources, bootstrapContext, options );
 
 		if ( isNotEmpty( sources.getHbmXmlBindings() ) ) {
-			final ConfigurationService configurationService =
-					bootstrapContext.getServiceRegistry().getService( ConfigurationService.class );
+			final ConfigurationService configurationService = bootstrapContext.getConfigurationService();
 			final boolean transformHbm = configurationService != null
 					&& configurationService.getSetting( MappingSettings.TRANSFORM_HBM_XML, BOOLEAN,false );
 
@@ -457,7 +456,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 				final List<Binding<JaxbEntityMappingsImpl>> transformed = HbmXmlTransformer.transform(
 						sources.getHbmXmlBindings(),
 						bootModel,
-						bootstrapContext.getServiceRegistry(),
 						UnsupportedFeatureHandling.fromSetting(
 								configurationService.getSettings().get( AvailableSettings.TRANSFORM_HBM_XML_FEATURE_HANDLING ),
 								UnsupportedFeatureHandling.ERROR
@@ -513,21 +511,21 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			// are taken into account later, at runtime, when rendering table/sequence names.
 			// These fields are exclusively about mapping defaults,
 			// overridden in XML mappings or through setters in MetadataBuilder.
-			this.implicitSchemaName = null;
-			this.implicitCatalogName = null;
+			implicitSchemaName = null;
+			implicitCatalogName = null;
 
-			this.implicitlyQuoteIdentifiers = configService.getSetting(
+			implicitlyQuoteIdentifiers = configService.getSetting(
 					AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS,
 					BOOLEAN,
 					false
 			);
 
-			this.implicitCacheAccessType = configService.getSetting(
+			implicitCacheAccessType = configService.getSetting(
 					AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY,
 					value -> AccessType.fromExternalName( value.toString() )
 			);
 
-			this.implicitListClassification = configService.getSetting(
+			implicitListClassification = configService.getSetting(
 					AvailableSettings.DEFAULT_LIST_SEMANTICS,
 					value -> {
 						final CollectionClassification classification = CollectionClassification.interpretSetting( value );
@@ -952,38 +950,42 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		/**
-		 * Yuck.  This is needed because JPA lets users define "global building options"
-		 * in {@code orm.xml} mappings.  Forget that there are generally multiple
+		 * Yuck. This is needed because JPA lets users define "global building options"
+		 * in {@code orm.xml} mappings. Forget that there are generally multiple
 		 * {@code orm.xml} mappings if using XML approach...  Ugh
 		 */
 		public void apply(JpaOrmXmlPersistenceUnitDefaults jpaOrmXmlPersistenceUnitDefaults) {
 			if ( !mappingDefaults.shouldImplicitlyQuoteIdentifiers() ) {
-				mappingDefaults.implicitlyQuoteIdentifiers = jpaOrmXmlPersistenceUnitDefaults.shouldImplicitlyQuoteIdentifiers();
+				mappingDefaults.implicitlyQuoteIdentifiers =
+						jpaOrmXmlPersistenceUnitDefaults.shouldImplicitlyQuoteIdentifiers();
 			}
 
 			if ( mappingDefaults.getImplicitCatalogName() == null ) {
-				mappingDefaults.implicitCatalogName = nullIfEmpty(
-						jpaOrmXmlPersistenceUnitDefaults.getDefaultCatalogName()
-				);
+				mappingDefaults.implicitCatalogName =
+						nullIfEmpty( jpaOrmXmlPersistenceUnitDefaults.getDefaultCatalogName() );
 			}
 
 			if ( mappingDefaults.getImplicitSchemaName() == null ) {
-				mappingDefaults.implicitSchemaName = nullIfEmpty( jpaOrmXmlPersistenceUnitDefaults.getDefaultSchemaName() );
+				mappingDefaults.implicitSchemaName =
+						nullIfEmpty( jpaOrmXmlPersistenceUnitDefaults.getDefaultSchemaName() );
 			}
 		}
 
 		@Override
 		public void apply(PersistenceUnitMetadata persistenceUnitMetadata) {
 			if ( !mappingDefaults.implicitlyQuoteIdentifiers ) {
-				mappingDefaults.implicitlyQuoteIdentifiers = persistenceUnitMetadata.useQuotedIdentifiers();
+				mappingDefaults.implicitlyQuoteIdentifiers =
+						persistenceUnitMetadata.useQuotedIdentifiers();
 			}
 
 			if ( mappingDefaults.getImplicitCatalogName() == null ) {
-				mappingDefaults.implicitCatalogName = nullIfEmpty( persistenceUnitMetadata.getDefaultCatalog() );
+				mappingDefaults.implicitCatalogName =
+						nullIfEmpty( persistenceUnitMetadata.getDefaultCatalog() );
 			}
 
 			if ( mappingDefaults.getImplicitSchemaName() == null ) {
-				mappingDefaults.implicitSchemaName = nullIfEmpty( persistenceUnitMetadata.getDefaultSchema() );
+				mappingDefaults.implicitSchemaName =
+						nullIfEmpty( persistenceUnitMetadata.getDefaultSchema() );
 			}
 		}
 
@@ -1025,12 +1027,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	private static WrapperArrayHandling resolveFallbackWrapperArrayHandling(
 			ConfigurationService configService) {
-		if ( configService.getSetting( JPA_COMPLIANCE, BOOLEAN, false ) ) {
-			// JPA compliance was enabled.  Use PICK
-			return WrapperArrayHandling.PICK;
-		}
-		else {
-			return WrapperArrayHandling.DISALLOW;
-		}
+		return configService.getSetting( JPA_COMPLIANCE, BOOLEAN, false )
+				? WrapperArrayHandling.PICK // JPA compliance was enabled. Use PICK
+				: WrapperArrayHandling.DISALLOW;
 	}
 }

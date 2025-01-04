@@ -34,7 +34,8 @@ public class ColumnTests {
 				.addXmlMappings( "mappings/models/column/complete.xml" )
 				.build();
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
-		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
+		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions =
+				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
 		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
 				serviceRegistry,
 				metadataBuildingOptions
@@ -67,7 +68,8 @@ public class ColumnTests {
 				.build();
 
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
-		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
+		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions =
+				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
 		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
 				serviceRegistry,
 				metadataBuildingOptions

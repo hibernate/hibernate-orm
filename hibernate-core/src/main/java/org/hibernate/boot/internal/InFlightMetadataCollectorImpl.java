@@ -69,7 +69,6 @@ import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -204,10 +203,10 @@ public class InFlightMetadataCollectorImpl
 		this.sourceModelBuildingContext = sourceModelBuildingContext;
 		this.options = options;
 
-		this.uuid = UUID.randomUUID();
+		uuid = UUID.randomUUID();
 
-		this.globalRegistrations = new GlobalRegistrationsImpl( sourceModelBuildingContext, bootstrapContext );
-		this.persistenceUnitMetadata = new PersistenceUnitMetadataImpl();
+		globalRegistrations = new GlobalRegistrationsImpl( sourceModelBuildingContext, bootstrapContext );
+		persistenceUnitMetadata = new PersistenceUnitMetadataImpl();
 
 		for ( Map.Entry<String, SqmFunctionDescriptor> sqlFunctionEntry : bootstrapContext.getSqlFunctions().entrySet() ) {
 			if ( sqlFunctionMap == null ) {
@@ -220,7 +219,7 @@ public class InFlightMetadataCollectorImpl
 
 		bootstrapContext.getAuxiliaryDatabaseObjectList().forEach( getDatabase()::addAuxiliaryDatabaseObject );
 
-		configurationService = bootstrapContext.getServiceRegistry().requireService(ConfigurationService.class);
+		configurationService = bootstrapContext.getConfigurationService();
 	}
 
 	public InFlightMetadataCollectorImpl(BootstrapContext bootstrapContext, MetadataBuildingOptions options) {
@@ -228,12 +227,11 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	private static SourceModelBuildingContext createModelBuildingContext(BootstrapContext bootstrapContext) {
-		final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
-		final ClassLoaderServiceLoading classLoading = new ClassLoaderServiceLoading( classLoaderService );
+		final ClassLoaderServiceLoading classLoading =
+				new ClassLoaderServiceLoading( bootstrapContext.getClassLoaderService() );
 
 		final ModelsConfiguration modelsConfiguration = new ModelsConfiguration();
-		modelsConfiguration.setClassLoading(classLoading);
-//		modelsConfiguration.setExplicitContextProvider(  );
+		modelsConfiguration.setClassLoading( classLoading );
 		modelsConfiguration.configValue( "hibernate.models.jandex.index", bootstrapContext.getJandexView() );
 		modelsConfiguration.setRegistryPrimer( ModelsHelper::preFillRegistries );
 		return modelsConfiguration.bootstrap();
@@ -283,7 +281,7 @@ public class InFlightMetadataCollectorImpl
 	public Database getDatabase() {
 		// important to delay this instantiation until as late as possible.
 		if ( database == null ) {
-			this.database = new Database( options );
+			database = new Database( options );
 		}
 		return database;
 	}

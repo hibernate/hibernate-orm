@@ -236,7 +236,7 @@ public class DefaultCatalogAndSchemaTest {
 				BootstrapContext bootstrapContext = ((MetadataImpl) metadata).getBootstrapContext();
 				sfb = new SessionFactoryBuilderImpl(
 						metadata,
-						new SessionFactoryOptionsBuilder( serviceRegistry, bootstrapContext),
+						new SessionFactoryOptionsBuilder( serviceRegistry, bootstrapContext ),
 						bootstrapContext
 				);
 				break;
@@ -247,8 +247,8 @@ public class DefaultCatalogAndSchemaTest {
 		sessionFactory = (SessionFactoryImplementor) sfb.build();
 		toClose.add( sessionFactory );
 
-		NameQualifierSupport nameQualifierSupport = sessionFactory.getJdbcServices().getJdbcEnvironment()
-				.getNameQualifierSupport();
+		NameQualifierSupport nameQualifierSupport =
+				sessionFactory.getJdbcServices().getJdbcEnvironment().getNameQualifierSupport();
 		dbSupportsCatalogs = nameQualifierSupport.supportsCatalogs();
 		dbSupportsSchemas = nameQualifierSupport.supportsSchemas();
 	}

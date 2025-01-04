@@ -150,7 +150,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private transient SessionFactoryImpl factory;
 	private transient SessionFactoryOptions factoryOptions;
 	private transient JdbcServices jdbcServices;
-	protected transient FastSessionServices fastSessionServices;
 
 	private UUID sessionIdentifier;
 	private Object sessionToken;
@@ -196,7 +195,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		this.factoryOptions = factory.getSessionFactoryOptions();
 		this.jdbcServices = factory.getJdbcServices();
 
-		fastSessionServices = factory.getFastSessionServices();
 		cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
 		flushMode = options.getInitialSessionFlushMode();
 		tenantIdentifier = getTenantId( factoryOptions, options );
@@ -234,7 +232,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			// This must happen *after* the JdbcSessionContext was initialized,
 			// because some calls retrieve this context indirectly via Session getters.
 			jdbcCoordinator = createJdbcCoordinator( options );
-			transactionCoordinator = fastSessionServices.getTransactionCoordinatorBuilder()
+			transactionCoordinator = factory.transactionCoordinatorBuilder
 					.buildTransactionCoordinator( jdbcCoordinator, this );
 		}
 	}
@@ -286,7 +284,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				statementInspector,
 				connectionHandlingMode,
 				getJdbcServices(),
-				fastSessionServices.getBatchBuilder(),
+				factory.batchBuilder,
 				// TODO: this object is deprecated and should be removed
 				new JdbcEventHandler(
 						factory.getStatistics(),
@@ -575,7 +573,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		final SessionFactoryOptions sessionFactoryOptions = getSessionFactoryOptions();
 		return sessionFactoryOptions.isJtaTransactionAccessEnabled() // defaults to false in JPA bootstrap
 			|| !sessionFactoryOptions.getJpaCompliance().isJpaTransactionComplianceEnabled()
-			|| !fastSessionServices.getTransactionCoordinatorBuilder().isJta();
+			|| !factory.transactionCoordinatorBuilder.isJta();
 	}
 
 	@Override
@@ -698,7 +696,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			if ( !getSessionFactoryOptions().isMultiTenancyEnabled() ) {
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
 						getEventListenerManager(),
-						fastSessionServices.getConnectionProvider(),
+						factory.connectionProvider,
 						this
 				);
 			}
@@ -706,7 +704,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				jdbcConnectionAccess = new ContextualJdbcConnectionAccess(
 						getTenantIdentifierValue(),
 						getEventListenerManager(),
-						fastSessionServices.getMultiTenantConnectionProvider(),
+						factory.multiTenantConnectionProvider,
 						this
 				);
 			}
@@ -1449,7 +1447,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public EventMonitor getEventMonitor() {
-		return fastSessionServices.getEventMonitor();
+		return factory.eventMonitor;
 	}
 
 	@Override
@@ -1650,7 +1648,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		factory = SessionFactoryImpl.deserialize( ois );
 		factoryOptions = factory.getSessionFactoryOptions();
 		jdbcServices = factory.getJdbcServices();
-		fastSessionServices = factory.getFastSessionServices();
 
 		//TODO: this isn't quite right, see createSessionEventsManager()
 		final SessionEventListener[] baseline =
@@ -1663,8 +1660,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
 		transactionCoordinator =
-				fastSessionServices.getTransactionCoordinatorBuilder()
-						.buildTransactionCoordinator( jdbcCoordinator, this );
+				factory.transactionCoordinatorBuilder.buildTransactionCoordinator( jdbcCoordinator, this );
 
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 	}

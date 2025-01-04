@@ -56,7 +56,10 @@ import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -64,6 +67,8 @@ import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.event.monitor.internal.EmptyEventMonitor;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
@@ -103,6 +108,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -193,7 +199,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	private final transient Map<String, FetchProfile> fetchProfiles;
 	private final transient JavaType<Object> tenantIdentifierJavaType;
 
-	private final transient FastSessionServices fastSessionServices;
+	private final transient EventListenerGroups eventListenerGroups;
+
 	private final transient WrapperOptions wrapperOptions;
 	private final transient SessionBuilderImpl defaultSessionOpenOptions;
 	private final transient SessionBuilderImpl temporarySessionOpenOptions;
@@ -201,6 +208,17 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	private final transient EntityNameResolver entityNameResolver;
 
 	private final transient SchemaManager schemaManager;
+
+	final transient ClassLoaderService classLoaderService;
+	final transient TransactionCoordinatorBuilder transactionCoordinatorBuilder;
+	final transient ConnectionProvider connectionProvider;
+	final transient MultiTenantConnectionProvider<Object> multiTenantConnectionProvider;
+	final transient ManagedBeanRegistry managedBeanRegistry;
+	final transient BatchBuilder batchBuilder;
+	final transient EventMonitor eventMonitor;
+	final transient EntityCopyObserverFactory entityCopyObserverFactory;
+	final transient ParameterMarkerStrategy parameterMarkerStrategy;
+	final transient JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
 
 	public SessionFactoryImpl(
 			final MetadataImplementor bootMetamodel,
@@ -259,6 +277,10 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		entityNameResolver = new CoordinatingEntityNameResolver( this, getInterceptor() );
 		schemaManager = new SchemaManagerImpl( this, bootMetamodel );
 
+		// used for initializing the MappingMetamodelImpl
+		classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		jdbcValuesMappingProducerProvider = serviceRegistry.getService( JdbcValuesMappingProducerProvider.class );
+
 		final IntegratorObserver integratorObserver = new IntegratorObserver();
 		observer.addObserver( integratorObserver );
 		try {
@@ -284,7 +306,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			runtimeMetamodels = runtimeMetamodelsImpl;
 			final MappingMetamodelImpl mappingMetamodelImpl = new MappingMetamodelImpl( typeConfiguration, serviceRegistry );
 			runtimeMetamodelsImpl.setMappingMetamodel( mappingMetamodelImpl );
-			fastSessionServices = new FastSessionServices( serviceRegistry, sessionFactoryOptions );
 			mappingMetamodelImpl.finishInitialization(
 					new ModelCreationContext( bootstrapContext, bootMetamodel, mappingMetamodelImpl, typeConfiguration ) );
 			runtimeMetamodelsImpl.setJpaMetamodel( mappingMetamodelImpl.getJpaMetamodel() );
@@ -300,6 +321,23 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			wrapperOptions = new SessionFactoryBasedWrapperOptions( this );
 
 			currentSessionContext = buildCurrentSessionContext();
+
+			// cache references to some "hot" services:
+			transactionCoordinatorBuilder = serviceRegistry.getService( TransactionCoordinatorBuilder.class );
+			entityCopyObserverFactory = serviceRegistry.requireService( EntityCopyObserverFactory.class );
+			parameterMarkerStrategy = serviceRegistry.getService( ParameterMarkerStrategy.class );
+			batchBuilder = serviceRegistry.getService( BatchBuilder.class );
+			managedBeanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
+
+			final boolean multiTenancyEnabled = options.isMultiTenancyEnabled();
+			connectionProvider =
+					multiTenancyEnabled ? null : serviceRegistry.getService( ConnectionProvider.class );
+			multiTenantConnectionProvider =
+					multiTenancyEnabled ? serviceRegistry.requireService( MultiTenantConnectionProvider.class ) : null;
+
+			eventMonitor = loadEventMonitor();
+
+			eventListenerGroups = new EventListenerGroups( serviceRegistry );
 
 			// re-scope the TypeConfiguration to this SessionFactory,
 			// now that we are (almost) fully-initialized ... note,
@@ -323,6 +361,11 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 
 		LOG.debug( "Instantiated SessionFactory" );
+	}
+
+	private EventMonitor loadEventMonitor() {
+		final var eventMonitors = classLoaderService.loadJavaServices( EventMonitor.class );
+		return eventMonitors.isEmpty() ? new EmptyEventMonitor() : eventMonitors.iterator().next();
 	}
 
 	private static SqlStringGenerationContext createSqlStringGenerationContext(
@@ -349,32 +392,32 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	@Override
 	public EventListenerGroups getEventListenerGroups() {
-		return fastSessionServices;
+		return eventListenerGroups;
 	}
 
 	@Override
 	public ParameterMarkerStrategy getParameterMarkerStrategy() {
-		return fastSessionServices.getParameterMarkerStrategy();
+		return parameterMarkerStrategy;
 	}
 
 	@Override
 	public JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider() {
-		return fastSessionServices.getJdbcValuesMappingProducerProvider();
+		return jdbcValuesMappingProducerProvider;
 	}
 
 	@Override
 	public EntityCopyObserverFactory getEntityCopyObserver() {
-		return fastSessionServices.getEntityCopyObserverFactory();
+		return entityCopyObserverFactory;
 	}
 
 	@Override
 	public ClassLoaderService getClassLoaderService() {
-		return fastSessionServices.getClassLoaderService();
+		return classLoaderService;
 	}
 
 	@Override
 	public ManagedBeanRegistry getManagedBeanRegistry() {
-		return fastSessionServices.getManagedBeanRegistry();
+		return managedBeanRegistry;
 	}
 
 	@Override
@@ -655,7 +698,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		// JPA requires that we throw IllegalStateException in cases where:
 		//		1) the PersistenceUnitTransactionType (TransactionCoordinator) is non-JTA
 		//		2) an explicit SynchronizationType is specified
-		if ( !fastSessionServices.getTransactionCoordinatorBuilder().isJta() ) {
+		if ( !transactionCoordinatorBuilder.isJta() ) {
 			throw new IllegalStateException(
 					"Illegal attempt to specify a SynchronizationType when building an EntityManager from an " +
 							"EntityManagerFactory defined as RESOURCE_LOCAL (as opposed to JTA)"
@@ -828,7 +871,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	@Override
 	public PersistenceUnitTransactionType getTransactionType() {
-		return fastSessionServices.getTransactionCoordinatorBuilder().isJta()
+		return transactionCoordinatorBuilder.isJta()
 				? PersistenceUnitTransactionType.JTA
 				: PersistenceUnitTransactionType.RESOURCE_LOCAL;
 
@@ -1599,14 +1642,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		boolean isNamed = ois.readBoolean();
 		final String name = isNamed ? ois.readUTF() : null;
 		return (SessionFactoryImpl) locateSessionFactoryOnDeserialization( uuid, name );
-	}
-
-	/**
-	 * @return the {@link FastSessionServices} for this {@code SessionFactory}.
-	 */
-	@Override
-	public FastSessionServices getFastSessionServices() {
-		return this.fastSessionServices;
 	}
 
 	@Override

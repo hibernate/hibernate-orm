@@ -37,7 +37,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.id.ExportableColumn;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -48,10 +47,12 @@ import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.singletonMap;
@@ -695,14 +696,13 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 			final BasicTypeRegistry basicTypeRegistry = database.getTypeConfiguration().getBasicTypeRegistry();
 			// todo : not sure the best solution here.  do we add the columns if missing?  other?
-			final Column segmentColumn = new ExportableColumn(
+			final DdlTypeRegistry ddlTypeRegistry = database.getTypeConfiguration().getDdlTypeRegistry();
+			final Column segmentColumn = ExportableColumnHelper.column(
 					database,
 					table,
 					segmentColumnName,
 					basicTypeRegistry.resolve( StandardBasicTypes.STRING ),
-					database.getTypeConfiguration()
-							.getDdlTypeRegistry()
-							.getTypeName( Types.VARCHAR, Size.length( segmentValueLength ) )
+					ddlTypeRegistry.getTypeName( Types.VARCHAR, Size.length( segmentValueLength ) )
 			);
 			segmentColumn.setNullable( false );
 			table.addColumn( segmentColumn );
@@ -711,11 +711,13 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			table.setPrimaryKey( new PrimaryKey( table ) );
 			table.getPrimaryKey().addColumn( segmentColumn );
 
-			final Column valueColumn = new ExportableColumn(
+			final BasicType<?> type = basicTypeRegistry.resolve( StandardBasicTypes.LONG );
+			final Column valueColumn = ExportableColumnHelper.column(
 					database,
 					table,
 					valueColumnName,
-					basicTypeRegistry.resolve( StandardBasicTypes.LONG )
+					type,
+					ddlTypeRegistry.getTypeName( type.getJdbcType().getDdlTypeCode(), database.getDialect() )
 			);
 			table.addColumn( valueColumn );
 		}

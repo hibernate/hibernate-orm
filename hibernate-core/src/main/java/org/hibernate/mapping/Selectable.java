@@ -13,7 +13,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * Models the commonality between a {@link Column} and a {@link Formula} (computed value).
  */
-public interface Selectable {
+public sealed interface Selectable permits Column, Formula {
 	/**
 	 * The selectable's "canonical" text representation
 	 */

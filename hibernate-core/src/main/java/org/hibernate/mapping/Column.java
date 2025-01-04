@@ -51,7 +51,9 @@ import static org.hibernate.type.descriptor.java.JavaTypeHelper.isTemporal;
  *
  * @author Gavin King
  */
-public class Column implements Selectable, Serializable, Cloneable, ColumnTypeInformation {
+public sealed class Column
+		implements Selectable, Serializable, Cloneable, ColumnTypeInformation
+		permits AggregateColumn {
 
 	private Long length;
 	private Integer precision;

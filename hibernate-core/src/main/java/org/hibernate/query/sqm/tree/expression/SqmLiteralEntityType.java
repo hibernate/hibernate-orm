@@ -98,8 +98,8 @@ public class SqmLiteralEntityType<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( entityType.getName() );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( entityType.getName() );
 	}
 
 }

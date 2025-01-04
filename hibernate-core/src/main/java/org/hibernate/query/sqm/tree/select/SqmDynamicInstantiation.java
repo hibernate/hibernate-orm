@@ -272,25 +272,25 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "new " );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "new " );
 		if ( instantiationTarget.getNature() == LIST ) {
-			sb.append( "list" );
+			hql.append( "list" );
 		}
 		else if ( instantiationTarget.getNature() == MAP ) {
-			sb.append( "map" );
+			hql.append( "map" );
 		}
 		else {
-			sb.append( instantiationTarget.getTargetTypeDescriptor().getJavaTypeClass().getTypeName() );
+			hql.append( instantiationTarget.getTargetTypeDescriptor().getJavaTypeClass().getTypeName() );
 		}
-		sb.append( '(' );
-		arguments.get( 0 ).appendHqlString( sb );
+		hql.append( '(' );
+		arguments.get( 0 ).appendHqlString( hql );
 		for ( int i = 1; i < arguments.size(); i++ ) {
-			sb.append(", ");
-			arguments.get( i ).appendHqlString( sb );
+			hql.append(", ");
+			arguments.get( i ).appendHqlString( hql );
 		}
 
-		sb.append( ')' );
+		hql.append( ')' );
 	}
 
 	@SuppressWarnings("unused")

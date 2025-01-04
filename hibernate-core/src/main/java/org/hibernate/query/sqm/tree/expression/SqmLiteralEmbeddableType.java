@@ -86,7 +86,7 @@ public class SqmLiteralEmbeddableType<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( embeddableDomainType.getTypeName() );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( embeddableDomainType.getTypeName() );
 	}
 }

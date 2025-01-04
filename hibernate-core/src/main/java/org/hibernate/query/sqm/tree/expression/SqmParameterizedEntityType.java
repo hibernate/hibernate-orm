@@ -58,10 +58,10 @@ public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> impl
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "type(" );
-		discriminatorSource.appendHqlString( sb );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "type(" );
+		discriminatorSource.appendHqlString( hql );
+		hql.append( ')' );
 	}
 
 }

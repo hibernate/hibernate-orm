@@ -61,9 +61,9 @@ public class SqmAny<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "any " );
-		subquery.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "any " );
+		subquery.appendHqlString( hql );
 	}
 
 }

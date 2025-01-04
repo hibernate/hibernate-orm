@@ -77,8 +77,8 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		booleanExpression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		booleanExpression.appendHqlString( hql );
 	}
 
 	@Override

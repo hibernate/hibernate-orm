@@ -58,9 +58,9 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 		return walker.visitByUnit( this );
 	}
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		duration.appendHqlString( sb );
-		sb.append( " by " );
-		sb.append( unit.getUnit() );
+	public void appendHqlString(StringBuilder hql) {
+		duration.appendHqlString( hql );
+		hql.append( " by " );
+		hql.append( unit.getUnit() );
 	}
 }

@@ -23,12 +23,12 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "wrap(" );
-		expression.appendHqlString( sb );
-		sb.append( " as " );
-		sb.append( getNodeType().getReturnedClassName() );
-		sb.append( ")" );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "wrap(" );
+		expression.appendHqlString( hql );
+		hql.append( " as " );
+		hql.append( getNodeType().getReturnedClassName() );
+		hql.append( ")" );
 	}
 
 	@Override

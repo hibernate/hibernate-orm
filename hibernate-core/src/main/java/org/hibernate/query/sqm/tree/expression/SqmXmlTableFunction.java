@@ -170,13 +170,13 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "xmltable(" );
-		getArguments().get( 0 ).appendHqlString( sb );
-		sb.append( " passing " );
-		getArguments().get( 1 ).appendHqlString( sb );
-		columns.appendHqlString( sb );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "xmltable(" );
+		getArguments().get( 0 ).appendHqlString( hql );
+		hql.append( " passing " );
+		getArguments().get( 1 ).appendHqlString( hql );
+		columns.appendHqlString( hql );
+		hql.append( ')' );
 	}
 
 	private void checkTypeResolved() {
@@ -445,11 +445,11 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		}
 
 		@Override
-		public void appendHqlString(StringBuilder sb) {
+		public void appendHqlString(StringBuilder hql) {
 			String separator = " columns ";
 			for ( ColumnDefinition columnDefinition : columnDefinitions ) {
-				sb.append( separator );
-				columnDefinition.appendHqlString( sb );
+				hql.append( separator );
+				columnDefinition.appendHqlString( hql );
 				separator = ", ";
 			}
 		}

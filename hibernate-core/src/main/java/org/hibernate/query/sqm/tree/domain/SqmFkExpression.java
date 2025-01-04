@@ -52,10 +52,10 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "fk(" );
-		getLhs().appendHqlString( sb );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "fk(" );
+		getLhs().appendHqlString( hql );
+		hql.append( ')' );
 	}
 
 	@Override

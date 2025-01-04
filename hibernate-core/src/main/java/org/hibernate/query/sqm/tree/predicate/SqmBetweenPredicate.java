@@ -84,15 +84,15 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		expression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		expression.appendHqlString( hql );
 		if ( isNegated() ) {
-			sb.append( " not" );
+			hql.append( " not" );
 		}
-		sb.append( " between " );
-		lowerBound.appendHqlString( sb );
-		sb.append( " and " );
-		upperBound.appendHqlString( sb );
+		hql.append( " between " );
+		lowerBound.appendHqlString( hql );
+		hql.append( " and " );
+		upperBound.appendHqlString( hql );
 	}
 
 	@Override

@@ -587,41 +587,41 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql) {
 		if ( selectClause != null ) {
-			sb.append( "select " );
+			hql.append( "select " );
 			if ( selectClause.isDistinct() ) {
-				sb.append( "distinct " );
+				hql.append( "distinct " );
 			}
 			final List<SqmSelection<?>> selections = selectClause.getSelections();
-			selections.get( 0 ).appendHqlString( sb );
+			selections.get( 0 ).appendHqlString( hql );
 			for ( int i = 1; i < selections.size(); i++ ) {
-				sb.append( ", " );
-				selections.get( i ).appendHqlString( sb );
+				hql.append( ", " );
+				selections.get( i ).appendHqlString( hql );
 			}
 		}
 		if ( fromClause != null ) {
-			sb.append( " from" );
-			fromClause.appendHqlString( sb );
+			hql.append( " from" );
+			fromClause.appendHqlString( hql );
 		}
 		if ( whereClause != null && whereClause.getPredicate() != null ) {
-			sb.append( " where " );
-			whereClause.getPredicate().appendHqlString( sb );
+			hql.append( " where " );
+			whereClause.getPredicate().appendHqlString( hql );
 		}
 		if ( !groupByClauseExpressions.isEmpty() ) {
-			sb.append( " group by " );
-			groupByClauseExpressions.get( 0 ).appendHqlString( sb );
+			hql.append( " group by " );
+			groupByClauseExpressions.get( 0 ).appendHqlString( hql );
 			for ( int i = 1; i < groupByClauseExpressions.size(); i++ ) {
-				sb.append( ", " );
-				groupByClauseExpressions.get( i ).appendHqlString( sb );
+				hql.append( ", " );
+				groupByClauseExpressions.get( i ).appendHqlString( hql );
 			}
 		}
 		if ( havingClausePredicate != null ) {
-			sb.append( " having " );
-			havingClausePredicate.appendHqlString( sb );
+			hql.append( " having " );
+			havingClausePredicate.appendHqlString( hql );
 		}
 
-		super.appendHqlString( sb );
+		super.appendHqlString( hql );
 	}
 
 	@Internal

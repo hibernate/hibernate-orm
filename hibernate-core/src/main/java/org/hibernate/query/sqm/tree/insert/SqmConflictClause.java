@@ -177,26 +177,26 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 		return walker.visitConflictClause( this );
 	}
 
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( " on conflict" );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( " on conflict" );
 		if ( constraintName != null ) {
-			sb.append( " on constraint " );
-			sb.append( constraintName );
+			hql.append( " on constraint " );
+			hql.append( constraintName );
 		}
 		else if ( !constraintPaths.isEmpty() ) {
 			char separator = '(';
 			for ( SqmPath<?> path : constraintPaths ) {
-				sb.append( separator );
-				appendUnqualifiedPath( sb, path );
+				hql.append( separator );
+				appendUnqualifiedPath( hql, path );
 				separator = ',';
 			}
-			sb.append( ')' );
+			hql.append( ')' );
 		}
 		if ( updateAction == null ) {
-			sb.append( " do nothing" );
+			hql.append( " do nothing" );
 		}
 		else {
-			updateAction.appendHqlString( sb );
+			updateAction.appendHqlString( hql );
 		}
 	}
 

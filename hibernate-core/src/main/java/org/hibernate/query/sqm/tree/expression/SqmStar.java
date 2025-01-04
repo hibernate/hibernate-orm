@@ -31,8 +31,8 @@ public class SqmStar extends AbstractSqmExpression<Object> {
 		return walker.visitStar( this );
 	}
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "*" );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "*" );
 	}
 
 }

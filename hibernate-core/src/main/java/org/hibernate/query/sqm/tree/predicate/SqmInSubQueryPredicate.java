@@ -105,13 +105,13 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		testExpression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		testExpression.appendHqlString( hql );
 		if ( isNegated() ) {
-			sb.append( " not" );
+			hql.append( " not" );
 		}
-		sb.append( " in " );
-		subQueryExpression.appendHqlString( sb );
+		hql.append( " in " );
+		subQueryExpression.appendHqlString( hql );
 	}
 
 	@Override

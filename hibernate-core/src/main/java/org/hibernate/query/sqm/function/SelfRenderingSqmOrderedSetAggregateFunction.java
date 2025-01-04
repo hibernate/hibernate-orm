@@ -133,40 +133,40 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql) {
 		final List<? extends SqmTypedNode<?>> arguments = getArguments();
-		sb.append( getFunctionName() );
-		sb.append( '(' );
+		hql.append( getFunctionName() );
+		hql.append( '(' );
 		int i = 1;
 		if ( arguments.get( 0 ) instanceof SqmDistinct<?> ) {
-			arguments.get( 0 ).appendHqlString( sb );
+			arguments.get( 0 ).appendHqlString( hql );
 			if ( arguments.size() > 1 ) {
-				sb.append( ' ' );
-				arguments.get( 1 ).appendHqlString( sb );
+				hql.append( ' ' );
+				arguments.get( 1 ).appendHqlString( hql );
 				i = 2;
 			}
 		}
 		for ( ; i < arguments.size(); i++ ) {
-			sb.append(", ");
-			arguments.get( i ).appendHqlString( sb );
+			hql.append(", ");
+			arguments.get( i ).appendHqlString( hql );
 		}
 
-		sb.append( ')' );
+		hql.append( ')' );
 		if ( withinGroup != null ) {
-			sb.append( " within group (order by " );
+			hql.append( " within group (order by " );
 			final List<SqmSortSpecification> sortSpecifications = withinGroup.getSortSpecifications();
-			sortSpecifications.get( 0 ).appendHqlString( sb );
+			sortSpecifications.get( 0 ).appendHqlString( hql );
 			for ( int j = 1; j < sortSpecifications.size(); j++ ) {
-				sb.append( ", " );
-				sortSpecifications.get( j ).appendHqlString( sb );
+				hql.append( ", " );
+				sortSpecifications.get( j ).appendHqlString( hql );
 			}
-			sb.append( ')' );
+			hql.append( ')' );
 		}
 
 		if ( getFilter() != null ) {
-			sb.append( " filter (where " );
-			getFilter().appendHqlString( sb );
-			sb.append( ')' );
+			hql.append( " filter (where " );
+			getFilter().appendHqlString( hql );
+			hql.append( ')' );
 		}
 	}
 }

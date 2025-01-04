@@ -990,8 +990,8 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 
 		@Override
-		public void appendHqlString(StringBuilder sb) {
-			appendColumnsToHqlString( sb );
+		public void appendHqlString(StringBuilder hql) {
+			appendColumnsToHqlString( hql );
 		}
 	}
 }

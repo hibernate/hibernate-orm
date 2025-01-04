@@ -101,15 +101,15 @@ public class SqmDeleteStatement<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		appendHqlCteString( sb );
-		sb.append( "delete from " );
+	public void appendHqlString(StringBuilder hql) {
+		appendHqlCteString( hql );
+		hql.append( "delete from " );
 		final SqmRoot<T> root = getTarget();
-		sb.append( root.getEntityName() );
-		sb.append( ' ' ).append( root.resolveAlias() );
-		SqmFromClause.appendJoins( root, sb );
-		SqmFromClause.appendTreatJoins( root, sb );
-		super.appendHqlString( sb );
+		hql.append( root.getEntityName() );
+		hql.append( ' ' ).append( root.resolveAlias() );
+		SqmFromClause.appendJoins( root, hql );
+		SqmFromClause.appendTreatJoins( root, hql );
+		super.appendHqlString( hql );
 	}
 
 	@Override

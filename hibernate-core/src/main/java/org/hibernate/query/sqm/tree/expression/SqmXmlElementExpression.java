@@ -115,14 +115,14 @@ public class SqmXmlElementExpression extends SelfRenderingSqmFunction<String> im
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql) {
 		final List<? extends SqmTypedNode<?>> arguments = getArguments();
-		sb.append( "xmlelement(name " );
-		arguments.get( 0 ).appendHqlString( sb );
+		hql.append( "xmlelement(name " );
+		arguments.get( 0 ).appendHqlString( hql );
 		for ( int i = 1; i < arguments.size(); i++ ) {
-			sb.append( ',' );
-			arguments.get( i ).appendHqlString( sb );
+			hql.append( ',' );
+			arguments.get( i ).appendHqlString( hql );
 		}
-		sb.append( ')' );
+		hql.append( ')' );
 	}
 }

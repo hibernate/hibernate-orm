@@ -172,18 +172,18 @@ public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boole
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "json_exists(" );
-		getArguments().get( 0 ).appendHqlString( sb );
-		sb.append( ',' );
-		getArguments().get( 1 ).appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "json_exists(" );
+		getArguments().get( 0 ).appendHqlString( hql );
+		hql.append( ',' );
+		getArguments().get( 1 ).appendHqlString( hql );
 
-		appendPassingExpressionHqlString( sb );
+		appendPassingExpressionHqlString( hql );
 		switch ( errorBehavior ) {
-			case ERROR -> sb.append( " error on error" );
-			case TRUE -> sb.append( " true on error" );
-			case FALSE -> sb.append( " false on error" );
+			case ERROR -> hql.append( " error on error" );
+			case TRUE -> hql.append( " true on error" );
+			case FALSE -> hql.append( " false on error" );
 		}
-		sb.append( ')' );
+		hql.append( ')' );
 	}
 }

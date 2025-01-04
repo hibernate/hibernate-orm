@@ -190,19 +190,19 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql) {
 		assert valuesList != null;
-		super.appendHqlString( sb );
-		sb.append( " values (" );
-		appendValues( valuesList.get( 0 ), sb );
+		super.appendHqlString( hql );
+		hql.append( " values (" );
+		appendValues( valuesList.get( 0 ), hql );
 		for ( int i = 1; i < valuesList.size(); i++ ) {
-			sb.append( ", " );
-			appendValues( valuesList.get( i ), sb );
+			hql.append( ", " );
+			appendValues( valuesList.get( i ), hql );
 		}
-		sb.append( ')' );
+		hql.append( ')' );
 		final SqmConflictClause conflictClause = getConflictClause();
 		if ( conflictClause != null ) {
-			conflictClause.appendHqlString( sb );
+			conflictClause.appendHqlString( hql );
 		}
 	}
 

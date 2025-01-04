@@ -64,9 +64,9 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		magnitude.appendHqlString( sb );
-		sb.append( ' ' );
-		sb.append( unit.getUnit() );
+	public void appendHqlString(StringBuilder hql) {
+		magnitude.appendHqlString( hql );
+		hql.append( ' ' );
+		hql.append( unit.getUnit() );
 	}
 }

@@ -7,6 +7,7 @@ package org.hibernate.engine.spi;
 import java.util.Collection;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
+import org.hibernate.Internal;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -15,8 +16,10 @@ import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
@@ -24,7 +27,9 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -149,9 +154,35 @@ public interface SessionFactoryImplementor
 	JavaType<Object> getTenantIdentifierJavaType();
 
 	/**
-	 * @return the {@link FastSessionServices} instance associated with this factory
+	 * Access to the event listener groups.
+	 *
+	 * @since 7.0
 	 */
+	EventListenerGroups getEventListenerGroups();
+
+	/**
+	 * @return the {@link FastSessionServices} instance associated with this factory
+	 *
+	 * @deprecated {@link FastSessionServices} belongs to an internal non-SPI package,
+	 *             and so this operation is a layer-breaker
+	 */
+	@Internal @Deprecated(since = "7.0", forRemoval = true)
 	FastSessionServices getFastSessionServices();
+
+	/**
+	 * @since 7.0
+	 */
+	ParameterMarkerStrategy getParameterMarkerStrategy();
+
+	/**
+	 * @since 7.0
+	 */
+	JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider();
+
+	/**
+	 * @since 7.0
+	 */
+	EntityCopyObserverFactory getEntityCopyObserver();
 
 	/**
 	 * Return an instance of {@link WrapperOptions} which is not backed by a session,

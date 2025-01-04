@@ -75,6 +75,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ParameterizedTypeImpl;
 
@@ -917,5 +918,15 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private ManagedBeanRegistry getManagedBeanRegistry() {
 		return scope.getServiceRegistry().requireService( ManagedBeanRegistry.class );
+	}
+
+	@Internal @Incubating // find a new home for this operation
+	public final FormatMapper getJsonFormatMapper() {
+		return getSessionFactory().getSessionFactoryOptions().getJsonFormatMapper();
+	}
+
+	@Internal @Incubating // find a new home for this operation
+	public final FormatMapper getXmlFormatMapper() {
+		return getSessionFactory().getSessionFactoryOptions().getXmlFormatMapper();
 	}
 }

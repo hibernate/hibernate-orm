@@ -352,7 +352,7 @@ public class EntityUpdateAction extends EntityAction {
 
 	protected boolean preUpdate() {
 		final EventListenerGroup<PreUpdateEventListener> listenerGroup
-				= getFastSessionServices().eventListenerGroup_PRE_UPDATE;
+				= getEventListenerGroups().eventListenerGroup_PRE_UPDATE;
 		if ( listenerGroup.isEmpty() ) {
 			return false;
 		}
@@ -368,7 +368,7 @@ public class EntityUpdateAction extends EntityAction {
 	}
 
 	protected void postUpdate() {
-		getFastSessionServices().eventListenerGroup_POST_UPDATE
+		getEventListenerGroups().eventListenerGroup_POST_UPDATE
 				.fireLazyEventOnEachListener( this::newPostUpdateEvent, PostUpdateEventListener::onPostUpdate );
 	}
 
@@ -377,7 +377,7 @@ public class EntityUpdateAction extends EntityAction {
 	}
 
 	protected void postCommitUpdate(boolean success) {
-		getFastSessionServices().eventListenerGroup_POST_COMMIT_UPDATE
+		getEventListenerGroups().eventListenerGroup_POST_COMMIT_UPDATE
 				.fireLazyEventOnEachListener( this::newPostUpdateEvent,
 						success ? PostUpdateEventListener::onPostUpdate : this::onPostCommitFailure );
 	}
@@ -395,7 +395,7 @@ public class EntityUpdateAction extends EntityAction {
 	@Override
 	protected boolean hasPostCommitEventListeners() {
 		final EventListenerGroup<PostUpdateEventListener> group
-				= getFastSessionServices().eventListenerGroup_POST_COMMIT_UPDATE;
+				= getEventListenerGroups().eventListenerGroup_POST_COMMIT_UPDATE;
 		for ( PostUpdateEventListener listener : group.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;

@@ -100,8 +100,8 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			SharedSessionContractImplementor session) {
 		if ( idTable.getSessionUidColumn() != null ) {
-			final ParameterMarkerStrategy parameterMarkerStrategy = session.getSessionFactory()
-					.getFastSessionServices().parameterMarkerStrategy;
+			final ParameterMarkerStrategy parameterMarkerStrategy =
+					session.getSessionFactory().getParameterMarkerStrategy();
 			return getTruncateTableCommand() + " " + idTable.getQualifiedTableName()
 					+ " where " + idTable.getSessionUidColumn().getColumnName() + " = "
 					+ parameterMarkerStrategy.createMarker( 1, null );

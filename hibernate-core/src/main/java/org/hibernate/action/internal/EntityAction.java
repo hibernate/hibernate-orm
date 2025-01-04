@@ -10,6 +10,7 @@ import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -192,10 +193,17 @@ public abstract class EntityAction
 
 	/**
 	 * Convenience method for all subclasses.
-	 * @return the {@link FastSessionServices} instance from the SessionFactory.
+	 * @return the {@link EventListenerGroups} instance from the {@code SessionFactory}.
 	 */
+	protected EventListenerGroups getEventListenerGroups() {
+		return session.getFactory().getEventListenerGroups();
+	}
+
+	/**
+	 * @deprecated This is a layer-breaker
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	protected FastSessionServices getFastSessionServices() {
 		return session.getFactory().getFastSessionServices();
 	}
-
 }

@@ -1722,7 +1722,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 					.setPersister( data.concreteDescriptor );
 
 			session.getFactory()
-					.getFastSessionServices()
+					.getEventListenerGroups()
 					.eventListenerGroup_PRE_LOAD
 					.fireEventOnEachListener( preLoadEvent, PreLoadEventListener::onPreLoad );
 		}

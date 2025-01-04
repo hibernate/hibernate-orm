@@ -108,7 +108,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 	}
 
 	private void preUpdate() {
-		getFastSessionServices().eventListenerGroup_PRE_COLLECTION_UPDATE
+		getEventListenerGroups().eventListenerGroup_PRE_COLLECTION_UPDATE
 				.fireLazyEventOnEachListener( this::newPreCollectionUpdateEvent,
 						PreCollectionUpdateEventListener::onPreUpdateCollection );
 	}
@@ -118,7 +118,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 	}
 
 	private void postUpdate() {
-		getFastSessionServices().eventListenerGroup_POST_COLLECTION_UPDATE
+		getEventListenerGroups().eventListenerGroup_POST_COLLECTION_UPDATE
 				.fireLazyEventOnEachListener( this::newPostCollectionUpdateEvent,
 						PostCollectionUpdateEventListener::onPostUpdateCollection );
 	}

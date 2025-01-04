@@ -35,8 +35,10 @@ import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.internal.FastSessionServices;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -47,6 +49,8 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.type.Type;
@@ -114,7 +118,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 
 	@Override
 	public SchemaManager getSchemaManager() {
-		return delegate().getSchemaManager();
+		return delegate.getSchemaManager();
 	}
 
 	@Override
@@ -405,5 +409,25 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public Class<?> classForName(String className) {
 		return delegate.classForName( className );
+	}
+
+	@Override
+	public EventListenerGroups getEventListenerGroups() {
+		return delegate.getEventListenerGroups();
+	}
+
+	@Override
+	public ParameterMarkerStrategy getParameterMarkerStrategy() {
+		return delegate.getParameterMarkerStrategy();
+	}
+
+	@Override
+	public JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider() {
+		return delegate.getJdbcValuesMappingProducerProvider();
+	}
+
+	@Override
+	public EntityCopyObserverFactory getEntityCopyObserver() {
+		return delegate.getEntityCopyObserver();
 	}
 }

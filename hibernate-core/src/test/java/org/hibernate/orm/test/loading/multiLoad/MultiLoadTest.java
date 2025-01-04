@@ -100,8 +100,7 @@ public class MultiLoadTest {
 					);
 
 					final Dialect dialect = session.getSessionFactory()
-							.getFastSessionServices()
-							.jdbcServices
+							.getJdbcServices()
 							.getDialect();
 					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
 						assertThat( paramCount, is( 1 ) );
@@ -353,10 +352,7 @@ public class MultiLoadTest {
 							'?'
 					);
 
-					final Dialect dialect = session.getSessionFactory()
-							.getFastSessionServices()
-							.jdbcServices
-							.getDialect();
+					final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
 					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
 						assertThat( paramCount, is( 1 ) );
 					}
@@ -418,10 +414,7 @@ public class MultiLoadTest {
 							'?'
 					);
 
-					final Dialect dialect = session.getSessionFactory()
-							.getFastSessionServices()
-							.jdbcServices
-							.getDialect();
+					final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
 					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
 						assertThat( paramCount, is( 1 ) );
 					}
@@ -459,10 +452,7 @@ public class MultiLoadTest {
 							'?'
 					);
 
-					final Dialect dialect = session.getSessionFactory()
-							.getFastSessionServices()
-							.jdbcServices
-							.getDialect();
+					final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
 					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
 						assertThat( paramCount, is( 1 ) );
 					}
@@ -506,10 +496,7 @@ public class MultiLoadTest {
 							'?'
 					);
 
-					final Dialect dialect = session.getSessionFactory()
-							.getFastSessionServices()
-							.jdbcServices
-							.getDialect();
+					final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
 					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
 						assertThat( paramCount, is( 1 ) );
 					}
@@ -546,10 +533,7 @@ public class MultiLoadTest {
 							'?'
 					);
 
-					final Dialect dialect = session.getSessionFactory()
-							.getFastSessionServices()
-							.jdbcServices
-							.getDialect();
+					final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
 					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
 						assertThat( paramCount, is( 1 ) );
 					}
@@ -592,10 +576,7 @@ public class MultiLoadTest {
 							'?'
 					);
 
-					final Dialect dialect = session.getSessionFactory()
-							.getFastSessionServices()
-							.jdbcServices
-							.getDialect();
+					final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
 					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
 						assertThat( paramCount, is( 1 ) );
 					}

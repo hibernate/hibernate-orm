@@ -27,7 +27,7 @@ public class Delete implements RestrictionRenderingContext {
 	private int parameterCount;
 
 	public Delete(SessionFactoryImplementor factory) {
-		this( factory.getFastSessionServices().parameterMarkerStrategy );
+		this( factory.getParameterMarkerStrategy() );
 	}
 
 	public Delete(ParameterMarkerStrategy parameterMarkerStrategy) {

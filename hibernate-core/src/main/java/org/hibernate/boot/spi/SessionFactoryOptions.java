@@ -18,6 +18,7 @@ import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.xsd.XmlValidationMode;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -615,4 +616,12 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.QuerySettings#NATIVE_PREFER_JDBC_DATETIME_TYPES
 	 */
 	boolean isPreferJdbcDatetimeTypesInNativeQueriesEnabled();
+
+	/**
+	 * @see org.hibernate.cfg.MappingSettings#XML_VALIDATION_MODE
+	 */
+	default XmlValidationMode getXmlValidationMode() {
+		return XmlValidationMode.DISABLED;
+	}
+
 }

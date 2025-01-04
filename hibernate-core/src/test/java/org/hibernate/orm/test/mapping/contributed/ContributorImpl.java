@@ -7,6 +7,7 @@ package org.hibernate.orm.test.mapping.contributed;
 import java.io.InputStream;
 
 import org.hibernate.boot.ResourceStreamLocator;
+import org.hibernate.boot.archive.internal.RepeatableInputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
@@ -36,16 +37,17 @@ public class ContributorImpl implements AdditionalMappingContributor {
 			InFlightMetadataCollector metadata,
 			ResourceStreamLocator resourceStreamLocator,
 			MetadataBuildingContext buildingContext) {
+		final String resourceLocation = "org/hibernate/orm/test/mapping/contributed/BasicContributorTests.hbm.xml";
 		final Origin origin = new Origin( SourceType.OTHER, "test" );
 
 		final ClassLoaderService classLoaderService = buildingContext.getBootstrapContext()
 				.getServiceRegistry()
 				.getService( ClassLoaderService.class );
 		final InputStream inputStream = classLoaderService.locateResourceStream(
-				"org/hibernate/orm/test/mapping/contributed/BasicContributorTests.hbm.xml" );
+				resourceLocation );
 
 		final MappingBinder mappingBinder = new MappingBinder( buildingContext.getBootstrapContext().getServiceRegistry() );
-		final Binding<JaxbHbmHibernateMapping> jaxbBinding = mappingBinder.bind( inputStream, origin );
+		final Binding<JaxbHbmHibernateMapping> jaxbBinding = mappingBinder.bind( new RepeatableInputStreamAccess( resourceLocation, inputStream), origin );
 		final JaxbHbmHibernateMapping jaxbRoot = jaxbBinding.getRoot();
 
 		contributions.contributeBinding( jaxbRoot );

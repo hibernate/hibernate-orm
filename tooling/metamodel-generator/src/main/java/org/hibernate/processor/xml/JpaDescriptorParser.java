@@ -17,12 +17,14 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
+import java.util.Map;
+import java.util.function.Supplier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.archive.internal.RepeatableInputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
@@ -70,7 +72,7 @@ public class JpaDescriptorParser {
 
 		final ResourceStreamLocatorImpl resourceStreamLocator = new ResourceStreamLocatorImpl( context );
 		this.configurationBinder = new ConfigurationBinder( resourceStreamLocator );
-		this.mappingBinder = new MappingBinder( resourceStreamLocator, (Function<String,Object>) null );
+		this.mappingBinder = new MappingBinder( resourceStreamLocator, (Supplier<Map<String,Object>>) null );
 	}
 
 	public void parseMappingXml() {
@@ -129,7 +131,7 @@ public class JpaDescriptorParser {
 
 		try {
 			final Binding<JaxbPersistenceImpl> binding = configurationBinder.bind(
-					stream,
+					new RepeatableInputStreamAccess( persistenceXmlLocation, stream ),
 					new Origin( SourceType.RESOURCE, persistenceXmlLocation )
 			);
 			persistence = binding.getRoot();
@@ -165,7 +167,7 @@ public class JpaDescriptorParser {
 			}
 			try {
 				final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind(
-						inputStream,
+						new RepeatableInputStreamAccess( mappingFile, inputStream),
 						new Origin( SourceType.RESOURCE, mappingFile )
 				);
 				if ( binding != null ) {

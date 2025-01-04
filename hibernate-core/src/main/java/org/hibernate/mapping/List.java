@@ -18,7 +18,7 @@ import org.hibernate.usertype.UserCollectionType;
  *
  * @author Gavin King
  */
-public class List extends IndexedCollection {
+public non-sealed class List extends IndexedCollection {
 
 	private int baseIndex;
 

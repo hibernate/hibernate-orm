@@ -18,7 +18,7 @@ import org.hibernate.usertype.UserCollectionType;
  * primitive arrays.
  * @author Gavin King
  */
-public abstract class IndexedCollection extends Collection {
+public sealed abstract class IndexedCollection extends Collection permits Map, List  {
 
 	public static final String DEFAULT_INDEX_COLUMN_NAME = "idx";
 

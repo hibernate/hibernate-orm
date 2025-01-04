@@ -24,7 +24,7 @@ import org.hibernate.usertype.UserCollectionType;
  *
  * @author Gavin King
  */
-public class Set extends Collection {
+public non-sealed class Set extends Collection {
 	/**
 	 * Used by hbm.xml binding
 	 */

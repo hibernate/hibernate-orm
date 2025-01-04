@@ -18,7 +18,7 @@ import org.hibernate.type.SpecialOneToOneType;
  *
  * @author Gavin King
  */
-public class OneToOne extends ToOne {
+public final class OneToOne extends ToOne {
 
 	private boolean constrained;
 	private ForeignKeyDirection foreignKeyType;

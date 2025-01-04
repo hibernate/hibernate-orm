@@ -17,7 +17,7 @@ import org.hibernate.usertype.UserCollectionType;
  * A mapping model object representing a collection with a synthetic "identifier" column,
  * that is, a surrogate key.
  */
-public abstract class IdentifierCollection extends Collection {
+public non-sealed abstract class IdentifierCollection extends Collection {
 
 	public static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
 

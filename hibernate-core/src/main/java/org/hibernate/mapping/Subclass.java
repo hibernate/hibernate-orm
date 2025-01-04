@@ -19,7 +19,8 @@ import org.hibernate.internal.util.collections.JoinedList;
  *
  * @author Gavin King
  */
-public class Subclass extends PersistentClass {
+public sealed class Subclass extends PersistentClass
+		permits SingleTableSubclass, JoinedSubclass, UnionSubclass {
 
 	private PersistentClass superclass;
 	private final int subclassId;

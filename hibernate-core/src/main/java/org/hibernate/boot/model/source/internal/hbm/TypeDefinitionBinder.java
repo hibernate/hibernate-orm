@@ -6,7 +6,6 @@ package org.hibernate.boot.model.source.internal.hbm;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeDefinitionType;
 import org.hibernate.boot.model.TypeDefinition;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 import org.jboss.logging.Logger;
 
@@ -28,8 +27,7 @@ public class TypeDefinitionBinder {
 
 		final TypeDefinition definition = new TypeDefinition(
 				typeDefinitionBinding.getName(),
-				context.getBuildingOptions().getServiceRegistry()
-						.requireService( ClassLoaderService.class )
+				context.getBootstrapContext().getClassLoaderService()
 						.classForName( typeDefinitionBinding.getClazz() ),
 				null,
 				ConfigParameterHelper.extractConfigParameters( typeDefinitionBinding )

@@ -73,7 +73,7 @@ public class ExtendedBeanManagerSmokeTests {
 
 	private static void assertApplied(ExtendedBeanManagerImpl ref, EntityManagerFactory emf) {
 		final SessionFactoryImplementor sfi = emf.unwrap( SessionFactoryImplementor.class );
-		final ManagedBeanRegistry beanRegistry = sfi.getServiceRegistry().getService( ManagedBeanRegistry.class );
+		final ManagedBeanRegistry beanRegistry = sfi.getManagedBeanRegistry();
 		assertThat( beanRegistry.getBeanContainer() ).isInstanceOf( CdiBeanContainerExtendedAccessImpl.class );
 
 		final CdiBeanContainerExtendedAccessImpl extensionWrapper = (CdiBeanContainerExtendedAccessImpl) beanRegistry.getBeanContainer();

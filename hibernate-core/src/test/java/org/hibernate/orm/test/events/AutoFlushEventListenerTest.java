@@ -12,7 +12,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.EventType;
@@ -114,7 +113,7 @@ public class AutoFlushEventListenerTest {
 				Metadata metadata,
 				BootstrapContext bootstrapContext,
 				SessionFactoryImplementor sessionFactory) {
-			sessionFactory.getServiceRegistry().getService( EventListenerRegistry.class ).appendListeners(
+			sessionFactory.getEventListenerRegistry().appendListeners(
 					EventType.AUTO_FLUSH,
 					LISTENER
 			);

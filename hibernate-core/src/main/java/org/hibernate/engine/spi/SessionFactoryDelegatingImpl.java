@@ -30,11 +30,13 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -48,6 +50,7 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.relational.SchemaManager;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
@@ -429,5 +432,20 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public EntityCopyObserverFactory getEntityCopyObserver() {
 		return delegate.getEntityCopyObserver();
+	}
+
+	@Override
+	public ClassLoaderService getClassLoaderService() {
+		return delegate.getClassLoaderService();
+	}
+
+	@Override
+	public ManagedBeanRegistry getManagedBeanRegistry() {
+		return delegate.getManagedBeanRegistry();
+	}
+
+	@Override
+	public EventListenerRegistry getEventListenerRegistry() {
+		return delegate.getEventListenerRegistry();
 	}
 }

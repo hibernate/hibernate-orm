@@ -154,8 +154,7 @@ public class AggregatedCollectionEventListener
 			}
 			listener = new AggregatedCollectionEventListener();
 
-			final EventListenerRegistry listenerRegistry = sessionFactory.getServiceRegistry()
-					.getService( EventListenerRegistry.class );
+			final EventListenerRegistry listenerRegistry = sessionFactory.getEventListenerRegistry();
 			listenerRegistry.appendListeners( EventType.INIT_COLLECTION, listener );
 			listenerRegistry.appendListeners( EventType.PRE_COLLECTION_RECREATE, listener );
 			listenerRegistry.appendListeners( EventType.POST_COLLECTION_RECREATE, listener );

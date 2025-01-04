@@ -130,8 +130,7 @@ public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 
 	private void addEntityListeners(final Order order) {
 
-		EventListenerRegistry registry = sessionFactory().getServiceRegistry()
-				.getService( EventListenerRegistry.class );
+		EventListenerRegistry registry = sessionFactory().getEventListenerRegistry();
 		registry.setListeners(
 				EventType.PRE_INSERT,
 				new PreInsertEventListener() {

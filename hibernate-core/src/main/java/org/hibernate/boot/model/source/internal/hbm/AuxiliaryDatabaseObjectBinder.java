@@ -8,7 +8,6 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmAuxiliaryDatabaseObjectType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmDialectScopeType;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.SimpleAuxiliaryDatabaseObject;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 
 /**
@@ -29,11 +28,10 @@ public class AuxiliaryDatabaseObjectBinder {
 		if ( auxDbObjectMapping.getDefinition() != null ) {
 			final String auxDbObjectImplClass = auxDbObjectMapping.getDefinition().getClazz();
 			try {
-				auxDbObject = (AuxiliaryDatabaseObject) context.getBuildingOptions()
-						.getServiceRegistry()
-						.requireService( ClassLoaderService.class )
-						.classForName( auxDbObjectImplClass )
-						.newInstance();
+				auxDbObject = (AuxiliaryDatabaseObject)
+						context.getBootstrapContext().getClassLoaderService()
+								.classForName( auxDbObjectImplClass )
+								.newInstance();
 			}
 			catch (ClassLoadingException cle) {
 				throw cle;

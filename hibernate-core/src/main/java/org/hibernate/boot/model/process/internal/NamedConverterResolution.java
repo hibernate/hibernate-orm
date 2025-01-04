@@ -13,7 +13,6 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -68,8 +67,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		final String converterClassName = name.substring( ConverterDescriptor.TYPE_NAME_PREFIX.length() );
 
 		final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
-				context.getBootstrapContext().getServiceRegistry()
-						.requireService( ClassLoaderService.class )
+				context.getBootstrapContext().getClassLoaderService()
 						.classForName( converterClassName ),
 				context.getBootstrapContext().getClassmateContext()
 		);

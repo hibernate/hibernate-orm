@@ -228,7 +228,7 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	private static SourceModelBuildingContext createModelBuildingContext(BootstrapContext bootstrapContext) {
-		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
 		final ClassLoaderServiceLoading classLoading = new ClassLoaderServiceLoading( classLoaderService );
 
 		final ModelsConfiguration modelsConfiguration = new ModelsConfiguration();

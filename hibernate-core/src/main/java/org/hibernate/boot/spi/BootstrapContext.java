@@ -16,11 +16,14 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -68,6 +71,21 @@ public interface BootstrapContext {
 	 * Options specific to building the {@linkplain Metadata boot metamodel}
 	 */
 	MetadataBuildingOptions getMetadataBuildingOptions();
+
+	/**
+	 * Access to the {@link ClassLoaderService}.
+	 */
+	ClassLoaderService getClassLoaderService();
+
+	/**
+	 * Access to the {@link ManagedBeanRegistry}.
+	 */
+	ManagedBeanRegistry getManagedBeanRegistry();
+
+	/**
+	 * Access to the {@link ConfigurationService}.
+	 */
+	ConfigurationService getConfigurationService();
 
 	/**
 	 * Whether the bootstrap was initiated from JPA bootstrapping.

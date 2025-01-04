@@ -43,7 +43,6 @@ import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
@@ -339,7 +338,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 			}
 			else {
 				try {
-					componentClass = classForName( componentClassName, getMetadata() );
+					componentClass = classForName( componentClassName, getBuildingContext().getBootstrapContext() );
 				}
 				catch (ClassLoadingException e) {
 					throw new MappingException( "Embeddable class not found: " + componentClassName, e );
@@ -384,14 +383,14 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	private CompositeUserType<?> createCompositeUserType(Component component) {
-		final BootstrapContext bootstrapContext = getBuildingContext().getBootstrapContext();
+		final MetadataBuildingContext buildingContext = getBuildingContext();
+		final BootstrapContext bootstrapContext = buildingContext.getBootstrapContext();
 		@SuppressWarnings("rawtypes")
 		final Class<? extends CompositeUserType> clazz =
-				classForName( CompositeUserType.class, component.getTypeName(), getMetadataCollector() );
-		return !getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
-				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( clazz )
-				: bootstrapContext.getServiceRegistry().requireService( ManagedBeanRegistry.class )
-						.getBean( clazz ).getBeanInstance();
+				classForName( CompositeUserType.class, component.getTypeName(), bootstrapContext );
+		return buildingContext.getBuildingOptions().isAllowExtensionsInCdi()
+				? bootstrapContext.getManagedBeanRegistry().getBean( clazz ).getBeanInstance()
+				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( clazz );
 	}
 
 	@Override

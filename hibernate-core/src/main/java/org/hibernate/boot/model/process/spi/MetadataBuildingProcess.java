@@ -184,7 +184,7 @@ public class MetadataBuildingProcess {
 			final BootstrapContext bootstrapContext,
 			final MetadataBuildingOptions options) {
 
-		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
 		assert classLoaderService != null;
 		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, options );
 
@@ -692,9 +692,7 @@ public class MetadataBuildingProcess {
 			BootstrapContext bootstrapContext,
 			MetadataBuildingOptions options,
 			InFlightMetadataCollector metadataCollector) {
-		final ClassLoaderService classLoaderService =
-				options.getServiceRegistry().requireService(ClassLoaderService.class);
-
+		final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
 		final StandardServiceRegistry serviceRegistry = bootstrapContext.getServiceRegistry();
 		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();

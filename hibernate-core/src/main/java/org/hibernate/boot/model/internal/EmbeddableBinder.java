@@ -51,7 +51,6 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUse
 import org.hibernate.property.access.internal.PropertyAccessStrategyGetterImpl;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -598,9 +597,7 @@ public class EmbeddableBinder {
 			FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( compositeUserTypeClass );
 		}
 
-		return context.getBootstrapContext()
-				.getServiceRegistry()
-				.requireService( ManagedBeanRegistry.class )
+		return context.getBootstrapContext().getManagedBeanRegistry()
 				.getBean( compositeUserTypeClass )
 				.getBeanInstance();
 	}

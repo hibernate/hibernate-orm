@@ -88,8 +88,7 @@ public class CollectionCacheInvalidator
 			// Nothing to do, if caching is disabled
 			return;
 		}
-		final EventListenerRegistry eventListenerRegistry =
-				sessionFactory.getServiceRegistry().requireService( EventListenerRegistry.class );
+		final EventListenerRegistry eventListenerRegistry = sessionFactory.getEventListenerRegistry();
 		eventListenerRegistry.appendListeners( EventType.POST_INSERT, this );
 		eventListenerRegistry.appendListeners( EventType.POST_DELETE, this );
 		eventListenerRegistry.appendListeners( EventType.POST_UPDATE, this );

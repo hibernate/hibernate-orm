@@ -76,9 +76,8 @@ public class SessionFactoryServiceRegistryImpl
 
 	@Override
 	public <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
-		if ( serviceBinding.getService() instanceof Configurable ) {
-			( (Configurable) serviceBinding.getService() )
-					.configure( requireService( ConfigurationService.class ).getSettings() );
+		if ( serviceBinding.getService() instanceof Configurable configurable ) {
+			configurable.configure( requireService( ConfigurationService.class ).getSettings() );
 		}
 	}
 

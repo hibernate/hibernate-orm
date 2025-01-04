@@ -7,15 +7,18 @@ package org.hibernate.engine.spi;
 import java.util.Collection;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
+import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -26,6 +29,7 @@ import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -158,6 +162,7 @@ public interface SessionFactoryImplementor
 	 *
 	 * @since 7.0
 	 */
+	@Internal @Incubating
 	EventListenerGroups getEventListenerGroups();
 
 	/**
@@ -172,17 +177,38 @@ public interface SessionFactoryImplementor
 	/**
 	 * @since 7.0
 	 */
+	@Incubating
 	ParameterMarkerStrategy getParameterMarkerStrategy();
 
 	/**
 	 * @since 7.0
 	 */
+	@Incubating
 	JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider();
 
 	/**
 	 * @since 7.0
 	 */
+	@Incubating
 	EntityCopyObserverFactory getEntityCopyObserver();
+
+	/**
+	 * @since 7.0
+	 */
+	@Incubating
+	ClassLoaderService getClassLoaderService();
+
+	/**
+	 * @since 7.0
+	 */
+	@Incubating
+	ManagedBeanRegistry getManagedBeanRegistry();
+
+	/**
+	 * @since 7.0
+	 */
+	@Incubating
+	EventListenerRegistry getEventListenerRegistry();
 
 	/**
 	 * Return an instance of {@link WrapperOptions} which is not backed by a session,
@@ -214,5 +240,4 @@ public interface SessionFactoryImplementor
 	 * The best guess entity name for an entity not in an association
 	 */
 	String bestGuessEntityName(Object object);
-
 }

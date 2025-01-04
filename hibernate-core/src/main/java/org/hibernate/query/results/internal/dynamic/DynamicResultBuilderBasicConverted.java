@@ -56,7 +56,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			Class<? extends AttributeConverter<O, R>> converterJavaType,
 			SessionFactoryImplementor sessionFactory) {
 		this.columnAlias = columnAlias;
-		final ManagedBeanRegistry beans = sessionFactory.getServiceRegistry().requireService( ManagedBeanRegistry.class );
+		final ManagedBeanRegistry beans = sessionFactory.getManagedBeanRegistry();
 		final JavaTypeRegistry javaTypeRegistry = sessionFactory.getTypeConfiguration().getJavaTypeRegistry();
 		this.basicValueConverter = new JpaAttributeConverterImpl<>(
 				beans.getBean( converterJavaType ),

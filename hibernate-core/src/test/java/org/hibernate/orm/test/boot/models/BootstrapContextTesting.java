@@ -35,6 +35,7 @@ import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -57,8 +58,11 @@ public class BootstrapContextTesting implements BootstrapContext {
 	private final SqmFunctionRegistry sqmFunctionRegistry;
 	private final MutableJpaCompliance jpaCompliance;
 
+	private final ClassLoaderService classLoaderService;
 	private final ClassLoaderAccessImpl classLoaderAccess;
 	private final BeanInstanceProducer beanInstanceProducer;
+	private final ManagedBeanRegistry managedBeanRegistry;
+	private final ConfigurationService configurationService;
 
 	private boolean isJpaBootstrap;
 
@@ -85,7 +89,8 @@ public class BootstrapContextTesting implements BootstrapContext {
 		this.classmateContext = new ClassmateContext();
 		this.metadataBuildingOptions = metadataBuildingOptions;
 
-		this.classLoaderAccess = new ClassLoaderAccessImpl( serviceRegistry.getService( ClassLoaderService.class ) );
+		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		this.classLoaderAccess = new ClassLoaderAccessImpl( classLoaderService );
 
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
@@ -108,7 +113,9 @@ public class BootstrapContextTesting implements BootstrapContext {
 		this.typeConfiguration = new TypeConfiguration();
 		this.beanInstanceProducer = new TypeBeanInstanceProducer( configService, serviceRegistry );
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
-	}
+
+		this.managedBeanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
+		this.configurationService = serviceRegistry.requireService( ConfigurationService.class );	}
 
 	@Override
 	public StandardServiceRegistry getServiceRegistry() {
@@ -138,6 +145,21 @@ public class BootstrapContextTesting implements BootstrapContext {
 	@Override
 	public MetadataBuildingOptions getMetadataBuildingOptions() {
 		return metadataBuildingOptions;
+	}
+
+	@Override
+	public ClassLoaderService getClassLoaderService() {
+		return classLoaderService;
+	}
+
+	@Override
+	public ManagedBeanRegistry getManagedBeanRegistry() {
+		return managedBeanRegistry;
+	}
+
+	@Override
+	public ConfigurationService getConfigurationService() {
+		return configurationService;
 	}
 
 	@Override

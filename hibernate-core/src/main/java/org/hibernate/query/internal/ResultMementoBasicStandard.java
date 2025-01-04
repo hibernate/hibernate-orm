@@ -85,8 +85,7 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 			final Class<? extends AttributeConverter<?, ?>> converterClass =
 					(Class<? extends AttributeConverter<?, ?>>) definedType;
 			final ManagedBean<? extends AttributeConverter<?,?>> converterBean =
-					sessionFactory.getServiceRegistry().requireService( ManagedBeanRegistry.class )
-							.getBean( converterClass );
+					sessionFactory.getManagedBeanRegistry().getBean( converterClass );
 			final JavaType<? extends AttributeConverter<?,?>> converterJtd =
 					typeConfiguration.getJavaTypeRegistry().getDescriptor( converterClass );
 
@@ -115,8 +114,7 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 			else {
 				final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 				final JavaType<Object> registeredJtd = jtdRegistry.getDescriptor( definedType );
-				final ManagedBeanRegistry beanRegistry =
-						sessionFactory.getServiceRegistry().requireService( ManagedBeanRegistry.class );
+				final ManagedBeanRegistry beanRegistry = sessionFactory.getManagedBeanRegistry();
 				if ( BasicType.class.isAssignableFrom( registeredJtd.getJavaTypeClass() ) ) {
 					final ManagedBean<BasicType<?>> typeBean =
 							(ManagedBean) beanRegistry.getBean( registeredJtd.getJavaTypeClass() );

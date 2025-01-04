@@ -93,6 +93,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	private final TypeConfiguration typeConfiguration;
 	private final MappingMetamodel mappingMetamodel;
 	private final ServiceRegistry serviceRegistry;
+	private final ClassLoaderService classLoaderService;
 
 	private final Map<String, ManagedDomainType<?>> managedTypeByName = new TreeMap<>();
 	private final Map<Class<?>, ManagedDomainType<?>> managedTypeByClass = new HashMap<>();
@@ -117,6 +118,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		this.typeConfiguration = typeConfiguration;
 		this.mappingMetamodel = mappingMetamodel;
 		this.serviceRegistry = serviceRegistry;
+		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 	}
 
 	@Override
@@ -326,8 +328,6 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			return enumJavaType;
 		}
 		else {
-			final ClassLoaderService classLoaderService =
-					serviceRegistry.requireService( ClassLoaderService.class );
 			try {
 				final Class<?> clazz = classLoaderService.classForName( className );
 				if ( clazz == null || !clazz.isEnum() ) {
@@ -375,10 +375,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	private Field getJavaField(String className, String fieldName) throws NoSuchFieldException {
-		final Class<?> namedClass =
-				getServiceRegistry()
-						.requireService( ClassLoaderService.class )
-						.classForName( className );
+		final Class<?> namedClass = classLoaderService.classForName( className );
 		if ( namedClass != null ) {
 			return namedClass.getDeclaredField( fieldName );
 		}
@@ -633,8 +630,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	private <X> Class<X> resolveRequestedClass(String entityName) {
 		try {
-			return getServiceRegistry().requireService( ClassLoaderService.class )
-					.classForName( entityName );
+			return classLoaderService.classForName( entityName );
 		}
 		catch (ClassLoadingException e) {
 			return null;
@@ -736,7 +732,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				bootMetamodel,
 				jpaStaticMetaModelPopulationSetting,
 				jpaMetaModelPopulationSetting,
-				runtimeModelCreationContext
+				runtimeModelCreationContext,
+				runtimeModelCreationContext.getBootstrapContext().getClassLoaderService()
 		);
 
 

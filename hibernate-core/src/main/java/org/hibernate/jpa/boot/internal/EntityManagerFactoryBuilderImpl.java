@@ -393,8 +393,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 		}
 
-		metamodelBuilder.getBootstrapContext().getServiceRegistry()
-				.requireService( ClassLoaderService.class )
+		metamodelBuilder.getBootstrapContext().getClassLoaderService()
 				.loadJavaServices( MetadataBuilderContributor.class )
 				.forEach( contributor -> contributor.contribute( metamodelBuilder ) );
 	}
@@ -1357,8 +1356,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( typeContributorList != null ) {
 			typeContributorList.getTypeContributors().forEach( metamodelBuilder::applyTypes );
 		}
-		metamodelBuilder.getBootstrapContext().getServiceRegistry()
-				.requireService( ClassLoaderService.class )
+		metamodelBuilder.getBootstrapContext().getClassLoaderService()
 				.loadJavaServices( TypeContributor.class )
 				.forEach( metamodelBuilder::applyTypes );
 	}

@@ -29,7 +29,6 @@ import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -194,7 +193,7 @@ public abstract class QueryBinder {
 
 		if ( annotatedClass != null ) {
 			builder.setResultClass(
-					context.getBootstrapContext().getServiceRegistry().requireService( ClassLoaderService.class )
+					context.getBootstrapContext().getClassLoaderService()
 							.classForName( annotatedClass.getClassName() )
 			);
 		}

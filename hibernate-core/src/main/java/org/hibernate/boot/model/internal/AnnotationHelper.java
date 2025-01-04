@@ -15,7 +15,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
@@ -49,15 +48,13 @@ public class AnnotationHelper {
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
 		final UserType<?> userType = !context.getBuildingOptions().isAllowExtensionsInCdi()
 				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass )
-				: bootstrapContext.getServiceRegistry().requireService( ManagedBeanRegistry.class ).getBean( userTypeClass ).getBeanInstance();
+				: bootstrapContext.getManagedBeanRegistry().getBean( userTypeClass ).getBeanInstance();
 		return new CustomType<>( userType, bootstrapContext.getTypeConfiguration() );
 	}
 
 	public static JdbcMapping resolveAttributeConverter(Class<AttributeConverter<?, ?>> type, MetadataBuildingContext context) {
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
-		final ManagedBean<AttributeConverter<?, ?>> bean = bootstrapContext.getServiceRegistry()
-				.requireService( ManagedBeanRegistry.class )
-				.getBean( type );
+		final ManagedBean<AttributeConverter<?, ?>> bean = bootstrapContext.getManagedBeanRegistry().getBean( type );
 
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
 		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
@@ -155,8 +152,7 @@ public class AnnotationHelper {
 			return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
 		}
 		else {
-			return context.getBootstrapContext().getServiceRegistry()
-					.requireService( ManagedBeanRegistry.class )
+			return context.getBootstrapContext().getManagedBeanRegistry()
 					.getBean( javaTypeClass )
 					.getBeanInstance();
 		}

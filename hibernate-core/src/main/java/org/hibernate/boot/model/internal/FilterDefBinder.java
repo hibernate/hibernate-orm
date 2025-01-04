@@ -21,7 +21,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.usertype.UserType;
 
@@ -106,9 +105,8 @@ public class FilterDefBinder {
 	private static ManagedBean<? extends Supplier<?>> resolveParamResolver(Class<? extends Supplier> resolverClass, MetadataBuildingContext context) {
 		assert resolverClass != Supplier.class;
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
-		return (ManagedBean<? extends Supplier<?>>) bootstrapContext.getServiceRegistry()
-						.requireService(ManagedBeanRegistry.class)
-						.getBean(resolverClass, bootstrapContext.getCustomTypeProducer());
+		return (ManagedBean<? extends Supplier<?>>) bootstrapContext.getManagedBeanRegistry()
+						.getBean( resolverClass, bootstrapContext.getCustomTypeProducer() );
 	}
 
 	@SuppressWarnings("unchecked")

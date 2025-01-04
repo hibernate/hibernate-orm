@@ -160,26 +160,28 @@ public abstract class MockSessionFactory
 
 	private final NodeBuilder nodeBuilder;
 
-	public MockSessionFactory() {
+	private final ClassLoaderServiceImpl classLoaderService;
 
-		serviceRegistry = StandardServiceRegistryImpl.create(
-				new BootstrapServiceRegistryBuilder().applyClassLoaderService(new ClassLoaderServiceImpl() {
-					@Override
-					@SuppressWarnings("unchecked")
-					public Class<?> classForName(String className) {
-						try {
-							return super.classForName(className);
-						}
-						catch (ClassLoadingException e) {
-							if (isClassDefined(className)) {
-								return Object[].class;
-							}
-							else {
-								throw e;
-							}
-						}
+	public MockSessionFactory() {
+		classLoaderService = new ClassLoaderServiceImpl() {
+			@Override
+			@SuppressWarnings("unchecked")
+			public Class<?> classForName(String className) {
+				try {
+					return super.classForName( className );
+				}
+				catch (ClassLoadingException e) {
+					if ( isClassDefined( className ) ) {
+						return Object[].class;
 					}
-				}).build(),
+					else {
+						throw e;
+					}
+				}
+			}
+		};
+		serviceRegistry = StandardServiceRegistryImpl.create(
+				new BootstrapServiceRegistryBuilder().applyClassLoaderService( classLoaderService ).build(),
 				singletonList(MockJdbcServicesInitiator.INSTANCE),
 				emptyList(),
 				emptyMap()
@@ -218,7 +220,8 @@ public abstract class MockSessionFactory
 				bootModel,
 				JpaStaticMetamodelPopulationSetting.DISABLED,
 				JpaMetamodelPopulationSetting.DISABLED,
-				this
+				this,
+				classLoaderService
 		);
 
 		typeConfiguration = new TypeConfiguration();
@@ -237,6 +240,11 @@ public abstract class MockSessionFactory
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
+	}
+
+	@Override
+	public ClassLoaderService getClassLoaderService() {
+		return classLoaderService;
 	}
 
 	@Override

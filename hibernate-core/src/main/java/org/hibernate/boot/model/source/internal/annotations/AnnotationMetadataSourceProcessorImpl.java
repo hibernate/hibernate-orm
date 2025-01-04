@@ -61,8 +61,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		this.domainModelSource = domainModelSource;
 		this.rootMetadataBuildingContext = rootMetadataBuildingContext;
 
-		final MetadataBuildingOptions metadataBuildingOptions = rootMetadataBuildingContext.getBuildingOptions();
-		this.classLoaderService = metadataBuildingOptions.getServiceRegistry().getService( ClassLoaderService.class );
+		this.classLoaderService = rootMetadataBuildingContext.getBootstrapContext().getClassLoaderService();
 		assert classLoaderService != null;
 
 		final ConverterRegistry converterRegistry = rootMetadataBuildingContext.getMetadataCollector().getConverterRegistry();

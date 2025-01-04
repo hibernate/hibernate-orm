@@ -56,7 +56,7 @@ public class Array extends List {
 		}
 		else {
 			try {
-				return classForName( elementClassName, getMetadata() );
+				return classForName( elementClassName, getBuildingContext().getBootstrapContext() );
 			}
 			catch (ClassLoadingException e) {
 				throw new MappingException( e );

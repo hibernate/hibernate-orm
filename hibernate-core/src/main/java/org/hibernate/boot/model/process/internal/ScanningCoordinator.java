@@ -64,7 +64,7 @@ public class ScanningCoordinator {
 
 		final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl(
 				bootstrapContext.getJpaTempClassLoader(),
-				bootstrapContext.getServiceRegistry().requireService( ClassLoaderService.class )
+				bootstrapContext.getClassLoaderService()
 		);
 
 		// NOTE : the idea with JandexInitializer/JandexInitManager was to allow adding classes
@@ -88,10 +88,10 @@ public class ScanningCoordinator {
 
 		if ( scannerSetting == null ) {
 			// No custom Scanner specified, use the StandardScanner
-			final Iterator<ScannerFactory> iterator = bootstrapContext.getServiceRegistry()
-					.requireService( ClassLoaderService.class )
-					.loadJavaServices( ScannerFactory.class )
-					.iterator();
+			final Iterator<ScannerFactory> iterator =
+					bootstrapContext.getClassLoaderService()
+							.loadJavaServices( ScannerFactory.class )
+							.iterator();
 			if ( iterator.hasNext() ) {
 				// todo: check for multiple scanner and in case raise a warning?
 				final ScannerFactory factory = iterator.next();
@@ -195,8 +195,7 @@ public class ScanningCoordinator {
 			XmlMappingBinderAccess xmlMappingBinderAccess) {
 
 		final ScanEnvironment scanEnvironment = bootstrapContext.getScanEnvironment();
-		final ClassLoaderService classLoaderService =
-				bootstrapContext.getServiceRegistry().requireService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
 
 
 		// mapping files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -93,9 +93,7 @@ public abstract sealed class ToOne
 	@Override
 	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
 		if ( referencedEntityName == null ) {
-			final ClassLoaderService cls =
-					getMetadata().getMetadataBuildingOptions().getServiceRegistry()
-							.requireService( ClassLoaderService.class );
+			final ClassLoaderService cls = getBuildingContext().getBootstrapContext().getClassLoaderService();
 			referencedEntityName = ReflectHelper.reflectedPropertyClass( className, propertyName, cls ).getName();
 		}
 	}

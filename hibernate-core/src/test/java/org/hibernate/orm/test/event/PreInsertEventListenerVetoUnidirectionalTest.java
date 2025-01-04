@@ -14,7 +14,6 @@ import jakarta.persistence.OneToOne;
 import org.hibernate.action.internal.EntityActionVetoException;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.event.spi.PreInsertEventListener;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -39,10 +38,10 @@ public class PreInsertEventListenerVetoUnidirectionalTest extends BaseCoreFuncti
 	@Override
 	protected void afterSessionFactoryBuilt() {
 		super.afterSessionFactoryBuilt();
-		EventListenerRegistry registry = sessionFactory().getServiceRegistry().getService( EventListenerRegistry.class );
+		EventListenerRegistry registry = sessionFactory().getEventListenerRegistry();
 		registry.appendListeners(
 				EventType.PRE_INSERT,
-				(PreInsertEventListener) event -> event.getEntity() instanceof Parent
+				event -> event.getEntity() instanceof Parent
 		);
 	}
 

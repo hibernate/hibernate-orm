@@ -19,7 +19,6 @@ import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
 /**
@@ -84,11 +83,10 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 				compositeUserType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
 			}
 			else {
-				compositeUserType = creationContext.getBootstrapContext()
-						.getServiceRegistry()
-						.requireService( ManagedBeanRegistry.class )
-						.getBean( userTypeClass )
-						.getBeanInstance();
+				compositeUserType =
+						creationContext.getBootstrapContext().getManagedBeanRegistry()
+								.getBean( userTypeClass )
+								.getBeanInstance();
 			}
 		}
 		else {
@@ -101,11 +99,10 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 				customInstantiator = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( instantiatorClass );
 			}
 			else {
-				customInstantiator = creationContext.getBootstrapContext()
-						.getServiceRegistry()
-						.requireService( ManagedBeanRegistry.class )
-						.getBean( instantiatorClass )
-						.getBeanInstance();
+				customInstantiator =
+						creationContext.getBootstrapContext().getManagedBeanRegistry()
+								.getBean( instantiatorClass )
+								.getBeanInstance();
 			}
 		}
 		else if ( compositeUserType != null ) {

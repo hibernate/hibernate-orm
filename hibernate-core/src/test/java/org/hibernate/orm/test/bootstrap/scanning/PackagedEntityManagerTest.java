@@ -302,9 +302,8 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf = Persistence.createEntityManagerFactory( "manager1", ServiceRegistryUtil.createBaseSettings() );
 		EntityManager em = emf.createEntityManager();
 		try {
-			EventListenerRegistry listenerRegistry = em.unwrap( SharedSessionContractImplementor.class ).getFactory()
-					.getServiceRegistry()
-					.getService( EventListenerRegistry.class );
+			EventListenerRegistry listenerRegistry =
+					em.unwrap( SharedSessionContractImplementor.class ).getFactory().getEventListenerRegistry();
 			assertEquals(
 					listenerRegistry.getEventListenerGroup( EventType.PRE_INSERT ).count(),
 					listenerRegistry.getEventListenerGroup( EventType.PRE_UPDATE ).count() + 1,

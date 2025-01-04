@@ -13,7 +13,6 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.internal.DefaultLoadEventListener;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
@@ -52,7 +51,7 @@ public class EagerKeyManyToOneTest {
 		}
 
 		private void integrate(SessionFactoryImplementor sessionFactory) {
-			sessionFactory.getServiceRegistry().getService( EventListenerRegistry.class ).prependListeners(
+			sessionFactory.getEventListenerRegistry().prependListeners(
 					EventType.LOAD,
 					new CustomLoadListener()
 			);

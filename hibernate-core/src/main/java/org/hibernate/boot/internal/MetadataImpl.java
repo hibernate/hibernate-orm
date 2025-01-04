@@ -165,24 +165,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		final SessionFactoryBuilderImplementor defaultBuilder =
-				metadataBuildingOptions.getServiceRegistry()
-						.requireService( SessionFactoryBuilderService.class )
-						.createSessionFactoryBuilder( this, bootstrapContext );
-		final SessionFactoryBuilder builder = discoverBuilder( defaultBuilder );
-		return builder != null ? builder : defaultBuilder;
-
-	}
-
-	private SessionFactoryBuilder discoverBuilder(SessionFactoryBuilderImplementor defaultBuilder) {
-		final java.util.Collection<SessionFactoryBuilderFactory> discoveredBuilderFactories =
-				metadataBuildingOptions.getServiceRegistry().requireService( ClassLoaderService.class )
-						.loadJavaServices( SessionFactoryBuilderFactory.class );
-
+		final SessionFactoryBuilderImplementor defaultBuilder = getFactoryBuilder();
 		SessionFactoryBuilder builder = null;
 		List<String> activeFactoryNames = null;
-
-		for ( SessionFactoryBuilderFactory discoveredBuilderFactory : discoveredBuilderFactories ) {
+		for ( SessionFactoryBuilderFactory discoveredBuilderFactory : getSessionFactoryBuilderFactories() ) {
 			final SessionFactoryBuilder returnedBuilder =
 					discoveredBuilderFactory.getSessionFactoryBuilder( this, defaultBuilder );
 			if ( returnedBuilder != null ) {
@@ -200,7 +186,22 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 							join( ", ", activeFactoryNames )
 			);
 		}
-		return builder;
+
+		return builder == null ? defaultBuilder : builder;
+	}
+
+	private Iterable<SessionFactoryBuilderFactory> getSessionFactoryBuilderFactories() {
+		return getClassLoaderService().loadJavaServices( SessionFactoryBuilderFactory.class );
+	}
+
+	private SessionFactoryBuilderImplementor getFactoryBuilder() {
+		return metadataBuildingOptions.getServiceRegistry()
+				.requireService( SessionFactoryBuilderService.class )
+				.createSessionFactoryBuilder( this, bootstrapContext );
+	}
+
+	private ClassLoaderService getClassLoaderService() {
+		return metadataBuildingOptions.getServiceRegistry().requireService( ClassLoaderService.class );
 	}
 
 	@Override
@@ -490,13 +491,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	public void initSessionFactory(SessionFactoryImplementor sessionFactory) {
 		final ServiceRegistryImplementor sessionFactoryServiceRegistry = sessionFactory.getServiceRegistry();
 		assert sessionFactoryServiceRegistry != null;
+		final ConfigurationService configurationService = bootstrapContext.getConfigurationService();
+		final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
 		final EventListenerRegistry eventListenerRegistry =
 				sessionFactoryServiceRegistry.requireService( EventListenerRegistry.class );
-		final ConfigurationService configurationService =
-				sessionFactoryServiceRegistry.requireService( ConfigurationService.class );
-		final ClassLoaderService classLoaderService =
-				sessionFactoryServiceRegistry.requireService( ClassLoaderService.class );
-
 		for ( Map.Entry<String,Object> entry : configurationService.getSettings().entrySet() ) {
 			final String propertyName = entry.getKey();
 			if ( propertyName.startsWith( EVENT_LISTENER_PREFIX ) ) {

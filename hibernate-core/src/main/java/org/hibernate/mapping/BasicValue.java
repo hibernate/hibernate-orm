@@ -17,6 +17,7 @@ import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.annotations.TimeZoneStorageType;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorBypassedImpl;
@@ -30,8 +31,6 @@ import org.hibernate.boot.model.process.internal.NamedBasicTypeResolution;
 import org.hibernate.boot.model.process.internal.NamedConverterResolution;
 import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.hibernate.boot.model.process.internal.VersionResolution;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
@@ -82,6 +81,7 @@ import static org.hibernate.internal.util.ReflectHelper.reflectedPropertyType;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
+import static org.hibernate.mapping.MappingHelper.classForName;
 import static org.hibernate.mapping.MappingHelper.injectParameters;
 
 /**
@@ -660,7 +660,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	@Override
 	public ManagedBeanRegistry getManagedBeanRegistry() {
-		return getServiceRegistry().requireService( ManagedBeanRegistry.class );
+		return getBuildingContext().getBootstrapContext().getManagedBeanRegistry();
 	}
 
 	private Resolution<?> converterResolution(JavaType<?> javaType, ConverterDescriptor attributeConverterDescriptor) {
@@ -811,9 +811,10 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			JdbcTypeIndicators stdIndicators,
 			MetadataBuildingContext context) {
 
-		final StandardServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
-		final ManagedBeanRegistry managedBeanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
-		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
+		final BootstrapContext bootstrapContext = context.getBootstrapContext();
+
+		final ManagedBeanRegistry managedBeanRegistry = bootstrapContext.getManagedBeanRegistry();
+		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
 
 		final JpaAttributeConverterCreationContext converterCreationContext = new JpaAttributeConverterCreationContext() {
 			@Override
@@ -851,7 +852,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 //		}
 
 		if ( name.startsWith( BasicTypeImpl.EXTERNALIZED_PREFIX ) ) {
-			final BasicType<Object> basicType = context.getBootstrapContext().resolveAdHocBasicType( name );
+			final BasicType<Object> basicType = bootstrapContext.resolveAdHocBasicType( name );
 			return new NamedBasicTypeResolution<>(
 					basicType.getJavaTypeDescriptor(),
 					basicType,
@@ -900,9 +901,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		}
 
 		// see if the name is a UserType or BasicType implementor class name
-		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		try {
-			final Class<?> typeNamedClass = classLoaderService.classForName( name );
+			final Class<?> typeNamedClass = classForName( name, bootstrapContext );
 			// if there are no local config params, register an implicit TypeDefinition for this custom type .
 			//  later uses may find it and re-use its cacheable reference...
 			if ( isEmpty( localTypeParams ) ) {

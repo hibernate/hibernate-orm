@@ -43,6 +43,7 @@ import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectation
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
+import static org.hibernate.mapping.MappingHelper.classForName;
 import static org.hibernate.sql.Template.collectColumnNames;
 
 /**
@@ -170,7 +171,7 @@ public abstract sealed class PersistentClass
 
 		try {
 			if ( mappedClass == null ) {
-				mappedClass = getClassLoaderAccess().classForName( className );
+				mappedClass = classForName( className, metadataBuildingContext.getBootstrapContext() );
 			}
 			return mappedClass;
 		}
@@ -185,7 +186,7 @@ public abstract sealed class PersistentClass
 		}
 		try {
 			if ( proxyInterface == null ) {
-				proxyInterface = getClassLoaderAccess().classForName( proxyInterfaceName );
+				proxyInterface = classForName( proxyInterfaceName, metadataBuildingContext.getBootstrapContext() );
 			}
 			return proxyInterface;
 		}

@@ -877,7 +877,8 @@ public abstract class CollectionBinder {
 						property.getDeclaringType().getName() + "#" + property.getName(),
 						typeRegistration.getImplementation(),
 						typeRegistration.getParameters(),
-						context.getMetadataCollector()
+						context.getBootstrapContext(),
+						context.getMetadataCollector().getMetadataBuildingOptions().isAllowExtensionsInCdi()
 				),
 				classification,
 				context
@@ -912,7 +913,8 @@ public abstract class CollectionBinder {
 				property.getDeclaringType().getName() + "." + property.getName(),
 				typeAnnotation.type(),
 				PropertiesHelper.map( extractParameters( typeAnnotation ) ),
-				context.getMetadataCollector()
+				context.getBootstrapContext(),
+				context.getMetadataCollector().getMetadataBuildingOptions().isAllowExtensionsInCdi()
 		);
 	}
 

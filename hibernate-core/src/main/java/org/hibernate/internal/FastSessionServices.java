@@ -5,6 +5,7 @@
 package org.hibernate.internal;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
@@ -14,6 +15,7 @@ import org.hibernate.event.monitor.internal.EmptyEventMonitor;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.service.spi.EventListenerGroups;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
@@ -52,28 +54,32 @@ public final class FastSessionServices extends EventListenerGroups {
 	private final BatchBuilder batchBuilder;
 	private final ParameterMarkerStrategy parameterMarkerStrategy;
 	private final JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
+	private final ManagedBeanRegistry managedBeanRegistry;
+	private final ConfigurationService configurationService;
 
 	FastSessionServices(SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory.getServiceRegistry() );
 		final ServiceRegistry serviceRegistry = sessionFactory.getServiceRegistry();
 
 		//Some "hot" services:
-		this.classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
-		this.transactionCoordinatorBuilder = serviceRegistry.getService( TransactionCoordinatorBuilder.class );
-		this.jdbcServices = serviceRegistry.requireService( JdbcServices.class );
-		this.entityCopyObserverFactory = serviceRegistry.requireService( EntityCopyObserverFactory.class );
-		this.jdbcValuesMappingProducerProvider = serviceRegistry.getService( JdbcValuesMappingProducerProvider.class );
-		this.parameterMarkerStrategy = serviceRegistry.getService( ParameterMarkerStrategy.class );
-		this.batchBuilder = serviceRegistry.getService( BatchBuilder.class );
+		classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
+		transactionCoordinatorBuilder = serviceRegistry.getService( TransactionCoordinatorBuilder.class );
+		jdbcServices = serviceRegistry.requireService( JdbcServices.class );
+		entityCopyObserverFactory = serviceRegistry.requireService( EntityCopyObserverFactory.class );
+		jdbcValuesMappingProducerProvider = serviceRegistry.getService( JdbcValuesMappingProducerProvider.class );
+		parameterMarkerStrategy = serviceRegistry.getService( ParameterMarkerStrategy.class );
+		batchBuilder = serviceRegistry.getService( BatchBuilder.class );
+		managedBeanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
+		configurationService = serviceRegistry.getService( ConfigurationService.class );
 
 		final boolean multiTenancyEnabled = sessionFactory.getSessionFactoryOptions().isMultiTenancyEnabled();
-		this.connectionProvider =
+		connectionProvider =
 				multiTenancyEnabled ? null : serviceRegistry.getService( ConnectionProvider.class );
-		this.multiTenantConnectionProvider =
+		multiTenantConnectionProvider =
 				multiTenancyEnabled ? serviceRegistry.requireService( MultiTenantConnectionProvider.class ) : null;
 
 		final Collection<EventMonitor> eventMonitors = classLoaderService.loadJavaServices( EventMonitor.class );
-		this.eventMonitor = eventMonitors.isEmpty() ? new EmptyEventMonitor() : eventMonitors.iterator().next();
+		eventMonitor = eventMonitors.isEmpty() ? new EmptyEventMonitor() : eventMonitors.iterator().next();
 	}
 
 	public JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider() {
@@ -114,5 +120,13 @@ public final class FastSessionServices extends EventListenerGroups {
 
 	public ParameterMarkerStrategy getParameterMarkerStrategy() {
 		return parameterMarkerStrategy;
+	}
+
+	public ManagedBeanRegistry getManagedBeanRegistry() {
+		return managedBeanRegistry;
+	}
+
+	public ConfigurationService getConfigurationService() {
+		return configurationService;
 	}
 }

@@ -15,6 +15,7 @@ import java.util.function.Supplier;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheLayout;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
@@ -232,7 +233,7 @@ public abstract sealed class Collection
 		if ( comparator == null && comparatorClassName != null ) {
 			@SuppressWarnings("rawtypes")
 			final Class<? extends Comparator> clazz =
-					classForName( Comparator.class, comparatorClassName, getMetadata() );
+					classForName( Comparator.class, comparatorClassName, getBuildingContext().getBootstrapContext() );
 			try {
 				comparator = clazz.getConstructor().newInstance();
 			}
@@ -480,11 +481,14 @@ public abstract sealed class Collection
 	}
 
 	private ManagedBean<? extends UserCollectionType> userTypeBean() {
-		final MetadataImplementor metadata = getMetadata();
-		return createUserTypeBean( role,
-				classForName( UserCollectionType.class, typeName, metadata ),
+		final BootstrapContext bootstrapContext = getBuildingContext().getBootstrapContext();
+		return createUserTypeBean(
+				role,
+				classForName( UserCollectionType.class, typeName, bootstrapContext ),
 				PropertiesHelper.map( typeParameters ),
-				metadata );
+				bootstrapContext,
+				getMetadata().getMetadataBuildingOptions().isAllowExtensionsInCdi()
+		);
 	}
 
 	public CollectionType getCollectionType() {

@@ -111,9 +111,10 @@ public class MetadataContext {
 			MetadataImplementor bootMetamodel,
 			JpaStaticMetamodelPopulationSetting jpaStaticMetaModelPopulationSetting,
 			JpaMetamodelPopulationSetting jpaMetaModelPopulationSetting,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
+			RuntimeModelCreationContext runtimeModelCreationContext,
+			ClassLoaderService classLoaderService) {
 		this.jpaMetamodel = jpaMetamodel;
-		this.classLoaderService = jpaMetamodel.getServiceRegistry().getService( ClassLoaderService.class );
+		this.classLoaderService = classLoaderService;
 		this.metamodel = mappingMetamodel;
 		this.knownMappedSuperclasses = bootMetamodel.getMappedSuperclassMappingsCopy();
 		this.typeConfiguration = runtimeModelCreationContext.getTypeConfiguration();

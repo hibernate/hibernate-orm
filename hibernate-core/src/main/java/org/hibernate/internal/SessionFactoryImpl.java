@@ -64,6 +64,7 @@ import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.event.service.spi.EventListenerGroups;
@@ -98,10 +99,10 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.relational.internal.SchemaManagerImpl;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
-import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -364,6 +365,21 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	@Override
 	public EntityCopyObserverFactory getEntityCopyObserver() {
 		return fastSessionServices.getEntityCopyObserverFactory();
+	}
+
+	@Override
+	public ClassLoaderService getClassLoaderService() {
+		return fastSessionServices.getClassLoaderService();
+	}
+
+	@Override
+	public ManagedBeanRegistry getManagedBeanRegistry() {
+		return fastSessionServices.getManagedBeanRegistry();
+	}
+
+	@Override
+	public EventListenerRegistry getEventListenerRegistry() {
+		return eventEngine.getListenerRegistry();
 	}
 
 	class IntegratorObserver implements SessionFactoryObserver {
@@ -639,7 +655,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		// JPA requires that we throw IllegalStateException in cases where:
 		//		1) the PersistenceUnitTransactionType (TransactionCoordinator) is non-JTA
 		//		2) an explicit SynchronizationType is specified
-		if ( !getServiceRegistry().requireService( TransactionCoordinatorBuilder.class ).isJta() ) {
+		if ( !fastSessionServices.getTransactionCoordinatorBuilder().isJta() ) {
 			throw new IllegalStateException(
 					"Illegal attempt to specify a SynchronizationType when building an EntityManager from an " +
 							"EntityManagerFactory defined as RESOURCE_LOCAL (as opposed to JTA)"
@@ -1023,7 +1039,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			default:
 				try {
 					return (CurrentSessionContext)
-							serviceRegistry.requireService( ClassLoaderService.class )
+							getClassLoaderService()
 									.classForName( sessionContextType )
 									.getConstructor( new Class[]{ SessionFactoryImplementor.class } )
 									.newInstance( this );
@@ -1605,8 +1621,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	@Override
 	public Class<?> classForName(String className) {
-		return serviceRegistry.requireService( ClassLoaderService.class )
-				.classForName( className );
+		return getClassLoaderService().classForName( className );
 	}
 
 	private enum Status {

@@ -286,15 +286,14 @@ public class AttributeFactory {
 			final java.util.Collection<String> embeddableSubclasses = component.getDiscriminatorValues().values();
 			final java.util.Map<String, EmbeddableTypeImpl<?>> domainTypes = new HashMap<>();
 			domainTypes.put( embeddableType.getTypeName(), embeddableType );
-			final ClassLoaderService cls = context.getJpaMetamodel().getServiceRegistry().requireService(
-					ClassLoaderService.class
-			);
+			final ClassLoaderService classLoaderService =
+					context.getRuntimeModelCreationContext().getBootstrapContext().getClassLoaderService();
 			for ( final String subclassName : embeddableSubclasses ) {
 				if ( domainTypes.containsKey( subclassName ) ) {
 					assert subclassName.equals( embeddableType.getTypeName() );
 					continue;
 				}
-				final Class<?> subclass = cls.classForName( subclassName );
+				final Class<?> subclass = classLoaderService.classForName( subclassName );
 				final EmbeddableTypeImpl<?> subType = new EmbeddableTypeImpl<>(
 						context.getJavaTypeRegistry().resolveManagedTypeDescriptor( subclass ),
 						domainTypes.get( component.getSuperclass( subclassName ) ),

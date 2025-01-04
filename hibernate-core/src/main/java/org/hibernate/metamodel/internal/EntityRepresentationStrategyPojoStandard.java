@@ -135,7 +135,8 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 		this.strategySelector = creationContext.getServiceRegistry().getService( StrategySelector.class );
 
-		final BytecodeProvider bytecodeProvider = creationContext.getBootstrapContext().getServiceRegistry().requireService( BytecodeProvider.class );
+		final BytecodeProvider bytecodeProvider =
+				creationContext.getBootstrapContext().getServiceRegistry().requireService( BytecodeProvider.class );
 
 		this.proxyFactory = resolveProxyFactory(
 				bootDescriptor,

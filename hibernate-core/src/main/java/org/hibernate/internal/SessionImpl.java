@@ -305,7 +305,7 @@ public class SessionImpl
 
 	private FlushMode getInitialFlushMode() {
 		return properties == null
-				? fastSessionServices.initialSessionFlushMode
+				? getSessionFactoryOptions().getInitialSessionFlushMode()
 				: ConfigurationHelper.getFlushMode( getSessionProperty( HINT_FLUSH_MODE ), FlushMode.AUTO );
 	}
 
@@ -318,7 +318,7 @@ public class SessionImpl
 	}
 
 	private LockOptions getLockOptionsForRead() {
-		return lockOptions == null ? fastSessionServices.defaultLockOptions : lockOptions;
+		return lockOptions == null ? getSessionFactoryOptions().getDefaultLockOptions() : lockOptions;
 	}
 
 	private LockOptions getLockOptionsForWrite() {
@@ -368,7 +368,7 @@ public class SessionImpl
 
 	private Object getSessionProperty(String propertyName) {
 		return properties == null
-				? fastSessionServices.defaultSessionProperties.get( propertyName )
+				? getSessionFactoryOptions().getDefaultSessionProperties().get( propertyName )
 				: properties.get( propertyName );
 	}
 
@@ -408,7 +408,7 @@ public class SessionImpl
 	@Override
 	public void close() {
 		if ( isClosed() ) {
-			if ( getFactory().getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
+			if ( getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
 				throw new IllegalStateException( "EntityManager was already closed" );
 			}
 			log.trace( "Already closed" );
@@ -430,8 +430,8 @@ public class SessionImpl
 				// Original HEM close behavior
 				checkSessionFactoryOpen();
 				checkOpenOrWaitingForAutoClose();
-				if ( fastSessionServices.discardOnClose
-						|| !isTransactionInProgressAndNotMarkedForRollback() ) {
+				if ( getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled()
+					|| !isTransactionInProgressAndNotMarkedForRollback() ) {
 					super.close();
 				}
 				else {
@@ -454,7 +454,7 @@ public class SessionImpl
 	}
 
 	private boolean isJpaBootstrap() {
-		return getSessionFactory().getSessionFactoryOptions().isJpaBootstrap();
+		return getSessionFactoryOptions().isJpaBootstrap();
 	}
 
 	private boolean isTransactionInProgressAndNotMarkedForRollback() {
@@ -1359,7 +1359,7 @@ public class SessionImpl
 	}
 
 	private void checkEntityManagedIfJpa(String entityName, Object entity) {
-		if ( getSessionFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+		if ( getSessionFactoryOptions().isJpaBootstrap() ) {
 			if ( !managed( entityName, entity )
 					// just in case it was already deleted
 					&& !persistenceContext.isEntryFor( entity ) ) {
@@ -2103,7 +2103,7 @@ public class SessionImpl
 
 		@Override
 		public SessionImpl openSession() {
-			if ( session.getSessionFactory().getSessionFactoryOptions().isMultiTenancyEnabled() ) {
+			if ( session.getSessionFactoryOptions().isMultiTenancyEnabled() ) {
 				if ( tenantIdChanged && shareTransactionContext ) {
 					throw new SessionException( "Cannot redefine the tenant identifier on a child session if the connection is reused" );
 				}
@@ -2574,11 +2574,11 @@ public class SessionImpl
 		}
 		if ( retrieveMode == null ) {
 			// use the EM setting
-			retrieveMode = fastSessionServices.getCacheRetrieveMode( properties );
+			retrieveMode = getSessionFactoryOptions().getCacheRetrieveMode( properties );
 		}
 		if ( storeMode == null ) {
 			// use the EM setting
-			storeMode = fastSessionServices.getCacheStoreMode( properties );
+			storeMode = getSessionFactoryOptions().getCacheStoreMode( properties );
 		}
 		return interpretCacheMode( storeMode, retrieveMode );
 	}
@@ -2857,7 +2857,7 @@ public class SessionImpl
 	}
 
 	private Map<String, Object> computeCurrentSessionProperties() {
-		final Map<String, Object> map = new HashMap<>( fastSessionServices.defaultSessionProperties );
+		final Map<String, Object> map = new HashMap<>( getSessionFactoryOptions().getDefaultSessionProperties() );
 		//The FLUSH_MODE is always set at Session creation time,
 		//so it needs special treatment to not eagerly initialize this Map:
 		map.put( HINT_FLUSH_MODE, getHibernateFlushMode().name() );

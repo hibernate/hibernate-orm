@@ -444,7 +444,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		final Callback callback = processingState.getExecutionContext().getCallback();
 		if ( processingState.getLoadingEntityHolders() != null ) {
 			final EventListenerGroup<PostLoadEventListener> listenerGroup =
-					getSession().getFactory().getFastSessionServices().eventListenerGroup_POST_LOAD;
+					getSession().getFactory().getEventListenerGroups().eventListenerGroup_POST_LOAD;
 			final PostLoadEvent postLoadEvent = processingState.getPostLoadEvent();
 			for ( final EntityHolder holder : processingState.getLoadingEntityHolders() ) {
 				processLoadedEntityHolder( holder, listenerGroup, postLoadEvent, callback, holderConsumer );

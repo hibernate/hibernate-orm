@@ -24,11 +24,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 class SessionFactoryBasedWrapperOptions implements WrapperOptions {
 
 	private final SessionFactoryImplementor factory;
-	private final FastSessionServices fastSessionServices;
 
 	SessionFactoryBasedWrapperOptions(SessionFactoryImplementor factory) {
 		this.factory = factory;
-		fastSessionServices = factory.getFastSessionServices();
 	}
 
 	@Override
@@ -38,41 +36,41 @@ class SessionFactoryBasedWrapperOptions implements WrapperOptions {
 
 	@Override
 	public boolean useStreamForLobBinding() {
-		return fastSessionServices.useStreamForLobBinding;
+		return factory.getJdbcServices().getJdbcEnvironment().getDialect().useInputStreamToInsertBlob();
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
-		return fastSessionServices.preferredSqlTypeCodeForBoolean;
+		return factory.getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
 	}
 
 	@Override
 	public LobCreator getLobCreator() {
-		return fastSessionServices.jdbcServices.getLobCreator( getSession() );
+		return factory.getJdbcServices().getLobCreator( getSession() );
 	}
 
 	@Override
 	public TimeZone getJdbcTimeZone() {
-		return fastSessionServices.jdbcTimeZone;
+		return factory.getSessionFactoryOptions().getJdbcTimeZone();
 	}
 
 	@Override
 	public Dialect getDialect() {
-		return fastSessionServices.dialect;
+		return factory.getJdbcServices().getJdbcEnvironment().getDialect();
 	}
 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
-		return fastSessionServices.typeConfiguration;
+		return factory.getTypeConfiguration();
 	}
 
 	@Override
 	public FormatMapper getXmlFormatMapper() {
-		return fastSessionServices.getXmlFormatMapper();
+		return factory.getSessionFactoryOptions().getXmlFormatMapper();
 	}
 
 	@Override
 	public FormatMapper getJsonFormatMapper() {
-		return fastSessionServices.getJsonFormatMapper();
+		return factory.getSessionFactoryOptions().getJsonFormatMapper();
 	}
 }

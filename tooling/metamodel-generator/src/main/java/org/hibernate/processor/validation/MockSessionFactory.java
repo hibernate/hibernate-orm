@@ -580,7 +580,6 @@ public abstract class MockSessionFactory
 	@Override
 	public void setCheckNullability(boolean enabled) {}
 
-
 	private static class MockMappingDefaults implements MappingDefaults {
 		@Override
 		public String getImplicitSchemaName() {

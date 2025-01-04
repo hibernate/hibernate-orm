@@ -112,7 +112,7 @@ public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 	@JiraKey(value = "HHH-12740")
 	public void testSubselect(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
-		final Dialect dialect = scope.getSessionFactory().getFastSessionServices().jdbcServices.getDialect();
+		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		statementInspector.clear();
 
 		scope.inTransaction(

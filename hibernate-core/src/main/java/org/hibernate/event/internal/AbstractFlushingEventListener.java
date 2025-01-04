@@ -209,7 +209,7 @@ public abstract class AbstractFlushingEventListener {
 
 		final EventSource source = event.getSession();
 		final EventListenerGroup<FlushEntityEventListener> flushListeners =
-				event.getFactory().getFastSessionServices().eventListenerGroup_FLUSH_ENTITY;
+				event.getFactory().getEventListenerGroups().eventListenerGroup_FLUSH_ENTITY;
 
 		// Among other things, updateReachables() recursively loads all
 		// collections that are changing roles. This might cause entities

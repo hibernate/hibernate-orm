@@ -199,7 +199,7 @@ public class EntityDeleteAction extends EntityAction {
 
 	protected boolean preDelete() {
 		final EventListenerGroup<PreDeleteEventListener> listenerGroup
-				= getFastSessionServices().eventListenerGroup_PRE_DELETE;
+				= getEventListenerGroups().eventListenerGroup_PRE_DELETE;
 		if ( listenerGroup.isEmpty() ) {
 			return false;
 		}
@@ -214,7 +214,7 @@ public class EntityDeleteAction extends EntityAction {
 	}
 
 	protected void postDelete() {
-		getFastSessionServices().eventListenerGroup_POST_DELETE
+		getEventListenerGroups().eventListenerGroup_POST_DELETE
 				.fireLazyEventOnEachListener( this::newPostDeleteEvent, PostDeleteEventListener::onPostDelete );
 	}
 
@@ -224,7 +224,7 @@ public class EntityDeleteAction extends EntityAction {
 
 	protected void postCommitDelete(boolean success) {
 		final EventListenerGroup<PostDeleteEventListener> eventListeners
-				= getFastSessionServices().eventListenerGroup_POST_COMMIT_DELETE;
+				= getEventListenerGroups().eventListenerGroup_POST_COMMIT_DELETE;
 		if (success) {
 			eventListeners.fireLazyEventOnEachListener( this::newPostDeleteEvent, PostDeleteEventListener::onPostDelete );
 		}
@@ -251,7 +251,7 @@ public class EntityDeleteAction extends EntityAction {
 
 	@Override
 	protected boolean hasPostCommitEventListeners() {
-		for ( PostDeleteEventListener listener: getFastSessionServices().eventListenerGroup_POST_COMMIT_DELETE.listeners() ) {
+		for ( PostDeleteEventListener listener: getEventListenerGroups().eventListenerGroup_POST_COMMIT_DELETE.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;
 			}

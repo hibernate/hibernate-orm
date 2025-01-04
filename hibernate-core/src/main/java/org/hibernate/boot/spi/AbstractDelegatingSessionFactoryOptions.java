@@ -8,9 +8,14 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Supplier;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import org.hibernate.CacheMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
+import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
@@ -536,5 +541,35 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isPreferJdbcDatetimeTypesInNativeQueriesEnabled() {
 		return delegate.isPreferJdbcDatetimeTypesInNativeQueriesEnabled();
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode(Map<String, Object> properties) {
+		return delegate.getCacheStoreMode( properties );
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode(Map<String, Object> properties) {
+		return delegate.getCacheRetrieveMode( properties );
+	}
+
+	@Override
+	public Map<String, Object> getDefaultSessionProperties() {
+		return delegate.getDefaultSessionProperties();
+	}
+
+	@Override
+	public CacheMode getInitialSessionCacheMode() {
+		return delegate.getInitialSessionCacheMode();
+	}
+
+	@Override
+	public FlushMode getInitialSessionFlushMode() {
+		return delegate.getInitialSessionFlushMode();
+	}
+
+	@Override
+	public LockOptions getDefaultLockOptions() {
+		return delegate.getDefaultLockOptions();
 	}
 }

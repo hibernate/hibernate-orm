@@ -18,7 +18,7 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 
-final class LockOptionsHelper {
+public final class LockOptionsHelper {
 
 	private LockOptionsHelper() {
 		//utility class, not to be constructed

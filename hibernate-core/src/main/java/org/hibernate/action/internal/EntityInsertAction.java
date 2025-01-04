@@ -210,7 +210,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	protected void postInsert() {
-		getFastSessionServices()
+		getEventListenerGroups()
 				.eventListenerGroup_POST_INSERT
 				.fireLazyEventOnEachListener( this::newPostInsertEvent, PostInsertEventListener::onPostInsert );
 	}
@@ -220,7 +220,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	protected void postCommitInsert(boolean success) {
-		getFastSessionServices().eventListenerGroup_POST_COMMIT_INSERT
+		getEventListenerGroups().eventListenerGroup_POST_COMMIT_INSERT
 				.fireLazyEventOnEachListener( this::newPostInsertEvent,
 						success ? PostInsertEventListener::onPostInsert : this::postCommitOnFailure );
 	}
@@ -237,7 +237,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 
 	protected boolean preInsert() {
 		final EventListenerGroup<PreInsertEventListener> listenerGroup
-				= getFastSessionServices().eventListenerGroup_PRE_INSERT;
+				= getEventListenerGroups().eventListenerGroup_PRE_INSERT;
 		if ( listenerGroup.isEmpty() ) {
 			return false;
 		}
@@ -298,7 +298,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	@Override
 	protected boolean hasPostCommitEventListeners() {
 		final EventListenerGroup<PostInsertEventListener> group
-				= getFastSessionServices().eventListenerGroup_POST_COMMIT_INSERT;
+				= getEventListenerGroups().eventListenerGroup_POST_COMMIT_INSERT;
 		for ( PostInsertEventListener listener : group.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;

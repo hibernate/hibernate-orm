@@ -26,7 +26,7 @@ public class XmlJavaType<T> extends FormatMapperBasedJavaType<T> {
 
 	@Override
 	protected FormatMapper getFormatMapper(TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getSessionFactory().getFastSessionServices().getXmlFormatMapper();
+		return typeConfiguration.getXmlFormatMapper();
 	}
 
 	@Override

@@ -133,9 +133,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 	}
 
 	private ResultSetMapping buildResultSetMapping(String registeredName, SessionFactoryImplementor sessionFactory) {
-		return sessionFactory
-				.getFastSessionServices()
-				.getJdbcValuesMappingProducerProvider()
+		return sessionFactory.getJdbcValuesMappingProducerProvider()
 				.buildResultSetMapping( registeredName, false, sessionFactory );
 	}
 

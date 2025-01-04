@@ -24,6 +24,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.DeleteEvent;
 import org.hibernate.event.spi.DeleteEventListener;
@@ -31,7 +32,6 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.EmptyInterceptor;
-import org.hibernate.internal.FastSessionServices;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.CallbackType;
@@ -298,14 +298,14 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 	}
 
 	private static boolean hasCustomEventListeners(EventSource source) {
-		FastSessionServices fss = source.getFactory().getFastSessionServices();
+		final EventListenerGroups eventListenerGroups = source.getFactory().getEventListenerGroups();
 		// Bean Validation adds a PRE_DELETE listener
 		// and Envers adds a POST_DELETE listener
-		return fss.eventListenerGroup_PRE_DELETE.count() > 0
-			|| fss.eventListenerGroup_POST_COMMIT_DELETE.count() > 0
-			|| fss.eventListenerGroup_POST_DELETE.count() > 1
-			|| fss.eventListenerGroup_POST_DELETE.count() == 1
-				&& !(fss.eventListenerGroup_POST_DELETE.listeners().iterator().next()
+		return eventListenerGroups.eventListenerGroup_PRE_DELETE.count() > 0
+			|| eventListenerGroups.eventListenerGroup_POST_COMMIT_DELETE.count() > 0
+			|| eventListenerGroups.eventListenerGroup_POST_DELETE.count() > 1
+			|| eventListenerGroups.eventListenerGroup_POST_DELETE.count() == 1
+				&& !(eventListenerGroups.eventListenerGroup_POST_DELETE.listeners().iterator().next()
 						instanceof PostDeleteEventListenerStandardImpl);
 	}
 

@@ -860,9 +860,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private JdbcValuesMappingProducer buildJdbcValuesMappingProducer(SelectStatement selectStatement) {
-		return getSessionFactory()
-				.getFastSessionServices()
-				.getJdbcValuesMappingProducerProvider()
+		return getSessionFactory().getJdbcValuesMappingProducerProvider()
 				.buildMappingProducer( selectStatement, getSessionFactory() );
 	}
 

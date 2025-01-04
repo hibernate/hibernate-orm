@@ -64,7 +64,9 @@ import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
+import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.generator.Generator;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.integrator.spi.Integrator;
@@ -104,6 +106,8 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -340,6 +344,26 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 				// it is not great how we pass in an instance to
 				// an incompletely-initialized instance here:
 				.buildServiceRegistry( self, options );
+	}
+
+	@Override
+	public EventListenerGroups getEventListenerGroups() {
+		return fastSessionServices;
+	}
+
+	@Override
+	public ParameterMarkerStrategy getParameterMarkerStrategy() {
+		return fastSessionServices.getParameterMarkerStrategy();
+	}
+
+	@Override
+	public JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider() {
+		return fastSessionServices.getJdbcValuesMappingProducerProvider();
+	}
+
+	@Override
+	public EntityCopyObserverFactory getEntityCopyObserver() {
+		return fastSessionServices.getEntityCopyObserverFactory();
 	}
 
 	class IntegratorObserver implements SessionFactoryObserver {
@@ -788,7 +812,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	@Override
 	public PersistenceUnitTransactionType getTransactionType() {
-		return fastSessionServices.transactionCoordinatorBuilder.isJta()
+		return fastSessionServices.getTransactionCoordinatorBuilder().isJta()
 				? PersistenceUnitTransactionType.JTA
 				: PersistenceUnitTransactionType.RESOURCE_LOCAL;
 

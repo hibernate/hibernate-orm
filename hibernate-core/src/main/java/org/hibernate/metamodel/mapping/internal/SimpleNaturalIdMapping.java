@@ -292,7 +292,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 	}
 
 	private Dialect getDialect() {
-		return sessionFactory.getFastSessionServices().jdbcServices.getDialect();
+		return sessionFactory.getJdbcServices().getDialect();
 	}
 
 	@Override

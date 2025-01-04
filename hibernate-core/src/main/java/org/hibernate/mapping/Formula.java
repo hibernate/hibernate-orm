@@ -23,7 +23,7 @@ import static org.hibernate.sql.Template.renderWhereStringTemplate;
  *
  * @author Gavin King
  */
-public class Formula implements Selectable, Serializable {
+public final class Formula implements Selectable, Serializable {
 
 	private static final AtomicInteger formulaUniqueInteger = new AtomicInteger();
 

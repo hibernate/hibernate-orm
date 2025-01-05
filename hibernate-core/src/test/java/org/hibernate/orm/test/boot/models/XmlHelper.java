@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.net.URL;
 
 import org.hibernate.boot.ResourceStreamLocator;
+import org.hibernate.boot.archive.internal.RepeatableInputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
@@ -33,7 +34,7 @@ public class XmlHelper {
 		final ResourceStreamLocatorImpl resourceStreamLocator = new ResourceStreamLocatorImpl( classLoadingAccess );
 		final MappingBinder mappingBinder = new MappingBinder( resourceStreamLocator, NON_VALIDATING );
 		final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind(
-				resourceStreamLocator.locateResourceStream( resourceName ),
+				new RepeatableInputStreamAccess( resourceName, resourceStreamLocator.locateResourceStream( resourceName )),
 				new Origin( SourceType.RESOURCE, resourceName )
 		);
 		return (JaxbEntityMappingsImpl) binding.getRoot();

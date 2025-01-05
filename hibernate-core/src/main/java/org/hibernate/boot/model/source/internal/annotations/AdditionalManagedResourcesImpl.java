@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.boot.archive.internal.RepeatableInputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
@@ -145,7 +146,10 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 		}
 
 		public Builder addXmlMappings(String resourceName, Origin origin) {
-			return addXmlBinding( mappingBinder.bind( getResourceAsStream( resourceName ), origin ) );
+			return addXmlBinding( mappingBinder.bind(
+					new RepeatableInputStreamAccess( resourceName,  getResourceAsStream( resourceName ) ),
+					origin
+			) );
 		}
 
 		public Builder addXmlBinding(Binding<JaxbBindableMappingDescriptor> binding) {

@@ -317,6 +317,14 @@ public final class CollectionHelper {
 		}
 	}
 
+	public static Map<String, Object> asMap(Properties props) {
+		final Map<String, Object> map = new HashMap<>(props.size());
+		for (String key : props.stringPropertyNames()) {
+			map.put(key, props.getProperty(key));
+		}
+		return map;
+	}
+
 	/**
 	 * Use to convert sets which will be retained for a long time,
 	 * such as for the lifetime of the Hibernate ORM instance.

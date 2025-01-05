@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.type.format.FormatMapper;
+import org.hibernate.boot.xsd.XmlValidationMode;
 
 import jakarta.persistence.criteria.Nulls;
 
@@ -754,6 +755,18 @@ public interface SessionFactoryBuilder {
 	 */
 	@Incubating
 	SessionFactoryBuilder applyXmlFormatMapper(FormatMapper xmlFormatMapper);
+
+	/**
+	 * Specifies a {@link XmlValidationMode validation mode} to use for validation of XML files.
+	 *
+	 * @param xmlValidationMode The {@link XmlValidationMode} to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#XML_VALIDATION_MODE
+	 */
+	@Incubating
+	SessionFactoryBuilder applyXmlValidationMode(XmlValidationMode xmlValidationMode);
 
 	/**
 	 * After all options have been set, build the SessionFactory.

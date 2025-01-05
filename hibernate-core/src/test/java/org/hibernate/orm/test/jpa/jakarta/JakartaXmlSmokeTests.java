@@ -37,7 +37,7 @@ public class JakartaXmlSmokeTests {
 	@Test
 	public void testLoadingOrmXml(ServiceRegistryScope scope) {
 		final ClassLoaderService cls = scope.getRegistry().getService( ClassLoaderService.class );
-		final MappingBinder mappingBinder = new MappingBinder( cls, MappingBinder.VALIDATING );
+		final MappingBinder mappingBinder = new MappingBinder( cls, MappingBinder.DEFAULT_VALIDATING );
 		final InputStream inputStream = cls.locateResourceStream( "xml/jakarta/simple/orm.xml" );
 		try {
 			final Binding<JaxbEntityMappingsImpl> binding = mappingBinder.bind( new StreamSource( inputStream ), new Origin( SourceType.RESOURCE, "xml/jakarta/simple/orm.xml" ) );

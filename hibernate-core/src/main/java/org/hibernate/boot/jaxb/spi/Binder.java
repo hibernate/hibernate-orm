@@ -4,9 +4,9 @@
  */
 package org.hibernate.boot.jaxb.spi;
 
-import java.io.InputStream;
 import javax.xml.transform.Source;
 
+import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
 
 /**
@@ -25,11 +25,11 @@ public interface Binder<T> {
 	<X extends T> Binding<X> bind(Source source, Origin origin);
 
 	/**
-	 * Bind from an InputStream
+	 * Bind from an InputStreamAccess
 	 *
-	 * @param stream The InputStream containing XML
+	 * @param streamAccess The {@link InputStreamAccess} providing access to the stream containing XML
 	 * @param origin The descriptor of the stream origin
 	 * @return The bound JAXB model
 	 */
-	<X extends T> Binding<X> bind(InputStream stream, Origin origin);
+	<X extends T> Binding<X> bind(InputStreamAccess streamAccess, Origin origin);
 }

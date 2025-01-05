@@ -42,6 +42,7 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.boot.xsd.XmlValidationMode;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
@@ -240,6 +241,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	private final int queryStatisticsMaxSize;
 
+	private XmlValidationMode xmlValidationMode;
 	private final Map<String, Object> defaultSessionProperties;
 	private final CacheStoreMode defaultCacheStoreMode;
 	private final CacheRetrieveMode defaultCacheRetrieveMode;
@@ -538,6 +540,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		defaultLockOptions = defaultLockOptions( defaultSessionProperties );
 		initialSessionFlushMode = defaultFlushMode( defaultSessionProperties );
+
+		xmlValidationMode = ConfigurationHelper.resolveXmlValidationMode( settings );
 	}
 
 	@Deprecated(forRemoval = true)
@@ -1409,6 +1413,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return preferJdbcDatetimeTypes;
 	}
 
+	@Override
+	public XmlValidationMode getXmlValidationMode() { return xmlValidationMode; }
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// In-flight mutation access
 
@@ -1686,13 +1693,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		mutableJpaCompliance().setGeneratorNameScopeCompliance( enabled );
 	}
 
-
 	public void enableCollectionInDefaultFetchGroup(boolean enabled) {
 		this.collectionsInDefaultFetchGroupEnabled = enabled;
 	}
 
 	public void disableJtaTransactionAccess() {
 		this.jtaTransactionAccessEnabled = false;
+	}
+
+	public void applyXmlValidationMode(XmlValidationMode xmlValidationMode) {
+		this.xmlValidationMode = xmlValidationMode;
 	}
 
 	public SessionFactoryOptions buildOptions() {

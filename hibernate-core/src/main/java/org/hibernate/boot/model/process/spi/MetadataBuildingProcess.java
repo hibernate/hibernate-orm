@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.archive.internal.RepeatableInputStreamAccess;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.internal.RootMappingDefaults;
@@ -104,6 +105,7 @@ import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.AttributeConverter;
 
+import static org.hibernate.boot.xsd.XmlValidationMode.DISABLED;
 import static org.hibernate.cfg.MappingSettings.XML_MAPPING_ENABLED;
 import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
@@ -494,7 +496,7 @@ public class MetadataBuildingProcess {
 		final AdditionalMappingContributionsImpl contributions = new AdditionalMappingContributionsImpl(
 				metadataCollector,
 				options,
-				options.isXmlMappingEnabled() ? new MappingBinder( classLoaderService, () -> false ) : null,
+				options.isXmlMappingEnabled() ? new MappingBinder( classLoaderService, () -> DISABLED ) : null,
 				rootMetadataBuildingContext
 		);
 
@@ -570,7 +572,7 @@ public class MetadataBuildingProcess {
 		@Override
 		public void contributeBinding(InputStream xmlStream) {
 			final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
-			final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind( xmlStream, origin );
+			final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind( new RepeatableInputStreamAccess( SourceType.INPUT_STREAM.toString(), xmlStream ), origin );
 
 			final JaxbBindableMappingDescriptor bindingRoot = binding.getRoot();
 			if ( bindingRoot instanceof JaxbHbmHibernateMapping hibernateMapping ) {

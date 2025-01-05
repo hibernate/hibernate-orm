@@ -4,13 +4,17 @@
  */
 package org.hibernate.boot.jaxb.internal;
 
-import java.util.function.Function;
+import java.util.Map;
 import java.util.function.Supplier;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.events.StartElement;
+import javax.xml.transform.stax.StAXSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.Validator;
 
 import org.hibernate.Internal;
+import org.hibernate.boot.MappingException;
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.UnsupportedOrmXsdVersionException;
 import org.hibernate.boot.jaxb.Origin;
@@ -24,9 +28,10 @@ import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.xsd.MappingXsdSupport;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.boot.xsd.XmlValidationMode;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.config.ConfigurationException;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -35,8 +40,9 @@ import org.jboss.logging.Logger;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 /**
  * Responsible for coordinating binding of mapping XML documents into
@@ -55,22 +61,14 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 	private JAXBContext entityMappingsJaxbContext;
 
 	public interface Options {
-		boolean validateMappings();
+		XmlValidationMode validationMode();
 	}
 
-	public static final Options VALIDATING = new Options() {
-		@Override
-		public boolean validateMappings() {
-			return true;
-		}
-	};
+	public static final Options NON_VALIDATING = () -> XmlValidationMode.DISABLED;
 
-	public static final Options NON_VALIDATING = new Options() {
-		@Override
-		public boolean validateMappings() {
-			return true;
-		}
-	};
+	public static final Options DEFAULT_VALIDATING = () -> XmlValidationMode.EXTENDED;
+
+	public static final Options STRICT_VALIDATING = () -> XmlValidationMode.STRICT;
 
 	/**
 	 * Full constructor
@@ -95,35 +93,26 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 
 	public MappingBinder(
 			ResourceStreamLocator resourceStreamLocator,
-			@Nullable Function<String, Object> settingsAccess) {
+			@Nullable Supplier<Map<String, Object>> settingsAccess) {
 		super( resourceStreamLocator == null ? MappingBinder.class.getClassLoader()::getResourceAsStream : resourceStreamLocator );
 
 		if ( settingsAccess == null ) {
-			this.optionsAccess = () -> VALIDATING;
+			this.optionsAccess = () -> DEFAULT_VALIDATING;
 		}
 		else {
-			this.optionsAccess = () -> new Options() {
-				@Override
-				public boolean validateMappings() {
-					final Object setting = settingsAccess.apply( AvailableSettings.VALIDATE_XML );
-					if ( setting == null ) {
-						return false;
-					}
-					return BOOLEAN.convert( setting );
-				}
-			};
+			this.optionsAccess = () -> (Options) () -> ConfigurationHelper.resolveXmlValidationMode( settingsAccess.get() );
 		}
 	}
 
 	public MappingBinder(ServiceRegistry serviceRegistry) {
 		this(
 				serviceRegistry.getService( ClassLoaderService.class ),
-				(settingName) -> {
+				(Supplier<Map<String, Object>>) () -> {
 					final ConfigurationService configurationService =
 							serviceRegistry instanceof ServiceRegistryImplementor serviceRegistryImplementor
 									? serviceRegistryImplementor.fromRegistryOrChildren( ConfigurationService.class )
 									: serviceRegistry.getService( ConfigurationService.class );
-					return configurationService == null ? null : configurationService.getSettings().get( settingName );
+					return configurationService == null ? null : configurationService.getSettings();
 				}
 		);
 	}
@@ -134,12 +123,7 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 	public MappingBinder(ResourceStreamLocator resourceStreamLocator, UnsupportedFeatureHandling unsupportedHandling) {
 		this(
 				resourceStreamLocator,
-				new Options() {
-					@Override
-					public boolean validateMappings() {
-						return false;
-					}
-				},
+				MappingBinder.NON_VALIDATING,
 				unsupportedHandling
 		);
 	}
@@ -151,9 +135,8 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 		this( resourceStreamLocator, options, UnsupportedFeatureHandling.ERROR );
 	}
 
-	@Override
-	public boolean isValidationEnabled() {
-		return optionsAccess.get().validateMappings();
+	protected XmlValidationMode getXmlValidationMode() {
+		return optionsAccess.get().validationMode();
 	}
 
 	@Override
@@ -168,9 +151,18 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 			}
 
 			final XMLEventReader hbmReader = new HbmEventReader( staxEventReader, xmlEventFactory );
+
+			final Schema xsd;
+			if ( getXmlValidationMode() == XmlValidationMode.EXTENDED ) {
+				xsd = MappingXsdSupport.INSTANCE.hbmXsd().getSchema();
+			}
+			else {
+				xsd = null;
+			}
+
 			final JaxbHbmHibernateMapping hbmBindings = jaxb(
 					hbmReader,
-					MappingXsdSupport.INSTANCE.hbmXsd().getSchema(),
+					xsd,
 					hbmJaxbContext(),
 					origin
 			);
@@ -184,9 +176,25 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 				log.tracef( "Performing JAXB binding of orm.xml document: %s", origin.toString() );
 
 				final XMLEventReader reader = new MappingEventReader( staxEventReader, xmlEventFactory );
+
+				final Schema xsd;
+				final XmlValidationMode validationMode = getXmlValidationMode();
+				if ( validationMode == XmlValidationMode.STRICT ) {
+					// deals with StrictValidationErrorHandler, etc
+					doStrictValidation( origin );
+					xsd = null;
+				}
+				else if ( validationMode == XmlValidationMode.EXTENDED ) {
+					// extended validation
+					xsd = MappingXsdSupport.latestDescriptor().getSchema();
+				}
+				else {
+					xsd = null;
+				}
+
 				final JaxbEntityMappingsImpl bindingRoot = jaxb(
 						reader,
-						MappingXsdSupport.latestDescriptor().getSchema(),
+						xsd,
 						mappingJaxbContext(),
 						origin
 				);
@@ -197,6 +205,24 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 			catch (JpaOrmXmlEventReader.BadVersionException e) {
 				throw new UnsupportedOrmXsdVersionException( e.getRequestedVersion(), origin );
 			}
+		}
+	}
+
+	private void doStrictValidation(Origin origin) {
+		StrictValidationErrorHandler errorHandler = new StrictValidationErrorHandler();
+		try {
+			Validator validator = MappingXsdSupport.latestJpaDescriptor().getSchema()
+					.newValidator();
+			validator.setErrorHandler( errorHandler );
+			// We need 'clean' access to the InputStream at this point, using the staxEventReader leads to errors
+			validator.validate( new StAXSource(
+					createReader( streamAccess.accessInputStream(), origin ) ) );
+		}
+		catch (Exception e) {
+			throw new MappingException(
+					"Strict validation failure: " + errorHandler.getMessage(),
+					e,
+					origin );
 		}
 	}
 
@@ -224,4 +250,33 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 		}
 		return entityMappingsJaxbContext;
 	}
+
+	private static final class StrictValidationErrorHandler implements ErrorHandler {
+		private int lineNumber;
+		private int columnNumber;
+		private String message;
+
+		@Override
+		public void warning(SAXParseException exception) {}
+
+		@Override
+		// Capture validation errors
+		public void error(SAXParseException exception) throws SAXException {
+			lineNumber = exception.getLineNumber();
+			columnNumber = exception.getColumnNumber();
+			message = exception.toString();
+			throw new SAXException( getMessage() );
+		}
+
+		@Override
+		public void fatalError(SAXParseException exception) {
+		}
+
+		public String getMessage() {
+			StringBuilder sb = new StringBuilder();
+			sb.append( message ).append( lineNumber != -1 && columnNumber != -1 ? " at line number " + lineNumber + " and column number " + columnNumber : "" );
+			return sb.toString();
+		}
+	}
+
 }

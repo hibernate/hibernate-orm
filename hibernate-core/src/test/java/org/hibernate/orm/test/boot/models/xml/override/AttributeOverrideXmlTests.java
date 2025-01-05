@@ -38,7 +38,7 @@ public class AttributeOverrideXmlTests {
 	void testBasicHandling(ServiceRegistryScope serviceRegistryScope) {
 		final StandardServiceRegistry registry = serviceRegistryScope.getRegistry();
 
-		final MetadataSources metadataSources = new MetadataSources().addResource( "org/hibernate/orm/test/jpa/xml/orm3.xml" );
+		final MetadataSources metadataSources = new MetadataSources( registry ).addResource( "org/hibernate/orm/test/jpa/xml/orm3.xml" );
 		final MetadataBuildingOptionsImpl options = new MetadataBuildingOptionsImpl( registry );
 		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl( registry, options );
 		options.setBootstrapContext( bootstrapContext );

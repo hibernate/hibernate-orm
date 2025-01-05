@@ -15,6 +15,7 @@ import javax.xml.validation.Schema;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.ResourceStreamLocator;
+import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.internal.stax.BufferedXMLEventReader;
 import org.hibernate.boot.jaxb.internal.stax.LocalXmlResourceResolver;
@@ -36,15 +37,16 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 
 	private final LocalXmlResourceResolver xmlResourceResolver;
 
+	protected InputStreamAccess streamAccess;
+
 	protected AbstractBinder(ResourceStreamLocator resourceStreamLocator) {
 		this.xmlResourceResolver = new LocalXmlResourceResolver( resourceStreamLocator );
 	}
 
-	public abstract boolean isValidationEnabled();
-
 	@Override
-	public <X extends T> Binding<X> bind(InputStream stream, Origin origin) {
-		final XMLEventReader eventReader = createReader( stream, origin );
+	public <X extends T> Binding<X> bind(InputStreamAccess streamAccess, Origin origin) {
+		this.streamAccess = streamAccess;
+		final XMLEventReader eventReader = createReader( streamAccess.accessInputStream(), origin );
 		try {
 			return doBind( eventReader, origin );
 		}
@@ -150,12 +152,7 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 
 		try {
 			final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-			if ( isValidationEnabled() ) {
-				unmarshaller.setSchema( xsd );
-			}
-			else {
-				unmarshaller.setSchema( null );
-			}
+			unmarshaller.setSchema( xsd );
 			unmarshaller.setEventHandler( handler );
 
 			//noinspection unchecked
@@ -171,6 +168,5 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 			);
 		}
 	}
-
 
 }

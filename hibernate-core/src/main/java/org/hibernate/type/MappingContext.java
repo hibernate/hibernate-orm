@@ -16,7 +16,7 @@ import org.hibernate.MappingException;
  * @see org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor
  * @see org.hibernate.boot.Metadata
  *
- *
+ * @since 7.0
  */
 public interface MappingContext {
 	Type getIdentifierType(String className) throws MappingException;

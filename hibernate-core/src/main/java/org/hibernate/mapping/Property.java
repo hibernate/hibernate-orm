@@ -279,7 +279,7 @@ public class Property implements Serializable, MetaAttributable {
 	/**
 	 * @deprecated use {@link #isValid(MappingContext)}
 	 */
-	@Deprecated(since = "7.0")
+	@Deprecated(since = "7.0", forRemoval = true)
 	public boolean isValid(Mapping mapping) throws MappingException {
 		return isValid( (MappingContext) mapping);
 	}

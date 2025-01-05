@@ -75,7 +75,7 @@ public interface Value extends Serializable {
 	/**
 	 * @deprecated use {@link #getSelectableType(MappingContext, int)}
 	 */
-	@Deprecated(since = "7.0")
+	@Deprecated(since = "7.0", forRemoval = true)
 	default JdbcMapping getSelectableType(Mapping factory, int index) throws MappingException {
 		return getSelectableType( (MappingContext) factory, index );
 	}
@@ -146,7 +146,7 @@ public interface Value extends Serializable {
 	/**
 	 * @deprecated use {@link #isValid(MappingContext)}
 	 */
-	@Deprecated(since = "7.0")
+	@Deprecated(since = "7.0", forRemoval = true)
 	default boolean isValid(Mapping mapping) throws MappingException{
 		return isValid( (MappingContext) mapping );
 	}

@@ -123,7 +123,7 @@ public class MetaType extends AbstractType {
 	/**
 	 * @deprecated use {@link #fromXMLString(String, MappingContext)}
 	 */
-	@Deprecated(since = "7.0")
+	@Deprecated(since = "7.0", forRemoval = true)
 	public Object fromXMLString(String xml, Mapping factory) throws HibernateException {
 		return fromXMLString( xml, (MappingContext) factory );
 	}

@@ -381,7 +381,7 @@ public abstract sealed class Collection
 	/**
 	 * @deprecated use {@link #validate(MappingContext)}
 	 */
-	@Deprecated(since = "7.0")
+	@Deprecated(since = "7.0", forRemoval = true)
 	public void validate(Mapping mapping) throws MappingException {
 		validate( (MappingContext) mapping);
 	}

@@ -23,6 +23,6 @@ import org.hibernate.type.MappingContext;
  *             {@link org.hibernate.metamodel.RuntimeMetamodels},
  *             or {@link MappingContext} to access such information
  */
-@Deprecated(since = "6.0")
+@Deprecated(since = "6.0", forRemoval = true)
 public interface Mapping extends MappingContext {
 }

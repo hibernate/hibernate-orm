@@ -48,6 +48,7 @@ public non-sealed class Set extends Collection {
 		return new Set( this );
 	}
 
+	@Deprecated(forRemoval = true)
 	public void validate(Mapping mapping) throws MappingException {
 		validate( (MappingContext) mapping );
 	}

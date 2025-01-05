@@ -284,7 +284,7 @@ public sealed class Column
 	/**
 	 * @deprecated use {@link #getSqlTypeCode(MappingContext)}
 	 */
-	@Deprecated(since = "7.0")
+	@Deprecated(since = "7.0", forRemoval = true)
 	public int getSqlTypeCode(Mapping mapping) throws MappingException{
 		return getSqlTypeCode((MappingContext) mapping);
 	}
@@ -425,7 +425,7 @@ public sealed class Column
 	/**
 	 * @deprecated use {@link #getSqlType(Metadata)}
 	 */
-	@Deprecated(since = "6.2")
+	@Deprecated(since = "6.2", forRemoval = true)
 	public String getSqlType(TypeConfiguration typeConfiguration, Dialect dialect, Mapping mapping) {
 		return getSqlTypeName( typeConfiguration, dialect, mapping );
 	}
@@ -463,7 +463,7 @@ public sealed class Column
 	/**
 	 * @deprecated use {@link #getColumnSize(Dialect, MappingContext)}
 	 */
-	@Deprecated(since = "7.0")
+	@Deprecated(since = "7.0", forRemoval = true)
 	public Size getColumnSize(Dialect dialect, Mapping mapping) {
 		return getColumnSize(dialect, (MappingContext) mapping);
 	}

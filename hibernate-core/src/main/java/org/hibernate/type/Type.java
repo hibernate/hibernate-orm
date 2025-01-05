@@ -103,7 +103,7 @@ public interface Type extends Serializable {
 	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
 	 * @deprecated use {@link  #getColumnSpan(MappingContext)}
 	 */
-	@Deprecated(since = "7.0")
+	@Deprecated(since = "7.0", forRemoval = true)
 	default int getColumnSpan(Mapping mapping) throws MappingException{
 		return getColumnSpan( (MappingContext) mapping);
 	}
@@ -134,7 +134,7 @@ public interface Type extends Serializable {
 	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
 	 * @deprecated use {@link #getSqlTypeCodes(MappingContext)}
 	 */
-	@Deprecated(since = "7.0")
+	@Deprecated(since = "7.0", forRemoval = true)
 	default int[] getSqlTypeCodes(Mapping mapping) throws MappingException{
 		return getSqlTypeCodes((MappingContext) mapping);
 	}
@@ -544,7 +544,7 @@ public interface Type extends Serializable {
 	 * @return array indicating column nullness for a value instance
 	 * @deprecated use {@link #toColumnNullness(Object, MappingContext)}
 	 */
-	@Deprecated(since = "7.0")
+	@Deprecated(since = "7.0", forRemoval = true)
 	default boolean[] toColumnNullness(@Nullable Object value, Mapping mapping){
 		return toColumnNullness( value,(MappingContext) mapping);
 	}

@@ -575,7 +575,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @return The identifier type
 	 * @deprecated use {@link #getIdentifierType(MappingContext)}
 	 */
-	@Deprecated(since = "7.0")
+	@Deprecated(since = "7.0", forRemoval = true)
 	Type getIdentifierType(final Mapping factory) {
 		return getIdentifierType( (MappingContext) factory );
 	}
@@ -625,7 +625,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * or unique key property name.
 	 * @deprecated use {@link  #getIdentifierOrUniqueKeyType(MappingContext)}
 	 */
-	@Deprecated(since = "7.0")
+	@Deprecated(since = "7.0", forRemoval = true)
 	public final Type getIdentifierOrUniqueKeyType(Mapping factory) throws MappingException {
 		return getIdentifierOrUniqueKeyType( (MappingContext) factory );
 	}

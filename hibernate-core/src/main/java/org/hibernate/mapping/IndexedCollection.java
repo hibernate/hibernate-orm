@@ -96,7 +96,7 @@ public sealed abstract class IndexedCollection extends Collection permits Map, L
 //		}
 	}
 
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public void validate(Mapping mapping) throws MappingException {
 		validate( (MappingContext) mapping);
 	}

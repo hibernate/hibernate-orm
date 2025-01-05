@@ -66,6 +66,7 @@ public non-sealed abstract class IdentifierCollection extends Collection {
 		// create an index on the key columns??
 	}
 
+	@Deprecated(forRemoval = true)
 	public void validate(Mapping mapping) throws MappingException {
 		validate( (MappingContext) mapping);
 	}

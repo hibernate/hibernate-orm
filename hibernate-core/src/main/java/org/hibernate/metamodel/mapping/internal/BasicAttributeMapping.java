@@ -355,7 +355,7 @@ public class BasicAttributeMapping
 				),
 				jdbcMapping.getJdbcJavaType(),
 				fetchParent,
-				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 	}
 

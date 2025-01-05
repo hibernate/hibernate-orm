@@ -103,7 +103,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 				fetchable.getJdbcMapping().getJdbcJavaType(),
 				parent,
 				domainResultCreationState.getSqlAstCreationState().getCreationContext()
-						.getSessionFactory().getTypeConfiguration()
+						.getTypeConfiguration()
 		);
 	}
 

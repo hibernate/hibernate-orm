@@ -27,7 +27,7 @@ public class SqlAstHelper {
 				hqlQuery.getDomainParameterXref(),
 				query.getParameterBindings(),
 				session.getLoadQueryInfluencers(),
-				session.getFactory(),
+				session.getFactory().getSqlTranslationEngine(),
 				true
 		);
 

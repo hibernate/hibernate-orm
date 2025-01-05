@@ -406,7 +406,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 				( (QuerySqmImpl<?>) hqlQuery ).getDomainParameterXref(),
 				query.getParameterBindings(),
 				loadQueryInfluencers,
-				session.getSessionFactory(),
+				session.getSessionFactory().getSqlTranslationEngine(),
 				true
 		);
 

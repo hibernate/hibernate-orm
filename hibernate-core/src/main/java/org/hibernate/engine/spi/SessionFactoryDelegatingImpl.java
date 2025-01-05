@@ -47,6 +47,7 @@ import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sql.spi.SqlTranslationEngine;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -278,11 +279,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public Integer getMaximumFetchDepth() {
-		return delegate.getMaximumFetchDepth();
-	}
-
-	@Override
 	public void addObserver(SessionFactoryObserver observer) {
 		delegate.addObserver( observer );
 	}
@@ -343,6 +339,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public SqlTranslationEngine getSqlTranslationEngine() {
+		return delegate.getSqlTranslationEngine();
+	}
+
+	@Override
 	public Reference getReference() throws NamingException {
 		return delegate.getReference();
 	}
@@ -390,11 +391,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
 		return delegate.findEntityGraphsByType(entityClass);
-	}
-
-	@Override
-	public Class<?> classForName(String className) {
-		return delegate.classForName( className );
 	}
 
 	@Override

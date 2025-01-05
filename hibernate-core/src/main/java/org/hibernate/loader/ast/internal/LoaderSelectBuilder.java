@@ -41,6 +41,7 @@ import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
@@ -119,7 +120,7 @@ public class LoaderSelectBuilder {
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			SessionFactoryImplementor sessionFactory) {
 		final LoaderSelectBuilder process = new LoaderSelectBuilder(
-				sessionFactory,
+				sessionFactory.getSqlTranslationEngine(),
 				loadable,
 				partsToSelect,
 				singletonList( restrictedPart ),
@@ -127,7 +128,7 @@ public class LoaderSelectBuilder {
 				1,
 				loadQueryInfluencers,
 				lockOptions,
-				determineGraphTraversalState( loadQueryInfluencers, sessionFactory ),
+				determineGraphTraversalState( loadQueryInfluencers, sessionFactory.getJpaMetamodel() ),
 				true,
 				jdbcParameterConsumer
 		);
@@ -146,7 +147,7 @@ public class LoaderSelectBuilder {
 			JdbcParameter jdbcArrayParameter,
 			SessionFactoryImplementor sessionFactory) {
 		final LoaderSelectBuilder builder = new LoaderSelectBuilder(
-				sessionFactory,
+				sessionFactory.getSqlTranslationEngine(),
 				loadable,
 				null,
 				singletonList( restrictedPart ),
@@ -154,7 +155,7 @@ public class LoaderSelectBuilder {
 				-1,
 				influencers,
 				lockOptions,
-				determineGraphTraversalState( influencers, sessionFactory ),
+				determineGraphTraversalState( influencers, sessionFactory.getJpaMetamodel() ),
 				true,
 				null
 		);
@@ -239,7 +240,7 @@ public class LoaderSelectBuilder {
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			SessionFactoryImplementor sessionFactory) {
 		final LoaderSelectBuilder process = new LoaderSelectBuilder(
-				sessionFactory,
+				sessionFactory.getSqlTranslationEngine(),
 				loadable,
 				partsToSelect,
 				restrictedPart,
@@ -264,7 +265,7 @@ public class LoaderSelectBuilder {
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			SessionFactoryImplementor sessionFactory) {
 		final LoaderSelectBuilder process = new LoaderSelectBuilder(
-				sessionFactory,
+				sessionFactory.getSqlTranslationEngine(),
 				loadable,
 				partsToSelect,
 				restrictedParts,
@@ -292,7 +293,7 @@ public class LoaderSelectBuilder {
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			SessionFactoryImplementor sessionFactory) {
 		final LoaderSelectBuilder process = new LoaderSelectBuilder(
-				sessionFactory,
+				sessionFactory.getSqlTranslationEngine(),
 				loadable,
 				partsToSelect,
 				restrictedParts,
@@ -300,7 +301,7 @@ public class LoaderSelectBuilder {
 				numberOfKeysToLoad,
 				loadQueryInfluencers,
 				lockOptions,
-				determineGraphTraversalState( loadQueryInfluencers, sessionFactory ),
+				determineGraphTraversalState( loadQueryInfluencers, sessionFactory.getJpaMetamodel() ),
 				forceIdentifierSelection,
 				jdbcParameterConsumer
 		);
@@ -330,7 +331,7 @@ public class LoaderSelectBuilder {
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			SessionFactoryImplementor sessionFactory) {
 		final LoaderSelectBuilder process = new LoaderSelectBuilder(
-				sessionFactory,
+				sessionFactory.getSqlTranslationEngine(),
 				attributeMapping,
 				null,
 				attributeMapping.getKeyDescriptor(),
@@ -410,7 +411,7 @@ public class LoaderSelectBuilder {
 				numberOfKeysToLoad,
 				loadQueryInfluencers,
 				lockOptions != null ? lockOptions : LockOptions.NONE,
-				determineGraphTraversalState( loadQueryInfluencers, creationContext.getSessionFactory() ),
+				determineGraphTraversalState( loadQueryInfluencers, creationContext.getJpaMetamodel() ),
 				determineWhetherToForceIdSelection( numberOfKeysToLoad, restrictedParts ),
 				jdbcParameterConsumer
 		);
@@ -462,7 +463,7 @@ public class LoaderSelectBuilder {
 
 	private static EntityGraphTraversalState determineGraphTraversalState(
 			LoadQueryInfluencers loadQueryInfluencers,
-			SessionFactoryImplementor sessionFactory) {
+			JpaMetamodel jpaMetamodel) {
 		if ( loadQueryInfluencers != null ) {
 			final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
 			if ( effectiveEntityGraph != null ) {
@@ -472,7 +473,7 @@ public class LoaderSelectBuilder {
 					return new StandardEntityGraphTraversalStateImpl(
 							graphSemantic,
 							rootGraphImplementor,
-							sessionFactory.getJpaMetamodel()
+							jpaMetamodel
 					);
 				}
 			}
@@ -872,8 +873,8 @@ public class LoaderSelectBuilder {
 						final String fetchableRole = fetchable.getNavigableRole().getFullPath();
 
 						for ( String enabledFetchProfileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
-							final FetchProfile enabledFetchProfile = creationContext.getSessionFactory()
-									.getFetchProfile( enabledFetchProfileName );
+							final FetchProfile enabledFetchProfile =
+									creationContext.getFetchProfile( enabledFetchProfileName );
 							final org.hibernate.engine.profile.Fetch profileFetch =
 									enabledFetchProfile.getFetchByRole( fetchableRole );
 							if ( profileFetch != null ) {

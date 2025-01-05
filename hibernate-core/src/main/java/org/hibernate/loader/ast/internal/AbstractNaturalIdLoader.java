@@ -120,7 +120,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 						(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 						true,
 						new LoadQueryInfluencers( sessionFactory ),
-						sessionFactory
+						sessionFactory.getSqlTranslationEngine()
 				),
 				session
 		);
@@ -192,7 +192,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				fetchProcessor,
 				true,
 				new LoadQueryInfluencers( sessionFactory ),
-				sessionFactory
+				sessionFactory.getSqlTranslationEngine()
 		);
 
 		final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(

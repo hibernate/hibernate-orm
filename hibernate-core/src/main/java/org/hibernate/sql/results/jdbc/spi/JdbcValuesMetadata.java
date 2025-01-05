@@ -31,7 +31,11 @@ public interface JdbcValuesMetadata {
 
 	/**
 	 * Determine the mapping to use for a particular position in the result
+	 *
+	 * @deprecated The existence of this method encourages people to pass around
+	 * references to the SessionFactoryImplementor when they don't need it
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	default <J> BasicType<J> resolveType(
 			int position,
 			JavaType<J> explicitJavaType,

@@ -221,9 +221,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 					final FunctionRenderer substringFunction = getFunction( walker, "substring", 3 );
 					final BasicType<String> stringType = typeConfiguration.getBasicTypeRegistry()
 							.resolve( StandardBasicTypes.STRING );
-					final Dialect dialect =
-							walker.getCreationContext().getSessionFactory().getJdbcServices()
-									.getDialect();
+					final Dialect dialect = walker.getCreationContext().getDialect();
 					Expression formatExpression = null;
 					final StringBuilder sb = new StringBuilder();
 					final StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender( sb );
@@ -425,13 +423,12 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 
 		private FunctionRenderer getFunction(SqmToSqlAstConverter walker, String name) {
 			return (FunctionRenderer)
-					walker.getCreationContext().getSessionFactory().getQueryEngine()
-							.getSqmFunctionRegistry().findFunctionDescriptor( name );
+					walker.getCreationContext().getSqmFunctionRegistry().findFunctionDescriptor( name );
 		}
 
 		private FunctionRenderer getFunction(SqmToSqlAstConverter walker, String name, int argumentCount) {
 			final SqmFunctionDescriptor functionDescriptor =
-					walker.getCreationContext().getSessionFactory().getQueryEngine().getSqmFunctionRegistry()
+					walker.getCreationContext().getSqmFunctionRegistry()
 							.findFunctionDescriptor( name );
 			if ( functionDescriptor instanceof MultipatternSqmFunctionDescriptor multipatternSqmFunctionDescriptor ) {
 				return (FunctionRenderer) multipatternSqmFunctionDescriptor.getFunction( argumentCount );

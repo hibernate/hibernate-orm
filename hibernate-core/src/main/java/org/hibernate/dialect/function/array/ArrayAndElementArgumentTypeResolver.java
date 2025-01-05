@@ -43,7 +43,7 @@ public class ArrayAndElementArgumentTypeResolver extends AbstractFunctionArgumen
 					if ( expressible != null ) {
 						return DdlTypeHelper.resolveArrayType(
 								(DomainType<?>) expressible.getSingleJdbcMapping(),
-								converter.getCreationContext().getSessionFactory().getTypeConfiguration()
+								converter.getCreationContext().getTypeConfiguration()
 						);
 					}
 				}

@@ -193,8 +193,7 @@ public class DynamicFetchBuilderStandard
 					),
 					selectableMapping.getJdbcMapping().getJdbcJavaType(),
 					null,
-					domainResultCreationState.getSqlAstCreationState().getCreationContext()
-							.getSessionFactory().getTypeConfiguration()
+					domainResultCreationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 			);
 		};
 	}

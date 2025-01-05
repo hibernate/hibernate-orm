@@ -104,7 +104,7 @@ public class TableBasedUpdateHandler
 				executionContext.getQueryOptions(),
 				executionContext.getSession().getLoadQueryInfluencers(),
 				executionContext.getQueryParameterBindings(),
-				sessionFactory
+				sessionFactory.getSqlTranslationEngine()
 		);
 
 		final TableGroup updatingTableGroup = converterDelegate.getMutatingTableGroup();

@@ -5,6 +5,8 @@
 package org.hibernate.query.sqm.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.BindingContext;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -27,5 +29,17 @@ public interface SqmCreationContext extends BindingContext {
 	 *          objects are not available to the query validator
 	 *          in Hibernate Processor at compilation time.
 	 */
-	Class<?> classForName(String className);
+	default Class<?> classForName(String className) {
+		return getQueryEngine().getClassLoaderService().classForName( className );
+	}
+
+	@Override
+	default MappingMetamodel getMappingMetamodel() {
+		return getQueryEngine().getMappingMetamodel();
+	}
+
+	@Override
+	default JpaMetamodel getJpaMetamodel() {
+		return getQueryEngine().getJpaMetamodel();
+	}
 }

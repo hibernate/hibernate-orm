@@ -82,7 +82,7 @@ public abstract class AbstractSqmSetReturningFunctionDescriptor implements SqmSe
 	public final <T> SelfRenderingSqmSetReturningFunction<T> generateSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			QueryEngine queryEngine) {
-		argumentsValidator.validate( arguments, getName(), queryEngine.getTypeConfiguration() );
+		argumentsValidator.validate( arguments, getName(), queryEngine );
 
 		return generateSqmSetReturningFunctionExpression( arguments, queryEngine );
 	}

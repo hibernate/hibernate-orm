@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -22,8 +23,22 @@ public interface ArgumentsValidator {
 
 	/**
 	 * Perform validation that may be done using the {@link SqmTypedNode} tree and assigned Java types.
+	 *
+	 * @since 7.0
 	 */
-	default void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, TypeConfiguration typeConfiguration) {}
+	default void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, BindingContext bindingContext) {
+		validate( arguments, functionName, bindingContext.getTypeConfiguration() );
+	}
+
+	/**
+	 * Perform validation that may be done using the {@link SqmTypedNode} tree and assigned Java types.
+	 *
+	 * @deprecated Implement {@link #validate(List, String, BindingContext)} instead
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
+	default void validate(List<? extends SqmTypedNode<?>> arguments, String functionName, TypeConfiguration typeConfiguration) {
+		throw new UnsupportedOperationException( "Deprecated operation not implemented" );
+	}
 
 	/**
 	 * Pretty-print the signature of the argument list.

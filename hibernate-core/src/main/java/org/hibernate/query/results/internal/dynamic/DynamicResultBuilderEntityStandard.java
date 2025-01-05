@@ -297,9 +297,7 @@ public class DynamicResultBuilderEntityStandard
 				),
 				discriminatorMapping.getJdbcMapping().getJdbcJavaType(),
 				null,
-				domainResultCreationState.getSqlAstCreationState()
-						.getCreationContext()
-						.getSessionFactory()
+				domainResultCreationState.getSqlAstCreationState().getCreationContext()
 						.getTypeConfiguration()
 		);
 	}
@@ -325,9 +323,7 @@ public class DynamicResultBuilderEntityStandard
 				),
 				selectableMapping.getJdbcMapping().getJdbcJavaType(),
 				null,
-				domainResultCreationState.getSqlAstCreationState()
-						.getCreationContext()
-						.getSessionFactory()
+				domainResultCreationState.getSqlAstCreationState().getCreationContext()
 						.getTypeConfiguration()
 		);
 	}

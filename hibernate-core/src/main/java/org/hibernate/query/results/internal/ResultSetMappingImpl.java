@@ -308,7 +308,9 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			JdbcValuesMetadata jdbcResultsMetadata,
 			SessionFactoryImplementor sessionFactory) {
 		final int jdbcPosition = valuesArrayPosition + 1;
-		final BasicType<?> jdbcMapping = jdbcResultsMetadata.resolveType( jdbcPosition, null, sessionFactory );
+		final BasicType<?> jdbcMapping =
+				jdbcResultsMetadata.resolveType( jdbcPosition, null,
+						sessionFactory.getTypeConfiguration() );
 
 		final String name = jdbcResultsMetadata.resolveColumnName( jdbcPosition );
 

@@ -30,7 +30,6 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -120,7 +119,6 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.lang.Character.isWhitespace;
 import static java.util.Collections.addAll;
@@ -192,6 +190,10 @@ public class NativeQueryImpl<R>
 
 	private static NamedObjectRepository getNamedObjectRepository(SharedSessionContractImplementor session) {
 		return session.getFactory().getQueryEngine().getNamedObjectRepository();
+	}
+
+	private static QueryInterpretationCache getInterpretationCache(SharedSessionContractImplementor session) {
+		return session.getFactory().getQueryEngine().getInterpretationCache();
 	}
 
 	private static String getResultSetMappingName(NamedNativeQueryMemento<?> memento) {
@@ -421,7 +423,7 @@ public class NativeQueryImpl<R>
 
 	private ParameterInterpretation resolveParameterInterpretation(
 			String sqlString, SharedSessionContractImplementor session) {
-		return session.getFactory().getQueryEngine().getInterpretationCache()
+		return getInterpretationCache( session )
 				.resolveNativeQueryParameters( sqlString,
 						s -> parameterInterpretation( sqlString, session ) );
 	}
@@ -709,7 +711,7 @@ public class NativeQueryImpl<R>
 			}
 			else if ( !isResultTypeAlwaysAllowed( resultType )
 					&& (!isClass( resultType ) || hasJavaTypeDescriptor( resultType )) ) {
-				mapping.addResultBuilder( Builders.resultClassBuilder( resultType, getSessionFactory() ) );
+				mapping.addResultBuilder( Builders.resultClassBuilder( resultType, getSessionFactory().getMappingMetamodel() ) );
 			}
 		}
 		else {
@@ -788,10 +790,6 @@ public class NativeQueryImpl<R>
 			}
 		};
 		return getNativeQueryInterpreter().createQueryPlan( queryDefinition, getSessionFactory() );
-	}
-
-	private TypeConfiguration getTypeConfiguration() {
-		return getSessionFactory().getTypeConfiguration();
 	}
 
 	private NativeQueryInterpreter getNativeQueryInterpreter() {
@@ -966,7 +964,7 @@ public class NativeQueryImpl<R>
 	}
 
 	private QueryInterpretationCache getInterpretationCache() {
-		return getSession().getFactory().getQueryEngine().getInterpretationCache();
+		return getInterpretationCache( getSession() );
 	}
 
 	private NonSelectQueryPlan resolveNonSelectQueryPlan() {
@@ -998,7 +996,7 @@ public class NativeQueryImpl<R>
 	@Override
 	public void addResultTypeClass(Class<?> resultClass) {
 		assert resultSetMapping.getNumberOfResultBuilders() == 0;
-		registerBuilder( Builders.resultClassBuilder( resultClass, getSessionFactory() ) );
+		registerBuilder( Builders.resultClassBuilder( resultClass, getSessionFactory().getMappingMetamodel() ) );
 	}
 
 	@Override
@@ -1236,10 +1234,6 @@ public class NativeQueryImpl<R>
 			}
 			addAll( querySpaces, (String[]) spaces );
 		}
-	}
-
-	private MappingMetamodelImplementor getMappingMetamodel() {
-		return getSession().getFactory().getRuntimeMetamodels().getMappingMetamodel();
 	}
 
 	@Override

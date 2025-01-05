@@ -767,7 +767,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 
 	private boolean isInstance(BindableType<?> parameterType, Object value) {
-		final SqmExpressible<?> sqmExpressible = parameterType.resolveExpressible( getSession().getFactory() );
+		final SqmExpressible<?> sqmExpressible =
+				parameterType.resolveExpressible( getSession().getFactory().getQueryEngine().getCriteriaBuilder() );
 		assert sqmExpressible != null;
 
 		return sqmExpressible.getExpressibleJavaType().isInstance( value );

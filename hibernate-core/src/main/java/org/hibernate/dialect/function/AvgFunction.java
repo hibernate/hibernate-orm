@@ -14,6 +14,7 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
@@ -150,7 +151,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		public void validate(
 				List<? extends SqmTypedNode<?>> arguments,
 				String functionName,
-				TypeConfiguration typeConfiguration) {
+				BindingContext bindingContext) {
 			if ( arguments.size() != 1 ) {
 				throw new FunctionArgumentException(
 						String.format(
@@ -166,7 +167,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			final SqmExpressible<?> expressible = argument.getExpressible();
 			final DomainType<?> domainType;
 			if ( expressible != null && ( domainType = expressible.getSqmType() ) != null ) {
-				final JdbcType jdbcType = getJdbcType( domainType, typeConfiguration );
+				final JdbcType jdbcType = getJdbcType( domainType, bindingContext.getTypeConfiguration() );
 				if ( !isNumeric( jdbcType ) ) {
 					throw new FunctionArgumentException(
 							String.format(
@@ -230,7 +231,8 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			if ( impliedType != null ) {
 				return impliedType;
 			}
-			final JdbcMapping jdbcMapping = ( (Expression) arguments.get( 0 ) ).getExpressionType().getSingleJdbcMapping();
+			Expression expression = (Expression) arguments.get( 0 );
+			final JdbcMapping jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
 			if ( jdbcMapping instanceof BasicPluralType<?, ?> ) {
 				return (BasicValuedMapping) jdbcMapping;
 			}

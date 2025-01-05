@@ -210,12 +210,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		this.criteriaValueHandlingMode = options.getCriteriaValueHandlingMode();
 		this.immutableEntityUpdateQueryHandlingMode = options.getImmutableEntityUpdateQueryHandlingMode();
 		this.bindingContext = bindingContext;
+		this.extensions = loadExtensions();
+	}
+
+	private Map<Class<? extends HibernateCriteriaBuilder>, HibernateCriteriaBuilder> loadExtensions() {
 		// load registered criteria builder extensions
-		this.extensions = new HashMap<>();
+		final Map<Class<? extends HibernateCriteriaBuilder>, HibernateCriteriaBuilder> extensions = new HashMap<>();
 		for ( CriteriaBuilderExtension extension : ServiceLoader.load( CriteriaBuilderExtension.class ) ) {
-			HibernateCriteriaBuilder builder = extension.extend( this );
-			extensions.put( extension.getRegistrationKey(), builder );
+			extensions.put( extension.getRegistrationKey(), extension.extend( this ) );
 		}
+		return extensions;
 	}
 
 	@Override
@@ -225,7 +229,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
-		return getQueryEngine().getTypeConfiguration();
+		return bindingContext.getTypeConfiguration();
 	}
 
 	@Override

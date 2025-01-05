@@ -92,9 +92,7 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();
 		final SelectableMapping selectableMapping = fetchContainer.getAggregateMapping();
 		final Expression expression = sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping );
-		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext()
-				.getSessionFactory()
-				.getTypeConfiguration();
+		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
 		final SqlSelection aggregateSelection = sqlExpressionResolver.resolveSqlSelection(
 				expression,
 				typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Object[].class ),

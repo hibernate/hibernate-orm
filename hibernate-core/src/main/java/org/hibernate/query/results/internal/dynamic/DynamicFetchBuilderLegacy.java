@@ -316,8 +316,7 @@ public class DynamicFetchBuilderLegacy
 				),
 				selectableMapping.getJdbcMapping().getJdbcJavaType(),
 				null,
-				domainResultCreationState.getSqlAstCreationState().getCreationContext()
-						.getSessionFactory().getTypeConfiguration()
+				domainResultCreationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 	}
 

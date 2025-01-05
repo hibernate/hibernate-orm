@@ -194,7 +194,7 @@ public class EntityJoinTest {
 											DomainParameterXref.EMPTY,
 											QueryParameterBindingsImpl.EMPTY,
 											new LoadQueryInfluencers( factory ),
-											factory,
+											factory.getSqlTranslationEngine(),
 											true
 									)
 									.translate();

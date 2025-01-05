@@ -95,6 +95,8 @@ import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
+import org.hibernate.query.sql.internal.SqlTranslationEngineImpl;
+import org.hibernate.query.sql.spi.SqlTranslationEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -139,8 +141,9 @@ import static java.util.Collections.singletonList;
  */
 @SuppressWarnings({"nullness", "initialization"})
 public abstract class MockSessionFactory
-		implements SessionFactoryImplementor, QueryEngine, RuntimeModelCreationContext, MetadataBuildingOptions,
-				BootstrapContext, MetadataBuildingContext, FunctionContributions, SessionFactoryOptions, JdbcTypeIndicators {
+		implements SessionFactoryImplementor, SessionFactoryOptions, QueryEngine, FunctionContributions,
+		MetadataBuildingOptions, MetadataBuildingContext, RuntimeModelCreationContext, BootstrapContext,
+		JdbcTypeIndicators {
 
 	private static final BasicTypeImpl<Object> OBJECT_BASIC_TYPE =
 			new BasicTypeImpl<>(new UnknownBasicJavaType<>(Object.class), ObjectJdbcType.INSTANCE);
@@ -158,6 +161,7 @@ public abstract class MockSessionFactory
 	private final MetadataContext metadataContext;
 
 	private final NodeBuilder nodeBuilder;
+	private final SqlTranslationEngine sqlTranslationEngine;
 
 	private final ClassLoaderServiceImpl classLoaderService;
 
@@ -234,6 +238,8 @@ public abstract class MockSessionFactory
 		typeConfiguration.scope((SessionFactoryImplementor) this);
 
 		nodeBuilder = new SqmCriteriaNodeBuilder("", "", this, this, this);
+
+		sqlTranslationEngine = new SqlTranslationEngineImpl(this, typeConfiguration);
 	}
 
 	@Override
@@ -378,12 +384,6 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
-	public Class<?> classForName(String className) {
-		return serviceRegistry.requireService( ClassLoaderService.class )
-				.classForName( className );
-	}
-
-	@Override
 	public JdbcServices getJdbcServices() {
 		return MockJdbcServicesInitiator.jdbcServices;
 //		return serviceRegistry.getService(JdbcServices.class);
@@ -502,7 +502,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public HqlTranslator getHqlTranslator() {
-		return new StandardHqlTranslator(MockSessionFactory.this, new SqmCreationOptions() {});
+		return new StandardHqlTranslator(nodeBuilder, new SqmCreationOptions() {});
 	}
 
 	@Override
@@ -513,6 +513,11 @@ public abstract class MockSessionFactory
 	@Override
 	public QueryEngine getQueryEngine() {
 		return this;
+	}
+
+	@Override
+	public SqlTranslationEngine getSqlTranslationEngine() {
+		return sqlTranslationEngine;
 	}
 
 	@Override
@@ -1041,7 +1046,7 @@ public abstract class MockSessionFactory
 
 	protected abstract String getJpaEntityName(String typeName);
 
-	private AbstractAttribute createAttribute(String name, String entityName, Type type, ManagedDomainType<?> owner) {
+	private <T> AbstractAttribute<T,?,?> createAttribute(String name, String entityName, Type type, ManagedDomainType<T> owner) {
 		if (type==null) {
 			throw new UnsupportedOperationException(entityName + "." + name);
 		}
@@ -1127,11 +1132,11 @@ public abstract class MockSessionFactory
 		}
 	}
 
-	private AbstractPluralAttribute createPluralAttribute(
+	private <T> AbstractPluralAttribute<T,?,?> createPluralAttribute(
 			CollectionType collectionType,
 			String entityName,
 			String name,
-			ManagedDomainType<?> owner) {
+			ManagedDomainType<T> owner) {
 		final Property property = new Property();
 		property.setName(name);
 		final JavaType<?> collectionJavaType =
@@ -1201,11 +1206,11 @@ public abstract class MockSessionFactory
 		};
 	}
 
-	private EmbeddableTypeImpl<?> createEmbeddableDomainType(String entityName, CompositeType compositeType, ManagedDomainType<?> owner) {
-		final JavaType<Object> javaType = new UnknownBasicJavaType<>(Object.class, compositeType.getReturnedClassName());
+	private <T> EmbeddableTypeImpl<T> createEmbeddableDomainType(String entityName, CompositeType compositeType, ManagedDomainType<T> owner) {
+		final JavaType<T> javaType = new UnknownBasicJavaType<>(null, compositeType.getReturnedClassName());
 		return new EmbeddableTypeImpl<>( javaType, null, null, true, metamodel.getJpaMetamodel() ) {
 			@Override
-			public PersistentAttribute<Object, Object> findAttribute(String name) {
+			public PersistentAttribute<T, ?> findAttribute(String name) {
 				return createAttribute(
 						name,
 						entityName,

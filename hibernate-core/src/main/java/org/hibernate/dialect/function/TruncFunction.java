@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.common.TemporalUnit;
@@ -215,12 +216,12 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 		public void validate(
 				List<? extends SqmTypedNode<?>> arguments,
 				String functionName,
-				TypeConfiguration typeConfiguration) {
+				BindingContext bindingContext) {
 			if ( arguments.size() == 2 && arguments.get( 1 ) instanceof SqmExtractUnit ) {
-				DATETIME_VALIDATOR.validate( arguments, functionName, typeConfiguration );
+				DATETIME_VALIDATOR.validate( arguments, functionName, bindingContext );
 			}
 			else {
-				NUMERIC_VALIDATOR.validate( arguments, functionName, typeConfiguration );
+				NUMERIC_VALIDATOR.validate( arguments, functionName, bindingContext );
 			}
 		}
 	}

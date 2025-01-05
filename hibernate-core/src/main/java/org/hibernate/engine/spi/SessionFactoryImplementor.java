@@ -23,14 +23,15 @@ import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.sqm.spi.SqmCreationContext;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sql.spi.SqlTranslationEngine;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.generator.Generator;
@@ -49,8 +50,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionFactoryImplementor
-		extends MappingContext, SessionFactory, SqmCreationContext, SqlAstCreationContext {
+public interface SessionFactoryImplementor extends MappingContext, SessionFactory {
 	/**
 	 * Get the UUID for this {@code SessionFactory}.
 	 * <p>
@@ -81,19 +81,6 @@ public interface SessionFactoryImplementor
 	SessionImplementor openSession();
 
 	@Override
-	TypeConfiguration getTypeConfiguration();
-
-	@Override
-	default SessionFactoryImplementor getSessionFactory() {
-		return this;
-	}
-
-	@Override
-	default MappingMetamodelImplementor getMappingMetamodel() {
-		return getRuntimeMetamodels().getMappingMetamodel();
-	}
-
-	@Override
 	SessionBuilderImplementor withOptions();
 
 	/**
@@ -107,7 +94,21 @@ public interface SessionFactoryImplementor
 	@Override
 	StatisticsImplementor getStatistics();
 
+	TypeConfiguration getTypeConfiguration();
+
 	RuntimeMetamodelsImplementor getRuntimeMetamodels();
+
+	default MappingMetamodelImplementor getMappingMetamodel() {
+		return getRuntimeMetamodels().getMappingMetamodel();
+	}
+
+	default JpaMetamodel getJpaMetamodel() {
+		return getRuntimeMetamodels().getJpaMetamodel();
+	}
+
+	QueryEngine getQueryEngine();
+
+	SqlTranslationEngine getSqlTranslationEngine();
 
 	/**
 	 * Access to the {@code ServiceRegistry} for this {@code SessionFactory}.
@@ -228,4 +229,5 @@ public interface SessionFactoryImplementor
 	 * The best guess entity name for an entity not in an association
 	 */
 	String bestGuessEntityName(Object object);
+
 }

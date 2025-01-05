@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.internal;
 
 import java.util.function.Function;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -59,11 +58,10 @@ public class SqmMappingModelHelper {
 	 */
 	public static EntityPersister resolveEntityPersister(
 			EntityDomainType<?> entityType,
-			SessionFactoryImplementor sessionFactory) {
+			MappingMetamodel mappingMetamodel) {
 		// Our EntityTypeImpl#getType impl returns the Hibernate entity-name
 		// which is exactly what we want
-		final String hibernateEntityName = entityType.getHibernateEntityName();
-		return sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( hibernateEntityName );
+		return mappingMetamodel.getEntityDescriptor( entityType.getHibernateEntityName() );
 	}
 
 	public static <J> SqmPathSource<J> resolveSqmKeyPathSource(
@@ -258,7 +256,7 @@ public class SqmMappingModelHelper {
 			if ( treatTarget.getPersistenceType() == Type.PersistenceType.ENTITY ) {
 				return resolveEntityPersister(
 						( (EntityDomainType<?>) treatTarget ),
-						converter.getCreationContext().getSessionFactory()
+						converter.getCreationContext().getMappingMetamodel()
 				);
 			}
 		}

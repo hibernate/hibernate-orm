@@ -194,14 +194,15 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 
 	protected SqlAstTranslator<? extends JdbcOperationQueryMutation> createTranslator(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-		final SqmTranslator<? extends MutationStatement> translator = factory.getQueryEngine().getSqmTranslatorFactory().createMutationTranslator(
-				sqmDelete,
-				executionContext.getQueryOptions(),
-				domainParameterXref,
-				executionContext.getQueryParameterBindings(),
-				executionContext.getSession().getLoadQueryInfluencers(),
-				factory
-		);
+		final SqmTranslator<? extends MutationStatement> translator =
+				factory.getQueryEngine().getSqmTranslatorFactory().createMutationTranslator(
+						sqmDelete,
+						executionContext.getQueryOptions(),
+						domainParameterXref,
+						executionContext.getQueryParameterBindings(),
+						executionContext.getSession().getLoadQueryInfluencers(),
+						factory.getSqlTranslationEngine()
+				);
 		//noinspection unchecked
 		sqmInterpretation = (SqmTranslation<? extends AbstractUpdateOrDeleteStatement>) translator.translate();
 

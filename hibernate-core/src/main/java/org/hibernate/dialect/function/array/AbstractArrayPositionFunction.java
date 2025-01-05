@@ -42,7 +42,6 @@ public abstract class AbstractArrayPositionFunction extends AbstractSqmSelfRende
 					public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
 						if ( argumentIndex == 2 ) {
 							return converter.getCreationContext()
-									.getSessionFactory()
 									.getTypeConfiguration()
 									.standardBasicTypeForJavaType( Integer.class );
 						}

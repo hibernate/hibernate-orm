@@ -35,7 +35,7 @@ public class AbstractResultTests {
 						DomainParameterXref.from( sqm ),
 						parameterBindings,
 						new LoadQueryInfluencers( sessionFactory ),
-						sessionFactory,
+						sessionFactory.getSqlTranslationEngine(),
 						true
 				)
 				.translate()

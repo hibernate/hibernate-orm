@@ -66,10 +66,7 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 						this,
 						expressible.getJdbcMapping().getJdbcJavaType(),
 						null,
-						creationState.getSqlAstCreationState()
-								.getCreationContext()
-								.getSessionFactory()
-								.getTypeConfiguration()
+						creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 				);
 
 		return new BasicResult<>(

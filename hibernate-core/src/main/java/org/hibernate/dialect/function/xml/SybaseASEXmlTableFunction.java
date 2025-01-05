@@ -6,7 +6,6 @@ package org.hibernate.dialect.function.xml;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
@@ -126,8 +125,8 @@ public class SybaseASEXmlTableFunction extends XmlTableFunction {
 			if ( arguments.xmlDocument() instanceof Literal documentLiteral ) {
 				documentFragment = documentLiteral.getJdbcMapping().getJdbcLiteralFormatter().toJdbcLiteral(
 						documentLiteral.getLiteralValue(),
-						converter.getCreationContext().getSessionFactory().getJdbcServices().getDialect(),
-						converter.getCreationContext().getSessionFactory().getWrapperOptions()
+						converter.getCreationContext().getDialect(),
+						converter.getCreationContext().getWrapperOptions()
 				);
 			}
 			else if ( arguments.xmlDocument() instanceof ColumnReference columnReference ) {
@@ -169,9 +168,8 @@ public class SybaseASEXmlTableFunction extends XmlTableFunction {
 			if ( isBoolean( type ) ) {
 				//noinspection unchecked
 				final JdbcLiteralFormatter<Object> jdbcLiteralFormatter = type.getJdbcLiteralFormatter();
-				final SessionFactoryImplementor sessionFactory = converter.getCreationContext().getSessionFactory();
-				final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
-				final WrapperOptions wrapperOptions = sessionFactory.getWrapperOptions();
+				final Dialect dialect = converter.getCreationContext().getDialect();
+				final WrapperOptions wrapperOptions = converter.getCreationContext().getWrapperOptions();
 				final Object trueValue = type.convertToRelationalValue( true );
 				final Object falseValue = type.convertToRelationalValue( false );
 				final String trueFragment = jdbcLiteralFormatter.toJdbcLiteral( trueValue, dialect, wrapperOptions );

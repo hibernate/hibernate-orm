@@ -189,7 +189,7 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 					return basicValuedMapping;
 				}
 				try {
-					return walker.getCreationContext().getSessionFactory().getMappingMetamodel()
+					return walker.getCreationContext().getMappingMetamodel()
 							.resolveMappingExpressible( getNodeType(), walker.getFromClauseAccess()::getTableGroup );
 				}
 				catch (Exception e) {

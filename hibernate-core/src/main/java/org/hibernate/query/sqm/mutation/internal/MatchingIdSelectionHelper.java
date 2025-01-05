@@ -265,7 +265,7 @@ public class MatchingIdSelectionHelper {
 						domainParameterXref,
 						executionContext.getQueryParameterBindings(),
 						executionContext.getSession().getLoadQueryInfluencers(),
-						factory,
+						factory.getSqlTranslationEngine(),
 						true
 				);
 		final SqmTranslation<SelectStatement> translation = translator.translate();

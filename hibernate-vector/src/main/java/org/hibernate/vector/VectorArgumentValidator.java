@@ -13,9 +13,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.type.BasicPluralType;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A {@link ArgumentsValidator} that validates the arguments are all vector types i.e. {@link org.hibernate.type.SqlTypes#VECTOR}.
@@ -46,18 +44,10 @@ public class VectorArgumentValidator implements ArgumentsValidator {
 	}
 
 	private static boolean isVectorType(SqmExpressible<?> vectorType) {
-		if ( !( vectorType instanceof BasicPluralType<?, ?> ) ) {
-			return false;
-		}
-
-		switch ( ( (BasicType<?>) vectorType ).getJdbcType().getDefaultSqlTypeCode() ) {
-			case SqlTypes.VECTOR:
-			case SqlTypes.VECTOR_INT8:
-			case SqlTypes.VECTOR_FLOAT32:
-			case SqlTypes.VECTOR_FLOAT64:
-				return true;
-			default:
-				return false;
-		}
+		return vectorType instanceof BasicPluralType<?, ?> basicPluralType
+			&& switch ( basicPluralType.getJdbcType().getDefaultSqlTypeCode() ) {
+			case SqlTypes.VECTOR, SqlTypes.VECTOR_INT8, SqlTypes.VECTOR_FLOAT32, SqlTypes.VECTOR_FLOAT64 -> true;
+			default -> false;
+		};
 	}
 }

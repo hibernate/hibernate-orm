@@ -7,6 +7,8 @@ package org.hibernate.query.sql.spi;
 import org.hibernate.Incubating;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 
+import java.util.Set;
+
 /**
  * Introduced as an analog of {@link org.hibernate.query.spi.QueryEngine}
  * and/or {@link org.hibernate.query.sqm.NodeBuilder} for the SQL
@@ -19,4 +21,8 @@ import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 @Incubating
 public interface SqlTranslationEngine extends SqlAstCreationContext {
 	// TODO: consider implementing SqlStringGenerationContext
+
+	boolean containsFetchProfileDefinition(String name);
+
+	Set<String> getDefinedFetchProfileNames();
 }

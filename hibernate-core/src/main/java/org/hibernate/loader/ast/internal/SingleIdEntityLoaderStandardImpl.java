@@ -36,7 +36,8 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 		this(
 				entityDescriptor,
 				loadQueryInfluencers,
-				(lockOptions, influencers) -> createLoadPlan( entityDescriptor, lockOptions, influencers, influencers.getSessionFactory() )
+				(lockOptions, influencers) ->
+						createLoadPlan( entityDescriptor, lockOptions, influencers, influencers.getSessionFactory() )
 		);
 	}
 

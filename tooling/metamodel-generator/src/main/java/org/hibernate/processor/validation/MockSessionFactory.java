@@ -239,7 +239,7 @@ public abstract class MockSessionFactory
 
 		nodeBuilder = new SqmCriteriaNodeBuilder("", "", this, this, this);
 
-		sqlTranslationEngine = new SqlTranslationEngineImpl(this, typeConfiguration);
+		sqlTranslationEngine = new SqlTranslationEngineImpl(this, typeConfiguration, emptyMap() );
 	}
 
 	@Override

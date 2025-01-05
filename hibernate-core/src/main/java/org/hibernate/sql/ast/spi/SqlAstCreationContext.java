@@ -56,14 +56,24 @@ public interface SqlAstCreationContext extends BindingContext {
 	 */
 	FetchProfile getFetchProfile(String name);
 
+	/**
+	 * Obtain the {@link SqmFunctionRegistry}.
+	 */
 	default SqmFunctionRegistry getSqmFunctionRegistry() {
 		return getSessionFactory().getQueryEngine().getSqmFunctionRegistry();
 	}
 
+	/**
+	 * Obtain the {@link Dialect}.
+	 */
 	default Dialect getDialect() {
 		return getSessionFactory().getQueryEngine().getDialect();
 	}
 
+	/**
+	 * Obtain the "incomplete" {@link WrapperOptions} that would be
+	 * returned by {@link SessionFactoryImplementor#getWrapperOptions()}.
+	 */
 	default WrapperOptions getWrapperOptions() {
 		return getSessionFactory().getWrapperOptions();
 	}

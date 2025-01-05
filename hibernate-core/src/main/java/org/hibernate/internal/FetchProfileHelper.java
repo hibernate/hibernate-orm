@@ -42,7 +42,8 @@ public class FetchProfileHelper {
 		return fetchProfiles;
 	}
 
-	static void addFetchProfiles(MetadataImplementor bootMetamodel, RuntimeMetamodels runtimeMetamodels, Map<String, FetchProfile> fetchProfiles) {
+	static void addFetchProfiles(
+			MetadataImplementor bootMetamodel, RuntimeMetamodels runtimeMetamodels, Map<String, FetchProfile> fetchProfiles) {
 		for ( org.hibernate.mapping.FetchProfile mappingProfile : bootMetamodel.getFetchProfiles() ) {
 			final FetchProfile fetchProfile = createFetchProfile( runtimeMetamodels.getMappingMetamodel(), mappingProfile );
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );

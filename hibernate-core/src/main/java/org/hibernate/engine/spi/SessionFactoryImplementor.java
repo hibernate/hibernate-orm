@@ -52,23 +52,13 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public interface SessionFactoryImplementor extends MappingContext, SessionFactory {
 	/**
-	 * Get the UUID for this {@code SessionFactory}.
+	 * The UUID assigned to this {@code SessionFactory}.
 	 * <p>
-	 * The value is generated as a {@link java.util.UUID}, but kept as a String.
-	 *
-	 * @return The UUID for this {@code SessionFactory}.
+	 * The value is generated as a {@link java.util.UUID}, but kept as a string.
 	 *
 	 * @see org.hibernate.internal.SessionFactoryRegistry#getSessionFactory
 	 */
 	String getUuid();
-
-	/**
-	 * Access to the name (if one) assigned to the {@code SessionFactory}
-	 *
-	 * @return The name for the {@code SessionFactory}
-	 */
-	@Override
-	String getName();
 
 	/**
 	 * Overrides {@link SessionFactory#openSession()} to widen the return type:
@@ -80,34 +70,65 @@ public interface SessionFactoryImplementor extends MappingContext, SessionFactor
 	@Override
 	SessionImplementor openSession();
 
+	/**
+	 * Obtain a {@linkplain org.hibernate.SessionBuilder session builder}
+	 * for creating new instances of {@link org.hibernate.Session} with
+	 * certain customized options.
+	 */
 	@Override
 	SessionBuilderImplementor withOptions();
 
 	/**
-	 * Get a non-transactional "current" session (used by hibernate-envers)
+	 * Get a non-transactional "current" session.
+	 *
+	 * @apiNote This is used by {@code hibernate-envers}.
 	 */
 	SessionImplementor openTemporarySession();
 
+	/**
+	 * Obtain the {@link CacheImplementor}.
+	 */
 	@Override
 	CacheImplementor getCache();
 
+	/**
+	 * Obtain the {@link StatisticsImplementor}.
+	 */
 	@Override
 	StatisticsImplementor getStatistics();
 
+	/**
+	 * Obtain the {@link TypeConfiguration}
+	 */
 	TypeConfiguration getTypeConfiguration();
 
+	/**
+	 * Obtain the {@link RuntimeMetamodelsImplementor}
+	 */
 	RuntimeMetamodelsImplementor getRuntimeMetamodels();
 
+	/**
+	 * Obtain the {@link MappingMetamodelImplementor}
+	 */
 	default MappingMetamodelImplementor getMappingMetamodel() {
 		return getRuntimeMetamodels().getMappingMetamodel();
 	}
 
+	/**
+	 * Obtain the {@link JpaMetamodel}
+	 */
 	default JpaMetamodel getJpaMetamodel() {
 		return getRuntimeMetamodels().getJpaMetamodel();
 	}
 
+	/**
+	 * Obtain the {@link QueryEngine}
+	 */
 	QueryEngine getQueryEngine();
 
+	/**
+	 * Obtain the {@link SqlTranslationEngine}
+	 */
 	SqlTranslationEngine getSqlTranslationEngine();
 
 	/**
@@ -123,11 +144,14 @@ public interface SessionFactoryImplementor extends MappingContext, SessionFactor
 	EventEngine getEventEngine();
 
 	/**
-	 * Retrieve fetch profile by name.
+	 * Retrieve a {@linkplain FetchProfile fetch profile} by name.
 	 *
 	 * @param name The name of the profile to retrieve.
 	 * @return The profile definition
+	 *
+	 * @deprecated Use {@link SqlTranslationEngine#getFetchProfile(String)}
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	FetchProfile getFetchProfile(String name);
 
 	/**
@@ -138,25 +162,37 @@ public interface SessionFactoryImplementor extends MappingContext, SessionFactor
 	@Deprecated(since = "7", forRemoval = true)
 	Generator getGenerator(String rootEntityName);
 
+	/**
+	 * Obtain the {@link EntityNotFoundDelegate}
+	 */
 	EntityNotFoundDelegate getEntityNotFoundDelegate();
 
+	/**
+	 * Register a {@link SessionFactoryObserver} of this factory.
+	 */
 	void addObserver(SessionFactoryObserver observer);
 
+	/**
+	 * Obtain the {@link CustomEntityDirtinessStrategy}
+	 */
 	//todo make a Service ?
 	CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
 
+	/**
+	 * Obtain the {@link CurrentTenantIdentifierResolver}
+	 */
 	//todo make a Service ?
 	CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver();
 
 	/**
-	 * The java type to use for a tenant identifier.
+	 * The {@link JavaType} to use for a tenant identifier.
 	 *
 	 * @since 6.4
 	 */
 	JavaType<Object> getTenantIdentifierJavaType();
 
 	/**
-	 * Access to the event listener groups.
+	 * Access to the {@linkplain EventListenerGroups event listener groups}.
 	 *
 	 * @since 7.0
 	 */
@@ -164,36 +200,48 @@ public interface SessionFactoryImplementor extends MappingContext, SessionFactor
 	EventListenerGroups getEventListenerGroups();
 
 	/**
+	 * Obtain the {@link ParameterMarkerStrategy} service.
+	 *
 	 * @since 7.0
 	 */
 	@Incubating
 	ParameterMarkerStrategy getParameterMarkerStrategy();
 
 	/**
+	 * Obtain the {@link JdbcServices} service.
+	 *
 	 * @since 7.0
 	 */
 	@Incubating
 	JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider();
 
 	/**
+	 * Obtain the {@link EntityCopyObserverFactory} service.
+	 *
 	 * @since 7.0
 	 */
 	@Incubating
 	EntityCopyObserverFactory getEntityCopyObserver();
 
 	/**
+	 * Obtain the {@link ClassLoaderService}.
+	 *
 	 * @since 7.0
 	 */
 	@Incubating
 	ClassLoaderService getClassLoaderService();
 
 	/**
+	 * Obtain the {@link ManagedBeanRegistry} service.
+	 *
 	 * @since 7.0
 	 */
 	@Incubating
 	ManagedBeanRegistry getManagedBeanRegistry();
 
 	/**
+	 * Obtain the {@link EventListenerRegistry} service.
+	 *
 	 * @since 7.0
 	 */
 	@Incubating
@@ -207,16 +255,35 @@ public interface SessionFactoryImplementor extends MappingContext, SessionFactor
 	 */
 	WrapperOptions getWrapperOptions();
 
+	/**
+	 * Get the {@linkplain SessionFactoryOptions options} used to build this factory.
+	 */
 	@Override
 	SessionFactoryOptions getSessionFactoryOptions();
 
+	/**
+	 * Obtain the {@linkplain FilterDefinition definition of a filter} by name.
+	 *
+	 * @param filterName The name of a declared filter
+	 */
 	@Override
 	FilterDefinition getFilterDefinition(String filterName);
 
+	/**
+	 * Obtain a collection of {@link FilterDefinition}s representing all the
+	 * {@linkplain org.hibernate.annotations.FilterDef#autoEnabled auto-enabled}
+	 * filters.
+	 */
 	Collection<FilterDefinition> getAutoEnabledFilters();
 
+	/**
+	 * Obtain the {@link JdbcServices} service.
+	 */
 	JdbcServices getJdbcServices();
 
+	/**
+	 * Obtain the {@link SqlStringGenerationContext}.
+	 */
 	SqlStringGenerationContext getSqlStringGenerationContext();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

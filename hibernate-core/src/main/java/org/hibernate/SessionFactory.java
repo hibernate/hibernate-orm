@@ -145,8 +145,9 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	String getJndiName();
 
 	/**
-	 * Obtain a {@linkplain SessionBuilder session builder} for creating
-	 * new {@link Session}s with certain customized options.
+	 * Obtain a {@linkplain org.hibernate.SessionBuilder session builder}
+	 * for creating new instances of {@link org.hibernate.Session} with
+	 * certain customized options.
 	 *
 	 * @return The session builder
 	 */
@@ -455,6 +456,26 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	default boolean containsFetchProfileDefinition(String name) {
 		return getDefinedFilterNames().contains( name );
 	}
+
+	/**
+	 * The name assigned to this {@code SessionFactory}, if any.
+	 * <ul>
+	 * <li>When bootstrapping via JPA, this is the persistence unit name.
+	 * <li>Otherwise, the name may be specified by the configuration property
+	 *     {@value org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_NAME}.
+	 * </ul>
+	 * <p>
+	 * If {@value org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_NAME_IS_JNDI}
+	 * is enabled, then this name is used to bind this object to JNDI, unless
+	 * {@value org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_JNDI_NAME}
+	 * is also specified.
+	 *
+	 * @see org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_NAME
+	 * @see org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_NAME_IS_JNDI
+	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getPersistenceUnitName
+	 */
+	@Override
+	String getName();
 
 	/**
 	 * Get the {@linkplain SessionFactoryOptions options} used to build this factory.

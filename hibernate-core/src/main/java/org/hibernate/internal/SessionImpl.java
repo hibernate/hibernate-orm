@@ -3016,7 +3016,8 @@ public class SessionImpl
 		// filter, which will fail when called before FilterImpl#afterDeserialize( factory );
 		// Instead lookup the filter by name and then call FilterImpl#afterDeserialize( factory ).
 		for ( String filterName : loadQueryInfluencers.getEnabledFilterNames() ) {
-			( (FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName ) ).afterDeserialize( getFactory() );
+			( (FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName ) )
+					.afterDeserialize( getFactory() );
 		}
 
 		eventListenerGroups = getFactory().getEventListenerGroups();

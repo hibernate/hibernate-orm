@@ -83,7 +83,7 @@ public abstract class AbstractSelectLockingStrategy implements LockingStrategy {
 					lockable.getVersionType().nullSafeSet(
 							st,
 							version,
-							lockable.getIdentifierType().getColumnSpan( factory ) + 1,
+							lockable.getIdentifierType().getColumnSpan( factory.getRuntimeMetamodels() ) + 1,
 							session
 					);
 				}

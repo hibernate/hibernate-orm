@@ -229,7 +229,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SharedSessionContractImplementor session)
 			throws SQLException {
 		if ( settable.length > 0 ) {
-			requireIdentifierOrUniqueKeyType( session.getFactory() )
+			requireIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
 					.nullSafeSet( st, getIdentifier( value, session ), index, settable, session );
 		}
 	}
@@ -237,7 +237,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
 			throws SQLException {
-		requireIdentifierOrUniqueKeyType( session.getFactory() )
+		requireIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
 				.nullSafeSet( st, getIdentifier( value, session ), index, session );
 	}
 
@@ -275,7 +275,8 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			// At this point we know both are non-null.
 			final Object xId = extractIdentifier( x, factory );
 			final Object yId = extractIdentifier( y, factory );
-			return getIdentifierType( factory ).compare( xId, yId );
+			return getIdentifierType( factory.getRuntimeMetamodels() )
+					.compare( xId, yId );
 		}
 	}
 
@@ -332,7 +333,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 					throw new AssertionFailure( "non-transient entity has a null id: " + original.getClass().getName() );
 				}
 				final Object replaced =
-						getIdentifierOrUniqueKeyType( session.getFactory() )
+						getIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
 								.replace( id, null, session, owner, copyCache );
 				return resolve( replaced, session, owner );
 			}
@@ -603,7 +604,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	Type getIdentifierType(final SharedSessionContractImplementor session) {
 		final Type type = associatedIdentifierType;
 		if ( type == null ) {
-			associatedIdentifierType = getIdentifierType( session.getFactory() );
+			associatedIdentifierType = getIdentifierType( session.getFactory().getRuntimeMetamodels() );
 			return associatedIdentifierType;
 		}
 		else {
@@ -764,7 +765,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				entityName,
 				uniqueKeyPropertyName,
 				key,
-				getIdentifierOrUniqueKeyType( factory ),
+				getIdentifierOrUniqueKeyType( factory.getRuntimeMetamodels() ),
 				session.getFactory()
 		);
 

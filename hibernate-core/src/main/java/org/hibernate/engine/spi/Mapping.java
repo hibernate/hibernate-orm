@@ -19,10 +19,9 @@ import org.hibernate.type.MappingContext;
  * @author Gavin King
  *
  * @deprecated Use {@link org.hibernate.type.spi.TypeConfiguration},
- * {@link org.hibernate.boot.Metadata}, or
- * {@link org.hibernate.metamodel.RuntimeMetamodels}
- * or {@link  MappingContext}
- * to access such information
+ *             {@link org.hibernate.boot.Metadata},
+ *             {@link org.hibernate.metamodel.RuntimeMetamodels},
+ *             or {@link MappingContext} to access such information
  */
 @Deprecated(since = "6.0")
 public interface Mapping extends MappingContext {

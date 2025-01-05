@@ -4,16 +4,17 @@
  */
 package org.hibernate.metamodel.internal;
 
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.MappingException;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
  */
 public class RuntimeMetamodelsImpl implements RuntimeMetamodelsImplementor {
+
 	private JpaMetamodelImplementor jpaMetamodel;
 	private MappingMetamodelImplementor mappingMetamodel;
 
@@ -31,14 +32,20 @@ public class RuntimeMetamodelsImpl implements RuntimeMetamodelsImplementor {
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getEmbedded(String role) {
-		throw new UnsupportedOperationException( "Locating EmbeddableValuedModelPart by (String) role is not supported" );
+	public Type getIdentifierType(String className) throws MappingException {
+		return mappingMetamodel.getEntityDescriptor( className ).getIdentifierType();
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getEmbedded(NavigableRole role) {
-		return mappingMetamodel.getEmbeddableValuedModelPart( role );
+	public String getIdentifierPropertyName(String className) throws MappingException {
+		return mappingMetamodel.getEntityDescriptor( className ).getIdentifierPropertyName();
 	}
+
+	@Override
+	public Type getReferencedPropertyType(String className, String propertyName) throws MappingException {
+		return mappingMetamodel.getEntityDescriptor( className ).getPropertyType( propertyName );
+	}
+
 
 	public void setMappingMetamodel(MappingMetamodelImplementor mappingMetamodel) {
 		this.mappingMetamodel = mappingMetamodel;

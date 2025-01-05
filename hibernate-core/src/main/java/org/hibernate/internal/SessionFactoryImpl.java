@@ -31,7 +31,6 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactory;
@@ -119,7 +118,6 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -779,21 +777,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 				SessionFactoryRegistry.ObjectFactoryImpl.class.getName(),
 				null
 		);
-	}
-
-	@Override
-	public Type getIdentifierType(String className) throws MappingException {
-		return runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( className ).getIdentifierType();
-	}
-
-	@Override
-	public String getIdentifierPropertyName(String className) throws MappingException {
-		return runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( className ).getIdentifierPropertyName();
-	}
-
-	@Override
-	public Type getReferencedPropertyType(String className, String propertyName) throws MappingException {
-		return runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( className ).getPropertyType( propertyName );
 	}
 
 	/**

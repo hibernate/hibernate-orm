@@ -54,7 +54,7 @@ public interface OrderingExpression extends Node {
 			final SqmToSqlAstConverter converter =
 					creationState instanceof SqmToSqlAstConverter sqmToSqlAstConverter
 							? sqmToSqlAstConverter
-							: new FakeSqmToSqlAstConverter(creationState);
+							: new FakeSqmToSqlAstConverter( creationState );
 			sortExpression =
 					queryEngine.getSqmFunctionRegistry()
 							.findFunctionDescriptor( "collate" )

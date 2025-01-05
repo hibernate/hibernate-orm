@@ -178,7 +178,7 @@ public class EntityDelayedFetchInitializer
 				final String uniqueKeyPropertyName = referencedModelPart.getReferencedPropertyName();
 				final Type uniqueKeyPropertyType = ( referencedModelPart.getReferencedPropertyName() == null ) ?
 						concreteDescriptor.getIdentifierType() :
-						session.getFactory()
+						session.getFactory().getRuntimeMetamodels()
 								.getReferencedPropertyType(
 										concreteDescriptor.getEntityName(),
 										uniqueKeyPropertyName

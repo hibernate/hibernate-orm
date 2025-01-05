@@ -23,7 +23,6 @@ import jakarta.persistence.TypedQueryReference;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -55,7 +54,6 @@ import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.generator.Generator;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -296,21 +294,6 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public JavaType<Object> getTenantIdentifierJavaType() {
 		return delegate.getTenantIdentifierJavaType();
-	}
-
-	@Override
-	public Type getIdentifierType(String className) throws MappingException {
-		return delegate.getIdentifierType( className );
-	}
-
-	@Override
-	public String getIdentifierPropertyName(String className) throws MappingException {
-		return delegate.getIdentifierPropertyName( className );
-	}
-
-	@Override
-	public Type getReferencedPropertyType(String className, String propertyName) throws MappingException {
-		return delegate.getReferencedPropertyType( className, propertyName );
 	}
 
 	@Override

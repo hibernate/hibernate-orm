@@ -37,7 +37,6 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.MappingContext;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -50,7 +49,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface SessionFactoryImplementor extends MappingContext, SessionFactory {
+public interface SessionFactoryImplementor extends SessionFactory {
 	/**
 	 * The UUID assigned to this {@code SessionFactory}.
 	 * <p>

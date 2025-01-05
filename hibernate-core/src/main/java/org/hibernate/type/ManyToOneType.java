@@ -154,7 +154,7 @@ public class ManyToOneType extends EntityType {
 		}
 		else {
 			// the ids are fully resolved, so compare them with isDirty(), not isModified()
-			return getIdentifierOrUniqueKeyType( session.getFactory() )
+			return getIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
 					.isDirty( old, getIdentifierEvenIfTransient( current, session ), session );
 		}
 	}
@@ -189,7 +189,8 @@ public class ManyToOneType extends EntityType {
 			// property-ref, which might not be initialized
 			final Object id = getIdentifier( value, sessionFactory );
 			checkIdNotNull( id );
-			return getIdentifierType( sessionFactory ).disassemble( id, sessionFactory );
+			return getIdentifierType( sessionFactory.getRuntimeMetamodels() )
+					.disassemble( id, sessionFactory );
 		}
 	}
 
@@ -242,7 +243,8 @@ public class ManyToOneType extends EntityType {
 		else {
 			final Object oldid = getIdentifierEvenIfTransient( old, session );
 			final Object newid = getIdentifierEvenIfTransient( current, session );
-			return getIdentifierOrUniqueKeyType( session.getFactory() ).isDirty( oldid, newid, session );
+			return getIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
+					.isDirty( oldid, newid, session );
 		}
 	}
 
@@ -261,7 +263,8 @@ public class ManyToOneType extends EntityType {
 		else {
 			final Object oldid = getIdentifierEvenIfTransient( old, session );
 			final Object newid = getIdentifierEvenIfTransient( current, session );
-			return getIdentifierOrUniqueKeyType( session.getFactory() ).isDirty( oldid, newid, checkable, session );
+			return getIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
+					.isDirty( oldid, newid, checkable, session );
 		}
 	}
 

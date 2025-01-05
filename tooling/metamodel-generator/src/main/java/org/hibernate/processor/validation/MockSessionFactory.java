@@ -54,7 +54,6 @@ import org.hibernate.metamodel.internal.JpaMetamodelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetamodelPopulationSetting;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.MetadataContext;
-import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -143,7 +142,7 @@ import static java.util.Collections.singletonList;
 public abstract class MockSessionFactory
 		implements SessionFactoryImplementor, SessionFactoryOptions, QueryEngine, FunctionContributions,
 		MetadataBuildingOptions, MetadataBuildingContext, RuntimeModelCreationContext, BootstrapContext,
-		JdbcTypeIndicators {
+		JdbcTypeIndicators, RuntimeMetamodelsImplementor {
 
 	private static final BasicTypeImpl<Object> OBJECT_BASIC_TYPE =
 			new BasicTypeImpl<>(new UnknownBasicJavaType<>(Object.class), ObjectJdbcType.INSTANCE);
@@ -532,10 +531,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public RuntimeMetamodelsImplementor getRuntimeMetamodels() {
-		final RuntimeMetamodelsImpl runtimeMetamodels = new RuntimeMetamodelsImpl();
-		runtimeMetamodels.setJpaMetamodel( metamodel.getJpaMetamodel() );
-		runtimeMetamodels.setMappingMetamodel( metamodel );
-		return runtimeMetamodels;
+		return this;
 	}
 
 	@Override

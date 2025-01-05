@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.boot.models.hbm._extends;
 
 import jakarta.persistence.InheritanceType;
+import org.hibernate.boot.archive.internal.RepeatableInputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
@@ -39,7 +40,7 @@ public class ExtendsTests {
 
 		try (InputStream stream = classLoaderService.locateResourceStream( mappingName )) {
 			final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind(
-					stream,
+					new RepeatableInputStreamAccess( SourceType.INPUT_STREAM.toString(), stream),
 					new Origin( SourceType.RESOURCE, mappingName )
 			);
 			verifyHierarchy( (JaxbEntityMappingsImpl) binding.getRoot(), InheritanceType.SINGLE_TABLE );

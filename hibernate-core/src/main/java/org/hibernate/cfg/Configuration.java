@@ -52,6 +52,7 @@ import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.EmptyInterceptor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -204,7 +205,7 @@ public class Configuration {
 	private XmlMappingBinderAccess createMappingBinderAccess(BootstrapServiceRegistry serviceRegistry) {
 		return new XmlMappingBinderAccess(
 				serviceRegistry,
-				(settingName) -> properties == null ? null : properties.get( settingName )
+				() -> properties == null ? null : CollectionHelper.asMap( properties )
 		);
 	}
 

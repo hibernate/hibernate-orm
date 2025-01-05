@@ -36,7 +36,7 @@ public class SimpleOverrideXmlTests {
 	void testSimpleCompleteEntity(ServiceRegistryScope scope) {
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
 
-		final MetadataSources metadataSources = new MetadataSources().addResource( "mappings/models/override/simple-override.xml" );
+		final MetadataSources metadataSources = new MetadataSources( serviceRegistry ).addResource( "mappings/models/override/simple-override.xml" );
 		final MetadataBuilderImpl.MetadataBuildingOptionsImpl options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
 		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl( serviceRegistry, options );
 		options.setBootstrapContext( bootstrapContext );

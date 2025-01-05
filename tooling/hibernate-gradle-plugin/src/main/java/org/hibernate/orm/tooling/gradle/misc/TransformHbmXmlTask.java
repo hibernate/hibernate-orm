@@ -21,6 +21,7 @@ import org.gradle.api.tasks.SourceTask;
 import org.gradle.api.tasks.TaskAction;
 
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.archive.internal.RepeatableInputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
@@ -188,7 +189,7 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 
 	private Binding<JaxbHbmHibernateMapping> bindMapping(MappingBinder mappingBinder, File hbmXmlFile, Origin origin) {
 		try ( final FileInputStream fileStream = new FileInputStream( hbmXmlFile ) ) {
-			return mappingBinder.bind( fileStream, origin );
+			return mappingBinder.bind( new RepeatableInputStreamAccess( hbmXmlFile.getPath(), fileStream), origin );
 		}
 		catch (IOException e) {
 			getProject().getLogger()

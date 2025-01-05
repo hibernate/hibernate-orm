@@ -18,6 +18,7 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.boot.xsd.XmlValidationMode;
 import org.hibernate.bytecode.internal.SessionFactoryObserverForBytecodeEnhancer;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
@@ -429,6 +430,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public void disableJtaTransactionAccess() {
 		this.optionsBuilder.disableJtaTransactionAccess();
+	}
+
+	@Override
+	public SessionFactoryBuilder applyXmlValidationMode(XmlValidationMode xmlValidationMode) {
+		this.optionsBuilder.applyXmlValidationMode( xmlValidationMode );
+		return this;
 	}
 
 	@Override

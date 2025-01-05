@@ -287,10 +287,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		if ( expandToAllColumns ) {
 			// Expand to all columns of the entity mapping type to ensure a correct group / order by expression,
 			// or use only the primary key if the dialect supports functional dependency
-			final Dialect dialect = sqlAstCreationState.getCreationContext()
-					.getSessionFactory()
-					.getJdbcServices()
-					.getDialect();
+			final Dialect dialect = sqlAstCreationState.getCreationContext().getDialect();
 			final EntityMappingType entityMappingType = mapping.getEntityMappingType();
 			final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
 			final List<Expression> expressions = new ArrayList<>( identifierMapping.getJdbcTypeCount() );

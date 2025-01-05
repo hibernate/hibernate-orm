@@ -386,7 +386,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 				sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping ),
 				javaType,
 				fetchParent,
-				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 
 		final JdbcMappingContainer selectionType = sqlSelection.getExpressionType();

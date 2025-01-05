@@ -941,7 +941,7 @@ public abstract class AbstractCollectionPersister
 				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				true,
 				new LoadQueryInfluencers( factory ),
-				factory
+				factory.getSqlTranslationEngine()
 		);
 
 		final NavigablePath entityPath = new NavigablePath( attributeMapping.getRootPathName() );

@@ -124,7 +124,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 				executionContext.getQueryOptions(),
 				executionContext.getSession().getLoadQueryInfluencers(),
 				executionContext.getQueryParameterBindings(),
-				sessionFactory
+				sessionFactory.getSqlTranslationEngine()
 		);
 
 		final TableGroup insertingTableGroup = converterDelegate.getMutatingTableGroup();

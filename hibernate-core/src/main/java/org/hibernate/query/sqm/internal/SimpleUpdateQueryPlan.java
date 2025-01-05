@@ -101,7 +101,7 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 								domainParameterXref,
 								executionContext.getQueryParameterBindings(),
 								executionContext.getSession().getLoadQueryInfluencers(),
-								factory
+								factory.getSqlTranslationEngine()
 						)
 						.translate();
 

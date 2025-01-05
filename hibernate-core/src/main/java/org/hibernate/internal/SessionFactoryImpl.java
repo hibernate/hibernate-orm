@@ -94,12 +94,15 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.internal.QueryEngineImpl;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.sql.internal.SqlTranslationEngineImpl;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
+import org.hibernate.query.sql.spi.SqlTranslationEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.relational.SchemaManager;
@@ -166,7 +169,7 @@ import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DEL
  * @author Steve Ebersole
  * @author Chris Cranford
  */
-public class SessionFactoryImpl implements SessionFactoryImplementor {
+public class SessionFactoryImpl implements SessionFactoryImplementor, BindingContext {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryImpl.class );
 
 	private final String name;
@@ -191,6 +194,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final PersistenceUnitUtil jpaPersistenceUnitUtil;
 	private final transient CacheImplementor cacheAccess;
 	private final transient QueryEngine queryEngine;
+	private final transient SqlTranslationEngine sqlTranslationEngine;
+	private final transient TypeConfiguration typeConfiguration;
 
 	private final transient CurrentSessionContext currentSessionContext;
 
@@ -225,7 +230,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			final SessionFactoryOptions options,
 			final BootstrapContext bootstrapContext) {
 		LOG.debug( "Building session factory" );
-		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
+		typeConfiguration = bootstrapContext.getTypeConfiguration();
 
 		sessionFactoryOptions = options;
 
@@ -299,7 +304,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			// created, then we can split creation of QueryEngine
 			// and SqmFunctionRegistry, instantiating just the
 			// registry here, and doing the engine later
-			queryEngine = QueryEngineImpl.from( bootMetamodel, options, this, serviceRegistry, settings, name );
+			queryEngine = new QueryEngineImpl( bootMetamodel, options, this, serviceRegistry, settings, name );
+			sqlTranslationEngine = new SqlTranslationEngineImpl( this, typeConfiguration );
 
 			// create runtime metamodels (mapping and JPA)
 			final RuntimeMetamodelsImpl runtimeMetamodelsImpl = new RuntimeMetamodelsImpl();
@@ -312,7 +318,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			// this needs to happen after the mapping metamodel is
 			// completely built, since we need to use the persisters
-			fetchProfiles = getFetchProfiles( bootMetamodel, runtimeMetamodelsImpl);
+			fetchProfiles = getFetchProfiles( bootMetamodel, runtimeMetamodelsImpl );
 
 			defaultSessionOpenOptions = createDefaultSessionOpenOptionsIfPossible();
 			temporarySessionOpenOptions = defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();
@@ -617,12 +623,17 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
-		return runtimeMetamodels.getMappingMetamodel().getTypeConfiguration();
+		return typeConfiguration;
 	}
 
 	@Override
 	public QueryEngine getQueryEngine() {
 		return queryEngine;
+	}
+
+	@Override
+	public SqlTranslationEngine getSqlTranslationEngine() {
+		return sqlTranslationEngine;
 	}
 
 	@Override
@@ -1106,11 +1117,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public Integer getMaximumFetchDepth() {
-		return getSessionFactoryOptions().getMaximumFetchDepth();
-	}
-
-	@Override
 	public ServiceRegistryImplementor getServiceRegistry() {
 		return serviceRegistry;
 	}
@@ -1411,7 +1417,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.sessionFactory = sessionFactory;
 			this.statementInspector = sessionFactory.getSessionFactoryOptions().getStatementInspector();
 
-			CurrentTenantIdentifierResolver<Object> tenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
+			final CurrentTenantIdentifierResolver<Object> tenantIdentifierResolver =
+					sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( tenantIdentifierResolver != null ) {
 				tenantIdentifier = tenantIdentifierResolver.resolveCurrentTenantIdentifier();
 			}
@@ -1655,8 +1662,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public Class<?> classForName(String className) {
-		return getClassLoaderService().classForName( className );
+	public MappingMetamodelImplementor getMappingMetamodel() {
+		return getRuntimeMetamodels().getMappingMetamodel();
 	}
 
 	private enum Status {

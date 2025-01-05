@@ -170,10 +170,9 @@ public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunc
 		}
 
 		private String determineIndexSelectionExpression(SelectableMapping[] selectableMappings, String tableIdentifierVariable, SqmToSqlAstConverter walker) {
-			final String defaultOrdinalityColumnName = walker.getCreationContext().getSessionFactory()
-					.getJdbcServices()
-					.getDialect()
-					.getDefaultOrdinalityColumnName();
+			final String defaultOrdinalityColumnName =
+					walker.getCreationContext().getDialect()
+							.getDefaultOrdinalityColumnName();
 			String name = defaultOrdinalityColumnName == null ? "i" : defaultOrdinalityColumnName;
 			OUTER: for ( int i = 0; i < selectableMappings.length; i++ ) {
 				for ( SelectableMapping selectableMapping : selectableMappings ) {

@@ -194,7 +194,6 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 	interface Side {
 		Nature getNature();
 		ValuedModelPart getModelPart();
-
 	}
 
 	boolean isEmbedded();

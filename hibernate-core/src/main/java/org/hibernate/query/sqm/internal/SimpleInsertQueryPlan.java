@@ -46,14 +46,15 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 	private SqlAstTranslator<? extends JdbcOperationQueryMutation> createInsertTranslator(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
-		final SqmTranslation<? extends MutationStatement> sqmInterpretation = factory.getQueryEngine().getSqmTranslatorFactory()
-				.createMutationTranslator(
+		final SqmTranslation<? extends MutationStatement> sqmInterpretation =
+				factory.getQueryEngine().getSqmTranslatorFactory()
+						.createMutationTranslator(
 								sqmInsert,
 								executionContext.getQueryOptions(),
 								domainParameterXref,
 								executionContext.getQueryParameterBindings(),
 								executionContext.getSession().getLoadQueryInfluencers(),
-								factory
+								factory.getSqlTranslationEngine()
 						)
 						.translate();
 

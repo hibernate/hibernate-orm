@@ -103,8 +103,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 				),
 				attributeMapping.getJdbcMapping().getJdbcJavaType(),
 				null,
-				domainResultCreationState.getSqlAstCreationState().getCreationContext()
-						.getSessionFactory().getTypeConfiguration()
+				domainResultCreationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 	}
 

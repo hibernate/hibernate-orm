@@ -111,7 +111,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 		final OutputableType<T> typeToUse = (OutputableType<T>) BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
 				binding == null ? null : binding.getExplicitTemporalPrecision(),
 				bindableType,
-				session.getFactory()
+				session.getFactory().getQueryEngine().getCriteriaBuilder()
 		);
 
 		final String jdbcParamName;

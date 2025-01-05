@@ -7,6 +7,7 @@ package org.hibernate.vector;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
@@ -27,7 +28,7 @@ public class VectorArgumentValidator implements ArgumentsValidator {
 	public void validate(
 			List<? extends SqmTypedNode<?>> arguments,
 			String functionName,
-			TypeConfiguration typeConfiguration) {
+			BindingContext bindingContext) {
 		for ( int i = 0; i < arguments.size(); i++ ) {
 			final SqmExpressible<?> expressible = arguments.get( i ).getExpressible();
 			final DomainType<?> type;

@@ -4,9 +4,13 @@
  */
 package org.hibernate.sql.ast.spi;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindingContext;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * The "context" in which creation of SQL AST occurs.  Provides
@@ -16,12 +20,21 @@ import org.hibernate.query.BindingContext;
  */
 public interface SqlAstCreationContext extends BindingContext {
 	/**
-	 * The SessionFactory
+	 * Avoid calling this method directly, as much as possible.
+	 * SQL AST creation should not depend on the existence of
+	 * a session factory, so if you need to obtain this object,
+	 * there's something wrong with the design.
+	 * <p>
+	 * Currently this is only called when creating a
+	 * {@link org.hibernate.sql.ast.tree.from.TableGroup},
+	 * but we will introduce a new sort of creation context
+	 * for that, probably.
 	 */
+	@Deprecated
 	SessionFactoryImplementor getSessionFactory();
 
 	/**
-	 * The runtime MappingMetamodelImplementor
+	 * The runtime {@link MappingMetamodelImplementor}
 	 */
 	MappingMetamodelImplementor getMappingMetamodel();
 
@@ -30,4 +43,28 @@ public interface SqlAstCreationContext extends BindingContext {
 	 * defines a limit to how deep we should join for fetches.
 	 */
 	Integer getMaximumFetchDepth();
+
+	/**
+	 * @see org.hibernate.jpa.spi.JpaCompliance#isJpaQueryComplianceEnabled
+	 */
+	boolean isJpaQueryComplianceEnabled();
+
+	/**
+	 * Obtain the definition of a named {@link FetchProfile}.
+	 *
+	 * @param name The name of the fetch profile
+	 */
+	FetchProfile getFetchProfile(String name);
+
+	default SqmFunctionRegistry getSqmFunctionRegistry() {
+		return getSessionFactory().getQueryEngine().getSqmFunctionRegistry();
+	}
+
+	default Dialect getDialect() {
+		return getSessionFactory().getQueryEngine().getDialect();
+	}
+
+	default WrapperOptions getWrapperOptions() {
+		return getSessionFactory().getWrapperOptions();
+	}
 }

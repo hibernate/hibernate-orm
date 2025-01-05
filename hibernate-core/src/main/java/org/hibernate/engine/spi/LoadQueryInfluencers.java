@@ -354,7 +354,8 @@ public class LoadQueryInfluencers implements Serializable {
 	private boolean isSubselectFetchEnabledInProfile(CollectionPersister persister) {
 		if ( hasEnabledFetchProfiles() ) {
 			for ( String profile : getEnabledFetchProfileNames() ) {
-				final FetchProfile fetchProfile = persister.getFactory().getFetchProfile( profile )	;
+				final FetchProfile fetchProfile =
+						persister.getFactory().getSqlTranslationEngine().getFetchProfile( profile )	;
 				if ( fetchProfile != null ) {
 					final Fetch fetch = fetchProfile.getFetchByRole( persister.getRole() );
 					if ( fetch != null && fetch.getMethod() == SUBSELECT) {
@@ -375,7 +376,7 @@ public class LoadQueryInfluencers implements Serializable {
 	private boolean hasSubselectLoadableCollectionsEnabledInProfile(EntityPersister persister) {
 		if ( hasEnabledFetchProfiles() ) {
 			for ( String profile : getEnabledFetchProfileNames() ) {
-				if ( persister.getFactory().getFetchProfile( profile )
+				if ( persister.getFactory().getSqlTranslationEngine().getFetchProfile( profile )
 						.hasSubselectLoadableCollectionsEnabled( persister ) ) {
 					return true;
 				}

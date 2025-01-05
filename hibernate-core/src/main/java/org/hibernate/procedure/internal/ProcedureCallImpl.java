@@ -567,7 +567,8 @@ public class ProcedureCallImpl<R>
 			return null;
 		}
 		else {
-			final SqmExpressible<T> sqmExpressible = parameterType.resolveExpressible( getSessionFactory() );
+			final SqmExpressible<T> sqmExpressible =
+					parameterType.resolveExpressible( getSessionFactory().getQueryEngine().getCriteriaBuilder() );
 			assert sqmExpressible != null;
 
 			return sqmExpressible.getExpressibleJavaType().getJavaTypeClass();

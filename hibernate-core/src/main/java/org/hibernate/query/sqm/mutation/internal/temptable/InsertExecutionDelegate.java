@@ -322,7 +322,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			querySpec.setFetchClauseExpression(
 					new QueryLiteral<>(
 							1,
-							executionContext.getSession().getFactory().getNodeBuilder() .getIntegerType()
+							executionContext.getSession().getFactory().getQueryEngine().getCriteriaBuilder().getIntegerType()
 					),
 					FetchClauseType.ROWS_ONLY
 			);

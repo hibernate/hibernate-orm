@@ -23,7 +23,5 @@ public interface BindingContext {
 
 	MappingMetamodel getMappingMetamodel();
 
-	default TypeConfiguration getTypeConfiguration() {
-		return getJpaMetamodel().getTypeConfiguration();
-	}
+	TypeConfiguration getTypeConfiguration();
 }

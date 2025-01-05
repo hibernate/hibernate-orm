@@ -103,17 +103,17 @@ public class InlineUpdateHandler implements UpdateHandler {
 		final List<Expression> inListExpressions = matchingIdsPredicateProducer.produceIdExpressionList( ids, entityDescriptor );
 
 		//noinspection unchecked
-		final SqmTranslation<UpdateStatement> translation = (SqmTranslation<UpdateStatement>) sessionFactory.getQueryEngine()
-				.getSqmTranslatorFactory()
-				.createMutationTranslator(
-						sqmUpdate,
-						executionContext.getQueryOptions(),
-						domainParameterXref,
-						executionContext.getQueryParameterBindings(),
-						executionContext.getSession().getLoadQueryInfluencers(),
-						sessionFactory
-				)
-				.translate();
+		final SqmTranslation<UpdateStatement> translation = (SqmTranslation<UpdateStatement>)
+				sessionFactory.getQueryEngine().getSqmTranslatorFactory()
+						.createMutationTranslator(
+								sqmUpdate,
+								executionContext.getQueryOptions(),
+								domainParameterXref,
+								executionContext.getQueryParameterBindings(),
+								executionContext.getSession().getLoadQueryInfluencers(),
+								sessionFactory.getSqlTranslationEngine()
+						)
+						.translate();
 		final TableGroup updatingTableGroup = translation.getSqlAst().getFromClause().getRoots().get( 0 );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -552,9 +552,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			boolean deduplicateSelectionItems) {
 		this.inferrableTypeAccessStack.push( () -> null );
 		this.creationContext = creationContext;
-		this.jpaQueryComplianceEnabled =
-				creationContext.getSessionFactory().getSessionFactoryOptions()
-						.getJpaCompliance().isJpaQueryComplianceEnabled();
+		this.jpaQueryComplianceEnabled = creationContext.isJpaQueryComplianceEnabled();
 
 		this.statement = statement;
 		this.currentSqmStatement = statement;
@@ -598,7 +596,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		this.domainParameterXref = domainParameterXref;
 		this.domainParameterBindings = domainParameterBindings;
 		this.jpaCriteriaParamResolutions = domainParameterXref.getParameterResolutions().getJpaCriteriaParamResolutions();
-		this.domainModel = creationContext.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
+		this.domainModel = creationContext.getMappingMetamodel();
 	}
 
 	private static EntityGraphTraversalState entityGraphTraversalState(SqlAstCreationContext creationContext, QueryOptions queryOptions) {
@@ -608,7 +606,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				&& appliedGraph.getGraph() != null ) {
 			return new StandardEntityGraphTraversalStateImpl(
 					appliedGraph.getSemantic(), appliedGraph.getGraph(),
-					creationContext.getSessionFactory().getJpaMetamodel()
+					creationContext.getJpaMetamodel()
 			);
 		}
 		else {
@@ -684,7 +682,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Dialect getDialect() {
-		return creationContext.getSessionFactory().getJdbcServices().getDialect();
+		return creationContext.getDialect();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -692,7 +690,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
-		return creationContext.getSessionFactory().getTypeConfiguration();
+		return creationContext.getTypeConfiguration();
 	}
 
 	@Override
@@ -833,10 +831,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final SqmRoot<?> sqmTarget = sqmStatement.getTarget();
 		final String entityName = sqmTarget.getEntityName();
 
-		final EntityPersister entityDescriptor = getCreationContext()
-				.getSessionFactory()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
+		final EntityPersister entityDescriptor =
+				getCreationContext().getMappingMetamodel()
+						.getEntityDescriptor( entityName );
 		assert entityDescriptor != null;
 
 		final FromClause fromClause = new FromClause( 1 );
@@ -885,7 +882,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return;
 		}
 		final EntityPersister persister =
-				creationContext.getSessionFactory().getMappingMetamodel()
+				creationContext.getMappingMetamodel()
 						.findEntityDescriptor( sqmStatement.getTarget().getEntityName() );
 		if ( !persister.isVersioned() ) {
 			throw new SemanticException( "Increment option specified for update of non-versioned entity" );
@@ -951,7 +948,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final SqmRoot<?> target = ( (SqmDmlStatement<?>) currentSqmStatement ).getTarget();
 		final String entityName = target.getEntityName();
 		final EntityPersister entityDescriptor =
-				getCreationContext().getSessionFactory().getMappingMetamodel()
+				getCreationContext().getMappingMetamodel()
 						.getEntityDescriptor( entityName );
 
 		// Returns a new instance for collecting assignments if needed
@@ -1096,7 +1093,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final SqmRoot<?> sqmTarget = statement.getTarget();
 		final String entityName = sqmTarget.getEntityName();
 		final EntityPersister entityDescriptor =
-				creationContext.getSessionFactory().getMappingMetamodel()
+				creationContext.getMappingMetamodel()
 						.getEntityDescriptor( entityName );
 		assert entityDescriptor != null;
 
@@ -1152,7 +1149,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		this.currentSqmStatement = sqmStatement;
 		final String entityName = sqmStatement.getTarget().getEntityName();
 		final EntityPersister entityDescriptor =
-				creationContext.getSessionFactory().getMappingMetamodel()
+				creationContext.getMappingMetamodel()
 						.getEntityDescriptor( entityName );
 		assert entityDescriptor != null;
 
@@ -1262,7 +1259,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		this.currentSqmStatement = sqmStatement;
 		final String entityName = sqmStatement.getTarget().getEntityName();
 		final EntityPersister entityDescriptor =
-				creationContext.getSessionFactory().getMappingMetamodel()
+				creationContext.getMappingMetamodel()
 						.getEntityDescriptor( entityName );
 		assert entityDescriptor != null;
 
@@ -1452,7 +1449,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					// If the dialect does not support window functions, we don't need the id column in the temporary table insert
 					// because we will make use of the special "rn_" column that is auto-incremented and serves as temporary identifier for a row,
 					// which is needed to control the generation of proper identifier values with the generator afterward
-					addIdColumn = creationContext.getSessionFactory().getJdbcServices().getDialect().supportsWindowFunctions();
+					addIdColumn = creationContext.getDialect().supportsWindowFunctions();
 				}
 				else {
 					// If the generator supports bulk insertion and the optimizer uses an increment size of 1,
@@ -1688,7 +1685,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final Literal noCycleLiteral = getLiteral( sqmCteStatement.getNoCycleLiteral() );
 		final JdbcMapping cycleMarkType = cycleLiteral == null ? null : cycleLiteral.getJdbcMapping();
 		final BasicType<String> stringType =
-				creationContext.getSessionFactory().getTypeConfiguration()
+				creationContext.getTypeConfiguration()
 						.getBasicTypeForJavaType( String.class );
 		if ( queryPart instanceof SqmQueryGroup<?> queryGroup
 				&& queryPart.getSortSpecifications().isEmpty()
@@ -2950,7 +2947,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private EntityPersister resolveEntityPersister(EntityDomainType<?> entityDomainType) {
-		return creationContext.getSessionFactory().getMappingMetamodel()
+		return creationContext.getMappingMetamodel()
 				.getEntityDescriptor( entityDomainType.getHibernateEntityName() );
 	}
 
@@ -3095,18 +3092,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			EntityNameUse entityNameUse,
 			String treatTargetTypeName,
 			boolean projection) {
-		final SessionFactoryImplementor factory = creationContext.getSessionFactory();
 		final EntityPersister persister;
 		if ( tableGroup.getModelPart() instanceof EmbeddableValuedModelPart ) {
 			persister = null;
 			final EmbeddableDomainType<?> embeddableDomainType =
-					factory.getJpaMetamodel().findEmbeddableType( treatTargetTypeName );
+					creationContext.getJpaMetamodel().findEmbeddableType( treatTargetTypeName );
 			if ( embeddableDomainType == null || !embeddableDomainType.isPolymorphic() ) {
 				return;
 			}
 		}
 		else {
-			persister = factory.getMappingMetamodel().findEntityDescriptor( treatTargetTypeName );
+			persister = creationContext.getMappingMetamodel().findEntityDescriptor( treatTargetTypeName );
 			if ( persister == null || !persister.getEntityMetamodel().isPolymorphic() ) {
 				return;
 			}
@@ -4318,9 +4314,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final EntityMappingType treatedMapping;
 			if ( path instanceof SqmTreatedPath<?, ?> && ( (SqmTreatedPath<?, ?>) path ).getTreatTarget().getPersistenceType() == ENTITY ) {
 				final ManagedDomainType<?> treatTarget = ( (SqmTreatedPath<?, ?>) path ).getTreatTarget();
-				treatedMapping = creationContext.getSessionFactory()
-						.getRuntimeMetamodels()
-						.getMappingMetamodel()
+				treatedMapping = creationContext.getMappingMetamodel()
 						.findEntityDescriptor( treatTarget.getTypeName() );
 			}
 			else {
@@ -4498,10 +4492,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private Expression extractEpoch(Expression intervalExpression) {
 		final BasicType<Integer> intType = getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
 		final PatternRenderer patternRenderer = new PatternRenderer(
-				creationContext.getSessionFactory()
-						.getJdbcServices()
-						.getDialect()
-						.extractPattern( EPOCH )
+				creationContext.getDialect().extractPattern( EPOCH )
 		);
 		return new SelfRenderingFunctionSqlAstExpression<>(
 				"extract",
@@ -4628,7 +4619,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			boolean index,
 			String functionName) {
 		// Try to create a lateral sub-query join if possible which allows the re-use of the expression
-		if ( creationContext.getSessionFactory().getJdbcServices().getDialect().supportsLateral() ) {
+		if ( creationContext.getDialect().supportsLateral() ) {
 			return createLateralJoinExpression( pluralPartPath, index, functionName );
 		}
 		else {
@@ -4961,11 +4952,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private AbstractSqmSelfRenderingFunctionDescriptor resolveFunction(String function) {
-		return (AbstractSqmSelfRenderingFunctionDescriptor) creationContext
-				.getSessionFactory()
-				.getQueryEngine()
-				.getSqmFunctionRegistry()
-				.findFunctionDescriptor( function );
+		return (AbstractSqmSelfRenderingFunctionDescriptor)
+				creationContext.getSqmFunctionRegistry()
+						.findFunctionDescriptor( function );
 	}
 
 	protected Expression createLateralJoinExpression(
@@ -5477,10 +5466,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private Set<String> determineEmbeddableNamesForTreatTypeRestriction(
 			EmbeddableMappingType embeddableMappingType,
 			Map<String, EntityNameUse> entityNameUses) {
-		final EmbeddableDomainType<?> embeddableDomainType = creationContext.getSessionFactory()
-				.getRuntimeMetamodels()
-				.getJpaMetamodel()
-				.embeddable( embeddableMappingType.getJavaType().getJavaTypeClass() );
+		final EmbeddableDomainType<?> embeddableDomainType =
+				creationContext.getJpaMetamodel()
+						.embeddable( embeddableMappingType.getJavaType().getJavaTypeClass() );
 		final Set<String> entityNameUsesSet = new HashSet<>( entityNameUses.keySet() );
 		ManagedDomainType<?> superType = embeddableDomainType;
 		while ( superType != null ) {
@@ -5547,9 +5535,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return new EntityTypeLiteral( domainModel.findEntityDescriptor( typeName ) );
 		}
 		else {
-			final EmbeddableDomainType<?> embeddable =
-					creationContext.getSessionFactory().getJpaMetamodel()
-							.embeddable( typeName );
+			final EmbeddableDomainType<?> embeddable = creationContext.getJpaMetamodel().embeddable( typeName );
 			return new EmbeddableTypeLiteral( embeddable,
 					(BasicType<?>) typeExpression.getExpressionType().getSingleJdbcMapping() );
 		}
@@ -5626,8 +5612,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final BasicSqmPathSource<?> nodeType = (BasicSqmPathSource<?>) literal.getNodeType();
 				return new QueryLiteral<>(
 						literal.getLiteralValue(),
-						creationContext.getSessionFactory().getTypeConfiguration()
-								.getBasicTypeRegistry()
+						creationContext.getTypeConfiguration().getBasicTypeRegistry()
 								.getRegisteredType( nodeType.getSqmPathType().getJavaType().getName() )
 				);
 			}
@@ -5637,7 +5622,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private MappingModelExpressible<?> literalExpressible(SqmLiteral<?> literal, MappingModelExpressible<?> inferableExpressible) {
 		final MappingModelExpressible<?> localExpressible =
 				resolveMappingModelExpressible( literal,
-						creationContext.getSessionFactory().getMappingMetamodel(),
+						creationContext.getMappingMetamodel(),
 						getFromClauseAccess() == null ? null : getFromClauseAccess()::findTableGroup );
 		if ( localExpressible == null ) {
 			return getElementExpressible( inferableExpressible );
@@ -5769,7 +5754,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				&& value instanceof Number ) {
 			return valueConverter.getRelationalJavaType().coerce(
 					value,
-					creationContext.getSessionFactory()::getTypeConfiguration
+					creationContext::getTypeConfiguration
 			);
 		}
 		else {
@@ -5789,9 +5774,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final E literalValue = literal.getLiteralValue();
 		final EntityPersister entityDescriptor;
 		if ( literalValue instanceof Class<?> clazz ) {
-			entityDescriptor =
-					creationContext.getSessionFactory().getMappingMetamodel()
-							.findEntityDescriptor( clazz );
+			entityDescriptor = creationContext.getMappingMetamodel().findEntityDescriptor( clazz );
 		}
 		else {
 			@SuppressWarnings("unchecked")
@@ -5817,7 +5800,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// In this case, we use wrap to transform the value to the correct type
 			final E relationalForm =
 					valueConverter.getRelationalJavaType()
-							.wrap( literalValue, creationContext.getSessionFactory().getWrapperOptions() );
+							.wrap( literalValue, creationContext.getWrapperOptions() );
 			return valueConverter.getDetailsForRelationalForm( relationalForm );
 		}
 	}
@@ -6579,9 +6562,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitCoalesce(SqmCoalesce<?> sqmCoalesce) {
-		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
-		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
-		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "coalesce" )
+		final QueryEngine queryEngine = creationContext.getSessionFactory().getQueryEngine();
+		return creationContext.getSqmFunctionRegistry().findFunctionDescriptor( "coalesce" )
 				.generateSqmExpression( sqmCoalesce.getArguments(), null, queryEngine )
 				.accept( this );
 	}
@@ -6908,15 +6890,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private TimestampaddFunction timestampadd() {
 		return (TimestampaddFunction)
-				getCreationContext().getSessionFactory()
-						.getQueryEngine().getSqmFunctionRegistry()
+				getCreationContext().getSqmFunctionRegistry()
 						.findFunctionDescriptor( "timestampadd" );
 	}
 
 	private TimestampdiffFunction timestampdiff() {
 		return (TimestampdiffFunction)
-				getCreationContext().getSessionFactory()
-						.getQueryEngine().getSqmFunctionRegistry()
+				getCreationContext().getSqmFunctionRegistry()
 						.findFunctionDescriptor( "timestampdiff" );
 	}
 
@@ -7230,8 +7210,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private MappingModelExpressible<?> determineCurrentExpressible(SqmTypedNode<?> expression) {
-		return creationContext.getSessionFactory()
-				.getMappingMetamodel()
+		return creationContext.getMappingMetamodel()
 				.resolveMappingExpressible( expression.getNodeType(), getFromClauseIndex()::findTableGroup );
 	}
 
@@ -7299,7 +7278,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Expression visitEntityTypeLiteralExpression(SqmLiteralEntityType<?> sqmExpression) {
 		final EntityPersister mappingDescriptor =
-				creationContext.getSessionFactory().getMappingMetamodel()
+				creationContext.getMappingMetamodel()
 						.getEntityDescriptor( sqmExpression.getNodeType().getHibernateEntityName() );
 		return new EntityTypeLiteral( mappingDescriptor );
 	}
@@ -8336,7 +8315,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
 		boolean joined = false;
 
-		final NavigablePath fetchablePath;
 		final Integer maxDepth = getCreationContext().getMaximumFetchDepth();
 		final FromClauseIndex fromClauseIndex = getFromClauseIndex();
 		final SqmAttributeJoin<?, ?> fetchedJoin = fromClauseIndex.findFetchedJoinByPath( resolvedNavigablePath );
@@ -8346,6 +8324,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		TableGroup joinedTableGroup = null;
 
+		final NavigablePath fetchablePath;
 		if ( fetchedJoin != null ) {
 			fetchablePath = fetchedJoin.getNavigablePath();
 			// there was an explicit fetch in the SQM
@@ -8390,8 +8369,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						for ( String enabledFetchProfileName :
 								getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
 							final FetchProfile enabledFetchProfile =
-									getCreationContext().getSessionFactory()
-											.getFetchProfile( enabledFetchProfileName );
+									getCreationContext().getFetchProfile( enabledFetchProfileName );
 							final org.hibernate.engine.profile.Fetch profileFetch =
 									enabledFetchProfile.getFetchByRole( fetchableRole );
 

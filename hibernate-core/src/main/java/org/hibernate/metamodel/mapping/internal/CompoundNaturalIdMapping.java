@@ -285,7 +285,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		assert navigablePath.getLocalName().equals( NaturalIdMapping.PART_NAME );
 
 		final JavaType<Object[]> jtd =
-				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory()
+				creationState.getSqlAstCreationState().getCreationContext()
 						.getTypeConfiguration().getJavaTypeRegistry()
 						.getDescriptor( Object[].class );
 

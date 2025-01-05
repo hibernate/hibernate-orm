@@ -98,7 +98,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 				resolvedExpression,
 				jdbcJavaType,
 				null,
-				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 
 		return new BasicResult(
@@ -135,7 +135,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 				resolvedExpression,
 				resolvedExpression.getExpressionType().getSingleJdbcMapping().getMappedJavaType(),
 				null,
-				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 	}
 }

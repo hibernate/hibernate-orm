@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.type.BasicPluralType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A {@link ArgumentsValidator} that validates all arguments are of the same array type.
@@ -26,7 +26,7 @@ public class ArraysOfSameTypeArgumentValidator implements ArgumentsValidator {
 	public void validate(
 			List<? extends SqmTypedNode<?>> arguments,
 			String functionName,
-			TypeConfiguration typeConfiguration) {
+			BindingContext bindingContext) {
 		BasicPluralType<?, ?> arrayType = null;
 		for ( int i = 0; i < arguments.size(); i++ ) {
 			final SqmExpressible<?> expressible = arguments.get( i ).getExpressible();

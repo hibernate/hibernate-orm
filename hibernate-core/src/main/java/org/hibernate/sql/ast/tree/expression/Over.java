@@ -136,7 +136,7 @@ public class Over<T> implements Expression, DomainResultProducer<T> {
 				this,
 				expression.getExpressionType().getSingleJdbcMapping().getJdbcJavaType(),
 				null,
-				creationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+				creationState.getCreationContext().getTypeConfiguration()
 		);
 	}
 

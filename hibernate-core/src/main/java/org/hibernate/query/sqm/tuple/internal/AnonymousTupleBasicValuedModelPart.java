@@ -287,7 +287,7 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 				expression,
 				getJdbcMapping().getJdbcJavaType(),
 				fetchParent,
-				creationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+				creationState.getCreationContext().getTypeConfiguration()
 		);
 	}
 

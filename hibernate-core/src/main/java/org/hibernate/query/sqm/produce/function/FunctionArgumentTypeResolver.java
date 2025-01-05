@@ -58,7 +58,7 @@ public interface FunctionArgumentTypeResolver {
 						new NamedSqmFunctionDescriptor( "", false, null, null ),
 						null,
 						arguments,
-						converter.getCreationContext().getSessionFactory().getNodeBuilder()
+						converter.getSqmCreationContext().getNodeBuilder()
 				) {
 					@Override
 					public Expression convertToSqlAst(SqmToSqlAstConverter walker) {

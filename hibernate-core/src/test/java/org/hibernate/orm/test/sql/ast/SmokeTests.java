@@ -116,7 +116,7 @@ public class SmokeTests {
 							( (QuerySqmImpl<?>) hqlQuery ).getDomainParameterXref(),
 							query.getParameterBindings(),
 							session.getLoadQueryInfluencers(),
-							scope.getSessionFactory(),
+							scope.getSessionFactory().getSqlTranslationEngine(),
 							true
 					);
 

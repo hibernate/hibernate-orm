@@ -37,10 +37,7 @@ public class VectorArgumentTypeResolver extends AbstractFunctionArgumentTypeReso
 			}
 		}
 
-		return converter.getCreationContext()
-				.getSessionFactory()
-				.getTypeConfiguration()
-				.getBasicTypeRegistry()
+		return converter.getCreationContext().getTypeConfiguration().getBasicTypeRegistry()
 				.resolve( StandardBasicTypes.VECTOR );
 	}
 }

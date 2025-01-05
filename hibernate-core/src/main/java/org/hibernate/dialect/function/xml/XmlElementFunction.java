@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.hibernate.dialect.XmlHelper;
 import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
@@ -52,7 +53,7 @@ public class XmlElementFunction extends AbstractSqmSelfRenderingFunctionDescript
 							public void validate(
 									List<? extends SqmTypedNode<?>> arguments,
 									String functionName,
-									TypeConfiguration typeConfiguration) {
+									BindingContext bindingContext) {
 								//noinspection unchecked
 								final String elementName = ( (SqmLiteral<String>) arguments.get( 0 ) ).getLiteralValue();
 								if ( !XmlHelper.isValidXmlName( elementName ) ) {

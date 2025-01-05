@@ -10,6 +10,7 @@ import java.util.Locale;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -19,7 +20,6 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
@@ -246,15 +246,12 @@ public class Builders {
 	public static ResultBuilder resultClassBuilder(
 			Class<?> resultMappingClass,
 			ResultSetMappingResolutionContext resolutionContext) {
-		return resultClassBuilder( resultMappingClass, resolutionContext.getSessionFactory() );
+		return resultClassBuilder( resultMappingClass, resolutionContext.getMappingMetamodel() );
 	}
 
 	public static ResultBuilder resultClassBuilder(
 			Class<?> resultMappingClass,
-			SessionFactoryImplementor sessionFactory) {
-		final MappingMetamodelImplementor mappingMetamodel =
-				sessionFactory.getRuntimeMetamodels()
-						.getMappingMetamodel();
+			MappingMetamodel mappingMetamodel) {
 		final EntityMappingType entityMappingType = mappingMetamodel.findEntityDescriptor( resultMappingClass );
 		if ( entityMappingType != null ) {
 			// the resultClass is an entity

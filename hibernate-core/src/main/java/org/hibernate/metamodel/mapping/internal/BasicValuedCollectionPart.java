@@ -205,7 +205,7 @@ public class BasicValuedCollectionPart
 				),
 				getJdbcMapping().getJdbcJavaType(),
 				fetchParent,
-				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 	}
 

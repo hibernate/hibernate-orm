@@ -1838,7 +1838,7 @@ public abstract class AbstractEntityPersister
 				this::fetchProcessor,
 				true,
 				new LoadQueryInfluencers( factory ),
-				factory
+				factory.getSqlTranslationEngine()
 		);
 
 		final NavigablePath entityPath = new NavigablePath( getRootPathName() );

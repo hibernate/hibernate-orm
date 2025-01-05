@@ -109,8 +109,7 @@ public class H2UnnestFunction extends UnnestFunction {
 									tg -> tg.findTableGroupJoin( functionTableGroup ) == null ? null : tg
 							);
 							final TableGroupJoin join = parentTableGroup.findTableGroupJoin( functionTableGroup );
-							final BasicType<Integer> integerType = walker.getCreationContext()
-									.getSessionFactory()
+							final BasicType<Integer> integerType = walker.getSqmCreationContext()
 									.getNodeBuilder()
 									.getIntegerType();
 							final Expression lhs = new SelfRenderingExpression() {

@@ -38,7 +38,7 @@ public class CommentBinder implements AttributeBinder<Comment>, TypeBinder<Comme
 		}
 		else if ( value instanceof Collection ) {
 			Collection collection = (Collection) value;
-			Table table = collection.getTable();
+			Table table = collection.getCollectionTable();
 			// by default, the comment goes on the table
 			if ( on.isEmpty() || table.getName().equalsIgnoreCase( on ) ) {
 				table.setComment( text );

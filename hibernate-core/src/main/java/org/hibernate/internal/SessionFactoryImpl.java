@@ -139,7 +139,7 @@ import static jakarta.persistence.SynchronizationType.SYNCHRONIZED;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
-import static org.hibernate.internal.FetchProfileHelper.getFetchProfiles;
+import static org.hibernate.internal.FetchProfileHelper.addFetchProfiles;
 import static org.hibernate.internal.SessionFactorySettings.deprecationCheck;
 import static org.hibernate.internal.SessionFactorySettings.determineJndiName;
 import static org.hibernate.internal.SessionFactorySettings.getSessionFactoryName;
@@ -201,7 +201,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient java.util.Collection<FilterDefinition> autoEnabledFilters = new HashSet<>();
-	private final transient Map<String, FetchProfile> fetchProfiles;
 	private final transient JavaType<Object> tenantIdentifierJavaType;
 
 	private final transient EventListenerGroups eventListenerGroups;
@@ -305,7 +304,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 			// and SqmFunctionRegistry, instantiating just the
 			// registry here, and doing the engine later
 			queryEngine = new QueryEngineImpl( bootMetamodel, options, this, serviceRegistry, settings, name );
-			sqlTranslationEngine = new SqlTranslationEngineImpl( this, typeConfiguration );
+			final Map<String, FetchProfile> fetchProfiles = new HashMap<>();
+			sqlTranslationEngine = new SqlTranslationEngineImpl( this, typeConfiguration, fetchProfiles );
 
 			// create runtime metamodels (mapping and JPA)
 			final RuntimeMetamodelsImpl runtimeMetamodelsImpl = new RuntimeMetamodelsImpl();
@@ -318,7 +318,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 
 			// this needs to happen after the mapping metamodel is
 			// completely built, since we need to use the persisters
-			fetchProfiles = getFetchProfiles( bootMetamodel, runtimeMetamodelsImpl );
+			addFetchProfiles( bootMetamodel, runtimeMetamodelsImpl, fetchProfiles );
 
 			defaultSessionOpenOptions = createDefaultSessionOpenOptionsIfPossible();
 			temporarySessionOpenOptions = defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();
@@ -1035,18 +1035,23 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 	}
 
 	@Override
-	public boolean containsFetchProfileDefinition(String name) {
-		return fetchProfiles.containsKey( name );
-	}
-
-	@Override
 	public Set<String> getDefinedFilterNames() {
 		return unmodifiableSet( filters.keySet() );
 	}
 
 	@Override
+	public FetchProfile getFetchProfile(String name) {
+		return sqlTranslationEngine.getFetchProfile( name );
+	}
+
+	@Override
+	public boolean containsFetchProfileDefinition(String name) {
+		return sqlTranslationEngine.containsFetchProfileDefinition( name );
+	}
+
+	@Override
 	public Set<String> getDefinedFetchProfileNames() {
-		return unmodifiableSet( fetchProfiles.keySet() );
+		return sqlTranslationEngine.getDefinedFetchProfileNames();
 	}
 
 	@Override @Deprecated
@@ -1124,11 +1129,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 	@Override
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {
 		return sessionFactoryOptions.getEntityNotFoundDelegate();
-	}
-
-	@Override
-	public FetchProfile getFetchProfile(String name) {
-		return fetchProfiles.get( name );
 	}
 
 	/**

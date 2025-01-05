@@ -11,16 +11,31 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.sql.spi.SqlTranslationEngine;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.util.Map;
+import java.util.Set;
+
+import static java.util.Collections.unmodifiableSet;
+
 public class SqlTranslationEngineImpl implements SqlTranslationEngine {
 
 	//TODO: consider unifying with SqlStringGenerationContextImpl
 
 	private final SessionFactoryImplementor factory;
 	private final TypeConfiguration typeConfiguration;
+	private final Map<String, FetchProfile> fetchProfiles;
 
-	public SqlTranslationEngineImpl(SessionFactoryImplementor factory, TypeConfiguration typeConfiguration) {
+	public SqlTranslationEngineImpl(
+			SessionFactoryImplementor factory,
+			TypeConfiguration typeConfiguration,
+			Map<String, FetchProfile> fetchProfiles) {
 		this.factory = factory;
 		this.typeConfiguration = typeConfiguration;
+		this.fetchProfiles = fetchProfiles;
+	}
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return typeConfiguration;
 	}
 
 	@Override
@@ -50,11 +65,16 @@ public class SqlTranslationEngineImpl implements SqlTranslationEngine {
 
 	@Override
 	public FetchProfile getFetchProfile(String name) {
-		return factory.getFetchProfile( name );
+		return fetchProfiles.get( name );
 	}
 
 	@Override
-	public TypeConfiguration getTypeConfiguration() {
-		return typeConfiguration;
+	public boolean containsFetchProfileDefinition(String name) {
+		return fetchProfiles.containsKey( name );
+	}
+
+	@Override
+	public Set<String> getDefinedFetchProfileNames() {
+		return unmodifiableSet( fetchProfiles.keySet() );
 	}
 }

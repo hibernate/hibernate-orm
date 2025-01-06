@@ -147,28 +147,18 @@ public class ArrayJdbcType implements JdbcType {
 		//noinspection unchecked
 		final JavaType<T> javaType = (JavaType<T>) binder.getJavaType();
 		if ( elementJdbcType instanceof AggregateJdbcType ) {
-			final T[] domainObjects = (T[]) javaType.unwrap( value, Object[].class, options );
+			final Object[] domainObjects = javaType.unwrap( value, Object[].class, options );
 			final Object[] objects = new Object[domainObjects.length];
 			for ( int i = 0; i < domainObjects.length; i++ ) {
 				if ( domainObjects[i] != null ) {
-					objects[i] = elementBinder.getBindValue( domainObjects[i], options );
+					//noinspection unchecked
+					objects[i] = elementBinder.getBindValue( (T) domainObjects[i], options );
 				}
 			}
 			return objects;
 		}
 		else {
-			final TypeConfiguration typeConfiguration = options.getTypeConfiguration();
-			final JdbcType underlyingJdbcType =
-					typeConfiguration.getJdbcTypeRegistry().getDescriptor( elementJdbcType.getDefaultSqlTypeCode() );
-			final Class<?> preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( options );
-			final Class<?> elementJdbcJavaTypeClass =
-					preferredJavaTypeClass == null
-							? underlyingJdbcType.getJdbcRecommendedJavaTypeMapping(null, null, typeConfiguration )
-									.getJavaTypeClass()
-							: preferredJavaTypeClass;
-			final Class<? extends Object[]> arrayClass = (Class<? extends Object[]>)
-					Array.newInstance( elementJdbcJavaTypeClass, 0 ).getClass();
-			return javaType.unwrap( value, arrayClass, options );
+			return javaType.unwrap( value, Object[].class, options );
 		}
 	}
 

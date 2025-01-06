@@ -910,9 +910,7 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public String getIdentifierColumnName() {
-		return collectionSemantics.getCollectionClassification() == CollectionClassification.ID_BAG
-				? identifierColumnName
-				: null;
+		return hasId() ? identifierColumnName : null;
 	}
 
 	/**
@@ -975,7 +973,7 @@ public abstract class AbstractCollectionPersister
 				i++;
 			}
 		}
-		if ( collectionSemantics.getCollectionClassification() == CollectionClassification.ID_BAG ) {
+		if ( hasId() ) {
 			sqlSelections.set(
 					i,
 					new SqlSelectionImpl(
@@ -1061,6 +1059,10 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public boolean hasIndex() {
 		return collectionSemantics.getCollectionClassification().isIndexed();
+	}
+
+	private boolean hasId() {
+		return collectionSemantics.getCollectionClassification() == CollectionClassification.ID_BAG;
 	}
 
 	@Override
@@ -1394,7 +1396,7 @@ public abstract class AbstractCollectionPersister
 		if ( hasIndex() ) {
 			initCollectionPropertyMap( "index", indexType, indexColumnAliases );
 		}
-		if ( collectionSemantics.getCollectionClassification() == CollectionClassification.ID_BAG ) {
+		if ( hasId() ) {
 			initCollectionPropertyMap( "id", identifierType, new String[] { identifierColumnAlias } );
 		}
 	}
@@ -1856,21 +1858,11 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public String[] getIndexColumnAliases(String suffix) {
-		if ( hasIndex() ) {
-			return new Alias( suffix ).toAliasStrings( indexColumnAliases );
-		}
-		else {
-			return null;
-		}
+		return hasIndex() ? new Alias( suffix ).toAliasStrings( indexColumnAliases ) : null;
 	}
 
 	@Override
 	public String getIdentifierColumnAlias(String suffix) {
-		if ( collectionSemantics.getCollectionClassification() == CollectionClassification.ID_BAG ) {
-			return new Alias( suffix ).toAliasString( identifierColumnAlias );
-		}
-		else {
-			return null;
-		}
+		return hasId() ? new Alias( suffix ).toAliasString( identifierColumnAlias ) : null;
 	}
 }

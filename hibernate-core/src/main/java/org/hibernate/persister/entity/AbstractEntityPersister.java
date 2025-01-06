@@ -1446,9 +1446,9 @@ public abstract class AbstractEntityPersister
 			if ( type instanceof CollectionType collectionType ) {
 				// we have a condition where a collection attribute is being access via enhancement:
 				// 		we can circumvent all the rest and just return the PersistentCollection
-				final CollectionPersister persister = factory.getRuntimeMetamodels()
-						.getMappingMetamodel()
-						.getCollectionDescriptor( collectionType.getRole() );
+				final CollectionPersister persister =
+						factory.getMappingMetamodel()
+								.getCollectionDescriptor( collectionType.getRole() );
 
 				// Get/create the collection, and make sure it is initialized!  This initialized part is
 				// different from proxy-based scenarios where we have to create the PersistentCollection

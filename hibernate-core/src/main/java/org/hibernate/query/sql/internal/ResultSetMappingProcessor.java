@@ -449,8 +449,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 	}
 
 	private EntityPersister getSQLLoadable(String entityName) throws MappingException {
-		return factory.getRuntimeMetamodels().getMappingMetamodel()
-				.getEntityDescriptor( entityName );
+		return factory.getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
 	private String generateEntitySuffix() {
@@ -519,7 +518,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 	private void addCollection(String role, String alias, Map<String, String[]> propertyResults) {
 
 		final CollectionPersister collectionDescriptor =
-				factory.getRuntimeMetamodels().getMappingMetamodel()
+				factory.getMappingMetamodel()
 						.getCollectionDescriptor( role );
 
 		alias2CollectionPersister.put( alias, collectionDescriptor );

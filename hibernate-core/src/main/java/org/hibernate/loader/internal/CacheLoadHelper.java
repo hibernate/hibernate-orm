@@ -253,7 +253,7 @@ public class CacheLoadHelper {
 			EntityKey entityKey) {
 
 		final EntityPersister subclassPersister =
-				source.getFactory().getRuntimeMetamodels().getMappingMetamodel()
+				source.getFactory().getMappingMetamodel()
 						.getEntityDescriptor( entry.getSubclass() );
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		final EntityHolder oldHolder = persistenceContext.getEntityHolder( entityKey );

@@ -96,7 +96,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 		}
 
 		domainParameterXref.clearExpansions();
-		final MappingMetamodel domainModel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
+		final MappingMetamodel domainModel = sessionFactory.getMappingMetamodel();
 
 		final String mutatingEntityName = sqmUpdate.getTarget().getModel().getHibernateEntityName();
 		final EntityPersister entityDescriptor = domainModel.getEntityDescriptor( mutatingEntityName );

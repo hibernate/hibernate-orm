@@ -20,6 +20,7 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
@@ -157,9 +158,9 @@ public class Builders {
 			);
 		}
 
-		final RuntimeMetamodels runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
-		final String fullEntityName = runtimeMetamodels.getMappingMetamodel().getImportedName( entityName );
-		final EntityPersister entityMapping = runtimeMetamodels.getMappingMetamodel().findEntityDescriptor( fullEntityName );
+		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getMappingMetamodel();
+		final String fullEntityName = mappingMetamodel.getImportedName( entityName );
+		final EntityPersister entityMapping = mappingMetamodel.findEntityDescriptor( fullEntityName );
 		if ( entityMapping == null ) {
 			throw new IllegalArgumentException( "Could not locate entity mapping : " + fullEntityName );
 		}

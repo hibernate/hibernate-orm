@@ -392,7 +392,7 @@ public class DefaultCatalogAndSchemaTest {
 				.filter( p -> p.getMappedClass().equals( entityClass ) )
 				.findFirst()
 				.orElseThrow( () -> new IllegalStateException( "Cannot find persister for " + entityClass ) );
-		String jpaEntityName = sessionFactory.getRuntimeMetamodels().getJpaMetamodel().getEntities()
+		String jpaEntityName = sessionFactory.getJpaMetamodel().getEntities()
 				.stream()
 				.filter( p -> p.getBindableJavaType().equals( entityClass ) )
 				.findFirst()

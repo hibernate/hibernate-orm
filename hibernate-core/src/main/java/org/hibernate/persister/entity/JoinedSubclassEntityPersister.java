@@ -1134,7 +1134,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public void pruneForSubclasses(TableGroup tableGroup, Map<String, EntityNameUse> entityNameUses) {
 		final Set<TableReference> retainedTableReferences = new HashSet<>( entityNameUses.size() );
-		final MappingMetamodelImplementor metamodel = getFactory().getRuntimeMetamodels().getMappingMetamodel();
+		final MappingMetamodelImplementor metamodel = getFactory().getMappingMetamodel();
 		// We can only do this optimization if the table group reports canUseInnerJoins or isRealTableGroup,
 		// because the switch for table reference joins to INNER must be cardinality preserving.
 		// If canUseInnerJoins is true, this is trivially given, but also if the table group is real

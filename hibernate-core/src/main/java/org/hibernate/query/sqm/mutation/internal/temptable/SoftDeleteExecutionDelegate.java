@@ -86,10 +86,9 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 	@Override
 	public int execute(DomainQueryExecutionContext domainQueryExecutionContext) {
 		final String targetEntityName = getSqmDelete().getTarget().getEntityName();
-		final EntityPersister targetEntityDescriptor = getSessionFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( targetEntityName );
+		final EntityPersister targetEntityDescriptor =
+				getSessionFactory().getMappingMetamodel()
+						.getEntityDescriptor( targetEntityName );
 
 		final EntityMappingType rootEntityDescriptor = targetEntityDescriptor.getRootEntityDescriptor();
 

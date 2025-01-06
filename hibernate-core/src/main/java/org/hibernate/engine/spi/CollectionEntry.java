@@ -281,7 +281,7 @@ public final class CollectionEntry implements Serializable {
 
 	void afterDeserialize(@Nullable SessionFactoryImplementor factory) {
 		loadedPersister = factory == null ? null
-				: factory.getRuntimeMetamodels().getMappingMetamodel()
+				: factory.getMappingMetamodel()
 						.getCollectionDescriptor( castNonNull( role ) );
 	}
 

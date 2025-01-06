@@ -769,9 +769,9 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> addSynchronizedEntityName(String entityName) {
-		final EntityPersister entityDescriptor = getSession().getFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
+		final EntityPersister entityDescriptor =
+				getSession().getFactory().getMappingMetamodel()
+						.getEntityDescriptor( entityName );
 		addSynchronizedQuerySpaces( entityDescriptor );
 		return this;
 	}
@@ -782,9 +782,9 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) {
-		final EntityPersister entityDescriptor = getSession().getFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityClass );
+		final EntityPersister entityDescriptor =
+				getSession().getFactory().getMappingMetamodel()
+						.getEntityDescriptor( entityClass );
 		addSynchronizedQuerySpaces( entityDescriptor );
 		return this;
 	}

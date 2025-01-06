@@ -37,7 +37,6 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -227,10 +226,9 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public boolean containsEntity(String entityName, Object identifier) {
-		final EntityPersister entityDescriptor = sessionFactory
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
+		final EntityPersister entityDescriptor =
+				sessionFactory.getMappingMetamodel()
+						.getEntityDescriptor( entityName );
 		final EntityDataAccess cacheAccess = entityDescriptor.getCacheAccessStrategy();
 		if ( cacheAccess == null ) {
 			return false;
@@ -256,10 +254,9 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public void evictEntityData(String entityName, Object identifier) {
-		final EntityPersister entityDescriptor = sessionFactory
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
+		final EntityPersister entityDescriptor =
+				sessionFactory.getMappingMetamodel()
+						.getEntityDescriptor( entityName );
 		final EntityDataAccess cacheAccess = entityDescriptor.getCacheAccessStrategy();
 		if ( cacheAccess == null ) {
 			return;
@@ -283,10 +280,9 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public void evictEntityData(String entityName) {
-		final EntityPersister entityDescriptor = sessionFactory
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
+		final EntityPersister entityDescriptor =
+				sessionFactory.getMappingMetamodel()
+						.getEntityDescriptor( entityName );
 		evictEntityData( entityDescriptor );
 	}
 
@@ -317,10 +313,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public void evictEntityData() {
-		final MappingMetamodelImplementor mappingMetamodel = sessionFactory
-				.getRuntimeMetamodels()
-				.getMappingMetamodel();
-		mappingMetamodel.forEachEntityDescriptor( this::evictEntityData );
+		sessionFactory.getMappingMetamodel().forEachEntityDescriptor( this::evictEntityData );
 	}
 
 
@@ -335,10 +328,9 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public void evictNaturalIdData(String entityName) {
-		final EntityPersister entityDescriptor = sessionFactory
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
+		final EntityPersister entityDescriptor =
+				sessionFactory.getMappingMetamodel()
+						.getEntityDescriptor( entityName );
 		evictNaturalIdData( entityDescriptor );
 	}
 
@@ -371,10 +363,9 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	@Override
 	public boolean containsCollection(String role, Object ownerIdentifier) {
 
-		final CollectionPersister collectionDescriptor = sessionFactory
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getCollectionDescriptor( role );
+		final CollectionPersister collectionDescriptor =
+				sessionFactory.getMappingMetamodel()
+						.getCollectionDescriptor( role );
 
 		final CollectionDataAccess cacheAccess = collectionDescriptor.getCacheAccessStrategy();
 		if ( cacheAccess == null ) {
@@ -387,10 +378,9 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public void evictCollectionData(String role, Object ownerIdentifier) {
-		final CollectionPersister collectionDescriptor = sessionFactory
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getCollectionDescriptor( role );
+		final CollectionPersister collectionDescriptor =
+				sessionFactory.getMappingMetamodel()
+						.getCollectionDescriptor( role );
 
 		final CollectionDataAccess cacheAccess = collectionDescriptor.getCacheAccessStrategy();
 		if ( cacheAccess == null ) {
@@ -410,10 +400,9 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public void evictCollectionData(String role) {
-		final CollectionPersister collectionDescriptor = sessionFactory
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getCollectionDescriptor( role );
+		final CollectionPersister collectionDescriptor =
+				sessionFactory.getMappingMetamodel()
+						.getCollectionDescriptor( role );
 
 		evictCollectionData( collectionDescriptor );
 	}

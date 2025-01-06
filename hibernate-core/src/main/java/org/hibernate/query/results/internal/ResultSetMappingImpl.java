@@ -169,9 +169,9 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			return;
 		}
 
-		final EntityPersister entityDescriptor = sessionFactory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.findEntityDescriptor( mappingIdentifier );
+		final EntityPersister entityDescriptor =
+				sessionFactory.getMappingMetamodel()
+						.findEntityDescriptor( mappingIdentifier );
 		if ( entityDescriptor == null ) {
 			return;
 		}

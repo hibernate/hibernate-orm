@@ -51,7 +51,7 @@ public class EntityNonEntityTest extends BaseCoreFunctionalTestCase {
 	public void testGetAndFindNonEntityThrowsIllegalArgumentException() {
 		try {
 			sessionFactory().getMappingMetamodel().findEntityDescriptor(Cellular.class);
-			sessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( Cellular.class );
+			sessionFactory().getMappingMetamodel().getEntityDescriptor( Cellular.class );
 
 		}
 		catch (UnknownEntityTypeException ignore) {

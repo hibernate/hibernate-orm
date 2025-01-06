@@ -901,6 +901,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return a persistent instance or null
 	 *
 	 * @deprecated The semantics of this method may change in a future release.
+	 *             Use {@link SessionFactory#createGraphForDynamicEntity(String)}
+	 *             together with {@link #find(EntityGraph, Object, FindOption...)}
+	 *             to load {@link org.hibernate.metamodel.RepresentationMode#MAP
+	 *             dynamic entities}.
+	 *
+	 * @see SessionFactory#createGraphForDynamicEntity(String)
+	 * @see #find(EntityGraph, Object, FindOption...)
 	 */
 	@Deprecated(since = "7")
 	Object get(String entityName, Object id);

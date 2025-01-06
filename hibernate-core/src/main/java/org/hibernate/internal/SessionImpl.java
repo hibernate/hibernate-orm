@@ -27,8 +27,8 @@ import jakarta.persistence.Timeout;
 import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
-import org.hibernate.EntityFilterException;
 import org.hibernate.EnabledFetchProfile;
+import org.hibernate.EntityFilterException;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -106,6 +106,7 @@ import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEvent;
 import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.loader.internal.CacheLoadHelper;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
@@ -961,8 +962,7 @@ public class SessionImpl
 		fireLoad( new LoadEvent( id, object, this, getReadOnlyFromLoadQueryInfluencers() ), LoadEventListener.RELOAD );
 	}
 
-	private <T> MultiIdentifierLoadAccess<T> multiloadAccessWithOptions(Class<T> entityClass, FindOption[] options) {
-		final MultiIdentifierLoadAccess<T> loadAccess = byMultipleIds( entityClass );
+	private <T> void setMultiIdentifierLoadAccessOptions(FindOption[] options, MultiIdentifierLoadAccess<T> loadAccess) {
 		CacheStoreMode storeMode = getCacheStoreMode();
 		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
 		LockOptions lockOptions = copySessionLockOptions();
@@ -1006,12 +1006,13 @@ public class SessionImpl
 		loadAccess.with( lockOptions )
 				.with( interpretCacheMode( storeMode, retrieveMode ) )
 				.withBatchSize( batchSize );
-		return loadAccess;
 	}
 
 	@Override
 	public <E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options) {
-		return multiloadAccessWithOptions( entityType, options ).multiLoad( ids );
+		final MultiIdentifierLoadAccess<E> loadAccess = byMultipleIds( entityType );
+		setMultiIdentifierLoadAccessOptions( options, loadAccess );
+		return loadAccess.multiLoad( ids );
 	}
 
 	@Override
@@ -2498,8 +2499,7 @@ public class SessionImpl
 		}
 	}
 
-	private <T> IdentifierLoadAccessImpl<T> loadAccessWithOptions(Class<T> entityClass, FindOption[] options) {
-		final IdentifierLoadAccessImpl<T> loadAccess = byId( entityClass );
+	private <T> void setLoadAccessOptions(FindOption[] options, IdentifierLoadAccessImpl<T> loadAccess) {
 		CacheStoreMode storeMode = getCacheStoreMode();
 		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
 		LockOptions lockOptions = copySessionLockOptions();
@@ -2537,19 +2537,26 @@ public class SessionImpl
 			}
 		}
 		loadAccess.with( lockOptions ).with( interpretCacheMode( storeMode, retrieveMode ) );
-		return loadAccess;
 	}
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey, FindOption... options) {
-		return loadAccessWithOptions( entityClass, options ).load( primaryKey );
+		final IdentifierLoadAccessImpl<T> loadAccess = byId( entityClass );
+		setLoadAccessOptions( options, loadAccess );
+		return loadAccess.load( primaryKey );
 	}
 
 	@Override
 	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
 		final RootGraph<T> graph = (RootGraph<T>) entityGraph;
-		final Class<T> entityClass = graph.getGraphedType().getJavaType();
-		return loadAccessWithOptions( entityClass, options ).withLoadGraph( graph ).load( primaryKey );
+		final ManagedDomainType<T> type = graph.getGraphedType();
+		final IdentifierLoadAccessImpl<T> loadAccess =
+				switch ( type.getRepresentationMode() ) {
+					case MAP -> byId( type.getTypeName() );
+					case POJO -> byId( type.getJavaType() );
+				};
+		setLoadAccessOptions( options, loadAccess );
+		return loadAccess.withLoadGraph( graph ).load( primaryKey );
 	}
 
 	private void checkTransactionNeededForLock(LockMode lockMode) {

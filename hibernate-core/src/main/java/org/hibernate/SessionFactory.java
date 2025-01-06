@@ -14,6 +14,7 @@ import java.util.function.Function;
 import javax.naming.Referenceable;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.FindOption;
 import jakarta.persistence.SynchronizationType;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -412,6 +413,27 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @see #addNamedEntityGraph
 	 */
 	RootGraph<?> findEntityGraphByName(String name);
+
+	/**
+	 * Create an {@link EntityGraph} which may be used from loading a
+	 * {@linkplain org.hibernate.metamodel.RepresentationMode#MAP dynamic}
+	 * entity with {@link Session#find(EntityGraph, Object, FindOption...)}.
+	 * <p>
+	 * This allows a dynamic entity to be loaded without the need for a cast.
+	 * <pre>
+	 * var MyDynamicEntity_ = factory.createGraphForDynamicEntity("MyDynamicEntity");
+	 * Map&lt;String,?&gt; myDynamicEntity = session.find(MyDynamicEntity_, id);
+	 * </pre>
+	 *
+	 * @apiNote Dynamic entities are normally defined using XML mappings.
+	 *
+	 * @param entityName The name of the dynamic entity
+	 *
+	 * @since 7.0
+	 *
+	 * @see Session#find(EntityGraph, Object, FindOption...)
+	 */
+	RootGraph<Map<String,?>> createGraphForDynamicEntity(String entityName);
 
 	/**
 	 * Obtain the set of names of all {@link org.hibernate.annotations.FilterDef

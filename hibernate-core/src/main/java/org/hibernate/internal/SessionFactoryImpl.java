@@ -72,6 +72,8 @@ import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.generator.Generator;
+import org.hibernate.graph.RootGraph;
+import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
@@ -82,8 +84,10 @@ import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -722,6 +726,17 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public boolean isOpen() {
 		return status != Status.CLOSED;
+	}
+
+	@Override
+	public RootGraph<Map<String, ?>> createGraphForDynamicEntity(String entityName) {
+		final EntityDomainType<?> entity = getJpaMetamodel().entity( entityName );
+		if ( entity.getRepresentationMode() != RepresentationMode.MAP ) {
+			throw new IllegalArgumentException( "Entity '" + entityName + "' is not a dynamic entity" );
+		}
+		@SuppressWarnings("unchecked") //Safe, because we just checked
+		final EntityDomainType<Map<String, ?>> dynamicEntity = (EntityDomainType<Map<String, ?>>) entity;
+		return new RootGraphImpl<>( null, dynamicEntity );
 	}
 
 	@Override

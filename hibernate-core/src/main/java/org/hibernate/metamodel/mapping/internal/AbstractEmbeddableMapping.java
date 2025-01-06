@@ -309,8 +309,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					if ( selectable.isFormula() ) {
 						columnExpression = selectable.getTemplate(
 								dialect,
-								creationProcess.getCreationContext().getTypeConfiguration(),
-								creationProcess.getSqmFunctionRegistry()
+								creationProcess.getCreationContext().getTypeConfiguration()
 						);
 					}
 					else {

@@ -453,8 +453,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					if ( selectable.isFormula() ) {
 						columnExpression = selectable.getTemplate(
 								dialect,
-								creationProcess.getCreationContext().getTypeConfiguration(),
-								creationProcess.getSqmFunctionRegistry()
+								creationProcess.getCreationContext().getTypeConfiguration()
 						);
 					}
 					else {
@@ -726,8 +725,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			final Formula formula = (Formula) selectable;
 			discriminatorColumnExpression = name = formula.getTemplate(
 					creationContext.getDialect(),
-					creationContext.getTypeConfiguration(),
-					creationContext.getFunctionRegistry()
+					creationContext.getTypeConfiguration()
 			);
 			columnDefinition = null;
 			length = null;

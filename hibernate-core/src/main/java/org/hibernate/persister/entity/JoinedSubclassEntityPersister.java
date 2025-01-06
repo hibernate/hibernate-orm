@@ -46,7 +46,6 @@ import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappin
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -164,7 +163,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
 		final Dialect dialect = creationContext.getDialect();
-		final SqmFunctionRegistry functionRegistry = creationContext.getFunctionRegistry();
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 
@@ -237,7 +235,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				final Column column = columns.get(k);
 				keyCols[k] = column.getQuotedName( dialect );
 				keyColReaders[k] = column.getReadExpr( dialect );
-				keyColReaderTemplates[k] = column.getTemplate( dialect, typeConfiguration, functionRegistry );
+				keyColReaderTemplates[k] = column.getTemplate( dialect, typeConfiguration );
 			}
 			keyColumns.add( keyCols );
 			keyColumnReaders.add( keyColReaders );
@@ -273,7 +271,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				final Column column = columns.get(k);
 				keyCols[k] = column.getQuotedName( dialect );
 				keyColReaders[k] = column.getReadExpr( dialect );
-				keyColReaderTemplates[k] = column.getTemplate( dialect, typeConfiguration, functionRegistry );
+				keyColReaderTemplates[k] = column.getTemplate( dialect, typeConfiguration );
 			}
 			keyColumns.add( keyCols );
 			keyColumnReaders.add( keyColReaders );

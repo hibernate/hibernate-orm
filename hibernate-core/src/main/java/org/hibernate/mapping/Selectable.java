@@ -7,7 +7,6 @@ package org.hibernate.mapping;
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -61,7 +60,7 @@ public sealed interface Selectable permits Column, Formula {
 	@Deprecated(since = "6.0")
 	String getAlias(Dialect dialect, Table table);
 
-	String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration, SqmFunctionRegistry functionRegistry);
+	String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration);
 
 	@Incubating
 	default String getWriteExpr() {

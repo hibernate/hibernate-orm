@@ -29,7 +29,6 @@ import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
 import org.hibernate.type.CollectionType;
@@ -1019,7 +1018,6 @@ public abstract sealed class PersistentClass
 			// in SQL formulas
 			final Dialect dialect = context.getDialect();
 			final TypeConfiguration types = context.getTypeConfiguration();
-			final SqmFunctionRegistry functions = context.getFunctionRegistry();
 
 			// now, move @Formulas to the correct AttributeContainers
 			//TODO: skip this step for hbm.xml
@@ -1028,7 +1026,7 @@ public abstract sealed class PersistentClass
 					if ( selectable.isFormula() && properties.contains( property ) ) {
 						final Formula formula = (Formula) selectable;
 						final AttributeContainer container =
-								container( collectColumnNames( formula.getTemplate( dialect, types, functions ) ) );
+								container( collectColumnNames( formula.getTemplate( dialect, types ) ) );
 						if ( !container.contains( property ) ) {
 							properties.remove( property );
 							container.addProperty( property );

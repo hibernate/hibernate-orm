@@ -32,7 +32,6 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
@@ -117,7 +116,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
 		final Dialect dialect = creationContext.getDialect();
-		final SqmFunctionRegistry functionRegistry = creationContext.getFunctionRegistry();
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 
 		// CLASS + TABLE
@@ -253,7 +251,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			discriminatorInsertable = isDiscriminatorInsertable( persistentClass );
 			if ( discriminator.hasFormula() ) {
 				final Formula formula = (Formula) selectable;
-				discriminatorFormulaTemplate = formula.getTemplate( dialect, typeConfiguration, functionRegistry );
+				discriminatorFormulaTemplate = formula.getTemplate( dialect, typeConfiguration );
 				discriminatorColumnName = null;
 				discriminatorColumnReaders = null;
 				discriminatorColumnReaderTemplate = null;
@@ -263,7 +261,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				final Column column = (Column) selectable;
 				discriminatorColumnName = column.getQuotedName( dialect );
 				discriminatorColumnReaders = column.getReadExpr( dialect );
-				discriminatorColumnReaderTemplate = column.getTemplate( dialect, typeConfiguration, functionRegistry );
+				discriminatorColumnReaderTemplate = column.getTemplate( dialect, typeConfiguration );
 				discriminatorAlias = column.getAlias( dialect, persistentClass.getRootTable() );
 				discriminatorFormulaTemplate = null;
 			}

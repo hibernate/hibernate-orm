@@ -21,7 +21,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.Template;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
@@ -622,7 +621,7 @@ public sealed class Column
 	}
 
 	@Override
-	public String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration, SqmFunctionRegistry registry) {
+	public String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration) {
 		return safeInterning(
 				hasCustomRead()
 					// see note in renderTransformerReadFragment wrt access to SessionFactory

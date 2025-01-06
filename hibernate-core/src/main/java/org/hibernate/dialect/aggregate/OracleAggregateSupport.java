@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -98,8 +99,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				return V21_INSTANCE;
 		}
 		return version.isSameOrAfter( 23 )
-				? useDateStoredAsString?OracleAggregateSupport.V23_INSTANCE:
-				OracleAggregateSupport.V23_OSON_EXT_INSTANCE
+				?  useDateStoredAsString ? OracleAggregateSupport.V23_INSTANCE: OracleAggregateSupport.V23_OSON_EXT_INSTANCE
 				: OracleAggregateSupport.LEGACY_INSTANCE;
 	}
 
@@ -150,10 +150,22 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							case BIGINT:
 							case CLOB:
 							case NCLOB:
-								return template.replace(
-										placeholder,
-										"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getColumnDefinition() + ')'
-								);
+								CastType castType = column.getJdbcMapping().getCastType();
+								switch ( castType ) {
+									case INTEGER_BOOLEAN:
+										if (!dateTypesStoreAsString) {
+											return template.replace(
+													placeholder,
+													"decode(json_value(" + parentPartExpression + columnExpression + "'),'true',1,'false',0,null)"
+											);
+										}
+									default:
+										return template.replace(
+												placeholder,
+												"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getColumnDefinition() + ')'
+										);
+								}
+
 							case DATE:
 								if (this.dateTypesStoreAsString) {
 									return template.replace(
@@ -255,10 +267,22 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 										"json_query(" + parentPartExpression + columnExpression + "' returning " + jsonTypeName + ")"
 								);
 							default:
-								return template.replace(
-										placeholder,
-										"cast(json_value(" + parentPartExpression + columnExpression + "') as " + column.getColumnDefinition() + ')'
-								);
+								CastType castTypeCharBoolean = column.getJdbcMapping().getCastType();
+								switch ( castTypeCharBoolean ){
+									case YN_BOOLEAN:
+										if (!dateTypesStoreAsString) {
+											return template.replace(
+													placeholder,
+													"decode(json_value(" + parentPartExpression + columnExpression + "'),'true','Y','false','N',null)"
+											);
+										}
+									default:
+										return template.replace(
+												placeholder,
+												"cast(json_value(" + parentPartExpression + columnExpression + "') as " + column.getColumnDefinition() + ')'
+										);
+								}
+
 						}
 					case NONE:
 						throw new UnsupportedOperationException( "The Oracle version doesn't support JSON aggregates!" );

@@ -86,6 +86,9 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 				//     But this do not let use inject our ObjectMapper. For now create our own instance
 				FormatMapper mapper = new JacksonOsonFormatMapper(objectMapper,getEmbeddableMappingType());
 
+				if(getEmbeddableMappingType()!= null) {
+					return ((JacksonOsonFormatMapper)mapper).toOson(value,javaType,options);
+				}
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				JsonGenerator osonGen = objectMapper.getFactory().createGenerator( out );
 				mapper.writeToTarget( value, javaType, osonGen, options );

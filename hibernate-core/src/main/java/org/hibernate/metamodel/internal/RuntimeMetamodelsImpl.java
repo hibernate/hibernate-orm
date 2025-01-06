@@ -9,16 +9,24 @@ import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
 public class RuntimeMetamodelsImpl implements RuntimeMetamodelsImplementor {
 
+	private final TypeConfiguration typeConfiguration;
 	private JpaMetamodelImplementor jpaMetamodel;
 	private MappingMetamodelImplementor mappingMetamodel;
 
-	public RuntimeMetamodelsImpl() {
+	public RuntimeMetamodelsImpl(TypeConfiguration typeConfiguration) {
+		this.typeConfiguration = typeConfiguration;
+	}
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return typeConfiguration;
 	}
 
 	@Override

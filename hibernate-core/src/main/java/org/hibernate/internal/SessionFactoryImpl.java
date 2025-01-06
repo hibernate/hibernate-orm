@@ -25,7 +25,6 @@ import java.util.function.Supplier;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
@@ -90,17 +89,11 @@ import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.query.BindingContext;
-import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.internal.QueryEngineImpl;
-import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.internal.SqlTranslationEngineImpl;
-import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sql.spi.SqlTranslationEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -167,7 +160,7 @@ import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DEL
  * @author Steve Ebersole
  * @author Chris Cranford
  */
-public class SessionFactoryImpl implements SessionFactoryImplementor, BindingContext {
+public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryImpl.class );
 
 	private final String name;
@@ -290,21 +283,26 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 
 			primeSecondLevelCacheRegions( bootMetamodel );
 
-			// we build this before creating the runtime metamodel
+			// create the empty runtime metamodels object
+			final RuntimeMetamodelsImpl runtimeMetamodelsImpl = new RuntimeMetamodelsImpl( typeConfiguration );
+			runtimeMetamodels = runtimeMetamodelsImpl;
+
+			// we build this before creating the runtime metamodels
 			// because the persisters need the SqmFunctionRegistry
-			// to translate SQL formulas ... but, if we fix Dialect
+			// to translate SQL formulas. But, if we fix Dialect
 			// as I proposed, so that it can contribute functions
 			// to the SqmFunctionRegistry before the QueryEngine is
 			// created, then we can split creation of QueryEngine
 			// and SqmFunctionRegistry, instantiating just the
-			// registry here, and doing the engine later
-			queryEngine = new QueryEngineImpl( bootMetamodel, options, this, serviceRegistry, settings, name );
+			// registry here, and doing the engine later, and we
+			// can thus untie this nasty little knot. Alternatively,
+			// perhaps it's not really appropriate that they use the
+			// SqmFunctionRegistry for that purpose at all?
+			queryEngine = new QueryEngineImpl( bootMetamodel, options, runtimeMetamodels, serviceRegistry, settings, name );
 			final Map<String, FetchProfile> fetchProfiles = new HashMap<>();
 			sqlTranslationEngine = new SqlTranslationEngineImpl( this, typeConfiguration, fetchProfiles );
 
-			// create runtime metamodels (mapping and JPA)
-			final RuntimeMetamodelsImpl runtimeMetamodelsImpl = new RuntimeMetamodelsImpl();
-			runtimeMetamodels = runtimeMetamodelsImpl;
+			// now actually create the mapping and JPA metamodels
 			final MappingMetamodelImpl mappingMetamodelImpl = new MappingMetamodelImpl( typeConfiguration, serviceRegistry );
 			runtimeMetamodelsImpl.setMappingMetamodel( mappingMetamodelImpl );
 			mappingMetamodelImpl.finishInitialization(
@@ -478,10 +476,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 	private void primeSecondLevelCacheRegions(MetadataImplementor mappingMetadata) {
 		final Map<String, DomainDataRegionConfigImpl.Builder> regionConfigBuilders = new ConcurrentHashMap<>();
 
-		// todo : ultimately this code can be made more efficient when we have a better intrinsic understanding of the hierarchy as a whole
+		// TODO: ultimately this code can be made more efficient when we have
+		//       a better intrinsic understanding of the hierarchy as a whole
 
 		for ( PersistentClass bootEntityDescriptor : mappingMetadata.getEntityBindings() ) {
-			final AccessType accessType = AccessType.fromExternalName( bootEntityDescriptor.getCacheConcurrencyStrategy() );
+			final AccessType accessType =
+					AccessType.fromExternalName( bootEntityDescriptor.getCacheConcurrencyStrategy() );
 
 			if ( accessType != null ) {
 				if ( bootEntityDescriptor.isCached() ) {
@@ -530,29 +530,25 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 	}
 
 	@Override
-	public SessionImplementor openSession() throws HibernateException {
-		//The defaultSessionOpenOptions can't be used in some cases; for example when using a TenantIdentifierResolver.
-		if ( defaultSessionOpenOptions != null ) {
-			return defaultSessionOpenOptions.openSession();
-		}
-		else {
-			return withOptions().openSession();
-		}
+	public SessionImplementor openSession() {
+		// The defaultSessionOpenOptions can't be used in some cases;
+		// for example when using a TenantIdentifierResolver.
+		return defaultSessionOpenOptions != null
+				? defaultSessionOpenOptions.openSession()
+				: withOptions().openSession();
 	}
 
 	@Override
-	public SessionImpl openTemporarySession() throws HibernateException {
-		//The temporarySessionOpenOptions can't be used in some cases; for example when using a TenantIdentifierResolver.
-		if ( temporarySessionOpenOptions != null ) {
-			return temporarySessionOpenOptions.openSession();
-		}
-		else {
-			return buildTemporarySessionOpenOptions().openSession();
-		}
+	public SessionImpl openTemporarySession() {
+		// The temporarySessionOpenOptions can't be used in some cases;
+		// for example when using a TenantIdentifierResolver.
+		return temporarySessionOpenOptions != null
+				? temporarySessionOpenOptions.openSession()
+				: buildTemporarySessionOpenOptions().openSession();
 	}
 
 	@Override
-	public Session getCurrentSession() throws HibernateException {
+	public Session getCurrentSession() {
 		if ( currentSessionContext == null ) {
 			throw new HibernateException( "No CurrentSessionContext configured" );
 		}
@@ -791,7 +787,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 	 * collector release the memory.
 	 */
 	@Override
-	public void close() throws HibernateException {
+	public void close() {
 		synchronized (this) {
 			if ( status != Status.OPEN ) {
 				if ( getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
@@ -871,58 +867,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 	@Override
 	public void addNamedQuery(String name, Query query) {
 		validateNotClosed();
-
-		// NOTE : we use Query#unwrap here (rather than direct type checking)
-		//        to account for possibly wrapped query implementations
-
-		// first, handle StoredProcedureQuery
-		final NamedObjectRepository namedObjectRepository = getQueryEngine().getNamedObjectRepository();
-		try {
-			final ProcedureCallImplementor<?> unwrapped = query.unwrap( ProcedureCallImplementor.class );
-			if ( unwrapped != null ) {
-				namedObjectRepository.registerCallableQueryMemento( name, unwrapped.toMemento( name ) );
-				return;
-			}
-		}
-		catch ( PersistenceException ignore ) {
-			// this means 'query' is not a ProcedureCallImplementor
-		}
-
-		// then try as a native-SQL or JPQL query
-		try {
-			final QueryImplementor<?> queryImplementor = query.unwrap( QueryImplementor.class );
-			if ( queryImplementor != null ) {
-				// create and register the proper NamedQueryDefinition...
-				if ( queryImplementor instanceof NativeQueryImplementor<?> nativeQueryImplementor ) {
-					namedObjectRepository.registerNativeQueryMemento(
-							name,
-							nativeQueryImplementor.toMemento( name )
-					);
-
-				}
-				else if ( queryImplementor instanceof SqmQueryImplementor<?> sqmQueryImplementor ) {
-					namedObjectRepository.registerSqmQueryMemento(
-							name,
-							sqmQueryImplementor.toMemento( name )
-					);
-				}
-				else {
-					throw new AssertionFailure("unknown QueryImplementor");
-				}
-				return;
-			}
-		}
-		catch ( PersistenceException ignore ) {
-			// this means 'query' is not a native-SQL or JPQL query
-		}
-
-		// if we get here, we are unsure how to properly unwrap the incoming query to extract the needed information
-		throw new PersistenceException(
-				String.format(
-						"Unsure how to properly unwrap given Query [%s] as basis for named query",
-						query
-				)
-		);
+		getQueryEngine().getNamedObjectRepository().registerNamedQuery( name, query );
 	}
 
 	@Override
@@ -1001,7 +946,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 		return statistics;
 	}
 
-	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {
+	public FilterDefinition getFilterDefinition(String filterName) {
 		final FilterDefinition filterDefinition = filters.get( filterName );
 		if ( filterDefinition == null ) {
 			throw new UnknownFilterException( filterName );

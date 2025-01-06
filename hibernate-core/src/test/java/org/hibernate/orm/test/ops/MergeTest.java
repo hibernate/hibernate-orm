@@ -623,7 +623,7 @@ public class MergeTest extends AbstractOperationTestCase {
 					session.getTransaction().commit();
 
 					assertInsertCount( 1, scope );
-					assertUpdateCount( 0, scope );
+					assertUpdateCount( 1, scope );
 
 					assertThat( root.getChildren().size(), is( 1 ) );
 					assertTrue( root.getChildren().contains( mergedChild ) );

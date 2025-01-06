@@ -35,26 +35,30 @@ public class CommentBinder implements AttributeBinder<Comment>, TypeBinder<Comme
 					+ "' was annotated '@Comment'");
 		}
 		else if ( value instanceof Collection collection ) {
-			Table table = collection.getTable();
+			Table table = collection.getCollectionTable();
 			// by default, the comment goes on the table
 			if ( on.isEmpty() || table.getName().equalsIgnoreCase( on ) ) {
 				table.setComment( text );
 			}
-			// but if 'on' is explicit, it can go on a column
-			Value element = collection.getElement();
-			for ( Column column : element.getColumns() ) {
-				if ( column.getName().equalsIgnoreCase( on ) ) {
-					column.setComment( text );
+			else {
+				// but if 'on' is explicit, it can go on a column
+				for ( Column column : table.getColumns() ) {
+					if ( column.getName().equalsIgnoreCase( on ) ) {
+						column.setComment( text );
+						return;
+					}
 				}
+				throw new AnnotationException( "No matching column for '@Comment(on=\"" + on + "\")'" );
 			}
-			//TODO: list index / map key columns
 		}
 		else {
 			for ( Column column : value.getColumns() ) {
 				if ( on.isEmpty() || column.getName().equalsIgnoreCase( on ) ) {
 					column.setComment( text );
+					return;
 				}
 			}
+			throw new AnnotationException( "No matching column for '@Comment(on=\"" + on + "\")'" );
 		}
 	}
 
@@ -67,12 +71,16 @@ public class CommentBinder implements AttributeBinder<Comment>, TypeBinder<Comme
 		if ( on.isEmpty() || primary.getName().equalsIgnoreCase( on ) ) {
 			primary.setComment( text );
 		}
-		// but if 'on' is explicit, it can go on a secondary table
-		for ( Join join : entity.getJoins() ) {
-			Table secondary = join.getTable();
-			if ( secondary.getName().equalsIgnoreCase( on ) ) {
-				secondary.setComment( text );
+		else {
+			// but if 'on' is explicit, it can go on a secondary table
+			for ( Join join : entity.getJoins() ) {
+				Table secondary = join.getTable();
+				if ( secondary.getName().equalsIgnoreCase( on ) ) {
+					secondary.setComment( text );
+					return;
+				}
 			}
+			throw new AnnotationException( "No matching column for '@Comment(on=\"" + on + "\")'" );
 		}
 	}
 

@@ -23,10 +23,14 @@ import oracle.sql.json.OracleJsonGenerator;
 import oracle.sql.json.OracleJsonParser;
 import oracle.sql.json.OracleJsonTimestamp;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.format.JsonDocumentHandler;
 
 import java.io.ByteArrayOutputStream;
@@ -36,6 +40,16 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+
+import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.UUID;
 
 
 /**
@@ -47,6 +61,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 	public static final String SHORT_NAME = "jackson";
 
 	private  ObjectMapper objectMapper;
+	private EmbeddableMappingType embeddableMappingType;
 
 	// fields/Methods to retrieve serializer data
 
@@ -195,15 +210,15 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 	}
 
 
-	public <X>byte[] toOson(X value, JavaType<X> javaType, WrapperOptions options) {
+	public <X>byte[] toOson(X value, JavaType<X> javaType, WrapperOptions options,EmbeddableMappingType embeddableMappingType) {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		OracleJsonGenerator generator = new OracleJsonFactory().createJsonBinaryGenerator( out );
-		serializetoOsonApproach2( value,generator,javaType,options);
+		serializetoOsonApproach2( value,generator,javaType,options,embeddableMappingType);
 		generator.close();
 		return out.toByteArray();
 	}
 
-	private <X> void serializetoOsonApproach2(X value, OracleJsonGenerator generator, JavaType<X> javaType, WrapperOptions options) {
+	private <X> void serializetoOsonApproach2(X value, OracleJsonGenerator generator, JavaType<X> javaType, WrapperOptions options, EmbeddableMappingType embeddableMappingType) {
 		generator.writeStartObject();
 		serializetoOsonApproach2Util( value, generator, javaType, options,embeddableMappingType );
 		generator.writeEnd();
@@ -562,11 +577,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 	public void setJacksonObjectMapper(ObjectMapper objectMapper, EmbeddableMappingType embeddableMappingType) {
 		this.objectMapper = objectMapper;
 
-		// need this until annotation introspector is removed.
-		if (embeddableMappingType != null) {
-			this.objectMapper.setAnnotationIntrospector(
-					new JacksonJakartaAnnotationIntrospector( embeddableMappingType ) );
-		}
+		this.embeddableMappingType = embeddableMappingType;
 
 	}
 

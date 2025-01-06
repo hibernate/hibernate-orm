@@ -151,11 +151,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 			if ( subColumn.getCustomReadExpression() == null ) {
 				if ( subColumn.isFormula() ) {
 					customReadExpression = aggregateSupport.aggregateComponentCustomReadExpression(
-							subColumn.getTemplate(
-									dialect,
-									typeConfiguration,
-									null
-							),
+							subColumn.getTemplate( dialect, typeConfiguration ),
 							Template.TEMPLATE + ".",
 							aggregateReadTemplate,
 							"",

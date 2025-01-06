@@ -172,7 +172,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		final boolean isLob;
 		final boolean isNullable;
 		if ( selectable.isFormula() ) {
-			columnExpression = selectable.getTemplate( dialect, typeConfiguration, sqmFunctionRegistry );
+			columnExpression = selectable.getTemplate( dialect, typeConfiguration );
 			columnDefinition = null;
 			length = null;
 			precision = null;

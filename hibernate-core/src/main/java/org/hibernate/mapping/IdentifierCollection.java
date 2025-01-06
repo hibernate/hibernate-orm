@@ -26,7 +26,10 @@ public non-sealed abstract class IdentifierCollection extends Collection {
 		super( buildingContext, owner );
 	}
 
-	public IdentifierCollection(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+	public IdentifierCollection(
+			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver,
+			PersistentClass owner,
+			MetadataBuildingContext buildingContext) {
 		super( customTypeBeanResolver, owner, buildingContext );
 	}
 
@@ -38,9 +41,11 @@ public non-sealed abstract class IdentifierCollection extends Collection {
 	public KeyValue getIdentifier() {
 		return identifier;
 	}
+
 	public void setIdentifier(KeyValue identifier) {
 		this.identifier = identifier;
 	}
+
 	public final boolean isIdentified() {
 		return true;
 	}
@@ -48,12 +53,12 @@ public non-sealed abstract class IdentifierCollection extends Collection {
 	@Override
 	public boolean isSame(Collection other) {
 		return other instanceof IdentifierCollection
-				&& isSame( (IdentifierCollection) other );
+			&& isSame( (IdentifierCollection) other );
 	}
 
 	public boolean isSame(IdentifierCollection other) {
 		return super.isSame( other )
-				&& isSame( identifier, other.identifier );
+			&& isSame( identifier, other.identifier );
 	}
 
 	void createPrimaryKey() {

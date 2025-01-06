@@ -288,16 +288,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			runtimeMetamodels = runtimeMetamodelsImpl;
 
 			// we build this before creating the runtime metamodels
-			// because the persisters need the SqmFunctionRegistry
-			// to translate SQL formulas. But, if we fix Dialect
-			// as I proposed, so that it can contribute functions
-			// to the SqmFunctionRegistry before the QueryEngine is
-			// created, then we can split creation of QueryEngine
-			// and SqmFunctionRegistry, instantiating just the
-			// registry here, and doing the engine later, and we
-			// can thus untie this nasty little knot. Alternatively,
-			// perhaps it's not really appropriate that they use the
-			// SqmFunctionRegistry for that purpose at all?
+			// because the SqlAstTranslators (unnecessarily, perhaps)
+			// use the SqmFunctionRegistry when rendering SQL for Loaders
 			queryEngine = new QueryEngineImpl( bootMetamodel, options, runtimeMetamodels, serviceRegistry, settings, name );
 			final Map<String, FetchProfile> fetchProfiles = new HashMap<>();
 			sqlTranslationEngine = new SqlTranslationEngineImpl( this, typeConfiguration, fetchProfiles );

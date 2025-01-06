@@ -191,7 +191,6 @@ import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sql.internal.SQLQueryParser;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategyProvider;
@@ -547,18 +546,13 @@ public abstract class AbstractEntityPersister
 		queryLoaderName = persistentClass.getLoaderName();
 
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
-		final SqmFunctionRegistry functionRegistry = creationContext.getFunctionRegistry();
 
 		final List<Column> columns = persistentClass.getIdentifier().getColumns();
 		for (int i = 0; i < columns.size(); i++ ) {
 			final Column column = columns.get(i);
 			rootTableKeyColumnNames[i] = column.getQuotedName( dialect );
 			rootTableKeyColumnReaders[i] = column.getReadExpr( dialect );
-			rootTableKeyColumnReaderTemplates[i] = column.getTemplate(
-					dialect,
-					typeConfiguration,
-					functionRegistry
-			);
+			rootTableKeyColumnReaderTemplates[i] = column.getTemplate( dialect, typeConfiguration );
 			identifierAliases[i] = column.getAlias( dialect, persistentClass.getRootTable() );
 		}
 
@@ -626,8 +620,7 @@ public abstract class AbstractEntityPersister
 					formula.setFormula( substituteBrackets( formula.getFormula() ) );
 					formulaTemplates[k] = selectable.getTemplate(
 							dialect,
-							typeConfiguration,
-							functionRegistry
+							typeConfiguration
 					);
 				}
 				else {
@@ -702,11 +695,7 @@ public abstract class AbstractEntityPersister
 			for ( int i = 0; i < selectables.size(); i++ ) {
 				final Selectable selectable = selectables.get(i);
 				if ( selectable.isFormula() ) {
-					final String template = selectable.getTemplate(
-							dialect,
-							typeConfiguration,
-							functionRegistry
-					);
+					final String template = selectable.getTemplate( dialect, typeConfiguration );
 					forms[i] = template;
 					final String formulaAlias = selectable.getAlias( dialect );
 					if ( prop.isSelectable() && !formulaAliases.contains( formulaAlias ) ) {
@@ -725,8 +714,7 @@ public abstract class AbstractEntityPersister
 					readers[i] = column.getReadExpr( dialect );
 					readerTemplates[i] = column.getTemplate(
 							dialect,
-							typeConfiguration,
-							functionRegistry
+							typeConfiguration
 					);
 					if ( thisClassProperties.contains( prop )
 							? persistentClass.hasSubclasses()
@@ -5413,8 +5401,7 @@ public abstract class AbstractEntityPersister
 
 					customReadExpr = selectable.getTemplate(
 							creationContext.getDialect(),
-							creationContext.getTypeConfiguration(),
-							creationContext.getFunctionRegistry()
+							creationContext.getTypeConfiguration()
 					);
 					customWriteExpr = selectable.getWriteExpr( (JdbcMapping) attrType, creationContext.getDialect() );
 					Column column = value.getColumns().get( 0 );

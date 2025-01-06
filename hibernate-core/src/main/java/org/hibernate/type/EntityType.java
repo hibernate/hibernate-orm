@@ -13,7 +13,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.spi.EntityUniqueKey;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -567,19 +566,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return isOneToOne();
 	}
 
-	/**
-	 * Convenience method to locate the identifier type of the associated entity.
-	 *
-	 * @param factory The mappings...
-	 *
-	 * @return The identifier type
-	 * @deprecated use {@link #getIdentifierType(MappingContext)}
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	Type getIdentifierType(final Mapping factory) {
-		return getIdentifierType( (MappingContext) factory );
-	}
-
 	Type getIdentifierType(final MappingContext mappingContext) {
 		final Type type = associatedIdentifierType;
 		//The following branch implements a simple lazy-initialization, but rather than the canonical
@@ -613,24 +599,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	/**
-	 * Determine the type of either (1) the identifier if we reference the
-	 * associated entity's PK or (2) the unique key to which we refer (i.e.
-	 * the property-ref).
-	 *
-	 * @param factory The mappings...
-	 *
-	 * @return The appropriate type.
-	 *
-	 * @throws MappingException Generally, if unable to resolve the associated entity name
-	 * or unique key property name.
-	 * @deprecated use {@link  #getIdentifierOrUniqueKeyType(MappingContext)}
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	public final Type getIdentifierOrUniqueKeyType(Mapping factory) throws MappingException {
-		return getIdentifierOrUniqueKeyType( (MappingContext) factory );
-	}
-
-	/**
 	 * Determine the type of either:
 	 * <ol>
 	 * <li>the identifier if we reference the primary key of the associated entity, or
@@ -655,24 +623,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 					? entityType.getIdentifierOrUniqueKeyType( mappingContext )
 					: type;
 		}
-	}
-
-	/**
-	 * The name of the property on the associated entity to which our FK
-	 * refers
-	 *
-	 * @param factory The mappings...
-	 *
-	 * @return The appropriate property name.
-	 *
-	 * @throws MappingException Generally, if unable to resolve the associated entity name
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	public final String getIdentifierOrUniqueKeyPropertyName(Mapping factory)
-			throws MappingException {
-		return getIdentifierOrUniqueKeyPropertyName( (MappingContext) factory);
 	}
 
 	/**

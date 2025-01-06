@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
@@ -53,34 +52,6 @@ public class SelectableMappingsImpl implements SelectableMappings {
 		else {
 			jdbcMappings.add( (JdbcMapping) keyType );
 		}
-	}
-
-	/**
-	 * @deprecated use {@link #from(String, Value, int[], MappingContext, TypeConfiguration, boolean[], boolean[], Dialect, SqmFunctionRegistry, RuntimeModelCreationContext)}
-	 */
-	@Deprecated(since = "7.0")
-	public static SelectableMappings from(
-			String containingTableExpression,
-			Value value,
-			int[] propertyOrder,
-			Mapping mapping,
-			TypeConfiguration typeConfiguration,
-			boolean[] insertable,
-			boolean[] updateable,
-			Dialect dialect,
-			SqmFunctionRegistry sqmFunctionRegistry,
-			RuntimeModelCreationContext creationContext) {
-		return from(
-				containingTableExpression,
-				value, propertyOrder,
-				(MappingContext) mapping,
-				typeConfiguration,
-				insertable,
-				updateable,
-				dialect,
-				sqmFunctionRegistry,
-				creationContext
-		);
 	}
 
 	public static SelectableMappings from(

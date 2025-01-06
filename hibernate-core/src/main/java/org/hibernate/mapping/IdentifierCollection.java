@@ -8,7 +8,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.UserCollectionType;
@@ -64,11 +63,6 @@ public non-sealed abstract class IdentifierCollection extends Collection {
 			getCollectionTable().setPrimaryKey(pk);
 		}
 		// create an index on the key columns??
-	}
-
-	@Deprecated(forRemoval = true)
-	public void validate(Mapping mapping) throws MappingException {
-		validate( (MappingContext) mapping);
 	}
 
 	public void validate(MappingContext mappingContext) throws MappingException {

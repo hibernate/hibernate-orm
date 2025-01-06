@@ -19,7 +19,6 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -281,14 +280,6 @@ public sealed class Column
 				: name.equalsIgnoreCase( column.name ) );
 	}
 
-	/**
-	 * @deprecated use {@link #getSqlTypeCode(MappingContext)}
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	public int getSqlTypeCode(Mapping mapping) throws MappingException{
-		return getSqlTypeCode((MappingContext) mapping);
-	}
-
 	public int getSqlTypeCode(MappingContext mapping) throws MappingException {
 		if ( sqlTypeCode == null ) {
 			final Type type = getValue().getType();
@@ -422,14 +413,6 @@ public sealed class Column
 		return getSqlTypeName( database.getTypeConfiguration(), database.getDialect(), mapping );
 	}
 
-	/**
-	 * @deprecated use {@link #getSqlType(Metadata)}
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	public String getSqlType(TypeConfiguration typeConfiguration, Dialect dialect, Mapping mapping) {
-		return getSqlTypeName( typeConfiguration, dialect, mapping );
-	}
-
 	@Override
 	public String getTypeName() {
 		return sqlTypeName;
@@ -458,14 +441,6 @@ public sealed class Column
 	@Override
 	public int getDecimalDigits() {
 		return scale == null ? 0 : scale;
-	}
-
-	/**
-	 * @deprecated use {@link #getColumnSize(Dialect, MappingContext)}
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	public Size getColumnSize(Dialect dialect, Mapping mapping) {
-		return getColumnSize(dialect, (MappingContext) mapping);
 	}
 
 	public Size getColumnSize(Dialect dialect, MappingContext mappingContext) {

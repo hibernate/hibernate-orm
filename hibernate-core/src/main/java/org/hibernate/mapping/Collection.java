@@ -21,7 +21,6 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -376,14 +375,6 @@ public abstract sealed class Collection
 	@Override
 	public void setFetchMode(FetchMode fetchMode) {
 		this.fetchMode = fetchMode;
-	}
-
-	/**
-	 * @deprecated use {@link #validate(MappingContext)}
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	public void validate(Mapping mapping) throws MappingException {
-		validate( (MappingContext) mapping);
 	}
 
 	public void validate(MappingContext mappingContext) throws MappingException {

@@ -18,7 +18,6 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -274,14 +273,6 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void setMetaAttributes(Map<String, MetaAttribute> metas) {
 		this.metaAttributes = metas;
-	}
-
-	/**
-	 * @deprecated use {@link #isValid(MappingContext)}
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	public boolean isValid(Mapping mapping) throws MappingException {
-		return isValid( (MappingContext) mapping);
 	}
 
 	public boolean isValid(MappingContext mappingContext) throws MappingException {

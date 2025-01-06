@@ -8,7 +8,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.OrderedSetType;
@@ -46,11 +45,6 @@ public non-sealed class Set extends Collection {
 	@Override
 	public Set copy() {
 		return new Set( this );
-	}
-
-	@Deprecated(forRemoval = true)
-	public void validate(Mapping mapping) throws MappingException {
-		validate( (MappingContext) mapping );
 	}
 
 	public void validate(MappingContext mappingContext) throws MappingException {

@@ -32,6 +32,13 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
  * combine creation of a subgraph with creation of a treated subgraph.
  * <p>
  * Extends the JPA-defined {@link jakarta.persistence.Graph} with additional operations.
+ * <p>
+ * There are a range of ways to create {@code Graph}s:
+ * <ul>
+ * <li>programmatically, beginning with {@link org.hibernate.Session#createEntityGraph(Class)},
+ * <li>using the {@link jakarta.persistence.NamedEntityGraph @NamedEntityGraph} annotation, or
+ * <li>using the mini-language understood by {@link GraphParser}.
+ * </ul>
  *
  * @apiNote Historically, both {@link jakarta.persistence.EntityGraph} and this interface
  * declared operations with incorrect generic types, leading to unsound code. This was
@@ -46,6 +53,8 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
  * @see SubGraph
  * @see jakarta.persistence.EntityGraph
  * @see jakarta.persistence.Subgraph
+ * @see GraphParser
+ * @see EntityGraphs
  */
 public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 

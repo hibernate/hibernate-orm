@@ -228,10 +228,10 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 	}
 
 	private <X> void serializetoOsonApproach2Util(X value,
-												  OracleJsonGenerator generator,
-												  JavaType<X> javaType,
-												  WrapperOptions options,
-												  EmbeddableMappingType embeddableMappingType) {
+												OracleJsonGenerator generator,
+												JavaType<X> javaType,
+												WrapperOptions options,
+												EmbeddableMappingType embeddableMappingType) {
 
 		final Object[] values = embeddableMappingType.getValues( value );
 		for ( int i = 0; i < values.length; i++ ) {

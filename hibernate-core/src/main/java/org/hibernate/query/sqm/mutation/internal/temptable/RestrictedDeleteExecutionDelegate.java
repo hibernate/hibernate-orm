@@ -88,9 +88,9 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 
 	@Override
 	public int execute(DomainQueryExecutionContext executionContext) {
-		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( getSqmDelete().getTarget().getEntityName() );
+		final EntityPersister entityDescriptor =
+				getSessionFactory().getMappingMetamodel()
+						.getEntityDescriptor( getSqmDelete().getTarget().getEntityName() );
 		final String hierarchyRootTableName = entityDescriptor.getTableName();
 
 		final TableGroup deletingTableGroup = getConverter().getMutatingTableGroup();

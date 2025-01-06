@@ -5,7 +5,6 @@
 package org.hibernate.service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.boot.cfgxml.internal.CfgXmlAccessServiceInitiator;
@@ -41,6 +40,8 @@ import org.hibernate.sql.ast.internal.ParameterMarkerStrategyInitiator;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerProviderInitiator;
 import org.hibernate.tool.schema.internal.SchemaManagementToolInitiator;
 import org.hibernate.tool.schema.internal.script.SqlScriptExtractorInitiator;
+
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Central definition of the standard set of service initiators defined by Hibernate.
@@ -157,6 +158,6 @@ public final class StandardServiceInitiators {
 
 		serviceInitiators.trimToSize();
 
-		return Collections.unmodifiableList( serviceInitiators );
+		return unmodifiableList( serviceInitiators );
 	}
 }

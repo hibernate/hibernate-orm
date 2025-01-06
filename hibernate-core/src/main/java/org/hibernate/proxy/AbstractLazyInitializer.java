@@ -80,7 +80,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	private MappingMetamodelImplementor getMappingMetamodel() {
-		return session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
+		return session.getFactory().getMappingMetamodel();
 	}
 
 	private EntityPersister getEntityDescriptor() {
@@ -146,7 +146,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 		else {
 			final EntityPersister entityDescriptor =
-					session.getFactory().getRuntimeMetamodels().getMappingMetamodel()
+					session.getFactory().getMappingMetamodel()
 							.getEntityDescriptor( entityName );
 			return session.generateEntityKey( id, entityDescriptor );
 		}

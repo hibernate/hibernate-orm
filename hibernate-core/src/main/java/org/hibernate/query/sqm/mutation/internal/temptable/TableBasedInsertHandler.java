@@ -112,9 +112,9 @@ public class TableBasedInsertHandler implements InsertHandler {
 	}
 
 	protected ExecutionDelegate resolveDelegate(DomainQueryExecutionContext executionContext) {
-		final EntityPersister entityDescriptor = sessionFactory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( getSqmInsertStatement().getTarget().getEntityName() );
+		final EntityPersister entityDescriptor =
+				sessionFactory.getMappingMetamodel()
+						.getEntityDescriptor( getSqmInsertStatement().getTarget().getEntityName() );
 
 		final MultiTableSqmMutationConverter converterDelegate = new MultiTableSqmMutationConverter(
 				entityDescriptor,

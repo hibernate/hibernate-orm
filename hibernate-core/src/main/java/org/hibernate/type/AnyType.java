@@ -189,7 +189,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 
 		if ( entityName == null ) {
-			final MappingMetamodelImplementor mappingMetamodel = factory.getRuntimeMetamodels().getMappingMetamodel();
+			final MappingMetamodelImplementor mappingMetamodel = factory.getMappingMetamodel();
 			for ( EntityNameResolver resolver : mappingMetamodel.getEntityNameResolvers() ) {
 				entityName = resolver.resolveEntityName( entity );
 				if ( entityName != null ) {
@@ -203,7 +203,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			entityName = object.getClass().getName();
 		}
 
-		return factory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
+		return factory.getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
 	@Override
@@ -296,7 +296,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		final String entityName = factory.bestGuessEntityName(value);
 		final EntityPersister descriptor = entityName == null
 				? null
-				: factory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( entityName );
+				: factory.getMappingMetamodel().getEntityDescriptor( entityName );
 		return infoString( descriptor, value, factory );
 	}
 

@@ -63,9 +63,9 @@ public class EntityConcreteTypeLoader {
 
 	public EntityMappingType getConcreteType(Object id, SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor sessionFactory = session.getSessionFactory();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = sessionFactory.getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory();
+		final SqlAstTranslatorFactory sqlAstTranslatorFactory =
+				sessionFactory.getJdbcServices().getJdbcEnvironment()
+						.getSqlAstTranslatorFactory();
 
 		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		int offset = jdbcParamBindings.registerParametersForEachJdbcValue(
@@ -95,11 +95,11 @@ public class EntityConcreteTypeLoader {
 		else {
 			assert results.size() == 1;
 			final Object result = results.get( 0 );
-			final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getRuntimeMetamodels()
-					.getMappingMetamodel();
-			final EntityPersister concreteType = result instanceof Class<?>
-					? mappingMetamodel.getEntityDescriptor( (Class<?>) result )
-					: mappingMetamodel.getEntityDescriptor( (String) result );
+			final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getMappingMetamodel();
+			final EntityPersister concreteType =
+					result instanceof Class<?> concreteClass
+							? mappingMetamodel.getEntityDescriptor( concreteClass )
+							: mappingMetamodel.getEntityDescriptor( (String) result );
 			if ( !concreteType.isTypeOrSuperType( entityDescriptor ) ) {
 				throw new WrongClassException(
 						concreteType.getEntityName(),

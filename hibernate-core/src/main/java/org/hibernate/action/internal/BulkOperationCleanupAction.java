@@ -111,7 +111,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	public BulkOperationCleanupAction(SharedSessionContractImplementor session, Set<String> tableSpaces) {
 		final LinkedHashSet<String> spacesList = new LinkedHashSet<>( tableSpaces );
 
-		final MappingMetamodelImplementor metamodel = session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
+		final MappingMetamodelImplementor metamodel = session.getFactory().getMappingMetamodel();
 		metamodel.forEachEntityDescriptor( (entityDescriptor) -> {
 			final String[] entitySpaces = (String[]) entityDescriptor.getQuerySpaces();
 			if ( affectedEntity( tableSpaces, entitySpaces ) ) {
@@ -143,7 +143,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 
 	public static void schedule(SharedSessionContractImplementor session, SqmDmlStatement<?> statement) {
 		final List<EntityPersister> entityPersisters = new ArrayList<>( 1 );
-		final MappingMetamodelImplementor metamodel = session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
+		final MappingMetamodelImplementor metamodel = session.getFactory().getMappingMetamodel();
 		if ( !( statement instanceof InsertSelectStatement ) ) {
 			entityPersisters.add( metamodel.getEntityDescriptor( statement.getTarget().getEntityName() ) );
 		}

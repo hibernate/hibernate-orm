@@ -565,9 +565,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			return;
 		}
 		// The following optimization is to add the discriminator filter fragment for all treated entity names
-		final MappingMetamodelImplementor mappingMetamodel = getFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel();
+		final MappingMetamodelImplementor mappingMetamodel = getFactory().getMappingMetamodel();
 
 		boolean containsTreatUse = false;
 		for ( Map.Entry<String, EntityNameUse> entry : entityNameUses.entrySet() ) {

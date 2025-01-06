@@ -79,9 +79,9 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 
 		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
 		final String rootEntityName = entityPersister.getRootEntityName();
-		final EntityPersister rootEntityDescriptor = factory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( rootEntityName );
+		final EntityPersister rootEntityDescriptor =
+				factory.getMappingMetamodel()
+						.getEntityDescriptor( rootEntityName );
 
 		final String hierarchyRootTableName = rootEntityDescriptor.getTableName();
 		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference(

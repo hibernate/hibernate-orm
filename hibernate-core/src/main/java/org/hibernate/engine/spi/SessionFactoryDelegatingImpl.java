@@ -253,7 +253,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 
 	@Deprecated
 	public Set<String> getCollectionRolesByEntityParticipant(String entityName) {
-		return delegate.getRuntimeMetamodels().getMappingMetamodel().getCollectionRolesByEntityParticipant( entityName );
+		return delegate.getMappingMetamodel().getCollectionRolesByEntityParticipant( entityName );
 	}
 
 	@Override

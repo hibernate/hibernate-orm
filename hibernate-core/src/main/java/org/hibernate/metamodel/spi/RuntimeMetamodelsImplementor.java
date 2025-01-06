@@ -6,6 +6,7 @@ package org.hibernate.metamodel.spi;
 
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.query.BindingContext;
 import org.hibernate.type.MappingContext;
 
 /**
@@ -13,7 +14,7 @@ import org.hibernate.type.MappingContext;
  *
  * @author Steve Ebersole
  */
-public interface RuntimeMetamodelsImplementor extends RuntimeMetamodels, MappingContext {
+public interface RuntimeMetamodelsImplementor extends RuntimeMetamodels, MappingContext, BindingContext {
 	@Override
 	MappingMetamodelImplementor getMappingMetamodel();
 

@@ -23,32 +23,6 @@ print "INFO: env.PROJECT = ${env.PROJECT}"
 print "INFO: env.JIRA_KEY = ${env.JIRA_KEY}"
 
 // --------------------------------------------
-// Build conditions
-
-// Avoid running the pipeline on branch indexing
-if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
-	print "INFO: Build skipped due to trigger being Branch Indexing"
-	currentBuild.result = 'NOT_BUILT'
-	return
-}
-
-def manualRelease = currentBuild.getBuildCauses().toString().contains( 'UserIdCause' )
-def cronRelease = currentBuild.getBuildCauses().toString().contains( 'TimerTriggerCause' )
-
-// Only do automatic release on branches where we opted in
-if ( !manualRelease && !cronRelease ) {
-	print "INFO: Build skipped because automated releases on push are disabled on this branch."
-	currentBuild.result = 'NOT_BUILT'
-	return
-}
-
-if ( !manualRelease && cronRelease && !RELEASE_ON_SCHEDULE ) {
-	print "INFO: Build skipped because automated releases are disabled on this branch. See constant RELEASE_ON_SCHEDULE in ci/release/Jenkinsfile"
-	currentBuild.result = 'NOT_BUILT'
-	return
-}
-
-// --------------------------------------------
 // Reusable methods
 
 def checkoutReleaseScripts() {
@@ -62,6 +36,9 @@ def checkoutReleaseScripts() {
 // --------------------------------------------
 // Pipeline
 
+// NOTE: this job checks pre-conditions
+// and may cancel itself before even running,
+// see "Build conditions" at the bottom of this file.
 pipeline {
 	agent {
 		label 'Release'
@@ -274,4 +251,34 @@ pipeline {
  			}
  		}
  	}
+}
+
+// --------------------------------------------
+// Build conditions
+
+// Note this code is at the end of the file for a reason:
+// this code gets executed after Jenkins parses the Jenkinsfile (so that Jenkins knows about the build's parameters/options)
+// but before Jenkins runs the build (so that we can cancel it before an agent is even started).
+
+// Avoid running the pipeline on branch indexing
+if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
+	print "INFO: Build skipped due to trigger being Branch Indexing"
+	currentBuild.result = 'NOT_BUILT'
+	return
+}
+
+def manualRelease = currentBuild.getBuildCauses().toString().contains( 'UserIdCause' )
+def cronRelease = currentBuild.getBuildCauses().toString().contains( 'TimerTriggerCause' )
+
+// Only do automatic release on branches where we opted in
+if ( !manualRelease && !cronRelease ) {
+	print "INFO: Build skipped because automated releases on push are disabled on this branch."
+	currentBuild.result = 'NOT_BUILT'
+	return
+}
+
+if ( !manualRelease && cronRelease && !RELEASE_ON_SCHEDULE ) {
+	print "INFO: Build skipped because automated releases are disabled on this branch. See constant RELEASE_ON_SCHEDULE in ci/release/Jenkinsfile"
+	currentBuild.result = 'NOT_BUILT'
+	return
 }

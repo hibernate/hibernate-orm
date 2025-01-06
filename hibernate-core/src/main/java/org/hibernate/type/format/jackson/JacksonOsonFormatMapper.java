@@ -27,18 +27,12 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.JdbcDateJavaType;
-import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
-import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
-import org.hibernate.type.descriptor.java.UUIDJavaType;
-import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.format.JsonDocumentHandler;
@@ -50,23 +44,16 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.sql.Date;
-import java.sql.SQLException;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Level;
+
 
 import static org.hibernate.dialect.StructHelper.getEmbeddedPart;
 
@@ -79,6 +66,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 	public static final String SHORT_NAME = "jackson";
 
 	private  ObjectMapper objectMapper;
+	private EmbeddableMappingType embeddableMappingType;
 
 	/**
 	 * Creates a new JacksonOsonFormatMapper
@@ -225,15 +213,15 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 	}
 
 
-	public <X>byte[] toOson(X value, JavaType<X> javaType, WrapperOptions options) {
+	public <X>byte[] toOson(X value, JavaType<X> javaType, WrapperOptions options,EmbeddableMappingType embeddableMappingType) {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		OracleJsonGenerator generator = new OracleJsonFactory().createJsonBinaryGenerator( out );
-		serializetoOsonApproach2( value,generator,javaType,options);
+		serializetoOsonApproach2( value,generator,javaType,options,embeddableMappingType);
 		generator.close();
 		return out.toByteArray();
 	}
 
-	private <X> void serializetoOsonApproach2(X value, OracleJsonGenerator generator, JavaType<X> javaType, WrapperOptions options) {
+	private <X> void serializetoOsonApproach2(X value, OracleJsonGenerator generator, JavaType<X> javaType, WrapperOptions options, EmbeddableMappingType embeddableMappingType) {
 		generator.writeStartObject();
 		serializetoOsonApproach2Util( value, generator, javaType, options,embeddableMappingType );
 		generator.writeEnd();
@@ -591,5 +579,6 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 
 	public void setJacksonObjectMapper(ObjectMapper objectMapper, EmbeddableMappingType embeddableMappingType) {
 		this.objectMapper = objectMapper;
+		this.embeddableMappingType = embeddableMappingType;
 	}
 }

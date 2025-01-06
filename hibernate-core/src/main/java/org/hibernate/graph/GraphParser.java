@@ -17,7 +17,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 /**
  * Parser for string representations of JPA {@link jakarta.persistence.EntityGraph}
  * ({@link RootGraph}) and {@link jakarta.persistence.Subgraph} ({@link SubGraph}),
- * using a simple syntax defined by the `graph.g` Antlr grammar.
+ * using a simple syntax defined by the {@code graph.g} ANTLR grammar.
  * <p>
  * The {@link #parse} methods all create a root {@link jakarta.persistence.EntityGraph}
  * based on the passed entity class and parse the graph string into that root graph.

@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceConfigurationError;
 import java.util.Set;
@@ -73,8 +74,20 @@ public interface CoreMessageLogger extends BasicLogger {
 	void callingJoinTransactionOnNonJtaEntityManager();
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Closing", id = 31)
-	void closing();
+	@Message(value = "Instantiating factory with settings: %s", id = 30)
+	void instantiatingFactory(Map<String, Object> settings);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Closing factory", id = 31)
+	void closingFactory();
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Serializing factory: %s", id = 32)
+	void serializingFactory(String uuid);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Deserialized factory: %s", id = 33)
+	void deserializedFactory(String uuid);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Composite-id class does not override equals(): %s", id = 38)

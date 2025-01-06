@@ -182,11 +182,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 	private final transient Map<String,Object> settings;
 
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
-	private final transient EventEngine eventEngine;//Needs to be closed!
+	private final transient EventEngine eventEngine;
 	private final transient JdbcServices jdbcServices;
 	private final transient SqlStringGenerationContext sqlStringGenerationContext;
-
-	// todo : org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor too?
 
 	private final transient RuntimeMetamodelsImplementor runtimeMetamodels;
 	private final PersistenceUnitUtil jpaPersistenceUnitUtil;
@@ -245,7 +243,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 		settings = getSettings( options, serviceRegistry );
 		maskOutSensitiveInformation( settings );
 		deprecationCheck( settings );
-		LOG.debugf( "Instantiating SessionFactory with settings: %s", settings );
+		LOG.instantiatingFactory( settings );
 
 		sqlStringGenerationContext = createSqlStringGenerationContext( bootMetamodel, options, jdbcServices );
 
@@ -258,7 +256,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 		}
 
 		filters = new HashMap<>( bootMetamodel.getFilterDefinitions() );
-		LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
 
 		final FilterDefinition tenantFilter = filters.get( TenantIdBinder.FILTER_NAME );
 		if ( tenantFilter == null ) {
@@ -359,12 +356,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 				close();
 			}
 			catch (Exception closeException) {
-				LOG.debug( "Eating error closing the SessionFactory after a failed attempt to start it" );
+				LOG.trace( "Eating error closing factory after failed instantiation" );
 			}
 			throw e;
 		}
 
-		LOG.debug( "Instantiated SessionFactory" );
+		LOG.debug( "Instantiated factory" );
 	}
 
 	private EventMonitor loadEventMonitor() {
@@ -770,7 +767,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 	@Override
 	public Reference getReference() {
 		// from javax.naming.Referenceable
-		LOG.debug( "Returning a Reference to the SessionFactory" );
+		LOG.debug( "Returning a Reference to the factory" );
 		return new Reference(
 				SessionFactoryImpl.class.getName(),
 				new StringRefAddr( "uuid", getUuid() ),
@@ -809,7 +806,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 		}
 
 		try {
-			LOG.closing();
+			LOG.closingFactory();
 			observer.sessionFactoryClosing( this );
 
 		// NOTE : the null checks below handle cases where close is called from
@@ -1543,11 +1540,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 	 */
 	@Serial
 	private void writeObject(ObjectOutputStream out) throws IOException {
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Serializing: %s", getUuid() );
-		}
+		LOG.serializingFactory( getUuid() );
 		out.defaultWriteObject();
-		LOG.trace( "Serialized" );
+		LOG.trace( "Serialized factory" );
 	}
 
 	/**
@@ -1560,11 +1555,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 	 */
 	@Serial
 	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-		LOG.trace( "Deserializing" );
+		LOG.trace( "Deserializing factory" );
 		in.defaultReadObject();
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Deserialized: %s", getUuid() );
-		}
+		LOG.deserializedFactory( getUuid() );
 	}
 
 	/**
@@ -1580,7 +1573,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 	 */
 	@Serial
 	private Object readResolve() throws InvalidObjectException {
-		LOG.trace( "Resolving serialized SessionFactory" );
+		LOG.trace( "Resolving serialized factory" );
 		return locateSessionFactoryOnDeserialization( getUuid(), name );
 	}
 
@@ -1588,7 +1581,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 			throws InvalidObjectException{
 		final SessionFactory uuidResult = SessionFactoryRegistry.INSTANCE.getSessionFactory( uuid );
 		if ( uuidResult != null ) {
-			LOG.debugf( "Resolved SessionFactory by UUID [%s]", uuid );
+			LOG.debug( "Resolved factory by UUID: " + uuid );
 			return uuidResult;
 		}
 
@@ -1597,12 +1590,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 		if ( name != null ) {
 			final SessionFactory namedResult = SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( name );
 			if ( namedResult != null ) {
-				LOG.debugf( "Resolved SessionFactory by name [%s]", name );
+				LOG.debug( "Resolved factory by name: " + name );
 				return namedResult;
 			}
 		}
 
-		throw new InvalidObjectException( "Could not find a SessionFactory [uuid=" + uuid + ",name=" + name + "]" );
+		throw new InvalidObjectException( "No SessionFactory with uuid [" + uuid + "] and name [" + name + "]" );
 	}
 
 	/**
@@ -1627,7 +1620,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor, BindingCon
 	 * @throws IOException indicates problems reading back serial data stream
 	 */
 	static SessionFactoryImpl deserialize(ObjectInputStream ois) throws IOException {
-		LOG.trace( "Deserializing SessionFactory from Session" );
+		LOG.trace( "Resolving factory from deserialized session" );
 		final String uuid = ois.readUTF();
 		boolean isNamed = ois.readBoolean();
 		final String name = isNamed ? ois.readUTF() : null;

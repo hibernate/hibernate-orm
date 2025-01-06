@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -34,6 +35,10 @@ import org.hibernate.type.Type;
 @Incubating
 public class PersistentSet<E> extends AbstractPersistentCollection<E> implements Set<E> {
 	protected Set<E> set;
+	/**
+	 * The Set provided to a PersistentSet constructor
+	 */
+	private Set<E> providedSet;
 
 	/**
 	 * Empty constructor.
@@ -63,14 +68,41 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 	 * @param set The underlying set data.
 	 */
 	public PersistentSet(SharedSessionContractImplementor session, Set<E> set) {
+		this( session, set, set instanceof HashSet<E> mutableSet ? mutableSet : new HashSet<>( set ) );
+	}
+	/**
+	 * Instantiates a non-lazy set (the underlying set is constructed
+	 * from the incoming set reference).
+	 *
+	 * @param session The session to which this set will belong.
+	 * @param collectionPersister The collection persister
+	 * @param set The underlying set data.
+	 * @since 7.0
+	 */
+	public PersistentSet(SharedSessionContractImplementor session, CollectionPersister collectionPersister, Set<E> set) {
+		this( session, set, mutableCollection( collectionPersister, set ) );
+	}
+
+	PersistentSet(SharedSessionContractImplementor session, Set<E> providedSet, Set<E> mutableSet) {
 		super( session );
-		// Sets can be just a view of a part of another collection.
-		// do we need to copy it to be sure it won't be changing
-		// underneath us?
-		// ie. this.set.addAll(set);
-		this.set = set;
+		this.providedSet = providedSet;
+		this.set = mutableSet;
 		setInitialized();
 		setDirectlyAccessible( true );
+	}
+
+	private static <E> Set<E> mutableCollection(CollectionPersister collectionPersister, Set<E> coll) {
+		final CollectionSemantics<?, ?> collectionSemantics = collectionPersister.getCollectionSemantics();
+		if ( collectionSemantics.isMutableRaw( coll ) ) {
+			return coll;
+		}
+		else {
+			//noinspection unchecked
+			final Set<E> mutableCollection =
+					(Set<E>) collectionSemantics.instantiateRaw( coll.size(), collectionPersister );
+			mutableCollection.addAll( coll );
+			return mutableCollection;
+		}
 	}
 
 	@Override
@@ -416,6 +448,11 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 	@Override
 	public boolean isWrapper(Object collection) {
 		return set==collection;
+	}
+
+	@Override
+	public boolean isDirectlyProvidedCollection(Object collection) {
+		return isDirectlyAccessible() && providedSet == collection;
 	}
 
 	final class Clear implements DelayedOperation<E> {

@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -21,7 +20,6 @@ import org.junit.jupiter.api.Test;
  * @author Jan Schatteman
  */
 @RequiresDialect( value = H2Dialect.class )
-@FailureExpected( jiraKey = "HHH-1914", reason = "throws an UnsupportedOperationException")
 @DomainModel(
 		annotatedClasses = {
 				Cat.class, Woman.class, Man.class

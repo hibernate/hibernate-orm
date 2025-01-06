@@ -4,6 +4,7 @@
  */
 package org.hibernate.collection.internal;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.collection.spi.AbstractMapSemantics;
@@ -41,6 +42,11 @@ public class StandardMapSemantics<K,V> extends AbstractMapSemantics<Map<K,V>,K,V
 	}
 
 	@Override
+	public boolean isMutableRaw(Object collection) {
+		return collection.getClass() == HashMap.class;
+	}
+
+	@Override
 	public PersistentCollection<V> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
@@ -53,6 +59,6 @@ public class StandardMapSemantics<K,V> extends AbstractMapSemantics<Map<K,V>,K,V
 			Map<K,V> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentMap<>( session, rawCollection );
+		return new PersistentMap<>( session, collectionDescriptor, rawCollection );
 	}
 }

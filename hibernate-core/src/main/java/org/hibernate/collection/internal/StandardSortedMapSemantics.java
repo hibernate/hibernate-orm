@@ -47,6 +47,11 @@ public class StandardSortedMapSemantics<K,V> extends AbstractMapSemantics<Sorted
 	}
 
 	@Override
+	public boolean isMutableRaw(Object collection) {
+		return collection.getClass() == TreeMap.class;
+	}
+
+	@Override
 	public PersistentCollection<V> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
@@ -60,6 +65,6 @@ public class StandardSortedMapSemantics<K,V> extends AbstractMapSemantics<Sorted
 			SortedMap<K,V> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSortedMap<>( session, rawCollection );
+		return new PersistentSortedMap<>( session, collectionDescriptor, rawCollection );
 	}
 }

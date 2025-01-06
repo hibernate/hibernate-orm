@@ -8,11 +8,13 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.BasicCollectionPersister;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * A persistent wrapper for a {@link java.util.SortedSet}. Underlying
@@ -53,8 +55,32 @@ public class PersistentSortedSet<E> extends PersistentSet<E> implements SortedSe
 	 * @param set The underlying set data
 	 */
 	public PersistentSortedSet(SharedSessionContractImplementor session, SortedSet<E> set) {
-		super( session, set );
+		super( session, set, mutableSet( set ) );
 		comparator = set.comparator();
+	}
+
+	/**
+	 * Constructs a PersistentSortedSet
+	 *
+	 * @param session The session
+	 * @param collectionPersister The collection persister
+	 * @param set The underlying set data
+	 * @since 7.0
+	 */
+	public PersistentSortedSet(SharedSessionContractImplementor session, CollectionPersister collectionPersister, SortedSet<E> set) {
+		super( session, collectionPersister, set );
+		comparator = set.comparator();
+	}
+
+	private static <E> SortedSet<E> mutableSet(SortedSet<E> set) {
+		if ( set instanceof TreeSet<E> mutableSet ) {
+			return mutableSet;
+		}
+		else {
+			final SortedSet<E> sortedSet = new TreeSet<>( set.comparator() );
+			sortedSet.addAll( set );
+			return sortedSet;
+		}
 	}
 
 	@SuppressWarnings("UnusedParameters")

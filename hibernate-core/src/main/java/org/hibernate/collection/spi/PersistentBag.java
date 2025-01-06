@@ -67,16 +67,41 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	 * @param coll The base elements.
 	 */
 	public PersistentBag(SharedSessionContractImplementor session, Collection<E> coll) {
+		this( session, coll, coll instanceof ArrayList<?> ? coll : new ArrayList<>( coll ) );
+	}
+
+	/**
+	 * Constructs a PersistentBag
+	 *
+	 * @param session The session
+	 * @param collectionPersister The collection persister
+	 * @param coll The base elements.
+	 * @since 7.0
+	 */
+	public PersistentBag(SharedSessionContractImplementor session, CollectionPersister collectionPersister, Collection<E> coll) {
+		this( session, coll, mutableCollection( collectionPersister, coll ) );
+	}
+
+	private PersistentBag(SharedSessionContractImplementor session, Collection<E> providedCollection, Collection<E> mutableCollection) {
 		super( session );
-		providedCollection = coll;
-		if ( coll instanceof List ) {
-			bag = (List<E>) coll;
-		}
-		else {
-			bag = new ArrayList<>( coll );
-		}
+		this.providedCollection = providedCollection;
+		this.bag = (List<E>) mutableCollection;
 		setInitialized();
 		setDirectlyAccessible( true );
+	}
+
+	private static <E> Collection<E> mutableCollection(CollectionPersister collectionPersister, Collection<E> coll) {
+		final CollectionSemantics<?, ?> collectionSemantics = collectionPersister.getCollectionSemantics();
+		if ( collectionSemantics.isMutableRaw( coll ) ) {
+			return coll;
+		}
+		else {
+			//noinspection unchecked
+			final Collection<E> mutableCollection =
+					(Collection<E>) collectionSemantics.instantiateRaw( coll.size(), collectionPersister );
+			mutableCollection.addAll( coll );
+			return mutableCollection;
+		}
 	}
 
 	@Override

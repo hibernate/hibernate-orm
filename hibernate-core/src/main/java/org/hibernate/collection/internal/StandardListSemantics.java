@@ -4,6 +4,7 @@
  */
 package org.hibernate.collection.internal;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
@@ -56,6 +57,11 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 	}
 
 	@Override
+	public boolean isMutableRaw(Object collection) {
+		return collection.getClass() == ArrayList.class;
+	}
+
+	@Override
 	public Iterator<E> getElementIterator(List<E> rawCollection) {
 		return rawCollection.iterator();
 	}
@@ -78,7 +84,7 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 			List<E> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentList<>( session, rawCollection );
+		return new PersistentList<>( session, collectionDescriptor, rawCollection );
 	}
 
 	@Override

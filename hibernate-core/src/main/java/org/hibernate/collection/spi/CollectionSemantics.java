@@ -53,6 +53,16 @@ public interface CollectionSemantics<CE, E> {
 			CollectionPersister collectionDescriptor);
 
 	/**
+	 * Returns whether the given collection is a mutable collection compatible with the type returned by
+	 * {@link #instantiateRaw(int, CollectionPersister)}.
+	 *
+	 * @since 7.0
+	 */
+	default boolean isMutableRaw(Object collection) {
+		return false;
+	}
+
+	/**
 	 * Create a wrapper for the collection
 	 */
 	PersistentCollection<E> instantiateWrapper(

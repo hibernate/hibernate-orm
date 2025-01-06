@@ -45,7 +45,7 @@ public class StandardBagSemantics<E> extends AbstractBagSemantics<E> {
 			Collection<E> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentBag<>( session, rawCollection );
+		return new PersistentBag<>( session, collectionDescriptor, rawCollection );
 	}
 
 }

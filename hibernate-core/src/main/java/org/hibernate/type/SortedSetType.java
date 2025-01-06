@@ -5,8 +5,10 @@
 package org.hibernate.type;
 
 import java.util.Comparator;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.hibernate.collection.internal.StandardSortedSetSemantics;
 import org.hibernate.collection.spi.PersistentSortedSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -42,6 +44,9 @@ public class SortedSetType extends SetType {
 
 	@Override
 	public PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object collection) {
-		return new PersistentSortedSet<>( session, (java.util.SortedSet<?>) collection );
+		final CollectionPersister persister = session.getFactory().getRuntimeMetamodels().getMappingMetamodel()
+				.getCollectionDescriptor( getRole() );
+		//noinspection rawtypes,unchecked
+		return StandardSortedSetSemantics.INSTANCE.wrap( (SortedSet) collection, persister, session );
 	}
 }

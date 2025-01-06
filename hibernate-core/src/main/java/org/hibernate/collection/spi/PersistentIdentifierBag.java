@@ -72,17 +72,42 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	 * @param coll The base elements
 	 */
 	public PersistentIdentifierBag(SharedSessionContractImplementor session, Collection<E> coll) {
+		this( session, coll, coll instanceof ArrayList<?> ? coll : new ArrayList<>( coll ) );
+	}
+
+	/**
+	 * Constructs a PersistentIdentifierBag.
+	 *
+	 * @param session The session
+	 * @param collectionPersister The collection persister
+	 * @param coll The base elements
+	 * @since 7.0
+	 */
+	public PersistentIdentifierBag(SharedSessionContractImplementor session, CollectionPersister collectionPersister, Collection<E> coll) {
+		this( session, coll, mutableCollection( collectionPersister, coll ) );
+	}
+
+	private PersistentIdentifierBag(SharedSessionContractImplementor session, Collection<E> providedCollection, Collection<E> mutableCollection) {
 		super( session );
-		providedValues = coll;
-		if (coll instanceof List) {
-			values = (List<E>) coll;
-		}
-		else {
-			values = new ArrayList<>( coll );
-		}
+		providedValues = providedCollection;
+		values = (List<E>) mutableCollection;
 		setInitialized();
 		setDirectlyAccessible( true );
 		identifiers = new HashMap<>();
+	}
+
+	private static <E> Collection<E> mutableCollection(CollectionPersister collectionPersister, Collection<E> coll) {
+		final CollectionSemantics<?, ?> collectionSemantics = collectionPersister.getCollectionSemantics();
+		if ( collectionSemantics.isMutableRaw( coll ) ) {
+			return coll;
+		}
+		else {
+			//noinspection unchecked
+			final Collection<E> mutableCollection =
+					(Collection<E>) collectionSemantics.instantiateRaw( coll.size(), collectionPersister );
+			mutableCollection.addAll( coll );
+			return mutableCollection;
+		}
 	}
 
 	@Override

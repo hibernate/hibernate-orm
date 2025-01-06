@@ -45,6 +45,6 @@ public class StandardIdentifierBagSemantics<E> extends AbstractBagSemantics<E> {
 			Collection<E> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentIdentifierBag<>( session, rawCollection );
+		return new PersistentIdentifierBag<>( session, collectionDescriptor, rawCollection );
 	}
 }

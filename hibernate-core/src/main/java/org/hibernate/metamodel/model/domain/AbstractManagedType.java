@@ -30,6 +30,7 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.DynamicModelJavaType;
 
 import static java.util.Collections.emptySet;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
@@ -66,10 +67,11 @@ public abstract class AbstractManagedType<J>
 			supertype.addSubType( this );
 		}
 
-		// todo (6.0) : need to handle RepresentationMode#MAP as well
-		this.representationMode = RepresentationMode.POJO;
+		representationMode = javaType instanceof DynamicModelJavaType
+				? RepresentationMode.MAP
+				: RepresentationMode.POJO;
 
-		this.inFlightAccess = createInFlightAccess();
+		inFlightAccess = createInFlightAccess();
 	}
 
 	protected InFlightAccess<J> createInFlightAccess() {

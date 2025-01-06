@@ -319,7 +319,8 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
 @Internal
 @SuppressWarnings("deprecation")
 public abstract class AbstractEntityPersister
-		implements EntityPersister, InFlightEntityMappingType, EntityMutationTarget, LazyPropertyInitializer, FetchProfileAffectee, Joinable {
+		implements EntityPersister, InFlightEntityMappingType, EntityMutationTarget, LazyPropertyInitializer,
+				FetchProfileAffectee, Joinable {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractEntityPersister.class );
 

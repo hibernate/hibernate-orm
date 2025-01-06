@@ -38,6 +38,7 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.metamodel.MappingMetamodel;
@@ -224,6 +225,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public SqlStringGenerationContext getSqlStringGenerationContext() {
 		return delegate.getSqlStringGenerationContext();
+	}
+
+	@Override
+	public RootGraph<Map<String, ?>> createGraphForDynamicEntity(String entityName) {
+		return delegate.createGraphForDynamicEntity( entityName );
 	}
 
 	@Override

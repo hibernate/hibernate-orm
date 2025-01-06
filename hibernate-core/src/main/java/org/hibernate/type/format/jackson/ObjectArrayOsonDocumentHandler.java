@@ -13,6 +13,7 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.format.JsonDocumentHandler;
 
 import java.sql.Date;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -36,7 +37,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 
 	// mapping definitions are in a tree
 	// Each mapping definition may contain sub mappings (sub embeddable mapping)
-	// This stack is used to keep pointer on mapping to be used
+	// This stack is used to keep a pointer on the current mapping to be used
 	// see startObject/endObject methods
 	Stack<EmbeddableMappingType> embeddableMappingTypes = new Stack<>();
 
@@ -152,11 +153,11 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 		if ( subArrayObjectList != null ) {
 			// dealing with arrays
 			subArrayObjectList.add(
-					subArrayObjectTypes.getElementType().getJdbcJavaType().fromString( value ) );
+					subArrayObjectTypes.getElementType().getJdbcJavaType().fromEncodedString( value ,0,value.length()) );
 		}
 		else {
 			objectArrayResult[currentSelectableIndexInResultArray] =
-					mapping.getJdbcMapping().getJdbcJavaType().fromString( value);
+					mapping.getJdbcMapping().getJdbcJavaType().fromEncodedString( value,0,value.length());
 		}
 	}
 
@@ -228,6 +229,12 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 		}
 		else if (java.time.LocalDate.class.isAssignableFrom( underlyingType )) {
 			theOneToBeUsed = localDateTime.toLocalDate();
+		}
+		else if (java.time.LocalTime.class.isAssignableFrom( underlyingType )) {
+			theOneToBeUsed = localDateTime.toLocalTime();
+		}
+		else if (java.sql.Time.class.isAssignableFrom( underlyingType )) {
+			theOneToBeUsed = Time.valueOf( localDateTime.toLocalTime() );
 		}
 		else if (java.sql.Timestamp.class.isAssignableFrom( underlyingType )) {
 			theOneToBeUsed = Timestamp.valueOf( localDateTime );

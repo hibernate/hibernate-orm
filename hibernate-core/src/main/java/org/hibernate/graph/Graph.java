@@ -7,6 +7,7 @@ package org.hibernate.graph;
 import java.util.List;
 
 import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
@@ -33,12 +34,17 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
  * <p>
  * Extends the JPA-defined {@link jakarta.persistence.Graph} with additional operations.
  * <p>
- * There are a range of ways to create {@code Graph}s:
+ * There are a range of ways to define {@code Graph}s:
  * <ul>
  * <li>programmatically, beginning with {@link org.hibernate.Session#createEntityGraph(Class)},
  * <li>using the {@link jakarta.persistence.NamedEntityGraph @NamedEntityGraph} annotation, or
  * <li>using the mini-language understood by {@link GraphParser}.
  * </ul>
+ * <p>
+ * When a graph is defined programmatically, the new graph is usually instantiated by calling
+ * {@link jakarta.persistence.EntityManager#createEntityGraph(Class)}. However, this requires
+ * a reference to and {@code EntityManager}, which might not always be convenient. An
+ * alternative is provided by {@link EntityGraphs#createGraph(EntityType)}.
  *
  * @apiNote Historically, both {@link jakarta.persistence.EntityGraph} and this interface
  * declared operations with incorrect generic types, leading to unsound code. This was

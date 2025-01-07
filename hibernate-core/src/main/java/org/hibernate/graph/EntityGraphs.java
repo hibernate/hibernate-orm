@@ -18,9 +18,13 @@ import jakarta.persistence.Query;
 import jakarta.persistence.Subgraph;
 import jakarta.persistence.TypedQuery;
 
+import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.SelectionQuery;
 
 /**
@@ -32,6 +36,43 @@ import org.hibernate.query.SelectionQuery;
  * @author Gavin King
  */
 public final class EntityGraphs {
+
+	/**
+	 * Create a new entity graph rooted at the given entity, without
+	 * needing a reference to the session or session factory.
+	 *
+	 * @param rootType The {@link EntityType} representing the root
+	 *                 entity of the graph
+	 * @return a new mutable {@link EntityGraph}
+	 *
+	 * @since 7.0
+	 */
+	public static <T> EntityGraph<T> createGraph(EntityType<T> rootType) {
+		return new RootGraphImpl<>( null, (EntityDomainType<T>) rootType );
+	}
+
+	/**
+	 * Create a new entity graph rooted at the given
+	 * {@linkplain RepresentationMode#MAP dynamic entity}, without
+	 * needing a reference to the session or session factory.
+	 *
+	 * @param rootType The {@link EntityType} representing the root
+	 *                 entity of the graph, which must be a dynamic
+	 *                 entity
+	 * @return a new mutable {@link EntityGraph}
+	 *
+	 * @since 7.0
+	 */
+	public static EntityGraph<Map<String,?>> createGraphForDynamicEntity(EntityType<?> rootType) {
+		final EntityDomainType<?> domainType = (EntityDomainType<?>) rootType;
+		if ( domainType.getRepresentationMode() != RepresentationMode.MAP ) {
+			throw new IllegalArgumentException( "Entity '" + domainType.getHibernateEntityName()
+												+ "' is not a dynamic entity" );
+		}
+		@SuppressWarnings("unchecked") //Safe, because we just checked
+		final EntityDomainType<Map<String, ?>> dynamicEntity = (EntityDomainType<Map<String, ?>>) domainType;
+		return new RootGraphImpl<>( null, dynamicEntity );
+	}
 
 	/**
 	 * Merges multiple entity graphs into a single graph that specifies the

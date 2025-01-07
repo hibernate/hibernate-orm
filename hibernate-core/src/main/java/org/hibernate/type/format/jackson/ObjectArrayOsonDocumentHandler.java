@@ -25,6 +25,8 @@ import java.util.Stack;
  * Implementation of <code>JsonDocumentHandler</code> for OSON document.
  * This implementation will produce an Object Array based on
  * embeddable mapping
+ * Once All JSON document is handle the mapped Object array can be retrieved using the
+ * <code>getObjectArray()</code> method.
  *
  */
 public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {

@@ -16,6 +16,7 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -68,6 +69,11 @@ public class CommentElementCollectionTest {
 		@Override
 		public void integrate(Metadata metadata, BootstrapContext bootstrapContext, SessionFactoryImplementor sessionFactory) {
 			METADATA = metadata;
+		}
+
+		@Override
+		public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+			// do nothing
 		}
 	}
 }

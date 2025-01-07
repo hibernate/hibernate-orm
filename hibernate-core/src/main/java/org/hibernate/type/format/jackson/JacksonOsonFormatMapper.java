@@ -225,10 +225,10 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 	}
 
 	private <X> void serializetoOsonApproach2Util(X value,
-												  OracleJsonGenerator generator,
-												  JavaType<X> javaType,
-												  WrapperOptions options,
-												  EmbeddableMappingType embeddableMappingType) {
+												OracleJsonGenerator generator,
+												JavaType<X> javaType,
+												WrapperOptions options,
+												EmbeddableMappingType embeddableMappingType) {
 
 		final Object[] values = embeddableMappingType.getValues( value );
 		for ( int i = 0; i < values.length; i++ ) {
@@ -296,20 +296,20 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 				generator.write( javaType.unwrap( value,Integer.class,options ) );
 				break;
 			case SqlTypes.BOOLEAN:
-				generator.write( (Boolean) value );
+				generator.write( javaType.unwrap( value,Boolean.class,options ) );
 				break;
 			case SqlTypes.BIT:
-				generator.write( (Integer) value );
+				generator.write( javaType.unwrap( value,Integer.class,options ) );
 				break;
 			case SqlTypes.BIGINT:
-				generator.write( (BigInteger) value );
+				generator.write( javaType.unwrap( value,BigInteger.class,options ) );
 				break;
 			case SqlTypes.FLOAT:
-				generator.write( (Float) value );
+				generator.write( javaType.unwrap( value,Float.class,options ) );
 				break;
 			case SqlTypes.REAL:
 			case SqlTypes.DOUBLE:
-				generator.write( (Double) value );
+				generator.write( javaType.unwrap( value,Double.class,options ) );
 				break;
 			case SqlTypes.CHAR:
 			case SqlTypes.NCHAR:
@@ -331,7 +331,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 			case SqlTypes.ENUM:
 			case SqlTypes.NAMED_ENUM:
 				// correct?
-				generator.write( javaType.toString(value) );
+				generator.write( javaType.unwrap( value,String.class,options ) );
 				break;
 			case SqlTypes.DATE:
 				DATE dd = new DATE(javaType.unwrap( value,java.sql.Date.class,options ));
@@ -341,7 +341,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 			case SqlTypes.TIME:
 			case SqlTypes.TIME_WITH_TIMEZONE:
 			case SqlTypes.TIME_UTC:
-				generator.write( javaType.toString(value) );
+				generator.write( javaType.unwrap( value,String.class,options ) );
 				break;
 			case SqlTypes.TIMESTAMP:
 				TIMESTAMP TS = new TIMESTAMP(javaType.unwrap( value, Timestamp.class, options ));
@@ -371,7 +371,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 					generator.write(instant.atOffset( ZoneOffset.UTC )  );
 					break;
 				}
-				generator.write( javaType.toString(value) );
+				generator.write( javaType.unwrap( value,String.class,options ) );
 				break;
 			case SqlTypes.NUMERIC:
 			case SqlTypes.DECIMAL:
@@ -385,16 +385,19 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 				break;
 			case SqlTypes.UUID:
 				UUID uuid = javaType.unwrap( value, UUID.class, options );
-				byte[] bytes = _asBytes( uuid );
-				generator.write( bytes );
+				byte[] uuidBytes = _asBytes( uuid );
+				generator.write( uuidBytes );
 				break;
 			case SqlTypes.BINARY:
 			case SqlTypes.VARBINARY:
 			case SqlTypes.LONGVARBINARY:
 			case SqlTypes.LONG32VARBINARY:
+				byte[] bytes = javaType.unwrap( value, byte[].class, options );
+				generator.write( bytes );
+				break;
 			case SqlTypes.BLOB:
 			case SqlTypes.MATERIALIZED_BLOB:
-
+				// how to handle
 				break;
 			case SqlTypes.ARRAY:
 			case SqlTypes.JSON_ARRAY:

@@ -6,7 +6,6 @@ package org.hibernate.type.format.jackson;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -36,7 +35,6 @@ import org.hibernate.type.format.JsonDocumentHandler;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -73,8 +71,11 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 	 */
 	public JacksonOsonFormatMapper(ObjectMapper objectMapper) {
 		super(objectMapper);
-		this.objectMapper = objectMapper;
 	}
+
+	/**
+	 * Creates a new JacksonOsonFormatMapper
+	 */
 	public JacksonOsonFormatMapper() {
 		super();
 	}
@@ -183,27 +184,6 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 
 		return (T)handler.getObjectArray();
 	}
-
-	@Override
-	public <T> T fromString(CharSequence charSequence, Type type) {
-		try {
-			return objectMapper.readValue( charSequence.toString(), objectMapper.constructType( type ) );
-		}
-		catch (JsonProcessingException e) {
-			throw new IllegalArgumentException( "Could not deserialize string to java type: " + type, e );
-		}
-	}
-
-	@Override
-	public <T> String toString(T value, Type type) {
-		try {
-			return objectMapper.writerFor( objectMapper.constructType( type ) ).writeValueAsString( value );
-		}
-		catch (JsonProcessingException e) {
-			throw new IllegalArgumentException( "Could not serialize object of java type: " + type, e );
-		}
-	}
-
 
 	public <X>byte[] toOson(X value, JavaType<X> javaType, WrapperOptions options,EmbeddableMappingType embeddableMappingType) {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();

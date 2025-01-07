@@ -17,7 +17,7 @@ import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
- * Represents a {@link jakarta.persistence.metamodel.ManagedType managed type} in an
+ * Represents a {@linkplain jakarta.persistence.metamodel.ManagedType managed type} in an
  * {@linkplain Graph entity graph}, acting as a container for:
  * <ul>
  * <li>{@link AttributeNode} references representing fetched attributes, and

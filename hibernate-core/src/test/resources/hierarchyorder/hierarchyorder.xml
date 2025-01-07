@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://java.sun.com/xml/ns/persistence" version="2.0">
+    <persistence-unit name="hierarchyorder">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <class>org.hibernate.orm.test.org.hierarchyorder.DerOA</class>
+        <class>org.hibernate.orm.test.org.hierarchyorder.DerDA</class>
+        <class>org.hibernate.orm.test.org.hierarchyorder.DerDB</class>
+        <class>org.hibernate.orm.test.org.hierarchyorder.DerOB</class>
+        <class>org.hibernate.orm.test.org.hierarchyorder.BaseD</class>
+        <class>org.hibernate.orm.test.org.hierarchyorder.BaseO</class>
+    </persistence-unit>
+</persistence>

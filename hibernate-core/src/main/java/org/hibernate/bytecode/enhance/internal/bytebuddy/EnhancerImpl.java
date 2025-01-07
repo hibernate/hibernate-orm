@@ -528,6 +528,11 @@ public class EnhancerImpl implements Enhancer {
 		// Check name of the getter/setter method with persistence annotation and getter/setter method name that doesn't refer to an entity field
 		// and will return false.  If the property accessor method(s) are named to match the field name(s), return true.
 		final AccessType defaultAccessType = determineDefaultAccessType( managedCtClass );
+
+		if ( AccessType.PROPERTY == defaultAccessType) {
+			return true;
+		}
+
 		final MethodList<?> methods = MethodGraph.Compiler.DEFAULT.compile( (TypeDefinition) managedCtClass )
 				.listNodes()
 				.asMethodList()

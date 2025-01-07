@@ -15,6 +15,7 @@ import org.hibernate.type.format.JsonDocumentHandler;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -230,6 +231,13 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 		}
 		else if (java.sql.Timestamp.class.isAssignableFrom( underlyingType )) {
 			theOneToBeUsed = Timestamp.valueOf( localDateTime );
+		}
+		else if(java.time.LocalTime.class.isAssignableFrom( underlyingType )) {
+			theOneToBeUsed = localDateTime.toLocalTime();
+		}
+		else if ( java.util.Date.class.isAssignableFrom( underlyingType ) ) {
+			// better way?
+			theOneToBeUsed = java.util.Date.from( localDateTime.atZone( ZoneId.of( "UTC" ) ).toInstant());
 		}
 
 		if ( subArrayObjectList != null ) {

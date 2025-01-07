@@ -54,9 +54,9 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 
 	/**
 	 * Gets the Object array built from document handling
-	 * @return the array
+	 * @return the array of objects
 	 */
-	public Object [] getMappedObjectArray() {
+	public Object [] getObjectArray() {
 		return this.objectArrayResult;
 	}
 
@@ -65,6 +65,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 		if (currentKeyName != null) {
 			// we are dealing with a sub-object, allocate space for it.
 			// otherwise, we have nothing to do.
+			// Push the new (sub)mapping definition.
 			currentSelectableIndexInResultArray = embeddableMappingTypes.peek().getSelectableIndex( currentKeyName );
 			assert currentSelectableIndexInResultArray != -1: "Cannot get index of " + currentKeyName;
 
@@ -81,6 +82,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 
 	@Override
 	public void endObject() {
+		// go back in the mapping definition tree
 		embeddableMappingTypes.pop();
 	}
 
@@ -159,6 +161,11 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 			objectArrayResult[currentSelectableIndexInResultArray] =
 					mapping.getJdbcMapping().getJdbcJavaType().fromEncodedString( value,0,value.length());
 		}
+	}
+
+	@Override
+	public void onNumberValue(Number value) {
+		onOsonValue(value);
 	}
 
 	/**

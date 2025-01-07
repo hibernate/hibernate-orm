@@ -131,13 +131,8 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 					handler.onNullValue();
 					break;
 				case OracleJsonParser.Event.VALUE_DECIMAL:
-					if (osonParser.isIntegralNumber()) {
-						((ObjectArrayOsonDocumentHandler)handler).onOsonValue(
-								osonParser.getInt());
-					} else {
-						((ObjectArrayOsonDocumentHandler)handler).onOsonValue(
-								osonParser.getFloat());
-					}
+					((ObjectArrayOsonDocumentHandler)handler).onOsonValue(
+							osonParser.getBigDecimal());
 					break;
 				case OracleJsonParser.Event.VALUE_DOUBLE:
 					((ObjectArrayOsonDocumentHandler)handler).onOsonValue(
@@ -186,7 +181,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 
 		consumeOsonTokens(osonParser, osonParser.next(), handler);
 
-		return (T)handler.getMappedObjectArray();
+		return (T)handler.getObjectArray();
 	}
 
 	@Override

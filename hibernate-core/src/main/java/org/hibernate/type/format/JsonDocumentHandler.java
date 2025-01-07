@@ -8,6 +8,7 @@ package org.hibernate.type.format;
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 
+
 /**
  * JSON document handler.
  * Used to parse JSON documents. Implementors of this will define
@@ -57,5 +58,9 @@ public interface JsonDocumentHandler {
 	 */
 	void onStringValue(String value);
 
+	/**
+	 * Callback to be called when Number value is encountered.
+	 */
+	void onNumberValue(Number value);
 
 }

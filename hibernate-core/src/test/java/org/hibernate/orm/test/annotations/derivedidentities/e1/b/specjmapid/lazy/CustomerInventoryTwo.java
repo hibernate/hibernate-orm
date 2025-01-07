@@ -26,7 +26,6 @@ import jakarta.persistence.Version;
 import org.hibernate.orm.test.annotations.derivedidentities.e1.b.specjmapid.Item;
 
 @NamedQueries({ @NamedQuery(name = "CustomerInventoryTwo.selectAll", query = "select a from CustomerInventoryTwo a") })
-@SuppressWarnings("serial")
 @Entity
 @Table(name = "O_CUSTINVENTORY")
 @IdClass(CustomerInventoryTwoPK.class)

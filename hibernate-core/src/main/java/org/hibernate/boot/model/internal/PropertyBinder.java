@@ -623,7 +623,7 @@ public class PropertyBinder {
 		final MemberDetails element = propertyAnnotatedElement.getAttributeMember();
 		if ( hasIdAnnotation( element ) ) {
 			inFlightPropertyDataList.add( idPropertyCounter, propertyAnnotatedElement );
-			handleIdProperty( propertyContainer, context, declaringClass, ownerType, element );
+			handleInferredMapsIdProperty( propertyContainer, context, declaringClass, ownerType, element );
 			if ( hasToOneAnnotation( element ) ) {
 				context.getMetadataCollector()
 						.addToOneAndIdProperty( ownerType.determineRawClass(), propertyAnnotatedElement );
@@ -653,31 +653,40 @@ public class PropertyBinder {
 		}
 	}
 
-	private static void handleIdProperty(
+	// The following code infers a "missing" @MapsId annotation when
+	// an @Id Column matches a @JoinColumn of another field. No test
+	// fails if I simply remove this code, and, indeed, it was broken
+	// and doing nothing before I got here. I've now "fixed" it to do
+	// what it was supposed to be doing, but honestly the semantics
+	// aren't clear: why should it be linked to the existence of an
+	// explicit @Column annotation? And there's still no test for it.
+	//
+	// The real work is done by ToOneBinder#handleInferredMapsId
+	private static void handleInferredMapsIdProperty(
 			PropertyContainer propertyContainer,
 			MetadataBuildingContext context,
 			ClassDetails declaringClass,
 			TypeVariableScope ownerType,
 			MemberDetails element) {
-		// The property must be put in hibernate.properties as it's a system wide property. Fixable?
-		//TODO support true/false/default on the property instead of present / not present
-		//TODO is @Column mandatory?
-		//TODO add method support
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
-		if ( context.getBuildingOptions().isSpecjProprietarySyntaxEnabled() ) {
-			if ( element.hasDirectAnnotationUsage( Id.class ) && element.hasDirectAnnotationUsage( Column.class ) ) {
+		if ( context.getBuildingOptions().isMapsIdInferenceEnabled() ) {
+			//TODO support true/false/default on the property instead of present / not present
+			final SourceModelBuildingContext sourceModelContext =
+					context.getMetadataCollector().getSourceModelBuildingContext();
+			if ( element.hasDirectAnnotationUsage( Id.class )
+				//TODO Explicit @Column should not be mandatory here
+					&& element.hasDirectAnnotationUsage( Column.class ) ) {
 				final String columnName = element.getDirectAnnotationUsage( Column.class ).name();
-				declaringClass.forEachField( (index, fieldDetails) -> {
-					if ( !element.hasDirectAnnotationUsage( MapsId.class )
-							&& isJoinColumnPresent( columnName, element, sourceModelContext ) ) {
+				declaringClass.forEachPersistableMember( memberDetails -> {
+					if ( !memberDetails.hasDirectAnnotationUsage( MapsId.class )
+							&& isJoinColumnPresent( columnName, memberDetails, sourceModelContext ) ) {
 						//create a PropertyData for the specJ property holding the mapping
-						context.getMetadataCollector().addPropertyAnnotatedWithMapsIdSpecj(
+						context.getMetadataCollector().addInferredMapsIdProperty(
 								ownerType.determineRawClass(),
 								new PropertyInferredData(
 										declaringClass,
 										ownerType,
 										//same dec
-										element,
+										memberDetails,
 										// the actual @XToOne property
 										propertyContainer.getClassLevelAccessType().getType(),
 										//TODO we should get the right accessor but the same as id would do
@@ -1389,7 +1398,7 @@ public class PropertyBinder {
 				return data;
 			}
 			// TODO: is this branch even necessary?
-			else if ( buildingContext.getBuildingOptions().isSpecjProprietarySyntaxEnabled() ) {
+			else  {
 				return metadataCollector.getPropertyAnnotatedWithMapsId( classDetails, propertyName );
 			}
 		}

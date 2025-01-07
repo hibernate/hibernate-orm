@@ -10,7 +10,6 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -26,7 +25,7 @@ public class IdMapManyToOneSpecjTest extends BaseNonConfigCoreFunctionalTestCase
 	@Override
 	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
 		super.configureMetadataBuilder( metadataBuilder );
-		( ( MetadataBuilderImpl) metadataBuilder ).allowSpecjSyntax();
+		metadataBuilder.enableMapsIdInference( true );
 	}
 
 	@Test

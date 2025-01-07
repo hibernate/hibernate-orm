@@ -5,6 +5,7 @@
 package org.hibernate.graph;
 
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * Extends the JPA-defined {@link EntityGraph} with additional operations.
@@ -13,6 +14,13 @@ import jakarta.persistence.EntityGraph;
  * @author Andrea Boriero
  *
  * @see SubGraph
+ * @see org.hibernate.Session#createEntityGraph(Class)
+ * @see org.hibernate.Session#createEntityGraph(String)
+ * @see org.hibernate.Session#createEntityGraph(Class, String)
+ * @see org.hibernate.SessionFactory#findEntityGraphByName(String)
+ * @see org.hibernate.SessionFactory#createGraphForDynamicEntity(String)
+ * @see EntityGraphs#createGraph(EntityType)
+ * @see EntityGraphs#createGraphForDynamicEntity(EntityType)
  */
 public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 

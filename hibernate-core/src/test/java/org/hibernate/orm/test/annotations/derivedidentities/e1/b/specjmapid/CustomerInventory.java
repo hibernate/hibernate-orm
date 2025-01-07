@@ -6,6 +6,8 @@ package org.hibernate.orm.test.annotations.derivedidentities.e1.b.specjmapid;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Comparator;
+import java.util.Objects;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,7 +27,6 @@ import jakarta.persistence.Version;
 		@NamedQuery(name = "CustomerInventory.selectAll",
 				query = "select a from CustomerInventory a")
 })
-@SuppressWarnings("serial")
 @Entity
 @Table(name = "O_CUSTINVENTORY")
 @IdClass(CustomerInventoryPK.class)
@@ -111,20 +112,16 @@ public class CustomerInventory implements Serializable, Comparator<CustomerInven
 		if ( obj == this ) {
 			return true;
 		}
-		if ( obj == null || !( obj instanceof CustomerInventory ) ) {
+		if ( !(obj instanceof CustomerInventory inventory) ) {
 			return false;
 		}
-		if ( this.id == ( ( CustomerInventory ) obj ).id ) {
-			return true;
-		}
-		if ( this.id != null && ( ( CustomerInventory ) obj ).id == null ) {
+		if ( this.id != null && inventory.id == null ) {
 			return false;
 		}
-		if ( this.id == null && ( ( CustomerInventory ) obj ).id != null ) {
+		if ( this.id == null && inventory.id != null ) {
 			return false;
 		}
-
-		return this.id.equals( ( ( CustomerInventory ) obj ).id );
+		return Objects.equals( this.id, inventory.id );
 	}
 
 }

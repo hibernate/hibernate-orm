@@ -343,8 +343,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		return this;
 	}
 
-	public MetadataBuilder allowSpecjSyntax() {
-		options.specjProprietarySyntaxEnabled = true;
+	public MetadataBuilder enableMapsIdInference(boolean enabled) {
+		options.mapsIdInferenceEnabled = enabled;
 		return this;
 	}
 
@@ -644,7 +644,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private boolean implicitDiscriminatorsForJoinedInheritanceSupported;
 		private boolean implicitlyForceDiscriminatorInSelect;
 		private boolean useNationalizedCharacterData;
-		private boolean specjProprietarySyntaxEnabled;
+		private boolean mapsIdInferenceEnabled;
 		private boolean noConstraintByDefault;
 
 		private final String schemaCharset;
@@ -735,8 +735,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					regionFactory == null ? null : regionFactory.getDefaultAccessType()
 			);
 
-			specjProprietarySyntaxEnabled = configService.getSetting(
-					"hibernate.enable_specj_proprietary_syntax",
+			mapsIdInferenceEnabled = configService.getSetting(
+					"hibernate.enable_mapsid_inference",
 					BOOLEAN,
 					false
 			);
@@ -920,8 +920,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		public boolean isSpecjProprietarySyntaxEnabled() {
-			return specjProprietarySyntaxEnabled;
+		public boolean isMapsIdInferenceEnabled() {
+			return mapsIdInferenceEnabled;
 		}
 
 		@Override

@@ -4,8 +4,6 @@
  */
 package org.hibernate.boot.model.source.spi;
 
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-
 /**
  * Common contract for composite identifiers. Specific subtypes include aggregated
  * (think {@link jakarta.persistence.EmbeddedId}) and non-aggregated (think
@@ -14,13 +12,4 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
  * @author Steve Ebersole
  */
 public interface CompositeIdentifierSource extends IdentifierSource, EmbeddableSourceContributor {
-	/**
-	 * Handle silly SpecJ reading of the JPA spec.  They believe composite identifiers should have "partial generation"
-	 * capabilities.
-	 *
-	 * @param identifierAttributeName The name of the individual attribute within the composite identifier.
-	 *
-	 * @return The generator for the named attribute (within the composite).
-	 */
-	IdentifierGeneratorDefinition getIndividualAttributeIdGenerator(String identifierAttributeName);
 }

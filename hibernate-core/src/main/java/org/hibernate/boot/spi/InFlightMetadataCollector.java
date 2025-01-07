@@ -330,7 +330,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 
 	PropertyData getPropertyAnnotatedWithMapsId(ClassDetails persistentClassDetails, String propertyName);
 	void addPropertyAnnotatedWithMapsId(ClassDetails entityClassDetails, PropertyData propertyAnnotatedElement);
-	void addPropertyAnnotatedWithMapsIdSpecj(ClassDetails entityClassDetails, PropertyData specJPropertyData, String s);
+	void addInferredMapsIdProperty(ClassDetails entityClassDetails, PropertyData specJPropertyData, String s);
 
 	void addToOneAndIdProperty(ClassDetails entityClassDetails, PropertyData propertyAnnotatedElement);
 	PropertyData getPropertyAnnotatedWithIdAndToOne(ClassDetails persistentClassDetails, String propertyName);

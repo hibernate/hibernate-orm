@@ -1373,7 +1373,7 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
-	public void addPropertyAnnotatedWithMapsIdSpecj(ClassDetails entityType, PropertyData property, String mapsIdValue) {
+	public void addInferredMapsIdProperty(ClassDetails entityType, PropertyData property, String mapsIdValue) {
 		if ( propertiesAnnotatedWithMapsId == null ) {
 			propertiesAnnotatedWithMapsId = new HashMap<>();
 		}

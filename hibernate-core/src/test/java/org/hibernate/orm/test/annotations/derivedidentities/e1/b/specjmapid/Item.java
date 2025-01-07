@@ -18,7 +18,6 @@ import jakarta.persistence.Version;
 		@NamedQuery(name = "Item.findByCategory",
 				query = "SELECT i FROM Item i WHERE i.category=:category ORDER BY i.id")
 })
-@SuppressWarnings("serial")
 @Entity
 @Table(name = "O_ITEM")
 public class Item implements Serializable {

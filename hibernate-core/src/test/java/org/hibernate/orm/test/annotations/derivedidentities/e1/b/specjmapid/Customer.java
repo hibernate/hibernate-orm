@@ -21,7 +21,6 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Version;
 
-@SuppressWarnings("serial")
 @NamedQueries({
 		@NamedQuery(name = Customer.QUERY_ALL,
 				query = "select a from Customer a"),

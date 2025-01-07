@@ -150,6 +150,12 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	}
 
 	@Override
+	public MetadataBuilder enableMapsIdInference(boolean enabled) {
+		delegate.enableMapsIdInference( enabled );
+		return getThis();
+	}
+
+	@Override
 	public MetadataBuilder applyBasicType(BasicType<?> type) {
 		delegate.applyBasicType( type );
 		return getThis();

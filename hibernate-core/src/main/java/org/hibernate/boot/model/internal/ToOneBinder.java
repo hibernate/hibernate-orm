@@ -89,7 +89,8 @@ public class ToOneBinder {
 			);
 		}
 
-		if ( joinColumns.hasMappedBy() && isIdentifier( propertyHolder, propertyBinder, isIdentifierMapper ) ) {
+		if ( joinColumns.hasMappedBy()
+				&& isIdentifier( propertyHolder, propertyBinder, isIdentifierMapper ) ) {
 			throw new AnnotationException(
 					"Property '" + getPath( propertyHolder, inferredData )
 							+ "' is the inverse side of a '@ManyToOne' association and cannot be used as identifier"
@@ -213,7 +214,7 @@ public class ToOneBinder {
 			joinColumns.setMapsId( mapsId.value() );
 		}
 
-		final boolean hasSpecjManyToOne = handleSpecjSyntax( joinColumns, inferredData, context, property );
+		final boolean hasInferredMapsId = handleInferredMapsId( joinColumns, inferredData, property, context );
 		value.setTypeName( inferredData.getClassOrElementName() );
 		final String propertyName = inferredData.getPropertyName();
 		value.setTypeUsingReflection( propertyHolder.getClassName(), propertyName );
@@ -243,11 +244,10 @@ public class ToOneBinder {
 				joinColumns,
 				optional,
 				inferredData,
-				isIdentifierMapper,
+				isIdentifierMapper || hasInferredMapsId,
 				propertyBinder,
 				value,
 				property,
-				hasSpecjManyToOne,
 				propertyName
 		);
 	}
@@ -257,36 +257,46 @@ public class ToOneBinder {
 		return target.hasDirectAnnotationUsage( Entity.class );
 	}
 
-	private static boolean handleSpecjSyntax(
+	// The following code infers a "missing" @MapsId annotation
+	// when an @Id Column matches a @JoinColumn of another field.
+	// There's also some related code for this case over in
+	// PropertyBinder#handleInferredMapsIdProperty
+	private static boolean handleInferredMapsId(
 			AnnotatedJoinColumns columns,
-			PropertyData inferredData,
-			MetadataBuildingContext context,
-			MemberDetails property) {
-		//Make sure that JPA1 key-many-to-one columns are read only too
-		boolean hasSpecjManyToOne = false;
-		if ( context.getBuildingOptions().isSpecjProprietarySyntaxEnabled() ) {
+			PropertyData propertyData,
+			MemberDetails property,
+			MetadataBuildingContext context) {
+		if ( context.getBuildingOptions().isMapsIdInferenceEnabled() ) {
+			//Make sure that JPA1 key-many-to-one columns are read only too
+			boolean hasInferredMapsId = false;
 			final JoinColumn joinColumn = property.getDirectAnnotationUsage( JoinColumn.class );
-			String columnName = "";
-			for ( MemberDetails prop : inferredData.getDeclaringClass().getFields() ) {
-				if ( prop.hasDirectAnnotationUsage( Id.class ) && prop.hasDirectAnnotationUsage( Column.class ) ) {
-					columnName = prop.getDirectAnnotationUsage( Column.class ).name();
-				}
-
-				if ( property.hasDirectAnnotationUsage( ManyToOne.class ) && joinColumn != null ) {
-					final String joinColumnName = joinColumn.name();
-					if ( isNotBlank( joinColumnName )
-							&& joinColumnName.equals( columnName )
-							&& !property.hasDirectAnnotationUsage( MapsId.class ) ) {
-						hasSpecjManyToOne = true;
-						for ( AnnotatedJoinColumn column : columns.getJoinColumns() ) {
-							column.setInsertable( false );
-							column.setUpdatable( false );
+			if ( joinColumn != null
+					&& property.hasDirectAnnotationUsage( ManyToOne.class )
+					&& !property.hasDirectAnnotationUsage( MapsId.class ) ) {
+				final String joinColumnName = joinColumn.name();
+				if ( isNotBlank( joinColumnName ) ) {
+					for ( MemberDetails member : propertyData.getDeclaringClass().getFields() ) {
+						if ( member.hasDirectAnnotationUsage( Id.class )
+							//TODO Explicit @Column should not be mandatory here
+								&& member.hasDirectAnnotationUsage( Column.class ) ) {
+							final String columnName = member.getDirectAnnotationUsage( Column.class ).name();
+							if ( joinColumnName.equals( columnName ) ) {
+								hasInferredMapsId = true;
+								for ( AnnotatedJoinColumn column : columns.getJoinColumns() ) {
+									column.setInsertable( false );
+									column.setUpdatable( false );
+								}
+							}
 						}
 					}
 				}
+
 			}
+			return hasInferredMapsId;
 		}
-		return hasSpecjManyToOne;
+		else {
+			return false;
+		}
 	}
 
 	private static void processManyToOneProperty(
@@ -298,7 +308,6 @@ public class ToOneBinder {
 			PropertyBinder propertyBinder,
 			org.hibernate.mapping.ManyToOne value,
 			MemberDetails property,
-			boolean hasSpecjManyToOne,
 			String propertyName) {
 
 		columns.checkPropertyConsistency();
@@ -311,10 +320,6 @@ public class ToOneBinder {
 			propertyBinder.setInsertable( false );
 			propertyBinder.setUpdatable( false );
 		}
-		else if ( hasSpecjManyToOne ) {
-			propertyBinder.setInsertable( false );
-			propertyBinder.setUpdatable( false );
-		}
 		propertyBinder.setColumns( columns );
 		propertyBinder.setAccessType( inferredData.getDefaultAccess() );
 		propertyBinder.setCascade( cascadeStrategy );
@@ -323,15 +328,15 @@ public class ToOneBinder {
 
 		final JoinColumn joinColumn = property.getDirectAnnotationUsage( JoinColumn.class );
 		final JoinColumns joinColumns = property.getDirectAnnotationUsage( JoinColumns.class );
-		propertyBinder.makePropertyAndBind().setOptional( optional && isNullable( joinColumns, joinColumn ) );
+		propertyBinder.makePropertyAndBind()
+				.setOptional( optional && isNullable( joinColumns, joinColumn ) );
 	}
 
 	private static boolean isNullable(JoinColumns joinColumns, JoinColumn joinColumn) {
 		if ( joinColumn != null ) {
 			return joinColumn.nullable();
 		}
-
-		if ( joinColumns != null ) {
+		else if ( joinColumns != null ) {
 			for ( JoinColumn column : joinColumns.value() ) {
 				if ( column.nullable() ) {
 					return true;
@@ -339,8 +344,9 @@ public class ToOneBinder {
 			}
 			return false;
 		}
-
-		return true;
+		else {
+			return true;
+		}
 	}
 
 	static void defineFetchingStrategy(

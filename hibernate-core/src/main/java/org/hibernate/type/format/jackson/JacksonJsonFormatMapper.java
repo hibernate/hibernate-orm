@@ -22,7 +22,7 @@ public class JacksonJsonFormatMapper extends AbstractJsonFormatMapper {
 
 	public static final String SHORT_NAME = "jackson";
 
-	private final ObjectMapper objectMapper;
+	protected final ObjectMapper objectMapper;
 
 	public JacksonJsonFormatMapper() {
 		this(new ObjectMapper().findAndRegisterModules());

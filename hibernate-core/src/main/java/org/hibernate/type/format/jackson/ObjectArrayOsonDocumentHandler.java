@@ -31,17 +31,24 @@ import java.util.Stack;
  */
 public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 
+	// final result of mapped obejct array
 	private Object [] objectArrayResult;
-	SelectableMapping mapping = null;
+	// current mapping to be used
+	SelectableMapping currentSelectableMapping = null;
 	String currentKeyName = null;
 	List<Object> subArrayObjectList = null;
 	BasicPluralType<?, ?> subArrayObjectTypes = null;
 
 	// mapping definitions are in a tree
 	// Each mapping definition may contain sub mappings (sub embeddable mapping)
-	// This stack is used to keep a pointer on the current mapping to be used
-	// see startObject/endObject methods
+	// This stack is used to keep a pointer on the current mapping to be used to assign correct types.
+	// see startObject()/endObject() methods
 	Stack<EmbeddableMappingType> embeddableMappingTypes = new Stack<>();
+	// As for mapping definitions, when "sub embeddable" is encountered, the array
+	// that needs to be filled with Objects is the one we allocate in the final result array slot.
+	// We use a stack to keep track of array ref
+	Stack<Object[]> objectArrays = new Stack<>();
+
 
 	WrapperOptions wrapperOptions;
 
@@ -52,6 +59,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 		this.embeddableMappingTypes.push(embeddableMappingType);
 		this.wrapperOptions = wrapperOptions;
 		this.objectArrayResult = new Object[embeddableMappingType.getJdbcValueCount()];
+		this.objectArrays.push( this.objectArrayResult );
 	}
 
 	/**
@@ -65,10 +73,10 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 	@Override
 	public void startObject() {
 		if (currentKeyName != null) {
-			// we are dealing with a sub-object, allocate space for it.
+			// We are dealing with a sub-object, allocate space for it then,
 			// otherwise, we have nothing to do.
 			// Push the new (sub)mapping definition.
-			currentSelectableIndexInResultArray = embeddableMappingTypes.peek().getSelectableIndex( currentKeyName );
+			this.currentSelectableIndexInResultArray = embeddableMappingTypes.peek().getSelectableIndex( currentKeyName );
 			assert currentSelectableIndexInResultArray != -1: "Cannot get index of " + currentKeyName;
 
 			final SelectableMapping selectable = embeddableMappingTypes.peek().getJdbcValueSelectable(
@@ -76,16 +84,18 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) selectable.getJdbcMapping()
 					.getJdbcType();
 			final EmbeddableMappingType subMappingType = aggregateJdbcType.getEmbeddableMappingType();
-			objectArrayResult[currentSelectableIndexInResultArray] =
+			this.objectArrays.peek()[currentSelectableIndexInResultArray] =
 					new Object[subMappingType.getJdbcValueCount()];
-			embeddableMappingTypes.push( subMappingType );
+			this.embeddableMappingTypes.push( subMappingType );
+			this.objectArrays.push( (Object[]) this.objectArrays.peek()[currentSelectableIndexInResultArray] );
 		}
 	}
 
 	@Override
 	public void endObject() {
 		// go back in the mapping definition tree
-		embeddableMappingTypes.pop();
+		this.embeddableMappingTypes.pop();
+		this.objectArrays.pop();
 	}
 
 	@Override
@@ -94,17 +104,17 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 
 		// initialize an array to gather values
 		subArrayObjectList = new ArrayList<>();
-		assert (mapping.getJdbcMapping() instanceof BasicPluralType<?, ?>)
+		assert (currentSelectableMapping.getJdbcMapping() instanceof BasicPluralType<?, ?>)
 				: "Array event received for non plural type";
 		// initialize array's element type
-		subArrayObjectTypes = (BasicPluralType<?, ?>) mapping.getJdbcMapping();
+		subArrayObjectTypes = (BasicPluralType<?, ?>) currentSelectableMapping.getJdbcMapping();
 	}
 
 	@Override
 	public void endArray() {
 		assert (subArrayObjectList != null && subArrayObjectTypes != null) : "endArray called before startArray";
 		// flush array values
-		objectArrayResult[currentSelectableIndexInResultArray] = subArrayObjectTypes.getJdbcJavaType().wrap( subArrayObjectList, wrapperOptions );
+		this.objectArrays.peek()[currentSelectableIndexInResultArray] = subArrayObjectTypes.getJdbcJavaType().wrap( subArrayObjectList, wrapperOptions );
 		// reset until we encounter next array element
 		subArrayObjectList = null;
 		subArrayObjectTypes = null;
@@ -117,7 +127,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 		currentSelectableIndexInResultArray = embeddableMappingTypes.peek().getSelectableIndex( currentKeyName );
 		if ( currentSelectableIndexInResultArray >= 0 ) {
 			// we may not have a selectable mapping for that key
-			mapping = embeddableMappingTypes.peek().getJdbcValueSelectable( currentSelectableIndexInResultArray );
+			currentSelectableMapping = embeddableMappingTypes.peek().getJdbcValueSelectable( currentSelectableIndexInResultArray );
 		}
 		else {
 			throw new IllegalArgumentException(
@@ -137,7 +147,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 			subArrayObjectList.add( null );
 		}
 		else {
-			objectArrayResult[currentSelectableIndexInResultArray] = null;
+			this.objectArrays.peek()[currentSelectableIndexInResultArray] = null;
 		}
 	}
 
@@ -148,7 +158,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 			subArrayObjectList.add( value?Boolean.TRUE:Boolean.FALSE);
 		}
 		else {
-			objectArrayResult[currentSelectableIndexInResultArray] = value?Boolean.TRUE:Boolean.FALSE;
+			this.objectArrays.peek()[currentSelectableIndexInResultArray] = value?Boolean.TRUE:Boolean.FALSE;
 		}
 	}
 
@@ -160,8 +170,8 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 					subArrayObjectTypes.getElementType().getJdbcJavaType().fromEncodedString( value ,0,value.length()) );
 		}
 		else {
-			objectArrayResult[currentSelectableIndexInResultArray] =
-					mapping.getJdbcMapping().getJdbcJavaType().fromEncodedString( value,0,value.length());
+			this.objectArrays.peek()[currentSelectableIndexInResultArray] =
+					currentSelectableMapping.getJdbcMapping().getJdbcJavaType().fromEncodedString( value,0,value.length());
 		}
 	}
 
@@ -181,9 +191,9 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 			subArrayObjectList.add( value );
 		}
 		else {
-			objectArrayResult[currentSelectableIndexInResultArray] =
-					mapping.getJdbcMapping().convertToDomainValue(
-					mapping.getJdbcMapping().getJdbcJavaType()
+			this.objectArrays.peek()[currentSelectableIndexInResultArray] =
+					currentSelectableMapping.getJdbcMapping().convertToDomainValue(
+					currentSelectableMapping.getJdbcMapping().getJdbcJavaType()
 							.wrap( value, wrapperOptions ) );
 		}
 	}
@@ -199,7 +209,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 			underlyingType = subArrayObjectTypes.getElementType().getJavaType();
 		}
 		else {
-			underlyingType = (Class) mapping.getJdbcMapping().getJdbcJavaType().getJavaType();
+			underlyingType = (Class) currentSelectableMapping.getJdbcMapping().getJdbcJavaType().getJavaType();
 		}
 
 		if (java.util.UUID.class.isAssignableFrom( underlyingType ))  {
@@ -214,7 +224,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 			subArrayObjectList.add( theOneToBeUsed );
 		}
 		else {
-			objectArrayResult[currentSelectableIndexInResultArray] = theOneToBeUsed;
+			this.objectArrays.peek()[currentSelectableIndexInResultArray] = theOneToBeUsed;
 		}
 	}
 
@@ -231,7 +241,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 			underlyingType = subArrayObjectTypes.getElementType().getJavaType();
 		}
 		else {
-			underlyingType = (Class) mapping.getJdbcMapping().getJdbcJavaType().getJavaType();
+			underlyingType = (Class) currentSelectableMapping.getJdbcMapping().getJdbcJavaType().getJavaType();
 		}
 		if (java.sql.Date.class.isAssignableFrom( underlyingType )) {
 			theOneToBeUsed = Date.valueOf( localDateTime.toLocalDate());
@@ -261,7 +271,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 			subArrayObjectList.add( theOneToBeUsed );
 		}
 		else {
-			objectArrayResult[currentSelectableIndexInResultArray] = theOneToBeUsed;
+			this.objectArrays.peek()[currentSelectableIndexInResultArray] = theOneToBeUsed;
 		}
 	}
 }

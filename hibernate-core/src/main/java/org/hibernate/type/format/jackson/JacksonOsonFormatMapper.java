@@ -144,12 +144,11 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 							osonParser.getBytes());
 					break;
 				case OracleJsonParser.Event.START_OBJECT:
-					handler.startObject(  );
-					//consumeOsonTokens( osonParser, osonParser.next(), handler);
+					handler.startObject();
 					break;
 				case OracleJsonParser.Event.END_OBJECT:
 					handler.endObject();
-					return;
+					break;
 				default:
 					throw new IOException( "Unknown OSON event " + event );
 

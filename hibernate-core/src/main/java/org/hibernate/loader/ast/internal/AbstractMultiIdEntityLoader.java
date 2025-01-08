@@ -11,7 +11,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.internal.CacheLoadHelper.PersistenceContextEntry;
@@ -22,7 +21,6 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,15 +38,12 @@ import static org.hibernate.loader.internal.CacheLoadHelper.loadFromSessionCache
 public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoader<T> {
 	private final EntityMappingType entityDescriptor;
 	private final SessionFactoryImplementor sessionFactory;
-	private final EntityIdentifierMapping identifierMapping;
-	protected final Object[] idArray;
+	protected final EntityIdentifierMapping identifierMapping;
 
-	@AllowReflection
 	public AbstractMultiIdEntityLoader(EntityMappingType entityDescriptor, SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
 		this.sessionFactory = sessionFactory;
 		identifierMapping = getLoadable().getIdentifierMapping();
-		idArray = (Object[]) Array.newInstance( identifierMapping.getJavaType().getJavaTypeClass(), 0 );
 	}
 
 	protected EntityMappingType getEntityDescriptor() {
@@ -303,9 +298,12 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		}
 		else {
 			// we need to load only some the ids
-			return unresolvedIds.toArray( idArray );
+			return toIdArray( unresolvedIds );
 		}
 	}
+
+	// Depending on the implementation, a specific subtype of Object[] (e.g. Integer[]) may be needed.
+	protected abstract Object[] toIdArray(List<Object> ids);
 
 	private boolean isIdCoercionEnabled() {
 		return !getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled();

@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.LockOptions;
@@ -12,6 +14,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
@@ -44,12 +47,15 @@ import static org.hibernate.sql.exec.spi.JdbcParameterBindings.NO_BINDINGS;
 public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoader<E> implements SqlArrayMultiKeyLoader {
 	private final JdbcMapping arrayJdbcMapping;
 	private final JdbcParameter jdbcParameter;
+	protected final Object[] idArray;
 
+	@AllowReflection
 	public MultiIdEntityLoaderArrayParam(
 			EntityMappingType entityDescriptor,
 			SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
-		final Class<?> idClass = idArray.getClass().getComponentType();
+		final Class<?> idClass = identifierMapping.getJavaType().getJavaTypeClass();
+		idArray = (Object[]) Array.newInstance( idClass, 0 );
 		arrayJdbcMapping = resolveArrayJdbcMapping(
 				getIdentifierMapping().getJdbcMapping(),
 				idClass,
@@ -117,7 +123,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(1);
 		jdbcParameterBindings.addBinding( jdbcParameter,
-				new JdbcParameterBindingImpl( arrayJdbcMapping, idsInBatch.toArray( idArray ) ) );
+				new JdbcParameterBindingImpl( arrayJdbcMapping, toIdArray( idsInBatch ) ) );
 
 		getJdbcSelectExecutor().executeQuery(
 				getSqlAstTranslatorFactory().buildSelectTranslator( getSessionFactory(), sqlAst )
@@ -165,7 +171,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 						.translate( NO_BINDINGS, QueryOptions.NONE );
 
 		final List<E> databaseResults = loadByArrayParameter(
-				unresolvableIds,
+				toIdArray( unresolvableIds ),
 				sqlAst,
 				jdbcSelectOperation,
 				jdbcParameter,
@@ -189,4 +195,19 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 		}
 	}
 
+	@Override
+	protected Object[] toIdArray(List<Object> ids) {
+		return ids.toArray( idArray );
+	}
+
+	protected Object[] toIdArray(Object[] ids) {
+		if ( ids.getClass().equals( idArray.getClass() ) ) {
+			return ids;
+		}
+		else {
+			Object[] typedIdArray = Arrays.copyOf( idArray, ids.length );
+			System.arraycopy( ids, 0, typedIdArray, 0, ids.length );
+			return typedIdArray;
+		}
+	}
 }

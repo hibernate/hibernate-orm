@@ -218,4 +218,10 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 			idPosition += batchSize;
 		}
 	}
+
+	@Override
+	protected Object[] toIdArray(List<Object> ids) {
+		// This loader implementation doesn't need arrays to have a specific type, Object[] will do.
+		return ids.toArray( new Object[0] );
+	}
 }

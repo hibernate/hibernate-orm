@@ -314,21 +314,32 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	<T> T doReturningWork(ReturningWork<T> work);
 
 	/**
-	 * Create a new mutable {@link EntityGraph} with only a root node.
+	 * Create a new mutable instance of {@link EntityGraph}, with only
+	 * a root node, allowing programmatic definition of the graph from
+	 * scratch.
 	 *
 	 * @param rootType the root entity class of the graph
 	 *
 	 * @since 6.3
+	 *
+	 * @see org.hibernate.graph.EntityGraphs#createGraph(jakarta.persistence.metamodel.EntityType)
 	 */
 	<T> RootGraph<T> createEntityGraph(Class<T> rootType);
 
 	/**
-	 * Create a new mutable copy of the named {@link EntityGraph},
-	 * or return {@code null} if there is no graph with the given
-	 * name.
+	 * Create a new mutable instance of {@link EntityGraph}, based on
+	 * a predefined {@linkplain jakarta.persistence.NamedEntityGraph
+	 * named entity graph}, allowing customization of the graph, or
+	 * return {@code null} if there is no predefined graph with the
+	 * given name.
 	 *
 	 * @param graphName the name of the graph
 	 *
+	 * @apiNote This method returns {@code RootGraph<?>}, requiring an
+	 * unchecked typecast before use. It's cleaner to obtain a graph using
+	 * {@link #createEntityGraph(Class, String)} instead.
+	 *
+	 * @see SessionFactory#getNamedEntityGraphs(Class)
 	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
 	 *
 	 * @since 6.3
@@ -336,12 +347,14 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	RootGraph<?> createEntityGraph(String graphName);
 
 	/**
-	 * Create a new mutable copy of the named {@link EntityGraph},
-	 * or return {@code null} if there is no graph with the given
-	 * name.
+	 * Create a new mutable instance of {@link EntityGraph}, based on
+	 * a predefined {@linkplain jakarta.persistence.NamedEntityGraph
+	 * named entity graph}, allowing customization of the graph, or
+	 * return {@code null} if there is no predefined graph with the
+	 * given name.
 	 *
 	 * @param rootType the root entity class of the graph
-	 * @param graphName the name of the graph
+	 * @param graphName the name of the predefined named entity graph
 	 *
 	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
 	 *
@@ -353,21 +366,29 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	<T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName);
 
 	/**
-	 * Retrieve the named {@link EntityGraph} as an immutable graph,
-	 * or return {@code null} if there is no graph with the given
+	 * Obtain an immutable reference to a predefined
+	 * {@linkplain jakarta.persistence.NamedEntityGraph named entity graph}
+	 * or return {@code null} if there is no predefined graph with the given
 	 * name.
 	 *
-	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
+	 * @param graphName the name of the predefined named entity graph
 	 *
-	 * @param graphName the name of the graph
+	 * @apiNote This method returns {@code RootGraph<?>}, requiring an
+	 * unchecked typecast before use. It's cleaner to obtain a graph using
+	 * the static metamodel for the class which defines the graph, or by
+	 * calling {@link SessionFactory#getNamedEntityGraphs(Class)} instead.
+	 *
+	 * @see SessionFactory#getNamedEntityGraphs(Class)
+	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
 	 *
 	 * @since 6.3
 	 */
 	RootGraph<?> getEntityGraph(String graphName);
 
 	/**
-	 * Retrieve all named {@link EntityGraph}s with the given type.
+	 * Retrieve all named {@link EntityGraph}s with the given root entity type.
 	 *
+	 * @see jakarta.persistence.EntityManagerFactory#getNamedEntityGraphs(Class)
 	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
 	 *
 	 * @since 6.3

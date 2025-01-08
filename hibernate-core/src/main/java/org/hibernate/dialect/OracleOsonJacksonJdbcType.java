@@ -6,6 +6,7 @@ package org.hibernate.dialect;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
 import oracle.jdbc.OracleType;
 import oracle.sql.json.OracleJsonDatum;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -134,7 +135,11 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 					// We are dealing with embeddable (@Embeddable)
 					type = (JavaType<X>) getEmbeddableMappingType().getJavaType();
 				}
-				return mapper.readFromSource( type, osonBytes, options );
+
+				JsonFactory osonFactory = (JsonFactory) osonFactoryKlass.getDeclaredConstructor().newInstance();
+				JsonParser osonParser = osonFactory.createParser(  osonBytes );
+
+				return mapper.readFromSource( type, osonParser, options );
 			}
 
 			private X doExtraction(OracleJsonDatum datum,  WrapperOptions options) throws SQLException {

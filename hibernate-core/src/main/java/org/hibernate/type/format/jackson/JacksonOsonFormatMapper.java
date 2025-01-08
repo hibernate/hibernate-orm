@@ -553,8 +553,8 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 
 	@Override
 	public <T> T readFromSource(JavaType<T> javaType, Object source, WrapperOptions options) throws IOException {
-		JsonParser osonParser = objectMapper.getFactory().createParser( (byte[]) source );
-		return  objectMapper.readValue( osonParser, objectMapper.constructType( javaType.getJavaType()) );
+		//JsonParser osonParser = objectMapper.getFactory().createParser( (byte[]) source );
+		return  objectMapper.readValue( (JsonParser)source, objectMapper.constructType( javaType.getJavaType()) );
 	}
 
 	@Override
@@ -564,7 +564,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 
 	@Override
 	public boolean supportsTargetType(Class<?> targetType) {
-		return JsonParser.class.isAssignableFrom( targetType );
+		return JsonGenerator.class.isAssignableFrom( targetType );
 	}
 
 	// TODO : remove the use of this once the OSON writer has been refactor ot Document handling

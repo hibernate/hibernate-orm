@@ -79,6 +79,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @RequiresDialect( PostgreSQLDialect.class )
 @RequiresDialect( OracleDialect.class )
 @RequiresDialect( DB2Dialect.class )
+@SkipForDialect(dialectClass = OracleDialect.class, reason = "Waiting for the fix of a bug that prevent creation of INTERVALDS from Duration")
 public class NestedStructEmbeddableTest implements AdditionalMappingContributor {
 
 	@Override

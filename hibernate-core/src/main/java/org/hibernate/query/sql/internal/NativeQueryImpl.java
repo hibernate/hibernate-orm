@@ -643,31 +643,27 @@ public class NativeQueryImpl<R>
 
 	@Override
 	protected void prepareForExecution() {
-		if ( getSynchronizedQuerySpaces() != null && !getSynchronizedQuerySpaces().isEmpty() ) {
-			// The application defined query spaces on the Hibernate NativeQuery
-			// which means the query will already perform a partial flush
-			// according to the defined query spaces, no need to do a full flush.
-			return;
+		if ( getSynchronizedQuerySpaces() == null || getSynchronizedQuerySpaces().isEmpty() ) {
+			// We need to flush. The query itself is not required to execute in a
+			// transaction; if there is no transaction, the flush would throw a
+			// TransactionRequiredException which would potentially break existing
+			// apps, so we only do the flush if a transaction is in progress.
+			if ( shouldFlush() ) {
+				getSession().flush();
+			}
+			// Reset the callback before every execution
+			callback = null;
 		}
-
-		// otherwise we need to flush.  the query itself is not required to execute
-		// in a transaction; if there is no transaction, the flush would throw a
-		// TransactionRequiredException which would potentially break existing
-		// apps, so we only do the flush if a transaction is in progress.
-		//
-		// NOTE : this was added for JPA initially.  Perhaps we want to only do
-		// this from JPA usage?
-		if ( shouldFlush() ) {
-			getSession().flush();
-		}
-		// Reset the callback before every execution
-		callback = null;
+		// Otherwise, the application specified query spaces via the Hibernate
+		// SynchronizeableQuery and so the query will already perform a partial
+		// flush according to the defined query spaces - no need for a full flush.
 	}
 
 	private boolean shouldFlush() {
 		if ( getSession().isTransactionInProgress() ) {
 			final FlushMode flushMode = getQueryOptions().getFlushMode();
 			return switch ( flushMode == null ? getSession().getHibernateFlushMode() : flushMode ) {
+				// The JPA spec requires that we auto-flush before native queries
 				case AUTO -> getSession().getFactory().getSessionFactoryOptions().isJpaBootstrap();
 				case ALWAYS -> true;
 				default -> false;

@@ -92,8 +92,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	JpaCompliance getJpaCompliance();
 
 	/**
-	 * Was building of the SessionFactory initiated through JPA bootstrapping, or
-	 * through Hibernate's native bootstrapping?
+	 * Was building of the {@link org.hibernate.SessionFactory} initiated through JPA
+	 * bootstrapping, or through Hibernate-native bootstrapping?
 	 *
 	 * @return {@code true} indicates the SessionFactory was built through JPA
 	 * bootstrapping; {@code false} indicates it was built through native bootstrapping.

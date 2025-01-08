@@ -102,6 +102,10 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable, 
 			result = getSubclassPropertyType(propertyPath);
 		}
 
+		if ("id".equals( propertyPath )) {
+			result = identifierType();
+		}
+
 		if (result!=null) {
 			propertyTypesByName.put(propertyPath, result);
 		}

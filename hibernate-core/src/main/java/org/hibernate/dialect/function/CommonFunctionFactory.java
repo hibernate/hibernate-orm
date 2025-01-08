@@ -452,11 +452,13 @@ public class CommonFunctionFactory {
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
+				.setReturnTypeResolver( new AvgFunction.ReturnTypeResolver( typeConfiguration ) )
 				.register();
 		functionRegistry.namedAggregateDescriptorBuilder( "stddev_samp" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
+				.setReturnTypeResolver( new AvgFunction.ReturnTypeResolver( typeConfiguration ) )
 				.register();
 	}
 
@@ -465,11 +467,13 @@ public class CommonFunctionFactory {
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
+				.setReturnTypeResolver( new AvgFunction.ReturnTypeResolver( typeConfiguration ) )
 				.register();
 		functionRegistry.namedAggregateDescriptorBuilder( "var_samp" )
 				.setInvariantType(doubleType)
 				.setExactArgumentCount( 1 )
 				.setParameterTypes(NUMERIC)
+				.setReturnTypeResolver( new AvgFunction.ReturnTypeResolver( typeConfiguration ) )
 				.register();
 	}
 

@@ -34,6 +34,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -249,6 +250,9 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				final var domainType = expressible.getSqmType();
 				if ( domainType instanceof BasicPluralType<?, ?> ) {
 					return (ReturnableType<?>) domainType;
+				}
+				if ( domainType instanceof final CustomType<?> customType ) {
+					return customType;
 				}
 			}
 			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE );

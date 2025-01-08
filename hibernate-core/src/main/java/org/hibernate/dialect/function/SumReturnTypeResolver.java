@@ -12,6 +12,7 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.math.BigDecimal;
@@ -66,6 +67,9 @@ public class SumReturnTypeResolver implements FunctionReturnTypeResolver {
 			return impliedType;
 		}
 		final ReturnableType<?> argType = extractArgumentType( arguments, 1 );
+		if ( argType instanceof CustomType ) {
+			return argType;
+		}
 		final BasicType<?> basicType;
 		if ( argType instanceof BasicType<?> type ) {
 			basicType = type;

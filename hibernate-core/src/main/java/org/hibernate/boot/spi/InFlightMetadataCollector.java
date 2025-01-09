@@ -365,7 +365,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	void addPropertyReference(String entityName, String propertyName);
 	void addUniquePropertyReference(String entityName, String propertyName);
 
-	void addPropertyReferencedAssociation(String s, String propertyName, String syntheticPropertyName);
+	void addPropertyReferencedAssociation(String entityName, String propertyName, String syntheticPropertyName);
 	String getPropertyReferencedAssociation(String entityName, String mappedBy);
 
 	void addMappedBy(String name, String mappedBy, String propertyName);

@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,12 +23,11 @@ import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
 
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.addPropertyToMappedSuperclass;
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.handleGenericComponentProperty;
+import static org.hibernate.boot.model.internal.PropertyBinder.hasIdAnnotation;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.qualifyConditionally;
 import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
@@ -83,7 +81,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		setCurrentProperty( embeddedMemberDetails );
 		this.component = component;
 		this.isOrWithinEmbeddedId = parent.isOrWithinEmbeddedId()
-				|| hasAnnotation( embeddedMemberDetails, Id.class, EmbeddedId.class );
+				|| embeddedMemberDetails != null && hasIdAnnotation( embeddedMemberDetails );
 		this.isWithinElementCollection = parent.isWithinElementCollection()
 				|| parent instanceof CollectionPropertyHolder;
 		this.inheritanceStatePerClass = inheritanceStatePerClass;
@@ -96,24 +94,6 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			this.embeddedAttributeName = "";
 			this.attributeConversionInfoMap = processAttributeConversions( inferredData.getClassOrElementType() );
 		}
-	}
-
-	private boolean hasAnnotation(
-			MemberDetails memberDetails,
-			Class<? extends Annotation> annotationType) {
-		if ( memberDetails == null ) {
-			return false;
-		}
-
-		return memberDetails.hasDirectAnnotationUsage( annotationType );
-	}
-
-	private boolean hasAnnotation(
-			MemberDetails memberDetails,
-			Class<? extends Annotation> annotationType1,
-			Class<? extends Annotation> annotationType2) {
-		return hasAnnotation( memberDetails, annotationType1 )
-				|| hasAnnotation( memberDetails, annotationType2 );
 	}
 
 	/**

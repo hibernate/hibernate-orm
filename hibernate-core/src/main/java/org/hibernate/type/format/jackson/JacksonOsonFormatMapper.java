@@ -6,8 +6,9 @@ package org.hibernate.type.format.jackson;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import oracle.jdbc.driver.json.tree.OracleJsonDateImpl;
 import oracle.jdbc.driver.json.tree.OracleJsonTimestampImpl;
 import oracle.sql.DATE;
@@ -242,7 +243,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 							generator,
 							javaType,
 							options,
-							embeddableMappingType );
+							mappingType );
 				}
 				else {
 					// non flattened case
@@ -253,7 +254,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 							generator,
 							javaType,
 							options,
-							embeddableMappingType);
+							mappingType);
 					generator.writeEnd();
 
 				}
@@ -432,15 +433,13 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 	@Override
 	public <T> void writeToTarget(T value, JavaType<T> javaType, Object target, WrapperOptions options)
 			throws IOException {
-		com.fasterxml.jackson.databind.JavaType jacksonJavaType = objectMapper.constructType( javaType.getJavaType() );
-		ObjectWriter writer = objectMapper.writerFor( jacksonJavaType );
+		ObjectWriter writer = objectMapper.writerFor( objectMapper.constructType( javaType.getJavaType() ) );
 		writer.writeValue( (JsonGenerator) target, value);
 
 	}
 
 	@Override
 	public <T> T readFromSource(JavaType<T> javaType, Object source, WrapperOptions options) throws IOException {
-		//JsonParser osonParser = objectMapper.getFactory().createParser( (byte[]) source );
 		return  objectMapper.readValue( (JsonParser)source, objectMapper.constructType( javaType.getJavaType()) );
 	}
 

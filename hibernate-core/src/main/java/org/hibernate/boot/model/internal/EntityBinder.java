@@ -2045,7 +2045,7 @@ public class EntityBinder {
 
 	private SecondaryRow findMatchingSecondaryRowAnnotation(String tableName) {
 		final SecondaryRow row = annotatedClass.getDirectAnnotationUsage( SecondaryRow.class );
-		if ( row != null && ( row.table().isBlank() || tableName.equals( row.table() ) ) ) {
+		if ( row != null && ( row.table().isBlank() || equalsTableName( tableName, row ) ) ) {
 			return row;
 		}
 		else {
@@ -2053,13 +2053,20 @@ public class EntityBinder {
 			if ( tables != null ) {
 				final SecondaryRow[] rowList = tables.value();
 				for ( SecondaryRow current : rowList ) {
-					if ( tableName.equals( current.table() ) ) {
+					if ( equalsTableName( tableName, current ) ) {
 						return current;
 					}
 				}
 			}
 			return null;
 		}
+	}
+
+	private boolean equalsTableName(String physicalTableName, SecondaryRow secondaryRow) {
+		final Identifier logicalName = context.getMetadataCollector().getDatabase().toIdentifier( secondaryRow.table() );
+		final Identifier secondaryRowPhysicalTableName = context.getBuildingOptions().getPhysicalNamingStrategy()
+				.toPhysicalTableName( logicalName, EntityTableNamingStrategyHelper.jdbcEnvironment( context ) );
+		return physicalTableName.equals( secondaryRowPhysicalTableName.render() );
 	}
 
 	//Used for @*ToMany @JoinTable

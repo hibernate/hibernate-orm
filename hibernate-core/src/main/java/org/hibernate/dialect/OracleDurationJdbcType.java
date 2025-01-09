@@ -4,14 +4,18 @@
  */
 package org.hibernate.dialect;
 
+import oracle.jdbc.OracleType;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.DurationJdbcType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -19,11 +23,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
 
-public class OracleDurationJdbcType implements JdbcType {
+public class OracleDurationJdbcType extends DurationJdbcType {
 
 	public static final OracleDurationJdbcType INSTANCE = new OracleDurationJdbcType();
 
-	public OracleDurationJdbcType() {}
+	public OracleDurationJdbcType() {
+		super();
+	}
 
 	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
@@ -80,13 +86,38 @@ public class OracleDurationJdbcType implements JdbcType {
 		};
 	}
 
-	@Override
+	/**
+	 * The {@linkplain SqlTypes JDBC type code} used when interacting with JDBC APIs.
+	 * <p>
+	 * For example, it's used when calling {@link java.sql.PreparedStatement#setNull(int, int)}.
+	 *
+	 * @return a JDBC type code
+	 */
 	public int getJdbcTypeCode() {
 		return SqlTypes.DURATION;
 	}
-
-	@Override
+	/**
+	 * A {@linkplain SqlTypes JDBC type code} that identifies the SQL column type to
+	 * be used for schema generation.
+	 * <p>
+	 * This value is passed to {@link DdlTypeRegistry#getTypeName(int, Size, Type)}
+	 * to obtain the SQL column type.
+	 *
+	 * @return a JDBC type code
+	 * @since 6.2
+	 */
+	public int getDdlTypeCode() {
+		return OracleType.INTERVAL_DAY_TO_SECOND.getVendorTypeNumber();
+	}
+	/**
+	 * A {@linkplain SqlTypes JDBC type code} that identifies the SQL column type.
+	 * <p>
+	 * This value might be different from {@link #getDdlTypeCode()} if the actual type
+	 * e.g. JSON is emulated through a type like CLOB.
+	 *
+	 * @return a JDBC type code
+	 */
 	public int getDefaultSqlTypeCode() {
-		return SqlTypes.DURATION;
+		return OracleType.INTERVAL_DAY_TO_SECOND.getVendorTypeNumber();
 	}
 }

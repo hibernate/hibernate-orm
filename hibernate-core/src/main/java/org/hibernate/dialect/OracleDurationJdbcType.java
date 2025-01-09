@@ -4,7 +4,6 @@
  */
 package org.hibernate.dialect;
 
-import oracle.jdbc.OracleType;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.Type;
@@ -107,7 +106,7 @@ public class OracleDurationJdbcType extends DurationJdbcType {
 	 * @since 6.2
 	 */
 	public int getDdlTypeCode() {
-		return OracleType.INTERVAL_DAY_TO_SECOND.getVendorTypeNumber();
+		return SqlTypes.DURATION;
 	}
 	/**
 	 * A {@linkplain SqlTypes JDBC type code} that identifies the SQL column type.
@@ -118,6 +117,6 @@ public class OracleDurationJdbcType extends DurationJdbcType {
 	 * @return a JDBC type code
 	 */
 	public int getDefaultSqlTypeCode() {
-		return OracleType.INTERVAL_DAY_TO_SECOND.getVendorTypeNumber();
+		return SqlTypes.DURATION;
 	}
 }

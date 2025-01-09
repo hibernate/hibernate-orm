@@ -6,14 +6,9 @@ package org.hibernate.type.format.jackson;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
-import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
-import com.fasterxml.jackson.databind.ser.PropertyWriter;
 import oracle.jdbc.driver.json.tree.OracleJsonDateImpl;
 import oracle.jdbc.driver.json.tree.OracleJsonTimestampImpl;
 import oracle.sql.DATE;
@@ -26,12 +21,10 @@ import oracle.sql.json.OracleJsonTimestamp;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
-import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
@@ -50,9 +43,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.UUID;
 
 
@@ -254,7 +244,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 							generator,
 							javaType,
 							options,
-							embeddableMappingType );
+							mappingType );
 				}
 				else {
 					// non flattened case
@@ -265,7 +255,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 							generator,
 							javaType,
 							options,
-							embeddableMappingType);
+							mappingType);
 					generator.writeEnd();
 
 				}
@@ -444,15 +434,13 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 	@Override
 	public <T> void writeToTarget(T value, JavaType<T> javaType, Object target, WrapperOptions options)
 			throws IOException {
-		com.fasterxml.jackson.databind.JavaType jacksonJavaType = objectMapper.constructType( javaType.getJavaType() );
-		ObjectWriter writer = objectMapper.writerFor( jacksonJavaType );
+		ObjectWriter writer = objectMapper.writerFor( objectMapper.constructType( javaType.getJavaType() ) );
 		writer.writeValue( (JsonGenerator) target, value);
 
 	}
 
 	@Override
 	public <T> T readFromSource(JavaType<T> javaType, Object source, WrapperOptions options) throws IOException {
-		//JsonParser osonParser = objectMapper.getFactory().createParser( (byte[]) source );
 		return  objectMapper.readValue( (JsonParser)source, objectMapper.constructType( javaType.getJavaType()) );
 	}
 

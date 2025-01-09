@@ -178,6 +178,19 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 											"json_value(" + parentPartExpression + columnExpression + "' returning timestamp)"
 									);
 								}
+							case DURATION:
+								if (this.dateTypesStoreAsString) {
+									return template.replace(
+											placeholder,
+											"cast(json_value(" + parentPartExpression + columnExpression + "') as " + column.getColumnDefinition() + ')'
+									);
+								}
+								else {
+									return template.replace(
+											placeholder,
+											"json_value(" + parentPartExpression + columnExpression + "' returning interval day to second)"
+									);
+								}
 							case TIMESTAMP_WITH_TIMEZONE:
 							case TIMESTAMP_UTC:
 								if (this.dateTypesStoreAsString) {

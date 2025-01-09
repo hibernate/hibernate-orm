@@ -224,11 +224,13 @@ public class EmbeddableBinder {
 	static boolean isEmbedded(MemberDetails property, ClassDetails returnedClass) {
 		return property.hasDirectAnnotationUsage( Embedded.class )
 			|| property.hasDirectAnnotationUsage( EmbeddedId.class )
-			|| returnedClass.hasDirectAnnotationUsage( Embeddable.class ) && !property.hasDirectAnnotationUsage( Convert.class );
+			|| returnedClass.hasDirectAnnotationUsage( Embeddable.class )
+				&& !property.hasDirectAnnotationUsage( Convert.class );
 	}
 
 	static boolean isEmbedded(MemberDetails property, TypeDetails returnedClass) {
-		if ( property.hasDirectAnnotationUsage( Embedded.class ) || property.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
+		if ( property.hasDirectAnnotationUsage( Embedded.class )
+			|| property.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
 			return true;
 		}
 		else {

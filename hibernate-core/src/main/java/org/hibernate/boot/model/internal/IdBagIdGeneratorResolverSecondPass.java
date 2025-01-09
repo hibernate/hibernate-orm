@@ -71,7 +71,13 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 	public void doSecondPass(Map<String, PersistentClass> idGeneratorDefinitionMap) throws MappingException {
 		final GeneratedValue generatedValue = idBagMember.getDirectAnnotationUsage( GeneratedValue.class );
 		switch ( generatedValue.strategy() ) {
-			case UUID -> handleUuidStrategy( idValue, idBagMember, buildingContext );
+			case UUID -> handleUuidStrategy(
+					idValue,
+					idBagMember,
+					buildingContext.getMetadataCollector().getClassDetailsRegistry()
+							.getClassDetails( entityMapping.getClassName() ),
+					buildingContext
+			);
 			case IDENTITY -> handleIdentityStrategy( idValue );
 			case SEQUENCE -> handleSequenceStrategy(
 					generatorName,
@@ -121,6 +127,8 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 		final TableGenerator localizedTableMatch = findLocalizedMatch(
 				JpaAnnotations.TABLE_GENERATOR,
 				idBagMember,
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
 				TableGenerator::name,
 				generatorName,
 				buildingContext
@@ -164,6 +172,8 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 		final SequenceGenerator localizedSequencedMatch = findLocalizedMatch(
 				JpaAnnotations.SEQUENCE_GENERATOR,
 				idBagMember,
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
 				SequenceGenerator::name,
 				generatorName,
 				buildingContext
@@ -235,6 +245,8 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 		final SequenceGenerator localizedSequencedMatch = findLocalizedMatch(
 				JpaAnnotations.SEQUENCE_GENERATOR,
 				idBagMember,
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
 				SequenceGenerator::name,
 				generatorName,
 				buildingContext
@@ -247,6 +259,8 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 		final TableGenerator localizedTableMatch = findLocalizedMatch(
 				JpaAnnotations.TABLE_GENERATOR,
 				idBagMember,
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
 				TableGenerator::name,
 				generatorName,
 				buildingContext

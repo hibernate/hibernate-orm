@@ -13,6 +13,7 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterAll;
@@ -72,6 +73,22 @@ public class CacheModeGetUpdateTest {
 		scope.inTransaction( session -> {
 			final Phone phone = session.find( Phone.class, PHONE_ID );
 			assertThat( phone.getPerson() ).isNotNull();
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-5689")
+	public void testRollback(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final Phone phone = session.find( Phone.class, PHONE_ID );
+			phone.setNumber( "456" );
+			session.flush();
+			session.markForRollbackOnly();
+		} );
+		// in a different transaction
+		scope.inTransaction( session -> {
+			final Phone phone = session.find( Phone.class, PHONE_ID );
+			assertThat( phone.getNumber() ).isEqualTo( "123" );
 		} );
 	}
 

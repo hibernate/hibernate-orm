@@ -87,9 +87,10 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 				//     modify the interface yet.
 				((JacksonOsonFormatMapper)mapper).setJacksonObjectMapper(objectMapper, getEmbeddableMappingType());
 
-//				if(getEmbeddableMappingType()!= null) {
-//					return ((JacksonOsonFormatMapper)mapper).toOson(value,javaType,options,getEmbeddableMappingType());
-//				}
+				if(getEmbeddableMappingType()!= null) {
+					return ((JacksonOsonFormatMapper)mapper).toOson(value,javaType,options,getEmbeddableMappingType());
+				}
+
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				JsonGenerator osonGen = objectMapper.getFactory().createGenerator( out );
 				mapper.writeToTarget( value, javaType, osonGen, options );

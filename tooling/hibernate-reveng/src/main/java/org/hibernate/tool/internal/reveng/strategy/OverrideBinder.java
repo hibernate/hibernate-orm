@@ -177,6 +177,7 @@ public class OverrideBinder {
 						localColumns, 
 						foreignTableName, 
 						null, 
+						null,
 						foreignColumns);
 				key.setReferencedTable(foreignTable); // only possible if foreignColumns is explicitly specified (workaround on aligncolumns)
 			}
@@ -214,6 +215,7 @@ public class OverrideBinder {
 						localColumns, 
 						foreignTableName, 
 						null, 
+						null,
 						foreignColumns);
 				key.setReferencedTable(foreignTable); // only possible if foreignColumns is explicitly specified (workaround on aligncolumns)				
 			}

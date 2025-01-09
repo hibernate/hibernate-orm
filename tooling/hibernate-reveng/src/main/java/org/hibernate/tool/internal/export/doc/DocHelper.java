@@ -11,25 +11,20 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.internal.export.common.ConfigurationNavigator;
 import org.hibernate.tool.internal.export.java.Cfg2JavaTool;
 import org.hibernate.tool.internal.export.java.ComponentPOJOClass;
 import org.hibernate.tool.internal.export.java.POJOClass;
 import org.hibernate.tool.internal.reveng.binder.TypeUtils;
 import org.hibernate.type.Type;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * This helper class is used expose hibernate mapping information to the
@@ -110,11 +105,6 @@ public final class DocHelper {
 	 */
 	private Map<Table, String> tableSchemaNames = new HashMap<Table, String>();
 
-	/**
-	 * The Dialect.
-	 */
-	private Dialect dialect;
-	
 	private Metadata metadata;
 
 	public DocHelper(Metadata metadata, Properties properties, Cfg2JavaTool cfg2JavaTool) {
@@ -129,9 +119,6 @@ public final class DocHelper {
 
 		StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
 		builder.applySettings(properties);
-		ServiceRegistry serviceRegistry = builder.build();
-		JdbcServices jdbcServices = serviceRegistry.getService(JdbcServices.class);
-		dialect = jdbcServices.getDialect(); 
 		String defaultCatalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
 		String defaultSchema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
 		if (defaultSchema == null) {
@@ -400,8 +387,7 @@ public final class DocHelper {
 	public String getSQLTypeName(Column column) {
 
 		try {
-			TypeConfiguration tc = ((MetadataImpl)metadata).getTypeConfiguration();
-			return column.getSqlType(tc, dialect, metadata);
+			return column.getSqlType(metadata);
 		} catch (HibernateException ex) {
 
 			// TODO: Fix this when we find a way to get the type or

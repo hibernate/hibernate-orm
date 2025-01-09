@@ -826,6 +826,9 @@ public class OracleDialect extends Dialect {
 			case VARBINARY:
 				return "raw($l)";
 
+			case DURATION:
+				return "interval day to second";
+
 			default:
 				return super.columnType( sqlTypeCode );
 		}

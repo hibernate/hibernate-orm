@@ -6,12 +6,8 @@ package org.hibernate.type.format.jackson;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
-import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
-import com.fasterxml.jackson.databind.ser.PropertyWriter;
 import oracle.jdbc.driver.json.tree.OracleJsonDateImpl;
 import oracle.jdbc.driver.json.tree.OracleJsonTimestampImpl;
 import oracle.sql.DATE;
@@ -22,9 +18,12 @@ import oracle.sql.json.OracleJsonGenerator;
 import oracle.sql.json.OracleJsonParser;
 import oracle.sql.json.OracleJsonTimestamp;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -38,15 +37,12 @@ import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.UUID;
 
 
@@ -188,22 +184,22 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 	public <X>byte[] toOson(X value, JavaType<X> javaType, WrapperOptions options,EmbeddableMappingType embeddableMappingType) {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		OracleJsonGenerator generator = new OracleJsonFactory().createJsonBinaryGenerator( out );
-		serializetoOsonApproach2( value,generator,javaType,options,embeddableMappingType);
+		serializetoOson( value,generator,javaType,options,embeddableMappingType);
 		generator.close();
 		return out.toByteArray();
 	}
 
-	private <X> void serializetoOsonApproach2(X value, OracleJsonGenerator generator, JavaType<X> javaType, WrapperOptions options, EmbeddableMappingType embeddableMappingType) {
+	private <X> void serializetoOson(X value, OracleJsonGenerator generator, JavaType<X> javaType, WrapperOptions options, EmbeddableMappingType embeddableMappingType) {
 		generator.writeStartObject();
-		serializetoOsonApproach2Util( value, generator, javaType, options,embeddableMappingType );
+		serializetoOsonUtil( value, generator, javaType, options,embeddableMappingType );
 		generator.writeEnd();
 	}
 
-	private <X> void serializetoOsonApproach2Util(X value,
-												OracleJsonGenerator generator,
-												JavaType<X> javaType,
-												WrapperOptions options,
-												EmbeddableMappingType embeddableMappingType) {
+	private <X> void serializetoOsonUtil(X value,
+										OracleJsonGenerator generator,
+										JavaType<X> javaType,
+										WrapperOptions options,
+										EmbeddableMappingType embeddableMappingType) {
 
 		final Object[] values = embeddableMappingType.getValues( value );
 		for ( int i = 0; i < values.length; i++ ) {
@@ -213,7 +209,16 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 				final BasicType<Object> basicType = (BasicType<Object>) attributeMapping.getMappedType();
 
 				generator.writeKey( name );
-				serializeValue( basicType.convertToRelationalValue( values[i] ), (JavaType<Object>) basicType.getJdbcJavaType(),basicType.getJdbcType(), options,generator);
+
+				if (values[i] == null) {
+					generator.writeNull();
+					continue;
+				}
+				serializeValue( basicType.convertToRelationalValue( values[i] ),
+						(JavaType<Object>) basicType.getJdbcJavaType(),
+						basicType.getJdbcType(),
+						options,
+						generator);
 
 			}
 			else if (attributeMapping instanceof EmbeddedAttributeMapping) {
@@ -225,7 +230,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 				}
 				if (aggregateMapping == null) {
 					// flattened case
-					serializetoOsonApproach2Util( (X) values[i],
+					serializetoOsonUtil( (X) values[i],
 							generator,
 							javaType,
 							options,
@@ -236,7 +241,7 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 					final String name = aggregateMapping.getSelectableName();
 					generator.writeKey( name );
 					generator.writeStartObject();
-					serializetoOsonApproach2Util( (X) values[i],
+					serializetoOsonUtil( (X) values[i],
 							generator,
 							javaType,
 							options,
@@ -316,7 +321,8 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 			case SqlTypes.TIME:
 			case SqlTypes.TIME_WITH_TIMEZONE:
 			case SqlTypes.TIME_UTC:
-				generator.write( javaType.unwrap( value,String.class,options ) );
+				Time time = javaType.unwrap( value, Time.class,options );
+				generator.write( time.toString() );
 				break;
 			case SqlTypes.TIMESTAMP:
 				TIMESTAMP TS = new TIMESTAMP(javaType.unwrap( value, Timestamp.class, options ));
@@ -367,12 +373,11 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 			case SqlTypes.VARBINARY:
 			case SqlTypes.LONGVARBINARY:
 			case SqlTypes.LONG32VARBINARY:
-				byte[] bytes = javaType.unwrap( value, byte[].class, options );
-				generator.write( bytes );
-				break;
 			case SqlTypes.BLOB:
 			case SqlTypes.MATERIALIZED_BLOB:
 				// how to handle
+				byte[] bytes = javaType.unwrap( value, byte[].class, options );
+				generator.write( bytes );
 				break;
 			case SqlTypes.ARRAY:
 			case SqlTypes.JSON_ARRAY:
@@ -420,120 +425,9 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 	public <T> void writeToTarget(T value, JavaType<T> javaType, Object target, WrapperOptions options)
 			throws IOException {
 		com.fasterxml.jackson.databind.JavaType jacksonJavaType = objectMapper.constructType( javaType.getJavaType() );
+		ObjectWriter writer = objectMapper.writerFor( jacksonJavaType );
+		writer.writeValue( (JsonGenerator) target, value);
 
-		if(embeddableMappingType == null ) {
-			ObjectWriter writer = objectMapper.writerFor( jacksonJavaType );
-			writer.writeValue( (JsonGenerator) target, value);
-			return;
-		}
-
-		DefaultSerializerProvider provider =((DefaultSerializerProvider)objectMapper.getSerializerProvider())
-				.createInstance( objectMapper.getSerializationConfig(),objectMapper.getSerializerFactory() );
-		JsonSerializer<Object> valueSerializer = provider
-				.findTypedValueSerializer( jacksonJavaType,true, null );
-		serializetoOson(value,valueSerializer,embeddableMappingType,(JsonGenerator)target,objectMapper,provider);
-		((JsonGenerator)target).flush();
-
-	}
-
-	private <T> void serializetoOson(T value, JsonSerializer<Object> valueSerializer, EmbeddableMappingType embeddableMappingType, JsonGenerator target, ObjectMapper objectMapper, DefaultSerializerProvider provider)
-			throws IOException {
-		target.writeStartObject();
-		serializetoOsonUtil(value,valueSerializer,embeddableMappingType,target,objectMapper,provider);
-		target.writeEndObject();
-
-	}
-
-	private <T> void serializetoOsonUtil(T value,
-										JsonSerializer<Object> valueSerializer,
-										EmbeddableMappingType embeddableMappingType,
-										JsonGenerator generator,
-										ObjectMapper mapper,
-										DefaultSerializerProvider provider) throws IOException {
-		final Object[] values = embeddableMappingType.getValues( value );
-
-		Map<String, BeanPropertyWriter> beanPropertyWriterMap = buildBeanPropertyMap(valueSerializer.properties());
-		for ( int i = 0; i < values.length; i++ ) {
-			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, i );
-			if ( attributeMapping instanceof SelectableMapping ) {
-				// basic attribute ??
-				final String name = ( (SelectableMapping) attributeMapping ).getSelectableName();
-
-				final BasicType<Object> basicType = (BasicType<Object>) attributeMapping.getMappedType();
-				BasicValueConverter<?, ?> valueConverter = basicType.getValueConverter();
-				JavaType<?> javaType =
-						valueConverter!=null ? valueConverter.getRelationalJavaType() : attributeMapping.getJavaType();
-				generator.writeFieldName( name );
-
-				BeanPropertyWriter writer = beanPropertyWriterMap.get( ( (BasicAttributeMapping) attributeMapping ).getAttributeName() );
-				JsonSerializer<Object> serializer =
-						provider.findValueSerializer( objectMapper.constructType( javaType.getJavaType() ), writer );
-				JsonSerializer<Object> nullSerializer = provider.findNullValueSerializer( null );
-
-				try {
-					assert serializer != null;
-					if ( values[i] == null ) {
-						nullSerializer.serialize( null, generator, provider );
-					}
-					else {
-						serializer.serialize( basicType.convertToRelationalValue( values[i] ),generator,provider);
-					}
-
-				}
-				catch (Exception e) {
-					throw new RuntimeException( e );
-				}
-			}
-			else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
-				if ( values[i] == null ) {
-					// Skipping the update of the separator is on purpose
-					continue;
-				}
-				final EmbeddableMappingType mappingType = (EmbeddableMappingType) attributeMapping.getMappedType();
-				final SelectableMapping aggregateMapping = mappingType.getAggregateMapping();
-				if ( aggregateMapping == null ){
-
-					JsonSerializer<Object> serializer = provider
-							.findTypedValueSerializer( objectMapper.constructType( attributeMapping.getJavaType().getJavaType() ),true,null );
-					// flattened case
-					serializetoOsonUtil( (T) values[i],
-							serializer,
-							mappingType,
-							generator,
-							mapper,
-							provider);
-				}
-				else {
-					// non flattened case
-					final String name = aggregateMapping.getSelectableName();
-					generator.writeFieldName( name );
-					generator.writeStartObject();
-					JsonSerializer<Object> serializer = provider
-							.findTypedValueSerializer(
-									objectMapper.constructType( attributeMapping.getJavaType().getJavaType() ),
-									true,null );
-					serializetoOsonUtil( (T)values[i],
-							serializer,
-							mappingType,
-							generator,
-							mapper,
-							provider);
-					generator.writeEndObject();
-				}
-
-			}
-
-		}
-
-	}
-
-	private Map<String, BeanPropertyWriter> buildBeanPropertyMap(Iterator<PropertyWriter> properties) {
-		Map<String,BeanPropertyWriter> result = new HashMap<String,BeanPropertyWriter>();
-		while ( properties.hasNext() ) {
-			BeanPropertyWriter writer = (BeanPropertyWriter) properties.next();
-			result.put( writer.getName(), writer );
-		}
-		return result;
 	}
 
 	@Override

@@ -6,6 +6,7 @@ package org.hibernate.dialect;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
 import oracle.sql.json.OracleJsonDatum;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -100,9 +101,11 @@ public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 
 			private X fromOson(byte[] osonBytes, WrapperOptions options) throws Exception {
-				FormatMapper mapper = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
 
-				return mapper.readFromSource(  getJavaType(), osonBytes, options);
+				FormatMapper mapper = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
+				JsonFactory osonFactory = (JsonFactory) osonFactoryKlass.getDeclaredConstructor().newInstance();
+				JsonParser osonParser = osonFactory.createParser( osonBytes );
+				return mapper.readFromSource(  getJavaType(), osonParser, options);
 			}
 
 			private X doExtraction(OracleJsonDatum datum,  WrapperOptions options) throws SQLException {

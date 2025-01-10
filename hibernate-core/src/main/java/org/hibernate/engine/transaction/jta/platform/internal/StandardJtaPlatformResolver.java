@@ -88,14 +88,6 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		catch (ClassLoadingException ignore) {
 		}
 
-		// JOnAS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		try {
-			classLoaderService.classForName( JOnASJtaPlatform.TM_CLASS_NAME );
-			return new JOnASJtaPlatform();
-		}
-		catch (ClassLoadingException ignore) {
-		}
-
 		// WebSphere Liberty ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		try {
 			classLoaderService.classForName(WebSphereLibertyJtaPlatform.TMF_CLASS_NAME);

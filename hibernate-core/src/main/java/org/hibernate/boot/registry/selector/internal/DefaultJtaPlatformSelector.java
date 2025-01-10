@@ -28,18 +28,17 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 	@Override
 	public Class<? extends JtaPlatform> resolve(final String name) {
 		Objects.requireNonNull( name);
-		if ( name.isEmpty() ) {
+		if ( name.isBlank() ) {
 			return null;
 		}
 		//Let's organize all string matches in groups by first letter:
-		final char n = name.charAt( 0 );
-		switch ( n ) {
-			case 'B': return caseB( name );
-			case 'J': return caseJ( name );
-			case 'W': return caseW( name );
-			case 'o': return caseLegacy( name, this );
-			default: return caseOthers( name );
-		}
+		return switch ( name.charAt( 0 ) ) {
+			case 'B' -> caseB( name );
+			case 'J'-> caseJ( name );
+			case 'W'-> caseW( name );
+			case 'o'-> caseLegacy( name, this );
+			default -> caseOthers( name );
+		};
 	}
 
 	private static Class<? extends JtaPlatform> caseB(final String name) {
@@ -50,57 +49,35 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 	}
 
 	private static Class<? extends JtaPlatform> caseJ(final String name) {
-		if ( "JBossAS".equals( name ) ) {
-			return JBossAppServerJtaPlatform.class;
-		}
-		if ( "JBossTS".equals( name ) ) {
-			return JBossStandAloneJtaPlatform.class;
-		}
-		if ( "JOnAS".equals( name ) ) {
-			return JOnASJtaPlatform.class;
-		}
-		if ( "JOTM".equals( name ) ) {
-			return JOTMJtaPlatform.class;
-		}
-		if ( "JRun4".equals( name ) ) {
-			return JRun4JtaPlatform.class;
-		}
-		return null;
+		return switch ( name ) {
+			case "JBossAS" -> JBossAppServerJtaPlatform.class;
+			case "JBossTS" -> JBossStandAloneJtaPlatform.class;
+			case "JOnAS" -> JOnASJtaPlatform.class;
+			case "JOTM" -> JOTMJtaPlatform.class;
+			case "JRun4" -> JRun4JtaPlatform.class;
+			case null, default -> null;
+		};
 	}
 
 	private static Class<? extends JtaPlatform> caseW(final String name) {
-		if ( "Weblogic".equals( name ) ) {
-			return WeblogicJtaPlatform.class;
-		}
-		if ( "WebSphereLiberty".equals( name ) ) {
-			return WebSphereLibertyJtaPlatform.class;
-		}
-		if ( "WebSphere".equals( name ) ) {
-			return WebSphereJtaPlatform.class;
-		}
-		if ( "WebSphereExtended".equals( name ) ) {
-			return WebSphereExtendedJtaPlatform.class;
-		}
-		return null;
+		return switch ( name ) {
+			case "Weblogic" -> WeblogicJtaPlatform.class;
+			case "WebSphereLiberty" -> WebSphereLibertyJtaPlatform.class;
+			case "WebSphere" -> WebSphereJtaPlatform.class;
+			case "WebSphereExtended" -> WebSphereExtendedJtaPlatform.class;
+			case null, default -> null;
+		};
 	}
 
 	private static Class<? extends JtaPlatform> caseOthers(final String name) {
-		if ( "Atomikos".equals( name ) ) {
-			return AtomikosJtaPlatform.class;
-		}
-		if ( "OC4J".equals( name ) ) {
-			return OC4JJtaPlatform.class;
-		}
-		if ( "Orion".equals( name ) ) {
-			return OrionJtaPlatform.class;
-		}
-		if ( "Resin".equals( name ) ) {
-			return ResinJtaPlatform.class;
-		}
-		if ( "SunOne".equals( name ) ) {
-			return SunOneJtaPlatform.class;
-		}
-		return null;
+		return switch ( name ) {
+			case "Atomikos" -> AtomikosJtaPlatform.class;
+			case "OC4J" -> OC4JJtaPlatform.class;
+			case "Orion" -> OrionJtaPlatform.class;
+			case "Resin" -> ResinJtaPlatform.class;
+			case "SunOne" -> SunOneJtaPlatform.class;
+			case null, default -> null;
+		};
 	}
 
 	/**

@@ -6,7 +6,6 @@ package org.hibernate.orm.test.strategyselectors;
 
 import org.hibernate.boot.registry.selector.internal.DefaultJtaPlatformSelector;
 import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.BorlandEnterpriseServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JOTMJtaPlatform;
@@ -43,13 +42,6 @@ public class JtaPlatformSelectorTest {
 				AtomikosJtaPlatform.class,
 				"Atomikos",
 				"org.hibernate.service.jta.platform.internal.AtomikosJtaPlatform"
-		);
-
-		testJtaPlatformResolves(
-				strategySelector,
-				BorlandEnterpriseServerJtaPlatform.class,
-				"Borland",
-				"org.hibernate.service.jta.platform.internal.BorlandEnterpriseServerJtaPlatform"
 		);
 
 		testJtaPlatformResolves(

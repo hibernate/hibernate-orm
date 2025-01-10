@@ -7,9 +7,11 @@ package org.hibernate.metamodel.internal;
 import java.lang.reflect.Constructor;
 
 import org.hibernate.InstantiationException;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.ValueAccess;
+
+import static org.hibernate.internal.util.ReflectHelper.getConstructorOrNull;
+import static org.hibernate.internal.util.ReflectHelper.getRecordComponentTypes;
 
 /**
  * Support for instantiating embeddables as record representation
@@ -20,9 +22,8 @@ public class EmbeddableInstantiatorRecordStandard extends AbstractPojoInstantiat
 
 	public EmbeddableInstantiatorRecordStandard(Class<?> javaType) {
 		super( javaType );
-
-		final Class<?>[] componentTypes = ReflectHelper.getRecordComponentTypes( javaType );
-		this.constructor = ReflectHelper.getConstructorOrNull( javaType, componentTypes );
+		final Class<?>[] componentTypes = getRecordComponentTypes( javaType );
+		this.constructor = getConstructorOrNull( javaType, componentTypes );
 	}
 
 	@Override

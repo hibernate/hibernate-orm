@@ -4,8 +4,9 @@
  */
 package org.hibernate.metamodel.internal;
 
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.spi.Instantiator;
+
+import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
 
 /**
  * Base support for POJO-based instantiation
@@ -18,7 +19,7 @@ public abstract class AbstractPojoInstantiator implements Instantiator {
 
 	public AbstractPojoInstantiator(Class<?> mappedPojoClass) {
 		this.mappedPojoClass = mappedPojoClass;
-		this.isAbstract = ReflectHelper.isAbstractClass( mappedPojoClass );
+		this.isAbstract = isAbstractClass( mappedPojoClass );
 	}
 
 	public Class<?> getMappedPojoClass() {

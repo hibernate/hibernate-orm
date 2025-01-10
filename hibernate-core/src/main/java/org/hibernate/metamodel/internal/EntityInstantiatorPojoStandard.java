@@ -11,13 +11,13 @@ import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
+import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 
 /**
  * Support for instantiating entity values as POJO representation
@@ -44,7 +44,7 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 
 	protected static Constructor<?> resolveConstructor(Class<?> mappedPojoClass) {
 		try {
-			return ReflectHelper.getDefaultConstructor( mappedPojoClass);
+			return getDefaultConstructor( mappedPojoClass);
 		}
 		catch ( PropertyNotFoundException e ) {
 			LOG.noDefaultConstructor( mappedPojoClass.getName() );

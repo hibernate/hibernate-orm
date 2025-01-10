@@ -39,9 +39,8 @@ class PluralAttributeMetadataImpl<X, Y, E>
 			Member member,
 			AttributeClassification attributeClassification,
 			AttributeClassification elementClassification,
-			AttributeClassification listIndexOrMapKeyClassification,
-			MetadataContext metadataContext) {
-		super( propertyMapping, ownerType, member, attributeClassification, metadataContext );
+			AttributeClassification listIndexOrMapKeyClassification) {
+		super( propertyMapping, ownerType, member, attributeClassification );
 		this.collectionClassification = determineCollectionType( getJavaType(), propertyMapping );
 		this.elementClassification = elementClassification;
 		this.listIndexOrMapKeyClassification = listIndexOrMapKeyClassification;

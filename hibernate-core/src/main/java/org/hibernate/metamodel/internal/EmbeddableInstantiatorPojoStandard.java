@@ -11,35 +11,34 @@ import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.ValueAccess;
+
+import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 
 /**
  * Support for instantiating embeddables as POJO representation
  */
 public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator implements StandardEmbeddableInstantiator {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PojoInstantiatorImpl.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EmbeddableInstantiatorPojoStandard.class );
 
 	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
 	private final Constructor<?> constructor;
 
 	public EmbeddableInstantiatorPojoStandard(Class<?> embeddableClass, Supplier<EmbeddableMappingType> embeddableMappingAccess) {
 		super( embeddableClass );
-
 		this.embeddableMappingAccess = embeddableMappingAccess;
 		this.constructor = resolveConstructor( embeddableClass );
 	}
 
 	protected static Constructor<?> resolveConstructor(Class<?> mappedPojoClass) {
 		try {
-			return ReflectHelper.getDefaultConstructor( mappedPojoClass );
+			return getDefaultConstructor( mappedPojoClass );
 		}
 		catch ( PropertyNotFoundException e ) {
 			LOG.noDefaultConstructor( mappedPojoClass.getName() );
+			return null;
 		}
-
-		return null;
 	}
 
 	@Override

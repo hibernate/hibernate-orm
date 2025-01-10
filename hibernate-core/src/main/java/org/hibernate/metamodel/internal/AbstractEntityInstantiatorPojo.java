@@ -6,7 +6,6 @@ package org.hibernate.metamodel.internal;
 
 
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -30,28 +29,25 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 			PersistentClass persistentClass,
 			JavaType<?> javaType) {
 		super( javaType.getJavaTypeClass() );
-
 		this.entityMetamodel = entityMetamodel;
 		this.proxyInterface = persistentClass.getProxyInterface();
-
 		//TODO this PojoEntityInstantiator appears to not be reused ?!
-		this.applyBytecodeInterception = isPersistentAttributeInterceptableType( persistentClass.getMappedClass() );
+		this.applyBytecodeInterception =
+				isPersistentAttributeInterceptableType( persistentClass.getMappedClass() );
 	}
 
 	protected Object applyInterception(Object entity) {
-		if ( !applyBytecodeInterception ) {
-			return entity;
+		if ( applyBytecodeInterception ) {
+			asPersistentAttributeInterceptable( entity )
+					.$$_hibernate_setInterceptor( new LazyAttributeLoadingInterceptor(
+							entityMetamodel.getName(),
+							null,
+							entityMetamodel.getBytecodeEnhancementMetadata()
+									.getLazyAttributesMetadata()
+									.getLazyAttributeNames(),
+							null
+					) );
 		}
-
-		PersistentAttributeInterceptor interceptor = new LazyAttributeLoadingInterceptor(
-				entityMetamodel.getName(),
-				null,
-				entityMetamodel.getBytecodeEnhancementMetadata()
-						.getLazyAttributesMetadata()
-						.getLazyAttributeNames(),
-				null
-		);
-		asPersistentAttributeInterceptable( entity ).$$_hibernate_setInterceptor( interceptor );
 		return entity;
 	}
 

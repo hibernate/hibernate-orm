@@ -28,8 +28,7 @@ public abstract class BaseAttributeMetadata<X, Y> implements AttributeMetadata<X
 			Property propertyMapping,
 			ManagedDomainType<X> ownerType,
 			Member member,
-			AttributeClassification attributeClassification,
-			MetadataContext metadataContext) {
+			AttributeClassification attributeClassification) {
 		this.propertyMapping = propertyMapping;
 		this.ownerType = ownerType;
 		this.member = member;

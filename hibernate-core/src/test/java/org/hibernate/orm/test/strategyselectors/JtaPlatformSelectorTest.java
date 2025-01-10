@@ -6,7 +6,6 @@ package org.hibernate.orm.test.strategyselectors;
 
 import org.hibernate.boot.registry.selector.internal.DefaultJtaPlatformSelector;
 import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.BitronixJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.BorlandEnterpriseServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
@@ -52,13 +51,6 @@ public class JtaPlatformSelectorTest {
 				BorlandEnterpriseServerJtaPlatform.class,
 				"Borland",
 				"org.hibernate.service.jta.platform.internal.BorlandEnterpriseServerJtaPlatform"
-		);
-
-		testJtaPlatformResolves(
-				strategySelector,
-				BitronixJtaPlatform.class,
-				"Bitronix",
-				"org.hibernate.service.jta.platform.internal.BitronixJtaPlatform"
 		);
 
 		testJtaPlatformResolves(

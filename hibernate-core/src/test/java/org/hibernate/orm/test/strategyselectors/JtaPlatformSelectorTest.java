@@ -9,7 +9,6 @@ import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatfor
 import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JOnASJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.OrionJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.SunOneJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJtaPlatform;
@@ -60,13 +59,6 @@ public class JtaPlatformSelectorTest {
 				JOnASJtaPlatform.class,
 				"JOnAS",
 				"org.hibernate.service.jta.platform.internal.JOnASJtaPlatform"
-		);
-
-		testJtaPlatformResolves(
-				strategySelector,
-				OrionJtaPlatform.class,
-				"Orion",
-				"org.hibernate.service.jta.platform.internal.OrionJtaPlatform"
 		);
 
 		testJtaPlatformResolves(

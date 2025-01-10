@@ -26,7 +26,6 @@ public class EmbeddableHelper {
 			index[i] = newIndex;
 			hasGaps = hasGaps || newIndex < 0;
 		}
-
 		return hasGaps;
 	}
 }

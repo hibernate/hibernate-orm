@@ -5,8 +5,9 @@
 package org.hibernate.metamodel.internal;
 
 import org.hibernate.InstantiationException;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.spi.ValueAccess;
+
+import static org.hibernate.internal.util.ReflectHelper.getRecordComponentNames;
 
 /**
  * Support for instantiating embeddables as record representation
@@ -21,14 +22,11 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 	}
 
 	public static EmbeddableInstantiatorRecordIndirecting of(Class<?> javaType, String[] propertyNames) {
-		final String[] componentNames = ReflectHelper.getRecordComponentNames( javaType );
+		final String[] componentNames = getRecordComponentNames( javaType );
 		final int[] index = new int[componentNames.length];
-		if ( EmbeddableHelper.resolveIndex( propertyNames, componentNames, index ) ) {
-			return new EmbeddableInstantiatorRecordIndirectingWithGap( javaType, index );
-		}
-		else {
-			return new EmbeddableInstantiatorRecordIndirecting(javaType, index);
-		}
+		return EmbeddableHelper.resolveIndex( propertyNames, componentNames, index )
+				? new EmbeddableInstantiatorRecordIndirectingWithGap( javaType, index )
+				: new EmbeddableInstantiatorRecordIndirecting( javaType, index );
 	}
 
 	@Override

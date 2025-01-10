@@ -31,12 +31,9 @@ public class EmbeddableInstantiatorPojoIndirecting extends AbstractPojoInstantia
 			throw new IllegalArgumentException( "Can't determine field assignment for constructor: " + constructor );
 		}
 		final int[] index = new int[componentNames.length];
-		if ( EmbeddableHelper.resolveIndex( propertyNames, componentNames, index ) ) {
-			return new EmbeddableInstantiatorPojoIndirecting.EmbeddableInstantiatorPojoIndirectingWithGap( constructor, index );
-		}
-		else {
-			return new EmbeddableInstantiatorPojoIndirecting( constructor, index );
-		}
+		return EmbeddableHelper.resolveIndex( propertyNames, componentNames, index )
+				? new EmbeddableInstantiatorPojoIndirectingWithGap( constructor, index )
+				: new EmbeddableInstantiatorPojoIndirecting( constructor, index );
 	}
 
 	@Override

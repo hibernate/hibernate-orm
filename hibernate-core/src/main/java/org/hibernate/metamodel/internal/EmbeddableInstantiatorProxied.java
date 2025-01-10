@@ -20,7 +20,8 @@ public class EmbeddableInstantiatorProxied implements StandardEmbeddableInstanti
 
 	public EmbeddableInstantiatorProxied(
 			Class<?> proxiedClass,
-			Supplier<EmbeddableMappingType> embeddableMappingAccess, BasicProxyFactory factory) {
+			Supplier<EmbeddableMappingType> embeddableMappingAccess,
+			BasicProxyFactory factory) {
 		this.proxiedClass = proxiedClass;
 		this.embeddableMappingAccess = embeddableMappingAccess;
 		this.factory = factory;
@@ -29,10 +30,9 @@ public class EmbeddableInstantiatorProxied implements StandardEmbeddableInstanti
 	@Override
 	public Object instantiate(ValueAccess valuesAccess) {
 		final Object proxy = factory.getProxy();
-		Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
+		final Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
 		if ( values != null ) {
-			final EmbeddableMappingType embeddableMapping = embeddableMappingAccess.get();
-			embeddableMapping.setValues( proxy, values );
+			embeddableMappingAccess.get().setValues( proxy, values );
 		}
 		return proxy;
 	}

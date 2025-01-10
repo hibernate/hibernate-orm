@@ -41,6 +41,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
 import static org.hibernate.internal.util.ReflectHelper.isRecord;
+import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
 /**
@@ -476,7 +477,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 				result.put( propertyNames[i], propertyTypes[i].toLoggableString( values[i], factory ) );
 			}
 		}
-		return StringHelper.unqualify( getName() ) + result;
+		return unqualify( getName() ) + result;
 	}
 
 	@Override

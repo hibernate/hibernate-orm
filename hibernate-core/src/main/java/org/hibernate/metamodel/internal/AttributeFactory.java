@@ -461,8 +461,7 @@ public class AttributeFactory {
 					propertyMapping,
 					attributeContext.getOwnerType(),
 					member,
-					AttributeClassification.ANY,
-					context
+					AttributeClassification.ANY
 			);
 		}
 		else if ( type instanceof EntityType ) {
@@ -471,8 +470,7 @@ public class AttributeFactory {
 					propertyMapping,
 					attributeContext.getOwnerType(),
 					member,
-					determineSingularAssociationClassification( member ),
-					context
+					determineSingularAssociationClassification( member )
 			);
 		}
 		else if ( type instanceof CollectionType ) {
@@ -486,8 +484,7 @@ public class AttributeFactory {
 						member,
 						collectionClassification( elementType, isManyToMany ),
 						elementClassification( elementType, isManyToMany ),
-						indexClassification( value ),
-						context
+						indexClassification( value )
 				);
 			}
 			else if ( value instanceof OneToMany ) {
@@ -516,8 +513,7 @@ public class AttributeFactory {
 					propertyMapping,
 					attributeContext.getOwnerType(),
 					member,
-					AttributeClassification.EMBEDDED,
-					context
+					AttributeClassification.EMBEDDED
 			);
 		}
 		else {
@@ -527,8 +523,7 @@ public class AttributeFactory {
 					propertyMapping,
 					attributeContext.getOwnerType(),
 					member,
-					AttributeClassification.BASIC,
-					context
+					AttributeClassification.BASIC
 			);
 		}
 		throw new UnsupportedMappingException( "oops, we are missing something: " + propertyMapping );
@@ -557,9 +552,9 @@ public class AttributeFactory {
 			return AttributeClassification.EMBEDDED;
 		}
 		else if ( elementType instanceof EntityType ) {
-			return isManyToMany ?
-					AttributeClassification.MANY_TO_MANY :
-					AttributeClassification.ONE_TO_MANY;
+			return isManyToMany
+					? AttributeClassification.MANY_TO_MANY
+					: AttributeClassification.ONE_TO_MANY;
 		}
 		else {
 			return AttributeClassification.BASIC;
@@ -569,9 +564,9 @@ public class AttributeFactory {
 	private static AttributeClassification collectionClassification(
 			org.hibernate.type.Type elementType, boolean isManyToMany) {
 		if ( elementType instanceof EntityType ) {
-			return isManyToMany ?
-					AttributeClassification.MANY_TO_MANY :
-					AttributeClassification.ONE_TO_MANY;
+			return isManyToMany
+					? AttributeClassification.MANY_TO_MANY
+					: AttributeClassification.ONE_TO_MANY;
 		}
 		else {
 			return AttributeClassification.ELEMENT_COLLECTION;
@@ -680,7 +675,7 @@ public class AttributeFactory {
 			return ownerBootDescriptor.getBuildingContext()
 							.getBootstrapContext()
 							.getRepresentationStrategySelector()
-							.resolveStrategy(ownerBootDescriptor, null,
+							.resolveStrategy( ownerBootDescriptor, null,
 									metadataContext.getRuntimeModelCreationContext() );
 		}
 		else {
@@ -728,66 +723,49 @@ public class AttributeFactory {
 		final ManagedDomainType<?> ownerType = attributeContext.getOwnerType();
 		final Property property = attributeContext.getPropertyMapping();
 		final Type.PersistenceType persistenceType = ownerType.getPersistenceType();
-		if ( Type.PersistenceType.EMBEDDABLE == persistenceType ) {
-			return embeddedMemberResolver.resolveMember( attributeContext, metadataContext );
-		}
-		else if ( Type.PersistenceType.MAPPED_SUPERCLASS == persistenceType ) {
-			return resolveMappedSuperclassMember(
-					property,
-					(MappedSuperclassDomainType<?>) ownerType,
-					metadataContext
-			);
-		}
-		else if ( Type.PersistenceType.ENTITY == persistenceType ) {
-			return resolveEntityMember( property, getDeclaringEntity( (AbstractIdentifiableType<?>) ownerType, metadataContext ) );
-		}
-		else {
-			throw new IllegalArgumentException( "Unexpected owner type : " + persistenceType );
-		}
+		return switch ( persistenceType ) {
+			case ENTITY ->
+					resolveEntityMember( property,
+							getDeclaringEntity( (AbstractIdentifiableType<?>) ownerType, metadataContext ) );
+			case MAPPED_SUPERCLASS ->
+					resolveMappedSuperclassMember( property, (MappedSuperclassDomainType<?>) ownerType, metadataContext );
+			case EMBEDDABLE ->
+					embeddedMemberResolver.resolveMember( attributeContext, metadataContext );
+			default -> throw new IllegalArgumentException( "Unexpected owner type : " + persistenceType );
+		};
 	};
 
 	private static Member resolveEntityMember(Property property, EntityPersister declaringEntity) {
 		final String propertyName = property.getName();
 		final AttributeMapping attributeMapping = declaringEntity.findAttributeMapping( propertyName );
-		if ( attributeMapping == null ) {
-			// just like in #determineIdentifierJavaMember , this *should* indicate we have an IdClass mapping
-			return resolveVirtualIdentifierMember( property, declaringEntity );
-		}
-		else {
-			final Getter getter = getter( declaringEntity, property );
-			return getter instanceof PropertyAccessMapImpl.GetterImpl
-					? new MapMember( propertyName, property.getType().getReturnedClass() )
-					: getter.getMember();
-		}
+		return attributeMapping == null
+				// just like in #determineIdentifierJavaMember , this *should* indicate we have an IdClass mapping
+				? resolveVirtualIdentifierMember( property, declaringEntity )
+				: getter( declaringEntity, property, propertyName, property.getType().getReturnedClass() );
 	}
 
 	private static Member resolveMappedSuperclassMember(
 			Property property,
 			MappedSuperclassDomainType<?> ownerType,
-			MetadataContext metadataContext) {
-		final EntityPersister declaringEntity = getDeclaringEntity( (AbstractIdentifiableType<?>) ownerType, metadataContext );
+			MetadataContext context) {
+		final EntityPersister declaringEntity =
+				getDeclaringEntity( (AbstractIdentifiableType<?>) ownerType, context );
 		if ( declaringEntity != null ) {
 			return resolveEntityMember( property, declaringEntity );
 		}
 		else {
 			final ManagedDomainType<?> subType = ownerType.getSubTypes().iterator().next();
 			final Type.PersistenceType persistenceType = subType.getPersistenceType();
-			if ( persistenceType == Type.PersistenceType.ENTITY ) {
-				return resolveEntityMember( property, getDeclaringEntity( (AbstractIdentifiableType<?>) subType, metadataContext ) );
-			}
-			else if ( persistenceType == Type.PersistenceType.EMBEDDABLE ) {
-				return resolveEmbeddedMember( property, (EmbeddableDomainType<?>) subType, metadataContext );
-			}
-			else if ( persistenceType == Type.PersistenceType.MAPPED_SUPERCLASS ) {
-				return resolveMappedSuperclassMember(
-						property,
-						(MappedSuperclassDomainType<?>) subType,
-						metadataContext
-				);
-			}
-			else {
-				throw new IllegalArgumentException( "Unexpected subtype: " + persistenceType );
-			}
+			return switch ( persistenceType ) {
+				case ENTITY ->
+						resolveEntityMember( property,
+								getDeclaringEntity( (AbstractIdentifiableType<?>) subType, context ) );
+				case MAPPED_SUPERCLASS ->
+						resolveMappedSuperclassMember( property, (MappedSuperclassDomainType<?>) subType, context );
+				case EMBEDDABLE ->
+						resolveEmbeddedMember( property, (EmbeddableDomainType<?>) subType, context );
+				default -> throw new IllegalArgumentException( "Unexpected PersistenceType: " + persistenceType );
+			};
 		}
 	}
 
@@ -797,18 +775,12 @@ public class AttributeFactory {
 		final EntityPersister declaringEntityMapping = getDeclaringEntity( identifiableType, metadataContext );
 		final EntityIdentifierMapping identifierMapping = declaringEntityMapping.getIdentifierMapping();
 		final Property propertyMapping = attributeContext.getPropertyMapping();
-		if ( !propertyMapping.getName().equals( identifierMapping.getAttributeName() ) ) {
-			// this *should* indicate processing part of an IdClass...
-			return virtualIdentifierMemberResolver.resolveMember( attributeContext, metadataContext );
-		}
+		return !propertyMapping.getName().equals( identifierMapping.getAttributeName() )
+				// this *should* indicate processing part of an IdClass...
+				? virtualIdentifierMemberResolver.resolveMember( attributeContext, metadataContext )
+				: getter( declaringEntityMapping, propertyMapping,
+						identifierMapping.getAttributeName(), identifierMapping.getJavaType().getJavaTypeClass() );
 
-		final Getter getter = getter( declaringEntityMapping, propertyMapping );
-		if ( getter instanceof PropertyAccessMapImpl.GetterImpl ) {
-			return new MapMember( identifierMapping.getAttributeName(), identifierMapping.getJavaType().getJavaTypeClass() );
-		}
-		else {
-			return getter.getMember();
-		}
 	};
 
 	private final MemberResolver versionMemberResolver = (attributeContext, metadataContext) -> {
@@ -824,20 +796,20 @@ public class AttributeFactory {
 			// this should never happen, but to be safe...
 			throw new IllegalArgumentException( "Given property did not match declared version property" );
 		}
-
-		final Getter getter = getter( entityPersister, attributeContext.getPropertyMapping() );
-		if ( getter instanceof PropertyAccessMapImpl.GetterImpl ) {
-			return new MapMember( versionPropertyName, versionMapping.getJavaType().getJavaTypeClass() );
-		}
-		else {
-			return getter.getMember();
-		}
+		return getter( entityPersister, attributeContext.getPropertyMapping(),
+				versionPropertyName, versionMapping.getJavaType().getJavaTypeClass() );
 	};
 
-	private static Getter getter(EntityPersister declaringEntityMapping, Property propertyMapping) {
-		return declaringEntityMapping.getRepresentationStrategy()
-				.resolvePropertyAccess( propertyMapping )
-				.getGetter();
+	private static Member getter(EntityPersister persister, Property property, String name, Class<?> type) {
+		final Getter getter = getter( persister, property );
+		return getter instanceof PropertyAccessMapImpl.GetterImpl
+				? new MapMember( name, type )
+				: getter.getMember();
 	}
 
+	private static Getter getter(EntityPersister persister, Property property) {
+		return persister.getRepresentationStrategy()
+				.resolvePropertyAccess( property )
+				.getGetter();
+	}
 }

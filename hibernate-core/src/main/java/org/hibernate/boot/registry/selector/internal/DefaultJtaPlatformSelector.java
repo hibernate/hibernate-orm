@@ -24,60 +24,44 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 		if ( name.isBlank() ) {
 			return null;
 		}
-		//Let's organize all string matches in groups by first letter:
-		return switch ( name.charAt( 0 ) ) {
-			case 'J'-> caseJ( name );
-			case 'W'-> caseW( name );
-			case 'o'-> caseLegacy( name, this );
-			default -> caseOthers( name );
-		};
+		else if ( name.startsWith( "org." ) ) {
+			return legacy( name, this );
+		}
+		else {
+			return switch ( name ) {
+				case "JBossAS" -> JBossAppServerJtaPlatform.class;
+				case "JBossTS" -> JBossStandAloneJtaPlatform.class;
+				case "Weblogic" -> WeblogicJtaPlatform.class;
+				case "WebSphereLiberty" -> WebSphereLibertyJtaPlatform.class;
+				case "WebSphere" -> WebSphereJtaPlatform.class;
+				case "WebSphereExtended" -> WebSphereExtendedJtaPlatform.class;
+				case "Atomikos" -> AtomikosJtaPlatform.class;
+				case "Resin" -> ResinJtaPlatform.class;
+				default -> null;
+			};
+		}
 	}
 
-	private static Class<? extends JtaPlatform> caseJ(final String name) {
-		return switch ( name ) {
-			case "JBossAS" -> JBossAppServerJtaPlatform.class;
-			case "JBossTS" -> JBossStandAloneJtaPlatform.class;
-			case null, default -> null;
-		};
-	}
-
-	private static Class<? extends JtaPlatform> caseW(final String name) {
-		return switch ( name ) {
-			case "Weblogic" -> WeblogicJtaPlatform.class;
-			case "WebSphereLiberty" -> WebSphereLibertyJtaPlatform.class;
-			case "WebSphere" -> WebSphereJtaPlatform.class;
-			case "WebSphereExtended" -> WebSphereExtendedJtaPlatform.class;
-			case null, default -> null;
-		};
-	}
-
-	private static Class<? extends JtaPlatform> caseOthers(final String name) {
-		return switch ( name ) {
-			case "Atomikos" -> AtomikosJtaPlatform.class;
-			case "Resin" -> ResinJtaPlatform.class;
-			case null, default -> null;
-		};
-	}
 
 	/**
 	 * Special case: we have several old fully qualified classnames which need to
 	 * be remapped to their new names for backwards compatibility reasons.
 	 */
-	private static Class<? extends JtaPlatform> caseLegacy(
+	private static Class<? extends JtaPlatform> legacy(
 			final String name,
 			final DefaultJtaPlatformSelector defaultJtaPlatformSelector) {
 
 		//First, let's deal with the special cases which don't follow any recognizable pattern:
-		if ( name.equals( "org.hibernate.service.jta.platform.internal.JBossAppServerJtaPlatform" ) ) {
-			return JBossAppServerJtaPlatform.class;
-		}
-		if ( name.equals( "org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform" ) ) {
-			return JBossStandAloneJtaPlatform.class;
-		}
-		//This one shouldn't be necessary as it matches the implementation FQN, but let's translate the existing
-		//code faithfully.
-		if ( name.equals( "org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform" ) ) {
-			return WebSphereLibertyJtaPlatform.class;
+		switch ( name ) {
+			case "org.hibernate.service.jta.platform.internal.JBossAppServerJtaPlatform" -> {
+				return JBossAppServerJtaPlatform.class;
+			}
+			case "org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform" -> {
+				return JBossStandAloneJtaPlatform.class;
+			}
+			case "org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform" -> {
+				return WebSphereLibertyJtaPlatform.class;
+			}
 		}
 
 		//All other ones follow a pattern, beginning with the same prefix and ending with the same postfix,

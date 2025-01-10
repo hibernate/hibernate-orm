@@ -22,5 +22,5 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * @author Steve Ebersole
  */
 public interface JtaPlatformResolver extends Service {
-	JtaPlatform resolveJtaPlatform(Map configurationValues, ServiceRegistryImplementor registry);
+	JtaPlatform resolveJtaPlatform(Map<?,?> configurationValues, ServiceRegistryImplementor registry);
 }

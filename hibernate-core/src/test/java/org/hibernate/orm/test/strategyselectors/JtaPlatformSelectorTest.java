@@ -8,7 +8,6 @@ import org.hibernate.boot.registry.selector.internal.DefaultJtaPlatformSelector;
 import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.JOTMJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JOnASJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JRun4JtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.OC4JJtaPlatform;
@@ -63,13 +62,6 @@ public class JtaPlatformSelectorTest {
 				JOnASJtaPlatform.class,
 				"JOnAS",
 				"org.hibernate.service.jta.platform.internal.JOnASJtaPlatform"
-		);
-
-		testJtaPlatformResolves(
-				strategySelector,
-				JOTMJtaPlatform.class,
-				"JOTM",
-				"org.hibernate.service.jta.platform.internal.JOTMJtaPlatform"
 		);
 
 		testJtaPlatformResolves(

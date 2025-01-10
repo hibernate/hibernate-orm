@@ -10,7 +10,6 @@ import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatfor
 import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.SunOneJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
@@ -56,7 +55,6 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 		return switch ( name ) {
 			case "Atomikos" -> AtomikosJtaPlatform.class;
 			case "Resin" -> ResinJtaPlatform.class;
-			case "SunOne" -> SunOneJtaPlatform.class;
 			case null, default -> null;
 		};
 	}

@@ -39,7 +39,7 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 			CollectionPersister persister, Object id, PersistentCollection<?> snapshot) {
 		return isCollectionSnapshotValid( snapshot )
 			&& persister.getRole().equals( snapshot.getRole() )
-			&& id.equals( snapshot.getKey() );
+			&& persister.getKeyType().isEqual( id, snapshot.getKey() );
 	}
 
 	private static boolean isCollectionSnapshotValid(PersistentCollection<?> snapshot) {

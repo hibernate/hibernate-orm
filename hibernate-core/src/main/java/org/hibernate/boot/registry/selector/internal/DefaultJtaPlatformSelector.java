@@ -16,7 +16,6 @@ import org.hibernate.engine.transaction.jta.platform.internal.JRun4JtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.OC4JJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.OrionJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.SapNetWeaverJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.SunOneJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatform;
@@ -97,9 +96,6 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 		}
 		if ( "Resin".equals( name ) ) {
 			return ResinJtaPlatform.class;
-		}
-		if ( "SapNetWeaver".equals( name ) ) {
-			return SapNetWeaverJtaPlatform.class;
 		}
 		if ( "SunOne".equals( name ) ) {
 			return SunOneJtaPlatform.class;

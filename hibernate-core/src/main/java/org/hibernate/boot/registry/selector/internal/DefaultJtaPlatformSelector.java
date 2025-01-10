@@ -7,7 +7,6 @@ package org.hibernate.boot.registry.selector.internal;
 import java.util.Objects;
 
 import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.BorlandEnterpriseServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JOTMJtaPlatform;
@@ -33,19 +32,11 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 		}
 		//Let's organize all string matches in groups by first letter:
 		return switch ( name.charAt( 0 ) ) {
-			case 'B' -> caseB( name );
 			case 'J'-> caseJ( name );
 			case 'W'-> caseW( name );
 			case 'o'-> caseLegacy( name, this );
 			default -> caseOthers( name );
 		};
-	}
-
-	private static Class<? extends JtaPlatform> caseB(final String name) {
-		if ( "Borland".equals( name ) ) {
-			return BorlandEnterpriseServerJtaPlatform.class;
-		}
-		return null;
 	}
 
 	private static Class<? extends JtaPlatform> caseJ(final String name) {
@@ -89,9 +80,6 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 			final DefaultJtaPlatformSelector defaultJtaPlatformSelector) {
 
 		//First, let's deal with the special cases which don't follow any recognizable pattern:
-		if ( name.equals( "org.hibernate.service.jta.platform.internal.BorlandEnterpriseServerJtaPlatform" ) ) {
-			return BorlandEnterpriseServerJtaPlatform.class;
-		}
 		if ( name.equals( "org.hibernate.service.jta.platform.internal.JBossAppServerJtaPlatform" ) ) {
 			return JBossAppServerJtaPlatform.class;
 		}

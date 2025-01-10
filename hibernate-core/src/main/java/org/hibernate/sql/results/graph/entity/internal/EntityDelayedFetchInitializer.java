@@ -202,14 +202,14 @@ public class EntityDelayedFetchInitializer
 						// Try to load a PersistentAttributeInterceptable. If we get one, we can add the lazy
 						// field to the interceptor. If we don't get one, we load the entity by unique key.
 						PersistentAttributeInterceptable persistentAttributeInterceptable = null;
-						if (getParent().isEntityInitializer()) {
+						if (getParent().isEntityInitializer() && isLazyByGraph( rowProcessingState )) {
 							final Object resolvedInstance =
-									getParent().asEntityInitializer().getResolvedInstance(rowProcessingState);
+									getParent().asEntityInitializer().getResolvedInstance( rowProcessingState );
 							persistentAttributeInterceptable =
 									ManagedTypeHelper.asPersistentAttributeInterceptableOrNull( resolvedInstance );
 						}
 
-						if (persistentAttributeInterceptable != null && isLazyByGraph( rowProcessingState )) {
+						if ( persistentAttributeInterceptable != null ) {
 							final LazyAttributeLoadingInterceptor persistentAttributeInterceptor = (LazyAttributeLoadingInterceptor) persistentAttributeInterceptable.$$_hibernate_getInterceptor();
 							persistentAttributeInterceptor.addLazyFieldByGraph( navigablePath.getLocalName() );
 							instance = UNFETCHED_PROPERTY;

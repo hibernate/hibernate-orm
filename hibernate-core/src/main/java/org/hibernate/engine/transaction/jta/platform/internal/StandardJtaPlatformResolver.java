@@ -24,13 +24,13 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 	private static final Logger log = Logger.getLogger( StandardJtaPlatformResolver.class );
 
 	@Override
-	public JtaPlatform resolveJtaPlatform(Map configurationValues, ServiceRegistryImplementor registry) {
+	public JtaPlatform resolveJtaPlatform(Map<?,?> configurationValues, ServiceRegistryImplementor registry) {
 		final ClassLoaderService classLoaderService = registry.requireService( ClassLoaderService.class );
 
 		// Initially look for a JtaPlatformProvider
 		for ( JtaPlatformProvider provider : classLoaderService.loadJavaServices( JtaPlatformProvider.class ) ) {
 			final JtaPlatform providedPlatform = provider.getProvidedJtaPlatform();
-			log.tracef( "Located JtaPlatformProvider [%s] provided JtaPlaform : %s", provider, providedPlatform );
+			log.tracef( "Located JtaPlatformProvider [%s] provided JtaPlatform : %s", provider, providedPlatform );
 			if ( providedPlatform!= null ) {
 				return providedPlatform;
 			}
@@ -100,7 +100,7 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		for ( WebSphereJtaPlatform.WebSphereEnvironment webSphereEnvironment
 				: WebSphereJtaPlatform.WebSphereEnvironment.values() ) {
 			try {
-				Class accessClass = classLoaderService.classForName( webSphereEnvironment.getTmAccessClassName() );
+				final Class<?> accessClass = classLoaderService.classForName( webSphereEnvironment.getTmAccessClassName() );
 				return new WebSphereJtaPlatform( accessClass, webSphereEnvironment );
 			}
 			catch (ClassLoadingException ignore) {

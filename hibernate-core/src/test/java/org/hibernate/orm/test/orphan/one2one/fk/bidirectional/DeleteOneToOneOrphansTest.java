@@ -107,4 +107,29 @@ public class DeleteOneToOneOrphansTest {
 		);
 
 	}
+
+	@Test
+	@JiraKey(value = "HHH-7122")
+	public void testOrphanedWithoutChildInSession(SessionFactoryScope scope) {
+		Employee e = scope.fromTransaction(
+				session -> {
+					List results = session.createQuery( "from Employee" ).list();
+					assertEquals( 1, results.size() );
+					Employee emp = (Employee) results.get( 0 );
+					emp.setInfo( null );
+					return emp;
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					Employee emp = session.get( Employee.class, e.getId() );
+					assertNull( emp.getInfo() );
+					List results = session.createQuery( "from EmployeeInfo" ).list();
+					assertEquals( 0, results.size() );
+					results = session.createQuery( "from Employee" ).list();
+					assertEquals( 1, results.size() );
+				}
+		);
+	}
 }

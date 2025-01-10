@@ -7,7 +7,6 @@ package org.hibernate.boot.registry.selector.internal;
 import java.util.Objects;
 
 import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.BitronixJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.BorlandEnterpriseServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
@@ -45,9 +44,6 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 	}
 
 	private static Class<? extends JtaPlatform> caseB(final String name) {
-		if ( "Bitronix".equals( name ) ) {
-			return BitronixJtaPlatform.class;
-		}
 		if ( "Borland".equals( name ) ) {
 			return BorlandEnterpriseServerJtaPlatform.class;
 		}

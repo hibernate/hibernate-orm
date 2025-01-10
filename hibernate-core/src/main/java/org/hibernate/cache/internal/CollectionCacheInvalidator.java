@@ -126,7 +126,7 @@ public class CollectionCacheInvalidator
 					Object id = getIdentifier( session, ref );
 
 					// only evict if the related entity has changed
-					if ( ( id != null && !id.equals( oldId ) ) || ( oldId != null && !oldId.equals( id ) ) ) {
+					if ( ( id != null || oldId != null ) && !collectionPersister.getKeyType().isEqual( oldId, id ) ) {
 						if ( id != null ) {
 							evict( id, collectionPersister, session );
 						}

@@ -19,6 +19,7 @@ import oracle.sql.json.OracleJsonGenerator;
 import oracle.sql.json.OracleJsonParser;
 import oracle.sql.json.OracleJsonTimestamp;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
@@ -27,7 +28,7 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-
+import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.format.JsonDocumentHandler;
@@ -190,44 +191,115 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 		return (T)handler.getObjectArray();
 	}
 
-	public <X>byte[] toOson(X value, JavaType<X> javaType, WrapperOptions options,EmbeddableMappingType embeddableMappingType) {
+	public <X>byte[] toOson(X value, WrapperOptions options,EmbeddableMappingType embeddableMappingType) {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		OracleJsonGenerator generator = new OracleJsonFactory().createJsonBinaryGenerator( out );
-		serializetoOson( value,generator,javaType,options,embeddableMappingType);
+		toOson( value,generator,options,embeddableMappingType);
 		generator.close();
 		return out.toByteArray();
 	}
 
-	private <X> void serializetoOson(X value, OracleJsonGenerator generator, JavaType<X> javaType, WrapperOptions options, EmbeddableMappingType embeddableMappingType) {
+	public void arrayToOson(OracleJsonGenerator osonGen,
+							EmbeddableMappingType elementMappingType,
+							Object[] values,
+							WrapperOptions options) {
+		if ( values.length == 0 ) {
+			osonGen.writeStartArray();
+			osonGen.writeEnd();
+			return;
+		}
+		osonGen.writeStartArray();
+		for ( Object value : values ) {
+			toOson( elementMappingType, value, options, osonGen);
+		}
+		osonGen.writeEnd();
+	}
+
+	private <X>void toOson(MappingType mappedType,
+						Object value, WrapperOptions options, OracleJsonGenerator osonGen) {
+		if (value == null) {
+			osonGen.writeNull();
+		}
+		else if ( mappedType instanceof EmbeddableMappingType ) {
+			toOson( (X) value, osonGen, options,(EmbeddableMappingType) mappedType );
+		}
+		else if ( mappedType instanceof BasicType<?> ) {
+			//noinspection unchecked
+			final BasicType<Object> basicType = (BasicType<Object>) mappedType;
+			convertedBasicValueToOson(basicType.convertToRelationalValue( value ),
+					options, osonGen, basicType);
+		}
+		else {
+			throw new UnsupportedOperationException( "Support for mapping type not yet implemented: " + mappedType.getClass().getName() );
+		}
+	}
+
+	private void convertedBasicValueToOson(Object value,
+										WrapperOptions options,
+										OracleJsonGenerator osonGen,
+										BasicType<Object> basicType) {
+		serializeValue(
+				value,
+				(JavaType<Object>) basicType.getJdbcJavaType(),
+				basicType.getJdbcType(),
+				options,
+				osonGen
+		);
+	}
+
+	public void arrayToOson(OracleJsonGenerator osonGen,
+							JavaType<?> elementJavaType,
+							JdbcType elementJdbcType,
+							Object[] values,
+							WrapperOptions options) {
+		if ( values.length == 0 ) {
+			osonGen.writeStartArray();
+			osonGen.writeEnd();
+		}
+
+		osonGen.writeStartArray();
+		for ( Object value : values ) {
+			//noinspection unchecked
+			convertedValueToOson((JavaType<Object>) elementJavaType, elementJdbcType, value, options, osonGen);
+		}
+		osonGen.writeEnd();
+	}
+
+	private void convertedValueToOson(JavaType<Object> javaType,
+									JdbcType jdbcType,
+									Object value,
+									WrapperOptions options,
+									OracleJsonGenerator osonGen) {
+		if ( value == null ) {
+			osonGen.writeNull();
+		}
+		else if ( jdbcType instanceof AggregateJdbcType aggregateJdbcType ) {
+			toOson(value,  osonGen, options, aggregateJdbcType.getEmbeddableMappingType());
+		}
+		else {
+			serializeValue( value, javaType, jdbcType, options, osonGen );
+		}
+	}
+
+	private <X> void toOson(X value, OracleJsonGenerator generator, WrapperOptions options, EmbeddableMappingType embeddableMappingType) {
 		generator.writeStartObject();
-		serializetoOsonUtil( value, generator, javaType, options,embeddableMappingType );
+		toOsonUtil( value, generator, options,embeddableMappingType );
 		generator.writeEnd();
 	}
 
-	private <X> void serializetoOsonUtil(X value,
-										OracleJsonGenerator generator,
-										JavaType<X> javaType,
-										WrapperOptions options,
-										EmbeddableMappingType embeddableMappingType) {
+	private <X> void toOsonUtil(X value,
+								OracleJsonGenerator generator,
+								WrapperOptions options,
+								EmbeddableMappingType embeddableMappingType) {
 
 		final Object[] values = embeddableMappingType.getValues( value );
 		for ( int i = 0; i < values.length; i++ ) {
 			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, i );
 			if ( attributeMapping instanceof SelectableMapping ) {
 				final String name = ( (SelectableMapping) attributeMapping ).getSelectableName();
-				final BasicType<Object> basicType = (BasicType<Object>) attributeMapping.getMappedType();
 
 				generator.writeKey( name );
-
-				if (values[i] == null) {
-					generator.writeNull();
-					continue;
-				}
-				serializeValue( basicType.convertToRelationalValue( values[i] ),
-						(JavaType<Object>) basicType.getJdbcJavaType(),
-						basicType.getJdbcType(),
-						options,
-						generator);
+				toOson( attributeMapping.getMappedType(), values[i], options,generator );
 
 			}
 			else if (attributeMapping instanceof EmbeddedAttributeMapping) {
@@ -239,9 +311,8 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 				}
 				if (aggregateMapping == null) {
 					// flattened case
-					serializetoOsonUtil( (X) values[i],
+					toOsonUtil( (X) values[i],
 							generator,
-							javaType,
 							options,
 							mappingType );
 				}
@@ -250,9 +321,8 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 					final String name = aggregateMapping.getSelectableName();
 					generator.writeKey( name );
 					generator.writeStartObject();
-					serializetoOsonUtil( (X) values[i],
+					toOsonUtil( (X) values[i],
 							generator,
-							javaType,
 							options,
 							mappingType);
 					generator.writeEnd();
@@ -452,6 +522,8 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 	public boolean supportsTargetType(Class<?> targetType) {
 		return JsonGenerator.class.isAssignableFrom( targetType );
 	}
+
+
 
 
 

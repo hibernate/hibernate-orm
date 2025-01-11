@@ -15,7 +15,7 @@ import jakarta.transaction.UserTransaction;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public class SunOneJtaPlatform extends AbstractJtaPlatform {
+public class GlassFishJtaPlatform extends AbstractJtaPlatform {
 	public static final String TM_NAME = "java:appserver/TransactionManager";
 	public static final String UT_NAME = "java:comp/UserTransaction";
 

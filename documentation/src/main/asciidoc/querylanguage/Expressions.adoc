@@ -1209,7 +1209,7 @@ However, we note that the following language constructs work with arrays, and ar
 |===
 
 [[functions-hash]]
-=== Hash functions
+==== Hash functions
 
 The following functions work on most supported platforms:
 

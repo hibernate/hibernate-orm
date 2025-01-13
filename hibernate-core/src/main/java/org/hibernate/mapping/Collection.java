@@ -19,6 +19,16 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
+import org.hibernate.collection.internal.StandardArraySemantics;
+import org.hibernate.collection.internal.StandardBagSemantics;
+import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
+import org.hibernate.collection.internal.StandardListSemantics;
+import org.hibernate.collection.internal.StandardMapSemantics;
+import org.hibernate.collection.internal.StandardOrderedMapSemantics;
+import org.hibernate.collection.internal.StandardOrderedSetSemantics;
+import org.hibernate.collection.internal.StandardSetSemantics;
+import org.hibernate.collection.internal.StandardSortedMapSemantics;
+import org.hibernate.collection.internal.StandardSortedSetSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.FilterConfiguration;
@@ -27,8 +37,18 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.ArrayType;
+import org.hibernate.type.BagType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CustomCollectionType;
+import org.hibernate.type.IdentifierBagType;
+import org.hibernate.type.ListType;
+import org.hibernate.type.MapType;
+import org.hibernate.type.OrderedMapType;
+import org.hibernate.type.OrderedSetType;
+import org.hibernate.type.SetType;
+import org.hibernate.type.SortedMapType;
+import org.hibernate.type.SortedSetType;
 import org.hibernate.type.Type;
 import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.UserCollectionType;
@@ -453,7 +473,40 @@ public abstract sealed class Collection
 			collectionType = cachedCollectionType;
 		}
 
-		return new CustomCollectionTypeSemantics<>( collectionType );
+		final Class<? extends CollectionType> collectionTypeClass = collectionType.getClass();
+		if ( collectionTypeClass == ArrayType.class ) {
+			return StandardArraySemantics.INSTANCE;
+		}
+		else if ( collectionTypeClass == BagType.class ) {
+			return StandardBagSemantics.INSTANCE;
+		}
+		else if ( collectionTypeClass == IdentifierBagType.class ) {
+			return StandardIdentifierBagSemantics.INSTANCE;
+		}
+		else if ( collectionTypeClass == ListType.class ) {
+			return StandardListSemantics.INSTANCE;
+		}
+		else if ( collectionTypeClass == SetType.class ) {
+			return StandardSetSemantics.INSTANCE;
+		}
+		else if ( collectionTypeClass == OrderedSetType.class ) {
+			return StandardOrderedSetSemantics.INSTANCE;
+		}
+		else if ( collectionTypeClass == SortedSetType.class ) {
+			return StandardSortedSetSemantics.INSTANCE;
+		}
+		else if ( collectionTypeClass == MapType.class ) {
+			return StandardMapSemantics.INSTANCE;
+		}
+		else if ( collectionTypeClass == OrderedMapType.class ) {
+			return StandardOrderedMapSemantics.INSTANCE;
+		}
+		else if ( collectionTypeClass == SortedMapType.class ) {
+			return StandardSortedMapSemantics.INSTANCE;
+		}
+		else {
+			return new CustomCollectionTypeSemantics<>( collectionType );
+		}
 	}
 
 	private CollectionType resolveCollectionType() {

@@ -7,6 +7,7 @@ package org.hibernate.type;
 import java.util.ArrayList;
 
 import org.hibernate.HibernateException;
+import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
 import org.hibernate.collection.spi.PersistentIdentifierBag;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -45,7 +46,10 @@ public class IdentifierBagType extends CollectionType {
 
 	@Override
 	public PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object collection) {
-		return new PersistentIdentifierBag<>( session, (java.util.Collection<?>) collection );
+		final CollectionPersister persister = session.getFactory().getRuntimeMetamodels().getMappingMetamodel()
+				.getCollectionDescriptor( getRole() );
+		//noinspection rawtypes,unchecked
+		return StandardIdentifierBagSemantics.INSTANCE.wrap( (java.util.Collection) collection, persister, session );
 	}
 
 }

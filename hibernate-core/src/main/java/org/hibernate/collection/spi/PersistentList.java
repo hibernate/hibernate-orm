@@ -33,6 +33,11 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 	protected List<E> list;
 
 	/**
+	 * The List provided to a PersistentList constructor
+	 */
+	private List<E> providedList;
+
+	/**
 	 * Constructs a PersistentList.  This form needed for SOAP libraries, etc
 	 */
 	public PersistentList() {
@@ -54,10 +59,40 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 	 * @param list The raw list
 	 */
 	public PersistentList(SharedSessionContractImplementor session, List<E> list) {
+		this( session, list, list instanceof ArrayList<?> ? list : new ArrayList<>( list ) );
+	}
+	/**
+	 * Constructs a PersistentList.
+	 *
+	 * @param session The session
+	 * @param collectionPersister The collection persister
+	 * @param list The raw list
+	 * @since 7.0
+	 */
+	public PersistentList(SharedSessionContractImplementor session, CollectionPersister collectionPersister, List<E> list) {
+		this( session, list, mutableCollection( collectionPersister, list ) );
+	}
+
+	private PersistentList(SharedSessionContractImplementor session, List<E> providedList, List<E> mutableList) {
 		super( session );
-		this.list = list;
+		this.providedList = providedList;
+		this.list = mutableList;
 		setInitialized();
 		setDirectlyAccessible( true );
+	}
+
+	private static <E> List<E> mutableCollection(CollectionPersister collectionPersister, List<E> coll) {
+		final CollectionSemantics<?, ?> collectionSemantics = collectionPersister.getCollectionSemantics();
+		if ( collectionSemantics.isMutableRaw( coll ) ) {
+			return coll;
+		}
+		else {
+			//noinspection unchecked
+			final List<E> mutableCollection =
+					(List<E>) collectionSemantics.instantiateRaw( coll.size(), collectionPersister );
+			mutableCollection.addAll( coll );
+			return mutableCollection;
+		}
 	}
 
 	protected List<E> getRawList() {
@@ -143,6 +178,11 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 	@Override
 	public boolean isWrapper(Object collection) {
 		return list==collection;
+	}
+
+	@Override
+	public boolean isDirectlyProvidedCollection(Object collection) {
+		return isDirectlyAccessible() && providedList == collection;
 	}
 
 	@Override

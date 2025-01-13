@@ -16,6 +16,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.BasicCollectionPersister;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * A persistent wrapper for a {@link java.util.SortedMap}. Underlying
@@ -56,8 +57,30 @@ public class PersistentSortedMap<K,E> extends PersistentMap<K,E> implements Sort
 	 * @param map The underlying map data
 	 */
 	public PersistentSortedMap(SharedSessionContractImplementor session, SortedMap<K,E> map) {
-		super( session, map );
+		super( session, map, mutableMap( map ) );
 		comparator = map.comparator();
+	}
+
+	/**
+	 * Constructs a PersistentSortedMap.
+	 *
+	 * @param session The session
+	 * @param map The underlying map data
+	 */
+	public PersistentSortedMap(SharedSessionContractImplementor session, CollectionPersister collectionPersister, SortedMap<K,E> map) {
+		super( session, collectionPersister, map );
+		comparator = map.comparator();
+	}
+
+	private static <K, E> SortedMap<K, E> mutableMap(SortedMap<K,E> map) {
+		if ( map instanceof TreeMap<K, E> mutableMap ) {
+			return mutableMap;
+		}
+		else {
+			final TreeMap<K, E> sortedSet = new TreeMap<>( map.comparator() );
+			sortedSet.putAll( map );
+			return sortedSet;
+		}
 	}
 
 	@SuppressWarnings("UnusedParameters")

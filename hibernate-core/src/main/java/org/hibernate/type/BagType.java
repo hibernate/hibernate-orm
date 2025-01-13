@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.hibernate.HibernateException;
+import org.hibernate.collection.internal.StandardBagSemantics;
 import org.hibernate.collection.spi.PersistentBag;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -38,7 +39,10 @@ public class BagType extends CollectionType {
 
 	@Override
 	public PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object collection) {
-		return new PersistentBag<>( session, (Collection<?>) collection );
+		final CollectionPersister persister = session.getFactory().getRuntimeMetamodels().getMappingMetamodel()
+				.getCollectionDescriptor( getRole() );
+		//noinspection rawtypes,unchecked
+		return StandardBagSemantics.INSTANCE.wrap( (Collection) collection, persister, session );
 	}
 
 	@Override

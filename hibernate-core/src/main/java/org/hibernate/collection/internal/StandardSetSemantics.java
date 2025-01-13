@@ -39,6 +39,11 @@ public class StandardSetSemantics<E> extends AbstractSetSemantics<Set<E>,E> {
 	}
 
 	@Override
+	public boolean isMutableRaw(Object collection) {
+		return collection.getClass() == HashSet.class;
+	}
+
+	@Override
 	public PersistentSet<E> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
@@ -51,7 +56,7 @@ public class StandardSetSemantics<E> extends AbstractSetSemantics<Set<E>,E> {
 			Set<E> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSet<>( session, rawCollection );
+		return new PersistentSet<>( session, collectionDescriptor, rawCollection );
 	}
 
 }

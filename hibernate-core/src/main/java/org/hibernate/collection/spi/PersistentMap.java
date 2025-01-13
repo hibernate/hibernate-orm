@@ -36,6 +36,10 @@ import org.hibernate.type.Type;
 public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implements Map<K,E> {
 
 	protected Map<K,E> map;
+	/**
+	 * The Map provided to a PersistentMap constructor
+	 */
+	private Map<K, E> providedMap;
 
 	/**
 	 * Empty constructor.
@@ -64,10 +68,42 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 	 * @param map The underlying map data.
 	 */
 	public PersistentMap(SharedSessionContractImplementor session, Map<K,E> map) {
+		this( session, map, map instanceof HashMap<K, E> ? map : new HashMap<>( map ) );
+	}
+
+	/**
+	 * Instantiates a non-lazy map (the underlying map is constructed
+	 * from the incoming map reference).
+	 *
+	 * @param session The session to which this map will belong.
+	 * @param collectionPersister The collection persister
+	 * @param map The underlying map data.
+	 * @since 7.0
+	 */
+	public PersistentMap(SharedSessionContractImplementor session, CollectionPersister collectionPersister, Map<K,E> map) {
+		this( session, map, mutableCollection( collectionPersister, map ) );
+	}
+
+	PersistentMap(SharedSessionContractImplementor session, Map<K,E> providedMap, Map<K, E> mutableMap) {
 		super( session );
-		this.map = map;
+		this.providedMap = providedMap;
+		this.map = mutableMap;
 		setInitialized();
 		setDirectlyAccessible( true );
+	}
+
+	private static <K, E> Map<K, E> mutableCollection(CollectionPersister collectionPersister, Map<K, E> coll) {
+		final CollectionSemantics<?, ?> collectionSemantics = collectionPersister.getCollectionSemantics();
+		if ( collectionSemantics.isMutableRaw( coll ) ) {
+			return coll;
+		}
+		else {
+			//noinspection unchecked
+			final Map<K, E> mutableCollection =
+					(Map<K, E>) collectionSemantics.instantiateRaw( coll.size(), collectionPersister );
+			mutableCollection.putAll( coll );
+			return mutableCollection;
+		}
 	}
 
 	@Override
@@ -118,6 +154,11 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 	@Override
 	public boolean isWrapper(Object collection) {
 		return map==collection;
+	}
+
+	@Override
+	public boolean isDirectlyProvidedCollection(Object collection) {
+		return isDirectlyAccessible() && providedMap == collection;
 	}
 
 	@Override

@@ -48,6 +48,11 @@ public class StandardSortedSetSemantics<E> extends AbstractSetSemantics<SortedSe
 	}
 
 	@Override
+	public boolean isMutableRaw(Object collection) {
+		return collection.getClass() == TreeSet.class;
+	}
+
+	@Override
 	public PersistentCollection<E> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
@@ -61,7 +66,7 @@ public class StandardSortedSetSemantics<E> extends AbstractSetSemantics<SortedSe
 			SortedSet<E> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSortedSet<>( session, rawCollection );
+		return new PersistentSortedSet<>( session, collectionDescriptor, rawCollection );
 	}
 
 	@Override

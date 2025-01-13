@@ -5,14 +5,15 @@
 package org.hibernate.type;
 
 import java.util.Comparator;
+import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.hibernate.collection.internal.StandardSortedMapSemantics;
 import org.hibernate.collection.spi.PersistentSortedMap;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
-
 
 public class SortedMapType extends MapType {
 
@@ -43,6 +44,9 @@ public class SortedMapType extends MapType {
 
 	@Override
 	public PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object collection) {
-		return new PersistentSortedMap<>( session, (java.util.SortedMap<?,?>) collection );
+		final CollectionPersister persister = session.getFactory().getRuntimeMetamodels().getMappingMetamodel()
+				.getCollectionDescriptor( getRole() );
+		//noinspection rawtypes,unchecked
+		return StandardSortedMapSemantics.INSTANCE.wrap( (SortedMap) collection, persister, session );
 	}
 }

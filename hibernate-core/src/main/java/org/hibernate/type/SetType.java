@@ -4,12 +4,15 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.collection.internal.StandardSetSemantics;
 import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
+
+import java.util.Set;
 
 public class SetType extends CollectionType {
 
@@ -34,7 +37,10 @@ public class SetType extends CollectionType {
 
 	@Override
 	public PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object collection) {
-		return new PersistentSet<>( session, (java.util.Set<?>) collection );
+		final CollectionPersister persister = session.getFactory().getRuntimeMetamodels().getMappingMetamodel()
+				.getCollectionDescriptor( getRole() );
+		//noinspection rawtypes,unchecked
+		return StandardSetSemantics.INSTANCE.wrap( (Set) collection, persister, session );
 	}
 
 	@Override

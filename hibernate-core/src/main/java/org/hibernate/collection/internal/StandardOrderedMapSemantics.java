@@ -40,6 +40,11 @@ public class StandardOrderedMapSemantics<K,V> extends AbstractMapSemantics<Linke
 	}
 
 	@Override
+	public boolean isMutableRaw(Object collection) {
+		return collection.getClass() == LinkedHashMap.class;
+	}
+
+	@Override
 	public PersistentCollection<V> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
@@ -52,7 +57,7 @@ public class StandardOrderedMapSemantics<K,V> extends AbstractMapSemantics<Linke
 			LinkedHashMap<K,V> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentMap<>( session, rawCollection );
+		return new PersistentMap<>( session, collectionDescriptor, rawCollection );
 	}
 
 	@Override

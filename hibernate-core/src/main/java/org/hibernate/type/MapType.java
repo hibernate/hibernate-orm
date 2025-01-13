@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.collection.internal.StandardMapSemantics;
 import org.hibernate.collection.spi.PersistentMap;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -47,7 +48,10 @@ public class MapType extends CollectionType {
 
 	@Override
 	public PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object collection) {
-		return new PersistentMap<>( session, (Map<?,?>) collection );
+		final CollectionPersister persister = session.getFactory().getRuntimeMetamodels().getMappingMetamodel()
+				.getCollectionDescriptor( getRole() );
+		//noinspection rawtypes,unchecked
+		return StandardMapSemantics.INSTANCE.wrap( (Map) collection, persister, session );
 	}
 
 	@Override

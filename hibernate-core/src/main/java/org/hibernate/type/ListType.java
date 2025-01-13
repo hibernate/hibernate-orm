@@ -7,6 +7,7 @@ package org.hibernate.type;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.collection.internal.StandardListSemantics;
 import org.hibernate.collection.spi.PersistentList;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -38,7 +39,10 @@ public class ListType extends CollectionType {
 
 	@Override
 	public PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object collection) {
-		return new PersistentList<>( session, (List<?>) collection );
+		final CollectionPersister persister = session.getFactory().getRuntimeMetamodels().getMappingMetamodel()
+				.getCollectionDescriptor( getRole() );
+		//noinspection rawtypes,unchecked
+		return StandardListSemantics.INSTANCE.wrap( (List) collection, persister, session );
 	}
 
 	@Override

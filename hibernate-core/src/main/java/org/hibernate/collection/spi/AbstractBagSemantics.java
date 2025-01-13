@@ -39,6 +39,11 @@ public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection
 	}
 
 	@Override
+	public boolean isMutableRaw(Object collection) {
+		return collection.getClass() == ArrayList.class;
+	}
+
+	@Override
 	public Iterator<E> getElementIterator(Collection<E> rawCollection) {
 		if ( rawCollection == null ) {
 			return null;

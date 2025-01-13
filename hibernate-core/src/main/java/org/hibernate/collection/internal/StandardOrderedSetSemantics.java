@@ -40,6 +40,11 @@ public class StandardOrderedSetSemantics<E> extends AbstractSetSemantics<LinkedH
 	}
 
 	@Override
+	public boolean isMutableRaw(Object collection) {
+		return collection.getClass() == LinkedHashSet.class;
+	}
+
+	@Override
 	public PersistentCollection<E> instantiateWrapper(
 			Object key,
 			CollectionPersister collectionDescriptor,
@@ -52,7 +57,7 @@ public class StandardOrderedSetSemantics<E> extends AbstractSetSemantics<LinkedH
 			LinkedHashSet<E> rawCollection,
 			CollectionPersister collectionDescriptor,
 			SharedSessionContractImplementor session) {
-		return new PersistentSet<>( session, rawCollection );
+		return new PersistentSet<>( session, collectionDescriptor, rawCollection );
 	}
 
 	@Override

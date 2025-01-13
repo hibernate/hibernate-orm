@@ -64,12 +64,22 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 	@Override
 	public final void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		switch ( generatedValue.strategy() ) {
-			case UUID -> GeneratorAnnotationHelper.handleUuidStrategy( idValue, idMember, buildingContext );
+			case UUID -> handleUuidStrategy();
 			case IDENTITY -> GeneratorAnnotationHelper.handleIdentityStrategy( idValue );
 			case SEQUENCE -> handleSequenceStrategy();
 			case TABLE -> handleTableStrategy();
 			case AUTO -> handleAutoStrategy();
 		}
+	}
+
+	private void handleUuidStrategy() {
+		GeneratorAnnotationHelper.handleUuidStrategy(
+				idValue,
+				idMember,
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
+				buildingContext
+		);
 	}
 
 	private void handleSequenceStrategy() {

@@ -54,6 +54,12 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 	}
 
 	@Override
+	public boolean isComparable() {
+		final Boolean comparable = userType.isComparable();
+		return comparable == null ? JdbcType.super.isComparable() : comparable;
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		assert javaType.getJavaTypeClass() == null

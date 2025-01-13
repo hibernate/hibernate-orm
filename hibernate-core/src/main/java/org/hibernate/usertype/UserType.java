@@ -524,4 +524,19 @@ public interface UserType<J> {
 	default BasicValueConverter<J, Object> getValueConverter() {
 		return null;
 	}
+
+	/**
+	 * Is this a comparable type in HQL? A type is comparable if it may be
+	 * used with comparison operators like {@code >=}, and with {@code max()}
+	 * and {@code min()}.
+	 *
+	 * @return {@code null} by default to indicate that the assigned
+	 *         {@code JdbcType} should decide
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	default Boolean isComparable() {
+		return null;
+	}
 }

@@ -28,19 +28,19 @@ import org.hibernate.usertype.UserType;
  *
  * @author Steve Ebersole
  */
-public class UserTypeSqlTypeAdapter<J> implements JdbcType {
+public class UserTypeJdbcTypeAdapter<J> implements JdbcType {
 	private final UserType<J> userType;
-	private final JavaType<J> jtd;
+	private final JavaType<J> javaType;
 
 	private final ValueExtractor<J> valueExtractor;
 	private final ValueBinder<J> valueBinder;
 
-	public UserTypeSqlTypeAdapter(UserType<J> userType, JavaType<J> jtd, TypeConfiguration typeConfiguration) {
+	public UserTypeJdbcTypeAdapter(UserType<J> userType, JavaType<J> javaType) {
 		this.userType = userType;
-		this.jtd = jtd;
+		this.javaType = javaType;
 
-		this.valueExtractor = new ValueExtractorImpl<>( userType, jtd );
-		this.valueBinder = new ValueBinderImpl<>( userType, typeConfiguration );
+		this.valueExtractor = new ValueExtractorImpl<>( userType );
+		this.valueBinder = new ValueBinderImpl<>( userType );
 	}
 
 	@Override
@@ -63,7 +63,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 	@SuppressWarnings("unchecked")
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		assert javaType.getJavaTypeClass() == null
-				|| jtd.getJavaTypeClass().isAssignableFrom( javaType.getJavaTypeClass() );
+			   || this.javaType.getJavaTypeClass().isAssignableFrom( javaType.getJavaTypeClass() );
 		return (ValueBinder<X>) valueBinder;
 	}
 
@@ -71,7 +71,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 	@SuppressWarnings("unchecked")
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 		assert javaType.getJavaTypeClass() == null
-				|| javaType.getJavaTypeClass().isAssignableFrom( jtd.getJavaTypeClass() );
+				|| javaType.getJavaTypeClass().isAssignableFrom( this.javaType.getJavaTypeClass() );
 		return (ValueExtractor<X>) valueExtractor;
 	}
 
@@ -81,7 +81,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		//noinspection unchecked
-		return (JavaType<T>) jtd;
+		return (JavaType<T>) javaType;
 	}
 
 	@Override
@@ -97,11 +97,9 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 
 	private static class ValueExtractorImpl<J> implements ValueExtractor<J> {
 		private final UserType<J> userType;
-		private final JavaType<J> javaType;
 
-		public ValueExtractorImpl(UserType<J> userType, JavaType<J> javaType) {
+		public ValueExtractorImpl(UserType<J> userType) {
 			this.userType = userType;
-			this.javaType = javaType;
 		}
 
 		@Override
@@ -138,28 +136,24 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 		}
 
 		private void logExtracted(int paramIndex, J extracted) {
-			if ( ! JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
-				return;
-			}
-
-			if ( extracted == null ) {
-				JdbcExtractingLogging.logNullExtracted( paramIndex, userType.getSqlType() );
-			}
-			else {
-				JdbcExtractingLogging.logExtracted( paramIndex, userType.getSqlType(), extracted );
+			if ( JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
+				if ( extracted == null ) {
+					JdbcExtractingLogging.logNullExtracted( paramIndex, userType.getSqlType() );
+				}
+				else {
+					JdbcExtractingLogging.logExtracted( paramIndex, userType.getSqlType(), extracted );
+				}
 			}
 		}
 
 		private void logExtracted(String paramName, J extracted) {
-			if ( ! JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
-				return;
-			}
-
-			if ( extracted == null ) {
-				JdbcExtractingLogging.logNullExtracted( paramName, userType.getSqlType() );
-			}
-			else {
-				JdbcExtractingLogging.logExtracted( paramName, userType.getSqlType(), extracted );
+			if ( JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
+				if ( extracted == null ) {
+					JdbcExtractingLogging.logNullExtracted( paramName, userType.getSqlType() );
+				}
+				else {
+					JdbcExtractingLogging.logExtracted( paramName, userType.getSqlType(), extracted );
+				}
 			}
 		}
 	}
@@ -167,7 +161,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 	private static class ValueBinderImpl<J> implements ValueBinder<J> {
 		private final UserType<J> userType;
 
-		public ValueBinderImpl(UserType<J> userType, TypeConfiguration typeConfiguration) {
+		public ValueBinderImpl(UserType<J> userType) {
 			this.userType = userType;
 		}
 
@@ -185,7 +179,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 		}
 
 		@Override
-		public void bind(CallableStatement st, J value, String name, WrapperOptions options) throws SQLException {
+		public void bind(CallableStatement st, J value, String name, WrapperOptions options) {
 			throw new UnsupportedOperationException( "Using UserType for CallableStatement parameter binding not supported" );
 		}
 	}

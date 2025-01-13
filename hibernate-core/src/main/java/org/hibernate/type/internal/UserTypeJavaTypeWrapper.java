@@ -67,10 +67,9 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 	}
 
 	private int compare(J first, J second) {
-		if ( userType.equals( first, second ) ) {
-			return 0;
-		}
-		return Comparator.<J, Integer>comparing( userType::hashCode ).compare( first, second );
+		return userType.equals( first, second ) ? 0
+				: Comparator.<J, Integer>comparing( userType::hashCode )
+						.compare( first, second );
 	}
 
 	@Override
@@ -115,40 +114,44 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 	@Override
 	public J fromString(CharSequence string) {
-		if ( userType instanceof EnhancedUserType<?> ) {
-			return ( (EnhancedUserType<J>) userType ).fromStringValue( string );
+		if ( userType instanceof EnhancedUserType<J> enhancedUserType ) {
+			return enhancedUserType.fromStringValue( string );
 		}
 		throw new UnsupportedOperationException( "No support for parsing UserType values from String: " + userType );
 	}
 
 	@Override
 	public String toString(J value) {
-		if ( userType.returnedClass().isInstance( value ) && userType instanceof EnhancedUserType<?> ) {
-			return ( (EnhancedUserType<J>) userType ).toString( value );
-		}
-		return value == null ? "null" : value.toString();
+		return userType.returnedClass().isInstance( value )
+			&& userType instanceof EnhancedUserType<J> enhancedUserType
+				? enhancedUserType.toString( value )
+				: value == null ? "null" : value.toString();
 	}
 
 	@Override
 	public <X> X unwrap(J value, Class<X> type, WrapperOptions options) {
-		final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
-		if ( value != null && !type.isInstance( value ) && valueConverter != null ) {
-			final Object relationalValue = valueConverter.toRelationalValue( value );
-			return valueConverter.getRelationalJavaType().unwrap( relationalValue, type, options );
+		final BasicValueConverter<J, Object> converter = userType.getValueConverter();
+		if ( value != null && !type.isInstance( value ) && converter != null ) {
+			final Object relationalValue = converter.toRelationalValue( value );
+			return converter.getRelationalJavaType().unwrap( relationalValue, type, options );
 		}
-		//noinspection unchecked
-		return (X) value;
+		else {
+			//noinspection unchecked
+			return (X) value;
+		}
 	}
 
 	@Override
 	public <X> J wrap(X value, WrapperOptions options) {
-		final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
-		if ( value != null && !userType.returnedClass().isInstance( value ) && valueConverter != null ) {
-			final J domainValue = valueConverter.toDomainValue( value );
-			return valueConverter.getDomainJavaType().wrap( domainValue, options );
+		final BasicValueConverter<J, Object> converter = userType.getValueConverter();
+		if ( value != null && !userType.returnedClass().isInstance( value ) && converter != null ) {
+			final J domainValue = converter.toDomainValue( value );
+			return converter.getDomainJavaType().wrap( domainValue, options );
 		}
-		//noinspection unchecked
-		return (J) value;
+		else {
+			//noinspection unchecked
+			return (J) value;
+		}
 	}
 
 	@Override
@@ -181,16 +184,11 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 			// in which case we will try to use a converter for disassembling,
 			// or if that doesn't exist, simply use the domain value as is
 			if ( disassembled == null && value != null ) {
-				final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
-				if ( valueConverter == null ) {
-					return (Serializable) value;
-				}
-				else {
-					return valueConverter.getRelationalJavaType().getMutabilityPlan().disassemble(
-							valueConverter.toRelationalValue( value ),
-							session
-					);
-				}
+				final BasicValueConverter<J, Object> converter = userType.getValueConverter();
+				return converter == null
+						? (Serializable) value
+						: converter.getRelationalJavaType().getMutabilityPlan()
+								.disassemble( converter.toRelationalValue( value ), session );
 			}
 			return disassembled;
 		}
@@ -203,15 +201,12 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 			// in which case we will try to use a converter for assembling,
 			// or if that doesn't exist, simply use the relational value as is
 			if ( assembled == null && cached != null ) {
-				final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
-				if ( valueConverter == null ) {
-					return (J) cached;
-				}
-				else {
-					return valueConverter.toDomainValue( cached );
-				}
+				final BasicValueConverter<J, Object> converter = userType.getValueConverter();
+				return converter == null ? (J) cached : converter.toDomainValue( cached );
 			}
-			return assembled;
+			else {
+				return assembled;
+			}
 		}
 	}
 }

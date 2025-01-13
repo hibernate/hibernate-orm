@@ -661,6 +661,19 @@ public abstract class CollectionType extends AbstractType implements Association
 			final boolean wasClean =
 					target instanceof PersistentCollection<?> collection
 							&& !collection.isDirty();
+			if ( target instanceof PersistentCollection<?> existingPersistentCollection
+				&& existingPersistentCollection.isDirectlyAccessible() ) {
+				// When a replace/merge is requested and the underlying collection is directly accessible,
+				// use a new persistent collection, to avoid potential issues
+				// like the underlying collection being unmodifiable and hence failing the element replacement
+				final CollectionPersister collectionPersister = getPersister( session );
+				final Object key = existingPersistentCollection.getKey();
+				final PersistentCollection<?> persistentCollection = instantiate( session, collectionPersister, key );
+				persistentCollection.initializeEmptyCollection( collectionPersister );
+				persistentCollection.setSnapshot( key, existingPersistentCollection.getRole(), existingPersistentCollection.getStoredSnapshot() );
+				session.getPersistenceContextInternal().addInitializedDetachedCollection( collectionPersister, persistentCollection );
+				target = persistentCollection;
+			}
 			//TODO: this is a little inefficient, don't need to do a whole
 			//      deep replaceElements() call
 			replaceElements( result, target, owner, copyCache, session );

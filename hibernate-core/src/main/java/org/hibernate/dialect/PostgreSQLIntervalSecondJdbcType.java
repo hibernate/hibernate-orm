@@ -44,6 +44,11 @@ public class PostgreSQLIntervalSecondJdbcType implements AdjustableJdbcType {
 	}
 
 	@Override
+	public boolean isComparable() {
+		return true;
+	}
+
+	@Override
 	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
 		return Duration.class;
 	}

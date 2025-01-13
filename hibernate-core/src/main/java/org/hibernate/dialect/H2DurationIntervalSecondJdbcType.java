@@ -44,6 +44,11 @@ public class H2DurationIntervalSecondJdbcType implements JdbcType {
 	}
 
 	@Override
+	public boolean isComparable() {
+		return true;
+	}
+
+	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
 		return (appender, value, dialect, wrapperOptions) ->
 				dialect.appendIntervalLiteral( appender, javaType.unwrap( value, Duration.class, wrapperOptions ) );

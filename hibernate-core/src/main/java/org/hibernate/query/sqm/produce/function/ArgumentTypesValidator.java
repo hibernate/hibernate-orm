@@ -203,7 +203,10 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		final int jdbcTypeCount = expressionType.getJdbcTypeCount();
 		for ( int i = 0; i < jdbcTypeCount; i++ ) {
 			final JdbcMapping mapping = expressionType.getJdbcMapping( i );
-			FunctionParameterType type = paramNumber < types.length ? types[paramNumber++] : types[types.length - 1];
+			final FunctionParameterType type =
+					paramNumber < types.length
+							? types[paramNumber++]
+							: types[types.length - 1];
 			if ( type != null ) {
 				checkArgumentType(
 						paramNumber,

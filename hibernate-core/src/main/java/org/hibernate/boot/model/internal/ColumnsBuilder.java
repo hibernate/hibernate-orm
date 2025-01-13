@@ -289,6 +289,11 @@ class ColumnsBuilder {
 	 */
 	AnnotatedColumns overrideColumnFromMapperOrMapsIdProperty(PropertyData override) {
 		if ( override != null ) {
+			final OneToOne oneToOneAnn = override.getAttributeMember().getDirectAnnotationUsage( OneToOne.class );
+			if ( oneToOneAnn != null && nullIfEmpty( oneToOneAnn.mappedBy() ) != null ) {
+				throw new AnnotationException( "Property '" + getPath( propertyHolder, override )
+											+ "' is annotated '@MapsId' but has no columns due to its '@OneToOne(mappedBy)' usage" );
+			}
 			final AnnotatedJoinColumns joinColumns = buildExplicitJoinColumns( override.getAttributeMember(), override );
 			return joinColumns == null
 					? buildDefaultJoinColumnsForToOne( override.getAttributeMember(), override )

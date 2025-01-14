@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import java.io.IOException;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,6 +17,7 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.format.StringJsonDocumentWriter;
 
 /**
  * Specialized type mapping for {@code JSON} and the JSON SQL data type.
@@ -97,7 +99,16 @@ public class JsonJdbcType implements AggregateJdbcType {
 
 	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
 		if ( embeddableMappingType != null ) {
-			return JsonHelper.toString( embeddableMappingType, value, options );
+			// used to be JsonHelper.toString( embeddableMappingType, value, options );
+			try {
+				StringBuilder sb = new StringBuilder();
+				StringJsonDocumentWriter writer = new StringJsonDocumentWriter(new JsonHelper.JsonAppender(sb) );
+				JsonHelper.serialize( embeddableMappingType, value, options, writer);
+				return sb.toString();
+			}
+			catch (IOException e) {
+				throw new RuntimeException("Failed to serialize JSON mapping", e );
+			}
 		}
 		return options.getJsonFormatMapper().toString( value, javaType, options );
 	}

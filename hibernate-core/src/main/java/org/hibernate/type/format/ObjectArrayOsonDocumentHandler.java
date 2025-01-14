@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.type.format.jackson;
+package org.hibernate.type.format;
 
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -10,7 +10,6 @@ import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
-import org.hibernate.type.format.JsonDocumentHandler;
 
 import java.sql.Date;
 import java.sql.Time;
@@ -31,8 +30,8 @@ import java.util.Stack;
  */
 public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 
-	// final result of mapped obejct array
-	private Object [] objectArrayResult;
+	// final result of a mapped object array
+	private final Object [] objectArrayResult;
 	// current mapping to be used
 	SelectableMapping currentSelectableMapping = null;
 	String currentKeyName = null;
@@ -42,7 +41,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 	// mapping definitions are in a tree
 	// Each mapping definition may contain sub mappings (sub embeddable mapping)
 	// This stack is used to keep a pointer on the current mapping to be used to assign correct types.
-	// see startObject()/endObject() methods
+	// see onStartObject()/onEndObject() methods
 	Stack<EmbeddableMappingType> embeddableMappingTypes = new Stack<>();
 	// As for mapping definitions, when "sub embeddable" is encountered, the array
 	// that needs to be filled with Objects is the one we allocate in the final result array slot.
@@ -58,7 +57,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 	public ObjectArrayOsonDocumentHandler(EmbeddableMappingType embeddableMappingType, WrapperOptions wrapperOptions) {
 		this.embeddableMappingTypes.push(embeddableMappingType);
 		this.wrapperOptions = wrapperOptions;
-		this.objectArrayResult = new Object[embeddableMappingType.getJdbcValueCount()];
+		this.objectArrayResult = new Object[embeddableMappingType.getJdbcValueCount()+ ( embeddableMappingType.isPolymorphic() ? 1 : 0 )];
 		this.objectArrays.push( this.objectArrayResult );
 	}
 
@@ -71,7 +70,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 	}
 
 	@Override
-	public void startObject() {
+	public void onStartObject() {
 		if (currentKeyName != null) {
 			// We are dealing with a sub-object, allocate space for it then,
 			// otherwise, we have nothing to do.
@@ -92,15 +91,15 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 	}
 
 	@Override
-	public void endObject() {
+	public void onEndObject() {
 		// go back in the mapping definition tree
 		this.embeddableMappingTypes.pop();
 		this.objectArrays.pop();
 	}
 
 	@Override
-	public void startArray() {
-		assert (subArrayObjectList == null && subArrayObjectTypes == null) : "startArray called twice ?";
+	public void onStartArray() {
+		assert (subArrayObjectList == null && subArrayObjectTypes == null) : "onStartArray called twice ?";
 
 		// initialize an array to gather values
 		subArrayObjectList = new ArrayList<>();
@@ -111,8 +110,8 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 	}
 
 	@Override
-	public void endArray() {
-		assert (subArrayObjectList != null && subArrayObjectTypes != null) : "endArray called before startArray";
+	public void onEndArray() {
+		assert (subArrayObjectList != null && subArrayObjectTypes != null) : "onEndArray called before onStartArray";
 		// flush array values
 		this.objectArrays.peek()[currentSelectableIndexInResultArray] = subArrayObjectTypes.getJdbcJavaType().wrap( subArrayObjectList, wrapperOptions );
 		// reset until we encounter next array element
@@ -203,7 +202,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 	 * @param bytes the OSON byters
 	 */
 	public void onOsonBinaryValue(byte[] bytes) {
-		Class underlyingType = null;
+		Class underlyingType;
 		Object theOneToBeUsed;
 		if(subArrayObjectTypes!=null) {
 			underlyingType = subArrayObjectTypes.getElementType().getJavaType();
@@ -234,7 +233,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 	 */
 	public void onOsonDateValue(LocalDateTime localDateTime) {
 
-		Class underlyingType = null;
+		Class underlyingType;
 		Object theOneToBeUsed = localDateTime;
 
 		if(subArrayObjectTypes!=null) {

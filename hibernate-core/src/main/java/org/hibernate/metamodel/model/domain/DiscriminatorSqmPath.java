@@ -17,10 +17,10 @@ import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
  */
 public interface DiscriminatorSqmPath<T> extends SqmPath<T> {
 	@Override
-	default void appendHqlString(StringBuilder sb) {
-		sb.append( "type(" );
-		getLhs().appendHqlString( sb );
-		sb.append( ')' );
+	default void appendHqlString(StringBuilder hql) {
+		hql.append( "type(" );
+		getLhs().appendHqlString( hql );
+		hql.append( ')' );
 	}
 
 	@Override

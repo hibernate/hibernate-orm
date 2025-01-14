@@ -99,7 +99,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 				sqlExpressionResolver.resolveSqlExpression( columnTableReference, this ),
 				rowIdType.getJdbcJavaType(),
 				null,
-				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 
 		return new BasicResult<>(

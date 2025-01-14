@@ -49,13 +49,11 @@ public class Origin implements Serializable {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !( o instanceof Origin ) ) {
+		if ( !(o instanceof Origin other) ) {
 			return false;
 		}
-
-		final Origin other = (Origin) o;
 		return type == other.type
-				&& Objects.equals( name, other.name );
+			&& Objects.equals( name, other.name );
 
 	}
 

@@ -11,6 +11,7 @@ import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -20,12 +21,14 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -72,6 +75,21 @@ public class BootstrapContextImpl implements BootstrapContext {
 	@Override
 	public MetadataBuildingOptions getMetadataBuildingOptions() {
 		return delegate.getMetadataBuildingOptions();
+	}
+
+	@Override
+	public ClassLoaderService getClassLoaderService() {
+		return delegate.getClassLoaderService();
+	}
+
+	@Override
+	public ManagedBeanRegistry getManagedBeanRegistry() {
+		return delegate.getManagedBeanRegistry();
+	}
+
+	@Override
+	public ConfigurationService getConfigurationService() {
+		return delegate.getConfigurationService();
 	}
 
 	@Override

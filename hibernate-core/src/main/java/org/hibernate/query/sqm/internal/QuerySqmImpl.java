@@ -700,8 +700,8 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public SqmQueryImplementor<R> setMaxResults(int maxResult) {
-		super.setMaxResults( maxResult );
+	public SqmQueryImplementor<R> setMaxResults(int maxResults) {
+		super.setMaxResults( maxResults );
 		return this;
 	}
 

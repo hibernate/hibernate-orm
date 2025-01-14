@@ -599,8 +599,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		assert fkTargetModelPart != null;
 
 		// If this is mapped by a to-one attribute, we can use the FK of that attribute
-		if ( fkTargetModelPart instanceof ToOneAttributeMapping ) {
-			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) fkTargetModelPart;
+		if ( fkTargetModelPart instanceof ToOneAttributeMapping toOneAttributeMapping ) {
 			if ( toOneAttributeMapping.getForeignKeyDescriptor() == null ) {
 				throw new IllegalStateException( "Not yet ready: " + toOneAttributeMapping );
 			}
@@ -611,9 +610,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 			);
 		}
 
-		if ( fkTargetModelPart instanceof ManyToManyCollectionPart ) {
+		if ( fkTargetModelPart instanceof ManyToManyCollectionPart targetModelPart ) {
 			// can this ever be anything other than another (the inverse) many-to-many part?
-			final ManyToManyCollectionPart targetModelPart = (ManyToManyCollectionPart) fkTargetModelPart;
 			if ( targetModelPart.getForeignKeyDescriptor() == null ) {
 				throw new IllegalStateException( "Not yet ready: " + targetModelPart );
 			}

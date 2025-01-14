@@ -26,7 +26,6 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.QueryParameterBindingTypeResolverImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.mapping.Collection;
@@ -52,7 +51,9 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterFactory;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleSimpleSqmPathSource;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleSqmPathSource;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -77,6 +78,7 @@ import jakarta.persistence.metamodel.Metamodel;
 
 import static org.hibernate.metamodel.internal.JpaMetamodelPopulationSetting.determineJpaMetaModelPopulationSetting;
 import static org.hibernate.metamodel.internal.JpaStaticMetamodelPopulationSetting.determineJpaStaticMetaModelPopulationSetting;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Implementation of the JPA-defined contract {@link jakarta.persistence.metamodel.Metamodel}.
@@ -88,15 +90,15 @@ import static org.hibernate.metamodel.internal.JpaStaticMetamodelPopulationSetti
  * @author Emmanuel Bernard
  * @author Andrea Boriero
  */
-public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
-		implements MappingMetamodelImplementor,JpaMetamodel, Metamodel, Serializable {
+public class MappingMetamodelImpl
+		implements MappingMetamodelImplementor, JpaMetamodel, Metamodel, QueryParameterBindingTypeResolver, Serializable {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( MappingMetamodelImpl.class );
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JpaMetamodel
 
-	private final JpaMetamodelImplementor jpaMetamodel;
+	private final JpaMetamodelImpl jpaMetamodel;
 
 	private final Map<Class<?>, String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
 
@@ -185,7 +187,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		registerEmbeddableMappingType( bootModel );
 
 		final Map<String, Object> settings = context.getSettings();
-		( (JpaMetamodelImpl) jpaMetamodel ).processJpa(
+		jpaMetamodel.processJpa(
 				bootModel,
 				this,
 				entityProxyInterfaceMap,
@@ -199,11 +201,9 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	private void registerEmbeddableMappingType(MetadataImplementor bootModel) {
 		bootModel.visitRegisteredComponents(
 				composite -> {
-					final EmbeddableValuedModelPart mappingModelPart = ((ComponentType) composite.getType()).getMappingModelPart();
-					embeddableValuedModelPart.put(
-							mappingModelPart.getNavigableRole(),
-							mappingModelPart
-					);
+					final ComponentType compositeType = (ComponentType) composite.getType();
+					final EmbeddableValuedModelPart mappingModelPart = compositeType.getMappingModelPart();
+					embeddableValuedModelPart.put( mappingModelPart.getNavigableRole(), mappingModelPart );
 				}
 		);
 	}
@@ -233,30 +233,30 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 
 			if ( entityPersister.getConcreteProxyClass() != null
 					&& entityPersister.getConcreteProxyClass().isInterface()
+					// we exclude Map based proxy interfaces here because that should indicate MAP entity mode
 					&& !Map.class.isAssignableFrom( entityPersister.getConcreteProxyClass() )
 					&& entityPersister.getMappedClass() != entityPersister.getConcreteProxyClass() ) {
-				// IMPL NOTE : we exclude Map based proxy interfaces here because that should
-				//		indicate MAP entity mode.0
 
 				if ( entityPersister.getMappedClass().equals( entityPersister.getConcreteProxyClass() ) ) {
 					// This part handles an odd case in the Hibernate test suite where we map an interface
 					// as the class and the proxy. I cannot think of a real-life use case for this.
 					if ( log.isDebugEnabled() ) {
-						log.debugf(
-								"Entity [%s] mapped same interface [%s] as class and proxy",
-								entityPersister.getEntityName(),
-								entityPersister.getMappedClass()
-						);
+						log.debugf( "Entity [%s] mapped same interface [%s] as class and proxy",
+								entityPersister.getEntityName(), entityPersister.getMappedClass() );
 					}
 				}
 				else {
-					final String old = entityProxyInterfaceMap.put( entityPersister.getConcreteProxyClass(), entityPersister.getEntityName() );
-					if ( old != null ) {
+					final String existing =
+							entityProxyInterfaceMap.put(
+									entityPersister.getConcreteProxyClass(),
+									entityPersister.getEntityName()
+							);
+					if ( existing != null ) {
 						throw new HibernateException(
 								String.format(
 										Locale.ENGLISH,
 										"Multiple entities [%s, %s] named the same interface [%s] as their proxy which is not supported",
-										old,
+										existing,
 										entityPersister.getEntityName(),
 										entityPersister.getConcreteProxyClass().getName()
 								)
@@ -292,13 +292,8 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 
 	private void registerEntityParticipant(org.hibernate.type.EntityType entityType, CollectionPersister persister) {
 		final String entityName = entityType.getAssociatedEntityName();
-		Set<String> roles = collectionRolesByEntityParticipant.get( entityName );
-		//noinspection Java8MapApi
-		if ( roles == null ) {
-			roles = new HashSet<>();
-			collectionRolesByEntityParticipant.put( entityName, roles );
-		}
-		roles.add( persister.getRole() );
+		collectionRolesByEntityParticipant.computeIfAbsent( entityName, k -> new HashSet<>() )
+				.add( persister.getRole() );
 	}
 
 	private static void registerEntityNameResolvers(
@@ -357,7 +352,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 
 	@Override
 	public EmbeddableValuedModelPart getEmbeddableValuedModelPart(NavigableRole role){
-		EmbeddableValuedModelPart embeddableMappingType = embeddableValuedModelPart.get( role );
+		final EmbeddableValuedModelPart embeddableMappingType = embeddableValuedModelPart.get( role );
 		if ( embeddableMappingType == null ) {
 			throw new IllegalArgumentException( "Unable to locate EmbeddableValuedModelPart: " + role );
 		}
@@ -655,61 +650,65 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 			return tableGroupLocator.apply( navigablePath.getParent() ).getModelPart();
 		}
 
-		if ( sqmExpressible instanceof BasicType<?> ) {
-			return (BasicType<?>) sqmExpressible;
+		else if ( sqmExpressible instanceof BasicType<?> basicType ) {
+			return basicType;
 		}
 
-		if ( sqmExpressible instanceof BasicDomainType<?> ) {
+		else if ( sqmExpressible instanceof BasicDomainType<?> ) {
 			return getTypeConfiguration().getBasicTypeForJavaType( sqmExpressible.getRelationalJavaType().getJavaType() );
 		}
 
-		if ( sqmExpressible instanceof BasicSqmPathSource<?>
+		else if ( sqmExpressible instanceof BasicSqmPathSource<?>
 				|| sqmExpressible instanceof AnonymousTupleSimpleSqmPathSource<?> ) {
 			return resolveMappingExpressible( sqmExpressible.getSqmType(), tableGroupLocator );
 		}
 
-		if ( sqmExpressible instanceof SqmFieldLiteral<?> sqmFieldLiteral ) {
+		else if ( sqmExpressible instanceof SqmFieldLiteral<?> sqmFieldLiteral ) {
 			return getTypeConfiguration().getBasicTypeForJavaType( sqmFieldLiteral.getJavaType() );
 		}
 
-		if ( sqmExpressible instanceof CompositeSqmPathSource ) {
+		else if ( sqmExpressible instanceof CompositeSqmPathSource ) {
 			throw new UnsupportedOperationException( "Resolution of embedded-valued SqmExpressible nodes not yet implemented" );
 		}
 
-		if ( sqmExpressible instanceof AnonymousTupleSqmPathSource<?> anonymousTupleSqmPathSource ) {
+		else if ( sqmExpressible instanceof AnonymousTupleSqmPathSource<?> anonymousTupleSqmPathSource ) {
 			return resolveMappingExpressible(
 					anonymousTupleSqmPathSource.getSqmPathType(),
 					tableGroupLocator
 			);
 		}
 
-		if ( sqmExpressible instanceof EmbeddableTypeImpl<?> ) {
+		else if ( sqmExpressible instanceof EmbeddableTypeImpl<?> ) {
 			return (MappingModelExpressible<?>) sqmExpressible;
 		}
 
-		if ( sqmExpressible instanceof EntityDomainType<?> entityDomainType ) {
+		else if ( sqmExpressible instanceof EntityDomainType<?> entityDomainType ) {
 			return getEntityDescriptor( entityDomainType.getHibernateEntityName() );
 		}
 
-		if ( sqmExpressible instanceof TupleType<?> tupleType ) {
-			final MappingModelExpressible<?> mappingModelExpressible = tupleTypeCache.get(sqmExpressible);
+		else if ( sqmExpressible instanceof TupleType<?> tupleType ) {
+			final MappingModelExpressible<?> mappingModelExpressible = tupleTypeCache.get( sqmExpressible );
 			if ( mappingModelExpressible != null ) {
 				return mappingModelExpressible;
 			}
-			final MappingModelExpressible<?>[] components = new MappingModelExpressible<?>[tupleType.componentCount()];
-			for ( int i = 0; i < components.length; i++ ) {
-				components[i] = resolveMappingExpressible( tupleType.get( i ), tableGroupLocator );
+			else {
+				final MappingModelExpressible<?>[] components =
+						new MappingModelExpressible<?>[tupleType.componentCount()];
+				for ( int i = 0; i < components.length; i++ ) {
+					components[i] = resolveMappingExpressible( tupleType.get( i ), tableGroupLocator );
+				}
+				final MappingModelExpressible<?> createdMappingModelExpressible =
+						new TupleMappingModelExpressible( components );
+				final MappingModelExpressible<?> existingMappingModelExpressible =
+						tupleTypeCache.putIfAbsent( tupleType, createdMappingModelExpressible );
+				return existingMappingModelExpressible == null
+						? createdMappingModelExpressible
+						: existingMappingModelExpressible;
 			}
-			final MappingModelExpressible<?> createdMappingModelExpressible = new TupleMappingModelExpressible( components );
-			final MappingModelExpressible<?> existingMappingModelExpressible = tupleTypeCache.putIfAbsent(
-					tupleType,
-					createdMappingModelExpressible
-			);
-			return existingMappingModelExpressible == null
-					? createdMappingModelExpressible
-					: existingMappingModelExpressible;
 		}
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	@Override
@@ -750,7 +749,6 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	@Override
 	public Set<String> getCollectionRolesByEntityParticipant(String entityName) {
 		return collectionRolesByEntityParticipant.get( entityName );
-
 	}
 
 	@Override
@@ -766,5 +764,50 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	@Override
 	public String[] getAllCollectionRoles() {
 		return ArrayHelper.toStringArray( collectionPersisterMap.keySet() );
+	}
+
+	@Override
+	public <T> BindableType<T> resolveParameterBindType(Class<T> javaType) {
+		return resolveQueryParameterType( javaType );
+	}
+
+	@Override
+	public <T> BindableType<? super T> resolveParameterBindType(T bindValue) {
+		if ( bindValue == null ) {
+			// we can't guess
+			return null;
+		}
+
+		final Class<T> clazz = unproxiedClass( bindValue );
+
+		// Resolve superclass bindable type if necessary, as we don't register types for e.g. Inet4Address
+		Class<? super T> c = clazz;
+		do {
+			final BindableType<? super T> type = resolveParameterBindType( c );
+			if ( type != null ) {
+				return type;
+			}
+			c = c.getSuperclass();
+		}
+		while ( c != Object.class );
+
+		if ( clazz.isEnum() ) {
+			return null; //createEnumType( (Class) clazz );
+		}
+		else if ( Serializable.class.isAssignableFrom( clazz ) ) {
+			final BindableType<Serializable> parameterBindType = resolveParameterBindType( Serializable.class );
+			//noinspection unchecked
+			return (BindableType<? super T>) parameterBindType;
+		}
+		else {
+			return null;
+		}
+	}
+
+	private static <T> Class<T> unproxiedClass(T bindValue) {
+		final LazyInitializer lazyInitializer = extractLazyInitializer( bindValue );
+		final Class<?> result = lazyInitializer != null ? lazyInitializer.getPersistentClass() : bindValue.getClass();
+		//noinspection unchecked
+		return (Class<T>) result;
 	}
 }

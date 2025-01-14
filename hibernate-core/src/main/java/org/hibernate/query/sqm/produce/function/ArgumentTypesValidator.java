@@ -11,6 +11,7 @@ import org.hibernate.Internal;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmCollation;
@@ -24,7 +25,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.COMPARABLE;
 import static org.hibernate.type.descriptor.java.JavaTypeHelper.isUnknown;
@@ -71,8 +71,8 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	public void validate(
 			List<? extends SqmTypedNode<?>> arguments,
 			String functionName,
-			TypeConfiguration typeConfiguration) {
-		delegate.validate( arguments, functionName, typeConfiguration);
+			BindingContext bindingContext) {
+		delegate.validate( arguments, functionName, bindingContext );
 		int count = 0;
 		for (SqmTypedNode<?> argument : arguments) {
 //			JdbcTypeIndicators indicators = typeConfiguration.getCurrentBaseSqlTypeIndicators();
@@ -203,7 +203,10 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		final int jdbcTypeCount = expressionType.getJdbcTypeCount();
 		for ( int i = 0; i < jdbcTypeCount; i++ ) {
 			final JdbcMapping mapping = expressionType.getJdbcMapping( i );
-			FunctionParameterType type = paramNumber < types.length ? types[paramNumber++] : types[types.length - 1];
+			final FunctionParameterType type =
+					paramNumber < types.length
+							? types[paramNumber++]
+							: types[types.length - 1];
 			if ( type != null ) {
 				checkArgumentType(
 						paramNumber,

@@ -6,7 +6,6 @@ package org.hibernate.boot.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,10 +34,14 @@ import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 
 /**
  * @author Andrea Boriero
@@ -53,8 +56,10 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private final SqmFunctionRegistry sqmFunctionRegistry;
 	private final MutableJpaCompliance jpaCompliance;
 
+	private final ClassLoaderService classLoaderService;
 	private final ClassLoaderAccessImpl classLoaderAccess;
 	private final BeanInstanceProducer beanInstanceProducer;
+	private final ManagedBeanRegistry managedBeanRegistry;
 
 	private boolean isJpaBootstrap;
 
@@ -72,37 +77,42 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private HashMap<Class<?>, ConverterDescriptor> attributeConverterDescriptorMap;
 	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
 	private final ManagedTypeRepresentationResolver representationStrategySelector;
+	private final ConfigurationService configurationService;
 
 	public BootstrapContextImpl(
 			StandardServiceRegistry serviceRegistry,
 			MetadataBuildingOptions metadataBuildingOptions) {
 		this.serviceRegistry = serviceRegistry;
-		this.classmateContext = new ClassmateContext();
 		this.metadataBuildingOptions = metadataBuildingOptions;
 
-		this.classLoaderAccess = new ClassLoaderAccessImpl( serviceRegistry.getService( ClassLoaderService.class ) );
+		classmateContext = new ClassmateContext();
+		classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
+		classLoaderAccess = new ClassLoaderAccessImpl( classLoaderService );
 
 		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
 		final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
 
-		this.jpaCompliance = new MutableJpaComplianceImpl( configService.getSettings() );
-		this.scanOptions = new StandardScanOptions(
+		jpaCompliance = new MutableJpaComplianceImpl( configService.getSettings() );
+		scanOptions = new StandardScanOptions(
 				(String) configService.getSettings().get( AvailableSettings.SCANNER_DISCOVERY ),
 				false
 		);
 
 		// ScanEnvironment must be set explicitly
-		this.scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER );
-		this.archiveDescriptorFactory = strategySelector.resolveStrategy(
+		scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER );
+		archiveDescriptorFactory = strategySelector.resolveStrategy(
 				ArchiveDescriptorFactory.class,
 				configService.getSettings().get( AvailableSettings.SCANNER_ARCHIVE_INTERPRETER )
 		);
 
-		this.representationStrategySelector = ManagedTypeRepresentationResolverStandard.INSTANCE;
+		representationStrategySelector = ManagedTypeRepresentationResolverStandard.INSTANCE;
 
-		this.typeConfiguration = new TypeConfiguration();
-		this.beanInstanceProducer = new TypeBeanInstanceProducer( configService, serviceRegistry );
-		this.sqmFunctionRegistry = new SqmFunctionRegistry();
+		typeConfiguration = new TypeConfiguration();
+		beanInstanceProducer = new TypeBeanInstanceProducer( configService, serviceRegistry );
+		sqmFunctionRegistry = new SqmFunctionRegistry();
+
+		managedBeanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
+		configurationService = serviceRegistry.requireService( ConfigurationService.class );
 	}
 
 	@Override
@@ -133,6 +143,21 @@ public class BootstrapContextImpl implements BootstrapContext {
 	@Override
 	public MetadataBuildingOptions getMetadataBuildingOptions() {
 		return metadataBuildingOptions;
+	}
+
+	@Override
+	public ClassLoaderService getClassLoaderService() {
+		return classLoaderService;
+	}
+
+	@Override
+	public ManagedBeanRegistry getManagedBeanRegistry() {
+		return managedBeanRegistry;
+	}
+
+	@Override
+	public ConfigurationService getConfigurationService() {
+		return configurationService;
 	}
 
 	@Override
@@ -187,24 +212,24 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	@Override
 	public Map<String, SqmFunctionDescriptor> getSqlFunctions() {
-		return sqlFunctionMap == null ? Collections.emptyMap() : sqlFunctionMap;
+		return sqlFunctionMap == null ? emptyMap() : sqlFunctionMap;
 	}
 
 	@Override
 	public Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList() {
-		return auxiliaryDatabaseObjectList == null ? Collections.emptyList() : auxiliaryDatabaseObjectList;
+		return auxiliaryDatabaseObjectList == null ? emptyList() : auxiliaryDatabaseObjectList;
 	}
 
 	@Override
 	public Collection<ConverterDescriptor> getAttributeConverters() {
 		return attributeConverterDescriptorMap != null
 				? attributeConverterDescriptorMap.values()
-				: Collections.emptyList();
+				: emptyList();
 	}
 
 	@Override
 	public Collection<CacheRegionDefinition> getCacheRegionDefinitions() {
-		return cacheRegionDefinitions == null ? Collections.emptyList() : cacheRegionDefinitions;
+		return cacheRegionDefinitions == null ? emptyList() : cacheRegionDefinitions;
 	}
 
 	private final Map<String,BasicType<?>> adHocBasicTypeRegistrations = new HashMap<>();
@@ -258,12 +283,11 @@ public class BootstrapContextImpl implements BootstrapContext {
 	// Mutations
 
 	public void addAttributeConverterDescriptor(ConverterDescriptor descriptor) {
-		if ( this.attributeConverterDescriptorMap == null ) {
-			this.attributeConverterDescriptorMap = new HashMap<>();
+		if ( attributeConverterDescriptorMap == null ) {
+			attributeConverterDescriptorMap = new HashMap<>();
 		}
 
-		final Object old = this.attributeConverterDescriptorMap.put( descriptor.getAttributeConverterClass(), descriptor );
-
+		final Object old = attributeConverterDescriptorMap.put( descriptor.getAttributeConverterClass(), descriptor );
 		if ( old != null ) {
 			throw new AssertionFailure(
 					String.format(
@@ -305,17 +329,17 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	public void addSqlFunction(String functionName, SqmFunctionDescriptor function) {
-		if ( this.sqlFunctionMap == null ) {
-			this.sqlFunctionMap = new HashMap<>();
+		if ( sqlFunctionMap == null ) {
+			sqlFunctionMap = new HashMap<>();
 		}
-		this.sqlFunctionMap.put( functionName, function );
+		sqlFunctionMap.put( functionName, function );
 	}
 
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
-		if ( this.auxiliaryDatabaseObjectList == null ) {
-			this.auxiliaryDatabaseObjectList = new ArrayList<>();
+		if ( auxiliaryDatabaseObjectList == null ) {
+			auxiliaryDatabaseObjectList = new ArrayList<>();
 		}
-		this.auxiliaryDatabaseObjectList.add( auxiliaryDatabaseObject );
+		auxiliaryDatabaseObjectList.add( auxiliaryDatabaseObject );
 	}
 
 

@@ -194,7 +194,7 @@ public class SessionWithSharedConnectionTest {
 
 		final String postCommitMessage = "post commit was called";
 
-		EventListenerRegistry eventListenerRegistry = scope.getSessionFactory().getServiceRegistry().getService(EventListenerRegistry.class);
+		EventListenerRegistry eventListenerRegistry = scope.getSessionFactory().getEventListenerRegistry();
 		//register a post commit listener
 		eventListenerRegistry.appendListeners(
 				EventType.POST_COMMIT_INSERT,

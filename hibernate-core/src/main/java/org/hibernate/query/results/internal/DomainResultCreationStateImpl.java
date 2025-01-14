@@ -77,7 +77,7 @@ public class DomainResultCreationStateImpl
 	private final LegacyFetchResolver legacyFetchResolver;
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final Stack<Function> fetchBuilderResolverStack = new StandardStack<>( fetchableName -> null );
+	private final Stack<Function<Fetchable, FetchBuilder>> fetchBuilderResolverStack = new StandardStack<>( fetchableName -> null );
 	private Map<String, LockMode> registeredLockModes;
 	private boolean processingKeyFetches = false;
 	private boolean resolvingCircularFetch;
@@ -210,7 +210,7 @@ public class DomainResultCreationStateImpl
 	}
 
 	public SqlAstCreationContext getCreationContext() {
-		return getSessionFactory();
+		return sessionFactory.getSqlTranslationEngine();
 	}
 
 	@Override
@@ -433,9 +433,9 @@ public class DomainResultCreationStateImpl
 				final ForeignKeyDescriptor foreignKeyDescriptor = association.getForeignKeyDescriptor();
 				// If there are no fetch builders for this association, we only want to fetch the FK
 				if ( explicitFetchBuilder == null && fetchBuilderLegacy == null  ) {
-					explicitFetchBuilder = (FetchBuilder) fetchBuilderResolverStack
-							.getCurrent()
-							.apply( foreignKeyDescriptor.getSide( association.getSideNature().inverse() ).getModelPart() );
+					Fetchable modelPart = (Fetchable)
+							foreignKeyDescriptor.getSide( association.getSideNature().inverse() ).getModelPart();
+					explicitFetchBuilder = fetchBuilderResolverStack.getCurrent().apply( modelPart );
 					if ( explicitFetchBuilder == null ) {
 						fetchBuilderLegacy = legacyFetchResolver.resolve(
 								fromClauseAccess.findTableGroup( fetchParent.getNavigablePath() )

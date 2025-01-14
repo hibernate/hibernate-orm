@@ -52,9 +52,7 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 		final EmbeddableMappingType mappingType = modelPart.getEmbeddableTypeDescriptor();
 		final int numberOfAttributeMappings = mappingType.getNumberOfAttributeMappings();
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext()
-				.getSessionFactory()
-				.getTypeConfiguration();
+		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) mappingType.getAttributeMapping( i );

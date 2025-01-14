@@ -157,7 +157,7 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 			final BasicType<Object> resolvedType = jdbcResultsMetadata.resolveType(
 					jdbcPosition,
 					null,
-					sessionFactory
+					sessionFactory.getTypeConfiguration()
 			);
 			return new ResolvedSqlSelection(
 					jdbcPosition,

@@ -60,14 +60,13 @@ public class ImmutableBitSet {
 
 	@Override
 	public boolean equals(Object obj) {
-		if ( !( obj instanceof ImmutableBitSet ) ) {
+		if ( !(obj instanceof ImmutableBitSet set) ) {
 			return false;
 		}
 		if ( this == obj ) {
 			return true;
 		}
 
-		final ImmutableBitSet set = (ImmutableBitSet) obj;
 		return Arrays.equals( words, set.words );
 	}
 

@@ -103,20 +103,19 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql) {
 		final String separator = booleanOperator == BooleanOperator.AND
 				? " and "
 				: " or ";
-		appendJunctionHqlString( predicates.get( 0 ), sb );
+		appendJunctionHqlString( predicates.get( 0 ), hql );
 		for ( int i = 1; i < predicates.size(); i++ ) {
-			sb.append( separator );
-			appendJunctionHqlString( predicates.get( i ), sb );
+			hql.append( separator );
+			appendJunctionHqlString( predicates.get( i ), hql );
 		}
 	}
 
 	private void appendJunctionHqlString(SqmPredicate p, StringBuilder sb) {
-		if ( p instanceof SqmJunctionPredicate ) {
-			final SqmJunctionPredicate junction = (SqmJunctionPredicate) p;
+		if ( p instanceof SqmJunctionPredicate junction ) {
 			// If we have the same nature, or if this is a disjunction and the operand is a conjunction,
 			// then we don't need parenthesis, because the AND operator binds stronger
 			if ( booleanOperator == junction.getOperator() || booleanOperator == BooleanOperator.OR ) {

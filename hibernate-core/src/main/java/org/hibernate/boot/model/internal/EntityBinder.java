@@ -6,6 +6,7 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -2044,7 +2045,7 @@ public class EntityBinder {
 
 	private SecondaryRow findMatchingSecondaryRowAnnotation(String tableName) {
 		final SecondaryRow row = annotatedClass.getDirectAnnotationUsage( SecondaryRow.class );
-		if ( row != null && ( row.table().isBlank() || tableName.equals( row.table() ) ) ) {
+		if ( row != null && ( row.table().isBlank() || equalsTableName( tableName, row ) ) ) {
 			return row;
 		}
 		else {
@@ -2052,13 +2053,20 @@ public class EntityBinder {
 			if ( tables != null ) {
 				final SecondaryRow[] rowList = tables.value();
 				for ( SecondaryRow current : rowList ) {
-					if ( tableName.equals( current.table() ) ) {
+					if ( equalsTableName( tableName, current ) ) {
 						return current;
 					}
 				}
 			}
 			return null;
 		}
+	}
+
+	private boolean equalsTableName(String physicalTableName, SecondaryRow secondaryRow) {
+		final Identifier logicalName = context.getMetadataCollector().getDatabase().toIdentifier( secondaryRow.table() );
+		final Identifier secondaryRowPhysicalTableName = context.getBuildingOptions().getPhysicalNamingStrategy()
+				.toPhysicalTableName( logicalName, EntityTableNamingStrategyHelper.jdbcEnvironment( context ) );
+		return physicalTableName.equals( secondaryRowPhysicalTableName.render() );
 	}
 
 	//Used for @*ToMany @JoinTable
@@ -2299,9 +2307,7 @@ public class EntityBinder {
 	private void bindFilters(AnnotationTarget element) {
 		final Filters filters = getOverridableAnnotation( element, Filters.class, context );
 		if ( filters != null ) {
-			for ( Filter filter : filters.value() ) {
-				this.filters.add( filter );
-			}
+			Collections.addAll( this.filters, filters.value() );
 		}
 		final Filter filter = element.getDirectAnnotationUsage( Filter.class );
 		if ( filter != null ) {

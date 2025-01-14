@@ -12,11 +12,9 @@ import java.util.Set;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.internal.DelayedParameterizedTypeBean;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserCollectionType;
@@ -37,9 +35,10 @@ public final class MappingHelper {
 			String role,
 			Class<? extends UserCollectionType> userCollectionTypeClass,
 			Map<String, ?> parameters,
-			MetadataImplementor metadata) {
-		return metadata.getMetadataBuildingOptions().isAllowExtensionsInCdi()
-				? createSharedUserTypeBean( role, userCollectionTypeClass, parameters, metadata )
+			BootstrapContext bootstrapContext,
+			boolean allowExtensionsInCdi) {
+		return allowExtensionsInCdi
+				? createSharedUserTypeBean( role, userCollectionTypeClass, parameters, bootstrapContext )
 				: createLocalUserTypeBean( role, userCollectionTypeClass, parameters );
 	}
 
@@ -47,9 +46,9 @@ public final class MappingHelper {
 			String role,
 			Class<? extends UserCollectionType> userCollectionTypeClass,
 			Map<String, ?> parameters,
-			MetadataImplementor metadata) {
+			BootstrapContext bootstrapContext) {
 		final ManagedBean<? extends UserCollectionType> managedBean =
-				getManagedBeanRegistry( metadata ).getBean( userCollectionTypeClass );
+				bootstrapContext.getManagedBeanRegistry().getBean( userCollectionTypeClass );
 		if ( isNotEmpty( parameters ) ) {
 			if ( ParameterizedType.class.isAssignableFrom( managedBean.getBeanClass() ) ) {
 				// create a copy of the parameters and create a bean wrapper to delay injecting
@@ -64,11 +63,6 @@ public final class MappingHelper {
 			}
 		}
 		return managedBean;
-	}
-
-	private static ManagedBeanRegistry getManagedBeanRegistry(MetadataImplementor metadata) {
-		return metadata.getMetadataBuildingOptions().getServiceRegistry()
-				.requireService( ManagedBeanRegistry.class );
 	}
 
 	private static void throwIgnoredCollectionTypeParameters(String role, Class<?> implementation) {
@@ -117,14 +111,12 @@ public final class MappingHelper {
 		}
 	}
 
-	static Class<?> classForName(String typeName, MetadataImplementor metadata) {
-		return metadata.getMetadataBuildingOptions().getServiceRegistry()
-				.requireService( ClassLoaderService.class )
-				.classForName( typeName );
+	static Class<?> classForName(String typeName, BootstrapContext bootstrapContext) {
+		return bootstrapContext.getClassLoaderAccess().classForName( typeName );
 	}
 
-	static <T> Class<? extends T> classForName(Class<T> supertype, String typeName, MetadataImplementor metadata) {
-		final Class<?> clazz = classForName( typeName, metadata );
+	static <T> Class<? extends T> classForName(Class<T> supertype, String typeName, BootstrapContext bootstrapContext) {
+		final Class<?> clazz = classForName( typeName, bootstrapContext );
 		if ( supertype.isAssignableFrom( clazz ) ) {
 			//noinspection unchecked
 			return (Class<? extends T>) clazz;

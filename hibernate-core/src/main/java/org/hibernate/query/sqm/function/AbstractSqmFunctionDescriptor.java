@@ -98,7 +98,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		argumentsValidator.validate( arguments, getName(), queryEngine.getTypeConfiguration() );
+		argumentsValidator.validate( arguments, getName(), queryEngine );
 
 		return generateSqmFunctionExpression(
 				arguments,
@@ -113,7 +113,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			SqmPredicate filter,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		argumentsValidator.validate( arguments, getName(), queryEngine.getTypeConfiguration() );
+		argumentsValidator.validate( arguments, getName(), queryEngine );
 
 		return generateSqmAggregateFunctionExpression(
 				arguments,
@@ -130,7 +130,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			SqmOrderByClause withinGroupClause,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		argumentsValidator.validate( arguments, getName(), queryEngine.getTypeConfiguration() );
+		argumentsValidator.validate( arguments, getName(), queryEngine );
 
 		return generateSqmOrderedSetAggregateFunctionExpression(
 				arguments,
@@ -149,7 +149,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			Boolean fromFirst,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		argumentsValidator.validate( arguments, getName(), queryEngine.getTypeConfiguration() );
+		argumentsValidator.validate( arguments, getName(), queryEngine );
 
 		return generateSqmWindowFunctionExpression(
 				arguments,

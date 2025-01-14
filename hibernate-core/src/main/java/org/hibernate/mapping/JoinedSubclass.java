@@ -17,7 +17,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
  *
  * @author Gavin King
  */
-public class JoinedSubclass extends Subclass implements TableOwner {
+public final class JoinedSubclass extends Subclass implements TableOwner {
 	private Table table;
 	private KeyValue key;
 

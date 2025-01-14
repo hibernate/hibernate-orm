@@ -12,10 +12,8 @@ import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -214,10 +212,9 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 					(mapping) -> argumentResultMementos.add( mapping.resolve( resolutionContext ) )
 			);
 
-			final SessionFactoryImplementor sessionFactory = resolutionContext.getSessionFactory();
-			final JavaType<?> targetJtd = sessionFactory.getTypeConfiguration()
-					.getJavaTypeRegistry()
-					.getDescriptor( targetJavaType );
+			final JavaType<?> targetJtd =
+					resolutionContext.getTypeConfiguration().getJavaTypeRegistry()
+							.getDescriptor( targetJavaType );
 
 			return new ResultMementoInstantiationStandard( targetJtd, argumentResultMementos );
 		}
@@ -270,8 +267,8 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public ResultMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			final RuntimeMetamodels runtimeMetamodels = resolutionContext.getSessionFactory().getRuntimeMetamodels();
-			final EntityMappingType entityDescriptor = runtimeMetamodels.getEntityMappingType( entityName );
+			final EntityMappingType entityDescriptor =
+					resolutionContext.getMappingMetamodel().getEntityDescriptor( entityName );
 
 			final FetchMementoBasic discriminatorMemento = resolveDiscriminatorMemento(
 					entityDescriptor,
@@ -366,8 +363,8 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public ResultMemento asResultMemento(NavigablePath path, ResultSetMappingResolutionContext resolutionContext) {
-			final RuntimeMetamodels runtimeMetamodels = resolutionContext.getSessionFactory().getRuntimeMetamodels();
-			final EntityMappingType entityMapping = runtimeMetamodels.getEntityMappingType( entityName );
+			final EntityMappingType entityMapping =
+					resolutionContext.getMappingMetamodel().getEntityDescriptor( entityName );
 
 			final ModelPart subPart = entityMapping.findSubPart( propertyPath, null );
 
@@ -386,8 +383,8 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public FetchMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			final RuntimeMetamodels runtimeMetamodels = resolutionContext.getSessionFactory().getRuntimeMetamodels();
-			final EntityMappingType entityMapping = runtimeMetamodels.getEntityMappingType( entityName );
+			final EntityMappingType entityMapping =
+					resolutionContext.getMappingMetamodel().getEntityDescriptor( entityName );
 
 			ModelPart subPart = entityMapping.findSubPart(
 					propertyPathParts[0],

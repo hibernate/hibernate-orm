@@ -303,8 +303,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			final AttributeMapping attribute = embeddableTypeDescriptor.getAttributeMapping( i );
 			final AttributeMapping mappedIdAttributeMapping = identifierValueMapper.getAttributeMapping( i );
 			Object o = mappedIdAttributeMapping.getValue( id );
-			if ( attribute instanceof ToOneAttributeMapping && !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
-				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attribute;
+			if ( attribute instanceof ToOneAttributeMapping toOneAttributeMapping && !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
 				final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType().getEntityPersister();
 				final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
 				final PersistenceContext persistenceContext = session.getPersistenceContext();

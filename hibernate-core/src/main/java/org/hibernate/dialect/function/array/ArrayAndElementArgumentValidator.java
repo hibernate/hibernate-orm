@@ -6,12 +6,12 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
+import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A {@link ArgumentsValidator} that validates the array type is compatible with the element type.
@@ -31,8 +31,8 @@ public class ArrayAndElementArgumentValidator extends ArrayArgumentValidator {
 	public void validate(
 			List<? extends SqmTypedNode<?>> arguments,
 			String functionName,
-			TypeConfiguration typeConfiguration) {
-		final BasicType<?> expectedElementType = getElementType( arguments, functionName, typeConfiguration );
+			BindingContext bindingContext) {
+		final BasicType<?> expectedElementType = getElementType( arguments, functionName, bindingContext );
 		for ( int elementIndex : elementIndexes ) {
 			if ( elementIndex < arguments.size() ) {
 				final SqmTypedNode<?> elementArgument = arguments.get( elementIndex );

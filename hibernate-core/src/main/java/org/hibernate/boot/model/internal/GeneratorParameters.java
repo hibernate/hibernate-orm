@@ -94,8 +94,7 @@ public class GeneratorParameters {
 
 	public static int fallbackAllocationSize(Annotation generatorAnnotation, MetadataBuildingContext buildingContext) {
 		if ( generatorAnnotation == null ) {
-			final ConfigurationService configService = buildingContext.getBootstrapContext()
-					.getServiceRegistry().requireService( ConfigurationService.class );
+			final ConfigurationService configService = buildingContext.getBootstrapContext().getConfigurationService();
 			final String idNamingStrategy = configService.getSetting( ID_DB_STRUCTURE_NAMING_STRATEGY, StandardConverters.STRING );
 			if ( LegacyNamingStrategy.STRATEGY_NAME.equals( idNamingStrategy )
 					|| LegacyNamingStrategy.class.getName().equals( idNamingStrategy )

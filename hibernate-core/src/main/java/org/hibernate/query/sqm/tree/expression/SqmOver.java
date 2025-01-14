@@ -96,10 +96,10 @@ public class SqmOver<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		expression.appendHqlString( sb );
-		sb.append( " over (" );
-		window.appendHqlString( sb );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql) {
+		expression.appendHqlString( hql );
+		hql.append( " over (" );
+		window.appendHqlString( hql );
+		hql.append( ')' );
 	}
 }

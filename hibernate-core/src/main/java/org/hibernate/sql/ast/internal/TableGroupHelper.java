@@ -119,8 +119,7 @@ public class TableGroupHelper extends AbstractSqlAstWalker {
 		final TableReferenceJoin tableReferenceJoin = tableGroup.getTableReferenceJoins().get( index );
 		final NamedTableReference joinedTableReference = tableReferenceJoin.getJoinedTableReference();
 		final Predicate predicate = tableReferenceJoin.getPredicate();
-		if ( predicate instanceof Junction ) {
-			final Junction junction = (Junction) predicate;
+		if ( predicate instanceof Junction junction ) {
 			if ( junction.getNature() == Junction.Nature.CONJUNCTION ) {
 				for ( Predicate subPredicate : junction.getPredicates() ) {
 					if ( !isComparison( subPredicate, primaryTableReference, joinedTableReference ) ) {
@@ -137,8 +136,7 @@ public class TableGroupHelper extends AbstractSqlAstWalker {
 	}
 
 	private static boolean isComparison(Predicate predicate, TableReference table1, TableReference table2) {
-		if ( predicate instanceof ComparisonPredicate ) {
-			final ComparisonPredicate comparisonPredicate = (ComparisonPredicate) predicate;
+		if ( predicate instanceof ComparisonPredicate comparisonPredicate ) {
 			final Expression lhs = comparisonPredicate.getLeftHandExpression();
 			final Expression rhs = comparisonPredicate.getRightHandExpression();
 			final SqlTuple lhsTuple;

@@ -6,7 +6,6 @@ package org.hibernate.engine.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
@@ -48,7 +47,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
 public class EntityEntryContext {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( EntityEntryContext.class );
 
-	private transient PersistenceContext persistenceContext;
+	private final transient PersistenceContext persistenceContext;
 
 	private transient IdentityHashMap<ManagedEntity,ImmutableManagedEntityHolder> immutableManagedEntityXref;
 
@@ -521,19 +520,19 @@ public class EntityEntryContext {
 		return context;
 	}
 
-	private static EntityEntry deserializeEntityEntry(char[] entityEntryClassNameArr, ObjectInputStream ois, StatefulPersistenceContext rtn){
+	private static EntityEntry deserializeEntityEntry(
+			char[] entityEntryClassNames, ObjectInputStream ois, StatefulPersistenceContext persistenceContext){
 		EntityEntry entry = null;
 
-		final String entityEntryClassName = new String( entityEntryClassNameArr );
+		final String entityEntryClassName = new String( entityEntryClassNames );
 		final Class<?> entityEntryClass =
-				rtn.getSession().getFactory().getServiceRegistry()
-						.requireService( ClassLoaderService.class )
+				persistenceContext.getSession().getFactory().getClassLoaderService()
 						.classForName( entityEntryClassName );
 
 		try {
 			final Method deserializeMethod =
 					entityEntryClass.getDeclaredMethod( "deserialize", ObjectInputStream.class, PersistenceContext.class );
-			entry = (EntityEntry) deserializeMethod.invoke( null, ois, rtn );
+			entry = (EntityEntry) deserializeMethod.invoke( null, ois, persistenceContext );
 		}
 		catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
 			log.errorf( "Enable to deserialize [%s]", entityEntryClassName );

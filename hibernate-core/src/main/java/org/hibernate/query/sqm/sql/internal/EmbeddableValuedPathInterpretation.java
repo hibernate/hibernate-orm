@@ -45,10 +45,7 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( lhs.getNavigablePath() );
 		EntityMappingType treatTarget = null;
 		if ( jpaQueryComplianceEnabled ) {
-			final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext()
-					.getSessionFactory()
-					.getRuntimeMetamodels()
-					.getMappingMetamodel();
+			final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext().getMappingMetamodel();
 			if ( lhs instanceof SqmTreatedPath<?, ?> && ( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget().getPersistenceType() == ENTITY ) {
 				final EntityDomainType<?> treatTargetDomainType = (EntityDomainType<?>) ( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget();
 				treatTarget = mappingMetamodel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );

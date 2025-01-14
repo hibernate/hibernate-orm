@@ -509,17 +509,15 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <T> ProcedureParameter<T> registerParameter(int position, Class<T> javaType, ParameterMode mode) {
-		final BindableType<T> parameterType = getSessionFactory().getMappingMetamodel().resolveParameterBindType( javaType );
-
+		final BindableType<T> parameterType =
+				getSessionFactory().getMappingMetamodel().resolveParameterBindType( javaType );
 		final ProcedureParameterImpl<T> procedureParameter = new ProcedureParameterImpl<>(
 				position,
 				mode,
 				getExpressibleJavaType( parameterType ),
 				parameterType
 		);
-
 		registerParameter( procedureParameter );
-
 		return procedureParameter;
 	}
 
@@ -552,17 +550,15 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <T> ProcedureParameterImplementor<T> registerParameter(String name, Class<T> javaType, ParameterMode mode) {
-		final BindableType<T> parameterType = getSessionFactory().getMappingMetamodel().resolveParameterBindType( javaType );
-
+		final BindableType<T> parameterType =
+				getSessionFactory().getMappingMetamodel().resolveParameterBindType( javaType );
 		final ProcedureParameterImpl<T> parameter = new ProcedureParameterImpl<>(
 				name,
 				mode,
 				getExpressibleJavaType( parameterType ),
 				parameterType
 		);
-
 		registerParameter( parameter );
-
 		return parameter;
 	}
 
@@ -571,7 +567,8 @@ public class ProcedureCallImpl<R>
 			return null;
 		}
 		else {
-			final SqmExpressible<T> sqmExpressible = parameterType.resolveExpressible( getSessionFactory() );
+			final SqmExpressible<T> sqmExpressible =
+					parameterType.resolveExpressible( getSessionFactory().getQueryEngine().getCriteriaBuilder() );
 			assert sqmExpressible != null;
 
 			return sqmExpressible.getExpressibleJavaType().getJavaTypeClass();
@@ -772,9 +769,9 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> addSynchronizedEntityName(String entityName) {
-		final EntityPersister entityDescriptor = getSession().getFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName );
+		final EntityPersister entityDescriptor =
+				getSession().getFactory().getMappingMetamodel()
+						.getEntityDescriptor( entityName );
 		addSynchronizedQuerySpaces( entityDescriptor );
 		return this;
 	}
@@ -785,9 +782,9 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) {
-		final EntityPersister entityDescriptor = getSession().getFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityClass );
+		final EntityPersister entityDescriptor =
+				getSession().getFactory().getMappingMetamodel()
+						.getEntityDescriptor( entityClass );
 		addSynchronizedQuerySpaces( entityDescriptor );
 		return this;
 	}

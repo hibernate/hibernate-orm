@@ -29,7 +29,7 @@ public abstract class AbstractSingularAttributeSourceEmbeddedImpl
 
 	private final EmbeddedAttributeMapping jaxbEmbeddedAttributeMapping;
 	private final EmbeddableSource embeddableSource;
-	private NaturalIdMutability naturalIdMutability;
+	private final NaturalIdMutability naturalIdMutability;
 
 	protected AbstractSingularAttributeSourceEmbeddedImpl(
 			final MappingDocument sourceMappingDocument,

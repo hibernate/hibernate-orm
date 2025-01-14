@@ -73,6 +73,7 @@ public final class CollectionEntry implements Serializable {
 		collection.clearDirty();
 
 		snapshot = persister.isMutable() ? collection.getSnapshot( persister ) : null;
+		role = persister.getRole();
 		collection.setSnapshot( loadedKey, role, snapshot );
 	}
 
@@ -280,7 +281,7 @@ public final class CollectionEntry implements Serializable {
 
 	void afterDeserialize(@Nullable SessionFactoryImplementor factory) {
 		loadedPersister = factory == null ? null
-				: factory.getRuntimeMetamodels().getMappingMetamodel()
+				: factory.getMappingMetamodel()
 						.getCollectionDescriptor( castNonNull( role ) );
 	}
 

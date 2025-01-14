@@ -49,7 +49,7 @@ public interface IdentifiableTypeSource extends AttributeSourceContainer {
 	/**
 	 * Access the subtype sources for types extending from this type source,
 	 *
-	 * @return Sub-type sources
+	 * @return Subtype sources
 	 */
 	Collection<IdentifiableTypeSource> getSubTypes();
 

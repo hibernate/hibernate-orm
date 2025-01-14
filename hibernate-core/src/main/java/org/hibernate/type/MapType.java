@@ -65,7 +65,7 @@ public class MapType extends CollectionType {
 			final Map<Object, Object> copyCache,
 			final SharedSessionContractImplementor session) throws HibernateException {
 		final CollectionPersister persister =
-				session.getFactory().getRuntimeMetamodels().getMappingMetamodel()
+				session.getFactory().getMappingMetamodel()
 						.getCollectionDescriptor( getRole() );
 
 		final Map source = (Map) original;

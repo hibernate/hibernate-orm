@@ -48,7 +48,6 @@ public class ManagedResourcesImpl implements ManagedResources {
 		return impl;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private static void handleXmlMappings(
 			MetadataSources sources,
 			ManagedResourcesImpl impl,
@@ -61,7 +60,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 			);
 			return;
 		}
-		impl.mappingFileBindings.addAll( (List) sources.getXmlBindings() );
+		impl.mappingFileBindings.addAll( sources.getXmlBindings() );
 	}
 
 	public ManagedResourcesImpl() {

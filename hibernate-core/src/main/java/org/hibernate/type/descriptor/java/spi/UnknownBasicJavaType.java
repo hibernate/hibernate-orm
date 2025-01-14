@@ -22,6 +22,7 @@ public final class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
 	public UnknownBasicJavaType(Class<T> type) {
 		this( type, type.getTypeName() );
 	}
+
 	public UnknownBasicJavaType(Class<T> type, String typeName) {
 		super( type );
 		this.typeName = typeName;
@@ -40,6 +41,17 @@ public final class UnknownBasicJavaType<T> extends AbstractJavaType<T> {
 	@Override
 	public String getTypeName() {
 		return typeName;
+	}
+
+	@Override
+	public Type getJavaType() {
+		final Type type = super.getJavaType();
+		if ( type == null ) {
+			throw new UnsupportedOperationException( "Unloadable Java type: " + typeName );
+		}
+		else {
+			return type;
+		}
 	}
 
 	@Override

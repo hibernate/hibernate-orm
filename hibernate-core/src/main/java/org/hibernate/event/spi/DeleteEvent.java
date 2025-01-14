@@ -10,7 +10,7 @@ package org.hibernate.event.spi;
  * @author Steve Ebersole
  */
 public class DeleteEvent extends AbstractEvent {
-	private Object object;
+	private final Object object;
 	private String entityName;
 	private boolean cascadeDeleteEnabled;
 	// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task

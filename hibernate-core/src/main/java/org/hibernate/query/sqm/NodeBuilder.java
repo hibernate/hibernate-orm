@@ -21,7 +21,6 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.BindingContext;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCastTarget;
@@ -35,7 +34,7 @@ import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.criteria.JpaWindow;
-import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
@@ -66,7 +65,6 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CollectionJoin;
@@ -88,14 +86,19 @@ import jakarta.persistence.criteria.Subquery;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unchecked")
-public interface NodeBuilder extends HibernateCriteriaBuilder, BindingContext {
-	JpaMetamodel getDomainModel();
+public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContext {
+	default JpaMetamodel getDomainModel() {
+		return getJpaMetamodel();
+	}
 
-	TypeConfiguration getTypeConfiguration();
+	default boolean isJpaQueryComplianceEnabled() {
+		return getJpaCompliance().isJpaQueryComplianceEnabled();
+	}
 
-	boolean isJpaQueryComplianceEnabled();
-
-	QueryEngine getQueryEngine();
+	@Override
+	default NodeBuilder getNodeBuilder() {
+		return this;
+	}
 
 	<R> SqmTuple<R> tuple(
 			Class<R> tupleType,

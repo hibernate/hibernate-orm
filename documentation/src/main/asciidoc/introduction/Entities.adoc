@@ -1422,6 +1422,14 @@ However, as before, the order of the elements is not persistent.
 That is, the collection is a _bag_, not a set.
 ====
 
+[WARNING]
+====
+We don't usually map collections with `fetch=EAGER`, since that usually leads to poor performance and fetching of unnecessary data.
+But this is especially clear in the case of many-to-many associations.
+We don't much employ the word "never" when it comes to object/relational mappings, but here we will:
+**never** write `@ManyToMany(fetch=EAGER)` unless you're deliberately looking for trouble.
+====
+
 [[collections]]
 === Collections of basic values and embeddable objects
 

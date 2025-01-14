@@ -13,11 +13,11 @@ import org.hibernate.Internal;
 import java.util.List;
 
 /**
- * Specifies an allowed set of range of values for a value being restricted.
+ * Specifies an allowed set or range of values for a value being restricted.
  * <p>
  * A parameter of a {@linkplain org.hibernate.annotations.processing.Find
  * finder method} may be declared with type {@code Range<T>} where {@code T}
- * is the type of the matching field of property of the entity.
+ * is the type of the matching field or property of the entity.
  *
  * @param <U> The type of the value being restricted
  *

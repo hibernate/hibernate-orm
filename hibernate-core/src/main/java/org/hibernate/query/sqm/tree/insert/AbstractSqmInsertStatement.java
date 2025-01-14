@@ -178,18 +178,18 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		appendHqlCteString( sb );
-		sb.append( "insert into " );
-		sb.append( getTarget().getEntityName() );
+	public void appendHqlString(StringBuilder hql) {
+		appendHqlCteString( hql );
+		hql.append( "insert into " );
+		hql.append( getTarget().getEntityName() );
 		if ( insertionTargetPaths != null && !insertionTargetPaths.isEmpty() ) {
-			sb.append( '(' );
-			insertionTargetPaths.get( 0 ).appendHqlString( sb );
+			hql.append( '(' );
+			insertionTargetPaths.get( 0 ).appendHqlString( hql );
 			for ( int i = 1; i < insertionTargetPaths.size(); i++ ) {
-				sb.append( ", " );
-				insertionTargetPaths.get( i ).appendHqlString( sb );
+				hql.append( ", " );
+				insertionTargetPaths.get( i ).appendHqlString( hql );
 			}
-			sb.append( ')' );
+			hql.append( ')' );
 		}
 	}
 }

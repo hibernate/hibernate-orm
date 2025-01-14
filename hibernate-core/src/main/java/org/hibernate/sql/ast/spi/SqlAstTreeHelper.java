@@ -25,8 +25,7 @@ public final class SqlAstTreeHelper {
 
 		final Junction combinedPredicate;
 
-		if ( baseRestriction instanceof Junction ) {
-			final Junction junction = (Junction) baseRestriction;
+		if ( baseRestriction instanceof Junction junction ) {
 			if ( junction.isEmpty() ) {
 				return incomingRestriction;
 			}

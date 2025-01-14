@@ -50,11 +50,11 @@ public class InformixSqmToSqlAstConverter<T extends Statement> extends BaseSqmTo
 
 	@Override
 	public QuerySpec visitQuerySpec(SqmQuerySpec<?> sqmQuerySpec) {
-		final boolean needsDummy = this.needsDummyTableGroup;
-		this.needsDummyTableGroup = false;
+		final boolean needsDummy = needsDummyTableGroup;
+		needsDummyTableGroup = false;
 		try {
 			final QuerySpec querySpec = super.visitQuerySpec( sqmQuerySpec );
-			if ( this.needsDummyTableGroup ) {
+			if ( needsDummyTableGroup ) {
 				querySpec.getFromClause().addRoot(
 						new StandardTableGroup(
 								true,
@@ -70,7 +70,7 @@ public class InformixSqmToSqlAstConverter<T extends Statement> extends BaseSqmTo
 			return querySpec;
 		}
 		finally {
-			this.needsDummyTableGroup = needsDummy;
+			needsDummyTableGroup = needsDummy;
 		}
 	}
 

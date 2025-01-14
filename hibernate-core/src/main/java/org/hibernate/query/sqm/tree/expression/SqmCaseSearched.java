@@ -140,20 +140,20 @@ public class SqmCaseSearched<R>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "case" );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "case" );
 		for ( WhenFragment<? extends R> whenFragment : whenFragments ) {
-			sb.append( " when " );
-			whenFragment.predicate.appendHqlString( sb );
-			sb.append( " then " );
-			whenFragment.result.appendHqlString( sb );
+			hql.append( " when " );
+			whenFragment.predicate.appendHqlString( hql );
+			hql.append( " then " );
+			whenFragment.result.appendHqlString( hql );
 		}
 
 		if ( otherwise != null ) {
-			sb.append( " else " );
-			otherwise.appendHqlString( sb );
+			hql.append( " else " );
+			otherwise.appendHqlString( hql );
 		}
-		sb.append( " end" );
+		hql.append( " end" );
 	}
 
 

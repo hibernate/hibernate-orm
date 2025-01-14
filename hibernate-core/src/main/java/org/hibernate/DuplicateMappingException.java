@@ -15,7 +15,7 @@ public class DuplicateMappingException extends MappingException {
 	/**
 	 * Enumeration of the types of things that can be duplicated.
 	 */
-	public static enum Type {
+	public enum Type {
 		/**
 		 * A duplicate entity definition was encountered.
 		 */

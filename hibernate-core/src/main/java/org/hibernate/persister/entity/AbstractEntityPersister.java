@@ -191,7 +191,6 @@ import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sql.internal.SQLQueryParser;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategyProvider;
@@ -320,7 +319,8 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
 @Internal
 @SuppressWarnings("deprecation")
 public abstract class AbstractEntityPersister
-		implements EntityPersister, InFlightEntityMappingType, EntityMutationTarget, LazyPropertyInitializer, FetchProfileAffectee, Joinable {
+		implements EntityPersister, InFlightEntityMappingType, EntityMutationTarget, LazyPropertyInitializer,
+				FetchProfileAffectee, Joinable {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractEntityPersister.class );
 
@@ -547,18 +547,13 @@ public abstract class AbstractEntityPersister
 		queryLoaderName = persistentClass.getLoaderName();
 
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
-		final SqmFunctionRegistry functionRegistry = creationContext.getFunctionRegistry();
 
 		final List<Column> columns = persistentClass.getIdentifier().getColumns();
 		for (int i = 0; i < columns.size(); i++ ) {
 			final Column column = columns.get(i);
 			rootTableKeyColumnNames[i] = column.getQuotedName( dialect );
 			rootTableKeyColumnReaders[i] = column.getReadExpr( dialect );
-			rootTableKeyColumnReaderTemplates[i] = column.getTemplate(
-					dialect,
-					typeConfiguration,
-					functionRegistry
-			);
+			rootTableKeyColumnReaderTemplates[i] = column.getTemplate( dialect, typeConfiguration );
 			identifierAliases[i] = column.getAlias( dialect, persistentClass.getRootTable() );
 		}
 
@@ -626,8 +621,7 @@ public abstract class AbstractEntityPersister
 					formula.setFormula( substituteBrackets( formula.getFormula() ) );
 					formulaTemplates[k] = selectable.getTemplate(
 							dialect,
-							typeConfiguration,
-							functionRegistry
+							typeConfiguration
 					);
 				}
 				else {
@@ -702,11 +696,7 @@ public abstract class AbstractEntityPersister
 			for ( int i = 0; i < selectables.size(); i++ ) {
 				final Selectable selectable = selectables.get(i);
 				if ( selectable.isFormula() ) {
-					final String template = selectable.getTemplate(
-							dialect,
-							typeConfiguration,
-							functionRegistry
-					);
+					final String template = selectable.getTemplate( dialect, typeConfiguration );
 					forms[i] = template;
 					final String formulaAlias = selectable.getAlias( dialect );
 					if ( prop.isSelectable() && !formulaAliases.contains( formulaAlias ) ) {
@@ -725,8 +715,7 @@ public abstract class AbstractEntityPersister
 					readers[i] = column.getReadExpr( dialect );
 					readerTemplates[i] = column.getTemplate(
 							dialect,
-							typeConfiguration,
-							functionRegistry
+							typeConfiguration
 					);
 					if ( thisClassProperties.contains( prop )
 							? persistentClass.hasSubclasses()
@@ -1175,8 +1164,7 @@ public abstract class AbstractEntityPersister
 	private static List<UniqueKeyEntry> initUniqueKeyEntries(final AbstractEntityPersister aep) {
 		final ArrayList<UniqueKeyEntry> uniqueKeys = new ArrayList<>();
 		for ( Type propertyType : aep.getPropertyTypes() ) {
-			if ( propertyType instanceof AssociationType ) {
-				final AssociationType associationType = (AssociationType) propertyType;
+			if ( propertyType instanceof AssociationType associationType ) {
 				final String ukName = associationType.getLHSPropertyName();
 				if ( ukName != null ) {
 					final AttributeMapping attributeMapping = aep.findAttributeMapping( ukName );
@@ -1444,13 +1432,12 @@ public abstract class AbstractEntityPersister
 
 		if ( hasCollections() ) {
 			final Type type = getPropertyType( fieldName );
-			if ( type instanceof CollectionType ) {
+			if ( type instanceof CollectionType collectionType ) {
 				// we have a condition where a collection attribute is being access via enhancement:
 				// 		we can circumvent all the rest and just return the PersistentCollection
-				final CollectionType collectionType = (CollectionType) type;
-				final CollectionPersister persister = factory.getRuntimeMetamodels()
-						.getMappingMetamodel()
-						.getCollectionDescriptor( collectionType.getRole() );
+				final CollectionPersister persister =
+						factory.getMappingMetamodel()
+								.getCollectionDescriptor( collectionType.getRole() );
 
 				// Get/create the collection, and make sure it is initialized!  This initialized part is
 				// different from proxy-based scenarios where we have to create the PersistentCollection
@@ -1840,7 +1827,7 @@ public abstract class AbstractEntityPersister
 				this::fetchProcessor,
 				true,
 				new LoadQueryInfluencers( factory ),
-				factory
+				factory.getSqlTranslationEngine()
 		);
 
 		final NavigablePath entityPath = new NavigablePath( getRootPathName() );
@@ -1951,8 +1938,7 @@ public abstract class AbstractEntityPersister
 						continue;
 					}
 				}
-				else if ( fetchable instanceof Association ) {
-					final Association association = (Association) fetchable;
+				else if ( fetchable instanceof Association association ) {
 					// Ignore the fetchable if the FK is on the other side
 					if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
 						continue;
@@ -5219,8 +5205,7 @@ public abstract class AbstractEntityPersister
 			MappingModelCreationProcess creationProcess) {
 		final Type idType = getIdentifierType();
 
-		if ( idType instanceof CompositeType ) {
-			final CompositeType cidType = (CompositeType) idType;
+		if ( idType instanceof CompositeType cidType ) {
 
 			// NOTE: the term `isEmbedded` here uses Hibernate's older (pre-JPA) naming for its "non-aggregated"
 			// composite-id support.  It unfortunately conflicts with the JPA usage of "embedded".  Here we normalize
@@ -5417,8 +5402,7 @@ public abstract class AbstractEntityPersister
 
 					customReadExpr = selectable.getTemplate(
 							creationContext.getDialect(),
-							creationContext.getTypeConfiguration(),
-							creationContext.getFunctionRegistry()
+							creationContext.getTypeConfiguration()
 					);
 					customWriteExpr = selectable.getWriteExpr( (JdbcMapping) attrType, creationContext.getDialect() );
 					Column column = value.getColumns().get( 0 );
@@ -5475,12 +5459,10 @@ public abstract class AbstractEntityPersister
 					creationProcess
 			);
 		}
-		else if ( attrType instanceof AnyType ) {
+		else if ( attrType instanceof AnyType anyType ) {
 			final JavaType<Object> baseAssociationJtd =
 					creationContext.getTypeConfiguration().getJavaTypeRegistry()
 							.getDescriptor( Object.class );
-
-			final AnyType anyType = (AnyType) attrType;
 
 			final MutabilityPlan<?> mutabilityPlan = new DiscriminatedAssociationAttributeMapping.MutabilityPlanImpl( anyType );
 			final SimpleAttributeMetadata attributeMetadataAccess = new SimpleAttributeMetadata(
@@ -5503,7 +5485,7 @@ public abstract class AbstractEntityPersister
 					bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE,
 					propertyAccess,
 					bootProperty,
-					(AnyType) attrType,
+					anyType,
 					(Any) value,
 					creationProcess
 			);
@@ -5819,8 +5801,7 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			for ( AttributeMapping attribute : declaredAttributeMappings.valueIterator() ) {
-				if ( attribute instanceof EmbeddableValuedModelPart && attribute instanceof VirtualModelPart ) {
-					EmbeddableValuedModelPart part = (EmbeddableValuedModelPart) attribute;
+				if ( attribute instanceof EmbeddableValuedModelPart part && attribute instanceof VirtualModelPart ) {
 					final ModelPart subPart = part.findSubPart( name, null );
 					if ( subPart != null ) {
 						return subPart;
@@ -6136,9 +6117,8 @@ public abstract class AbstractEntityPersister
 		}
 
 		// aliases for composite-id's
-		if ( getIdentifierType() instanceof ComponentType ) {
+		if ( getIdentifierType() instanceof ComponentType componentId ) {
 			// Fetch embedded identifiers property names from the "virtual" identifier component
-			final ComponentType componentId = (ComponentType) getIdentifierType();
 			final String[] idPropertyNames = componentId.getPropertyNames();
 			final String[] idAliases = getIdentifierAliases();
 

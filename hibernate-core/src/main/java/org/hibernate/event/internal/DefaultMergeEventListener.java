@@ -81,7 +81,8 @@ public class DefaultMergeEventListener
 	@Override
 	public void onMerge(MergeEvent event) throws HibernateException {
 		final EventSource session = event.getSession();
-		final EntityCopyObserver entityCopyObserver = createEntityCopyObserver( session );
+		final EntityCopyObserver entityCopyObserver =
+				session.getFactory().getEntityCopyObserver().createEntityCopyObserver();
 		final MergeContext mergeContext = new MergeContext( session, entityCopyObserver );
 		try {
 			onMerge( event, mergeContext );
@@ -91,10 +92,6 @@ public class DefaultMergeEventListener
 			entityCopyObserver.clear();
 			mergeContext.clear();
 		}
-	}
-
-	private EntityCopyObserver createEntityCopyObserver(final EventSource session) {
-		return session.getFactory().getFastSessionServices().entityCopyObserverFactory.createEntityCopyObserver();
 	}
 
 	/**

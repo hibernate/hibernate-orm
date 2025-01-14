@@ -91,12 +91,11 @@ public class NaturalIdCacheKey implements Serializable {
 			return true;
 		}
 
-		if ( hashCode != o.hashCode() || !( o instanceof NaturalIdCacheKey) ) {
+		if ( hashCode != o.hashCode() || !(o instanceof NaturalIdCacheKey other) ) {
 			//hashCode is part of this check since it is pre-calculated and hash must match for equals to be true
 			return false;
 		}
 
-		final NaturalIdCacheKey other = (NaturalIdCacheKey) o;
 		return Objects.equals( entityName, other.entityName )
 				&& Objects.equals( tenantId, other.tenantId )
 				&& Objects.deepEquals( this.naturalIdValues, other.naturalIdValues );
@@ -107,8 +106,7 @@ public class NaturalIdCacheKey implements Serializable {
 		//Complex toString is needed as naturalIds for entities are not simply based on a single value like primary keys
 		//the only same way to differentiate the keys is to include the disassembled values in the string.
 		final StringBuilder toStringBuilder = new StringBuilder().append( entityName ).append( "##NaturalId[" );
-		if ( naturalIdValues instanceof Object[] ) {
-			final Object[] values = (Object[]) naturalIdValues;
+		if ( naturalIdValues instanceof Object[] values ) {
 			for ( int i = 0; i < values.length; i++ ) {
 				toStringBuilder.append( values[ i ] );
 				if ( i + 1 < values.length ) {

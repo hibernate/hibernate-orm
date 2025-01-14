@@ -23,23 +23,20 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeRegistry;
 
 /**
  * Standard MultiNaturalIdLoader implementation
  */
 public class MultiNaturalIdLoaderArrayParam<E> implements MultiNaturalIdLoader<E>, SqlArrayMultiKeyLoader {
 	private final EntityMappingType entityDescriptor;
-	private final Class<?> keyArrayClass;
+	private final Class<?> keyClass;
 
 	public MultiNaturalIdLoaderArrayParam(EntityMappingType entityDescriptor) {
 		assert entityDescriptor.getNaturalIdMapping() instanceof SimpleNaturalIdMapping;
 
 		this.entityDescriptor = entityDescriptor;
 
-		final Class<?> keyClass = entityDescriptor.getNaturalIdMapping().getJavaType().getJavaTypeClass();
-		this.keyArrayClass = LoaderHelper.createTypedArray( keyClass, 0 ).getClass();
+		this.keyClass = entityDescriptor.getNaturalIdMapping().getJavaType().getJavaTypeClass();
 	}
 
 	@Override
@@ -77,12 +74,9 @@ public class MultiNaturalIdLoaderArrayParam<E> implements MultiNaturalIdLoader<E
 						? LockOptions.NONE
 						: loadOptions.getLockOptions();
 
-		final BasicTypeRegistry basicTypeRegistry = sessionFactory.getTypeConfiguration().getBasicTypeRegistry();
-		final BasicType<?> arrayBasicType = basicTypeRegistry.getRegisteredType( keyArrayClass );
 		final JdbcMapping arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
-				arrayBasicType,
 				getNaturalIdMapping().getSingleJdbcMapping(),
-				keyArrayClass,
+				keyClass,
 				sessionFactory
 		);
 		final JdbcParameter jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );

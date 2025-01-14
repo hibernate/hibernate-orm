@@ -176,20 +176,20 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 		RootGraphImplementor<GraphParsingTestEntity> graph = parseGraph( "linkToOne(name, description), linkToOne(GraphParsingTestSubEntity: sub)" );
 		assertNotNull( graph );
 
-		List<AttributeNodeImplementor<?>> attrs = graph.getAttributeNodeImplementors();
+		List<? extends AttributeNodeImplementor<?,?,?>> attrs = graph.getAttributeNodeList();
 		assertNotNull( attrs );
 		assertEquals( 1, attrs.size() );
 
-		AttributeNodeImplementor<?> linkToOneNode = attrs.get( 0 );
+		AttributeNodeImplementor<?,?,?> linkToOneNode = attrs.get( 0 );
 		assertNotNull( linkToOneNode );
 		assertEquals( "linkToOne", linkToOneNode.getAttributeName() );
 
 		assertNullOrEmpty( linkToOneNode.getKeySubgraphs() );
 
-		final SubGraphImplementor subGraph = linkToOneNode.getSubGraphMap().get( GraphParsingTestSubEntity.class );
-		assertNotNull( subGraph );
+		final SubGraphImplementor<?> subgraph = linkToOneNode.getSubGraphs().get( GraphParsingTestSubEntity.class );
+		assertNotNull( subgraph );
 
-		assertBasicAttributes( subGraph, "sub" );
+		assertBasicAttributes( subgraph, "sub" );
 	}
 
 	@Test
@@ -204,7 +204,7 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 
 		assertEquals( subGraph.getGraphedType().getJavaType(), GraphParsingTestSubEntity.class );
 
-		final AttributeNodeImplementor<Object> subTypeAttrNode = subGraph.findOrCreateAttributeNode( "sub" );
+		final AttributeNodeImplementor<?,?,?> subTypeAttrNode = subGraph.findOrCreateAttributeNode( "sub" );
 		assert subTypeAttrNode != null;
 	}
 

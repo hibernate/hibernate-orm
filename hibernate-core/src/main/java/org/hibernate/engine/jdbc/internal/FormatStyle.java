@@ -30,7 +30,7 @@ public enum FormatStyle {
 	private final String name;
 	private final Formatter formatter;
 
-	private FormatStyle(String name, Formatter formatter) {
+	FormatStyle(String name, Formatter formatter) {
 		this.name = name;
 		this.formatter = formatter;
 	}

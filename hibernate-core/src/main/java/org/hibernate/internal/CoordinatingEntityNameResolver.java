@@ -35,7 +35,7 @@ public class CoordinatingEntityNameResolver implements EntityNameResolver {
 			}
 		}
 
-		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
+		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getMappingMetamodel();
 		for ( EntityNameResolver resolver : mappingMetamodel.getEntityNameResolvers() ) {
 			entityName = resolver.resolveEntityName( entity );
 			if ( entityName != null ) {

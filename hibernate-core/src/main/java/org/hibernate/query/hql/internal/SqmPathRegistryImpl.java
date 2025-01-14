@@ -69,8 +69,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		// Regarding part #1 (add to the path-by-path map), it is ok for a SqmFrom to replace a
 		// 		non-SqmFrom.  This should equate to, e.g., an implicit join.
 
-		if ( sqmPath instanceof SqmFrom<?, ?> ) {
-			final SqmFrom<?, ?> sqmFrom = (SqmFrom<?, ?>) sqmPath;
+		if ( sqmPath instanceof SqmFrom<?, ?> sqmFrom ) {
 
 			registerByAliasOnly( sqmFrom );
 

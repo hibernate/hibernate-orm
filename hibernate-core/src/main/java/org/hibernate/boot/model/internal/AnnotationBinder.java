@@ -253,8 +253,7 @@ public final class AnnotationBinder {
 			AnnotationTarget annotatedElement,
 			MetadataBuildingContext context) {
 		final ManagedBeanRegistry managedBeanRegistry =
-				context.getBootstrapContext().getServiceRegistry()
-						.getService( ManagedBeanRegistry.class );
+				context.getBootstrapContext().getManagedBeanRegistry();
 
 		final SourceModelBuildingContext sourceModelContext = sourceContext( context );
 

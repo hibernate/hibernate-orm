@@ -116,12 +116,11 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferre
  *     </li>
  *     <li>
  *         Two step : a first step coordinates resource scanning and some other preparation work; a second step
- *         builds the {@link org.hibernate.boot.Metadata}.  A hugely important distinction in the need for the
+ *         builds the {@link org.hibernate.boot.Metadata}. A hugely important distinction in the need for the
  *         steps is that the first phase should strive to not load user entity/component classes so that we can still
- *         perform enhancement on them later.  This approach caters to the 2-phase bootstrap we use in regards
- *         to WildFly Hibernate-JPA integration.  The first step is defined by {@link #prepare} which returns
- *         a {@link ManagedResources} instance.  The second step is defined by calling
- *         {@link #complete}
+ *         perform enhancement on them later. This approach caters to the 2-phase bootstrap we use in regard to
+ *         WildFly Hibernate-JPA integration. The first step is defined by {@link #prepare} which returns
+ *         a {@link ManagedResources} instance. The second step is defined by calling {@link #complete}
  *     </li>
  * </ul>
  *
@@ -156,8 +155,7 @@ public class MetadataBuildingProcess {
 			final MetadataSources sources,
 			final BootstrapContext bootstrapContext) {
 		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline( sources, bootstrapContext );
-		final ConfigurationService configService =
-				bootstrapContext.getServiceRegistry().requireService( ConfigurationService.class );
+		final ConfigurationService configService = bootstrapContext.getConfigurationService();
 		final boolean xmlMappingEnabled = configService.getSetting(
 				AvailableSettings.XML_MAPPING_ENABLED,
 				StandardConverters.BOOLEAN,
@@ -184,9 +182,8 @@ public class MetadataBuildingProcess {
 			final BootstrapContext bootstrapContext,
 			final MetadataBuildingOptions options) {
 
-		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
-		assert classLoaderService != null;
-		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, options );
+		final InFlightMetadataCollectorImpl metadataCollector =
+				new InFlightMetadataCollectorImpl( bootstrapContext, options );
 
 		handleTypes( bootstrapContext, options, metadataCollector );
 
@@ -223,6 +220,7 @@ public class MetadataBuildingProcess {
 				metadataCollector
 		);
 
+		final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
 		processAdditionalMappingContributions( metadataCollector, options, classLoaderService, rootMetadataBuildingContext );
 
 		applyExtraQueryImports( managedResources, metadataCollector );
@@ -383,7 +381,6 @@ public class MetadataBuildingProcess {
 
 		assert metadataCollector.getPersistenceUnitMetadata() == xmlPreProcessingResult.getPersistenceUnitMetadata();
 
-		//noinspection unchecked
 		final List<String> allKnownClassNames = mutableJoin(
 				managedResources.getAnnotatedClassReferences().stream().map( Class::getName ).collect( Collectors.toList() ),
 				managedResources.getAnnotatedClassNames(),
@@ -692,9 +689,7 @@ public class MetadataBuildingProcess {
 			BootstrapContext bootstrapContext,
 			MetadataBuildingOptions options,
 			InFlightMetadataCollector metadataCollector) {
-		final ClassLoaderService classLoaderService =
-				options.getServiceRegistry().requireService(ClassLoaderService.class);
-
+		final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
 		final StandardServiceRegistry serviceRegistry = bootstrapContext.getServiceRegistry();
 		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();

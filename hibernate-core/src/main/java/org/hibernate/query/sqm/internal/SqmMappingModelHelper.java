@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.internal;
 
 import java.util.function.Function;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -59,11 +58,10 @@ public class SqmMappingModelHelper {
 	 */
 	public static EntityPersister resolveEntityPersister(
 			EntityDomainType<?> entityType,
-			SessionFactoryImplementor sessionFactory) {
+			MappingMetamodel mappingMetamodel) {
 		// Our EntityTypeImpl#getType impl returns the Hibernate entity-name
 		// which is exactly what we want
-		final String hibernateEntityName = entityType.getHibernateEntityName();
-		return sessionFactory.getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( hibernateEntityName );
+		return mappingMetamodel.getEntityDescriptor( entityType.getHibernateEntityName() );
 	}
 
 	public static <J> SqmPathSource<J> resolveSqmKeyPathSource(
@@ -177,8 +175,7 @@ public class SqmMappingModelHelper {
 			MappingMetamodel domainModel,
 			Function<NavigablePath,TableGroup> tableGroupLocator) {
 
-		if ( sqmPath instanceof SqmTreatedPath<?, ?> ) {
-			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) sqmPath;
+		if ( sqmPath instanceof SqmTreatedPath<?, ?> treatedPath ) {
 			final ManagedDomainType<?> treatTarget = treatedPath.getTreatTarget();
 			if ( treatTarget.getPersistenceType() == Type.PersistenceType.ENTITY ) {
 				final EntityDomainType<?> treatTargetType = (EntityDomainType<?>) treatTarget;
@@ -187,8 +184,7 @@ public class SqmMappingModelHelper {
 		}
 
 		// see if the LHS is treated
-		if ( sqmPath.getLhs() instanceof SqmTreatedPath<?, ?> ) {
-			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) sqmPath.getLhs();
+		if ( sqmPath.getLhs() instanceof SqmTreatedPath<?, ?> treatedPath ) {
 			final ManagedDomainType<?> treatTarget = treatedPath.getTreatTarget();
 			if ( treatTarget.getPersistenceType() == Type.PersistenceType.ENTITY ) {
 				final EntityPersister container = domainModel.findEntityDescriptor( treatTarget.getTypeName() );
@@ -218,8 +214,7 @@ public class SqmMappingModelHelper {
 
 		if ( sqmPath.getLhs() == null ) {
 			final SqmPathSource<?> referencedPathSource = sqmPath.getReferencedPathSource();
-			if ( referencedPathSource instanceof EntityDomainType<?> ) {
-				final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) referencedPathSource;
+			if ( referencedPathSource instanceof EntityDomainType<?> entityDomainType ) {
 				return domainModel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
 			}
 			assert referencedPathSource instanceof SqmCteTable<?>;
@@ -256,13 +251,12 @@ public class SqmMappingModelHelper {
 			SqmPath<?> sqmPath,
 			SqmToSqlAstConverter converter) {
 		final SqmPath<?> parentPath = sqmPath.getLhs();
-		if ( parentPath instanceof SqmTreatedPath<?, ?> ) {
-			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) parentPath;
+		if ( parentPath instanceof SqmTreatedPath<?, ?> treatedPath ) {
 			final ManagedDomainType<?> treatTarget = treatedPath.getTreatTarget();
 			if ( treatTarget.getPersistenceType() == Type.PersistenceType.ENTITY ) {
 				return resolveEntityPersister(
 						( (EntityDomainType<?>) treatTarget ),
-						converter.getCreationContext().getSessionFactory()
+						converter.getCreationContext().getMappingMetamodel()
 				);
 			}
 		}

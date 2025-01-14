@@ -51,13 +51,13 @@ public class SqmEmptinessPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		pluralPath.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		pluralPath.appendHqlString( hql );
 		if ( isNegated() ) {
-			sb.append( " is not empty" );
+			hql.append( " is not empty" );
 		}
 		else {
-			sb.append( " is empty" );
+			hql.append( " is empty" );
 		}
 	}
 

@@ -32,6 +32,7 @@ import jakarta.persistence.MappedSuperclass;
 import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
 import static jakarta.persistence.InheritanceType.TABLE_PER_CLASS;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
+import static org.hibernate.boot.model.internal.PropertyBinder.hasIdAnnotation;
 
 /**
  * Some extra data to the inheritance position of a class.
@@ -274,19 +275,20 @@ public class InheritanceState {
 		for ( ClassDetails candidate = classDetails;
 				candidate != null && !Object.class.getName().equals( candidate.getName() );
 				candidate = candidate.getSuperClass() ) {
-			if ( candidate.hasDirectAnnotationUsage( Entity.class ) || candidate.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
+			if ( candidate.hasDirectAnnotationUsage( Entity.class )
+				|| candidate.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
 				for ( MethodDetails method : candidate.getMethods() ) {
 					if ( method.getMethodKind() != MethodDetails.MethodKind.GETTER ) {
 						continue;
 					}
 
-					if ( method.hasDirectAnnotationUsage( Id.class ) || method.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
+					if ( hasIdAnnotation( method ) ) {
 						return AccessType.PROPERTY;
 					}
 				}
 
 				for ( FieldDetails field : candidate.getFields() ) {
-					if ( field.hasDirectAnnotationUsage( Id.class ) || field.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
+					if ( hasIdAnnotation( field ) ) {
 						return AccessType.FIELD;
 					}
 				}

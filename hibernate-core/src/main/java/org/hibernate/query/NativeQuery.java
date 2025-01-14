@@ -82,6 +82,18 @@ import java.util.Map;
  *     {@link #addSynchronizedEntityName}, or
  *     {@link #addSynchronizedQuerySpace}.
  * </ul>
+ * <p>
+ * When the affected tables are not known to Hibernate, the behavior depends
+ * on whether Hibernate is operating in fully JPA-compliant mode.
+ * <ul>
+ * <li>In JPA-compliant mode, {@link FlushModeType#AUTO} specifies that the
+ *     session should be flushed before execution of a native query when the
+ *     affected tables are not known.
+ * <li>Otherwise, when Hibernate is not operating in JPA-compliant mode,
+ *     {@code AUTO} specifies that the session is <em>not</em> flushed before
+ *     execution of a native query, unless the affected tables are known and
+ *     Hibernate determines that a flush is required.
+ * </ul>
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -624,7 +636,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> addQueryHint(String hint);
 
 	@Override
-	NativeQuery<T> setMaxResults(int maxResult);
+	NativeQuery<T> setMaxResults(int maxResults);
 
 	@Override
 	NativeQuery<T> setFirstResult(int startPosition);

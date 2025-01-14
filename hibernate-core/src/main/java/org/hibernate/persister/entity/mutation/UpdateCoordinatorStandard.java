@@ -138,7 +138,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object nextVersion,
 			SharedSessionContractImplementor session) {
 		if ( versionUpdateGroup == null ) {
-			throw new HibernateException( "Cannot force version increment relative to sub-type; use the root type" );
+			throw new HibernateException( "Cannot force version increment relative to subtype; use the root type" );
 		}
 		doVersionUpdate( null, id, nextVersion, currentVersion, session );
 	}
@@ -151,7 +151,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			boolean batching,
 			SharedSessionContractImplementor session) {
 		if ( versionUpdateGroup == null ) {
-			throw new HibernateException( "Cannot force version increment relative to sub-type; use the root type" );
+			throw new HibernateException( "Cannot force version increment relative to subtype; use the root type" );
 		}
 		doVersionUpdate( null, id, nextVersion, currentVersion, batching, session );
 	}

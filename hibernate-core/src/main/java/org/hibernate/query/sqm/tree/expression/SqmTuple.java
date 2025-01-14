@@ -83,14 +83,14 @@ public class SqmTuple<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( '(' );
-		groupedExpressions.get( 0 ).appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( '(' );
+		groupedExpressions.get( 0 ).appendHqlString( hql );
 		for ( int i = 1; i < groupedExpressions.size(); i++ ) {
-			sb.append(", ");
-			groupedExpressions.get( i ).appendHqlString( sb );
+			hql.append(", ");
+			groupedExpressions.get( i ).appendHqlString( hql );
 		}
-		sb.append( ')' );
+		hql.append( ')' );
 	}
 
 	@Override

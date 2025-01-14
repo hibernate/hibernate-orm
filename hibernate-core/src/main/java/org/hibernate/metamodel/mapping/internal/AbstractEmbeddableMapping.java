@@ -203,8 +203,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		// We copy the attributes from the inverse mappings and replace the selection mappings
 		for ( int j = 0; j < size; j++ ) {
 			AttributeMapping attributeMapping = inverseMappingType.getAttributeMapping( j );
-			if ( attributeMapping instanceof BasicAttributeMapping ) {
-				final BasicAttributeMapping original = (BasicAttributeMapping) attributeMapping;
+			if ( attributeMapping instanceof BasicAttributeMapping original ) {
 				final SelectableMapping selectableMapping = selectableMappings.getSelectable( currentIndex );
 				attributeMapping = BasicAttributeMapping.withSelectableMapping(
 						declaringType,
@@ -216,8 +215,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				);
 				currentIndex++;
 			}
-			else if ( attributeMapping instanceof ToOneAttributeMapping ) {
-				final ToOneAttributeMapping original = (ToOneAttributeMapping) attributeMapping;
+			else if ( attributeMapping instanceof ToOneAttributeMapping original ) {
 				ForeignKeyDescriptor foreignKeyDescriptor = original.getForeignKeyDescriptor();
 				if ( foreignKeyDescriptor == null ) {
 					// This is expected to happen when processing a
@@ -311,8 +309,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					if ( selectable.isFormula() ) {
 						columnExpression = selectable.getTemplate(
 								dialect,
-								creationProcess.getCreationContext().getTypeConfiguration(),
-								creationProcess.getSqmFunctionRegistry()
+								creationProcess.getCreationContext().getTypeConfiguration()
 						);
 					}
 					else {
@@ -339,8 +336,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				final Integer temporalPrecision;
 				final boolean isLob;
 				final boolean nullable;
-				if ( selectable instanceof Column ) {
-					final Column column = (Column) selectable;
+				if ( selectable instanceof Column column ) {
 					columnDefinition = column.getSqlType();
 					length = column.getLength();
 					precision = column.getPrecision();
@@ -392,9 +388,8 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 
 				columnPosition++;
 			}
-			else if ( subtype instanceof AnyType ) {
+			else if ( subtype instanceof AnyType anyType ) {
 				final Any bootValueMapping = (Any) value;
-				final AnyType anyType = (AnyType) subtype;
 
 				final boolean nullable = bootValueMapping.isNullable();
 				final boolean insertable = value.isColumnInsertable( 0 );
@@ -428,8 +423,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						creationProcess
 				);
 			}
-			else if ( subtype instanceof CompositeType ) {
-				final CompositeType subCompositeType = (CompositeType) subtype;
+			else if ( subtype instanceof CompositeType subCompositeType ) {
 				final int columnSpan = subCompositeType.getColumnSpan( creationProcess.getCreationContext().getMetadata() );
 				final String subTableExpression;
 				final String[] subRootTableKeyColumnNames;

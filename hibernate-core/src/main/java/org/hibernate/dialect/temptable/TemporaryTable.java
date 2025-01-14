@@ -224,8 +224,7 @@ public class TemporaryTable implements Exportable, Contributable {
 								fkTarget.forEachSelectable(
 										(columnIndex, selection) -> {
 											final Selectable selectable = columnIterator.next();
-											if ( selectable instanceof Column ) {
-												final Column column = (Column) selectable;
+											if ( selectable instanceof Column column ) {
 												columns.add(
 														new TemporaryTableColumn(
 																temporaryTable,
@@ -277,12 +276,10 @@ public class TemporaryTable implements Exportable, Contributable {
 			BiConsumer<PluralAttributeMapping, String> consumer) {
 		attributeMapping.visitSubParts(
 				modelPart -> {
-					if ( modelPart instanceof PluralAttributeMapping ) {
-						final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) modelPart;
+					if ( modelPart instanceof PluralAttributeMapping pluralAttribute ) {
 						consumer.accept( pluralAttribute, attributeName + "." + pluralAttribute.getAttributeName() );
 					}
-					else if ( modelPart instanceof EmbeddedAttributeMapping ) {
-						final EmbeddedAttributeMapping embeddedAttribute = (EmbeddedAttributeMapping) modelPart;
+					else if ( modelPart instanceof EmbeddedAttributeMapping embeddedAttribute ) {
 						visitPluralAttributes(
 								embeddedAttribute,
 								attributeName + "." + embeddedAttribute.getAttributeName(),
@@ -404,8 +401,7 @@ public class TemporaryTable implements Exportable, Contributable {
 									attribute.forEachSelectable(
 											(columnIndex, selection) -> {
 												final Selectable selectable = columnIterator.next();
-												if ( selectable instanceof Column ) {
-													final Column column = (Column) selectable;
+												if ( selectable instanceof Column column ) {
 													columns.add(
 															new TemporaryTableColumn(
 																	temporaryTable,

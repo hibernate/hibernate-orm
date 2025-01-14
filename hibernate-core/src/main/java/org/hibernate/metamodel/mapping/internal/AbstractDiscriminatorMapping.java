@@ -137,7 +137,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 				resolveSqlExpression( navigablePath, jdbcMappingToUse, tableGroup, creationState ),
 				jdbcMappingToUse.getJdbcJavaType(),
 				fetchParent,
-				creationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+				creationState.getCreationContext().getTypeConfiguration()
 		);
 	}
 

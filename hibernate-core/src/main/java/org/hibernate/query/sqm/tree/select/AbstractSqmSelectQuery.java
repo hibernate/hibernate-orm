@@ -403,16 +403,16 @@ public abstract class AbstractSqmSelectQuery<T>
 		return this;
 	}
 
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql) {
 		if ( !cteStatements.isEmpty() ) {
-			sb.append( "with " );
+			hql.append( "with " );
 			for ( SqmCteStatement<?> value : cteStatements.values() ) {
-				value.appendHqlString( sb );
-				sb.append( ", " );
+				value.appendHqlString( hql );
+				hql.append( ", " );
 			}
-			sb.setLength( sb.length() - 2 );
+			hql.setLength( hql.length() - 2 );
 		}
-		sqmQueryPart.appendHqlString( sb );
+		sqmQueryPart.appendHqlString( hql );
 	}
 
 	@SuppressWarnings("unchecked")

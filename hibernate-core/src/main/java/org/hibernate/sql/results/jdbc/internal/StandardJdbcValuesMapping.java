@@ -115,10 +115,11 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 		}
 		final AssemblerCreationStateImpl creationState = new AssemblerCreationStateImpl(
 				this,
-				sessionFactory
+				sessionFactory.getSqlTranslationEngine()
 		);
 
-		DomainResultAssembler<?>[] domainResultAssemblers = resolveAssemblers( creationState ).toArray(new DomainResultAssembler[0]);
+		DomainResultAssembler<?>[] domainResultAssemblers =
+				resolveAssemblers( creationState ).toArray(new DomainResultAssembler[0]);
 		creationState.initializerMap.logInitializers();
 		return this.resolution = new JdbcValuesMappingResolutionImpl(
 				domainResultAssemblers,
@@ -148,7 +149,7 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 
 	private static class AssemblerCreationStateImpl implements AssemblerCreationState {
 		private final JdbcValuesMapping jdbcValuesMapping;
-		private final SessionFactoryImplementor sessionFactory;
+		private final SqlAstCreationContext sqlAstCreationContexty;
 		//custom Map<NavigablePath, Initializer>
 		private final NavigablePathMapToInitializer initializerMap = new NavigablePathMapToInitializer();
 		private final InitializersList.Builder initializerListBuilder = new InitializersList.Builder();
@@ -159,9 +160,9 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 
 		public AssemblerCreationStateImpl(
 				JdbcValuesMapping jdbcValuesMapping,
-				SessionFactoryImplementor sessionFactory) {
+				SqlAstCreationContext sqlAstCreationContexty) {
 			this.jdbcValuesMapping = jdbcValuesMapping;
-			this.sessionFactory = sessionFactory;
+			this.sqlAstCreationContexty = sqlAstCreationContexty;
 		}
 
 		@Override
@@ -256,7 +257,7 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 
 		@Override
 		public SqlAstCreationContext getSqlAstCreationContext() {
-			return sessionFactory;
+			return sqlAstCreationContexty;
 		}
 
 	}

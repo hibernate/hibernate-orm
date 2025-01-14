@@ -81,10 +81,10 @@ public class SqmModifiedSubQueryExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( modifier );
-		sb.append( " (" );
-		subQuery.appendHqlString( sb );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( modifier );
+		hql.append( " (" );
+		subQuery.appendHqlString( hql );
+		hql.append( ')' );
 	}
 }

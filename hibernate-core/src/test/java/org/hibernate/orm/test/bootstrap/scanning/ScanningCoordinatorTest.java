@@ -90,6 +90,7 @@ public class ScanningCoordinatorTest {
 		when( bootstrapContext.getMetadataBuildingOptions() ).thenReturn( metadataBuildingOptions );
 
 		when( serviceRegistry.requireService( ClassLoaderService.class ) ).thenReturn( classLoaderService );
+		when( bootstrapContext.getClassLoaderService() ).thenReturn( classLoaderService );
 
 		when( metadataBuildingOptions.isXmlMappingEnabled() ).thenReturn( true );
 

@@ -30,6 +30,7 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.DynamicModelJavaType;
 
 import static java.util.Collections.emptySet;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
@@ -43,7 +44,7 @@ public abstract class AbstractManagedType<J>
 		extends AbstractDomainType<J>
 		implements ManagedDomainType<J>, AttributeContainer<J>, Serializable {
 	private final String hibernateTypeName;
-	private final ManagedDomainType<? super J> superType;
+	private final ManagedDomainType<? super J> supertype;
 	private final RepresentationMode representationMode;
 	private final JpaMetamodelImplementor metamodel;
 
@@ -51,44 +52,49 @@ public abstract class AbstractManagedType<J>
 	private volatile Map<String, PluralPersistentAttribute<J, ?, ?>> declaredPluralAttributes ;
 	private volatile Map<String, PersistentAttribute<J, ?>> declaredConcreteGenericAttributes;
 
-	private final List<ManagedDomainType<? extends J>> subTypes = new ArrayList<>();
+	private final List<ManagedDomainType<? extends J>> subtypes = new ArrayList<>();
 
 	protected AbstractManagedType(
 			String hibernateTypeName,
 			JavaType<J> javaType,
-			ManagedDomainType<? super J> superType,
+			ManagedDomainType<? super J> supertype,
 			JpaMetamodelImplementor metamodel) {
 		super( javaType );
 		this.hibernateTypeName = hibernateTypeName;
-		this.superType = superType;
+		this.supertype = supertype;
 		this.metamodel = metamodel;
-		if ( superType != null ) {
-			superType.addSubType( this );
+		if ( supertype != null ) {
+			supertype.addSubType( this );
 		}
 
-		// todo (6.0) : need to handle RepresentationMode#MAP as well
-		this.representationMode = RepresentationMode.POJO;
+		representationMode = javaType instanceof DynamicModelJavaType
+				? RepresentationMode.MAP
+				: RepresentationMode.POJO;
 
-		this.inFlightAccess = createInFlightAccess();
+		inFlightAccess = createInFlightAccess();
 	}
 
 	protected InFlightAccess<J> createInFlightAccess() {
 		return new InFlightAccessImpl();
 	}
 
+	public JpaMetamodelImplementor getMetamodel() {
+		return metamodel;
+	}
+
 	@Override
 	public ManagedDomainType<? super J> getSuperType() {
-		return superType;
+		return supertype;
 	}
 
 	@Override
 	public Collection<? extends ManagedDomainType<? extends J>> getSubTypes() {
-		return subTypes;
+		return subtypes;
 	}
 
 	@Override
 	public void addSubType(ManagedDomainType<? extends J> subType){
-		subTypes.add( subType );
+		subtypes.add( subType );
 	}
 
 	@Override
@@ -150,49 +156,41 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	public PersistentAttribute<? super J,?> findAttribute(String name) {
-		// first look at declared attributes
 		final PersistentAttribute<J,?> attribute = findDeclaredAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
 		}
-
-		if ( getSuperType() != null ) {
-			return getSuperType().findAttributeInSuperTypes( name );
+		else {
+			return supertype != null ? supertype.findAttribute( name ) : null;
 		}
-
-		return null;
 	}
 
 	@Override
-	public PersistentAttribute<? super J, ?> findAttributeInSuperTypes(String name) {
-		final PersistentAttribute<J, ?> local = findDeclaredAttribute( name );
-		if ( local != null ) {
-			return local;
+	public final PersistentAttribute<? super J, ?> findAttributeInSuperTypes(String name) {
+		final PersistentAttribute<J, ?> attribute = findDeclaredAttribute( name );
+		if ( attribute != null ) {
+			return attribute;
 		}
-
-		if ( superType != null ) {
-			return superType.findAttributeInSuperTypes( name );
+		else {
+			return supertype != null ? supertype.findAttributeInSuperTypes( name ) : null;
 		}
-
-		return null;
 	}
 
 	@Override
 	public PersistentAttribute<?, ?> findSubTypesAttribute(String name) {
-		// first look at declared attributes
 		final PersistentAttribute<J,?> attribute = findDeclaredAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
 		}
-
-		for ( ManagedDomainType<? extends J> subType : subTypes ) {
-			final PersistentAttribute<?,?> subTypeAttribute = subType.findSubTypesAttribute( name );
-			if ( subTypeAttribute != null ) {
-				return subTypeAttribute;
+		else {
+			for ( ManagedDomainType<? extends J> subtype : subtypes ) {
+				final PersistentAttribute<?, ?> subTypeAttribute = subtype.findSubTypesAttribute( name );
+				if ( subTypeAttribute != null ) {
+					return subTypeAttribute;
+				}
 			}
+			return null;
 		}
-
-		return null;
 	}
 
 	@Override
@@ -202,13 +200,13 @@ public abstract class AbstractManagedType<J>
 		if ( attribute != null ) {
 			return attribute;
 		}
-
 		// next plural
-		if ( declaredPluralAttributes != null ) {
+		else if ( declaredPluralAttributes != null ) {
 			return declaredPluralAttributes.get( name );
 		}
-
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	@Override

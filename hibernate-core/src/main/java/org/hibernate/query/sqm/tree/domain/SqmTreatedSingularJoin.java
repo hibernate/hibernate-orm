@@ -119,12 +119,12 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "treat(" );
-		wrappedPath.appendHqlString( sb );
-		sb.append( " as " );
-		sb.append( treatTarget.getTypeName() );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "treat(" );
+		wrappedPath.appendHqlString( hql );
+		hql.append( " as " );
+		hql.append( treatTarget.getTypeName() );
+		hql.append( ')' );
 	}
 
 	@Override

@@ -91,14 +91,12 @@ public class AnnotatedColumn {
 	private String defaultValue;
 	private String generatedAs;
 
-//	private String comment;
 	private final List<CheckConstraint> checkConstraints = new ArrayList<>();
 
 	private AnnotatedColumns parent;
 
-	private String options;
-
-	private String comment;
+	String options;
+	String comment;
 
 	public AnnotatedColumns getParent() {
 		return parent;
@@ -1050,4 +1048,7 @@ public class AnnotatedColumn {
 		this.options = options;
 	}
 
+	void setComment(String comment){
+		this.comment = comment;
+	}
 }

@@ -201,10 +201,8 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 			mapping = returnTypeResolver.resolveFunctionReturnType(
 					() -> {
 						try {
-							final MappingMetamodelImplementor domainModel = walker.getCreationContext()
-									.getSessionFactory()
-									.getRuntimeMetamodels()
-									.getMappingMetamodel();
+							final MappingMetamodelImplementor domainModel =
+									walker.getCreationContext().getMappingMetamodel();
 							return (BasicValuedMapping) domainModel.resolveMappingExpressible(
 									getNodeType(),
 									walker.getFromClauseAccess()::getTableGroup

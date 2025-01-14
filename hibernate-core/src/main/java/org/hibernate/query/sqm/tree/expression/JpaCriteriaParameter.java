@@ -29,6 +29,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 public class JpaCriteriaParameter<T>
 		extends AbstractSqmExpression<T>
 		implements SqmParameter<T>, QueryParameterImplementor<T> {
+
 	private final String name;
 	private boolean allowsMultiValuedBinding;
 
@@ -49,10 +50,7 @@ public class JpaCriteriaParameter<T>
 	}
 
 	private static <T> SqmExpressible<T> toSqmType(BindableType<T> type, NodeBuilder nodeBuilder) {
-		if ( type == null ) {
-			return null;
-		}
-		return type.resolveExpressible( nodeBuilder );
+		return type == null ? null : type.resolveExpressible( nodeBuilder );
 	}
 
 	@Override
@@ -110,12 +108,7 @@ public class JpaCriteriaParameter<T>
 
 	@Override
 	public SqmParameter<T> copy() {
-		return new JpaCriteriaParameter<>(
-				getName(),
-				getAnticipatedType(),
-				allowMultiValuedBinding(),
-				nodeBuilder()
-		);
+		return new JpaCriteriaParameter<>( getName(), getAnticipatedType(), allowMultiValuedBinding(), nodeBuilder() );
 	}
 
 	@Override
@@ -145,9 +138,8 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( ':' );
-		sb.append( getName() );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( ':' ).append( getName() );
 	}
 
 	@Override
@@ -155,19 +147,20 @@ public class JpaCriteriaParameter<T>
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( o == null ) {
 			return false;
 		}
-		JpaCriteriaParameter<?> parameter = (JpaCriteriaParameter<?>) o;
-		return Objects.equals( name, parameter.name );
+		else if ( !(o instanceof JpaCriteriaParameter<?> that) ) {
+			return false;
+		}
+		else {
+			return Objects.equals( name, that.name );
+		}
 	}
 
 	@Override
 	public int hashCode() {
-		if ( name == null ) {
-			return super.hashCode();
-		}
-		return Objects.hash( name );
+		return name == null ? super.hashCode() : Objects.hash( name );
 	}
 
 	@Override

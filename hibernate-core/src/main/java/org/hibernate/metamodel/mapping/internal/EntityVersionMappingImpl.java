@@ -245,7 +245,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				sqlExpressionResolver.resolveSqlExpression( columnTableReference, this ),
 				versionBasicType.getJdbcJavaType(),
 				fetchParent,
-				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 
 		return new BasicFetch<>(
@@ -318,7 +318,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				sqlExpressionResolver.resolveSqlExpression( columnTableReference, this ),
 				versionBasicType.getJdbcJavaType(),
 				null,
-				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 	}
 

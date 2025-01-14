@@ -1492,7 +1492,7 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public void addPropertyAnnotatedWithMapsIdSpecj(
+		public void addInferredMapsIdProperty(
 				ClassDetails entityClassDetails,
 				PropertyData specJPropertyData,
 				String s) {
@@ -1606,7 +1606,7 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public void addPropertyReferencedAssociation(String s, String propertyName, String syntheticPropertyName) {
+		public void addPropertyReferencedAssociation(String entityName, String propertyName, String syntheticPropertyName) {
 
 		}
 

@@ -38,6 +38,7 @@ import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 
 import static org.hibernate.event.spi.EventType.AUTO_FLUSH;
@@ -122,6 +123,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 	}
 
 	@SafeVarargs
+	@AllowReflection // Possible array types are registered in org.hibernate.graalvm.internal.StaticClassLists.typesNeedingArrayCopy
 	private <T> T[] resolveListenerInstances(EventType<T> type, Class<? extends T>... listenerClasses) {
 		@SuppressWarnings("unchecked")
 		T[] listeners = (T[]) Array.newInstance( type.baseListenerInterface(), listenerClasses.length );

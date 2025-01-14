@@ -39,7 +39,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 	private final String fieldName;
 	private final NodeBuilder nodeBuilder;
 
-	private SqmExpressible<T> expressible;
+	private final SqmExpressible<T> expressible;
 
 	public SqmFieldLiteral(
 			Field field,
@@ -139,8 +139,8 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		SqmLiteral.appendHqlString( sb, getJavaTypeDescriptor(), getValue() );
+	public void appendHqlString(StringBuilder hql) {
+		SqmLiteral.appendHqlString( hql, getJavaTypeDescriptor(), getValue() );
 	}
 
 	@Override

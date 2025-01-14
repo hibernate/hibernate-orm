@@ -901,6 +901,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return a persistent instance or null
 	 *
 	 * @deprecated The semantics of this method may change in a future release.
+	 *             Use {@link SessionFactory#createGraphForDynamicEntity(String)}
+	 *             together with {@link #find(EntityGraph, Object, FindOption...)}
+	 *             to load {@link org.hibernate.metamodel.RepresentationMode#MAP
+	 *             dynamic entities}.
+	 *
+	 * @see SessionFactory#createGraphForDynamicEntity(String)
+	 * @see #find(EntityGraph, Object, FindOption...)
 	 */
 	@Deprecated(since = "7")
 	Object get(String entityName, Object id);
@@ -1245,8 +1252,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	LobHelper getLobHelper();
 
 	/**
-	 * Obtain a {@link Session} builder with the ability to copy certain information
-	 * from this session.
+	 * Obtain a {@link Session} builder with the ability to copy certain
+	 * information from this session.
 	 *
 	 * @return the session builder
 	 */
@@ -1259,15 +1266,66 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 */
 	void addEventListeners(SessionEventListener... listeners);
 
+	/**
+	 * Create a new mutable instance of {@link EntityGraph}, with only
+	 * a root node, allowing programmatic definition of the graph from
+	 * scratch.
+	 *
+	 * @param rootType The root entity of the graph
+	 *
+	 * @see #find(EntityGraph, Object, FindOption...)
+	 * @see org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, org.hibernate.graph.GraphSemantic)
+	 * @see org.hibernate.graph.EntityGraphs#createGraph(jakarta.persistence.metamodel.EntityType)
+	 */
 	@Override
 	<T> RootGraph<T> createEntityGraph(Class<T> rootType);
 
+	/**
+	 * Create a new mutable instance of {@link EntityGraph}, based on
+	 * a predefined {@linkplain jakarta.persistence.NamedEntityGraph
+	 * named entity graph}, allowing customization of the graph, or
+	 * return {@code null} if there is no predefined graph with the
+	 * given name.
+	 *
+	 * @param graphName The name of the predefined named entity graph
+	 *
+	 * @apiNote This method returns {@code RootGraph<?>}, requiring an
+	 * unchecked typecast before use. It's cleaner to obtain a graph using
+	 * {@link #createEntityGraph(Class, String)} instead.
+	 *
+	 * @see #find(EntityGraph, Object, FindOption...)
+	 * @see org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, org.hibernate.graph.GraphSemantic)
+	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
+	 */
 	@Override
 	RootGraph<?> createEntityGraph(String graphName);
 
+	/**
+	 * Obtain an immutable reference to a predefined
+	 * {@linkplain jakarta.persistence.NamedEntityGraph named entity graph}
+	 * or return {@code null} if there is no predefined graph with the given
+	 * name.
+	 *
+	 * @param graphName The name of the predefined named entity graph
+	 *
+	 * @apiNote This method returns {@code RootGraph<?>}, requiring an
+	 * unchecked typecast before use. It's cleaner to obtain a graph using
+	 * the static metamodel for the class which defines the graph, or by
+	 * calling {@link SessionFactory#getNamedEntityGraphs(Class)} instead.
+	 *
+	 * @see #find(EntityGraph, Object, FindOption...)
+	 * @see org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, org.hibernate.graph.GraphSemantic)
+	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
+	 */
 	@Override
 	RootGraph<?> getEntityGraph(String graphName);
 
+	/**
+	 * Retrieve all named {@link EntityGraph}s with the given root entity type.
+	 *
+	 * @see jakarta.persistence.EntityManagerFactory#getNamedEntityGraphs(Class)
+	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
+	 */
 	@Override
 	<T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass);
 

@@ -15,12 +15,12 @@ import java.util.function.Supplier;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheLayout;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -44,7 +44,11 @@ import static org.hibernate.mapping.MappingHelper.createUserTypeBean;
  *
  * @author Gavin King
  */
-public abstract class Collection implements Fetchable, Value, Filterable, SoftDeletable {
+public abstract sealed class Collection
+		implements Fetchable, Value, Filterable, SoftDeletable
+		permits Set, Bag,
+				IndexedCollection, // List, Map
+				IdentifierCollection { // IdentifierBag only built-in implementation
 
 	public static final String DEFAULT_ELEMENT_COLUMN_NAME = "elt";
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";
@@ -228,7 +232,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		if ( comparator == null && comparatorClassName != null ) {
 			@SuppressWarnings("rawtypes")
 			final Class<? extends Comparator> clazz =
-					classForName( Comparator.class, comparatorClassName, getMetadata() );
+					classForName( Comparator.class, comparatorClassName, getBuildingContext().getBootstrapContext() );
 			try {
 				comparator = clazz.getConstructor().newInstance();
 			}
@@ -373,14 +377,6 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 		this.fetchMode = fetchMode;
 	}
 
-	/**
-	 * @deprecated use {@link #validate(MappingContext)}
-	 */
-	@Deprecated(since = "7.0")
-	public void validate(Mapping mapping) throws MappingException {
-		validate( (MappingContext) mapping);
-	}
-
 	public void validate(MappingContext mappingContext) throws MappingException {
 		assert getKey() != null : "Collection key not bound : " + getRole();
 		assert getElement() != null : "Collection element not bound : " + getRole();
@@ -476,11 +472,14 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 	}
 
 	private ManagedBean<? extends UserCollectionType> userTypeBean() {
-		final MetadataImplementor metadata = getMetadata();
-		return createUserTypeBean( role,
-				classForName( UserCollectionType.class, typeName, metadata ),
+		final BootstrapContext bootstrapContext = getBuildingContext().getBootstrapContext();
+		return createUserTypeBean(
+				role,
+				classForName( UserCollectionType.class, typeName, bootstrapContext ),
 				PropertiesHelper.map( typeParameters ),
-				metadata );
+				bootstrapContext,
+				getMetadata().getMetadataBuildingOptions().isAllowExtensionsInCdi()
+		);
 	}
 
 	public CollectionType getCollectionType() {

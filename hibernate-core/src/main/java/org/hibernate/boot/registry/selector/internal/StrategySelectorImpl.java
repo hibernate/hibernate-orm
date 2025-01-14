@@ -106,7 +106,7 @@ public class StrategySelectorImpl implements StrategySelector {
 			Class<T> strategy,
 			Object strategyReference,
 			Callable<T> defaultResolver) {
-		return (T) resolveStrategy( strategy, strategyReference, defaultResolver, (StrategyCreator<T>) STANDARD_STRATEGY_CREATOR );
+		return resolveStrategy( strategy, strategyReference, defaultResolver, (StrategyCreator<T>) STANDARD_STRATEGY_CREATOR );
 	}
 
 	@Override

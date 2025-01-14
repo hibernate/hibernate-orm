@@ -107,7 +107,6 @@ import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
 import org.hibernate.type.ComponentType;
-import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -272,9 +271,8 @@ public class ToOneAttributeMapping
 				declaringEntityPersister,
 				navigableRole
 		);
-		if ( bootValue instanceof ManyToOne ) {
-			final ManyToOne manyToOne = (ManyToOne) bootValue;
-			this.notFoundAction = ( (ManyToOne) bootValue ).getNotFoundAction();
+		if ( bootValue instanceof ManyToOne manyToOne ) {
+			this.notFoundAction = manyToOne.getNotFoundAction();
 			if ( manyToOne.isLogicalOneToOne() ) {
 				cardinality = Cardinality.LOGICAL_ONE_TO_ONE;
 			}
@@ -368,7 +366,7 @@ public class ToOneAttributeMapping
 					isKeyTableNullable = declaringEntityPersister.isNullableTable( tableIndex );
 				}
 			}
-			isOptional = ( (ManyToOne) bootValue ).isIgnoreNotFound();
+			isOptional = manyToOne.isIgnoreNotFound();
 			isInternalLoadNullable = ( isNullable && bootValue.isForeignKeyEnabled() ) || hasNotFoundAction();
 		}
 		else {
@@ -591,8 +589,7 @@ public class ToOneAttributeMapping
 					return bidirectionalAttributeName;
 				}
 			}
-			if ( value instanceof Collection ) {
-				final Collection collection = (Collection) value;
+			if ( value instanceof Collection collection ) {
 				if ( propertyPath.equals( collection.getMappedByProperty() )
 						&& collection.getElement().getType().getName()
 						.equals( declaringType.getJavaType().getTypeName() ) ) {
@@ -625,8 +622,7 @@ public class ToOneAttributeMapping
 					return bidirectionalAttributeName;
 				}
 			}
-			else if ( value instanceof OneToOne ) {
-				final OneToOne oneToOne = (OneToOne) value;
+			else if ( value instanceof OneToOne oneToOne ) {
 				if (declaringTableGroupProducer.getNavigableRole().getLocalName().equals( oneToOne.getReferencedEntityName() )
 				&& propertyPath.equals( oneToOne.getMappedByProperty() )
 						&& oneToOne.getReferencedEntityName()
@@ -768,8 +764,7 @@ public class ToOneAttributeMapping
 		if ( prefix != null ) {
 			targetKeyPropertyNames.add( prefix );
 		}
-		if ( type instanceof ComponentType ) {
-			final CompositeType componentType = (CompositeType) type;
+		if ( type instanceof ComponentType componentType ) {
 			final String[] propertyNames = componentType.getPropertyNames();
 			final Type[] componentTypeSubtypes = componentType.getSubtypes();
 			for ( int i = 0, propertyNamesLength = propertyNames.length; i < propertyNamesLength; i++ ) {
@@ -783,9 +778,9 @@ public class ToOneAttributeMapping
 				addPrefixedPropertyNames( targetKeyPropertyNames, newPrefix, componentTypeSubtypes[i], factory );
 			}
 		}
-		else if ( type instanceof EntityType ) {
-			final EntityType entityType = (EntityType) type;
-			final Type identifierOrUniqueKeyType = entityType.getIdentifierOrUniqueKeyType( factory );
+		else if ( type instanceof EntityType entityType ) {
+			final Type identifierOrUniqueKeyType =
+					entityType.getIdentifierOrUniqueKeyType( factory.getRuntimeMetamodels() );
 			final String propertyName;
 			if ( entityType.isReferenceToPrimaryKey() ) {
 				propertyName = entityType.getAssociatedEntityPersister( factory ).getIdentifierPropertyName();
@@ -1116,8 +1111,7 @@ public class ToOneAttributeMapping
 				otherSideMappedBy = "biologicalChild"
 
 			 */
-			if ( parentModelPart instanceof ToOneAttributeMapping ) {
-				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) parentModelPart;
+			if ( parentModelPart instanceof ToOneAttributeMapping toOneAttributeMapping ) {
 				if ( toOneAttributeMapping.bidirectionalAttributePath != null ) {
 					return toOneAttributeMapping.isBidirectionalAttributeName(
 							fetchablePath,
@@ -1923,9 +1917,8 @@ public class ToOneAttributeMapping
 		if ( cardinality == Cardinality.LOGICAL_ONE_TO_ONE && bidirectionalAttributePath != null ) {
 			final ModelPart bidirectionalModelPart = entityMappingType.findByPath( bidirectionalAttributePath );
 			// Add the inverse association key side as well to be able to resolve to a CircularFetch
-			if ( bidirectionalModelPart instanceof ToOneAttributeMapping ) {
+			if ( bidirectionalModelPart instanceof ToOneAttributeMapping bidirectionalAttribute ) {
 				assert bidirectionalModelPart.getPartMappingType() == declaringTableGroupProducer;
-				final ToOneAttributeMapping bidirectionalAttribute = (ToOneAttributeMapping) bidirectionalModelPart;
 				final AssociationKey secondKey = bidirectionalAttribute.getForeignKeyDescriptor().getAssociationKey();
 				if ( creationState.registerVisitedAssociationKey( secondKey ) ) {
 					additionalAssociationKey = secondKey;

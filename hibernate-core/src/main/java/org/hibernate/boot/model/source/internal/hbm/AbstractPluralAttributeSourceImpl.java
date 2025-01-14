@@ -96,8 +96,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 						.filter( (JaxbHbmRootEntityType entityType) -> childClass.equals( entityType.getName() ) )
 						.flatMap( jaxbHbmRootEntityType -> jaxbHbmRootEntityType.getAttributes().stream() )
 						.filter( attribute -> {
-							if ( attribute instanceof JaxbHbmManyToOneType ) {
-								JaxbHbmManyToOneType manyToOneType = (JaxbHbmManyToOneType) attribute;
+							if ( attribute instanceof JaxbHbmManyToOneType manyToOneType ) {
 								String manyToOneTypeClass = manyToOneType.getClazz();
 								String containerClass = container.getAttributeRoleBase().getFullPath();
 								// Consider many to ones that have no class defined or equal the owner class of the one to many

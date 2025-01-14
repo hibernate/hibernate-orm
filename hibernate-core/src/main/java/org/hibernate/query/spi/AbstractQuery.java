@@ -158,8 +158,8 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public QueryImplementor<R> setMaxResults(int maxResult) {
-		super.setMaxResults( maxResult );
+	public QueryImplementor<R> setMaxResults(int maxResults) {
+		super.setMaxResults( maxResults );
 		return this;
 	}
 

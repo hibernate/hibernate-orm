@@ -25,15 +25,17 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
-import org.hibernate.id.ExportableColumn;
+import org.hibernate.mapping.Column;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Table;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 
+import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.LockMode.PESSIMISTIC_WRITE;
@@ -320,11 +322,15 @@ public class TableStructure implements DatabaseStructure {
 
 		valueColumnNameText = logicalValueColumnNameIdentifier.render( database.getJdbcEnvironment().getDialect() );
 		if ( tableCreated ) {
-			final ExportableColumn valueColumn = new ExportableColumn(
+			final TypeConfiguration typeConfiguration = database.getTypeConfiguration();
+			final BasicType<Long> type = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.LONG );
+			final Column valueColumn = ExportableColumnHelper.column(
 					database,
 					table,
 					valueColumnNameText,
-					database.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.LONG )
+					type,
+					typeConfiguration.getDdlTypeRegistry()
+							.getTypeName( type.getJdbcType().getDdlTypeCode(), database.getDialect() )
 			);
 
 			table.addColumn( valueColumn );

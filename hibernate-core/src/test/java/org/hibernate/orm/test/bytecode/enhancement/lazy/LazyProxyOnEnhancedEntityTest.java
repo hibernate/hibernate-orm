@@ -60,7 +60,7 @@ public class LazyProxyOnEnhancedEntityTest {
 
 	@Test
 	public void test(SessionFactoryScope scope) {
-		EventListenerRegistry registry = scope.getSessionFactory().getServiceRegistry().getService( EventListenerRegistry.class );
+		EventListenerRegistry registry = scope.getSessionFactory().getEventListenerRegistry();
 		registry.prependListeners( EventType.LOAD, new ImmediateLoadTrap() );
 
 		scope.inTransaction( em -> {

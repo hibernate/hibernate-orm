@@ -100,7 +100,7 @@ public class SpecialOneToOneType extends OneToOneType {
 								getAssociatedEntityName()
 				);
 			}
-			return getIdentifierType( sessionFactory ).disassemble( id, sessionFactory );
+			return getIdentifierType( sessionFactory.getRuntimeMetamodels() ).disassemble( id, sessionFactory );
 		}
 	}
 

@@ -55,7 +55,7 @@ public abstract class AbstractArrayFillFunction extends AbstractSqmSelfRendering
 						: null;
 			}
 			else {
-				return converter.getCreationContext().getSessionFactory().getTypeConfiguration().getBasicTypeRegistry()
+				return converter.getCreationContext().getTypeConfiguration().getBasicTypeRegistry()
 						.getRegisteredType( Integer.class );
 			}
 		}

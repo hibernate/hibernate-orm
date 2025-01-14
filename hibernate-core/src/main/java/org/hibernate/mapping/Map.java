@@ -19,7 +19,7 @@ import org.hibernate.usertype.UserCollectionType;
  * A mapping model object representing a collection of type {@link java.util.Map}.
  * A map has a primary key consisting of the key columns + index columns.
  */
-public class Map extends IndexedCollection {
+public non-sealed class Map extends IndexedCollection {
 
 	private String mapKeyPropertyName;
 	private boolean hasMapKeyProperty;

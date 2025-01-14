@@ -75,9 +75,9 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( ':' );
-		sb.append( getName() );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( ':' );
+		hql.append( getName() );
 	}
 
 	@Override

@@ -8,7 +8,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -52,7 +51,6 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 	private final EmbeddableMappingType representationEmbeddable;
 	private final EmbeddableInstantiator embeddableInstantiator;
 	private final @Nullable InitializerParent<?> parent;
-	private final SessionFactoryImplementor sessionFactory;
 	private final boolean isResultInitializer;
 
 	private final DomainResultAssembler<?>[] assemblers;
@@ -123,8 +121,6 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 		this.representationEmbeddable = embedded.getMappedIdEmbeddableTypeDescriptor();
 		this.embeddableInstantiator = representationEmbeddable.getRepresentationStrategy().getInstantiator();
 		this.hasIdClass = embedded.hasContainingClass() && virtualIdEmbeddable != representationEmbeddable;
-
-		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
 
 		final int size = virtualIdEmbeddable.getNumberOfFetchables();
 		final DomainResultAssembler<?>[] assemblers = new DomainResultAssembler[size];
@@ -387,9 +383,8 @@ public class NonAggregatedIdentifierMappingInitializer extends AbstractInitializ
 				if ( hasIdClass ) {
 					final AttributeMapping virtualIdAttribute = virtualIdEmbeddable.getAttributeMapping( i );
 					final AttributeMapping mappedIdAttribute = representationEmbeddable.getAttributeMapping( i );
-					if ( virtualIdAttribute instanceof ToOneAttributeMapping
-							&& !( mappedIdAttribute instanceof ToOneAttributeMapping ) ) {
-						final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) virtualIdAttribute;
+					if ( virtualIdAttribute instanceof ToOneAttributeMapping toOneAttributeMapping
+						&& !( mappedIdAttribute instanceof ToOneAttributeMapping ) ) {
 						final ForeignKeyDescriptor fkDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
 						final Object associationKey = fkDescriptor.getAssociationKeyFromSide(
 								data.virtualIdState[i],

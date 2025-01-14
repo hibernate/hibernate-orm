@@ -243,8 +243,7 @@ public class SingularAttributeImpl<D,J>
 			if ( parent.getResolvedModel() instanceof PluralPersistentAttribute<?, ?, ?> ) {
 				navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
 			}
-			if ( getDeclaringType() instanceof IdentifiableDomainType<?> ) {
-				final IdentifiableDomainType<?> declaringType = (IdentifiableDomainType<?>) getDeclaringType();
+			if ( getDeclaringType() instanceof IdentifiableDomainType<?> declaringType ) {
 				if ( !declaringType.hasSingleIdAttribute() ) {
 					return new EntityIdentifierNavigablePath( navigablePath, null )
 							.append( getName(), SqmCreationHelper.determineAlias( alias ) );

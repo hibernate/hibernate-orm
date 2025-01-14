@@ -55,7 +55,8 @@ public class JpaEventListenerTests {
 		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		assert classLoaderService != null;
 
-		final MetadataBuilderImpl.MetadataBuildingOptionsImpl options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
+		final MetadataBuilderImpl.MetadataBuildingOptionsImpl options =
+				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
 		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl( serviceRegistry, options );
 		options.setBootstrapContext( bootstrapContext );
 		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, options );

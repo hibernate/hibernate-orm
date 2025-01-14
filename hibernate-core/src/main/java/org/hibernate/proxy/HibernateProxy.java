@@ -28,8 +28,7 @@ public interface HibernateProxy extends Serializable, PrimeAmongSecondarySuperty
 	 *         object is a proxy, or {@code null} otherwise.
 	 */
 	static @Nullable LazyInitializer extractLazyInitializer(final @Nullable Object object) {
-		if ( object instanceof PrimeAmongSecondarySupertypes ) {
-			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) object;
+		if ( object instanceof PrimeAmongSecondarySupertypes t ) {
 			final HibernateProxy hibernateProxy = t.asHibernateProxy();
 			if ( hibernateProxy != null ) {
 				return hibernateProxy.getHibernateLazyInitializer();

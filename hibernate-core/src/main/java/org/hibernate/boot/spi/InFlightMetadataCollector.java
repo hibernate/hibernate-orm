@@ -330,7 +330,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 
 	PropertyData getPropertyAnnotatedWithMapsId(ClassDetails persistentClassDetails, String propertyName);
 	void addPropertyAnnotatedWithMapsId(ClassDetails entityClassDetails, PropertyData propertyAnnotatedElement);
-	void addPropertyAnnotatedWithMapsIdSpecj(ClassDetails entityClassDetails, PropertyData specJPropertyData, String s);
+	void addInferredMapsIdProperty(ClassDetails entityClassDetails, PropertyData specJPropertyData, String s);
 
 	void addToOneAndIdProperty(ClassDetails entityClassDetails, PropertyData propertyAnnotatedElement);
 	PropertyData getPropertyAnnotatedWithIdAndToOne(ClassDetails persistentClassDetails, String propertyName);
@@ -365,7 +365,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	void addPropertyReference(String entityName, String propertyName);
 	void addUniquePropertyReference(String entityName, String propertyName);
 
-	void addPropertyReferencedAssociation(String s, String propertyName, String syntheticPropertyName);
+	void addPropertyReferencedAssociation(String entityName, String propertyName, String syntheticPropertyName);
 	String getPropertyReferencedAssociation(String entityName, String mappedBy);
 
 	void addMappedBy(String name, String mappedBy, String propertyName);

@@ -61,10 +61,10 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "size(" );
-		pluralPath.appendHqlString( sb );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "size(" );
+		pluralPath.appendHqlString( hql );
+		hql.append( ')' );
 	}
 
 }

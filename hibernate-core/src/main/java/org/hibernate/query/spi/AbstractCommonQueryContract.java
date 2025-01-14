@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.FlushMode;
+import org.hibernate.Internal;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -635,7 +636,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter binding handling
 
-	protected abstract QueryParameterBindings getQueryParameterBindings();
+	@Internal // Made public to work around this bug: https://bugs.openjdk.org/browse/JDK-8340443
+	public abstract QueryParameterBindings getQueryParameterBindings();
 	protected abstract boolean resolveJdbcParameterTypeIfNecessary();
 
 	protected <P> QueryParameterBinding<P> locateBinding(Parameter<P> parameter) {
@@ -765,7 +767,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 
 	private boolean isInstance(BindableType<?> parameterType, Object value) {
-		final SqmExpressible<?> sqmExpressible = parameterType.resolveExpressible( getSession().getFactory() );
+		final SqmExpressible<?> sqmExpressible =
+				parameterType.resolveExpressible( getSession().getFactory().getQueryEngine().getCriteriaBuilder() );
 		assert sqmExpressible != null;
 
 		return sqmExpressible.getExpressibleJavaType().isInstance( value );
@@ -789,10 +792,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				paramType = basicType;
 			}
 			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
+				final ManagedDomainType<P> managedDomainType =
+						getSession().getFactory().getJpaMetamodel()
+								.managedType( javaType );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
@@ -873,10 +875,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				paramType = basicType;
 			}
 			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
+				final ManagedDomainType<P> managedDomainType =
+						getSession().getFactory().getJpaMetamodel()
+								.managedType( javaType );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
@@ -929,10 +930,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				paramType = basicType;
 			}
 			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
+				final ManagedDomainType<P> managedDomainType =
+						getSession().getFactory().getJpaMetamodel()
+								.managedType( javaType );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
@@ -1048,10 +1048,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				paramType = basicType;
 			}
 			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
+				final ManagedDomainType<P> managedDomainType =
+						getSession().getFactory().getJpaMetamodel()
+								.managedType( javaType );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
@@ -1095,10 +1094,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				paramType = basicType;
 			}
 			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
+				final ManagedDomainType<P> managedDomainType =
+						getSession().getFactory().getJpaMetamodel()
+								.managedType( javaType );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
@@ -1140,10 +1138,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				paramType = basicType;
 			}
 			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
+				final ManagedDomainType<P> managedDomainType =
+						getSession().getFactory().getJpaMetamodel()
+								.managedType( javaType );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
@@ -1186,10 +1183,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				paramType = basicType;
 			}
 			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
+				final ManagedDomainType<P> managedDomainType =
+						getSession().getFactory().getJpaMetamodel()
+								.managedType( javaType );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
@@ -1233,10 +1229,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				paramType = basicType;
 			}
 			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
+				final ManagedDomainType<P> managedDomainType =
+						getSession().getFactory().getJpaMetamodel()
+								.managedType( javaType );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
@@ -1279,10 +1274,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				paramType = basicType;
 			}
 			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
+				final ManagedDomainType<P> managedDomainType =
+						getSession().getFactory().getJpaMetamodel()
+								.managedType( javaType );
 				if ( managedDomainType != null ) {
 					paramType = managedDomainType;
 				}
@@ -1345,10 +1339,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		final Class<?> clazz = bean.getClass();
 		for ( String paramName : getParameterMetadata().getNamedParameterNames() ) {
 			try {
-				final PropertyAccess propertyAccess = BuiltInPropertyAccessStrategies.BASIC.getStrategy().buildPropertyAccess(
-						clazz,
-						paramName,
-						true );
+				final PropertyAccess propertyAccess =
+						BuiltInPropertyAccessStrategies.BASIC.getStrategy()
+								.buildPropertyAccess( clazz, paramName, true );
 				final Getter getter = propertyAccess.getGetter();
 				final Class<?> retType = getter.getReturnTypeClass();
 				final Object object = getter.get( bean );

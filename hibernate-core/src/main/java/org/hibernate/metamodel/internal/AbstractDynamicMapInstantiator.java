@@ -21,7 +21,7 @@ public abstract class AbstractDynamicMapInstantiator implements Instantiator {
 
 	public AbstractDynamicMapInstantiator(String roleName) {
 		if ( roleName == null ) {
-			throw new IllegalArgumentException( "`roleName` passed to dynamic-map instantiator cannot be null" );
+			throw new IllegalArgumentException( "Role name passed to dynamic map instantiator cannot be null" );
 		}
 		this.roleName = roleName;
 	}
@@ -32,12 +32,9 @@ public abstract class AbstractDynamicMapInstantiator implements Instantiator {
 
 	@Override
 	public boolean isInstance(Object object) {
-		if ( object instanceof Map<?,?> map ) {
-			return isSameRole( (String) map.get( TYPE_KEY ) );
-		}
-
-		// todo (6.0) : should this be an exception instead?
-		return false;
+		return object instanceof Map<?, ?> map
+			&& isSameRole( (String) map.get( TYPE_KEY ) );
+		// todo (6.0) : should this be an exception if there is no TYPE_KEY
 	}
 
 	protected boolean isSameRole(String type) {
@@ -49,10 +46,8 @@ public abstract class AbstractDynamicMapInstantiator implements Instantiator {
 		return isInstance( object );
 	}
 
-	@SuppressWarnings("rawtypes")
-	protected Map generateDataMap() {
-		final Map map = new HashMap();
-		//noinspection unchecked
+	protected Map<String,?> generateDataMap() {
+		final Map<String,Object> map = new HashMap<>();
 		map.put( TYPE_KEY, roleName );
 		return map;
 	}

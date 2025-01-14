@@ -6,6 +6,7 @@ package org.hibernate.type.descriptor.converter.internal;
 
 import java.lang.reflect.Array;
 
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -18,6 +19,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @param <T> the unconverted array type
  * @param <S> the converted array type
  */
+@AllowReflection
 public class ArrayConverter<T, S, E, F> implements BasicValueConverter<T, S> {
 
 	private final BasicValueConverter<E, F> elementConverter;

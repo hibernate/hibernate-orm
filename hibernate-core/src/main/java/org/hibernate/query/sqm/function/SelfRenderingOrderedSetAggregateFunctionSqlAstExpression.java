@@ -22,7 +22,8 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
  *
  * @author Christian Beikov
  */
-public class SelfRenderingOrderedSetAggregateFunctionSqlAstExpression extends SelfRenderingAggregateFunctionSqlAstExpression
+public class SelfRenderingOrderedSetAggregateFunctionSqlAstExpression<T>
+		extends SelfRenderingAggregateFunctionSqlAstExpression<T>
 		implements OrderedSetAggregateFunctionExpression {
 
 	private final List<SortSpecification> withinGroup;
@@ -33,7 +34,7 @@ public class SelfRenderingOrderedSetAggregateFunctionSqlAstExpression extends Se
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			List<SortSpecification> withinGroup,
-			ReturnableType<?> type,
+			ReturnableType<T> type,
 			JdbcMappingContainer expressible) {
 		super( functionName, renderer, sqlAstArguments, filter, type, expressible );
 		this.withinGroup = withinGroup;

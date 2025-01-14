@@ -139,7 +139,6 @@ import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
@@ -2270,8 +2269,7 @@ public class ModelBinder {
 			return resolution.getLegacyResolvedBasicType();
 		}
 		else {
-			final ClassLoaderService classLoaderService =
-					bootstrapContext.getServiceRegistry().requireService( ClassLoaderService.class );
+			final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
 			try {
 				final Object typeInstance = typeInstance( typeName, classLoaderService.classForName( typeName ) );
 
@@ -2309,8 +2307,7 @@ public class ModelBinder {
 		}
 		else {
 			final String beanName = typeName + ":" + TypeDefinition.NAME_COUNTER.getAndIncrement();
-			return metadataBuildingContext.getBootstrapContext()
-					.getServiceRegistry().requireService( ManagedBeanRegistry.class )
+			return metadataBuildingContext.getBootstrapContext().getManagedBeanRegistry()
 					.getBean( beanName, typeJavaType ).getBeanInstance();
 		}
 	}
@@ -2537,8 +2534,7 @@ public class ModelBinder {
 						}
 						else {
 							compositeUserType = (CompositeUserType<?>) sourceDocument.getBootstrapContext()
-									.getServiceRegistry()
-									.requireService( ManagedBeanRegistry.class )
+									.getManagedBeanRegistry()
 									.getBean( componentClass )
 									.getBeanInstance();
 						}
@@ -2655,7 +2651,7 @@ public class ModelBinder {
 				throw new AssertionFailure(
 						String.format(
 								Locale.ENGLISH,
-								"Unexpected AttributeSource sub-type [%s] as part of composite [%s]",
+								"Unexpected AttributeSource subtype [%s] as part of composite [%s]",
 								attributeSource.getClass().getName(),
 								attributeSource.getAttributeRole().getFullPath()
 						)

@@ -229,6 +229,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.criteria.Nulls;
 
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.persister.entity.DiscriminatorHelper.jdbcLiteral;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.DIVIDE_PORTABLE;
 import static org.hibernate.query.common.TemporalUnit.DAY;
@@ -859,9 +860,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private JdbcValuesMappingProducer buildJdbcValuesMappingProducer(SelectStatement selectStatement) {
-		return getSessionFactory()
-				.getFastSessionServices()
-				.getJdbcValuesMappingProducerProvider()
+		return getSessionFactory().getJdbcValuesMappingProducerProvider()
 				.buildMappingProducer( selectStatement, getSessionFactory() );
 	}
 
@@ -6667,7 +6666,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			countQuery.setHavingClauseRestrictions( querySpec.getHavingClauseRestrictions() );
 			countQuery.getSelectClause().addSqlSelection(
 					new SqlSelectionImpl(
-							new SelfRenderingAggregateFunctionSqlAstExpression(
+							new SelfRenderingAggregateFunctionSqlAstExpression<>(
 									"count",
 									(sqlAppender, sqlAstArguments, returnType, walker) -> sqlAppender.append( "count(*)" ),
 									List.of( Star.INSTANCE ),
@@ -7305,9 +7304,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			duration.getMagnitude().accept( this );
 			// Convert to NANOSECOND because DurationJavaType requires values in that unit
-			appendSql(
-					duration.getUnit().conversionFactor( NANOSECOND, dialect )
-			);
+			appendSql( duration.getUnit().conversionFactor( NANOSECOND, dialect ) );
 		}
 	}
 
@@ -7352,11 +7349,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitConversion(Conversion conversion) {
 		final Duration duration = conversion.getDuration();
 		duration.getMagnitude().accept( this );
-		appendSql(
-				duration.getUnit().conversionFactor(
-						conversion.getUnit(), dialect
-				)
-		);
+		appendSql( duration.getUnit().conversionFactor( conversion.getUnit(), dialect ) );
 	}
 
 	@Override
@@ -7379,7 +7372,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		appendSql( "case" );
 		final SqlAstNodeRenderingMode original = this.parameterRenderingMode;
 		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
-			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
+			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS
+					&& original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 			}
 			appendSql( " when " );
@@ -7407,7 +7401,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		for ( int i = 0; i < caseNumber; i++ ) {
 			final CaseSearchedExpression.WhenFragment whenFragment = whenFragments.get( i );
 			Predicate predicate = whenFragment.getPredicate();
-			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
+			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS
+					&& original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 			}
 			if ( i != 0 ) {
@@ -7568,12 +7563,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				throw new IllegalArgumentException( "Can't render parameter as literal, no literal formatter found" );
 			}
 			else {
-				literalFormatter.appendJdbcLiteral(
-						this,
-						literalValue,
-						dialect,
-						getWrapperOptions()
-				);
+				literalFormatter.appendJdbcLiteral( this, literalValue, dialect, getWrapperOptions() );
 			}
 		}
 	}
@@ -7625,13 +7615,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// Most databases do not support boolean expressions in a predicate context, so we render `expr=true`
 		booleanExpressionPredicate.getExpression().accept( this );
 		appendSql( '=' );
-		if ( booleanExpressionPredicate.isNegated() ) {
-			dialect.appendBooleanValueString( this, false );
-
-		}
-		else {
-			dialect.appendBooleanValueString( this, true );
-		}
+		dialect.appendBooleanValueString( this, !booleanExpressionPredicate.isNegated() );
 	}
 
 	@Override
@@ -7663,20 +7647,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitFilterFragmentPredicate(FilterFragmentPredicate filter) {
 		// process a specific filter
 		final String sqlFragment = filter.getSqlFragment();
-
 		if ( filter.getParameters() == null ) {
 			sqlBuffer.append( sqlFragment );
-			return;
 		}
-
-		int lastEnd = 0;
-		for ( int p = 0; p < filter.getParameters().size(); p++ ) {
-			final FilterFragmentParameter parameter = filter.getParameters().get( p );
-			lastEnd = processFilterParameter( parameter, sqlFragment, lastEnd );
-		}
-
-		if ( lastEnd < sqlFragment.length() ) {
-			appendSql( sqlFragment.substring( lastEnd ) );
+		else {
+			int lastEnd = 0;
+			for ( int p = 0; p < filter.getParameters().size(); p++ ) {
+				final FilterFragmentParameter parameter = filter.getParameters().get( p );
+				lastEnd = processFilterParameter( parameter, sqlFragment, lastEnd );
+			}
+			if ( lastEnd < sqlFragment.length() ) {
+				appendSql( sqlFragment.substring( lastEnd ) );
+			}
 		}
 	}
 
@@ -7689,9 +7671,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final Object value = parameter.getValue();
 		final JdbcMapping valueMapping = parameter.getValueMapping();
 
-		if ( value instanceof Iterable
+		if ( value instanceof Iterable<?> iterable
 				&& !valueMapping.getJavaTypeDescriptor().isInstance( value ) ) {
-			processIterableFilterParameterValue( valueMapping, ( (Iterable<?>) value ).iterator() );
+			processIterableFilterParameterValue( valueMapping, iterable.iterator() );
 		}
 		else {
 			processSingularFilterParameterValue( valueMapping, value );
@@ -7706,8 +7688,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private void processIterableFilterParameterValue(JdbcMapping valueMapping, Iterator<?> iterator) {
 		while ( iterator.hasNext() ) {
-			final Object element = iterator.next();
-			processSingularFilterParameterValue( valueMapping, element );
+			processSingularFilterParameterValue( valueMapping, iterator.next() );
 			if ( iterator.hasNext() ) {
 				appendSql( "," );
 			}
@@ -7716,19 +7697,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitSqlFragmentPredicate(SqlFragmentPredicate predicate) {
-		assert StringHelper.isNotEmpty( predicate.getSqlFragment() );
+		assert isNotEmpty( predicate.getSqlFragment() );
 		appendSql( predicate.getSqlFragment() );
 	}
 
 	@Override
 	public void visitGroupedPredicate(GroupedPredicate groupedPredicate) {
-		if ( groupedPredicate.isEmpty() ) {
-			return;
+		if ( !groupedPredicate.isEmpty() ) {
+			appendSql( OPEN_PARENTHESIS );
+			groupedPredicate.getSubPredicate().accept( this );
+			appendSql( CLOSE_PARENTHESIS );
 		}
-
-		appendSql( OPEN_PARENTHESIS );
-		groupedPredicate.getSubPredicate().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	@Override
@@ -7738,6 +7717,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( "1=" + ( inListPredicate.isNegated() ? "1" : "0" ) );
 			return;
 		}
+
 		Function<Expression, Expression> itemAccessor = Function.identity();
 		final SqlTuple lhsTuple;
 		if ( ( lhsTuple = SqlTupleContainer.getSqlTuple( inListPredicate.getTestExpression() ) ) != null ) {
@@ -7854,14 +7834,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private static int addPadding(int bindValueCount, int inExprLimit) {
-		int ceilingPowerOfTwo = MathHelper.ceilingPowerOfTwo( bindValueCount );
+		final int ceilingPowerOfTwo = MathHelper.ceilingPowerOfTwo( bindValueCount );
 		if ( inExprLimit <= 0 || ceilingPowerOfTwo <= inExprLimit ) {
 			return ceilingPowerOfTwo;
 		}
-
-		int numberOfInClauses = MathHelper.divideRoundingUp( bindValueCount, inExprLimit );
-		int numberOfInClausesWithPadding = MathHelper.ceilingPowerOfTwo( numberOfInClauses );
-		return numberOfInClausesWithPadding * inExprLimit;
+		else {
+			int numberOfInClauses = MathHelper.divideRoundingUp( bindValueCount, inExprLimit );
+			int numberOfInClausesWithPadding = MathHelper.ceilingPowerOfTwo( numberOfInClauses );
+			return numberOfInClausesWithPadding * inExprLimit;
+		}
 	}
 
 	@Override
@@ -7924,9 +7905,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			ComparisonOperator tupleComparisonOperator) {
 		final QueryPart queryPart = selectStatement.getQueryPart();
 		final QuerySpec subQuery;
-		if ( queryPart instanceof QuerySpec && queryPart.getFetchClauseExpression() == null
+		if ( queryPart instanceof QuerySpec querySpec
+				&& queryPart.getFetchClauseExpression() == null
 				&& queryPart.getOffsetClauseExpression() == null ) {
-			subQuery = (QuerySpec) queryPart;
+			subQuery = querySpec;
 			// We can only emulate the tuple subquery predicate as exists predicate when there are no limit/offsets
 			if ( negated ) {
 				appendSql( "not " );
@@ -8023,8 +8005,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			ComparisonOperator tupleComparisonOperator) {
 		final QueryPart queryPart = selectStatement.getQueryPart();
 		final QuerySpec subQuery;
-		if ( queryPart instanceof QuerySpec && queryPart.getFetchClauseExpression() == null && queryPart.getOffsetClauseExpression() == null ) {
-			subQuery = (QuerySpec) queryPart;
+		if ( queryPart instanceof QuerySpec querySpec
+				&& queryPart.getFetchClauseExpression() == null
+				&& queryPart.getOffsetClauseExpression() == null ) {
+			subQuery = querySpec;
 			// We can only emulate the tuple subquery predicate comparing against the top element when there are no limit/offsets
 			lhsTuple.accept( this );
 			appendSql( tupleComparisonOperator.sqlText() );
@@ -8047,7 +8031,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( " order by " );
 				final List<SqlSelection> sqlSelections = subQuery.getSelectClause().getSqlSelections();
 				final String order;
-				if ( tupleComparisonOperator == ComparisonOperator.LESS_THAN || tupleComparisonOperator == ComparisonOperator.LESS_THAN_OR_EQUAL ) {
+				if ( tupleComparisonOperator == ComparisonOperator.LESS_THAN
+						|| tupleComparisonOperator == ComparisonOperator.LESS_THAN_OR_EQUAL ) {
 					// Default order is asc so we don't need to specify the order explicitly
 					order = "";
 				}
@@ -8097,9 +8082,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		final Junction.Nature nature = junction.getNature();
-		final String separator = nature == Junction.Nature.CONJUNCTION
-				? " and "
-				: " or ";
+		final String separator = nature == Junction.Nature.CONJUNCTION ? " and " : " or ";
 		final List<Predicate> predicates = junction.getPredicates();
 		visitJunctionPredicate( nature, predicates.get( 0 ) );
 		for ( int i = 1; i < predicates.size(); i++ ) {
@@ -8189,7 +8172,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// Note: this does not cover cases where it's set via parameter binding
 		boolean isExplicitEscape = false;
 		if ( escapeCharacter instanceof Literal literal ) {
-			Object literalValue = literal.getLiteralValue();
+			final Object literalValue = literal.getLiteralValue();
 			isExplicitEscape = literalValue != null && !literalValue.toString().equals( "" );
 		}
 		if ( isExplicitEscape ) {
@@ -8198,8 +8181,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			// Since escape with empty or null character is ignored we need
 			// four backslashes to render a single one in a like pattern
-			if ( pattern instanceof Literal ) {
-				Object literalValue = ( (Literal) pattern ).getLiteralValue();
+			if ( pattern instanceof Literal literal ) {
+				final Object literalValue = literal.getLiteralValue();
 				if ( literalValue == null ) {
 					pattern.accept( this );
 				}
@@ -8265,7 +8248,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			String separator = NO_SEPARATOR;
 			// HQL has different semantics for the not null check on embedded attribute mappings
 			// as the embeddable is not considered as null, if at least one sub-part is not null
-			if ( nullnessPredicate.isNegated() && expression.getExpressionType() instanceof AttributeMapping ) {
+			if ( nullnessPredicate.isNegated()
+					&& expression.getExpressionType() instanceof AttributeMapping ) {
 				appendSql( '(' );
 				for ( Expression exp : tuple.getExpressions() ) {
 					appendSql( separator );
@@ -8342,16 +8326,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final SelectStatement subquery;
 
 			// Handle emulation of quantified comparison
-			if ( rhsExpression instanceof SelectStatement ) {
-				subquery = (SelectStatement) rhsExpression;
+			if ( rhsExpression instanceof SelectStatement selectStatement ) {
+				subquery = selectStatement;
 				all = true;
 			}
-			else if ( rhsExpression instanceof Every ) {
-				subquery = ( (Every) rhsExpression ).getSubquery();
+			else if ( rhsExpression instanceof Every every ) {
+				subquery = every.getSubquery();
 				all = true;
 			}
-			else if ( rhsExpression instanceof Any ) {
-				subquery = ( (Any) rhsExpression ).getSubquery();
+			else if ( rhsExpression instanceof Any any ) {
+				subquery = any.getSubquery();
 				all = false;
 			}
 			else {
@@ -8393,7 +8377,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						case EQUAL:
 						case DISTINCT_FROM:
 						case NOT_DISTINCT_FROM: {
-							// For this special case, we can rely on scalar subquery handling, given that the subquery fetches only one row
+							// For this special case, we can rely on scalar subquery handling,
+							// given that the subquery fetches only one row
 							if ( isFetchFirstRowOnly( subquery.getQueryPart() ) ) {
 								renderComparison( lhsTuple, operator, subquery );
 								return;
@@ -8414,7 +8399,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				rhsTuple = SqlTupleContainer.getSqlTuple( rhsExpression );
 				assert rhsTuple != null;
 				// If the DB supports tuples in the IN list predicate, use that syntax as it's more concise
-				if ( ( operator == ComparisonOperator.EQUAL || operator == ComparisonOperator.NOT_EQUAL ) && supportsRowValueConstructorSyntaxInInList() ) {
+				if ( ( operator == ComparisonOperator.EQUAL || operator == ComparisonOperator.NOT_EQUAL )
+						&& supportsRowValueConstructorSyntaxInInList() ) {
 					comparisonPredicate.getLeftHandExpression().accept( this );
 					if ( operator == ComparisonOperator.NOT_EQUAL ) {
 						appendSql( " not" );
@@ -8440,7 +8426,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final Expression lhsExpression = comparisonPredicate.getLeftHandExpression();
 
 			if ( lhsExpression instanceof SqlTupleContainer
-					|| lhsExpression instanceof SelectStatement && ( (SelectStatement) lhsExpression ).getQueryPart() instanceof QueryGroup ) {
+					|| lhsExpression instanceof SelectStatement selectStatement
+							&& selectStatement.getQueryPart() instanceof QueryGroup ) {
 				if ( rhsTuple.getExpressions().size() == 1 ) {
 					// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
 					renderComparison(
@@ -8640,7 +8627,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected enum LockStrategy {
 		CLAUSE,
 		FOLLOW_ON,
-		NONE;
+		NONE
 	}
 
 	protected static class ForUpdateClause {

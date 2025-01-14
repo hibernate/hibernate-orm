@@ -70,12 +70,12 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql) {
 		if ( navigablePath == null ) {
-			sb.append( position );
+			hql.append( position );
 		}
 		else {
-			sb.append( navigablePath.getLocalName() );
+			hql.append( navigablePath.getLocalName() );
 		}
 	}
 }

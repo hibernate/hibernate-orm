@@ -433,11 +433,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			if ( columnNames == null ) {
 				initializeArrays();
 			}
-			final BasicType<J> basicType = resultSetAccess.resolveType(
-					position,
-					explicitJavaType,
-					typeConfiguration
-			);
+			final BasicType<J> basicType = resultSetAccess.resolveType( position, explicitJavaType, typeConfiguration );
 			types[position - 1] = basicType;
 			return basicType;
 		}

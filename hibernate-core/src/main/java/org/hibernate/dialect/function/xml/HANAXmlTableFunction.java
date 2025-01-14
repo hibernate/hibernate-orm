@@ -437,9 +437,8 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 			if ( isBoolean( type ) ) {
 				//noinspection unchecked
 				final JdbcLiteralFormatter<Object> jdbcLiteralFormatter = type.getJdbcLiteralFormatter();
-				final SessionFactoryImplementor sessionFactory = converter.getCreationContext().getSessionFactory();
-				final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
-				final WrapperOptions wrapperOptions = sessionFactory.getWrapperOptions();
+				final Dialect dialect = converter.getCreationContext().getDialect();
+				final WrapperOptions wrapperOptions = converter.getCreationContext().getWrapperOptions();
 				final Object trueValue = type.convertToRelationalValue( true );
 				final Object falseValue = type.convertToRelationalValue( false );
 				final String trueFragment = jdbcLiteralFormatter.toJdbcLiteral( trueValue, dialect, wrapperOptions );

@@ -88,8 +88,7 @@ public class CollectionCacheInvalidator
 			// Nothing to do, if caching is disabled
 			return;
 		}
-		final EventListenerRegistry eventListenerRegistry =
-				sessionFactory.getServiceRegistry().requireService( EventListenerRegistry.class );
+		final EventListenerRegistry eventListenerRegistry = sessionFactory.getEventListenerRegistry();
 		eventListenerRegistry.appendListeners( EventType.POST_INSERT, this );
 		eventListenerRegistry.appendListeners( EventType.POST_DELETE, this );
 		eventListenerRegistry.appendListeners( EventType.POST_UPDATE, this );
@@ -99,7 +98,7 @@ public class CollectionCacheInvalidator
 		try {
 			SessionFactoryImplementor factory = persister.getFactory();
 
-			final MappingMetamodelImplementor metamodel = factory.getRuntimeMetamodels().getMappingMetamodel();
+			final MappingMetamodelImplementor metamodel = factory.getMappingMetamodel();
 			Set<String> collectionRoles = metamodel.getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( collectionRoles == null || collectionRoles.isEmpty() ) {
 				return;
@@ -127,7 +126,7 @@ public class CollectionCacheInvalidator
 					Object id = getIdentifier( session, ref );
 
 					// only evict if the related entity has changed
-					if ( ( id != null && !id.equals( oldId ) ) || ( oldId != null && !oldId.equals( id ) ) ) {
+					if ( ( id != null || oldId != null ) && !collectionPersister.getKeyType().isEqual( oldId, id ) ) {
 						if ( id != null ) {
 							evict( id, collectionPersister, session );
 						}

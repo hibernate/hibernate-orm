@@ -4,57 +4,42 @@
  */
 package org.hibernate.graph.internal.parse;
 
-import org.hibernate.graph.CannotContainSubGraphException;
-import org.hibernate.metamodel.model.domain.DomainType;
+
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-
-import static org.hibernate.metamodel.model.domain.internal.DomainModelHelper.resolveSubType;
 
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("unchecked")
 public enum PathQualifierType {
-	KEY(
-			(attributeNode, subTypeName, sessionFactory) ->
-					attributeNode.makeKeySubGraph(
-							resolveSubTypeManagedType(
-									attributeNode.getAttributeDescriptor().getKeyGraphType(),
-									subTypeName,
-									sessionFactory.getJpaMetamodel()
-							)
-					)
+
+	KEY( (attributeNode, subtypeName, sessionFactory) -> subtypeName == null
+			? attributeNode.addKeySubgraph()
+			: attributeNode.addKeySubgraph().addTreatedSubgraph( managedType( subtypeName, sessionFactory ) )
 	),
-	VALUE(
-			(attributeNode, subTypeName, sessionFactory) ->
-					attributeNode.makeSubGraph(
-							resolveSubTypeManagedType(
-									attributeNode.getAttributeDescriptor().getValueGraphType(),
-									subTypeName,
-									sessionFactory.getJpaMetamodel()
-							)
-					)
+
+	VALUE( (attributeNode, subtypeName, sessionFactory) -> subtypeName == null
+			? attributeNode.addValueSubgraph()
+			: attributeNode.addValueSubgraph().addTreatedSubgraph( managedType( subtypeName, sessionFactory ) )
 	);
 
-	private static ManagedDomainType resolveSubTypeManagedType(
-			DomainType<?> graphType,
-			String subTypeName,
-			JpaMetamodel metamodel) {
-		if ( !( graphType instanceof ManagedDomainType<?> managedType ) ) {
-			throw new CannotContainSubGraphException( "The given type [" + graphType + "] is not a ManagedType" );
+	private static <T> ManagedDomainType<T> managedType(String subtypeName, SessionFactoryImplementor sessionFactory) {
+		final JpaMetamodel metamodel = sessionFactory.getJpaMetamodel();
+		ManagedDomainType<T> managedType = metamodel.findManagedType( subtypeName );
+		if ( managedType == null ) {
+			managedType = metamodel.getHqlEntityReference( subtypeName );
 		}
-
-		if ( subTypeName != null ) {
-			managedType = resolveSubType( managedType, subTypeName, metamodel );
+		if ( managedType == null ) {
+			throw new IllegalArgumentException( "Unknown managed type: " + subtypeName );
 		}
 		return managedType;
 	}
 
 	private final SubGraphGenerator subGraphCreator;
 
-	PathQualifierType(SubGraphGenerator subGraphCreator) {
-		this.subGraphCreator = subGraphCreator;
+	PathQualifierType(SubGraphGenerator subgraphCreator) {
+		this.subGraphCreator = subgraphCreator;
 	}
 
 	public SubGraphGenerator getSubGraphCreator() {

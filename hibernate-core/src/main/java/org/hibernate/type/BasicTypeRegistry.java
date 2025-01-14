@@ -117,6 +117,10 @@ public class BasicTypeRegistry implements Serializable {
 		return getRegisteredType( javaType.getTypeName() );
 	}
 
+	public BasicType<?> getRegisteredArrayType(java.lang.reflect.Type javaElementType) {
+		return getRegisteredType( javaElementType.getTypeName() + "[]" );
+	}
+
 	public <J> BasicType<J> resolve(BasicTypeReference<J> basicTypeReference) {
 		return getRegisteredType( basicTypeReference.getName() );
 	}

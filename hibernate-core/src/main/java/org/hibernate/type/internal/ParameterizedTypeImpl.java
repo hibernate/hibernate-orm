@@ -61,10 +61,9 @@ public class ParameterizedTypeImpl implements ParameterizedType {
 
 	@Override
 	public boolean equals(Object obj) {
-		if ( !( obj instanceof ParameterizedType ) ) {
+		if ( !(obj instanceof ParameterizedType other) ) {
 			return false;
 		}
-		ParameterizedType other = (ParameterizedType) obj;
 		return Objects.equals( getOwnerType(), other.getOwnerType() )
 				&& Objects.equals( getRawType(), other.getRawType() )
 				&& Arrays.equals( getActualTypeArguments(), other.getActualTypeArguments() );

@@ -416,25 +416,34 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setReadOnly(boolean readOnly);
 
 	/**
-	 * The max number of rows requested for the query results
+	 * The maximum number of query result rows to return.
+	 *
+	 * @return the maximum length of the query result list
 	 */
 	int getMaxResults();
 
 	/**
-	 * Set the max number of rows requested for the query results. Applied
-	 * to the SQL query
+	 * Set the maximum number of query result rows to return.
+	 *
+	 * @param maxResults the maximum length of the query result list
 	 */
-	SelectionQuery<R> setMaxResults(int maxResult);
+	SelectionQuery<R> setMaxResults(int maxResults);
 
 	/**
-	 * The first row position to return from the query results. Applied
-	 * to the SQL query.
+	 * The first query result row to return. The very first row
+	 * of the query result list is considered the zeroth row.
+	 *
+	 * @return the position of the first row to return,
+	 *         indexed from zero
 	 */
 	int getFirstResult();
 
 	/**
-	 * Set the first row position to return from the query results. Applied
-	 * to the SQL query.
+	 * Set the first query result row to return. The very first
+	 * row of the query result list is considered the zeroth row.
+	 *
+	 * @param startPosition the position of the first row to return,
+	 *                      indexed from zero
 	 */
 	SelectionQuery<R> setFirstResult(int startPosition);
 

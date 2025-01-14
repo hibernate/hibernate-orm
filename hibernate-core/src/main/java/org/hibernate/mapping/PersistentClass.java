@@ -29,7 +29,6 @@ import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
 import org.hibernate.type.CollectionType;
@@ -43,6 +42,7 @@ import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectation
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
+import static org.hibernate.mapping.MappingHelper.classForName;
 import static org.hibernate.sql.Template.collectColumnNames;
 
 /**
@@ -50,7 +50,9 @@ import static org.hibernate.sql.Template.collectColumnNames;
  *
  * @author Gavin King
  */
-public abstract class PersistentClass implements IdentifiableTypeClass, AttributeContainer, Filterable, MetaAttributable, Contributable, Serializable {
+public abstract sealed class PersistentClass
+		implements IdentifiableTypeClass, AttributeContainer, Filterable, MetaAttributable, Contributable, Serializable
+		permits RootClass, Subclass {
 
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
@@ -168,7 +170,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 
 		try {
 			if ( mappedClass == null ) {
-				mappedClass = getClassLoaderAccess().classForName( className );
+				mappedClass = classForName( className, metadataBuildingContext.getBootstrapContext() );
 			}
 			return mappedClass;
 		}
@@ -183,7 +185,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		}
 		try {
 			if ( proxyInterface == null ) {
-				proxyInterface = getClassLoaderAccess().classForName( proxyInterfaceName );
+				proxyInterface = classForName( proxyInterfaceName, metadataBuildingContext.getBootstrapContext() );
 			}
 			return proxyInterface;
 		}
@@ -904,8 +906,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 					return true;
 				}
 			}
-			else if ( value instanceof org.hibernate.mapping.Collection ) {
-				final org.hibernate.mapping.Collection collection = (org.hibernate.mapping.Collection) value;
+			else if ( value instanceof org.hibernate.mapping.Collection collection ) {
 				if ( !( (CollectionType) collection.getType() ).useLHSPrimaryKey() ) {
 					return true;
 				}
@@ -1017,7 +1018,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 			// in SQL formulas
 			final Dialect dialect = context.getDialect();
 			final TypeConfiguration types = context.getTypeConfiguration();
-			final SqmFunctionRegistry functions = context.getFunctionRegistry();
 
 			// now, move @Formulas to the correct AttributeContainers
 			//TODO: skip this step for hbm.xml
@@ -1026,7 +1026,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 					if ( selectable.isFormula() && properties.contains( property ) ) {
 						final Formula formula = (Formula) selectable;
 						final AttributeContainer container =
-								container( collectColumnNames( formula.getTemplate( dialect, types, functions ) ) );
+								container( collectColumnNames( formula.getTemplate( dialect, types ) ) );
 						if ( !container.contains( property ) ) {
 							properties.remove( property );
 							container.addProperty( property );

@@ -16,10 +16,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 	private final T value;
 
-	public ValueBindJpaCriteriaParameter(
-			BindableType<? super T> type,
-			T value,
-			NodeBuilder nodeBuilder) {
+	public ValueBindJpaCriteriaParameter(BindableType<? super T> type, T value, NodeBuilder nodeBuilder) {
 		super( null, type, false, nodeBuilder );
 		assert value == null || type == null || type.isInstance( value );
 		this.value = value;
@@ -33,10 +30,9 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 	@Override
 	public ValueBindJpaCriteriaParameter<T> copy(SqmCopyContext context) {
 		final ValueBindJpaCriteriaParameter<T> existing = context.getCopy( this );
-		if ( existing != null ) {
-			return existing;
-		}
-		return context.registerCopy( this, new ValueBindJpaCriteriaParameter<>( this ) );
+		return existing != null
+				? existing
+				: context.registerCopy( this, new ValueBindJpaCriteriaParameter<>( this ) );
 	}
 
 	public T getValue() {
@@ -44,8 +40,8 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( value );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( value );
 	}
 
 	@Override
@@ -60,9 +56,6 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 
 	@Override
 	public int compareTo(SqmParameter anotherParameter) {
-		if ( this == anotherParameter ) {
-			return 0;
-		}
-		return 1;
+		return this == anotherParameter ? 0 : 1;
 	}
 }

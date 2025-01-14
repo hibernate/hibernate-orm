@@ -8,7 +8,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.UserCollectionType;
@@ -17,7 +16,7 @@ import org.hibernate.usertype.UserCollectionType;
  * A mapping model object representing a collection with a synthetic "identifier" column,
  * that is, a surrogate key.
  */
-public abstract class IdentifierCollection extends Collection {
+public non-sealed abstract class IdentifierCollection extends Collection {
 
 	public static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
 
@@ -27,7 +26,10 @@ public abstract class IdentifierCollection extends Collection {
 		super( buildingContext, owner );
 	}
 
-	public IdentifierCollection(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+	public IdentifierCollection(
+			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver,
+			PersistentClass owner,
+			MetadataBuildingContext buildingContext) {
 		super( customTypeBeanResolver, owner, buildingContext );
 	}
 
@@ -39,9 +41,11 @@ public abstract class IdentifierCollection extends Collection {
 	public KeyValue getIdentifier() {
 		return identifier;
 	}
+
 	public void setIdentifier(KeyValue identifier) {
 		this.identifier = identifier;
 	}
+
 	public final boolean isIdentified() {
 		return true;
 	}
@@ -49,12 +53,12 @@ public abstract class IdentifierCollection extends Collection {
 	@Override
 	public boolean isSame(Collection other) {
 		return other instanceof IdentifierCollection
-				&& isSame( (IdentifierCollection) other );
+			&& isSame( (IdentifierCollection) other );
 	}
 
 	public boolean isSame(IdentifierCollection other) {
 		return super.isSame( other )
-				&& isSame( identifier, other.identifier );
+			&& isSame( identifier, other.identifier );
 	}
 
 	void createPrimaryKey() {
@@ -64,10 +68,6 @@ public abstract class IdentifierCollection extends Collection {
 			getCollectionTable().setPrimaryKey(pk);
 		}
 		// create an index on the key columns??
-	}
-
-	public void validate(Mapping mapping) throws MappingException {
-		validate( (MappingContext) mapping);
 	}
 
 	public void validate(MappingContext mappingContext) throws MappingException {

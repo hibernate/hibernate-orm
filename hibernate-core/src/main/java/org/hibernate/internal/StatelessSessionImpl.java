@@ -36,6 +36,7 @@ import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
+import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
 import org.hibernate.event.spi.PostCollectionRemoveEvent;
@@ -128,11 +129,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private final boolean connectionProvided;
 	private final List<Runnable> afterCompletions = new ArrayList<>();
 
+	private final EventListenerGroups eventListenerGroups;
+
 	public StatelessSessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 		connectionProvided = options.getConnection() != null;
 		temporaryPersistenceContext = new StatefulPersistenceContext( this );
 		influencers = new LoadQueryInfluencers( getFactory() );
+		eventListenerGroups = factory.getEventListenerGroups();
 		setUpMultitenancy( factory, influencers );
 		setJdbcBatchSize( 0 );
 	}
@@ -526,13 +530,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	// event processing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private boolean firePreInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
-		if ( fastSessionServices.eventListenerGroup_PRE_INSERT.isEmpty() ) {
+		if ( eventListenerGroups.eventListenerGroup_PRE_INSERT.isEmpty() ) {
 			return false;
 		}
 		else {
 			boolean veto = false;
 			final PreInsertEvent event = new PreInsertEvent( entity, id, state, persister, null );
-			for ( PreInsertEventListener listener : fastSessionServices.eventListenerGroup_PRE_INSERT.listeners() ) {
+			for ( PreInsertEventListener listener : eventListenerGroups.eventListenerGroup_PRE_INSERT.listeners() ) {
 				veto |= listener.onPreInsert( event );
 			}
 			return veto;
@@ -540,13 +544,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	private boolean firePreUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
-		if ( fastSessionServices.eventListenerGroup_PRE_UPDATE.isEmpty() ) {
+		if ( eventListenerGroups.eventListenerGroup_PRE_UPDATE.isEmpty() ) {
 			return false;
 		}
 		else {
 			boolean veto = false;
 			final PreUpdateEvent event = new PreUpdateEvent( entity, id, state, null, persister, null );
-			for ( PreUpdateEventListener listener : fastSessionServices.eventListenerGroup_PRE_UPDATE.listeners() ) {
+			for ( PreUpdateEventListener listener : eventListenerGroups.eventListenerGroup_PRE_UPDATE.listeners() ) {
 				veto |= listener.onPreUpdate( event );
 			}
 			return veto;
@@ -554,13 +558,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	private boolean firePreUpsert(Object entity, Object id, Object[] state, EntityPersister persister) {
-		if ( fastSessionServices.eventListenerGroup_PRE_UPSERT.isEmpty() ) {
+		if ( eventListenerGroups.eventListenerGroup_PRE_UPSERT.isEmpty() ) {
 			return false;
 		}
 		else {
 			boolean veto = false;
 			final PreUpsertEvent event = new PreUpsertEvent( entity, id, state, persister, null );
-			for ( PreUpsertEventListener listener : fastSessionServices.eventListenerGroup_PRE_UPSERT.listeners() ) {
+			for ( PreUpsertEventListener listener : eventListenerGroups.eventListenerGroup_PRE_UPSERT.listeners() ) {
 				veto |= listener.onPreUpsert( event );
 			}
 			return veto;
@@ -568,13 +572,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	private boolean firePreDelete(Object entity, Object id, EntityPersister persister) {
-		if ( fastSessionServices.eventListenerGroup_PRE_DELETE.isEmpty() ) {
+		if ( eventListenerGroups.eventListenerGroup_PRE_DELETE.isEmpty() ) {
 			return false;
 		}
 		else {
 			boolean veto = false;
 			final PreDeleteEvent event = new PreDeleteEvent( entity, id, null, persister, null );
-			for ( PreDeleteEventListener listener : fastSessionServices.eventListenerGroup_PRE_DELETE.listeners() ) {
+			for ( PreDeleteEventListener listener : eventListenerGroups.eventListenerGroup_PRE_DELETE.listeners() ) {
 				veto |= listener.onPreDelete( event );
 			}
 			return veto;
@@ -582,61 +586,61 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	private void firePostInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
-		fastSessionServices.eventListenerGroup_POST_INSERT.fireLazyEventOnEachListener(
+		eventListenerGroups.eventListenerGroup_POST_INSERT.fireLazyEventOnEachListener(
 				() -> new PostInsertEvent( entity, id, state, persister, null ),
 				PostInsertEventListener::onPostInsert );
 	}
 
 	private void firePostUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
-		fastSessionServices.eventListenerGroup_POST_UPDATE.fireLazyEventOnEachListener(
+		eventListenerGroups.eventListenerGroup_POST_UPDATE.fireLazyEventOnEachListener(
 				() -> new PostUpdateEvent( entity, id, state, null, null, persister, null ),
 				PostUpdateEventListener::onPostUpdate );
 	}
 
 	private void firePostUpsert(Object entity, Object id, Object[] state, EntityPersister persister) {
-		fastSessionServices.eventListenerGroup_POST_UPSERT.fireLazyEventOnEachListener(
+		eventListenerGroups.eventListenerGroup_POST_UPSERT.fireLazyEventOnEachListener(
 				() -> new PostUpsertEvent( entity, id, state, null, persister, null ),
 				PostUpsertEventListener::onPostUpsert );
 	}
 
 	private void firePostDelete(Object entity, Object id, EntityPersister persister) {
-		fastSessionServices.eventListenerGroup_POST_DELETE.fireLazyEventOnEachListener(
+		eventListenerGroups.eventListenerGroup_POST_DELETE.fireLazyEventOnEachListener(
 				() -> new PostDeleteEvent( entity, id, null, persister, null ),
 				PostDeleteEventListener::onPostDelete );
 	}
 
 	private void firePreRecreate(PersistentCollection<?> collection, CollectionPersister persister) {
-		fastSessionServices.eventListenerGroup_PRE_COLLECTION_RECREATE.fireLazyEventOnEachListener(
+		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_RECREATE.fireLazyEventOnEachListener(
 				() -> new PreCollectionRecreateEvent(  persister, collection, null ),
 				PreCollectionRecreateEventListener::onPreRecreateCollection );
 	}
 
 	private void firePreUpdate(PersistentCollection<?> collection, CollectionPersister persister) {
-		fastSessionServices.eventListenerGroup_PRE_COLLECTION_UPDATE.fireLazyEventOnEachListener(
+		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_UPDATE.fireLazyEventOnEachListener(
 				() -> new PreCollectionUpdateEvent(  persister, collection, null ),
 				PreCollectionUpdateEventListener::onPreUpdateCollection );
 	}
 
 	private void firePreRemove(PersistentCollection<?> collection, Object owner, CollectionPersister persister) {
-		fastSessionServices.eventListenerGroup_PRE_COLLECTION_REMOVE.fireLazyEventOnEachListener(
+		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_REMOVE.fireLazyEventOnEachListener(
 				() -> new PreCollectionRemoveEvent(  persister, collection, null, owner ),
 				PreCollectionRemoveEventListener::onPreRemoveCollection );
 	}
 
 	private void firePostRecreate(PersistentCollection<?> collection, CollectionPersister persister) {
-		fastSessionServices.eventListenerGroup_POST_COLLECTION_RECREATE.fireLazyEventOnEachListener(
+		eventListenerGroups.eventListenerGroup_POST_COLLECTION_RECREATE.fireLazyEventOnEachListener(
 				() -> new PostCollectionRecreateEvent(  persister, collection, null ),
 				PostCollectionRecreateEventListener::onPostRecreateCollection );
 	}
 
 	private void firePostUpdate(PersistentCollection<?> collection, CollectionPersister persister) {
-		fastSessionServices.eventListenerGroup_POST_COLLECTION_UPDATE.fireLazyEventOnEachListener(
+		eventListenerGroups.eventListenerGroup_POST_COLLECTION_UPDATE.fireLazyEventOnEachListener(
 				() -> new PostCollectionUpdateEvent(  persister, collection, null ),
 				PostCollectionUpdateEventListener::onPostUpdateCollection );
 	}
 
 	private void firePostRemove(PersistentCollection<?> collection, Object owner, CollectionPersister persister) {
-		fastSessionServices.eventListenerGroup_POST_COLLECTION_REMOVE.fireLazyEventOnEachListener(
+		eventListenerGroups.eventListenerGroup_POST_COLLECTION_REMOVE.fireLazyEventOnEachListener(
 				() -> new PostCollectionRemoveEvent(  persister, collection, null, owner ),
 				PostCollectionRemoveEventListener::onPostRemoveCollection );
 	}
@@ -1051,7 +1055,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public boolean isAutoCloseSessionEnabled() {
-		return getFactory().getSessionFactoryOptions().isAutoCloseSessionEnabled();
+		return getSessionFactoryOptions().isAutoCloseSessionEnabled();
 	}
 
 	@Override

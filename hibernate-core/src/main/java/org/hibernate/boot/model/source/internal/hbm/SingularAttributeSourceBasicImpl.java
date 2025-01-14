@@ -35,7 +35,7 @@ class SingularAttributeSourceBasicImpl
 	private final AttributeRole attributeRole;
 	private final AttributePath attributePath;
 
-	private ToolingHintContext toolingHintContext;
+	private final ToolingHintContext toolingHintContext;
 
 	SingularAttributeSourceBasicImpl(
 			MappingDocument sourceMappingDocument,

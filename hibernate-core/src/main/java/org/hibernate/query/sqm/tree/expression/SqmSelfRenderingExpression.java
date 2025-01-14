@@ -47,7 +47,7 @@ public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql) {
 		throw new UnsupportedOperationException();
 	}
 }

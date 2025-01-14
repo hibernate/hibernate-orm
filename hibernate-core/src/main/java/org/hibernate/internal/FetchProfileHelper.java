@@ -33,16 +33,24 @@ import static org.hibernate.engine.profile.DefaultFetchProfile.HIBERNATE_DEFAULT
  */
 public class FetchProfileHelper {
 
+	@SuppressWarnings("unused")
 	public static Map<String, FetchProfile> getFetchProfiles(
 			MetadataImplementor bootMetamodel,
 			RuntimeMetamodels runtimeMetamodels) {
 		final Map<String, FetchProfile> fetchProfiles = new HashMap<>();
+		addFetchProfiles( bootMetamodel, runtimeMetamodels, fetchProfiles );
+		return fetchProfiles;
+	}
+
+	static void addFetchProfiles(
+			MetadataImplementor bootMetamodel,
+			RuntimeMetamodels runtimeMetamodels,
+			Map<String, FetchProfile> fetchProfiles) {
 		for ( org.hibernate.mapping.FetchProfile mappingProfile : bootMetamodel.getFetchProfiles() ) {
 			final FetchProfile fetchProfile = createFetchProfile( runtimeMetamodels.getMappingMetamodel(), mappingProfile );
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
 		fetchProfiles.put( HIBERNATE_DEFAULT_PROFILE, new DefaultFetchProfile( runtimeMetamodels ) );
-		return fetchProfiles;
 	}
 
 	private static FetchProfile createFetchProfile(
@@ -53,7 +61,9 @@ public class FetchProfileHelper {
 		for ( org.hibernate.mapping.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
 			// resolve the persister owning the fetch
 			final EntityPersister owner = getEntityPersister( mappingMetamodel, fetchProfile, mappingFetch );
-			( (FetchProfileAffectee) owner ).registerAffectingFetchProfile( profileName);
+			if ( owner instanceof FetchProfileAffectee fetchProfileAffectee ) {
+				fetchProfileAffectee.registerAffectingFetchProfile( profileName );
+			}
 
 			final Association association = new Association( owner, mappingFetch.getAssociation() );
 			final FetchStyle fetchStyle = fetchStyle( mappingFetch.getMethod() );
@@ -62,8 +72,8 @@ public class FetchProfileHelper {
 			// validate the specified association fetch
 			final ModelPart fetchablePart = owner.findByPath( association.getAssociationPath() );
 			validateFetchablePart( fetchablePart, profileName, association );
-			if ( fetchablePart instanceof FetchProfileAffectee ) {
-				( (FetchProfileAffectee) fetchablePart ).registerAffectingFetchProfile( profileName );
+			if ( fetchablePart instanceof FetchProfileAffectee fetchProfileAffectee ) {
+				fetchProfileAffectee.registerAffectingFetchProfile( profileName );
 			}
 
 			// then register the association with the FetchProfile
@@ -73,16 +83,11 @@ public class FetchProfileHelper {
 	}
 
 	private static FetchStyle fetchStyle(FetchMode fetchMode) {
-		switch ( fetchMode ) {
-			case JOIN:
-				return FetchStyle.JOIN;
-			case SELECT:
-				return FetchStyle.SELECT;
-			case SUBSELECT:
-				return FetchStyle.SUBSELECT;
-			default:
-				throw new IllegalArgumentException( "Unknown FetchMode" );
-		}
+		return switch ( fetchMode ) {
+			case JOIN -> FetchStyle.JOIN;
+			case SELECT -> FetchStyle.SELECT;
+			case SUBSELECT -> FetchStyle.SUBSELECT;
+		};
 	}
 
 	private static void validateFetchablePart(ModelPart fetchablePart, String profileName, Association association) {

@@ -32,6 +32,7 @@ import org.hibernate.SessionException;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.binder.internal.TenantIdBinder;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
@@ -107,7 +108,6 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
-import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.TransactionRequiredException;
@@ -148,7 +148,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( SessionImpl.class );
 
 	private transient SessionFactoryImpl factory;
-	protected transient FastSessionServices fastSessionServices;
+	private transient SessionFactoryOptions factoryOptions;
+	private transient JdbcServices jdbcServices;
 
 	private UUID sessionIdentifier;
 	private Object sessionToken;
@@ -191,18 +192,20 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
+		this.factoryOptions = factory.getSessionFactoryOptions();
+		this.jdbcServices = factory.getJdbcServices();
 
-		fastSessionServices = factory.getFastSessionServices();
 		cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
 		flushMode = options.getInitialSessionFlushMode();
-		tenantIdentifier = getTenantId( factory, options );
+		tenantIdentifier = getTenantId( factoryOptions, options );
 		interceptor = interpret( options.getInterceptor() );
 		jdbcTimeZone = options.getJdbcTimeZone();
-		sessionEventsManager = createSessionEventsManager(options);
+		sessionEventsManager = createSessionEventsManager( factoryOptions, options );
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
-		setCriteriaCopyTreeEnabled( factory.getSessionFactoryOptions().isCriteriaCopyTreeEnabled() );
-		setNativeJdbcParametersIgnored( factory.getSessionFactoryOptions().getNativeJdbcParametersIgnored() );
-		setCacheMode( fastSessionServices.initialSessionCacheMode );
+
+		setCriteriaCopyTreeEnabled( factoryOptions.isCriteriaCopyTreeEnabled() );
+		setNativeJdbcParametersIgnored( factoryOptions.getNativeJdbcParametersIgnored() );
+		setCacheMode( factoryOptions.getInitialSessionCacheMode() );
 
 		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
 
@@ -229,9 +232,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			// This must happen *after* the JdbcSessionContext was initialized,
 			// because some calls retrieve this context indirectly via Session getters.
 			jdbcCoordinator = createJdbcCoordinator( options );
-			transactionCoordinator = fastSessionServices.transactionCoordinatorBuilder
+			transactionCoordinator = factory.transactionCoordinatorBuilder
 					.buildTransactionCoordinator( jdbcCoordinator, this );
 		}
+	}
+
+	final SessionFactoryOptions getSessionFactoryOptions() {
+		return factoryOptions;
 	}
 
 	private static boolean isTransactionCoordinatorShared(SessionCreationOptions options) {
@@ -249,8 +256,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				final CurrentTenantIdentifierResolver<Object> resolver = factory.getCurrentTenantIdentifierResolver();
 				if ( resolver==null || !resolver.isRoot( tenantIdentifier ) ) {
 					// turn on the filter, unless this is the "root" tenant with access to all partitions
-					loadQueryInfluencers
-							.enableFilter( TenantIdBinder.FILTER_NAME )
+					loadQueryInfluencers.enableFilter( TenantIdBinder.FILTER_NAME )
 							.setParameter( TenantIdBinder.PARAMETER_NAME, tenantIdentifier );
 				}
 			}
@@ -259,21 +265,17 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	private void logInconsistentOptions(SharedSessionCreationOptions sharedOptions) {
 		if ( sharedOptions.shouldAutoJoinTransactions() ) {
-			log.debug(
-					"Session creation specified 'autoJoinTransactions', which is invalid in conjunction " +
-							"with sharing JDBC connection between sessions; ignoring"
-			);
+			log.debug( "Session creation specified 'autoJoinTransactions', which is invalid in conjunction " +
+							"with sharing JDBC connection between sessions; ignoring" );
 		}
 		if ( sharedOptions.getPhysicalConnectionHandlingMode() != connectionHandlingMode ) {
-			log.debug(
-					"Session creation specified 'PhysicalConnectionHandlingMode' which is invalid in conjunction " +
-							"with sharing JDBC connection between sessions; ignoring"
-			);
+			log.debug( "Session creation specified 'PhysicalConnectionHandlingMode' which is invalid in conjunction " +
+							"with sharing JDBC connection between sessions; ignoring" );
 		}
 	}
 
 	private JdbcCoordinatorImpl createJdbcCoordinator(SessionCreationOptions options) {
-		return new JdbcCoordinatorImpl( options.getConnection(), this, fastSessionServices.jdbcServices );
+		return new JdbcCoordinatorImpl( options.getConnection(), this, getJdbcServices() );
 	}
 
 	private JdbcSessionContextImpl createJdbcSessionContext(StatementInspector statementInspector) {
@@ -281,8 +283,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				factory,
 				statementInspector,
 				connectionHandlingMode,
-				fastSessionServices.jdbcServices,
-				fastSessionServices.batchBuilder,
+				getJdbcServices(),
+				factory.batchBuilder,
 				// TODO: this object is deprecated and should be removed
 				new JdbcEventHandler(
 						factory.getStatistics(),
@@ -293,19 +295,25 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		);
 	}
 
-	private Object getTenantId( SessionFactoryImpl factory, SessionCreationOptions options ) {
+	private static Object getTenantId( SessionFactoryOptions factoryOptions, SessionCreationOptions options ) {
 		final Object tenantIdentifier = options.getTenantIdentifierValue();
-		if ( factory.getSessionFactoryOptions().isMultiTenancyEnabled() && tenantIdentifier == null ) {
+		if ( factoryOptions.isMultiTenancyEnabled() && tenantIdentifier == null ) {
 			throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
 		}
 		return tenantIdentifier;
 	}
 
-	private SessionEventListenerManager createSessionEventsManager(SessionCreationOptions options) {
-		final List<SessionEventListener> customSessionEventListener = options.getCustomSessionEventListener();
-		return customSessionEventListener == null
-				? new SessionEventListenerManagerImpl( fastSessionServices.defaultSessionEventListeners.buildBaseline() )
-				: new SessionEventListenerManagerImpl( customSessionEventListener.toArray( new SessionEventListener[0] ) );
+	private static SessionEventListenerManager createSessionEventsManager(
+			SessionFactoryOptions factoryOptions, SessionCreationOptions options) {
+		final List<SessionEventListener> customListeners = options.getCustomSessionEventListener();
+		if ( customListeners == null ) {
+			final SessionEventListener[] baseline =
+					factoryOptions.getBaselineSessionEventsListenerBuilder().buildBaseline();
+			return new SessionEventListenerManagerImpl( baseline );
+		}
+		else {
+			return new SessionEventListenerManagerImpl( customListeners );
+		}
 	}
 
 	/**
@@ -317,7 +325,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public Integer getConfiguredJdbcBatchSize() {
 		final Integer sessionJdbcBatchSize = jdbcBatchSize;
 		return sessionJdbcBatchSize == null
-				? fastSessionServices.defaultJdbcBatchSize
+				? getSessionFactoryOptions().getJdbcBatchSize()
 				: sessionJdbcBatchSize;
 	}
 
@@ -354,7 +362,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		// We do not want an exception to be thrown if the transaction
 		// is not accessible. If the transaction is not accessible,
 		// then return null.
-		return fastSessionServices.isJtaTransactionAccessible ? accessTransaction() : null;
+		return isTransactionAccessible() ? accessTransaction() : null;
 	}
 
 	protected void addSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
@@ -467,7 +475,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				delayedAfterCompletion();
 			}
 			catch ( HibernateException e ) {
-				if ( getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+				if ( getSessionFactoryOptions().isJpaBootstrap() ) {
 					throw getExceptionConverter().convert( e );
 				}
 				else {
@@ -553,14 +561,24 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
-		if ( fastSessionServices.disallowOutOfTransactionUpdateOperations && !isTransactionInProgress() ) {
+		if ( !getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations()
+				&& !isTransactionInProgress() ) {
 			throw new TransactionRequiredException( exceptionMessage );
 		}
 	}
 
+	private boolean isTransactionAccessible() {
+		// JPA requires that access not be provided to the transaction when using JTA.
+		// This is overridden when SessionFactoryOptions isJtaTransactionAccessEnabled() is true.
+		final SessionFactoryOptions sessionFactoryOptions = getSessionFactoryOptions();
+		return sessionFactoryOptions.isJtaTransactionAccessEnabled() // defaults to false in JPA bootstrap
+			|| !sessionFactoryOptions.getJpaCompliance().isJpaTransactionComplianceEnabled()
+			|| !factory.transactionCoordinatorBuilder.isJta();
+	}
+
 	@Override
 	public Transaction getTransaction() throws HibernateException {
-		if ( ! fastSessionServices.isJtaTransactionAccessible ) {
+		if ( !isTransactionAccessible(  ) ) {
 			throw new IllegalStateException(
 					"Transaction is not accessible when using JTA with JPA-compliant transaction access enabled"
 			);
@@ -675,10 +693,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public JdbcConnectionAccess getJdbcConnectionAccess() {
 		// See class-level JavaDocs for a discussion of the concurrent-access safety of this method
 		if ( jdbcConnectionAccess == null ) {
-			if ( ! fastSessionServices.requiresMultiTenantConnectionProvider ) {
+			if ( !getSessionFactoryOptions().isMultiTenancyEnabled() ) {
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
 						getEventListenerManager(),
-						fastSessionServices.connectionProvider,
+						factory.connectionProvider,
 						this
 				);
 			}
@@ -686,7 +704,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				jdbcConnectionAccess = new ContextualJdbcConnectionAccess(
 						getTenantIdentifierValue(),
 						getEventListenerManager(),
-						fastSessionServices.multiTenantConnectionProvider,
+						factory.multiTenantConnectionProvider,
 						this
 				);
 			}
@@ -706,27 +724,27 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public boolean useStreamForLobBinding() {
-		return fastSessionServices.useStreamForLobBinding;
+		return getJdbcServices().getJdbcEnvironment().getDialect().useInputStreamToInsertBlob();
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
-		return fastSessionServices.preferredSqlTypeCodeForBoolean;
+		return getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
 	}
 
 	@Override
 	public LobCreator getLobCreator() {
-		return fastSessionServices.jdbcServices.getLobCreator( this );
+		return getJdbcServices().getLobCreator( this );
 	}
 
 	@Override
 	public Dialect getDialect() {
-		return fastSessionServices.dialect;
+		return getJdbcServices().getJdbcEnvironment().getDialect();
 	}
 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
-		return fastSessionServices.typeConfiguration;
+		return factory.getTypeConfiguration();
 	}
 
 	@Override
@@ -753,7 +771,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public JdbcServices getJdbcServices() {
-		return getFactory().getJdbcServices();
+		return jdbcServices;
 	}
 
 	@Override
@@ -1429,7 +1447,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public EventMonitor getEventMonitor() {
-		return fastSessionServices.eventMonitor;
+		return factory.eventMonitor;
 	}
 
 	@Override
@@ -1527,10 +1545,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public RootGraphImplementor<?> createEntityGraph(String graphName) {
 		checkOpen();
 		final RootGraphImplementor<?> named = getFactory().findEntityGraphByName( graphName );
-		if ( named == null ) {
-			return null;
-		}
-		return named.makeRootGraph( graphName, true );
+		return named == null ? null : named.makeCopy( true );
 	}
 
 	@Override
@@ -1573,12 +1588,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public FormatMapper getXmlFormatMapper() {
-		return fastSessionServices.getXmlFormatMapper();
+		return getSessionFactoryOptions().getXmlFormatMapper();
 	}
 
 	@Override
 	public FormatMapper getJsonFormatMapper() {
-		return fastSessionServices.getJsonFormatMapper();
+		return getSessionFactoryOptions().getJsonFormatMapper();
 	}
 
 	@Serial
@@ -1631,16 +1646,21 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		//		-- see above
 
 		factory = SessionFactoryImpl.deserialize( ois );
-		fastSessionServices = factory.getFastSessionServices();
-		sessionEventsManager = new SessionEventListenerManagerImpl( fastSessionServices.defaultSessionEventListeners.buildBaseline() );
+		factoryOptions = factory.getSessionFactoryOptions();
+		jdbcServices = factory.getJdbcServices();
+
+		//TODO: this isn't quite right, see createSessionEventsManager()
+		final SessionEventListener[] baseline =
+				factoryOptions.getBaselineSessionEventsListenerBuilder()
+						.buildBaseline();
+		sessionEventsManager = new SessionEventListenerManagerImpl( baseline );
+
 		jdbcSessionContext = createJdbcSessionContext( (StatementInspector) ois.readObject() );
 		jdbcCoordinator = JdbcCoordinatorImpl.deserialize( ois, this );
 
 		cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
-
-		transactionCoordinator = factory.getServiceRegistry()
-				.requireService( TransactionCoordinatorBuilder.class )
-				.buildTransactionCoordinator( jdbcCoordinator, this );
+		transactionCoordinator =
+				factory.transactionCoordinatorBuilder.buildTransactionCoordinator( jdbcCoordinator, this );
 
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 	}

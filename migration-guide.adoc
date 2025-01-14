@@ -15,12 +15,12 @@ earlier versions, see any other pertinent migration guides as well.
 
 7.0 migrates to Jakarta Persistence 3.2 which is fairly disruptive, mainly around:
 
-* type parameters
+* Type parameters:
   ** Affects much of the Criteria API - especially roots, joins, paths
   ** Affects much of the Graph API -
-    *** org.hibernate.graph.Graph.addAttributeNode(java.lang.String) defines a return while
+    *** `org.hibernate.graph.Graph.addAttributeNode(java.lang.String)` defines a return while
                 `jakarta.persistence.Graph.addAttributeNode(java.lang.String)` does not.
-* new JPA features colliding with previous Hibernate extension features
+* New JPA features colliding with previous Hibernate extension features:
   ** `Nulls` (JPA) v. `NullPrecedence` (Hibernate), including JPA's new `Order#getNullPrecedence()` returning `Nulls`
         colliding with Hibernate's `SqmSortSpecification#getNullPrecedence` returning `NullPrecedence`.  Hibernate's form
         was renamed to `SqmSortSpecification#getHibernateNullPrecedence` to avoid the collision.
@@ -86,18 +86,19 @@ private Employee manager;
 === Misplaced Annotations
 
 7.0 does much more in-depth checking that annotations appear in the proper place.  While previous versions
-did not necessarily throw errors, in most cases these annotations were simply ignored.  E.g.
+did not necessarily throw errors, in most cases these annotations were simply ignored.
 
+For example, this code now results in an error:
 
 [source,java]
 ----
 @Entity
 class Book {
-	// defines FIELD access-type
+    // specifies FIELD access, properties should not be annotated
     @Id
     Integer id;
 
-	// previously ignored, this is an error now
+    // previously ignored, this is an error now
     @Column(name="category")
     String getType() { ... }
 }
@@ -114,7 +115,8 @@ versions did not validate this particularly well.
 [[java-beans]]
 === JavaBean Conventions
 
-Previous versions allowed some questionable (at best) attribute naming patterns.  These are no longer supported.  E.g.
+Previous versions allowed some questionable (at best) attribute naming patterns.
+For example, this property declaration is no longer allowed:
 
 [source,java]
 ----
@@ -204,16 +206,16 @@ Applications will need to replace usages of the removed `@Proxy` annotation.
 
 `@Proxy#proxyClass` has no direct replacement, but was also never needed/useful.
 
-Here we focus on `@Proxy#laxy` attribute which, again, was hardly ever useful.
+Here we focus on `@Proxy#lazy` attribute which, again, was hardly ever useful.
 By default (true), Hibernate would proxy an entity when possible and when asked for.
 "Asked for" includes calls to `Session#getReference` and lazy associations.
 All such cases though are already controllable by the application.
 
 * Instead of `Session#getReference`, use `Session#find`
-* Use eager associations, using
-** `FetchType.EAGER` (the default for to-one associations anyway), possibly combined with `@Fetch`
-** `EntityGraph`
-** `@FetchProfiles`
+* Use eager association fetching, for example,
+** `FetchType.EAGER` (the default for to-one associations anyway), possibly combined with `@Fetch`,
+** `EntityGraph`, or a
+** `@FetchProfile`.
 
 The effect can also often be mitigated using Hibernate's bytecode-based laziness (possibly combined with `@ConcreteProxy`).
 
@@ -310,8 +312,8 @@ The previous behavior may be recovered by setting `hibernate.query.native.prefer
 [[ddl-implicit-datatype-timestamp]]
 == Default precision for `timestamp` on some databases
 
-The default precision for Oracle timestamps was changed to 9 i.e. nanosecond precision.
-The default precision for SQL Server timestamps was changed to 7 i.e. 100 nanosecond precision.
+The default precision for Oracle timestamps was changed to 9, i.e. nanosecond precision.
+The default precision for SQL Server timestamps was changed to 7, i.e. 100 nanosecond precision.
 
 Note that these changes only affect DDL generation.
 
@@ -339,12 +341,12 @@ The migration requires to read data and re-save it.
 To retain backwards compatibility, configure the setting `hibernate.type.preferred_array_jdbc_type` to `VARBINARY`.
 
 [[xml-format-mapper-changes]]
-== XML FormatMapper changes
+== XML `FormatMapper` changes
 
 Previous versions of Hibernate ORM used an undefined/provider-specific format for serialization/deserialization of
-collections, maps and byte arrays to/from XML, which is not portable.
+collections, maps and byte arrays to/from XML, which was not portable.
 
-XML FormatMapper implementations were changed to now use a portable format for collections, maps and byte arrays.
+XML `FormatMapper` implementations now use a portable format for collections, maps, and byte arrays.
 This change is necessary to allow mapping basic arrays as `SqlTypes.XML_ARRAY`.
 
 The migration requires to read data and re-save it.
@@ -365,7 +367,7 @@ To align with Jakarta Persistence (the 3.2 TCK tests this), Hibernate now consid
 
 However, because `hibernate.session_factory_name` is also a trigger to attempt to bind the SessionFactory into JNDI,
 this change to consider persistence-unit name, means that each `SessionFactory` created through Jakarta Persistence now
-have a name and Hibernate attempted to bind these to JNDI.
+has a name and Hibernate attempts to bind it to JNDI.
 
 To work around this we have introduced a new `hibernate.session_factory_jndi_name` setting that can be used to explicitly
 specify a name for JNDI binding.  The new behavior is as follows (assuming `hibernate.session_factory_name_is_jndi` is not explicitly configured):
@@ -460,6 +462,21 @@ Hibernate now reports an error in this situation.
 
 This includes auto-applied converters.
 To suppress the error for an auto-applied converter, use `@Convert(disableConversion=true)`.
+
+== `org.hibernate.graph` package
+
+The `EntityGraph` API was enhanced in JPA 3.2, and made much more useful.
+The incubating package `org.hibernate.graph` contains extensions to that API, which have been significantly impacted by the migration to JPA 3.2, and by the additional of new functionality.
+Furthermore, some legacy operations were declared with incorrect generic type signatures (by both JPA, and by Hibernate).
+
+This package has been significantly re-engineered, and the impact of this effort includes:
+
+- some breaking changes to type signatures, and
+- a number of deprecations of legacy operations which are now covered by JPA.
+
+Also, a key subgraph now always refers to a `Map` key, and never to an entity id.
+
+We encourage migration to the use of the new JPA-standard operations.
 
 == Deprecations
 

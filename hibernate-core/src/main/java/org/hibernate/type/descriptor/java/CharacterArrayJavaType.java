@@ -29,7 +29,7 @@ public class CharacterArrayJavaType extends AbstractClassJavaType<Character[]> {
 
 	@SuppressWarnings("unchecked")
 	public CharacterArrayJavaType() {
-		super( Character[].class, ArrayMutabilityPlan.INSTANCE, IncomparableComparator.INSTANCE );
+		super( Character[].class, ImmutableObjectArrayMutabilityPlan.get(), IncomparableComparator.INSTANCE );
 	}
 
 	@Override

@@ -58,7 +58,7 @@ public class ExpressionDomainResultProducer implements DomainResultProducer<Obje
 				expression,
 				expression.getExpressionType().getSingleJdbcMapping().getJdbcJavaType(),
 				null,
-				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 	}
 }

@@ -24,7 +24,6 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 	private static final String PROXY_NAMING_SUFFIX = "HibernateBasicProxy";
 
 	private final Class proxyClass;
-	private final ProxyConfiguration.Interceptor interceptor;
 	private final Constructor proxyClassConstructor;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -54,7 +53,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 							.intercept( byteBuddyState.getProxyDefinitionHelpers().getInterceptorFieldAccessor() )
 				)
 		);
-		this.interceptor = new PassThroughInterceptor( proxyClass.getName() );
+
 		try {
 			proxyClassConstructor = proxyClass.getConstructor();
 		}
@@ -76,7 +75,9 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 		if ( proxyConfiguration == null ) {
 			throw new HibernateException( "Produced proxy does not correctly implement ProxyConfiguration" );
 		}
-		proxyConfiguration.$$_hibernate_set_interceptor( this.interceptor );
+		// Create a dedicated interceptor for the proxy. This is required as the interceptor is stateful.
+		final ProxyConfiguration.Interceptor interceptor = new PassThroughInterceptor( proxyClass.getName() );
+		proxyConfiguration.$$_hibernate_set_interceptor( interceptor );
 		return instance;
 	}
 

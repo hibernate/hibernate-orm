@@ -34,6 +34,7 @@ import org.hibernate.query.results.internal.TableGroupImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
@@ -156,12 +157,12 @@ public class CteInsertHandler implements InsertHandler {
 		return cteTable;
 	}
 
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
-	}
-
 	public DomainParameterXref getDomainParameterXref() {
 		return domainParameterXref;
+	}
+
+	private NodeBuilder getCriteriaBuilder() {
+		return sessionFactory.getQueryEngine().getCriteriaBuilder();
 	}
 
 	@Override
@@ -184,7 +185,7 @@ public class CteInsertHandler implements InsertHandler {
 				executionContext.getQueryOptions(),
 				executionContext.getSession().getLoadQueryInfluencers(),
 				executionContext.getQueryParameterBindings(),
-				factory
+				factory.getSqlTranslationEngine()
 		);
 		final TableGroup insertingTableGroup = sqmConverter.getMutatingTableGroup();
 
@@ -611,12 +612,10 @@ public class CteInsertHandler implements InsertHandler {
 	protected Expression createCountStar(
 			SessionFactoryImplementor factory,
 			MultiTableSqmMutationConverter sqmConverter) {
-		final SqmExpression<?> arg = new SqmStar( factory.getNodeBuilder() );
-		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "count" ).generateSqmExpression(
-				arg,
-				null,
-				factory.getQueryEngine()
-		).convertToSqlAst( sqmConverter );
+		final SqmExpression<?> arg = new SqmStar( getCriteriaBuilder() );
+		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "count" )
+				.generateSqmExpression( arg, null, factory.getQueryEngine() )
+				.convertToSqlAst( sqmConverter );
 	}
 
 	protected String addDmlCtes(
@@ -631,9 +630,9 @@ public class CteInsertHandler implements InsertHandler {
 
 		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
 		final String rootEntityName = entityPersister.getRootEntityName();
-		final EntityPersister rootEntityDescriptor = factory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( rootEntityName );
+		final EntityPersister rootEntityDescriptor =
+				factory.getMappingMetamodel()
+						.getEntityDescriptor( rootEntityName );
 
 		final String hierarchyRootTableName = rootEntityDescriptor.getTableName();
 		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference(
@@ -1032,11 +1031,12 @@ public class CteInsertHandler implements InsertHandler {
 			statement.addCteStatement( new CteStatement( dmlResultCte, insertStatement ) );
 		}
 		else {
+			final NodeBuilder nodeBuilder = getCriteriaBuilder();
 			// Build an exists subquery clause to only insert if no row with a matching constraint column value exists i.e.
 			// insert into target (c1, c2)
 			// select e.c1, e.c2 from HTE_target e
 			// where not exists (select 1 from target excluded where e.c1=excluded.c1 and e.c2=excluded.c2)
-			final BasicType<Boolean> booleanType = sessionFactory.getNodeBuilder().getBooleanType();
+			final BasicType<Boolean> booleanType = nodeBuilder.getBooleanType();
 			final List<String> constraintColumnNames = conflictClause.getConstraintColumnNames();
 			final QuerySpec insertQuerySpec = (QuerySpec) insertStatement.getSourceSelectStatement();
 			final QuerySpec subquery = new QuerySpec( false, 1 );
@@ -1057,14 +1057,14 @@ public class CteInsertHandler implements InsertHandler {
 					sessionFactory
 			);
 			subquery.getSelectClause().addSqlSelection(
-					new SqlSelectionImpl( new QueryLiteral<>( 1, sessionFactory.getNodeBuilder().getIntegerType() ) )
+					new SqlSelectionImpl( new QueryLiteral<>( 1, nodeBuilder.getIntegerType() ) )
 			);
 			subquery.getFromClause().addRoot( tableGroup );
 			List<String> columnsToMatch;
 			if ( constraintColumnNames.isEmpty() ) {
 				// Assume the primary key columns
 				Predicate predicate = buildColumnMatchPredicate(
-						columnsToMatch = Arrays.asList( ( (EntityPersister) entityDescriptor).getKeyColumns( tableIndex ) ),
+						columnsToMatch = Arrays.asList( ((EntityPersister) entityDescriptor).getKeyColumns( tableIndex ) ),
 						insertStatement,
 						false,
 						true
@@ -1157,7 +1157,7 @@ public class CteInsertHandler implements InsertHandler {
 					matchCteSubquery.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl( new QueryLiteral<>(
 									1,
-									sessionFactory.getNodeBuilder().getIntegerType()
+									getCriteriaBuilder().getIntegerType()
 							) )
 					);
 					matchCteSubquery.getFromClause().addRoot( updateSubquery.getFromClause().getRoots().get( 0 ) );
@@ -1231,7 +1231,7 @@ public class CteInsertHandler implements InsertHandler {
 			InsertSelectStatement dmlStatement,
 			boolean errorIfMissing,
 			boolean compareAgainstSelectItems) {
-		final BasicType<Boolean> booleanType = sessionFactory.getNodeBuilder().getBooleanType();
+		final BasicType<Boolean> booleanType = getCriteriaBuilder().getBooleanType();
 		final QuerySpec insertQuerySpec = (QuerySpec) dmlStatement.getSourceSelectStatement();
 		Predicate predicate = null;
 		OUTER: for ( String constraintColumnName : constraintColumnNames ) {

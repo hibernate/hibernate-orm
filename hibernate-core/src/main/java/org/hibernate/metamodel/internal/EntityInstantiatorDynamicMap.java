@@ -25,7 +25,6 @@ public class EntityInstantiatorDynamicMap
 
 	public EntityInstantiatorDynamicMap(PersistentClass bootDescriptor) {
 		super( bootDescriptor.getEntityName() );
-
 		entityRoleNames.add( getRoleName() );
 		if ( bootDescriptor.hasSubclasses() ) {
 			for ( PersistentClass subclassInfo : bootDescriptor.getSubclassClosure() ) {
@@ -48,25 +47,19 @@ public class EntityInstantiatorDynamicMap
 		return entityRoleNames.contains( type );
 	}
 
-	public static final EntityNameResolver ENTITY_NAME_RESOLVER = entity -> {
-		if ( ! (entity instanceof Map ) ) {
-			return null;
-		}
-		final String entityName = extractEmbeddedEntityName( (Map<?,?>) entity );
-		if ( entityName == null ) {
-			throw new HibernateException( "Could not determine type of dynamic map entity" );
-		}
-		return entityName;
-	};
+	public static final EntityNameResolver ENTITY_NAME_RESOLVER =
+			entity -> entity instanceof Map<?, ?> map ? extractEmbeddedEntityName( map ) : null;
 
 	public static String extractEmbeddedEntityName(Map<?,?> entity) {
 		if ( entity == null ) {
-			return null;
-		}
-		final String entityName = (String) entity.get( TYPE_KEY );
-		if ( entityName == null ) {
 			throw new HibernateException( "Could not determine type of dynamic map entity" );
 		}
-		return entityName;
+		else {
+			final String entityName = (String) entity.get( TYPE_KEY );
+			if ( entityName == null ) {
+				throw new HibernateException( "Could not determine type of dynamic map entity" );
+			}
+			return entityName;
+		}
 	}
 }

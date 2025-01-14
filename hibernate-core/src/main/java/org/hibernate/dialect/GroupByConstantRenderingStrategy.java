@@ -29,5 +29,5 @@ public enum GroupByConstantRenderingStrategy {
 	/**
 	 * Renders a column reference to a dummy table e.g. `, (select 1 x) dummy` and `dummy.x`
 	 */
-	COLUMN_REFERENCE;
+	COLUMN_REFERENCE
 }

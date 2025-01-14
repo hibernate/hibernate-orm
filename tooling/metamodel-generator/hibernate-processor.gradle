@@ -1,22 +1,17 @@
-import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
-
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+
+plugins {
+	id "local.publishing-java-module"
+	id "local.publishing-group-relocation"
+	id "org.hibernate.build.version-injection"
+}
+
 description = 'Hibernate compile-time tooling'
-
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply from: rootProject.file( 'gradle/group-relocation.gradle' )
-
-apply plugin: 'org.hibernate.build.version-injection'
-
-//java {
-//	sourceCompatibility = jdks.versions.baseline.get()
-//	targetCompatibility = sourceCompatibility
-//}
 
 sourceSets {
 	quarkusOrmPanache {
@@ -147,20 +142,22 @@ compileTestJava {
 }
 
 var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+def oldGroupId = "org.hibernate"
+def oldArtifactId = "hibernate-jpamodelgen"
 
 publishingExtension.publications.named("groupRelocation", MavenPublication) {
-	// org.hibernate:hibernate-jpamodelgen -> org.hibernate.orm:hibernate-processor
+	artifactId = oldArtifactId
 	pom {
-		artifactId = 'hibernate-jpamodelgen'
-		name = 'hibernate-jpamodelgen (relocated)'
+		name = "Relocation : ${oldGroupId}:${oldArtifactId} -> ${project.group}:${project.name}"
+		description = "The `${oldArtifactId}` module has been renamed `${project.name}` and moved to the `${project.group}` group-id"
 	}
 }
 
 publishingExtension.publications.register("renameRelocation", MavenPublication) {
-	// org.hibernate.orm:hibernate-jpamodelgen -> org.hibernate.orm:hibernate-processor
+	artifactId = oldArtifactId
 	pom {
-		artifactId = 'hibernate-jpamodelgen'
-		name = 'hibernate-jpamodelgen (relocated)'
+		name = "Relocation : ${project.group}:${oldArtifactId} -> ${project.group}:${project.name}"
+		description = "The `${oldArtifactId}` module has been renamed `${project.name}`"
 
 		distributionManagement {
 			relocation {

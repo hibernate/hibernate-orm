@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.Collections;
 import java.util.List;
 
 import javax.xml.stream.XMLEventFactory;
@@ -34,6 +33,7 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.orm.test.boot.jaxb.JaxbHelper.withStaxEventReader;
 
@@ -62,9 +62,8 @@ public class TransformationHelper {
 							new Origin( SourceType.RESOURCE, resourceName )
 					) ).buildMetadata();
 					final List<Binding<JaxbEntityMappingsImpl>> transformed = HbmXmlTransformer.transform(
-							Collections.singletonList( new Binding<>( hbmMapping, new Origin( SourceType.RESOURCE, resourceName ) ) ),
+							singletonList( new Binding<>( hbmMapping, new Origin( SourceType.RESOURCE, resourceName ) ) ),
 							metadata,
-							serviceRegistry,
 							UnsupportedFeatureHandling.ERROR
 					);
 

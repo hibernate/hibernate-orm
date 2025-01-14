@@ -136,11 +136,11 @@ public class SqmJpaCompoundSelection<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		selectableNodes.get( 0 ).appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		selectableNodes.get( 0 ).appendHqlString( hql );
 		for ( int i = 1; i < selectableNodes.size(); i++ ) {
-			sb.append(", ");
-			selectableNodes.get( i ).appendHqlString( sb );
+			hql.append(", ");
+			selectableNodes.get( i ).appendHqlString( hql );
 		}
 	}
 

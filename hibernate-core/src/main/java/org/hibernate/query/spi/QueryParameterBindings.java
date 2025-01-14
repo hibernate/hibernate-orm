@@ -82,15 +82,17 @@ public interface QueryParameterBindings {
 	 */
 	QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext);
 
-	void visitBindings(BiConsumer<QueryParameterImplementor<?>, QueryParameterBinding<?>> action);
+	void visitBindings(BiConsumer<? super QueryParameter<?>, ? super QueryParameterBinding<?>> action);
 
 	QueryKey.ParameterBindingsMemento NO_PARAMETER_BINDING_MEMENTO = new QueryKey.ParameterBindingsMemento(){
 	};
 
 	/**
 	 * @deprecated Use {@link #empty()} instead.
+	 *             Currently unused and can be safely removed.
 	 */
 	@Deprecated(forRemoval = true, since = "6.6")
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	QueryParameterBindings NO_PARAM_BINDINGS = new QueryParameterBindings() {
 		@Override
 		public boolean isBound(QueryParameterImplementor parameter) {

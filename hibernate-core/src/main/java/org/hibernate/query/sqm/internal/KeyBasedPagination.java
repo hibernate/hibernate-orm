@@ -14,7 +14,6 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -40,10 +39,9 @@ public class KeyBasedPagination {
 		final List<? extends JpaSelection<?>> items = querySpec.getSelectClause().getSelectionItems();
 		if ( items.size() == 1 ) {
 			final JpaSelection<?> selected = items.get(0);
-			if ( selected instanceof SqmRoot) {
+			if ( selected instanceof SqmFrom<?, ?> root ) {
 				statement.orderBy( keyDefinition.stream().map( order -> sortSpecification( statement, order ) )
 						.collect( toList() ) );
-				final SqmFrom<?,?> root = (SqmFrom<?,?>) selected;
 				statement.select( keySelection( keyDefinition, root, selected, builder ) );
 				if ( keyValues != null ) {
 					final SqmPredicate restriction = keyRestriction( keyDefinition, keyValues, root, builder );

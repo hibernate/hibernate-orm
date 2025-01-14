@@ -5,11 +5,9 @@
 package org.hibernate.metamodel;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 
 /**
  * Entry point providing access to the runtime metamodels:
@@ -42,20 +40,13 @@ public interface RuntimeMetamodels {
 		return getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
-	default EntityMappingType getEntityMappingType(Class entityType) {
+	default EntityMappingType getEntityMappingType(Class<?> entityType) {
 		return getMappingMetamodel().getEntityDescriptor( entityType );
 	}
 
 	default PluralAttributeMapping getPluralAttributeMapping(String role) {
 		return getMappingMetamodel().findCollectionDescriptor( role ).getAttributeMapping();
 	}
-
-	/**
-	 * @deprecated Use {@link #getEmbedded(NavigableRole)} instead
-	 */
-	@Deprecated
-	EmbeddableValuedModelPart getEmbedded(String role);
-	EmbeddableValuedModelPart getEmbedded(NavigableRole role);
 
 	default String getImportedName(String name) {
 		return getMappingMetamodel().getImportedName( name );

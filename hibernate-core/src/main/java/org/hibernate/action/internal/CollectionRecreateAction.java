@@ -68,7 +68,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 	}
 
 	private void preRecreate() {
-		getFastSessionServices().eventListenerGroup_PRE_COLLECTION_RECREATE
+		getEventListenerGroups().eventListenerGroup_PRE_COLLECTION_RECREATE
 				.fireLazyEventOnEachListener( this::newPreCollectionRecreateEvent,
 						PreCollectionRecreateEventListener::onPreRecreateCollection );
 	}
@@ -78,7 +78,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 	}
 
 	private void postRecreate() {
-		getFastSessionServices().eventListenerGroup_POST_COLLECTION_RECREATE
+		getEventListenerGroups().eventListenerGroup_POST_COLLECTION_RECREATE
 				.fireLazyEventOnEachListener( this::newPostCollectionRecreateEvent,
 						PostCollectionRecreateEventListener::onPostRecreateCollection );
 	}

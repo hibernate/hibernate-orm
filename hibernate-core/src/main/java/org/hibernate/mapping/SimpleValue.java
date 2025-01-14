@@ -284,18 +284,19 @@ public abstract class SimpleValue implements KeyValue {
 
 	void setAttributeConverterDescriptor(String typeName) {
 		final String converterClassName = typeName.substring( TYPE_NAME_PREFIX.length() );
+		final MetadataBuildingContext context = getBuildingContext();
 		@SuppressWarnings("unchecked")
 		final Class<? extends AttributeConverter<?,?>> clazz =
 				(Class<? extends AttributeConverter<?,?>>)
-						classForName( AttributeConverter.class, converterClassName, getMetadata() );
+						classForName( AttributeConverter.class, converterClassName,
+								context.getBootstrapContext() );
 		attributeConverterDescriptor =
 				new ClassBasedConverterDescriptor( clazz, false,
-						getBuildingContext().getBootstrapContext().getClassmateContext() );
+						context.getBootstrapContext().getClassmateContext() );
 	}
 
 	ClassLoaderService classLoaderService() {
-		return getMetadata().getMetadataBuildingOptions().getServiceRegistry()
-				.requireService( ClassLoaderService.class );
+		return getBuildingContext().getBootstrapContext().getClassLoaderService();
 	}
 
 	public void makeVersion() {
@@ -702,10 +703,7 @@ public abstract class SimpleValue implements KeyValue {
 				new JpaAttributeConverterCreationContext() {
 					@Override
 					public ManagedBeanRegistry getManagedBeanRegistry() {
-						return getMetadata()
-								.getMetadataBuildingOptions()
-								.getServiceRegistry()
-								.requireService( ManagedBeanRegistry.class );
+						return getBuildingContext().getBootstrapContext().getManagedBeanRegistry();
 					}
 
 					@Override

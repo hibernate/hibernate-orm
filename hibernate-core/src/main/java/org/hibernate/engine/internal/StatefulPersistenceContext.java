@@ -444,7 +444,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		final Callback callback = processingState.getExecutionContext().getCallback();
 		if ( processingState.getLoadingEntityHolders() != null ) {
 			final EventListenerGroup<PostLoadEventListener> listenerGroup =
-					getSession().getFactory().getFastSessionServices().eventListenerGroup_POST_LOAD;
+					getSession().getFactory().getEventListenerGroups().eventListenerGroup_POST_LOAD;
 			final PostLoadEvent postLoadEvent = processingState.getPostLoadEvent();
 			for ( final EntityHolder holder : processingState.getLoadingEntityHolders() ) {
 				processLoadedEntityHolder( holder, listenerGroup, postLoadEvent, callback, holderConsumer );
@@ -1471,9 +1471,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public Object getOwnerId(String entityName, String propertyName, Object childEntity, Map mergeMap) {
 		final String collectionRole = entityName + '.' + propertyName;
 
-		final MappingMetamodelImplementor mappingMetamodel = session.getFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel();
+		final MappingMetamodelImplementor mappingMetamodel = session.getFactory().getMappingMetamodel();
 		final EntityPersister persister = mappingMetamodel.getEntityDescriptor( entityName );
 		final CollectionPersister collectionPersister = mappingMetamodel.getCollectionDescriptor( collectionRole );
 
@@ -1601,7 +1599,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object getIndexInOwner(String entity, String property, Object childEntity, Map mergeMap) {
-		final MappingMetamodelImplementor metamodel = session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
+		final MappingMetamodelImplementor metamodel = session.getFactory().getMappingMetamodel();
 		final EntityPersister persister = metamodel.getEntityDescriptor( entity );
 		final CollectionPersister cp = metamodel.getCollectionDescriptor( entity + '.' + property );
 

@@ -36,7 +36,7 @@ public class ArrayContainsArgumentTypeResolver extends AbstractFunctionArgumentT
 					else {
 						return DdlTypeHelper.resolveArrayType(
 								(DomainType<?>) expressible.getSingleJdbcMapping(),
-								converter.getCreationContext().getSessionFactory().getTypeConfiguration()
+								converter.getCreationContext().getTypeConfiguration()
 						);
 					}
 				}

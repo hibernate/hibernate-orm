@@ -53,10 +53,7 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 		if ( lhs instanceof SqmTreatedPath<?, ?> && ( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget().getPersistenceType() == ENTITY ) {
 			final EntityDomainType<?> treatTargetDomainType = (EntityDomainType<?>) ( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget();
 
-			final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext()
-					.getSessionFactory()
-					.getRuntimeMetamodels()
-					.getMappingMetamodel();
+			final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext().getMappingMetamodel();
 			final EntityPersister treatEntityDescriptor = mappingMetamodel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
 			final MappingType tableGroupMappingType = tableGroup.getModelPart().getPartMappingType();
 			if ( tableGroupMappingType instanceof EntityMappingType
@@ -70,13 +67,9 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 		}
 		else {
 			modelPartContainer = tableGroup.getModelPart();
-			if ( jpaQueryComplianceEnabled && lhs.getNodeType() instanceof EntityDomainType<?> ) {
-				final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) lhs.getNodeType();
-				final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext()
-						.getSessionFactory()
-						.getRuntimeMetamodels()
-						.getMappingMetamodel();
-				treatTarget = mappingMetamodel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
+			if ( jpaQueryComplianceEnabled && lhs.getNodeType() instanceof EntityDomainType<?> entityDomainType ) {
+				treatTarget = sqlAstCreationState.getCreationContext().getMappingMetamodel()
+						.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
 			}
 		}
 

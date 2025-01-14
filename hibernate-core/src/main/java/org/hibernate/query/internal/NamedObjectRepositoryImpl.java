@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.Query;
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.boot.Metadata;
@@ -17,6 +20,10 @@ import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
+import org.hibernate.procedure.spi.ProcedureCallImplementor;
+import org.hibernate.query.hql.spi.SqmQueryImplementor;
+import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.EntityTypeException;
 import org.hibernate.query.NamedQueryValidationException;
 import org.hibernate.query.sqm.PathElementException;
@@ -74,6 +81,46 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 			}
 		}
 		return namedQueries;
+	}
+
+	@Override
+	public void registerNamedQuery(String name, Query query) {
+		// use unwrap() here instead of 'instanceof' because the Query might be wrapped
+
+		// first, handle stored procedures
+		try {
+			final var unwrapped = query.unwrap( ProcedureCallImplementor.class );
+			if ( unwrapped != null ) {
+				registerCallableQueryMemento( name, unwrapped.toMemento( name ) );
+				return;
+			}
+		}
+		catch ( PersistenceException ignore ) {
+			// this means 'query' is not a ProcedureCallImplementor
+		}
+
+		// then try as a native SQL or JPQL query
+		try {
+			final var queryImplementor = query.unwrap( QueryImplementor.class );
+			if ( queryImplementor != null ) {
+				if ( queryImplementor instanceof NativeQueryImplementor<?> nativeQueryImplementor ) {
+					registerNativeQueryMemento( name, nativeQueryImplementor.toMemento( name ) );
+
+				}
+				else if ( queryImplementor instanceof SqmQueryImplementor<?> sqmQueryImplementor ) {
+					registerSqmQueryMemento( name, sqmQueryImplementor.toMemento( name ) );
+				}
+				else {
+					throw new AssertionFailure( "unknown QueryImplementor" );
+				}
+				return;
+			}
+		}
+		catch ( PersistenceException ignore ) {
+			// this means 'query' is not a native SQL or JPQL query
+		}
+
+		throw new PersistenceException( "Could not register named query: " + name );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

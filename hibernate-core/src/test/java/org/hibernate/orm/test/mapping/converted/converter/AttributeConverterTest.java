@@ -77,9 +77,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		try {
 			cfg.addAttributeConverter( BlowsUpConverter.class );
 			try ( final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory() ) {
-				final ManagedBeanRegistry managedBeanRegistry = sessionFactory
-						.getServiceRegistry()
-						.getService( ManagedBeanRegistry.class );
+				final ManagedBeanRegistry managedBeanRegistry = sessionFactory.getManagedBeanRegistry();
 				final ManagedBean<BlowsUpConverter> converterBean = managedBeanRegistry.getBean( BlowsUpConverter.class );
 				converterBean.getBeanInstance();
 				fail( "expecting an exception" );

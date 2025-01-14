@@ -51,7 +51,7 @@ public class CompositeParameterTests {
 	@Test
 	public void testSimplePredicateCriteria(SessionFactoryScope scope) {
 		final HibernateCriteriaBuilder builder = scope.getSessionFactory().getCriteriaBuilder();
-		final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getRuntimeMetamodels().getJpaMetamodel();
+		final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getJpaMetamodel();
 		final EntityDomainType<SimpleEntity> entityDescriptor = jpaMetamodel.entity( SimpleEntity.class );
 		final SingularAttribute<? super SimpleEntity, SimpleComposite> attribute = entityDescriptor.getSingularAttribute( "composite", SimpleComposite.class );
 
@@ -75,7 +75,7 @@ public class CompositeParameterTests {
 	@Test
 	public void testInPredicateCriteria(SessionFactoryScope scope) {
 		final HibernateCriteriaBuilder builder = scope.getSessionFactory().getCriteriaBuilder();
-		final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getRuntimeMetamodels().getJpaMetamodel();
+		final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getJpaMetamodel();
 		final EntityDomainType<SimpleEntity> entityDescriptor = jpaMetamodel.entity( SimpleEntity.class );
 		final SingularAttribute<? super SimpleEntity, SimpleComposite> attribute = entityDescriptor.getSingularAttribute( "composite", SimpleComposite.class );
 
@@ -99,7 +99,7 @@ public class CompositeParameterTests {
 	@Test
 	public void testDeTypedInPredicateCriteria(SessionFactoryScope scope) {
 		final HibernateCriteriaBuilder builder = scope.getSessionFactory().getCriteriaBuilder();
-		final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getRuntimeMetamodels().getJpaMetamodel();
+		final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getJpaMetamodel();
 		final EntityDomainType entityDescriptor = jpaMetamodel.entity( SimpleEntity.class );
 		final SingularAttribute attribute = entityDescriptor.getSingularAttribute( "composite" );
 

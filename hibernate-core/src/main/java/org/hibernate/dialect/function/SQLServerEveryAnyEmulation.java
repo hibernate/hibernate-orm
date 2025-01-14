@@ -83,6 +83,6 @@ public class SQLServerEveryAnyEmulation extends AbstractSqmSelfRenderingFunction
 			List<? extends SqlAstNode> sqlAstArguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		this.render( sqlAppender, sqlAstArguments, null, (ReturnableType<?>) null, walker );
+		this.render( sqlAppender, sqlAstArguments, null, null, walker );
 	}
 }

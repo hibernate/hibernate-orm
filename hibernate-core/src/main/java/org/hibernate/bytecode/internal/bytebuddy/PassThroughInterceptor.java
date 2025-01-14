@@ -6,12 +6,13 @@ package org.hibernate.bytecode.internal.bytebuddy;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.hibernate.proxy.ProxyConfiguration;
 
 public class PassThroughInterceptor implements ProxyConfiguration.Interceptor {
 
-	private HashMap<Object, Object> data = new HashMap<>();
+	private final Map<Object, Object> data = new HashMap<>();
 	private final String proxiedClassName;
 
 	public PassThroughInterceptor(String proxiedClassName) {

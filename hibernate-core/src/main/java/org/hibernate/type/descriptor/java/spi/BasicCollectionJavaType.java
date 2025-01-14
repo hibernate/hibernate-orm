@@ -21,6 +21,7 @@ import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
@@ -46,6 +47,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Christian Beikov
  */
 @Incubating
+@AllowReflection // Needed for arbitrary array wrapping/unwrapping
 public class BasicCollectionJavaType<C extends Collection<E>, E> extends AbstractJavaType<C> implements
 		BasicPluralJavaType<E> {
 

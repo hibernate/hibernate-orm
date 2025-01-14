@@ -78,9 +78,9 @@ public class SqmPositionalParameter<T> extends AbstractSqmParameter<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( '?' );
-		sb.append( getPosition() );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( '?' );
+		hql.append( getPosition() );
 	}
 
 	@Override

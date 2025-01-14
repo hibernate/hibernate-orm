@@ -26,10 +26,6 @@ protected String getBaseForMappings() {
 public String[] getMappings() {
 	return new String[] { "org/hibernate/orm/test/annotations/derivedidentities/e1/b/specjmapid/lazy/order_orm.xml" };
 }
-
-public CompositeKeyDeleteTest() {
-	System.setProperty( "hibernate.enable_specj_proprietary_syntax", "true" );
-}
 /**
 	* This test checks to make sure the non null column is not updated with a
 	* null value when a CustomerInventory is removed.

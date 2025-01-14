@@ -10,7 +10,7 @@ import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.FastSessionServices;
+import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.internal.util.StringHelper.unqualify;
@@ -192,10 +192,10 @@ public abstract class EntityAction
 
 	/**
 	 * Convenience method for all subclasses.
-	 * @return the {@link FastSessionServices} instance from the SessionFactory.
+	 * @return the {@link EventListenerGroups} instance from the {@code SessionFactory}.
 	 */
-	protected FastSessionServices getFastSessionServices() {
-		return session.getFactory().getFastSessionServices();
+	protected EventListenerGroups getEventListenerGroups() {
+		return session.getFactory().getEventListenerGroups();
 	}
 
 }

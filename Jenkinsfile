@@ -49,11 +49,11 @@ stage('Configure') {
 		// and it's useful to test that.
 		new BuildEnvironment( testJdkVersion: '21', testJdkLauncherArgs: '--enable-preview' ),
 		new BuildEnvironment( testJdkVersion: '23', testJdkLauncherArgs: '--enable-preview' ),
+		new BuildEnvironment( testJdkVersion: '24', testJdkLauncherArgs: '--enable-preview' ),
 		// The following JDKs aren't supported by Hibernate ORM out-of-the box yet:
 		// they require the use of -Dnet.bytebuddy.experimental=true.
 		// Make sure to remove that argument as soon as possible
 		// -- generally that requires upgrading bytebuddy after the JDK goes GA.
-		new BuildEnvironment( testJdkVersion: '24', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true' ),
 		new BuildEnvironment( testJdkVersion: '25', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true' )
 	];
 
@@ -249,7 +249,7 @@ void ciBuild(buildEnv, String args) {
 			}
 		}
 	}
-	else if ( buildEnv.node && buildEnv.node != 's390x' ) { // We couldn't get the code below to work on s390x for some reason.
+	else if ( buildEnv.node != 's390x' ) { // We couldn't get the code below to work on s390x for some reason.
 		// Pull request: we can't pass credentials to the build, since we'd be exposing secrets to e.g. tests.
 		// We do the build first, then publish the build scan separately.
 		tryFinally({

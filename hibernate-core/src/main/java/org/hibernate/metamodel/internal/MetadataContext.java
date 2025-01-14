@@ -111,9 +111,10 @@ public class MetadataContext {
 			MetadataImplementor bootMetamodel,
 			JpaStaticMetamodelPopulationSetting jpaStaticMetaModelPopulationSetting,
 			JpaMetamodelPopulationSetting jpaMetaModelPopulationSetting,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
+			RuntimeModelCreationContext runtimeModelCreationContext,
+			ClassLoaderService classLoaderService) {
 		this.jpaMetamodel = jpaMetamodel;
-		this.classLoaderService = jpaMetamodel.getServiceRegistry().getService( ClassLoaderService.class );
+		this.classLoaderService = classLoaderService;
 		this.metamodel = mappingMetamodel;
 		this.knownMappedSuperclasses = bootMetamodel.getMappedSuperclassMappingsCopy();
 		this.typeConfiguration = runtimeModelCreationContext.getTypeConfiguration();
@@ -573,12 +574,28 @@ public class MetadataContext {
 		return null;
 	}
 
-	private EmbeddableTypeImpl<?> applyIdClassMetadata(Component idClassComponent) {
-		final JavaType<?> javaType =
+	private <Y> EmbeddableTypeImpl<Y> applyIdClassMetadata(Component idClassComponent) {
+		final JavaType<Y> javaType =
 				getTypeConfiguration().getJavaTypeRegistry()
 						.resolveManagedTypeDescriptor( idClassComponent.getComponentClass() );
-		final EmbeddableTypeImpl<?> embeddableType =
-				new EmbeddableTypeImpl<>( javaType, null, null, false, getJpaMetamodel() );
+
+		final MappedSuperclass mappedSuperclass = idClassComponent.getMappedSuperclass();
+		final MappedSuperclassDomainType<? super Y> superType;
+		if ( mappedSuperclass != null ) {
+			//noinspection unchecked
+			superType = (MappedSuperclassDomainType<? super Y>) locateMappedSuperclassType( mappedSuperclass );
+		}
+		else {
+			superType = null;
+		}
+
+		final EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<>(
+				javaType,
+				superType,
+				null,
+				false,
+				getJpaMetamodel()
+		);
 		registerEmbeddableType( embeddableType, idClassComponent );
 		return embeddableType;
 	}

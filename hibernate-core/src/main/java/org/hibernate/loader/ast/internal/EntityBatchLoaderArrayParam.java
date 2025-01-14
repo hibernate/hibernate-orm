@@ -11,6 +11,7 @@ import java.util.Locale;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -75,12 +76,10 @@ public class EntityBatchLoaderArrayParam<T>
 		}
 
 		identifierMapping = (BasicEntityIdentifierMapping) getLoadable().getIdentifierMapping();
-		final Class<?> arrayClass =
-				Array.newInstance( identifierMapping.getJavaType().getJavaTypeClass(), 0 ).getClass();
+		final Class<?> idClass = identifierMapping.getJavaType().getJavaTypeClass();
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
-				sessionFactory.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( arrayClass ),
 				identifierMapping.getJdbcMapping(),
-				arrayClass,
+				idClass,
 				sessionFactory
 		);
 
@@ -106,6 +105,7 @@ public class EntityBatchLoaderArrayParam<T>
 		return domainBatchSize;
 	}
 
+	@AllowReflection
 	protected Object[] resolveIdsToInitialize(Object pkValue, SharedSessionContractImplementor session) {
 		//TODO: should this really be different to EntityBatchLoaderInPredicate impl?
 		final Class<?> idType = identifierMapping.getJavaType().getJavaTypeClass();

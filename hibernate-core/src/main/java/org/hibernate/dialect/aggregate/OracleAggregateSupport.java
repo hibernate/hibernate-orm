@@ -564,7 +564,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		MERGEPATCH,
 		QUERY_AND_PATH,
 		QUERY,
-		NONE;
+		NONE
 	}
 
 	interface JsonWriteExpression {

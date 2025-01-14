@@ -41,6 +41,7 @@ import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
@@ -119,7 +120,7 @@ public class LoaderSelectBuilder {
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			SessionFactoryImplementor sessionFactory) {
 		final LoaderSelectBuilder process = new LoaderSelectBuilder(
-				sessionFactory,
+				sessionFactory.getSqlTranslationEngine(),
 				loadable,
 				partsToSelect,
 				singletonList( restrictedPart ),
@@ -127,7 +128,7 @@ public class LoaderSelectBuilder {
 				1,
 				loadQueryInfluencers,
 				lockOptions,
-				determineGraphTraversalState( loadQueryInfluencers, sessionFactory ),
+				determineGraphTraversalState( loadQueryInfluencers, sessionFactory.getJpaMetamodel() ),
 				true,
 				jdbcParameterConsumer
 		);
@@ -146,7 +147,7 @@ public class LoaderSelectBuilder {
 			JdbcParameter jdbcArrayParameter,
 			SessionFactoryImplementor sessionFactory) {
 		final LoaderSelectBuilder builder = new LoaderSelectBuilder(
-				sessionFactory,
+				sessionFactory.getSqlTranslationEngine(),
 				loadable,
 				null,
 				singletonList( restrictedPart ),
@@ -154,7 +155,7 @@ public class LoaderSelectBuilder {
 				-1,
 				influencers,
 				lockOptions,
-				determineGraphTraversalState( influencers, sessionFactory ),
+				determineGraphTraversalState( influencers, sessionFactory.getJpaMetamodel() ),
 				true,
 				null
 		);
@@ -184,8 +185,7 @@ public class LoaderSelectBuilder {
 		);
 
 
-		if ( loadable instanceof PluralAttributeMapping ) {
-			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
+		if ( loadable instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			builder.applyFiltering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
 			builder.applyOrdering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
 		}
@@ -240,7 +240,7 @@ public class LoaderSelectBuilder {
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			SessionFactoryImplementor sessionFactory) {
 		final LoaderSelectBuilder process = new LoaderSelectBuilder(
-				sessionFactory,
+				sessionFactory.getSqlTranslationEngine(),
 				loadable,
 				partsToSelect,
 				restrictedPart,
@@ -265,7 +265,7 @@ public class LoaderSelectBuilder {
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			SessionFactoryImplementor sessionFactory) {
 		final LoaderSelectBuilder process = new LoaderSelectBuilder(
-				sessionFactory,
+				sessionFactory.getSqlTranslationEngine(),
 				loadable,
 				partsToSelect,
 				restrictedParts,
@@ -293,7 +293,7 @@ public class LoaderSelectBuilder {
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			SessionFactoryImplementor sessionFactory) {
 		final LoaderSelectBuilder process = new LoaderSelectBuilder(
-				sessionFactory,
+				sessionFactory.getSqlTranslationEngine(),
 				loadable,
 				partsToSelect,
 				restrictedParts,
@@ -301,7 +301,7 @@ public class LoaderSelectBuilder {
 				numberOfKeysToLoad,
 				loadQueryInfluencers,
 				lockOptions,
-				determineGraphTraversalState( loadQueryInfluencers, sessionFactory ),
+				determineGraphTraversalState( loadQueryInfluencers, sessionFactory.getJpaMetamodel() ),
 				forceIdentifierSelection,
 				jdbcParameterConsumer
 		);
@@ -331,7 +331,7 @@ public class LoaderSelectBuilder {
 			Consumer<JdbcParameter> jdbcParameterConsumer,
 			SessionFactoryImplementor sessionFactory) {
 		final LoaderSelectBuilder process = new LoaderSelectBuilder(
-				sessionFactory,
+				sessionFactory.getSqlTranslationEngine(),
 				attributeMapping,
 				null,
 				attributeMapping.getKeyDescriptor(),
@@ -383,8 +383,7 @@ public class LoaderSelectBuilder {
 		this.entityGraphTraversalState = entityGraphTraversalState;
 		this.forceIdentifierSelection = forceIdentifierSelection;
 		this.jdbcParameterConsumer = jdbcParameterConsumer;
-		if ( loadable instanceof PluralAttributeMapping ) {
-			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
+		if ( loadable instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			if ( pluralAttributeMapping.getMappedType()
 					.getCollectionSemantics()
 					.getCollectionClassification() == CollectionClassification.BAG ) {
@@ -412,7 +411,7 @@ public class LoaderSelectBuilder {
 				numberOfKeysToLoad,
 				loadQueryInfluencers,
 				lockOptions != null ? lockOptions : LockOptions.NONE,
-				determineGraphTraversalState( loadQueryInfluencers, creationContext.getSessionFactory() ),
+				determineGraphTraversalState( loadQueryInfluencers, creationContext.getJpaMetamodel() ),
 				determineWhetherToForceIdSelection( numberOfKeysToLoad, restrictedParts ),
 				jdbcParameterConsumer
 		);
@@ -464,7 +463,7 @@ public class LoaderSelectBuilder {
 
 	private static EntityGraphTraversalState determineGraphTraversalState(
 			LoadQueryInfluencers loadQueryInfluencers,
-			SessionFactoryImplementor sessionFactory) {
+			JpaMetamodel jpaMetamodel) {
 		if ( loadQueryInfluencers != null ) {
 			final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
 			if ( effectiveEntityGraph != null ) {
@@ -474,7 +473,7 @@ public class LoaderSelectBuilder {
 					return new StandardEntityGraphTraversalStateImpl(
 							graphSemantic,
 							rootGraphImplementor,
-							sessionFactory.getJpaMetamodel()
+							jpaMetamodel
 					);
 				}
 			}
@@ -521,8 +520,7 @@ public class LoaderSelectBuilder {
 			);
 		}
 
-		if ( loadable instanceof PluralAttributeMapping ) {
-			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
+		if ( loadable instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			applyFiltering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
 			applyOrdering( rootQuerySpec, rootTableGroup, pluralAttributeMapping, sqlAstCreationState );
 		}
@@ -539,8 +537,7 @@ public class LoaderSelectBuilder {
 		for ( ModelPart part : partsToSelect ) {
 			final NavigablePath navigablePath = rootNavigablePath.append( part.getPartName() );
 			final TableGroup tableGroup;
-			if ( part instanceof TableGroupJoinProducer ) {
-				final TableGroupJoinProducer tableGroupJoinProducer = (TableGroupJoinProducer) part;
+			if ( part instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
 				final TableGroupJoin tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 						navigablePath,
 						rootTableGroup,
@@ -816,8 +813,7 @@ public class LoaderSelectBuilder {
 
 			if ( isKeyFetchable ) {
 				final EntityIdentifierMapping identifierMapping;
-				if ( fetchParent instanceof BiDirectionalFetch ) {
-					final BiDirectionalFetch parentAsBiDirectionalFetch = (BiDirectionalFetch) fetchParent;
+				if ( fetchParent instanceof BiDirectionalFetch parentAsBiDirectionalFetch ) {
 					final Fetchable biDirectionalFetchedMapping = parentAsBiDirectionalFetch.getFetchedMapping();
 					if ( biDirectionalFetchedMapping instanceof EntityValuedFetchable ) {
 						identifierMapping = ( (EntityValuedFetchable) biDirectionalFetchedMapping )
@@ -830,8 +826,7 @@ public class LoaderSelectBuilder {
 				}
 				else {
 					final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
-					if ( fetchableContainer instanceof EntityValuedModelPart ) {
-						final EntityValuedModelPart entityValuedModelPart = (EntityValuedModelPart) fetchableContainer;
+					if ( fetchableContainer instanceof EntityValuedModelPart entityValuedModelPart ) {
 						identifierMapping = entityValuedModelPart.getEntityMappingType().getIdentifierMapping();
 					}
 					else {
@@ -878,8 +873,8 @@ public class LoaderSelectBuilder {
 						final String fetchableRole = fetchable.getNavigableRole().getFullPath();
 
 						for ( String enabledFetchProfileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
-							final FetchProfile enabledFetchProfile = creationContext.getSessionFactory()
-									.getFetchProfile( enabledFetchProfileName );
+							final FetchProfile enabledFetchProfile =
+									creationContext.getFetchProfile( enabledFetchProfileName );
 							final org.hibernate.engine.profile.Fetch profileFetch =
 									enabledFetchProfile.getFetchByRole( fetchableRole );
 							if ( profileFetch != null ) {
@@ -1165,8 +1160,7 @@ public class LoaderSelectBuilder {
 	}
 
 	private void registerPluralTableGroupParts(FromClauseAccess fromClauseAccess, TableGroup tableGroup) {
-		if ( tableGroup instanceof PluralTableGroup ) {
-			final PluralTableGroup pluralTableGroup = (PluralTableGroup) tableGroup;
+		if ( tableGroup instanceof PluralTableGroup pluralTableGroup ) {
 			if ( pluralTableGroup.getElementTableGroup() != null ) {
 				fromClauseAccess.registerTableGroup(
 						pluralTableGroup.getElementTableGroup().getNavigablePath(),

@@ -447,7 +447,7 @@ public interface EntityMappingType
 	}
 
 	/**
-	 * Walk this type's attributes as well as its sub-type's
+	 * Walk this type's attributes as well as its subtypes
 	 */
 	default void visitSubTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
 		// by default do nothing

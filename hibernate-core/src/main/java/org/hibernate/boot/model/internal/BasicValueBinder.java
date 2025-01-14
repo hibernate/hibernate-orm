@@ -504,8 +504,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	private ManagedBeanRegistry getManagedBeanRegistry() {
-		return buildingContext.getBootstrapContext().getServiceRegistry()
-				.requireService(ManagedBeanRegistry.class);
+		return buildingContext.getBootstrapContext().getManagedBeanRegistry();
 	}
 
 	private void prepareMapKey(

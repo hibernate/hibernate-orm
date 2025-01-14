@@ -160,9 +160,9 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( enumValue.getDeclaringClass().getTypeName() );
-		sb.append( '.' );
-		sb.append( enumValueName );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( enumValue.getDeclaringClass().getTypeName() );
+		hql.append( '.' );
+		hql.append( enumValueName );
 	}
 }

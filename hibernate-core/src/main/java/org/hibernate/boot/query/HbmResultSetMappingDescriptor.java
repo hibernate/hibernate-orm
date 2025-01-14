@@ -4,17 +4,6 @@
  */
 package org.hibernate.boot.query;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.function.Supplier;
-
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.BootLogging;
@@ -43,10 +32,9 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.query.internal.FetchMementoBasicStandard;
 import org.hibernate.query.internal.FetchMementoEmbeddableStandard;
 import org.hibernate.query.internal.FetchMementoEntityStandard;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.internal.FetchMementoBasicStandard;
 import org.hibernate.query.internal.FetchMementoHbmStandard;
 import org.hibernate.query.internal.FetchMementoHbmStandard.FetchParentMemento;
 import org.hibernate.query.internal.NamedResultSetMappingMementoImpl;
@@ -58,10 +46,22 @@ import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.ResultMemento;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.type.BasicType;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.function.Supplier;
 
 /**
  * Boot-time descriptor of a result set mapping as defined in an {@code hbm.xml} file
@@ -372,10 +372,8 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 					registrationName
 			);
 
-			final EntityMappingType entityDescriptor = resolutionContext
-					.getSessionFactory()
-					.getRuntimeMetamodels()
-					.getEntityMappingType( entityName );
+			final EntityMappingType entityDescriptor =
+					resolutionContext.getMappingMetamodel().getEntityDescriptor( entityName );
 			applyFetchJoins( joinDescriptorsAccess, tableAlias, propertyFetchDescriptors );
 
 			final NavigablePath entityPath = new NavigablePath( entityName );
@@ -421,10 +419,8 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		@Override
 		public FetchParentMemento resolveParentMemento(ResultSetMappingResolutionContext resolutionContext) {
 			if ( thisAsParentMemento == null ) {
-				final EntityMappingType entityDescriptor = resolutionContext
-						.getSessionFactory()
-						.getRuntimeMetamodels()
-						.getEntityMappingType( entityName );
+				final EntityMappingType entityDescriptor =
+						resolutionContext.getMappingMetamodel().getEntityDescriptor( entityName );
 				thisAsParentMemento = new HbmFetchParentMemento(
 						new NavigablePath( entityDescriptor.getEntityName() ),
 						entityDescriptor
@@ -916,10 +912,9 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		@Override
 		public FetchParentMemento resolveParentMemento(ResultSetMappingResolutionContext resolutionContext) {
 			if ( thisAsParentMemento == null ) {
-				final CollectionPersister collectionDescriptor = resolutionContext.getSessionFactory()
-						.getRuntimeMetamodels()
-						.getMappingMetamodel()
-						.getCollectionDescriptor( collectionPath.getFullPath() );
+				final CollectionPersister collectionDescriptor =
+						resolutionContext.getMappingMetamodel()
+								.getCollectionDescriptor( collectionPath.getFullPath() );
 
 				thisAsParentMemento = new HbmFetchParentMemento( collectionPath, collectionDescriptor.getAttributeMapping() );
 			}
@@ -957,10 +952,9 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			);
 
 			if ( hibernateTypeName != null ) {
-				final BasicType<?> namedType = resolutionContext.getSessionFactory()
-						.getTypeConfiguration()
-						.getBasicTypeRegistry()
-						.getRegisteredType( hibernateTypeName );
+				final BasicType<?> namedType =
+						resolutionContext.getTypeConfiguration().getBasicTypeRegistry()
+								.getRegisteredType( hibernateTypeName );
 
 				if ( namedType == null ) {
 					throw new IllegalArgumentException( "Could not resolve named type : " + hibernateTypeName );

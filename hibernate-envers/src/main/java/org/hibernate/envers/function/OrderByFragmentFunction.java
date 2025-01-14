@@ -196,11 +196,9 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 			final TableGroup tableGroup = ( (FromClauseIndex) walker.getFromClauseAccess() ).findTableGroup(
 					sqmAlias
 			);
-			final CollectionPersister collectionDescriptor = walker.getCreationContext()
-					.getSessionFactory()
-						.getRuntimeMetamodels()
-						.getMappingMetamodel()
-					.findCollectionDescriptor( attributeRole );
+			final CollectionPersister collectionDescriptor =
+					walker.getCreationContext().getMappingMetamodel()
+							.findCollectionDescriptor( attributeRole );
 			final PluralAttributeMapping pluralAttribute = collectionDescriptor.getAttributeMapping();
 			final QuerySpec queryPart = (QuerySpec) ( (SqlAstQueryPartProcessingState) walker.getCurrentProcessingState() ).getInflightQueryPart();
 			final OrderByFragment fragment;

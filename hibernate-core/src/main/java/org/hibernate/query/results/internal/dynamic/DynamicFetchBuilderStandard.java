@@ -36,7 +36,7 @@ import java.util.List;
 public class DynamicFetchBuilderStandard
 		implements DynamicFetchBuilder, NativeQuery.ReturnProperty {
 
-	private Fetchable fetchable;
+	private final Fetchable fetchable;
 	private final List<String> columnNames;
 
 	public DynamicFetchBuilderStandard(Fetchable fetchable) {
@@ -193,8 +193,7 @@ public class DynamicFetchBuilderStandard
 					),
 					selectableMapping.getJdbcMapping().getJdbcJavaType(),
 					null,
-					domainResultCreationState.getSqlAstCreationState().getCreationContext()
-							.getSessionFactory().getTypeConfiguration()
+					domainResultCreationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 			);
 		};
 	}

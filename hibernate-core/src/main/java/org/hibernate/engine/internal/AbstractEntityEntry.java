@@ -148,8 +148,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			final PersistenceContext persistenceContext) {
 		this.persister = factory == null
 				? null
-				: factory.getRuntimeMetamodels().getMappingMetamodel()
-						.getEntityDescriptor( entityName );
+				: factory.getMappingMetamodel().getEntityDescriptor( entityName );
 		this.id = id;
 		setCompressedValue( STATUS, status );
 		setCompressedValue( PREVIOUS_STATUS, previousStatus );

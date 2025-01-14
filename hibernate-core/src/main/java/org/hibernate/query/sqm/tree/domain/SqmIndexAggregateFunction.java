@@ -113,9 +113,9 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append(functionName).append( "(" );
-		getLhs().appendHqlString( sb );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append(functionName).append( "(" );
+		getLhs().appendHqlString( hql );
+		hql.append( ')' );
 	}
 }

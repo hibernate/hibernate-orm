@@ -181,9 +181,8 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				}
 			}
 			//JPA 2 @MapsId + @IdClass points to the pk of the entity
-			else if ( attributeMapping instanceof ToOneAttributeMapping
+			else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping
 					&& !( getAttributeMapping( i ) instanceof ToOneAttributeMapping ) ) {
-				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
 				final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
 						toOneAttributeMapping.getSideNature().inverse()
 				);
@@ -208,16 +207,15 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor factory = session.getFactory();
-		final EntityPersister entityDescriptor = factory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entity.getClass() );
+		final EntityPersister entityDescriptor =
+				factory.getMappingMetamodel()
+						.getEntityDescriptor( entity.getClass() );
 		final Object[] propertyValues = new Object[attributeMappings.size()];
 		virtualIdEmbeddable.forEachAttribute(
 				(position, virtualIdAttribute) -> {
 					final AttributeMapping idClassAttribute = attributeMappings.get( position );
 					Object o = idClassAttribute.getValue( id );
-					if ( virtualIdAttribute instanceof ToOneAttributeMapping && !( idClassAttribute instanceof ToOneAttributeMapping ) ) {
-						final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) virtualIdAttribute;
+					if ( virtualIdAttribute instanceof ToOneAttributeMapping toOneAttributeMapping && !( idClassAttribute instanceof ToOneAttributeMapping ) ) {
 						final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
 								.getEntityPersister();
 						final EntityKey entityKey = session.generateEntityKey( o, entityPersister );

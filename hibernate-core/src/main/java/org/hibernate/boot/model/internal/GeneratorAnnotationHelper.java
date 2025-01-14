@@ -273,8 +273,8 @@ public class GeneratorAnnotationHelper {
 			}
 			collectBaselineProperties(
 					creationContext.getProperty() != null
-							? (SimpleValue) creationContext.getProperty().getValue()
-							: (SimpleValue) creationContext.getPersistentClass().getIdentifierProperty().getValue(),
+							? creationContext.getProperty().getValue()
+							: creationContext.getPersistentClass().getIdentifierProperty().getValue(),
 					creationContext.getDatabase().getDialect(),
 					creationContext.getRootClass(),
 					properties::setProperty,

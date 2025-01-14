@@ -146,18 +146,18 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		testExpression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		testExpression.appendHqlString( hql );
 		if ( isNegated() ) {
-			sb.append( " not" );
+			hql.append( " not" );
 		}
-		sb.append( " in (" );
-		listExpressions.get( 0 ).appendHqlString( sb );
+		hql.append( " in (" );
+		listExpressions.get( 0 ).appendHqlString( hql );
 		for ( int i = 1; i < listExpressions.size(); i++ ) {
-			sb.append( ", " );
-			listExpressions.get( i ).appendHqlString( sb );
+			hql.append( ", " );
+			listExpressions.get( i ).appendHqlString( hql );
 		}
-		sb.append( ')' );
+		hql.append( ')' );
 	}
 
 	@Override

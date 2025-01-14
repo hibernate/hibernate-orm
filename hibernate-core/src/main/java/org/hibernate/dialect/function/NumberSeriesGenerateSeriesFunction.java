@@ -5,7 +5,6 @@
 package org.hibernate.dialect.function;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -28,6 +27,7 @@ import org.hibernate.query.sqm.tree.expression.NumericTypeCategory;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -107,8 +107,8 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 	public static Expression add(Expression left, Expression right, SqmToSqlAstConverter converter) {
 		if ( right instanceof org.hibernate.sql.ast.tree.expression.Duration duration ) {
 			final BasicType<?> nodeType = (BasicType<?>) left.getExpressionType().getSingleJdbcMapping();
-			final FunctionRenderer timestampadd = (FunctionRenderer) converter.getCreationContext().getSessionFactory()
-					.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "timestampadd" );
+			final FunctionRenderer timestampadd = (FunctionRenderer) converter.getCreationContext()
+					.getSqmFunctionRegistry().findFunctionDescriptor( "timestampadd" );
 			return new SelfRenderingFunctionSqlAstExpression(
 					"timestampadd",
 					timestampadd,
@@ -155,10 +155,11 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 
 	static Expression castToTimestamp(SqlAstNode node, SqmToSqlAstConverter converter) {
 		final BasicType<?> nodeType = (BasicType<?>) ((Expression) node).getExpressionType().getSingleJdbcMapping();
-		final FunctionRenderer cast = (FunctionRenderer) converter.getCreationContext().getSessionFactory().getQueryEngine()
-				.getSqmFunctionRegistry().findFunctionDescriptor( "cast" );
-		final BasicType<?> timestampType = converter.getCreationContext().getTypeConfiguration()
-				.getBasicTypeForJavaType( Timestamp.class );
+		final FunctionRenderer cast = (FunctionRenderer)
+				converter.getCreationContext().getSqmFunctionRegistry().findFunctionDescriptor( "cast" );
+		final BasicType<?> timestampType =
+				converter.getCreationContext().getTypeConfiguration()
+						.getBasicTypeForJavaType( Timestamp.class );
 		return new SelfRenderingFunctionSqlAstExpression(
 				"cast",
 				cast,
@@ -211,8 +212,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 			else {
 				predicateContainer = querySpec;
 			}
-			final BasicType<Integer> integerType = converter.getCreationContext()
-					.getSessionFactory()
+			final BasicType<Integer> integerType = converter.getSqmCreationContext()
 					.getNodeBuilder()
 					.getIntegerType();
 			final Expression oneBasedOrdinal = new ColumnReference(
@@ -247,8 +247,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 			}
 			else {
 				// When start < stop, step must be positive and value is only valid if it's less than or equal to stop
-				final BasicType<Boolean> booleanType = converter.getCreationContext()
-						.getSessionFactory()
+				final BasicType<Boolean> booleanType = converter.getSqmCreationContext()
 						.getNodeBuilder()
 						.getBooleanType();
 				final Predicate positiveProgress = new Junction(
@@ -438,8 +437,10 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 		}
 
 		private static String timestampadd(String startExpression, String stepExpression, JdbcMapping type, org.hibernate.sql.ast.tree.expression.Duration duration, SqmToSqlAstConverter converter) {
-			final FunctionRenderer renderer = (FunctionRenderer) converter.getCreationContext().getSessionFactory()
-					.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "timestampadd" );
+			final SqlAstCreationContext creationContext = converter.getCreationContext();
+
+			final FunctionRenderer renderer = (FunctionRenderer) creationContext.getSqmFunctionRegistry()
+					.findFunctionDescriptor( "timestampadd" );
 			final QuerySpec fakeQuery = new QuerySpec( true );
 			fakeQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl(
 					new SelfRenderingFunctionSqlAstExpression(
@@ -454,9 +455,9 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 							type
 					)
 			) );
-			final SqlAstTranslator<JdbcOperationQuerySelect> translator = converter.getCreationContext()
-					.getSessionFactory().getJdbcServices().getDialect().getSqlAstTranslatorFactory()
-					.buildSelectTranslator( converter.getCreationContext().getSessionFactory(), new SelectStatement( fakeQuery ) );
+			final SqlAstTranslator<JdbcOperationQuerySelect> translator =
+					creationContext.getDialect().getSqlAstTranslatorFactory()
+							.buildSelectTranslator( creationContext.getSessionFactory(), new SelectStatement( fakeQuery ) );
 			final JdbcOperationQuerySelect operation = translator.translate( null, QueryOptions.NONE );
 			final String sqlString = operation.getSqlString();
 			assert sqlString.startsWith( "select " );
@@ -483,11 +484,11 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 
 		private String getExpression(Expression expression, String tableIdentifierVariable, String syntheticColumnName, SqmToSqlAstConverter walker) {
 			if ( expression instanceof Literal literal ) {
-				final SessionFactoryImplementor sessionFactory = walker.getCreationContext().getSessionFactory();
 				//noinspection unchecked
+				final SqlAstCreationContext creationContext = walker.getCreationContext();
 				return literal.getJdbcMapping().getJdbcLiteralFormatter()
-						.toJdbcLiteral( literal.getLiteralValue(), sessionFactory.getJdbcServices().getDialect(),
-								sessionFactory.getWrapperOptions() );
+						.toJdbcLiteral( literal.getLiteralValue(), creationContext.getDialect(),
+								creationContext.getWrapperOptions() );
 			}
 			else if ( expression instanceof ColumnReference columnReference ) {
 				return columnReference.getExpressionText();

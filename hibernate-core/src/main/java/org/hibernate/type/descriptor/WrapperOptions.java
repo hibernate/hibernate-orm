@@ -58,7 +58,7 @@ public interface WrapperOptions {
 	/**
 	 * The JDBC {@link java.sql.Types type code} used to bind a null boolean value.
 	 *
-	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_BOOLEAN_JDBC_TYPE
+	 * @see org.hibernate.cfg.MappingSettings#PREFERRED_BOOLEAN_JDBC_TYPE
 	 * @see org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForBoolean()
 	 */
 	default int getPreferredSqlTypeCodeForBoolean() {
@@ -70,7 +70,7 @@ public interface WrapperOptions {
 	 *
 	 * @return The LOB creator
 	 *
-	 * @see org.hibernate.cfg.AvailableSettings#NON_CONTEXTUAL_LOB_CREATION
+	 * @see org.hibernate.cfg.JdbcSettings#NON_CONTEXTUAL_LOB_CREATION
 	 * @see org.hibernate.dialect.Dialect#getDefaultNonContextualLobCreation()
 	 */
 	default LobCreator getLobCreator() {
@@ -98,7 +98,7 @@ public interface WrapperOptions {
 	 *
 	 * @return the JDBC {@link TimeZone}, or null if no JDBC timezone was explicitly set
 	 *
-	 * @see org.hibernate.cfg.AvailableSettings#JDBC_TIME_ZONE
+	 * @see org.hibernate.cfg.JdbcSettings#JDBC_TIME_ZONE
 	 */
 	default TimeZone getJdbcTimeZone() {
 		return getSessionFactory().getSessionFactoryOptions().getJdbcTimeZone();

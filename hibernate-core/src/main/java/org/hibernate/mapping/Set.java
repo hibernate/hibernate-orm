@@ -8,7 +8,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.OrderedSetType;
@@ -24,7 +23,7 @@ import org.hibernate.usertype.UserCollectionType;
  *
  * @author Gavin King
  */
-public class Set extends Collection {
+public non-sealed class Set extends Collection {
 	/**
 	 * Used by hbm.xml binding
 	 */
@@ -46,10 +45,6 @@ public class Set extends Collection {
 	@Override
 	public Set copy() {
 		return new Set( this );
-	}
-
-	public void validate(Mapping mapping) throws MappingException {
-		validate( (MappingContext) mapping );
 	}
 
 	public void validate(MappingContext mappingContext) throws MappingException {

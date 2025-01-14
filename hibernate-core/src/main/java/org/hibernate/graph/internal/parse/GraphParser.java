@@ -8,6 +8,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.grammars.graph.GraphLanguageLexer;
 import org.hibernate.grammars.graph.GraphLanguageParser;
 import org.hibernate.grammars.graph.GraphLanguageParserBaseVisitor;
+import org.hibernate.graph.GraphNode;
 import org.hibernate.graph.InvalidGraphException;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
@@ -24,7 +25,7 @@ import static org.hibernate.graph.internal.GraphParserLogging.PARSING_LOGGER;
 /**
  * @author Steve Ebersole
  */
-public class GraphParser extends GraphLanguageParserBaseVisitor {
+public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 
 	/**
 	 * Parse the passed graph textual representation into the passed Graph.
@@ -64,8 +65,8 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final Stack<GraphImplementor> graphStack = new StandardStack<>();
-	private final Stack<AttributeNodeImplementor> attributeNodeStack = new StandardStack<>();
+	private final Stack<GraphImplementor<?>> graphStack = new StandardStack<>();
+	private final Stack<AttributeNodeImplementor<?,?,?>> attributeNodeStack = new StandardStack<>();
 	private final Stack<SubGraphGenerator> graphSourceStack = new StandardStack<>();
 
 	public GraphParser(SessionFactoryImplementor sessionFactory) {
@@ -73,7 +74,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 	}
 
 	@Override
-	public AttributeNodeImplementor visitAttributeNode(GraphLanguageParser.AttributeNodeContext ctx) {
+	public AttributeNodeImplementor<?,?,?> visitAttributeNode(GraphLanguageParser.AttributeNodeContext ctx) {
 		final String attributeName = ctx.attributePath().ATTR_NAME().getText();
 
 		final SubGraphGenerator subGraphCreator;
@@ -105,7 +106,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 			subGraphCreator = pathQualifierType.getSubGraphCreator();
 		}
 
-		final AttributeNodeImplementor attributeNode = resolveAttributeNode( attributeName );
+		final AttributeNodeImplementor<?,?,?> attributeNode = resolveAttributeNode( attributeName );
 
 		if ( ctx.subGraph() != null ) {
 			attributeNodeStack.push( attributeNode );
@@ -132,12 +133,11 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 		return attributeNode;
 	}
 
-
-	private AttributeNodeImplementor resolveAttributeNode(String attributeName) {
+	private AttributeNodeImplementor<?,?,?> resolveAttributeNode(String attributeName) {
 		final GraphImplementor<?> currentGraph = graphStack.getCurrent();
 		assert currentGraph != null;
 
-		final AttributeNodeImplementor attributeNode = currentGraph.findOrCreateAttributeNode( attributeName );
+		final AttributeNodeImplementor<?,?,?> attributeNode = currentGraph.findOrCreateAttributeNode( attributeName );
 		assert attributeNode != null;
 
 		return attributeNode;
@@ -156,7 +156,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 	}
 
 	@Override
-	public SubGraphImplementor visitSubGraph(GraphLanguageParser.SubGraphContext ctx) {
+	public SubGraphImplementor<?> visitSubGraph(GraphLanguageParser.SubGraphContext ctx) {
 		final String subTypeName = ctx.subType() == null ? null : ctx.subType().getText();
 
 		if ( PARSING_LOGGER.isDebugEnabled() ) {
@@ -167,7 +167,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 			);
 		}
 
-		final AttributeNodeImplementor<?> attributeNode = attributeNodeStack.getCurrent();
+		final AttributeNodeImplementor<?,?,?> attributeNode = attributeNodeStack.getCurrent();
 		final SubGraphGenerator subGraphCreator = graphSourceStack.getCurrent();
 
 		final SubGraphImplementor<?> subGraph = subGraphCreator.createSubGraph(

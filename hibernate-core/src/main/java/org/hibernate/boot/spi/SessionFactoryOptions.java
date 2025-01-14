@@ -4,14 +4,20 @@
  */
 package org.hibernate.boot.spi;
 
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Supplier;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import org.hibernate.CacheMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.Internal;
+import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
@@ -86,8 +92,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	JpaCompliance getJpaCompliance();
 
 	/**
-	 * Was building of the SessionFactory initiated through JPA bootstrapping, or
-	 * through Hibernate's native bootstrapping?
+	 * Was building of the {@link org.hibernate.SessionFactory} initiated through JPA
+	 * bootstrapping, or through Hibernate-native bootstrapping?
 	 *
 	 * @return {@code true} indicates the SessionFactory was built through JPA
 	 * bootstrapping; {@code false} indicates it was built through native bootstrapping.
@@ -615,4 +621,29 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.QuerySettings#NATIVE_PREFER_JDBC_DATETIME_TYPES
 	 */
 	boolean isPreferJdbcDatetimeTypesInNativeQueriesEnabled();
+
+	/**
+	 * @param properties the Session properties
+	 * @return either the CacheStoreMode as defined in the Session specific properties,
+	 *         or as defined in the properties shared across all sessions (the defaults).
+	 */
+	CacheStoreMode getCacheStoreMode(Map<String, Object> properties);
+
+	/**
+	 * @param properties the Session properties
+	 * @return either the CacheRetrieveMode as defined in the Session specific properties,
+	 *         or as defined in the properties shared across all sessions (the defaults).
+	 */
+	CacheRetrieveMode getCacheRetrieveMode(Map<String, Object> properties);
+
+	CacheMode getInitialSessionCacheMode();
+
+	FlushMode getInitialSessionFlushMode();
+
+	LockOptions getDefaultLockOptions();
+
+	/**
+	 * Default session properties
+	 */
+	Map<String, Object> getDefaultSessionProperties();
 }

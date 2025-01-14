@@ -80,24 +80,24 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( literalValue );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( literalValue );
 
 		switch ( typeCategory ) {
 			case BIG_DECIMAL: {
-				sb.append( "bd" );
+				hql.append( "bd" );
 				break;
 			}
 			case FLOAT: {
-				sb.append( "f" );
+				hql.append( "f" );
 				break;
 			}
 			case BIG_INTEGER: {
-				sb.append( "bi" );
+				hql.append( "bi" );
 				break;
 			}
 			case LONG: {
-				sb.append( "l" );
+				hql.append( "l" );
 				break;
 			}
 			default: {

@@ -147,8 +147,8 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		function.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		function.appendHqlString( hql );
 	}
 
 	@Override

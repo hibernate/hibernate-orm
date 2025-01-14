@@ -26,7 +26,7 @@ public class JsonJavaType<T> extends FormatMapperBasedJavaType<T> {
 
 	@Override
 	protected FormatMapper getFormatMapper(TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getSessionFactory().getFastSessionServices().getJsonFormatMapper();
+		return typeConfiguration.getJsonFormatMapper();
 	}
 
 	@Override

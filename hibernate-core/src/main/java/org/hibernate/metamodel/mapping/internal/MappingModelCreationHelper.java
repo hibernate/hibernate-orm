@@ -741,8 +741,7 @@ public class MappingModelCreationHelper {
 					.findSubPart( collectionDescriptor.getMappedByProperty(), null );
 		}
 
-		if ( attributeMappingSubPart instanceof ToOneAttributeMapping ) {
-			final ToOneAttributeMapping referencedAttributeMapping = (ToOneAttributeMapping) attributeMappingSubPart;
+		if ( attributeMappingSubPart instanceof ToOneAttributeMapping referencedAttributeMapping ) {
 
 			setReferencedAttributeForeignKeyDescriptor(
 					attributeMapping,
@@ -868,8 +867,7 @@ public class MappingModelCreationHelper {
 
 		String referencedPropertyName;
 		boolean swapDirection = false;
-		if ( bootValueMapping instanceof OneToOne ) {
-			OneToOne oneToOne = (OneToOne) bootValueMapping;
+		if ( bootValueMapping instanceof OneToOne oneToOne ) {
 			swapDirection = oneToOne.getForeignKeyType() == ForeignKeyDirection.TO_PARENT;
 			referencedPropertyName = oneToOne.getMappedByProperty();
 			if ( referencedPropertyName == null ) {
@@ -1065,8 +1063,7 @@ public class MappingModelCreationHelper {
 			if ( modelPart == null ) {
 				return false;
 			}
-			if ( modelPart instanceof ToOneAttributeMapping ) {
-				ToOneAttributeMapping referencedAttributeMapping = (ToOneAttributeMapping) modelPart;
+			if ( modelPart instanceof ToOneAttributeMapping referencedAttributeMapping ) {
 				ForeignKeyDescriptor foreignKeyDescriptor = referencedAttributeMapping.getForeignKeyDescriptor();
 				if ( foreignKeyDescriptor == null ) {
 					return false;
@@ -1123,8 +1120,7 @@ public class MappingModelCreationHelper {
 			MappingModelCreationProcess creationProcess) {
 		final boolean hasConstraint;
 		final SelectableMappings keySelectableMappings;
-		if ( bootValueMapping instanceof Collection ) {
-			final Collection collectionBootValueMapping = (Collection) bootValueMapping;
+		if ( bootValueMapping instanceof Collection collectionBootValueMapping ) {
 			hasConstraint = ((SimpleValue) collectionBootValueMapping.getKey()).isConstrained();
 			keyTableExpression = keyTableExpression != null ? keyTableExpression : getTableIdentifierExpression(
 					collectionBootValueMapping.getCollectionTable(),
@@ -1209,8 +1205,7 @@ public class MappingModelCreationHelper {
 	public static int[] getPropertyOrder(Value bootValueMapping, MappingModelCreationProcess creationProcess) {
 		final ComponentType componentType;
 		final boolean sorted;
-		if ( bootValueMapping instanceof Collection ) {
-			final Collection collectionBootValueMapping = (Collection) bootValueMapping;
+		if ( bootValueMapping instanceof Collection collectionBootValueMapping ) {
 			componentType = (ComponentType) collectionBootValueMapping.getKey().getType();
 			assert ( (SortableValue) collectionBootValueMapping.getKey() ).isSorted();
 			sorted = ( (SortableValue) collectionBootValueMapping.getKey() ).isSorted();
@@ -1354,9 +1349,8 @@ public class MappingModelCreationHelper {
 			);
 		}
 
-		if ( bootMapKeyDescriptor instanceof Component ) {
-			final Component component = (Component) bootMapKeyDescriptor;
-			final CompositeType compositeType = (CompositeType) component.getType();
+		if ( bootMapKeyDescriptor instanceof Component component ) {
+			final CompositeType compositeType = component.getType();
 
 
 			final EmbeddableMappingTypeImpl mappingType = EmbeddableMappingTypeImpl.from(
@@ -1451,8 +1445,7 @@ public class MappingModelCreationHelper {
 			);
 		}
 
-		if ( element instanceof Component ) {
-			final Component component = (Component) element;
+		if ( element instanceof Component component ) {
 			final CompositeType compositeType = (CompositeType) collectionDescriptor.getElementType();
 
 
@@ -1476,8 +1469,7 @@ public class MappingModelCreationHelper {
 			return (CollectionPart) mappingType.getEmbeddedValueMapping();
 		}
 
-		if ( element instanceof Any ) {
-			final Any anyBootMapping = (Any) element;
+		if ( element instanceof Any anyBootMapping ) {
 
 			final TypeConfiguration typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
 			final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
@@ -1849,8 +1841,7 @@ public class MappingModelCreationHelper {
 			CascadeStyle cascadeStyle,
 			MappingModelCreationProcess creationProcess,
 			Function<ToOneAttributeMapping, ToOneAttributeMapping> mappingConverter) {
-		if ( bootProperty.getValue() instanceof ToOne ) {
-			final ToOne value = (ToOne) bootProperty.getValue();
+		if ( bootProperty.getValue() instanceof ToOne value ) {
 			final EntityPersister entityPersister = creationProcess.getEntityPersister( value.getReferencedEntityName() );
 			final AttributeMetadata attributeMetadata = getAttributeMetadata(
 					bootProperty,
@@ -1906,7 +1897,7 @@ public class MappingModelCreationHelper {
 					navigableRole,
 					stateArrayPosition,
 					fetchableIndex,
-					(ToOne) bootProperty.getValue(),
+					value,
 					attributeMetadata,
 					fetchTiming,
 					fetchStyle,

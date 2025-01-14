@@ -9,15 +9,13 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
 	id 'java-gradle-plugin'
-	id 'com.gradle.plugin-publish' version '1.2.1'
+	id "local.module"
+	id "local.javadoc"
 
+	id 'com.gradle.plugin-publish' version '1.2.1'
 	// for local publishing
 	id 'maven-publish'
 }
-
-apply from: rootProject.file( 'gradle/module.gradle' )
-apply from: rootProject.file( 'gradle/javadoc.gradle' )
-apply from: rootProject.file( 'gradle/releasable.gradle' )
 
 description = "Gradle plugin for integrating Hibernate aspects into your build"
 
@@ -67,16 +65,31 @@ test {
 	}
 }
 
-// Publish to the Gradle Plugin Portal
-tasks.release.dependsOn tasks.publishPlugins
+def releasePrepareTask = tasks.register("releasePrepare") {
+	group "release-prepare"
+	description "See :release:releasePrepare for details.  Here we hook in the `check` task."
+
+	dependsOn tasks.check
+}
+
+// used from the h2 CI job
+tasks.register("preVerifyRelease") {
+	group "release-prepare"
+	description "Delegates to `releasePrepare` task"
+
+	dependsOn releasePrepareTask
+}
+
+tasks.register("releasePerform") {
+	group "release-perform"
+	description "See :release:releasePerform for details.  Here we hook in publishing to the Plugin Portal"
+
+	dependsOn tasks.publishPlugins
+}
 
 // local publishing (SNAPSHOT testing)
 tasks.publish.dependsOn tasks.publishPlugins
 
-tasks.register("publishReleaseArtifacts") {
-	// mirror for `:release:publishReleaseArtifacts`
-	dependsOn tasks.release
-}
 
 // local publishing (SNAPSHOT testing)
 publishing {
@@ -84,21 +97,6 @@ publishing {
 		maven {
 			name = 'localPluginRepository'
 			url = "${buildDir}/local-plugin-repository"
-		}
-	}
-}
-
-// local publishing (SNAPSHOT testing), cont.
-//		- https://github.com/gradle-nexus/publish-plugin/issues/143
-//		- https://github.com/gradle-nexus/publish-plugin/pull/144
-gradle.taskGraph.whenReady {
-	tasks.withType(PublishToMavenRepository) { PublishToMavenRepository t ->
-		if ( t.repository == null ) {
-			logger.info( "Task `{}` had null repository", t.path )
-		}
-		else if ( t.repository.name == "sonatype" ) {
-			logger.debug( "Disabling task `{}` because it publishes to Sonatype", t.path )
-			t.enabled = false
 		}
 	}
 }
@@ -124,17 +122,23 @@ else {
 						 " Using the JDK that runs Gradle for Groovy compilation." )
 }
 
-tasks.named( "javadoc", Javadoc ) {
-	configure( options ) {
-		windowTitle = "Hibernate Javadocs ($project.name)"
-		docTitle = "Hibernate Javadocs ($project.name : $project.version)"
-	}
-}
-
-tasks.publish.enabled !project.ormVersion.isSnapshot
-tasks.publishPlugins.enabled !project.ormVersion.isSnapshot
+tasks.publish.enabled !ormBuildDetails.hibernateVersion.isSnapshot
+tasks.publishPlugins.enabled !ormBuildDetails.hibernateVersion.isSnapshot
 
 gradle.taskGraph.whenReady { tg ->
+	// local publishing (SNAPSHOT testing), cont.
+	//		- https://github.com/gradle-nexus/publish-plugin/issues/143
+	//		- https://github.com/gradle-nexus/publish-plugin/pull/144
+	tasks.withType(PublishToMavenRepository).configureEach {t->
+		if (t.repository == null) {
+			logger.info("Task `{}` had null repository", t.path)
+		}
+		else if (t.repository.name == "sonatype") {
+			logger.debug("Disabling task `{}` because it publishes to Sonatype", t.path)
+			t.enabled = false
+		}
+	}
+
 	// verify credentials for publishing the plugin up front to avoid any work (only if we are publishing)
 	if ( tg.hasTask( ":publishPlugins" ) && project.tasks.publishPlugins.enabled  ) {
 		// we are publishing the plugin - make sure there is a credentials pair

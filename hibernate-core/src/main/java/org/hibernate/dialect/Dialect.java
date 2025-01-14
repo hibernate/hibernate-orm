@@ -1972,7 +1972,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			if ( original == null && target == null ) {
 				return null;
 			}
-			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
+			final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
 			try {
 				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
@@ -1989,7 +1989,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			if ( original == null && target == null ) {
 				return null;
 			}
-			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
+			final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
 			try {
 				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
@@ -2006,7 +2006,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			if ( original == null && target == null ) {
 				return null;
 			}
-			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
+			final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
 			try {
 				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
 				return original == null

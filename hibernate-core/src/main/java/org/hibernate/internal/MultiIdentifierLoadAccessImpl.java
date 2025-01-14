@@ -19,7 +19,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.loader.ast.internal.LoaderHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 
@@ -191,7 +190,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 		}
 		else {
 			return perform( () -> (List<T>) entityPersister.multiLoad(
-					ids.toArray( LoaderHelper.createTypedArray( ids.get( 0 ).getClass(), ids.size() ) ),
+					ids.toArray( new Object[0] ),
 					session,
 					this
 			) );

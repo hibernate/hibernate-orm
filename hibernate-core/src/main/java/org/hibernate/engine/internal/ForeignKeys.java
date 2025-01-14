@@ -446,8 +446,7 @@ public final class ForeignKeys {
 		if ( value == null ) {
 			// do nothing
 		}
-		else if ( type instanceof EntityType ) {
-			final EntityType entityType = (EntityType) type;
+		else if ( type instanceof EntityType entityType ) {
 			if ( !isNullable
 					&& !entityType.isOneToOne()
 					&& nullifier.isNullifiable( entityType.getAssociatedEntityName(), value ) ) {
@@ -459,8 +458,7 @@ public final class ForeignKeys {
 				nonNullableTransientEntities.add( propertyName, value );
 			}
 		}
-		else if ( type instanceof ComponentType ) {
-			final ComponentType compositeType = (ComponentType) type;
+		else if ( type instanceof ComponentType compositeType ) {
 			final boolean[] subValueNullability = compositeType.getPropertyNullability();
 			if ( subValueNullability != null ) {
 				final String[] subPropertyNames = compositeType.getPropertyNames();

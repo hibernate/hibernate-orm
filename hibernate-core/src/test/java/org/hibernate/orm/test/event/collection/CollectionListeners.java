@@ -147,7 +147,7 @@ public class CollectionListeners {
 		postCollectionRemoveListener = new PostCollectionRemoveListener( this );
 		postCollectionUpdateListener = new PostCollectionUpdateListener( this );
 
-		EventListenerRegistry registry = ( (SessionFactoryImplementor) sf ).getServiceRegistry().getService( EventListenerRegistry.class );
+		EventListenerRegistry registry = ( (SessionFactoryImplementor) sf ).getEventListenerRegistry();
 		registry.setListeners( EventType.INIT_COLLECTION, initializeCollectionListener );
 
 		registry.setListeners( EventType.PRE_COLLECTION_RECREATE, preCollectionRecreateListener );

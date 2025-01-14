@@ -244,35 +244,35 @@ public class SqmJsonValueExpression<T> extends AbstractSqmJsonPathExpression<T> 
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "json_value(" );
-		getArguments().get( 0 ).appendHqlString( sb );
-		sb.append( ',' );
-		getArguments().get( 1 ).appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( "json_value(" );
+		getArguments().get( 0 ).appendHqlString( hql );
+		hql.append( ',' );
+		getArguments().get( 1 ).appendHqlString( hql );
 
-		appendPassingExpressionHqlString( sb );
+		appendPassingExpressionHqlString( hql );
 		if ( getArguments().size() > 2 ) {
-			sb.append( " returning " );
-			getArguments().get( 2 ).appendHqlString( sb );
+			hql.append( " returning " );
+			getArguments().get( 2 ).appendHqlString( hql );
 		}
 		switch ( errorBehavior ) {
-			case NULL -> sb.append( " null on error" );
-			case ERROR -> sb.append( " error on error" );
+			case NULL -> hql.append( " null on error" );
+			case ERROR -> hql.append( " error on error" );
 			case DEFAULT -> {
-				sb.append( " default " );
-				errorDefaultExpression.appendHqlString( sb );
-				sb.append( " on error" );
+				hql.append( " default " );
+				errorDefaultExpression.appendHqlString( hql );
+				hql.append( " on error" );
 			}
 		}
 		switch ( emptyBehavior ) {
-			case NULL -> sb.append( " null on empty" );
-			case ERROR -> sb.append( " error on empty" );
+			case NULL -> hql.append( " null on empty" );
+			case ERROR -> hql.append( " error on empty" );
 			case DEFAULT -> {
-				sb.append( " default " );
-				emptyDefaultExpression.appendHqlString( sb );
-				sb.append( " on empty" );
+				hql.append( " default " );
+				emptyDefaultExpression.appendHqlString( hql );
+				hql.append( " on empty" );
 			}
 		}
-		sb.append( ')' );
+		hql.append( ')' );
 	}
 }

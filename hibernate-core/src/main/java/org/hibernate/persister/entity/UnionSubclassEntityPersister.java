@@ -473,7 +473,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 
 		final Dialect dialect = getFactory().getJdbcServices().getDialect();
-		final MappingMetamodelImplementor metamodel = getFactory().getRuntimeMetamodels().getMappingMetamodel();
+		final MappingMetamodelImplementor metamodel = getFactory().getMappingMetamodel();
 		// Collect all selectables of every entity subtype and group by selection expression as well as table name
 		final LinkedHashMap<String, Map<String, SelectableMapping>> selectables = new LinkedHashMap<>();
 		final Set<String> tablesToUnion = new HashSet<>( entityNameUses.size() );

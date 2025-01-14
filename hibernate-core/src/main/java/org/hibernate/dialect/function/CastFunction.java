@@ -105,7 +105,7 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				sqlAppender,
 				List.of(
 						new QueryLiteral<>( "[", stringType ),
-						new SelfRenderingFunctionSqlAstExpression(
+						new SelfRenderingFunctionSqlAstExpression<>(
 								"array_to_string",
 								arrayToStringDescriptor,
 								List.of(

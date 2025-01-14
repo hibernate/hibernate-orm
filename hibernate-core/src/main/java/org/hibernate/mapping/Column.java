@@ -19,10 +19,8 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.Template;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
@@ -51,7 +49,9 @@ import static org.hibernate.type.descriptor.java.JavaTypeHelper.isTemporal;
  *
  * @author Gavin King
  */
-public class Column implements Selectable, Serializable, Cloneable, ColumnTypeInformation {
+public sealed class Column
+		implements Selectable, Serializable, Cloneable, ColumnTypeInformation
+		permits AggregateColumn {
 
 	private Long length;
 	private Integer precision;
@@ -279,14 +279,6 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 				: name.equalsIgnoreCase( column.name ) );
 	}
 
-	/**
-	 * @deprecated use {@link #getSqlTypeCode(MappingContext)}
-	 */
-	@Deprecated(since = "7.0")
-	public int getSqlTypeCode(Mapping mapping) throws MappingException{
-		return getSqlTypeCode((MappingContext) mapping);
-	}
-
 	public int getSqlTypeCode(MappingContext mapping) throws MappingException {
 		if ( sqlTypeCode == null ) {
 			final Type type = getValue().getType();
@@ -420,14 +412,6 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return getSqlTypeName( database.getTypeConfiguration(), database.getDialect(), mapping );
 	}
 
-	/**
-	 * @deprecated use {@link #getSqlType(Metadata)}
-	 */
-	@Deprecated(since = "6.2")
-	public String getSqlType(TypeConfiguration typeConfiguration, Dialect dialect, Mapping mapping) {
-		return getSqlTypeName( typeConfiguration, dialect, mapping );
-	}
-
 	@Override
 	public String getTypeName() {
 		return sqlTypeName;
@@ -456,14 +440,6 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	@Override
 	public int getDecimalDigits() {
 		return scale == null ? 0 : scale;
-	}
-
-	/**
-	 * @deprecated use {@link #getColumnSize(Dialect, MappingContext)}
-	 */
-	@Deprecated(since = "7.0")
-	public Size getColumnSize(Dialect dialect, Mapping mapping) {
-		return getColumnSize(dialect, (MappingContext) mapping);
 	}
 
 	public Size getColumnSize(Dialect dialect, MappingContext mappingContext) {
@@ -645,7 +621,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	}
 
 	@Override
-	public String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration, SqmFunctionRegistry registry) {
+	public String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration) {
 		return safeInterning(
 				hasCustomRead()
 					// see note in renderTransformerReadFragment wrt access to SessionFactory

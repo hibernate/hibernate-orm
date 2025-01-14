@@ -13,7 +13,8 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.FastSessionServices;
+import org.hibernate.event.service.spi.EventListenerGroups;
+
 import org.hibernate.persister.collection.CollectionPersister;
 
 import static org.hibernate.internal.util.StringHelper.unqualify;
@@ -197,10 +198,10 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 	/**
 	 * Convenience method for all subclasses.
-	 * @return the {@link FastSessionServices} instance from the SessionFactory.
+	 * @return the {@link EventListenerGroups} instance from the {@code SessionFactory}.
 	 */
-	protected FastSessionServices getFastSessionServices() {
-		return session.getFactory().getFastSessionServices();
+	protected EventListenerGroups getEventListenerGroups() {
+		return session.getFactory().getEventListenerGroups();
 	}
 
 }

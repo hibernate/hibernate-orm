@@ -31,13 +31,11 @@ public class EmbeddableInstantiatorDynamicMap
 	@Override
 	public Object instantiate(ValueAccess valuesAccess) {
 		final Map<?,?> dataMap = generateDataMap();
-
-		Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
+		final Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
 		if ( values != null ) {
 			final EmbeddableMappingType mappingType = runtimeDescriptorAccess.get();
 			mappingType.setValues( dataMap, values );
 		}
-
 		return dataMap;
 	}
 }

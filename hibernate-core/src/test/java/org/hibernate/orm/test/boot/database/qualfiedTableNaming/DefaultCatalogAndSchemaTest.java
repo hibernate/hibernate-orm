@@ -236,7 +236,7 @@ public class DefaultCatalogAndSchemaTest {
 				BootstrapContext bootstrapContext = ((MetadataImpl) metadata).getBootstrapContext();
 				sfb = new SessionFactoryBuilderImpl(
 						metadata,
-						new SessionFactoryOptionsBuilder( serviceRegistry, bootstrapContext),
+						new SessionFactoryOptionsBuilder( serviceRegistry, bootstrapContext ),
 						bootstrapContext
 				);
 				break;
@@ -247,8 +247,8 @@ public class DefaultCatalogAndSchemaTest {
 		sessionFactory = (SessionFactoryImplementor) sfb.build();
 		toClose.add( sessionFactory );
 
-		NameQualifierSupport nameQualifierSupport = sessionFactory.getJdbcServices().getJdbcEnvironment()
-				.getNameQualifierSupport();
+		NameQualifierSupport nameQualifierSupport =
+				sessionFactory.getJdbcServices().getJdbcEnvironment().getNameQualifierSupport();
 		dbSupportsCatalogs = nameQualifierSupport.supportsCatalogs();
 		dbSupportsSchemas = nameQualifierSupport.supportsSchemas();
 	}
@@ -392,7 +392,7 @@ public class DefaultCatalogAndSchemaTest {
 				.filter( p -> p.getMappedClass().equals( entityClass ) )
 				.findFirst()
 				.orElseThrow( () -> new IllegalStateException( "Cannot find persister for " + entityClass ) );
-		String jpaEntityName = sessionFactory.getRuntimeMetamodels().getJpaMetamodel().getEntities()
+		String jpaEntityName = sessionFactory.getJpaMetamodel().getEntities()
 				.stream()
 				.filter( p -> p.getBindableJavaType().equals( entityClass ) )
 				.findFirst()

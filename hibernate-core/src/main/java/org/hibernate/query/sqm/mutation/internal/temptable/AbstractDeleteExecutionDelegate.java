@@ -59,7 +59,7 @@ public abstract class AbstractDeleteExecutionDelegate implements TableBasedDelet
 				queryOptions,
 				loadQueryInfluencers,
 				queryParameterBindings,
-				getSessionFactory()
+				sessionFactory.getSqlTranslationEngine()
 		);
 	}
 

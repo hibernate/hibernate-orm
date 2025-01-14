@@ -50,12 +50,11 @@ public interface OrderingExpression extends Node {
 		}
 		else {
 			final QueryEngine queryEngine =
-					creationState.getCreationContext().getSessionFactory()
-							.getQueryEngine();
+					creationState.getSqmCreationContext().getQueryEngine();
 			final SqmToSqlAstConverter converter =
 					creationState instanceof SqmToSqlAstConverter sqmToSqlAstConverter
 							? sqmToSqlAstConverter
-							: new FakeSqmToSqlAstConverter(creationState);
+							: new FakeSqmToSqlAstConverter( creationState );
 			sortExpression =
 					queryEngine.getSqmFunctionRegistry()
 							.findFunctionDescriptor( "collate" )

@@ -123,12 +123,6 @@ class IdentifierSourceNonAggregatedCompositeImpl implements IdentifierSourceNonA
 	}
 
 	@Override
-	public IdentifierGeneratorDefinition getIndividualAttributeIdGenerator(String identifierAttributeName) {
-		// for now, return null.  this is that stupid specj bs
-		return null;
-	}
-
-	@Override
 	public IdentifierGeneratorDefinition getIdentifierGeneratorDescriptor() {
 		return generatorDefinition;
 	}

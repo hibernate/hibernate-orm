@@ -78,19 +78,19 @@ public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode impleme
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( functionName );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( functionName );
 		if ( arguments.isEmpty() ) {
-			sb.append( "()" );
+			hql.append( "()" );
 			return;
 		}
-		sb.append( '(' );
-		arguments.get( 0 ).appendHqlString( sb );
+		hql.append( '(' );
+		arguments.get( 0 ).appendHqlString( hql );
 		for ( int i = 1; i < arguments.size(); i++ ) {
-			sb.append( ", " );
-			arguments.get( i ).appendHqlString( sb );
+			hql.append( ", " );
+			arguments.get( i ).appendHqlString( hql );
 		}
 
-		sb.append( ')' );
+		hql.append( ')' );
 	}
 }

@@ -91,7 +91,7 @@ public class SqmAnyDiscriminatorValue<T> extends AbstractSqmExpression<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( getEntityValue().getName() );
+	public void appendHqlString(StringBuilder hql) {
+		hql.append( getEntityValue().getName() );
 	}
 }

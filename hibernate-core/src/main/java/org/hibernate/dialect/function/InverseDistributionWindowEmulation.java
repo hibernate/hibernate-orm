@@ -67,12 +67,12 @@ public class InverseDistributionWindowEmulation extends InverseDistributionFunct
 				}
 				final ReturnableType<?> resultType = resolveResultType( walker );
 
-				List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
-				ArgumentsValidator argumentsValidator = getArgumentsValidator();
+				final List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
+				final ArgumentsValidator argumentsValidator = getArgumentsValidator();
 				if ( argumentsValidator != null ) {
 					argumentsValidator.validateSqlTypes( arguments, getFunctionName() );
 				}
-				List<SortSpecification> withinGroup;
+				final List<SortSpecification> withinGroup;
 				if ( this.getWithinGroup() == null ) {
 					withinGroup = Collections.emptyList();
 				}
@@ -92,15 +92,16 @@ public class InverseDistributionWindowEmulation extends InverseDistributionFunct
 						walker.getCurrentClauseStack().pop();
 					}
 				}
-				final SelfRenderingFunctionSqlAstExpression function = new SelfRenderingOrderedSetAggregateFunctionSqlAstExpression(
-						getFunctionName(),
-						getFunctionRenderer(),
-						arguments,
-						getFilter() == null ? null : (Predicate) getFilter().accept( walker ),
-						withinGroup,
-						resultType,
-						getMappingModelExpressible( walker, resultType, arguments )
-				);
+				final SelfRenderingFunctionSqlAstExpression<?> function =
+						new SelfRenderingOrderedSetAggregateFunctionSqlAstExpression<>(
+								getFunctionName(),
+								getFunctionRenderer(),
+								arguments,
+								getFilter() == null ? null : (Predicate) getFilter().accept( walker ),
+								withinGroup,
+								resultType,
+								getMappingModelExpressible( walker, resultType, arguments )
+						);
 				final Over<Object> windowFunction = new Over<>( function, new ArrayList<>(), Collections.emptyList() );
 				walker.registerQueryTransformer(
 						new AggregateWindowEmulationQueryTransformer( windowFunction, withinGroup, null )

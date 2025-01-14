@@ -95,9 +95,7 @@ public interface ResultSetMapping extends JdbcValuesMappingProducer {
 	}
 
 	static ResultSetMapping resolveResultSetMapping(String name, boolean isDynamic, SessionFactoryImplementor sessionFactory) {
-		return sessionFactory
-				.getFastSessionServices()
-				.getJdbcValuesMappingProducerProvider()
+		return sessionFactory.getJdbcValuesMappingProducerProvider()
 				.buildResultSetMapping( name, isDynamic, sessionFactory );
 	}
 }

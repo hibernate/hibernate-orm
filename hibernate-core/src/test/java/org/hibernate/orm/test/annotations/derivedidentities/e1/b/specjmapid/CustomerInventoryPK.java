@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.annotations.derivedidentities.e1.b.specjmapid;
 import java.io.Serializable;
+import java.util.Objects;
 
 
 public class CustomerInventoryPK implements Serializable {
@@ -27,8 +28,7 @@ public class CustomerInventoryPK implements Serializable {
 			return false;
 		}
 		CustomerInventoryPK cip = ( CustomerInventoryPK ) other;
-		return ( custId == cip.custId && ( id == cip.id ||
-				( id != null && id.equals( cip.id ) ) ) );
+		return custId == cip.custId && Objects.equals( id, cip.id );
 	}
 
 	public int hashCode() {

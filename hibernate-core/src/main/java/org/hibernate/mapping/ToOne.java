@@ -23,7 +23,10 @@ import static org.hibernate.boot.model.internal.BinderHelper.findReferencedColum
  *
  * @author Gavin King
  */
-public abstract class ToOne extends SimpleValue implements Fetchable, SortableValue {
+public abstract sealed class ToOne
+		extends SimpleValue implements Fetchable, SortableValue
+		permits OneToOne, ManyToOne {
+
 	private FetchMode fetchMode;
 	protected String referencedPropertyName;
 	private String referencedEntityName;
@@ -90,9 +93,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable, SortableVa
 	@Override
 	public void setTypeUsingReflection(String className, String propertyName) throws MappingException {
 		if ( referencedEntityName == null ) {
-			final ClassLoaderService cls =
-					getMetadata().getMetadataBuildingOptions().getServiceRegistry()
-							.requireService( ClassLoaderService.class );
+			final ClassLoaderService cls = getBuildingContext().getBootstrapContext().getClassLoaderService();
 			referencedEntityName = ReflectHelper.reflectedPropertyClass( className, propertyName, cls ).getName();
 		}
 	}

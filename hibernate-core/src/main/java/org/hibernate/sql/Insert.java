@@ -36,8 +36,8 @@ public class Insert {
 
 	public Insert(SessionFactoryImplementor sessionFactory) {
 		this(
-				sessionFactory.getFastSessionServices().dialect,
-				sessionFactory.getFastSessionServices().parameterMarkerStrategy
+				sessionFactory.getJdbcServices().getJdbcEnvironment().getDialect(),
+				sessionFactory.getParameterMarkerStrategy()
 		);
 	}
 

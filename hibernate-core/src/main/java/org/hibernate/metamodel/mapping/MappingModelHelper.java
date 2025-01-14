@@ -96,15 +96,13 @@ public class MappingModelHelper {
 		if ( attribute1.getClass() != attribute2.getClass() || attribute1.getJavaType() != attribute2.getJavaType() ) {
 			return false;
 		}
-		if ( attribute1 instanceof Association ) {
-			final Association association1 = (Association) attribute1;
+		if ( attribute1 instanceof Association association1 ) {
 			final Association association2 = (Association) attribute2;
 			return association1.getForeignKeyDescriptor().getAssociationKey().equals(
 					association2.getForeignKeyDescriptor().getAssociationKey()
 			);
 		}
-		else if ( attribute1 instanceof PluralAttributeMapping ) {
-			final PluralAttributeMapping plural1 = (PluralAttributeMapping) attribute1;
+		else if ( attribute1 instanceof PluralAttributeMapping plural1 ) {
 			final PluralAttributeMapping plural2 = (PluralAttributeMapping) attribute2;
 			final CollectionPart element1 = plural1.getElementDescriptor();
 			final CollectionPart element2 = plural2.getElementDescriptor();
@@ -115,8 +113,7 @@ public class MappingModelHelper {
 			) && ( index1 == null && index2 == null || isCompatibleModelPart( index1, index2 ) )
 					&& isCompatibleModelPart( element1, element2 );
 		}
-		else if ( attribute1 instanceof EmbeddableValuedModelPart ) {
-			final EmbeddableValuedModelPart embedded1 = (EmbeddableValuedModelPart) attribute1;
+		else if ( attribute1 instanceof EmbeddableValuedModelPart embedded1 ) {
 			final EmbeddableValuedModelPart embedded2 = (EmbeddableValuedModelPart) attribute2;
 			final EmbeddableMappingType embeddableTypeDescriptor1 = embedded1.getEmbeddableTypeDescriptor();
 			final EmbeddableMappingType embeddableTypeDescriptor2 = embedded2.getEmbeddableTypeDescriptor();

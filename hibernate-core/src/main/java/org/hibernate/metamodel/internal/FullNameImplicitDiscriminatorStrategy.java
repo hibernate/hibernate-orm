@@ -28,7 +28,6 @@ public class FullNameImplicitDiscriminatorStrategy implements ImplicitDiscrimina
 	public EntityMappingType toEntityMapping(Object discriminatorValue, NavigableRole discriminatorRole, MappingMetamodelImplementor mappingModel) {
 		if ( discriminatorValue instanceof String assumedEntityName ) {
 			final EntityPersister persister = mappingModel.findEntityDescriptor( assumedEntityName );
-
 			if ( persister != null ) {
 				return persister;
 			}

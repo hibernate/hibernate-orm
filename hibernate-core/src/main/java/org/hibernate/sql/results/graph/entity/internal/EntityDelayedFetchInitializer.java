@@ -178,7 +178,7 @@ public class EntityDelayedFetchInitializer
 				final String uniqueKeyPropertyName = referencedModelPart.getReferencedPropertyName();
 				final Type uniqueKeyPropertyType = ( referencedModelPart.getReferencedPropertyName() == null ) ?
 						concreteDescriptor.getIdentifierType() :
-						session.getFactory()
+						session.getFactory().getRuntimeMetamodels()
 								.getReferencedPropertyType(
 										concreteDescriptor.getEntityName(),
 										uniqueKeyPropertyName
@@ -260,12 +260,10 @@ public class EntityDelayedFetchInitializer
 	private boolean isLazyByGraph(RowProcessingState rowProcessingState) {
 		final AppliedGraph appliedGraph = rowProcessingState.getQueryOptions().getAppliedGraph();
 		if ( appliedGraph != null && appliedGraph.getSemantic() == GraphSemantic.FETCH ) {
-			final AttributeNodeImplementor<Object> attributeNode = appliedGraph.getGraph()
-					.findAttributeNode( navigablePath.getLocalName() );
-			if ( attributeNode != null && attributeNode.getAttributeDescriptor() == getInitializedPart().asAttributeMapping() ) {
-				return false;
-			}
-			return true;
+			final AttributeNodeImplementor<?,?,?> attributeNode =
+					appliedGraph.getGraph().findAttributeNode( navigablePath.getLocalName() );
+			return attributeNode == null
+				|| attributeNode.getAttributeDescriptor() != getInitializedPart().asAttributeMapping();
 		}
 		return false;
 	}

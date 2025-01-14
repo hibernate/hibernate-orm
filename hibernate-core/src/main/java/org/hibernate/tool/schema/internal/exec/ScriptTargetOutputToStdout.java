@@ -44,7 +44,7 @@ public class ScriptTargetOutputToStdout extends AbstractScriptTargetOutput {
 				writer.close();
 			}
 			catch (IOException e) {
-				throw new SchemaManagementException( "Unable to close file writer : " + e.toString() );
+				throw new SchemaManagementException( "Unable to close file writer : " + e );
 			}
 			finally {
 				writer = null;

@@ -75,6 +75,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ParameterizedTypeImpl;
 
@@ -363,7 +364,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				}
 
 				try {
-					final Class<?> javaTypeClass = getClassLoaderService().classForName( name );
+					final Class<?> javaTypeClass = scope.getClassLoaderService().classForName( name );
 					final JavaType<?> jtd = javaTypeRegistry.resolveDescriptor( javaTypeClass );
 					final JdbcType jdbcType = jtd.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() );
 					return basicTypeRegistry.resolve( jtd, jdbcType );
@@ -499,6 +500,18 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			else {
 				return false;
 			}
+		}
+
+		public ClassLoaderService getClassLoaderService() {
+			return sessionFactory == null
+					? metadataBuildingContext.getBootstrapContext().getClassLoaderService()
+					: sessionFactory.getClassLoaderService();
+		}
+
+		public ManagedBeanRegistry getManagedBeanRegistry() {
+			return sessionFactory == null
+					? metadataBuildingContext.getBootstrapContext().getManagedBeanRegistry()
+					: sessionFactory.getManagedBeanRegistry();
 		}
 
 		private Scope(TypeConfiguration typeConfiguration) {
@@ -908,14 +921,16 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	public <J> MutabilityPlan<J> createMutabilityPlan(Class<? extends MutabilityPlan<?>> planClass) {
 		return !scope.allowExtensionsInCdi
 				? (MutabilityPlan<J>) FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( planClass )
-				: (MutabilityPlan<J>) getManagedBeanRegistry().getBean( planClass ).getBeanInstance();
+				: (MutabilityPlan<J>) scope.getManagedBeanRegistry().getBean( planClass ).getBeanInstance();
 	}
 
-	private ClassLoaderService getClassLoaderService() {
-		return scope.getServiceRegistry().requireService( ClassLoaderService.class );
+	@Internal @Incubating // find a new home for this operation
+	public final FormatMapper getJsonFormatMapper() {
+		return getSessionFactory().getSessionFactoryOptions().getJsonFormatMapper();
 	}
 
-	private ManagedBeanRegistry getManagedBeanRegistry() {
-		return scope.getServiceRegistry().requireService( ManagedBeanRegistry.class );
+	@Internal @Incubating // find a new home for this operation
+	public final FormatMapper getXmlFormatMapper() {
+		return getSessionFactory().getSessionFactoryOptions().getXmlFormatMapper();
 	}
 }

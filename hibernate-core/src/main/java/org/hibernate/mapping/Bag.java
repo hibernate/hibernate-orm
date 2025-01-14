@@ -18,7 +18,7 @@ import org.hibernate.usertype.UserCollectionType;
  *
  * @author Gavin King
  */
-public class Bag extends Collection {
+public non-sealed class Bag extends Collection {
 	/**
 	 * hbm.xml binding
 	 */

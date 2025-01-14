@@ -34,8 +34,7 @@ public class PostgreSQLArrayConstructorFunction extends ArrayConstructorFunction
 		String arrayTypeName = null;
 		if ( returnType != null ) {
 			final DomainType<?> type = returnType.getSqmType();
-			if ( type instanceof BasicPluralType<?, ?> ) {
-				final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) type;
+			if ( type instanceof BasicPluralType<?, ?> pluralType ) {
 				if ( needsArrayCasting( pluralType.getElementType() ) ) {
 					arrayTypeName = DdlTypeHelper.getCastTypeName(
 							returnType,

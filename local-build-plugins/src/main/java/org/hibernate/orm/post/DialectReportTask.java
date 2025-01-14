@@ -28,7 +28,8 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 
-import org.hibernate.orm.env.HibernateVersion;
+import org.hibernate.build.HibernateVersion;
+import org.hibernate.build.OrmBuildDetails;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
@@ -133,7 +134,7 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 				fileWriter.write(
 						"Supported Dialects along with the minimum supported version of the underlying database.\n\n\n" );
 
-				HibernateVersion ormVersion = (HibernateVersion) getProject().getRootProject().getExtensions().getByName( "ormVersion" );
+				HibernateVersion ormVersion = getProject().getExtensions().getByType( OrmBuildDetails.class ).getHibernateVersion();
 				fileWriter.write( "NOTE: Hibernate version " + ormVersion.getFamily() + "\n\n" );
 			}
 

@@ -30,7 +30,6 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -120,7 +119,6 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.lang.Character.isWhitespace;
 import static java.util.Collections.addAll;
@@ -192,6 +190,10 @@ public class NativeQueryImpl<R>
 
 	private static NamedObjectRepository getNamedObjectRepository(SharedSessionContractImplementor session) {
 		return session.getFactory().getQueryEngine().getNamedObjectRepository();
+	}
+
+	private static QueryInterpretationCache getInterpretationCache(SharedSessionContractImplementor session) {
+		return session.getFactory().getQueryEngine().getInterpretationCache();
 	}
 
 	private static String getResultSetMappingName(NamedNativeQueryMemento<?> memento) {
@@ -421,7 +423,7 @@ public class NativeQueryImpl<R>
 
 	private ParameterInterpretation resolveParameterInterpretation(
 			String sqlString, SharedSessionContractImplementor session) {
-		return session.getFactory().getQueryEngine().getInterpretationCache()
+		return getInterpretationCache( session )
 				.resolveNativeQueryParameters( sqlString,
 						s -> parameterInterpretation( sqlString, session ) );
 	}
@@ -641,31 +643,27 @@ public class NativeQueryImpl<R>
 
 	@Override
 	protected void prepareForExecution() {
-		if ( getSynchronizedQuerySpaces() != null && !getSynchronizedQuerySpaces().isEmpty() ) {
-			// The application defined query spaces on the Hibernate NativeQuery
-			// which means the query will already perform a partial flush
-			// according to the defined query spaces, no need to do a full flush.
-			return;
+		if ( getSynchronizedQuerySpaces() == null || getSynchronizedQuerySpaces().isEmpty() ) {
+			// We need to flush. The query itself is not required to execute in a
+			// transaction; if there is no transaction, the flush would throw a
+			// TransactionRequiredException which would potentially break existing
+			// apps, so we only do the flush if a transaction is in progress.
+			if ( shouldFlush() ) {
+				getSession().flush();
+			}
+			// Reset the callback before every execution
+			callback = null;
 		}
-
-		// otherwise we need to flush.  the query itself is not required to execute
-		// in a transaction; if there is no transaction, the flush would throw a
-		// TransactionRequiredException which would potentially break existing
-		// apps, so we only do the flush if a transaction is in progress.
-		//
-		// NOTE : this was added for JPA initially.  Perhaps we want to only do
-		// this from JPA usage?
-		if ( shouldFlush() ) {
-			getSession().flush();
-		}
-		// Reset the callback before every execution
-		callback = null;
+		// Otherwise, the application specified query spaces via the Hibernate
+		// SynchronizeableQuery and so the query will already perform a partial
+		// flush according to the defined query spaces - no need for a full flush.
 	}
 
 	private boolean shouldFlush() {
 		if ( getSession().isTransactionInProgress() ) {
 			final FlushMode flushMode = getQueryOptions().getFlushMode();
 			return switch ( flushMode == null ? getSession().getHibernateFlushMode() : flushMode ) {
+				// The JPA spec requires that we auto-flush before native queries
 				case AUTO -> getSession().getFactory().getSessionFactoryOptions().isJpaBootstrap();
 				case ALWAYS -> true;
 				default -> false;
@@ -709,7 +707,7 @@ public class NativeQueryImpl<R>
 			}
 			else if ( !isResultTypeAlwaysAllowed( resultType )
 					&& (!isClass( resultType ) || hasJavaTypeDescriptor( resultType )) ) {
-				mapping.addResultBuilder( Builders.resultClassBuilder( resultType, getSessionFactory() ) );
+				mapping.addResultBuilder( Builders.resultClassBuilder( resultType, getSessionFactory().getMappingMetamodel() ) );
 			}
 		}
 		else {
@@ -788,10 +786,6 @@ public class NativeQueryImpl<R>
 			}
 		};
 		return getNativeQueryInterpreter().createQueryPlan( queryDefinition, getSessionFactory() );
-	}
-
-	private TypeConfiguration getTypeConfiguration() {
-		return getSessionFactory().getTypeConfiguration();
 	}
 
 	private NativeQueryInterpreter getNativeQueryInterpreter() {
@@ -966,7 +960,7 @@ public class NativeQueryImpl<R>
 	}
 
 	private QueryInterpretationCache getInterpretationCache() {
-		return getSession().getFactory().getQueryEngine().getInterpretationCache();
+		return getInterpretationCache( getSession() );
 	}
 
 	private NonSelectQueryPlan resolveNonSelectQueryPlan() {
@@ -998,7 +992,7 @@ public class NativeQueryImpl<R>
 	@Override
 	public void addResultTypeClass(Class<?> resultClass) {
 		assert resultSetMapping.getNumberOfResultBuilders() == 0;
-		registerBuilder( Builders.resultClassBuilder( resultClass, getSessionFactory() ) );
+		registerBuilder( Builders.resultClassBuilder( resultClass, getSessionFactory().getMappingMetamodel() ) );
 	}
 
 	@Override
@@ -1236,10 +1230,6 @@ public class NativeQueryImpl<R>
 			}
 			addAll( querySpaces, (String[]) spaces );
 		}
-	}
-
-	private MappingMetamodelImplementor getMappingMetamodel() {
-		return getSession().getFactory().getRuntimeMetamodels().getMappingMetamodel();
 	}
 
 	@Override
@@ -1648,8 +1638,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setMaxResults(int maxResult) {
-		super.setMaxResults( maxResult );
+	public NativeQueryImplementor<R> setMaxResults(int maxResults) {
+		super.setMaxResults( maxResults );
 		return this;
 	}
 

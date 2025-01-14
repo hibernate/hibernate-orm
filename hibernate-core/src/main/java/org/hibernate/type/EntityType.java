@@ -13,7 +13,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.spi.EntityUniqueKey;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -229,7 +228,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SharedSessionContractImplementor session)
 			throws SQLException {
 		if ( settable.length > 0 ) {
-			requireIdentifierOrUniqueKeyType( session.getFactory() )
+			requireIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
 					.nullSafeSet( st, getIdentifier( value, session ), index, settable, session );
 		}
 	}
@@ -237,7 +236,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
 			throws SQLException {
-		requireIdentifierOrUniqueKeyType( session.getFactory() )
+		requireIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
 				.nullSafeSet( st, getIdentifier( value, session ), index, session );
 	}
 
@@ -275,7 +274,8 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			// At this point we know both are non-null.
 			final Object xId = extractIdentifier( x, factory );
 			final Object yId = extractIdentifier( y, factory );
-			return getIdentifierType( factory ).compare( xId, yId );
+			return getIdentifierType( factory.getRuntimeMetamodels() )
+					.compare( xId, yId );
 		}
 	}
 
@@ -332,7 +332,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 					throw new AssertionFailure( "non-transient entity has a null id: " + original.getClass().getName() );
 				}
 				final Object replaced =
-						getIdentifierOrUniqueKeyType( session.getFactory() )
+						getIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
 								.replace( id, null, session, owner, copyCache );
 				return resolve( replaced, session, owner );
 			}
@@ -566,19 +566,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return isOneToOne();
 	}
 
-	/**
-	 * Convenience method to locate the identifier type of the associated entity.
-	 *
-	 * @param factory The mappings...
-	 *
-	 * @return The identifier type
-	 * @deprecated use {@link #getIdentifierType(MappingContext)}
-	 */
-	@Deprecated(since = "7.0")
-	Type getIdentifierType(final Mapping factory) {
-		return getIdentifierType( (MappingContext) factory );
-	}
-
 	Type getIdentifierType(final MappingContext mappingContext) {
 		final Type type = associatedIdentifierType;
 		//The following branch implements a simple lazy-initialization, but rather than the canonical
@@ -603,30 +590,12 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	Type getIdentifierType(final SharedSessionContractImplementor session) {
 		final Type type = associatedIdentifierType;
 		if ( type == null ) {
-			associatedIdentifierType = getIdentifierType( session.getFactory() );
+			associatedIdentifierType = getIdentifierType( session.getFactory().getRuntimeMetamodels() );
 			return associatedIdentifierType;
 		}
 		else {
 			return type;
 		}
-	}
-
-	/**
-	 * Determine the type of either (1) the identifier if we reference the
-	 * associated entity's PK or (2) the unique key to which we refer (i.e.
-	 * the property-ref).
-	 *
-	 * @param factory The mappings...
-	 *
-	 * @return The appropriate type.
-	 *
-	 * @throws MappingException Generally, if unable to resolve the associated entity name
-	 * or unique key property name.
-	 * @deprecated use {@link  #getIdentifierOrUniqueKeyType(MappingContext)}
-	 */
-	@Deprecated(since = "7.0")
-	public final Type getIdentifierOrUniqueKeyType(Mapping factory) throws MappingException {
-		return getIdentifierOrUniqueKeyType( (MappingContext) factory );
 	}
 
 	/**
@@ -654,24 +623,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 					? entityType.getIdentifierOrUniqueKeyType( mappingContext )
 					: type;
 		}
-	}
-
-	/**
-	 * The name of the property on the associated entity to which our FK
-	 * refers
-	 *
-	 * @param factory The mappings...
-	 *
-	 * @return The appropriate property name.
-	 *
-	 * @throws MappingException Generally, if unable to resolve the associated entity name
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	public final String getIdentifierOrUniqueKeyPropertyName(Mapping factory)
-			throws MappingException {
-		return getIdentifierOrUniqueKeyPropertyName( (MappingContext) factory);
 	}
 
 	/**
@@ -764,7 +715,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				entityName,
 				uniqueKeyPropertyName,
 				key,
-				getIdentifierOrUniqueKeyType( factory ),
+				getIdentifierOrUniqueKeyType( factory.getRuntimeMetamodels() ),
 				session.getFactory()
 		);
 

@@ -144,8 +144,7 @@ public class InferredBasicValueResolver {
 				// see if there is a registered BasicType for this JavaType and,
 				// if so, use it. This mimics the legacy handling.
 				final BasicType registeredType;
-				if ( reflectedJtd instanceof BasicPluralJavaType<?> ) {
-					final BasicPluralJavaType<?> containerJtd = (BasicPluralJavaType<?>) reflectedJtd;
+				if ( reflectedJtd instanceof BasicPluralJavaType<?> containerJtd ) {
 					final JavaType<?> elementJtd = containerJtd.getElementJavaType();
 					final BasicType registeredElementType;
 					if ( elementJtd instanceof EnumJavaType ) {
@@ -242,8 +241,7 @@ public class InferredBasicValueResolver {
 				// NOTE : yes it's an odd case, but easy to implement here, so...
 				Integer length = null;
 				Integer scale = null;
-				if ( selectable instanceof Column ) {
-					final Column column = (Column) selectable;
+				if ( selectable instanceof Column column ) {
 					if ( column.getPrecision() != null && column.getPrecision() > 0 ) {
 						length = column.getPrecision();
 						scale = column.getScale();
@@ -301,8 +299,7 @@ public class InferredBasicValueResolver {
 			JdbcTypeIndicators stdIndicators,
 			BasicType<T> resolved,
 			JavaType<T> domainJtd) {
-		if ( resolved instanceof AdjustableBasicType ) {
-			final AdjustableBasicType<T> indicatorCapable = (AdjustableBasicType<T>) resolved;
+		if ( resolved instanceof AdjustableBasicType<T> indicatorCapable ) {
 			final BasicType<T> indicatedType = indicatorCapable.resolveIndicatedType( stdIndicators, domainJtd );
 			return indicatedType != null ? indicatedType : resolved;
 		}

@@ -71,8 +71,8 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		appendHqlString( sb, getJavaTypeDescriptor(), getLiteralValue() );
+	public void appendHqlString(StringBuilder hql) {
+		appendHqlString( hql, getJavaTypeDescriptor(), getLiteralValue() );
 	}
 
 	public static <T> void appendHqlString(StringBuilder sb, JavaType<T> javaType, @Nullable T value) {

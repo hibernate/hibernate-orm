@@ -134,7 +134,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 				20
 		);
 		resetStart();
-		metamodel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
+		metamodel = sessionFactory.getMappingMetamodel();
 		cache = sessionFactory.getCache();
 		secondLevelCacheEnabled = sessionFactoryOptions.isSecondLevelCacheEnabled();
 		queryCacheEnabled = sessionFactoryOptions.isQueryCacheEnabled();

@@ -210,10 +210,8 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 			}
 
 			if ( systemId != null ) {
-				if ( systemId.startsWith( httpBase )
-						|| systemId.startsWith( httpsBase ) ) {
-					return true;
-				}
+				return systemId.startsWith( httpBase )
+					|| systemId.startsWith( httpsBase );
 			}
 
 			return false;

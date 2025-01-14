@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.ReturnableType;
@@ -92,8 +91,6 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 			CteContainer cteContainer,
 			QuerySpec querySpec,
 			SqmToSqlAstConverter converter) {
-		final SessionFactoryImplementor factory = converter.getCreationContext()
-				.getSessionFactory();
 		final QuerySpec outerQuerySpec = new QuerySpec( querySpec.isRoot() );
 		final String identifierVariable = "hhh_";
 		final NavigablePath navigablePath = new NavigablePath(
@@ -125,7 +122,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 			final Expression expression = subSelections.get( i ).getExpression();
 			final Expression finalExpression;
 			if ( expression == windowFunction ) {
-				finalExpression = new SelfRenderingAggregateFunctionSqlAstExpression(
+				finalExpression = new SelfRenderingAggregateFunctionSqlAstExpression<>(
 						"min",
 						(sqlAppender, sqlAstArguments, returnType, walker1) -> {
 							sqlAppender.appendSql( "min(" );
@@ -400,7 +397,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 				columnNames,
 				false,
 				true,
-				factory
+				converter.getCreationContext().getSessionFactory()
 		);
 		outerQuerySpec.getFromClause().addRoot( queryPartTableGroup );
 

@@ -17,5 +17,5 @@ public enum CteSearchClauseKind {
 	/**
 	 * Use breadth first for a recursive CTE.
 	 */
-	BREADTH_FIRST;
+	BREADTH_FIRST
 }

@@ -88,6 +88,7 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	public void testFetch() {
+
 		sessionFactoryScope().inSession(
 				entityManager -> {
 					List<JsonHolder> jsonHolders = entityManager.createQuery( "from JsonHolder b where b.id = 1", JsonHolder.class ).getResultList();

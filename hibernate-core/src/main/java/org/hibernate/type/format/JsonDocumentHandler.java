@@ -3,10 +3,6 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.format;
-/*
- * SPDX-License-Identifier: LGPL-2.1-or-later
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 
 
 /**
@@ -21,22 +17,22 @@ public interface JsonDocumentHandler {
 	/**
 	 * Callback to be called when the start of an JSON object is encountered.
 	 */
-	void startObject();
+	void onStartObject();
 
 	/**
 	 * Callback to be called when the end of an JSON object is encountered.
 	 */
-	void endObject();
+	void onEndObject();
 
 	/**
 	 * Callback to be called when the start of an array is encountered.
 	 */
-	void startArray();
+	void onStartArray();
 
 	/**
 	 * Callback to be called when the end of an array is encountered.
 	 */
-	void endArray();
+	void onEndArray();
 
 	/**
 	 * Callback to be called when the key of JSON attribute is encountered.

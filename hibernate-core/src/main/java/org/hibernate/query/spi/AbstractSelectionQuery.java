@@ -350,12 +350,12 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public SelectionQuery<R> setMaxResults(int maxResult) {
-		if ( maxResult < 0 ) {
+	public SelectionQuery<R> setMaxResults(int maxResults) {
+		if ( maxResults < 0 ) {
 			throw new IllegalArgumentException( "Max results cannot be negative" );
 		}
 		getSession().checkOpen();
-		getQueryOptions().getLimit().setMaxRows(maxResult);
+		getQueryOptions().getLimit().setMaxRows( maxResults );
 		return this;
 	}
 

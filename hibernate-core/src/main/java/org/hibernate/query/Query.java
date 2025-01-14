@@ -897,7 +897,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	// covariant overrides - jakarta.persistence.Query/TypedQuery
 
 	@Override
-	Query<R> setMaxResults(int maxResult);
+	Query<R> setMaxResults(int maxResults);
 
 	@Override
 	Query<R> setFirstResult(int startPosition);

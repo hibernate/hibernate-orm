@@ -624,7 +624,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> addQueryHint(String hint);
 
 	@Override
-	NativeQuery<T> setMaxResults(int maxResult);
+	NativeQuery<T> setMaxResults(int maxResults);
 
 	@Override
 	NativeQuery<T> setFirstResult(int startPosition);

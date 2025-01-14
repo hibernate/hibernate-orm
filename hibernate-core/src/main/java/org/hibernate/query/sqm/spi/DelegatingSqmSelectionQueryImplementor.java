@@ -190,8 +190,8 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	}
 
 	@Override
-	public SqmSelectionQueryImplementor<R> setMaxResults(int maxResult) {
-		getDelegate().setMaxResults( maxResult );
+	public SqmSelectionQueryImplementor<R> setMaxResults(int maxResults) {
+		getDelegate().setMaxResults( maxResults );
 		return this;
 	}
 

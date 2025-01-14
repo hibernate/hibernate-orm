@@ -110,7 +110,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	SqmQueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	@Override
-	SqmQueryImplementor<R> setMaxResults(int maxResult);
+	SqmQueryImplementor<R> setMaxResults(int maxResults);
 
 	@Override
 	SqmQueryImplementor<R> setFirstResult(int startPosition);

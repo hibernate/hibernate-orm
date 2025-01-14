@@ -1642,8 +1642,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setMaxResults(int maxResult) {
-		super.setMaxResults( maxResult );
+	public NativeQueryImplementor<R> setMaxResults(int maxResults) {
+		super.setMaxResults( maxResults );
 		return this;
 	}
 

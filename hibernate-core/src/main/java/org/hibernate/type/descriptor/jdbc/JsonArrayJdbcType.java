@@ -16,6 +16,7 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.format.StringJsonDocumentWriter;
 
 /**
  * Specialized type mapping for {@code JSON_ARRAY} and the JSON ARRAY SQL data type.
@@ -64,15 +65,18 @@ public class JsonArrayJdbcType extends ArrayJdbcType {
 	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
 		final JdbcType elementJdbcType = getElementJdbcType();
 		final Object[] domainObjects = javaType.unwrap( value, Object[].class, options );
+		StringBuilder sb = new StringBuilder();
+		StringJsonDocumentWriter writer = new StringJsonDocumentWriter(new JsonHelper.JsonAppender(sb) );
 		if ( elementJdbcType instanceof JsonJdbcType jsonElementJdbcType ) {
 			final EmbeddableMappingType embeddableMappingType = jsonElementJdbcType.getEmbeddableMappingType();
-			return JsonHelper.arrayToString( embeddableMappingType, domainObjects, options );
+			JsonHelper.serializeArray( embeddableMappingType, domainObjects, options,  writer);
 		}
 		else {
 			assert !( elementJdbcType instanceof AggregateJdbcType );
 			final JavaType<?> elementJavaType = ( (BasicPluralJavaType<?>) javaType ).getElementJavaType();
-			return JsonHelper.arrayToString( elementJavaType, elementJdbcType, domainObjects, options );
+			JsonHelper.serializeArray( elementJavaType, elementJdbcType, domainObjects, options, writer );
 		}
+		return sb.toString();
 	}
 
 	@Override

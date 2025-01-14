@@ -9,43 +9,29 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import oracle.jdbc.driver.json.tree.OracleJsonDateImpl;
-import oracle.jdbc.driver.json.tree.OracleJsonTimestampImpl;
-import oracle.sql.DATE;
-import oracle.sql.TIMESTAMP;
-import oracle.sql.json.OracleJsonDate;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonGenerator;
 import oracle.sql.json.OracleJsonParser;
-import oracle.sql.json.OracleJsonTimestamp;
+import org.hibernate.dialect.JsonHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.format.JsonDocumentHandler;
+import org.hibernate.type.format.ObjectArrayOsonDocumentHandler;
+import org.hibernate.type.format.ObjectArrayOsonDocumentWriter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.UUID;
 
 
 /**
@@ -69,9 +55,6 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 			throw new ExceptionInInitializerError( "JacksonOsonFormatMapper class loaded without OSON extension: " + e.getClass()+" "+ e.getMessage());
 		}
 	}
-
-	// TODO : remove the use of this once the OSON writer has been refactor to Document handling
-	private EmbeddableMappingType embeddableMappingType = null;
 
 	/**
 	 * Creates a new JacksonOsonFormatMapper
@@ -104,10 +87,10 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 					handler.onObjectKey( osonParser.getString() );
 					break;
 				case OracleJsonParser.Event.START_ARRAY:
-					handler.startArray();
+					handler.onStartArray();
 					break;
 				case OracleJsonParser.Event.END_ARRAY:
-					handler.endArray();
+					handler.onEndArray();
 					break;
 				case OracleJsonParser.Event.VALUE_DATE:
 				case OracleJsonParser.Event.VALUE_TIMESTAMP:
@@ -155,10 +138,10 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 							osonParser.getBytes());
 					break;
 				case OracleJsonParser.Event.START_OBJECT:
-					handler.startObject();
+					handler.onStartObject();
 					break;
 				case OracleJsonParser.Event.END_OBJECT:
-					handler.endObject();
+					handler.onEndObject();
 					break;
 				default:
 					throw new IOException( "Unknown OSON event " + event );
@@ -191,24 +174,53 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 		return (T)handler.getObjectArray();
 	}
 
-	public <X>byte[] toOson(X value, WrapperOptions options,EmbeddableMappingType embeddableMappingType) {
+	public <X>byte[] fromObjectArray(X value, JavaType<X> javaType, WrapperOptions options,EmbeddableMappingType embeddableMappingType)
+			throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		OracleJsonGenerator generator = new OracleJsonFactory().createJsonBinaryGenerator( out );
-		toOson( value,generator,options,embeddableMappingType);
+		ObjectArrayOsonDocumentWriter writer = new ObjectArrayOsonDocumentWriter(generator);
+		JsonHelper.serialize( embeddableMappingType, value,options,writer);
 		generator.close();
 		return out.toByteArray();
 	}
 
-	public void arrayToOson(OracleJsonGenerator osonGen,
+	public <X>byte[] arrayToOson(X value,
+								JavaType<X> javaType,
+								JdbcType elementJdbcType,
+								WrapperOptions options) {
+
+		final Object[] domainObjects = javaType.unwrap( value, Object[].class, options );
+
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		OracleJsonGenerator generator = new OracleJsonFactory().createJsonBinaryGenerator( out );
+		ObjectArrayOsonDocumentWriter writer = new ObjectArrayOsonDocumentWriter(generator);
+
+		if ( elementJdbcType instanceof JsonJdbcType jsonElementJdbcType ) {
+			final EmbeddableMappingType embeddableMappingType = jsonElementJdbcType.getEmbeddableMappingType();
+			JsonHelper.serializeArray( embeddableMappingType, domainObjects, options,  writer);
+		}
+		else {
+			assert !( elementJdbcType instanceof AggregateJdbcType);
+			final JavaType<?> elementJavaType = ( (BasicPluralJavaType<?>) javaType ).getElementJavaType();
+			JsonHelper.serializeArray( elementJavaType, elementJdbcType, domainObjects, options, writer );
+		}
+
+		generator.close();
+		return out.toByteArray();
+	}
+
+	public void _arrayToOson(OracleJsonGenerator osonGen,
 							EmbeddableMappingType elementMappingType,
 							Object[] values,
 							WrapperOptions options) {
+
+		osonGen.writeStartArray();
+
 		if ( values.length == 0 ) {
-			osonGen.writeStartArray();
 			osonGen.writeEnd();
 			return;
 		}
-		osonGen.writeStartArray();
+
 		for ( Object value : values ) {
 			toOson( elementMappingType, value, options, osonGen);
 		}
@@ -247,7 +259,11 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 		);
 	}
 
-	public void arrayToOson(OracleJsonGenerator osonGen,
+	private void serializeValue(Object value, JavaType<Object> jdbcJavaType, JdbcType jdbcType, WrapperOptions options, OracleJsonGenerator osonGen) {
+		//TODO: remove me.
+	}
+
+	public void __arrayToOson(OracleJsonGenerator osonGen,
 							JavaType<?> elementJavaType,
 							JdbcType elementJdbcType,
 							Object[] values,
@@ -333,172 +349,6 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 		}
 	}
 
-	private void serializeValue(Object value,
-								JavaType<Object> javaType,
-								JdbcType jdbcType,
-								WrapperOptions options,
-								OracleJsonGenerator generator) {
-		switch ( jdbcType.getDefaultSqlTypeCode() ) {
-			case SqlTypes.TINYINT:
-			case SqlTypes.SMALLINT:
-			case SqlTypes.INTEGER:
-				if ( value instanceof Boolean ) {
-					// BooleanJavaType has this as an implicit conversion
-					int i = ((Boolean) value) ? 1 : 0;
-					generator.write( i );
-					break;
-				}
-				if ( value instanceof Enum ) {
-					generator.write( ((Enum<?>) value ).ordinal() );
-					break;
-				}
-				generator.write( javaType.unwrap( value,Integer.class,options ) );
-				break;
-			case SqlTypes.BOOLEAN:
-				generator.write( javaType.unwrap( value,Boolean.class,options ) );
-				break;
-			case SqlTypes.BIT:
-				generator.write( javaType.unwrap( value,Integer.class,options ) );
-				break;
-			case SqlTypes.BIGINT:
-				generator.write( javaType.unwrap( value,BigInteger.class,options ) );
-				break;
-			case SqlTypes.FLOAT:
-				generator.write( javaType.unwrap( value,Float.class,options ) );
-				break;
-			case SqlTypes.REAL:
-			case SqlTypes.DOUBLE:
-				generator.write( javaType.unwrap( value,Double.class,options ) );
-				break;
-			case SqlTypes.CHAR:
-			case SqlTypes.NCHAR:
-			case SqlTypes.VARCHAR:
-			case SqlTypes.NVARCHAR:
-				if ( value instanceof Boolean ) {
-					String c = ((Boolean) value) ? "Y" : "N";
-					generator.write( c );
-					break;
-				}
-			case SqlTypes.LONGVARCHAR:
-			case SqlTypes.LONGNVARCHAR:
-			case SqlTypes.LONG32VARCHAR:
-			case SqlTypes.LONG32NVARCHAR:
-			case SqlTypes.CLOB:
-			case SqlTypes.MATERIALIZED_CLOB:
-			case SqlTypes.NCLOB:
-			case SqlTypes.MATERIALIZED_NCLOB:
-			case SqlTypes.ENUM:
-			case SqlTypes.NAMED_ENUM:
-				// correct?
-				generator.write( javaType.unwrap( value,String.class,options ) );
-				break;
-			case SqlTypes.DATE:
-				DATE dd = new DATE(javaType.unwrap( value,java.sql.Date.class,options ));
-				OracleJsonDate jsonDate = new OracleJsonDateImpl(dd.shareBytes());
-				generator.write(jsonDate);
-				break;
-			case SqlTypes.TIME:
-			case SqlTypes.TIME_WITH_TIMEZONE:
-			case SqlTypes.TIME_UTC:
-				Time time = javaType.unwrap( value, Time.class,options );
-				generator.write( time.toString() );
-				break;
-			case SqlTypes.TIMESTAMP:
-				TIMESTAMP TS = new TIMESTAMP(javaType.unwrap( value, Timestamp.class, options ));
-				OracleJsonTimestamp writeTimeStamp = new OracleJsonTimestampImpl(TS.shareBytes());
-				generator.write(writeTimeStamp);
-				break;
-			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
-				try {
-					OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, options );
-					generator.write( dateTime );
-				}
-				catch (Exception e) {
-					Timestamp tswtz = javaType.unwrap( value, Timestamp.class, options );
-					TIMESTAMP TSWTZ = new TIMESTAMP(tswtz);
-					OracleJsonTimestamp writeTimeStampWTZ = new OracleJsonTimestampImpl(TSWTZ.shareBytes());
-					generator.write(writeTimeStampWTZ);
-				}
-				break;
-			case SqlTypes.TIMESTAMP_UTC:
-				if( value instanceof OffsetDateTime ) {
-					OffsetDateTime odt = javaType.unwrap( value, OffsetDateTime.class, options );
-					generator.write( odt );
-					break;
-				}
-				else if (value instanceof Instant ) {
-					Instant instant = javaType.unwrap( value, Instant.class, options );
-					generator.write(instant.atOffset( ZoneOffset.UTC )  );
-					break;
-				}
-				generator.write( javaType.unwrap( value,String.class,options ) );
-				break;
-			case SqlTypes.NUMERIC:
-			case SqlTypes.DECIMAL:
-				BigDecimal bd = javaType.unwrap( value, BigDecimal.class, options );
-				generator.write( bd );
-				break;
-
-			case SqlTypes.DURATION:
-				Duration duration = javaType.unwrap( value, Duration.class, options );
-				generator.write( duration );
-				break;
-			case SqlTypes.UUID:
-				UUID uuid = javaType.unwrap( value, UUID.class, options );
-				byte[] uuidBytes = _asBytes( uuid );
-				generator.write( uuidBytes );
-				break;
-			case SqlTypes.BINARY:
-			case SqlTypes.VARBINARY:
-			case SqlTypes.LONGVARBINARY:
-			case SqlTypes.LONG32VARBINARY:
-			case SqlTypes.BLOB:
-			case SqlTypes.MATERIALIZED_BLOB:
-				// how to handle
-				byte[] bytes = javaType.unwrap( value, byte[].class, options );
-				generator.write( bytes );
-				break;
-			case SqlTypes.ARRAY:
-			case SqlTypes.JSON_ARRAY:
-				final int length = Array.getLength( value );
-				generator.writeStartArray();
-				if ( length != 0 ) {
-					//noinspection unchecked
-					final JavaType<Object> elementJavaType = ( (BasicPluralJavaType<Object>) javaType ).getElementJavaType();
-					final JdbcType elementJdbcType = ( (ArrayJdbcType) jdbcType ).getElementJdbcType();
-
-					for ( int i = 0; i < length; i++ ) {
-						Object arrayElement = Array.get( value, i );
-						serializeValue( arrayElement,elementJavaType, elementJdbcType, options, generator );
-					}
-				}
-				generator.writeEnd();
-				break;
-			default:
-				throw new UnsupportedOperationException( "Unsupported JdbcType nested in JSON: " + jdbcType );
-		}
-
-	}
-	private byte[] _asBytes(UUID uuid)
-	{
-		byte[] buffer = new byte[16];
-		long hi = uuid.getMostSignificantBits();
-		long lo = uuid.getLeastSignificantBits();
-		_appendInt((int) (hi >> 32), buffer, 0);
-		_appendInt((int) hi, buffer, 4);
-		_appendInt((int) (lo >> 32), buffer, 8);
-		_appendInt((int) lo, buffer, 12);
-		return buffer;
-	}
-
-	private void _appendInt(int value, byte[] buffer, int offset)
-	{
-		buffer[offset] = (byte) (value >> 24);
-		buffer[++offset] = (byte) (value >> 16);
-		buffer[++offset] = (byte) (value >> 8);
-		buffer[++offset] = (byte) value;
-	}
-
 
 	@Override
 	public <T> void writeToTarget(T value, JavaType<T> javaType, Object target, WrapperOptions options)
@@ -522,9 +372,6 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 	public boolean supportsTargetType(Class<?> targetType) {
 		return JsonGenerator.class.isAssignableFrom( targetType );
 	}
-
-
-
 
 
 }

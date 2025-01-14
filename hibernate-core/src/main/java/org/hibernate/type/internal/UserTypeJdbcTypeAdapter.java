@@ -63,7 +63,7 @@ public class UserTypeJdbcTypeAdapter<J> implements JdbcType {
 	@SuppressWarnings("unchecked")
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		assert javaType.getJavaTypeClass() == null
-			   || this.javaType.getJavaTypeClass().isAssignableFrom( javaType.getJavaTypeClass() );
+			|| this.javaType.getJavaTypeClass().isAssignableFrom( javaType.getJavaTypeClass() );
 		return (ValueBinder<X>) valueBinder;
 	}
 

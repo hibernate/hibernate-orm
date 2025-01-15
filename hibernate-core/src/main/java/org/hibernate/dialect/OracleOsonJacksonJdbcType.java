@@ -114,8 +114,8 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 	@Override
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 
-		if (javaType.getJavaTypeClass().isAssignableFrom( String.class )) {
-			return super.getExtractor(javaType);
+		if(javaType.getJavaType() == String.class || javaType.getJavaType() == Object.class) {
+			return super.getExtractor( javaType );
 		}
 
 		return new BasicExtractor<>( javaType, this ) {
@@ -163,10 +163,6 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				// can I use rs.getBinaryStream( paramIndex); ?
 				try {
-					if(javaType.getJavaType() == String.class || javaType.getJavaType() == Object.class) {
-						return fromString( rs.getString( paramIndex ),javaType,options );
-					}
-
 					OracleJsonDatum ojd = rs.getObject( paramIndex, OracleJsonDatum.class );
 					return doExtraction(ojd,options);
 				}catch (SQLException e) {

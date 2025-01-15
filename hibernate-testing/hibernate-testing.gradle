@@ -48,11 +48,6 @@ dependencies {
     annotationProcessor project( ':hibernate-processor' )
 
 
-
-    runtimeOnly ('com.oracle.database.jdbc:ojdbc-provider-jackson-oson:1.0.2') {
-        exclude group: 'com.oracle.database.jdbc', module: 'ojdbc8'
-    }
-
 }
 
 

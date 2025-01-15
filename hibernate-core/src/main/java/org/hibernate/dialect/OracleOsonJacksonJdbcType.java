@@ -159,12 +159,14 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				// can I use rs.getBinaryStream( paramIndex); ?
 				try {
-					if(javaType.getJavaTypeClass().isAssignableFrom( String.class )) {
-						return fromString( rs.getString( 1 ),javaType,options );
+					if(javaType.getJavaType() == String.class || javaType.getJavaType() == Object.class) {
+						return fromString( rs.getString( paramIndex ),javaType,options );
 					}
+
 					OracleJsonDatum ojd = rs.getObject( paramIndex, OracleJsonDatum.class );
 					return doExtraction(ojd,options);
 				}catch (SQLException e) {
+					// fallback to string if possible
 
 					throw new SQLException( e );
 				}

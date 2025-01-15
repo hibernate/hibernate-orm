@@ -14,7 +14,8 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
-import org.hibernate.type.descriptor.jdbc.DurationJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import java.sql.CallableStatement;
@@ -23,7 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
 
-public class OracleDurationJdbcType extends DurationJdbcType {
+public class OracleDurationJdbcType implements JdbcType {
 
 	public static final OracleDurationJdbcType INSTANCE = new OracleDurationJdbcType();
 
@@ -119,5 +120,22 @@ public class OracleDurationJdbcType extends DurationJdbcType {
 	 */
 	public int getDefaultSqlTypeCode() {
 		return OracleTypes.INTERVALDS;
+	}
+
+	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return Duration.class;
+	}
+
+	@Override
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
+		return (appender, value, dialect, wrapperOptions) -> dialect.appendIntervalLiteral(
+				appender,
+				javaType.unwrap(
+						value,
+						Duration.class,
+						wrapperOptions
+				)
+		);
 	}
 }

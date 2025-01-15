@@ -858,7 +858,7 @@ public class OracleDialect extends Dialect {
 		}
 		// We need the DDL type during runtime to produce the proper encoding in certain functions
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( BIT, "number(1,0)", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( DURATION, "interval day to second", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( oracle.jdbc.OracleTypes.INTERVALDS, "interval day to second", this ) );
 		javaTypeRegistry.addDescriptor( OracleDurationJavaType.INSTANCE );
 
 	}
@@ -892,6 +892,8 @@ public class OracleDialect extends Dialect {
 		switch ( jdbcTypeCode ) {
 			case OracleTypes.JSON:
 				return jdbcTypeRegistry.getDescriptor( JSON );
+			case oracle.jdbc.OracleTypes.INTERVALDS:
+				return jdbcTypeRegistry.getDescriptor( DURATION );
 			case STRUCT:
 				if ( "MDSYS.SDO_GEOMETRY".equals( columnTypeName ) ) {
 					jdbcTypeCode = GEOMETRY;
@@ -1070,6 +1072,7 @@ public class OracleDialect extends Dialect {
 		typeContributions.contributeJdbcType( ObjectNullAsNullTypeJdbcType.INSTANCE );
 		// Oracle Stores the duration is ISO-8601 format.
 		typeContributions.contributeJdbcType( OracleDurationJdbcType.INSTANCE );
+		typeContributions.contributeJavaType( OracleDurationJavaType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(

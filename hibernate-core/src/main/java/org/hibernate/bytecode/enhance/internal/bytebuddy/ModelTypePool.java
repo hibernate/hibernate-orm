@@ -20,9 +20,11 @@ public class ModelTypePool extends TypePool.Default implements EnhancerClassLoca
 
 	private final ConcurrentHashMap<String, Resolution> resolutions = new ConcurrentHashMap<>();
 	private final OverridingClassFileLocator locator;
+	private final SafeCacheProvider poolCache;
 
-	private ModelTypePool(CacheProvider cacheProvider, OverridingClassFileLocator classFileLocator, CoreTypePool parent) {
+	private ModelTypePool(SafeCacheProvider cacheProvider, OverridingClassFileLocator classFileLocator, CoreTypePool parent) {
 		super( cacheProvider, classFileLocator, ReaderMode.FAST, parent );
+		this.poolCache = cacheProvider;
 		this.locator = classFileLocator;
 	}
 
@@ -62,7 +64,7 @@ public class ModelTypePool extends TypePool.Default implements EnhancerClassLoca
 	 * @return
 	 */
 	public static EnhancerClassLocator buildModelTypePool(ClassFileLocator classFileLocator, CoreTypePool coreTypePool) {
-		return buildModelTypePool( classFileLocator, coreTypePool, new TypePool.CacheProvider.Simple() );
+		return buildModelTypePool( classFileLocator, coreTypePool, new SafeCacheProvider() );
 	}
 
 	/**
@@ -72,7 +74,7 @@ public class ModelTypePool extends TypePool.Default implements EnhancerClassLoca
 	 * @param cacheProvider
 	 * @return
 	 */
-	public static EnhancerClassLocator buildModelTypePool(ClassFileLocator classFileLocator, CoreTypePool coreTypePool, CacheProvider cacheProvider) {
+	public static EnhancerClassLocator buildModelTypePool(ClassFileLocator classFileLocator, CoreTypePool coreTypePool, SafeCacheProvider cacheProvider) {
 		Objects.requireNonNull( classFileLocator );
 		Objects.requireNonNull( coreTypePool );
 		Objects.requireNonNull( cacheProvider );
@@ -92,6 +94,13 @@ public class ModelTypePool extends TypePool.Default implements EnhancerClassLoca
 
 	@Override
 	public void registerClassNameAndBytes(final String className, final byte[] bytes) {
+		//Very important: ensure the registered override is actually effective in case this class
+		//was already resolved in the recent past; this could have happened for example as a side effect
+		//of symbol resolution during enhancement of a different class, or very simply when attempting
+		//to re-enhanced the same class - which happens frequently in WildFly because of the class transformers
+		//being triggered concurrently by multiple parallel deployments.
+		resolutions.remove( className );
+		poolCache.remove( className );
 		locator.put( className, new ClassFileLocator.Resolution.Explicit( Objects.requireNonNull( bytes ) ) );
 	}
 

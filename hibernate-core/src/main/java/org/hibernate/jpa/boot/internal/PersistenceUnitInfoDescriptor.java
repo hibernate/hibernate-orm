@@ -7,10 +7,15 @@
 package org.hibernate.jpa.boot.internal;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.spi.ClassTransformer;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.jpa.internal.enhance.EnhancingClassTransformerImpl;
 
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.SharedCacheMode;
@@ -18,15 +23,13 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.spi.ClassTransformer;
-import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.jpa.internal.enhance.EnhancingClassTransformerImpl;
-
 /**
  * @author Steve Ebersole
  */
 public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor {
+
+	private static final CoreMessageLogger LOGGER = CoreLogging.messageLogger( PersistenceUnitInfoDescriptor.class );
+
 	private final PersistenceUnitInfo persistenceUnitInfo;
 	private ClassTransformer classTransformer;
 
@@ -121,6 +124,9 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 		}
 		// During testing, we will return a null temp class loader in cases where we don't care about enhancement
 		if ( persistenceUnitInfo.getNewTempClassLoader() != null ) {
+			if ( LOGGER.isDebugEnabled() ) {
+				LOGGER.debug( "Pushing class transformers for PU named '" + getName() + "' on loading classloader " + enhancementContext.getLoadingClassLoader() );
+			}
 			final EnhancingClassTransformerImpl classTransformer = new EnhancingClassTransformerImpl( enhancementContext );
 			this.classTransformer = classTransformer;
 			persistenceUnitInfo.addTransformer( classTransformer );

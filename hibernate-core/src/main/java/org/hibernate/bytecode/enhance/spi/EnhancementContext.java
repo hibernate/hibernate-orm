@@ -4,6 +4,8 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
+import org.hibernate.bytecode.spi.BytecodeProvider;
+
 import jakarta.persistence.metamodel.Type;
 import org.hibernate.Incubating;
 
@@ -156,4 +158,15 @@ public interface EnhancementContext {
 	default UnsupportedEnhancementStrategy getUnsupportedEnhancementStrategy() {
 		return UnsupportedEnhancementStrategy.SKIP;
 	}
+
+	/**
+	 * Allows to force the use of a specific instance of BytecodeProvider to perform the enhancement.
+	 * @return When returning {code null} the default implementation will be used. Only return a different instance if
+	 * you need to override the default implementation.
+	 */
+	@Incubating
+	default BytecodeProvider getBytecodeProvider() {
+		return null;
+	}
+
 }

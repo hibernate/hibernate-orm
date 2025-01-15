@@ -5,6 +5,7 @@
 package org.hibernate.dialect;
 
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.sql.SQLException;
@@ -42,6 +43,7 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.format.JsonDocumentWriter;
 
 import static org.hibernate.dialect.StructHelper.getEmbeddedPart;
 import static org.hibernate.dialect.StructHelper.instantiate;
@@ -61,41 +63,144 @@ public class JsonHelper {
 		return sb.toString();
 	}
 
-	public static String arrayToString(MappingType elementMappingType, Object[] values, WrapperOptions options) {
+
+	public static void serializeArray(MappingType elementMappingType, Object[] values, WrapperOptions options, JsonDocumentWriter writer) {
+		writer.startArray();
 		if ( values.length == 0 ) {
-			return "[]";
+			writer.endArray();
+			return;
 		}
-		final StringBuilder sb = new StringBuilder();
-		final JsonAppender jsonAppender = new JsonAppender( sb );
-		char separator = '[';
 		for ( Object value : values ) {
-			sb.append( separator );
-			toString( elementMappingType, value, options, jsonAppender );
-			separator = ',';
+			try {
+				if (value == null) {
+					writer.nullValue();
+				}
+				else {
+					JsonHelper.serialize( (EmbeddableMappingType) elementMappingType, value, options, writer );
+				}
+			}
+			catch (IOException e) {
+				// TODO : do better than this
+				throw new RuntimeException( e );
+			}
 		}
-		sb.append( ']' );
-		return sb.toString();
+		writer.endArray();
 	}
 
-	public static String arrayToString(
-			JavaType<?> elementJavaType,
-			JdbcType elementJdbcType,
-			Object[] values,
-			WrapperOptions options) {
+	public static void serializeArray(JavaType<?> elementJavaType, JdbcType elementJdbcType, Object[] values, WrapperOptions options, JsonDocumentWriter writer) {
+		writer.startArray();
 		if ( values.length == 0 ) {
-			return "[]";
+			writer.endArray();
+			return;
 		}
-		final StringBuilder sb = new StringBuilder();
-		final JsonAppender jsonAppender = new JsonAppender( sb );
-		char separator = '[';
 		for ( Object value : values ) {
-			sb.append( separator );
-			//noinspection unchecked
-			convertedValueToString( (JavaType<Object>) elementJavaType, elementJdbcType, value, options, jsonAppender );
-			separator = ',';
+			if (value == null) {
+				writer.nullValue();
+			}
+			else {
+				writer.serializeJsonValue( value ,(JavaType<Object>) elementJavaType,elementJdbcType,options);
+			}
 		}
-		sb.append( ']' );
-		return sb.toString();
+		writer.endArray();
+	}
+
+	/**
+	 * Checks that a JDBCType is assignable to an array
+	 * @param type the jdbc type
+	 * @return <code>true</code> if types is of array kind <code>false</code> otherwise.
+	 */
+	private static boolean isArrayType(JdbcType type) {
+		return (type.getDefaultSqlTypeCode() == SqlTypes.ARRAY ||
+				type.getDefaultSqlTypeCode() == SqlTypes.JSON_ARRAY);
+	}
+
+	/**
+	 * Serialized an Object value to a JSON document writer.
+	 *
+	 * @param embeddableMappingType the embeddable mapping definition of the given value.
+	 * @param domainValue the value to be serialized.
+	 * @param options wrapping options
+	 * @param writer the document writer
+	 * @throws IOException if the underlying writer failed to serialize a mpped value or failed to perform need I/O.
+	 */
+	public static void serialize(EmbeddableMappingType embeddableMappingType,
+										Object domainValue, WrapperOptions options, JsonDocumentWriter writer) throws IOException {
+		writer.startObject();
+		serializeMapping(embeddableMappingType, domainValue, options, writer);
+		writer.endObject();
+	}
+
+	private static void serializeMapping(EmbeddableMappingType embeddableMappingType,
+								Object domainValue, WrapperOptions options, JsonDocumentWriter writer) throws IOException {
+		final Object[] values = embeddableMappingType.getValues( domainValue );
+		for ( int i = 0; i < values.length; i++ ) {
+			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, i );
+			if ( attributeMapping instanceof SelectableMapping ) {
+				final String name = ( (SelectableMapping) attributeMapping ).getSelectableName();
+				writer.objectKey( name );
+				if (values[i] == null) {
+					writer.nullValue();
+				}
+				else if (attributeMapping.getMappedType() instanceof BasicType<?>) {
+					final BasicType<Object> basicType = (BasicType<Object>) attributeMapping.getMappedType();
+					if ( isArrayType(basicType.getJdbcType())) {
+						final int length = Array.getLength( values[i] );
+						writer.startArray();
+						if ( length != 0 ) {
+							//noinspection unchecked
+							final JavaType<Object> elementJavaType = ( (BasicPluralJavaType<Object>) basicType.getJdbcJavaType() ).getElementJavaType();
+							final JdbcType elementJdbcType = ( (ArrayJdbcType) basicType.getJdbcType() ).getElementJdbcType();
+							final Object domainArray = basicType.convertToRelationalValue(   values[i] );
+							for ( int j = 0; j < length; j++ ) {
+								writer.serializeJsonValue(Array.get(domainArray,j), elementJavaType, elementJdbcType, options);
+							}
+						}
+						writer.endArray();
+					}
+					else {
+						writer.serializeJsonValue(basicType.convertToRelationalValue( values[i]),
+								(JavaType<Object>)basicType.getJdbcJavaType(),basicType.getJdbcType(), options);
+					}
+				}
+				else if ( attributeMapping.getMappedType() instanceof EmbeddableMappingType ) {
+					writer.startObject();
+					serializeMapping(  (EmbeddableMappingType)attributeMapping.getMappedType(), values[i], options,writer);
+					writer.endObject();
+				}
+
+			}
+			else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
+				if ( values[i] == null ) {
+					//writer.nullValue();
+					continue;
+				}
+				final EmbeddableMappingType mappingType = (EmbeddableMappingType) attributeMapping.getMappedType();
+				final SelectableMapping aggregateMapping = mappingType.getAggregateMapping();
+				if (aggregateMapping == null) {
+					serializeMapping(
+							mappingType,
+							values[i],
+							options,
+							writer );
+				}
+				else {
+					final String name = aggregateMapping.getSelectableName();
+					writer.objectKey( name );
+					writer.startObject();
+					serializeMapping(
+							mappingType,
+							values[i],
+							options,
+							writer);
+					writer.endObject();
+
+				}
+			}
+			else {
+				throw new UnsupportedOperationException( "Support for attribute mapping type not yet implemented: " + attributeMapping.getClass().getName() );
+			}
+
+		}
 	}
 
 	private static void toString(EmbeddableMappingType embeddableMappingType, Object value, WrapperOptions options, JsonAppender appender) {
@@ -127,7 +232,15 @@ public class JsonHelper {
 				}
 				final EmbeddableMappingType mappingType = (EmbeddableMappingType) attributeMapping.getMappedType();
 				final SelectableMapping aggregateMapping = mappingType.getAggregateMapping();
-				if ( aggregateMapping == null ) {
+				if ( mappingType.shouldSelectAggregateMapping()) {
+					final String name = aggregateMapping.getSelectableName();
+					appender.append( separator );
+					appender.append( '"' );
+					appender.append( name );
+					appender.append( "\":" );
+					toString( mappingType, values[i], options, appender );
+				}
+				else {
 					toString(
 							mappingType,
 							options,
@@ -135,14 +248,6 @@ public class JsonHelper {
 							values[i],
 							separator
 					);
-				}
-				else {
-					final String name = aggregateMapping.getSelectableName();
-					appender.append( separator );
-					appender.append( '"' );
-					appender.append( name );
-					appender.append( "\":" );
-					toString( mappingType, values[i], options, appender );
 				}
 			}
 			else {
@@ -1376,7 +1481,7 @@ public class JsonHelper {
 		}
 	}
 
-	private static class JsonAppender extends OutputStream implements SqlAppender {
+	public static class JsonAppender extends OutputStream implements SqlAppender {
 
 		private final static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 

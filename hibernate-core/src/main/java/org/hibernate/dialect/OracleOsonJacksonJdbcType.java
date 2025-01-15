@@ -74,12 +74,9 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 			private <X> byte[] toOson(X value, JavaType<X> javaType, WrapperOptions options) throws Exception {
 
 				FormatMapper mapper = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
-				// TODO : we should not have to do this.
-				((JacksonOsonFormatMapper)mapper).setEmbeddableMappingType( getEmbeddableMappingType());
 
-				if(getEmbeddableMappingType()!= null) {
-					return ((JacksonOsonFormatMapper)mapper)
-							.toOson(value,options,getEmbeddableMappingType());
+				if (getEmbeddableMappingType()!= null) {
+					return ((JacksonOsonFormatMapper)mapper).fromObjectArray(value,javaType,options,getEmbeddableMappingType());
 				}
 
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -117,13 +114,15 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 	@Override
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 
+		if (javaType.getJavaTypeClass().isAssignableFrom( String.class )) {
+			return super.getExtractor(javaType);
+		}
+
 		return new BasicExtractor<>( javaType, this ) {
 
 			private X fromOson(byte[] osonBytes, WrapperOptions options) throws Exception {
 
 				FormatMapper mapper = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
-				// TODO : we should not have to do this.
-				((JacksonOsonFormatMapper)mapper).setEmbeddableMappingType( getEmbeddableMappingType() );
 
 				if (getEmbeddableMappingType() != null &&
 						getJavaType().getJavaTypeClass() == Object[].class) {
@@ -180,7 +179,6 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				// can I use rs.getBinaryStream( paramIndex); ?
 				OracleJsonDatum ojd = statement.getObject( index, OracleJsonDatum.class );
 				return doExtraction(ojd,options);
 			}
@@ -188,7 +186,6 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				// can I use rs.getBinaryStream( paramIndex); ?
 				OracleJsonDatum ojd = statement.getObject( name, OracleJsonDatum.class );
 				return doExtraction(ojd,options);
 			}

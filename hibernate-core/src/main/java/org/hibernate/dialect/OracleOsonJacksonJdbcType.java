@@ -67,7 +67,9 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 
-
+		if(javaType.getJavaType() == String.class || javaType.getJavaType() == Object.class) {
+			return super.getBinder( javaType );
+		}
 
 		return new BasicBinder<>( javaType, this ) {
 

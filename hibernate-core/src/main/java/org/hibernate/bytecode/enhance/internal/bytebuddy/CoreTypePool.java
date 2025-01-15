@@ -6,6 +6,7 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.bytebuddy.description.type.TypeDescription;
@@ -27,42 +28,39 @@ public class CoreTypePool extends TypePool.AbstractBase implements TypePool {
 
 	private final ClassLoader hibernateClassLoader = CoreTypePool.class.getClassLoader();
 	private final ConcurrentHashMap<String, Resolution> resolutions = new ConcurrentHashMap<>();
-	private final String[] acceptedPrefixes;
+	private final CorePrefixFilter acceptedPrefixes;
 
 	/**
-	 * Construct a new {@link CoreTypePool} with its default configuration:
-	 * to only load classes whose package names start with either "jakarta."
-	 * or "java."
+	 * Construct a new {@link CoreTypePool} with its default configuration.
+	 *
+	 * @see CorePrefixFilter
 	 */
 	public CoreTypePool() {
-		//By default optimise for jakarta annotations, and java util collections
-		this("jakarta.", "java.", "org.hibernate.annotations.");
+		this( CorePrefixFilter.DEFAULT_INSTANCE );
 	}
 
 	/**
 	 * Construct a new {@link CoreTypePool} with a choice of which prefixes
 	 * for fully qualified classnames will be loaded by this {@link TypePool}.
+	 *
+	 * @deprecated used by Quarkus
 	 */
+	@Deprecated
 	public CoreTypePool(final String... acceptedPrefixes) {
+		this( new CorePrefixFilter( acceptedPrefixes ) );
+	}
+
+	public CoreTypePool(CorePrefixFilter acceptedPrefixes) {
 		//While we implement a cache in this class we also want to enable
 		//ByteBuddy's default caching mechanism as it will cache the more
 		//useful output of the parsing and introspection of such types.
-		super( new TypePool.CacheProvider.Simple() );
-		this.acceptedPrefixes = acceptedPrefixes;
-	}
-
-	private boolean isCoreClassName(final String name) {
-		for ( String acceptedPrefix : this.acceptedPrefixes ) {
-			if ( name.startsWith( acceptedPrefix ) ) {
-				return true;
-			}
-		}
-		return false;
+		super( new CoreCacheProvider( acceptedPrefixes ) );
+		this.acceptedPrefixes = Objects.requireNonNull( acceptedPrefixes );
 	}
 
 	@Override
 	protected Resolution doDescribe(final String name) {
-		if ( isCoreClassName( name ) ) {
+		if ( acceptedPrefixes.isCoreClassName( name ) ) {
 			final Resolution resolution = resolutions.get( name );
 			if ( resolution != null ) {
 				return resolution;

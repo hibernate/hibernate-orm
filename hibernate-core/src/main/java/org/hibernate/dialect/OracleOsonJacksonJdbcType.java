@@ -114,8 +114,8 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 	@Override
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 
-		if (javaType.getJavaTypeClass().isAssignableFrom( String.class )) {
-			return super.getExtractor(javaType);
+		if(javaType.getJavaType() == String.class || javaType.getJavaType() == Object.class) {
+			return super.getExtractor( javaType );
 		}
 
 		return new BasicExtractor<>( javaType, this ) {

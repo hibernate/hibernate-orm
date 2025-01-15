@@ -28,8 +28,8 @@ import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SessionFactory
-@DomainModel(annotatedClasses = {GenericEnbeddedIdRecordTest.MainEntity.class, GenericEnbeddedIdRecordTest.ReferencedEntity.class})
-class GenericEnbeddedIdRecordTest {
+@DomainModel(annotatedClasses = {GenericEmbeddedIdRecordTest.MainEntity.class, GenericEmbeddedIdRecordTest.ReferencedEntity.class})
+class GenericEmbeddedIdRecordTest {
 
 	@Test
 	void testOverrideJoinColumn(SessionFactoryScope scope) {

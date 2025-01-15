@@ -8,13 +8,15 @@ import jakarta.transaction.TransactionManager;
 import jakarta.transaction.UserTransaction;
 
 /**
- * {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform} implementation for JRun4 AS
+ * {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform} implementation for Sun ONE Application Server 7 and above
  *
- * @author Joseph Bissen
+ * @author Robert Davidson
+ * @author Sanjeev Krishnan
+ * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public class JRun4JtaPlatform extends AbstractJtaPlatform {
-	public static final String TM_NAME = "java:/TransactionManager";
+public class GlassFishJtaPlatform extends AbstractJtaPlatform {
+	public static final String TM_NAME = "java:appserver/TransactionManager";
 	public static final String UT_NAME = "java:comp/UserTransaction";
 
 	@Override

@@ -26,11 +26,6 @@ public class JBossAppServerJtaPlatform extends AbstractJtaPlatform {
 	}
 
 	@Override
-	protected boolean canCacheTransactionManagerByDefault() {
-		return true;
-	}
-
-	@Override
 	protected TransactionManager locateTransactionManager() {
 		try {
 			return (TransactionManager) jndiService().locate( AS7_TM_NAME );

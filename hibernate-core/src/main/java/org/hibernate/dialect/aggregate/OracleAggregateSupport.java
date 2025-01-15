@@ -206,10 +206,16 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 											"json_value(" + parentPartExpression + columnExpression + "')"
 									);
 								}
+							case UUID:
+								if (this.dateTypesStoreAsString) {
+									return template.replace(
+											placeholder,
+											"hextoraw(replace(json_value(" + parentPartExpression + columnExpression + "'),'-',''))"
+									);
+								}
 							case BINARY:
 							case VARBINARY:
 							case LONG32VARBINARY:
-							case UUID:
 								// We encode binary data as hex, so we have to decode here
 								if ( determineLength( column ) * 2 < 4000L ) {
 									return template.replace(

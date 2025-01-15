@@ -14,8 +14,8 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.DurationJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import java.sql.CallableStatement;
@@ -24,7 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
 
-public class OracleDurationJdbcType implements JdbcType {
+public class OracleDurationJdbcType extends DurationJdbcType {
 
 	public static final OracleDurationJdbcType INSTANCE = new OracleDurationJdbcType();
 

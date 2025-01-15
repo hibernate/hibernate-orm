@@ -1304,7 +1304,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	/**
 	 * Similar to {@link #getEnhancer(EnhancementContext)} but intended for advanced users who wish
 	 * to customize how ByteBuddy is locating the class files and caching the types.
-	 * Possibly used in Quarkus in a future version.
+	 * Used in Quarkus.
 	 * @param enhancementContext
 	 * @param classLocator
 	 * @return

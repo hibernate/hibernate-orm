@@ -163,6 +163,18 @@ public class EnhancerImpl implements Enhancer {
 	}
 
 	private DynamicType.Builder<?> doEnhance(Supplier<DynamicType.Builder<?>> builderSupplier, TypeDescription managedCtClass) {
+		// skip if the class was already enhanced. This is very common in WildFly as classloading is highly concurrent.
+		// We need to ensure that no class is instrumented multiple times as that might result in incorrect bytecode.
+		// N.B. there is a second check below using a different approach: checking for the marker interfaces,
+		// which does not address the case of extended bytecode enhancement
+		// (because it enhances classes that do not end up with these marker interfaces).
+		// I'm currently inclined to keep both checks, as one is safer and the other has better backwards compatibility.
+		if ( managedCtClass.getDeclaredAnnotations().isAnnotationPresent( EnhancementInfo.class ) ) {
+			verifyVersions( managedCtClass, enhancementContext );
+			log.debugf( "Skipping enhancement of [%s]: it's already annotated with @EnhancementInfo", managedCtClass.getName() );
+			return null;
+		}
+
 		// can't effectively enhance interfaces
 		if ( managedCtClass.isInterface() ) {
 			log.debugf( "Skipping enhancement of [%s]: it's an interface", managedCtClass.getName() );
@@ -179,7 +191,7 @@ public class EnhancerImpl implements Enhancer {
 		if ( alreadyEnhanced( managedCtClass ) ) {
 			verifyVersions( managedCtClass, enhancementContext );
 
-			log.debugf( "Skipping enhancement of [%s]: already enhanced", managedCtClass.getName() );
+			log.debugf( "Skipping enhancement of [%s]: it's already implementing 'Managed'", managedCtClass.getName() );
 			return null;
 		}
 

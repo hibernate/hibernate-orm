@@ -33,7 +33,8 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 	public EnhancingClassTransformerImpl(EnhancementContext enhancementContext) {
 		Objects.requireNonNull( enhancementContext );
 		this.enhancementContext = enhancementContext;
-		this.bytecodeProvider = BytecodeProviderInitiator.buildDefaultBytecodeProvider();
+		final BytecodeProvider overriddenProvider = enhancementContext.getBytecodeProvider();
+		this.bytecodeProvider = overriddenProvider == null ? BytecodeProviderInitiator.buildDefaultBytecodeProvider() : overriddenProvider;
 	}
 
 	@Override

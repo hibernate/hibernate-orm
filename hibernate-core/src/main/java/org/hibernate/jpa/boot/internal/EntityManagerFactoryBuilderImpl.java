@@ -57,6 +57,7 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
+import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
@@ -128,6 +129,7 @@ import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
 import static org.hibernate.cfg.AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.URL;
 import static org.hibernate.cfg.AvailableSettings.USER;
+import static org.hibernate.cfg.BytecodeSettings.BYTECODE_PROVIDER_INSTANCE;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_DIRTY_TRACKING;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION;
@@ -443,6 +445,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			final boolean dirtyTrackingEnabled,
 			final boolean lazyInitializationEnabled,
 			final boolean associationManagementEnabled ) {
+		final Object propValue = configurationValues.get( BYTECODE_PROVIDER_INSTANCE );
+		if ( propValue != null && ( ! ( propValue instanceof BytecodeProvider ) ) ) {
+			throw persistenceException( "Property " + BYTECODE_PROVIDER_INSTANCE + " was set to '" + propValue + "', which is not compatible with the expected type " + BytecodeProvider.class );
+		}
+		final BytecodeProvider overriddenBytecodeProvider = (BytecodeProvider) propValue;
 		return new DefaultEnhancementContext() {
 
 			@Override
@@ -483,6 +490,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				return false;
 			}
 
+			@Override
+			public BytecodeProvider getBytecodeProvider() {
+				return overriddenBytecodeProvider;
+			}
 		};
 	}
 

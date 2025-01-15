@@ -29,6 +29,17 @@ public interface BytecodeSettings {
 	String BYTECODE_PROVIDER = "hibernate.bytecode.provider";
 
 	/**
+	 * This is similar to the now deprecated legacy property {@code hibernate.bytecode.provider} except
+	 * it's used specifically to pass an existing instance of a {@link org.hibernate.bytecode.spi.BytecodeProvider};
+	 * this happens to also allow to override the implementation, but is primarily intended to allow reusing a
+	 * specific instance; this could be useful when the implementation benefits from internal caches.
+	 * When not set, Hibernate will create its default implementation.
+	 *
+	 * @settingDefault {@code null}
+	 */
+	String BYTECODE_PROVIDER_INSTANCE = "hibernate.enhancer.bytecodeprovider.instance";
+
+	/**
 	 * Enable association management feature in runtime bytecode enhancement
 	 *
 	 * @settingDefault {@code false}

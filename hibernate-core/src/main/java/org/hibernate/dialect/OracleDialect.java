@@ -84,7 +84,6 @@ import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
@@ -819,7 +818,6 @@ public class OracleDialect extends Dialect {
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
-		final JavaTypeRegistry javaTypeRegistry = typeContributions.getTypeConfiguration().getJavaTypeRegistry();
 
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "SYS.XMLTYPE", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "MDSYS.SDO_GEOMETRY", this ) );
@@ -840,7 +838,6 @@ public class OracleDialect extends Dialect {
 		// We need the DDL type during runtime to produce the proper encoding in certain functions
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( BIT, "number(1,0)", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( oracle.jdbc.OracleTypes.INTERVALDS, "interval day to second", this ) );
-		javaTypeRegistry.addDescriptor( OracleDurationJavaType.INSTANCE );
 
 	}
 

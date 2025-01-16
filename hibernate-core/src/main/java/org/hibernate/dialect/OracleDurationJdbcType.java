@@ -5,9 +5,7 @@
 package org.hibernate.dialect;
 
 import oracle.jdbc.OracleTypes;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -16,7 +14,6 @@ import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.DurationJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -24,6 +21,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
 
+/**
+ * Oracle sub-implementation of {@link DurationJdbcType}
+ * which is a descriptor for {@link java.time.Duration}.
+ * In Oracle databse Duration is stored as {@link OracleTypes.INTERVALDS}
+ *
+ * @author ejannett
+ * @author Bidyadhar Mohanty
+ */
 public class OracleDurationJdbcType extends DurationJdbcType {
 
 	public static final OracleDurationJdbcType INSTANCE = new OracleDurationJdbcType();
@@ -87,37 +92,17 @@ public class OracleDurationJdbcType extends DurationJdbcType {
 		};
 	}
 
-	/**
-	 * The {@linkplain SqlTypes JDBC type code} used when interacting with JDBC APIs.
-	 * <p>
-	 * For example, it's used when calling {@link java.sql.PreparedStatement#setNull(int, int)}.
-	 *
-	 * @return a JDBC type code
-	 */
+	@Override
 	public int getJdbcTypeCode() {
 		return SqlTypes.DURATION;
 	}
-	/**
-	 * A {@linkplain SqlTypes JDBC type code} that identifies the SQL column type to
-	 * be used for schema generation.
-	 * <p>
-	 * This value is passed to {@link DdlTypeRegistry#getTypeName(int, Size, Type)}
-	 * to obtain the SQL column type.
-	 *
-	 * @return a JDBC type code
-	 * @since 6.2
-	 */
+
+	@Override
 	public int getDdlTypeCode() {
 		return OracleTypes.INTERVALDS;
 	}
-	/**
-	 * A {@linkplain SqlTypes JDBC type code} that identifies the SQL column type.
-	 * <p>
-	 * This value might be different from {@link #getDdlTypeCode()} if the actual type
-	 * e.g. JSON is emulated through a type like CLOB.
-	 *
-	 * @return a JDBC type code
-	 */
+
+	@Override
 	public int getDefaultSqlTypeCode() {
 		return OracleTypes.INTERVALDS;
 	}

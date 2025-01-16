@@ -13,64 +13,67 @@ import java.io.IOException;
 
 /**
  * JSON document producer.
- * Used to parse JSON documents. Implementors of this will define
- * proper callback implementations.
- *
+ * Implementation of this inteface will used to build a JSON document.
+ * Implementation example is {@link StringJsonDocumentWriter }
  * @author Emmanuel Jannetti
  */
 
 public interface JsonDocumentWriter {
 	/**
-	 * Callback to be called when the start of an JSON object is encountered.
+	 * Starts a new JSON Objects.
 	 */
-	void startObject() throws IOException;
+	void startObject();
 
 	/**
-	 * Callback to be called when the end of an JSON object is encountered.
+	 * Ends a new JSON Objects
 	 */
-	void endObject() throws IOException;
+	void endObject();
 
 	/**
-	 * Callback to be called when the start of an array is encountered.
+	 * Starts a new JSON array.
+	 * @throws IOException an I/O error roccured while starting the object.
 	 */
 	void startArray();
 
 	/**
-	 * Callback to be called when the end of an array is encountered.
+	 * Ends a new JSON array.
+	 * @throws IOException an I/O error roccured while starting the object.
 	 */
 	void endArray();
 
 	/**
-	 * Callback to be called when the key of JSON attribute is encountered.
-	 * @param key the attribute name
+	 * Adds a new JSON element name.
+	 * @param key the element name.
+	 * @throws IOException an I/O error roccured while starting the object.
 	 */
 	void objectKey(String key);
 
 	/**
-	 * Callback to be called when null value is encountered.
+	 * Adds a new JSON element null value.
+	 * @throws IOException an I/O error roccured while starting the object.
 	 */
 	void nullValue();
 
 	/**
-	 * Callback to be called when boolean value is encountered.
-	 * @param value the boolean value
+	 * Adds a new JSON element boolean value.
+	 * @param value the element boolean name.
 	 */
 	void booleanValue(boolean value);
 
 	/**
-	 * Callback to be called when string value is encountered.
-	 * @param value the String value
+	 * Adds a new JSON element string value.
+	 * @param value the element string name.
 	 */
 	void stringValue(String value);
 
 	/**
-	 * Callback to be called when Number value is encountered.
-	 * @param value the String value.
+	 * Adds a new JSON element Number value.
+	 * @param value the element Number name.
 	 */
 	void numberValue(Number value);
 
 	/**
-	 * Serialize a JSON value to the document
+	 * Adds a JSON value to the document
 	 * @param value the value to be serialized
 	 * @param javaType the Java type of the value
 	 * @param jdbcType the JDBC type for the value to be serialized

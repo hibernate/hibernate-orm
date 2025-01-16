@@ -25,6 +25,7 @@ import org.hibernate.sql.results.spi.LoadContexts;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+
 /**
  * Represents the state of "stuff" Hibernate is tracking, including (not exhaustive):
  * <ul>
@@ -407,6 +408,15 @@ public interface PersistenceContext {
 	void addInitializedDetachedCollection(
 			CollectionPersister collectionPersister,
 			PersistentCollection<?> collection);
+
+	/**
+	 * Replaces a directly accessible collection with the given one
+	 *
+	 * @param oldCollection
+	 * @param collection The collection to be associated with the persistence context
+	 * @since 7.0
+	 */
+	void replaceCollection(CollectionPersister persister, PersistentCollection<?> oldCollection, PersistentCollection<?> collection);
 
 	/**
 	 * add a collection we just pulled out of the cache (does not need initializing)

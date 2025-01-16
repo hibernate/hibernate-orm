@@ -17,7 +17,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Time;
@@ -42,19 +41,23 @@ public class ObjectArrayOsonDocumentWriter implements JsonDocumentWriter {
 
 	private final OracleJsonGenerator generator;
 
+	/**
+	 * Creates a new OSON document writer
+	 * @param generator the JSON generator.
+	 */
 	public ObjectArrayOsonDocumentWriter(OracleJsonGenerator generator) {
 		this.generator = generator;
 	}
 
 
 	@Override
-	public void startObject() throws IOException {
+	public void startObject() {
 		this.generator.writeStartObject();
 	}
 
 
 	@Override
-	public void endObject() throws IOException {
+	public void endObject() {
 		this.generator.writeEnd();
 	}
 
@@ -105,7 +108,15 @@ public class ObjectArrayOsonDocumentWriter implements JsonDocumentWriter {
 		serializeValue(value, javaType, jdbcType, options);
 	}
 
-
+	/**
+	 * Serializes a value according to its mapping type.
+	 * This method serializes the value and writes it into the underlying generator
+	 *
+	 * @param value the value
+	 * @param javaType the Java type of the value
+	 * @param jdbcType the JDBC SQL type of the value
+	 * @param options the wapping options.
+	 */
 	private void serializeValue(Object value,
 								JavaType<Object> javaType,
 								JdbcType jdbcType,

@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -103,6 +104,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		this.qualifiedObjectNameFormatter = new QualifiedObjectNameFormatterStandardImpl( nameQualifierSupport );
 
 		this.lobCreatorBuilder = makeLobCreatorBuilder( dialect );
+
+		logJdbcFetchSize( extractedMetaDataSupport.getDefaultFetchSize(), cfgService );
 	}
 
 	private IdentifierHelperBuilder identifierHelperBuilder(
@@ -312,6 +315,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 				cfgService.getSettings(),
 				databaseMetaData.getConnection()
 		);
+
+		logJdbcFetchSize( extractedMetaDataSupport.getDefaultFetchSize(), cfgService );
 	}
 
 	private static IdentifierHelper identifierHelper(
@@ -420,4 +425,14 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		return lobCreatorBuilder;
 	}
 
+	private static void logJdbcFetchSize(int defaultFetchSize, ConfigurationService cfgService) {
+		if ( !cfgService.getSettings().containsKey( JdbcSettings.STATEMENT_FETCH_SIZE ) ) {
+			if ( defaultFetchSize > 0 && defaultFetchSize < 200 ) {
+				log.warn( "Low default JDBC fetch size: " + defaultFetchSize + " (set hibernate.jdbc.fetch_size)" );
+			}
+			else {
+				log.debug( "Using default JDBC fetch size: " + defaultFetchSize );
+			}
+		}
+	}
 }

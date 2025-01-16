@@ -45,8 +45,5 @@ dependencies {
     implementation testLibs.junit5Launcher
 
     annotationProcessor project( ':hibernate-processor' )
-
-
 }
-
 

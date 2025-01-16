@@ -152,24 +152,32 @@ public interface JdbcLogging extends BasicLogger {
 	@Message(value = "Unable to roll back isolated connection on exception ", id = 100021)
 	void unableToRollBackIsolatedConnection(@Cause Exception ignored);
 
+	@LogMessage(level = DEBUG)
+	@Message(value = "Using default JDBC fetch size: %s", id = 100022)
+	void usingFetchSize(int fetchSize);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Low default JDBC fetch size: %s (consider setting 'hibernate.jdbc.fetch_size')", id = 100023)
+	void warnLowFetchSize(int fetchSize);
+
 	@LogMessage(level = TRACE)
-	@Message(value = "JDBC fetch size: %s", id = 100022)
+	@Message(value = "JDBC fetch size: %s", id = 100024)
 	void fetchSize(int fetchSize);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Low JDBC fetch size: %s (consider setting 'hibernate.jdbc.fetch_size')", id = 100023)
+	@Message(value = "Low JDBC fetch size: %s (consider setting 'hibernate.jdbc.fetch_size')", id = 100025)
 	void lowFetchSize(int fetchSize);
 
 	@LogMessage(level = TRACE)
-	@Message(value = "Setting JDBC fetch size: %s", id = 100024)
+	@Message(value = "Setting JDBC fetch size: %s", id = 100026)
 	void settingFetchSize(int fetchSize);
 
 	@LogMessage(level = TRACE)
-	@Message(value = "Setting JDBC query timeout: %s", id = 100025)
+	@Message(value = "Setting JDBC query timeout: %s", id = 100027)
 	void settingQueryTimeout(int timeout);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Called joinTransaction() on a non-JTA EntityManager (ignoring)", id = 100026)
+	@Message(value = "Called joinTransaction() on a non-JTA EntityManager (ignoring)", id = 100030)
 	void callingJoinTransactionOnNonJtaEntityManager();
 
 	@LogMessage(level = TRACE)

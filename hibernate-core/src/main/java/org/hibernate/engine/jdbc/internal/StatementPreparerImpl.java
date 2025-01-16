@@ -234,8 +234,8 @@ class StatementPreparerImpl implements StatementPreparer {
 		else {
 			if ( JDBC_MESSAGE_LOGGER.isDebugEnabled() ) {
 				final int defaultFetchSize = statement.getFetchSize();
-				if ( defaultFetchSize < 100 ) {
-					JDBC_MESSAGE_LOGGER.lowFetchSize( statement.getFetchSize() );
+				if ( defaultFetchSize > 0 && defaultFetchSize < 100 ) {
+					JDBC_MESSAGE_LOGGER.lowFetchSize( defaultFetchSize );
 				}
 			}
 			else if ( JDBC_MESSAGE_LOGGER.isTraceEnabled() ) {

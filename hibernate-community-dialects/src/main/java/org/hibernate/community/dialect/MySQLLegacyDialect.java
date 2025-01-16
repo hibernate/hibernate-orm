@@ -884,7 +884,7 @@ public class MySQLLegacyDialect extends Dialect {
 	public String getQueryHintString(String query, String hints) {
 		return getMySQLVersion().isBefore( 5 )
 				? super.getQueryHintString( query, hints )
-				: addQueryHints( query, hints );
+				: addUseIndexQueryHint( query, hints );
 	}
 
 	/**

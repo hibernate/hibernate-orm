@@ -19,6 +19,7 @@ import java.util.function.Function;
  * @author Sanne Grinovero
  * @author Marco Belladelli
  */
+@SuppressWarnings("unchecked")
 public final class StandardStack<T> implements Stack<T> {
 
 	private Object[] elements;
@@ -107,8 +108,8 @@ public final class StandardStack<T> implements Stack<T> {
 
 	@Override
 	public void clear() {
-		for ( int i = 0; i < top; i++ ) {
-			elements[i] = null;
+		if ( elements != null ) {
+			Arrays.fill( elements, 0, top, null );
 		}
 		top = 0;
 	}
@@ -145,7 +146,10 @@ public final class StandardStack<T> implements Stack<T> {
 	private void grow() {
 		final int oldCapacity = elements.length;
 		final int jump = ( oldCapacity < 64 ) ? ( oldCapacity + 2 ) : ( oldCapacity >> 1 );
-		elements = Arrays.copyOf( elements, oldCapacity + jump );
+		final Object[] newElements = Arrays.copyOf( elements, oldCapacity + jump );
+		// Prevents GC nepotism on the old array elements, see HHH-19047
+		Arrays.fill( elements, null );
+		elements = newElements;
 	}
 
 }

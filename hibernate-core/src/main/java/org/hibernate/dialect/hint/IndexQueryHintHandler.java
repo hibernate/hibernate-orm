@@ -14,6 +14,6 @@ public class IndexQueryHintHandler implements QueryHintHandler {
 
 	@Override
 	public String addQueryHints(String query, String hints) {
-		return Dialect.addQueryHints( query, hints);
+		return Dialect.addUseIndexQueryHint( query, hints);
 	}
 }

@@ -205,10 +205,12 @@ import java.util.regex.Pattern;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
+import static java.lang.String.join;
 import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.internal.util.MathHelper.ceilingPowerOfTwo;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 import static org.hibernate.type.SqlTypes.*;
@@ -2736,13 +2738,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		res.append( " add constraint " )
 				.append( quote( constraintName ) )
 				.append( " foreign key (" )
-				.append( String.join( ", ", foreignKey ) )
+				.append( join( ", ", foreignKey ) )
 				.append( ") references " )
 				.append( referencedTable );
 
 		if ( !referencesPrimaryKey ) {
 			res.append( " (" )
-					.append( String.join( ", ", primaryKey ) )
+					.append( join( ", ", primaryKey ) )
 					.append( ')' );
 		}
 
@@ -4161,8 +4163,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The modified SQL
 	 */
 	public String getQueryHintString(String query, List<String> hintList) {
-		final String hints = String.join( ", ", hintList );
-		return StringHelper.isEmpty( hints ) ? query : getQueryHintString( query, hints);
+		if ( hintList.isEmpty() ) {
+			return query;
+		}
+		else {
+			final String hints = join( ", ", hintList );
+			return isEmpty( hints ) ? query : getQueryHintString( query, hints );
+		}
 	}
 
 	/**
@@ -4745,12 +4752,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Modify the SQL, adding hints or comments, if necessary
+	 * Modify the SQL, adding hints or comments, if necessary.
+	 *
+	 * @see #getQueryHintString(String,List)
+	 * @see #prependComment
 	 */
-	public String addSqlHintOrComment(
-			String sql,
-			QueryOptions queryOptions,
-			boolean commentsEnabled) {
+	public String addSqlHintOrComment(String sql, QueryOptions queryOptions, boolean commentsEnabled) {
 		// Keep this here, rather than moving to Select.
 		// Some Dialects may need the hint to be appended to the very end or beginning
 		// of the finalized SQL statement, so wait until everything is processed.
@@ -4764,7 +4771,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Adds an INDEX query hint as follows:
+	 * Adds an {@code INDEX} query hint as follows:
 	 *
 	 * <pre>
 	 * SELECT *
@@ -4772,21 +4779,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * USE INDEX (hint1, hint2)
 	 * WHERE X=1
 	 * </pre>
+	 *
+	 * @since 7.0
 	 */
-	public static String addQueryHints(String query, String hints) {
-		Matcher matcher = QUERY_PATTERN.matcher( query );
+	public static String addUseIndexQueryHint(String query, String hints) {
+		final Matcher matcher = QUERY_PATTERN.matcher( query );
 		if ( matcher.matches() && matcher.groupCount() > 1 ) {
 			final String startToken = matcher.group(1);
 			// Null if there is no join in the query
-			final String joinToken = Objects.toString(matcher.group(2), "");
+			final String joinToken = Objects.toString( matcher.group(2), "" );
 			final String endToken = matcher.group(3);
-
-			return startToken +
-					" use index (" +
-					hints +
-					") " +
-					joinToken +
-					endToken;
+			return startToken + " use index (" + hints + ") " + joinToken + endToken;
 		}
 		else {
 			return query;

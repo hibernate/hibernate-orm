@@ -10,6 +10,16 @@ import org.hibernate.type.descriptor.java.DurationJavaType;
 
 import java.time.Duration;
 
+/**
+ * Oracle sub-implementation of {@link DurationJavaType}
+ * which is a descriptor for {@link Duration}
+ * This implementation brings the support of <code>oracle.sql.INTERVALDS</code>
+ * as source type.
+ * @see #wrap(Object, WrapperOptions)
+ *
+ * @author ejannett
+ * @author Bidyadhar Mohanty
+ */
 public class OracleDurationJavaType extends DurationJavaType {
 
 	public static final OracleDurationJavaType INSTANCE = new OracleDurationJavaType();

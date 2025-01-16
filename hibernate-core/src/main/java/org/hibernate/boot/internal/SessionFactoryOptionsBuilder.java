@@ -794,11 +794,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				setting,
 				(Callable<FormatMapper>) () -> {
 					FormatMapper jsonJacksonFormatMapper = null;
-					configurationService.getSetting(
-							SESSION_FACTORY_NAME_IS_JNDI,
-							BOOLEAN,
-							true
-					);
 					if (JacksonIntegration.isOracleOsonExtensionAvailable()) {
 						jsonJacksonFormatMapper = getOsonJacksonFormatMapperOrNull();
 					}

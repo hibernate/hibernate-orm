@@ -105,7 +105,7 @@ public class JsonHelper {
 	}
 
 	/**
-	 * Checks that a JDBCType is assignable to an array
+	 * Checks that a <code>JDBCType</code> is assignable to an array
 	 * @param type the jdbc type
 	 * @return <code>true</code> if types is of array kind <code>false</code> otherwise.
 	 */
@@ -115,7 +115,7 @@ public class JsonHelper {
 	}
 
 	/**
-	 * Serialized an Object value to a JSON document writer.
+	 * Serialized an Object value to JSON object using a document writer.
 	 *
 	 * @param embeddableMappingType the embeddable mapping definition of the given value.
 	 * @param domainValue the value to be serialized.
@@ -130,6 +130,15 @@ public class JsonHelper {
 		writer.endObject();
 	}
 
+	/**
+	 * JSON object attirbute serialization
+	 * @see #serialize(EmbeddableMappingType, Object, WrapperOptions, JsonDocumentWriter)
+	 * @param embeddableMappingType the embeddable mapping definition of the given value.
+	 * @param domainValue the value to be serialized.
+	 * @param options wrapping options
+	 * @param writer the document writer
+	 * @throws IOException
+	 */
 	private static void serializeMapping(EmbeddableMappingType embeddableMappingType,
 								Object domainValue, WrapperOptions options, JsonDocumentWriter writer) throws IOException {
 		final Object[] values = embeddableMappingType.getValues( domainValue );

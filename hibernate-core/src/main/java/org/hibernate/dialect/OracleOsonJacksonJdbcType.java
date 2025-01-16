@@ -28,6 +28,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
+ *
+ * Type mapping JSON SQL data type for Oracle database.
+ * This implementation is used when Jackson mapper is used and that the JDBC OSON extension
+ * is available.
+ *
  * @author Emmanuel Jannetti
  */
 public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
@@ -83,9 +88,9 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 				
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				JsonFactory osonFactory = (JsonFactory) osonFactoryKlass.getDeclaredConstructor().newInstance();
-				JsonGenerator osonGen = osonFactory.createGenerator( out );
-				mapper.writeToTarget( value, javaType, osonGen, options );
-				osonGen.close(); // until now
+				try (JsonGenerator osonGen = osonFactory.createGenerator( out )) {
+					mapper.writeToTarget( value, javaType, osonGen, options );
+				}
 				return out.toByteArray();
 			}
 
@@ -143,9 +148,9 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 				}
 
 				JsonFactory osonFactory = (JsonFactory) osonFactoryKlass.getDeclaredConstructor().newInstance();
-				JsonParser osonParser = osonFactory.createParser(  osonBytes );
-
-				return mapper.readFromSource( type, osonParser, options );
+				try (JsonParser osonParser = osonFactory.createParser(  osonBytes )) {
+					return mapper.readFromSource( type, osonParser, options );
+				}
 			}
 
 			private X doExtraction(OracleJsonDatum datum,  WrapperOptions options) throws SQLException {

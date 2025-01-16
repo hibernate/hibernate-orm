@@ -30,6 +30,8 @@ import java.nio.ByteBuffer;
 
 
 /**
+ * Implementation of FormatMapper for Orale OSON support
+ *
  * @author Emmanuel Jannetti
  * @author Bidyadhar Mohanty
  */
@@ -66,7 +68,9 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 	}
 
 	/**
-	 * Process OSON parser tokens
+	 * Process OSON parser tokens.
+	 * This method consume one by one event coming from an OSON parser and use the given JsonDocumentHandler
+	 * to populate values into Object array
 	 * @param osonParser the OSON parser
 	 * @param currentEvent the current of the parser
 	 * @throws IOException error while reading from underlying parser

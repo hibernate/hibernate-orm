@@ -1095,19 +1095,10 @@ public class OracleDialect extends Dialect {
 			jdbcTypeRegistry.addDescriptor( OracleOrdinalEnumJdbcType.INSTANCE );
 		}
 	}
-	@Override
-	public Boolean getSupportsJakartaTemporalAnnotationInEmbeddable() {
-		return OracleOsonExtensionUsed == false;
-	}
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		if (OracleOsonExtensionUsed) {
-			return OracleAggregateSupport.valueOf( this, false );
-		}
-		else {
-			return OracleAggregateSupport.valueOf( this, true );
-		}
+		return OracleAggregateSupport.valueOf( this ,false);
 	}
 
 	@Override

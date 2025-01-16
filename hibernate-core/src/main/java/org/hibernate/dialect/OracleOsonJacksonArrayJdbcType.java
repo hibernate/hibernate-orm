@@ -25,6 +25,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
+ *
+ * Type mapping of (JSON) array of JSON SQL data type for Oracle database.
+ * This implementation is used when Jackson mapper is used and that the JDBC OSON extension
+ * is available.
+ *
  * @author Emmanuel Jannetti
  * @author Bidyadhar Mohanty
  */

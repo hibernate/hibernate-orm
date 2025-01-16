@@ -14,13 +14,13 @@ import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
-import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Stack;
 
 /**
- * JsonDocument String writer implementation
+ * Implementation of <code>JsonDocumentWriter</code> for String based OSON document.
+ * This implementation will receive a {@link JsonHelper.JsonAppender } to a serialze JSON object to it
  * @author Emmanuel Jannetti
  */
 public class StringJsonDocumentWriter implements JsonDocumentWriter{
@@ -50,7 +50,10 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 	}
 	private Stack<PROCESSING_STATE> processingStates = new Stack<>();
 
-
+	/**
+	 * Creates a new StringJsonDocumentWriter.
+	 * @param appender the appender to receive the serialze JSON object
+	 */
 	public StringJsonDocumentWriter(JsonHelper.JsonAppender appender) {
 		this.processingStates.push( PROCESSING_STATE.NONE );
 		this.appender = appender;
@@ -60,7 +63,7 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 	 * Callback to be called when the start of an JSON object is encountered.
 	 */
 	@Override
-	public void startObject() throws IOException {
+	public void startObject() {
 		// Note: startArray and startObject must not call moveProcessingStateMachine()
 		if (this.processingStates.peek() == PROCESSING_STATE.STARTING_ARRAY) {
 			// are we building an array of objects?
@@ -82,7 +85,7 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 	 * Callback to be called when the end of an JSON object is encountered.
 	 */
 	@Override
-	public void endObject() throws IOException {
+	public void endObject() {
 		this.appender.append( OBJECT_END_MARKER );
 		this.processingStates.push( PROCESSING_STATE.ENDING_OBJECT);
 		moveProcessingStateMachine();
@@ -173,6 +176,7 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 				//   STARTING_ARRAY
 				// first pop ENDING_ARRAY
 				this.processingStates.pop();
+				// if we have ARRAY, so that's not an empty array. pop that state
 				if (this.processingStates.peek().equals( PROCESSING_STATE.ARRAY ))
 					this.processingStates.pop();
 				assert this.processingStates.pop().equals( PROCESSING_STATE.STARTING_ARRAY );
@@ -183,6 +187,7 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 				//   STARTING_OBJECT
 				// first pop ENDING_OBJECT
 				this.processingStates.pop();
+				// if we have OBJECT, so that's not an empty object. pop that state
 				if (this.processingStates.peek().equals( PROCESSING_STATE.OBJECT ))
 					this.processingStates.pop();
 				assert this.processingStates.pop().equals( PROCESSING_STATE.STARTING_OBJECT );
@@ -235,6 +240,15 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 		moveProcessingStateMachine();
 	}
 
+	/**
+	 * Converts a value to String according to its mapping type.
+	 * This method serializes the value and writes it into the underlying appender
+	 *
+	 * @param value the value
+	 * @param javaType the Java type of the value
+	 * @param jdbcType the JDBC SQL type of the value
+	 * @param options the wapping options.
+	 */
 	private  void convertedBasicValueToString(
 			Object value,
 			WrapperOptions options,

@@ -8,6 +8,7 @@ package org.hibernate.property.access.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.boot.spi.AccessType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
@@ -40,8 +41,11 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 				|| BuiltInPropertyAccessStrategies.MIXED.getExternalName().equals( explicitAccessStrategyName ) ) {
 			//type-cache-pollution agent: it's crucial to use the ManagedTypeHelper rather than attempting a direct cast
 			if ( isManagedType( containerClass ) ) {
-				if ( BuiltInPropertyAccessStrategies.FIELD.getExternalName().equals( explicitAccessStrategyName ) ) {
+				if ( AccessType.FIELD.getType().equals( explicitAccessStrategyName ) ) {
 					return PropertyAccessStrategyEnhancedImpl.FIELD;
+				}
+				else if ( AccessType.PROPERTY.getType().equals( explicitAccessStrategyName ) ) {
+					return PropertyAccessStrategyEnhancedImpl.PROPERTY;
 				}
 				return PropertyAccessStrategyEnhancedImpl.STANDARD;
 			}

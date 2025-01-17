@@ -44,7 +44,6 @@ public abstract class AbstractScrollableResults<R> implements ScrollableResultsI
 		this.persistenceContext = persistenceContext;
 	}
 
-
 	@Override
 	public final R get() throws HibernateException {
 		if ( closed ) {
@@ -85,26 +84,22 @@ public abstract class AbstractScrollableResults<R> implements ScrollableResultsI
 
 	@Override
 	public void setFetchSize(int fetchSize) {
-		getJdbcValues().setFetchSize(fetchSize);
+		getJdbcValues().setFetchSize( fetchSize );
 	}
 
 	@Override
 	public final void close() {
-		if ( this.closed ) {
-			// noop if already closed
-			return;
+		if ( !closed ) {
+			rowReader.finishUp( rowProcessingState );
+			jdbcValues.finishUp( persistenceContext );
+			getPersistenceContext().getJdbcCoordinator().afterStatementExecution();
+			closed = true;
 		}
-
-		rowReader.finishUp( rowProcessingState );
-		jdbcValues.finishUp( persistenceContext );
-
-		getPersistenceContext().getJdbcCoordinator().afterStatementExecution();
-
-		this.closed = true;
+		// noop if already closed
 	}
 
 	@Override
 	public boolean isClosed() {
-		return this.closed;
+		return closed;
 	}
 }

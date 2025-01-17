@@ -371,7 +371,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	@Override
 	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, DomainQueryExecutionContext executionContext) {
 		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
-			return EmptyScrollableResults.INSTANCE;
+			return EmptyScrollableResults.instance();
 		}
 		return withCacheableSqmInterpretation( executionContext, scrollMode, scrollInterpreter );
 	}

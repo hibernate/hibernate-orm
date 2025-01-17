@@ -117,32 +117,30 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 	}
 
 	private void prepareCurrentRow(boolean underlyingScrollSuccessful) {
-		if ( !underlyingScrollSuccessful ) {
-			currentRow = null;
-			return;
-		}
-
-		final PersistenceContext persistenceContext = getPersistenceContext().getPersistenceContext();
-		final LoadContexts loadContexts = persistenceContext.getLoadContexts();
-		loadContexts.register( getJdbcValuesSourceProcessingState() );
-		persistenceContext.beforeLoad();
-		try {
+		if ( underlyingScrollSuccessful ) {
+			final PersistenceContext persistenceContext = getPersistenceContext().getPersistenceContext();
+			final LoadContexts loadContexts = persistenceContext.getLoadContexts();
+			loadContexts.register( getJdbcValuesSourceProcessingState() );
+			persistenceContext.beforeLoad();
 			try {
-				currentRow = getRowReader().readRow( getRowProcessingState() );
-
-				getRowProcessingState().finishRowProcessing( true );
-				getJdbcValuesSourceProcessingState().finishUp( false );
+				try {
+					currentRow = getRowReader().readRow( getRowProcessingState() );
+					getRowProcessingState().finishRowProcessing( true );
+					getJdbcValuesSourceProcessingState().finishUp( false );
+				}
+				finally {
+					persistenceContext.afterLoad();
+				}
+				persistenceContext.initializeNonLazyCollections();
 			}
 			finally {
-				persistenceContext.afterLoad();
+				loadContexts.deregister( getJdbcValuesSourceProcessingState() );
 			}
-			persistenceContext.initializeNonLazyCollections();
+			afterScrollOperation();
 		}
-		finally {
-			loadContexts.deregister( getJdbcValuesSourceProcessingState() );
+		else {
+			currentRow = null;
 		}
-
-		afterScrollOperation();
 	}
 
 }

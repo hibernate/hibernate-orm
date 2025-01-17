@@ -144,8 +144,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 	@Override
 	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, DomainQueryExecutionContext executionContext) {
 		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
-			//noinspection unchecked
-			return EmptyScrollableResults.INSTANCE;
+			return EmptyScrollableResults.instance();
 		}
 		final List<JdbcParameterBinder> jdbcParameterBinders;
 		final JdbcParameterBindings jdbcParameterBindings;

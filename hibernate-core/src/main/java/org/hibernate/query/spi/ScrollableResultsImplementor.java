@@ -14,5 +14,4 @@ import org.hibernate.ScrollableResults;
  */
 @Incubating
 public interface ScrollableResultsImplementor<R> extends ScrollableResults<R> {
-	boolean isClosed();
 }

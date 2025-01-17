@@ -5,8 +5,8 @@
 package org.hibernate.query.internal;
 
 import org.hibernate.Incubating;
+import org.hibernate.ScrollableResults;
 import org.hibernate.query.spi.CloseableIterator;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 
 /**
  * @author Steve Ebersole
@@ -15,9 +15,9 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
  */
 @Incubating
 public class ScrollableResultsIterator<T> implements CloseableIterator<T> {
-	private final ScrollableResultsImplementor<T> scrollableResults;
+	private final ScrollableResults<T> scrollableResults;
 
-	public ScrollableResultsIterator(ScrollableResultsImplementor<T> scrollableResults) {
+	public ScrollableResultsIterator(ScrollableResults<T> scrollableResults) {
 		this.scrollableResults = scrollableResults;
 	}
 

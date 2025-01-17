@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.util.Properties;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,6 +20,7 @@ import org.hibernate.Length;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -212,6 +214,8 @@ public class OracleDialect extends Dialect {
 
 	protected final int driverMinorVersion;
 
+	private final int defaultFetchSize;
+
 
 	public OracleDialect() {
 		this( MINIMUM_VERSION );
@@ -222,6 +226,7 @@ public class OracleDialect extends Dialect {
 		autonomous = false;
 		extended = false;
 		applicationContinuity = false;
+		defaultFetchSize = -1;
 		driverMajorVersion = 19;
 		driverMinorVersion = 0;
 	}
@@ -235,6 +240,7 @@ public class OracleDialect extends Dialect {
 		autonomous = serverConfiguration.isAutonomous();
 		extended = serverConfiguration.isExtended();
 		applicationContinuity = serverConfiguration.isApplicationContinuity();
+		defaultFetchSize = serverConfiguration.getDefaultFetchSize();
 		this.driverMinorVersion = serverConfiguration.getDriverMinorVersion();
 		this.driverMajorVersion = serverConfiguration.getDriverMajorVersion();
 	}
@@ -288,6 +294,15 @@ public class OracleDialect extends Dialect {
 	@Override
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
+	}
+
+	@Override
+	public Properties getDefaultProperties() {
+		final Properties defaultProperties = super.getDefaultProperties();
+		if ( defaultFetchSize > 0 && defaultFetchSize < 200 ) {
+			defaultProperties.setProperty( JdbcSettings.STATEMENT_FETCH_SIZE, Integer.toString( 1024 ) );
+		}
+		return defaultProperties;
 	}
 
 	@Override

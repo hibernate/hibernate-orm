@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +58,7 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
+import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.ReflectHelper.isClass;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
 import static org.hibernate.query.sqm.internal.QuerySqmImpl.CRITERIA_HQL_STRING;
@@ -362,18 +362,16 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 	@Override
 	public List<R> performList(DomainQueryExecutionContext executionContext) {
-		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
-			return Collections.emptyList();
-		}
-		return withCacheableSqmInterpretation( executionContext, null, listInterpreter );
+		return executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0
+				? emptyList()
+				: withCacheableSqmInterpretation( executionContext, null, listInterpreter );
 	}
 
 	@Override
 	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, DomainQueryExecutionContext executionContext) {
-		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
-			return EmptyScrollableResults.instance();
-		}
-		return withCacheableSqmInterpretation( executionContext, scrollMode, scrollInterpreter );
+		return executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0
+				? EmptyScrollableResults.instance()
+				: withCacheableSqmInterpretation( executionContext, scrollMode, scrollInterpreter );
 	}
 
 	private <T, X> T withCacheableSqmInterpretation(DomainQueryExecutionContext executionContext, X context, SqmInterpreter<T, X> interpreter) {
@@ -500,7 +498,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressible<T>) sqmInterpretation.getSqmParameterMappingModelTypeResolutions().get(parameter);
+						return (MappingModelExpressible<T>)
+								sqmInterpretation.getSqmParameterMappingModelTypeResolutions().get( parameter );
 					}
 				},
 				session
@@ -509,7 +508,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		return new CacheableSqmInterpretation(
 				sqmInterpretation.getSqlAst(),
 				selectTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() ),
-				tableGroupAccess,
 				jdbcParamsXref,
 				sqmInterpretation.getSqmParameterMappingModelTypeResolutions(),
 				jdbcParameterBindings
@@ -527,7 +525,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private static class CacheableSqmInterpretation {
 		private final SelectStatement selectStatement;
 		private final JdbcOperationQuerySelect jdbcSelect;
-		private final FromClauseAccess tableGroupAccess;
 		private final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
 		private final Map<SqmParameter<?>, MappingModelExpressible<?>> sqmParameterMappingModelTypes;
 		private transient JdbcParameterBindings firstParameterBindings;
@@ -535,28 +532,18 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		CacheableSqmInterpretation(
 				SelectStatement selectStatement,
 				JdbcOperationQuerySelect jdbcSelect,
-				FromClauseAccess tableGroupAccess,
 				Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref,
 				Map<SqmParameter<?>, MappingModelExpressible<?>> sqmParameterMappingModelTypes,
 				JdbcParameterBindings firstParameterBindings) {
 			this.selectStatement = selectStatement;
 			this.jdbcSelect = jdbcSelect;
-			this.tableGroupAccess = tableGroupAccess;
 			this.jdbcParamsXref = jdbcParamsXref;
 			this.sqmParameterMappingModelTypes = sqmParameterMappingModelTypes;
 			this.firstParameterBindings = firstParameterBindings;
 		}
 
-		SelectStatement getSelectStatement() {
-			return selectStatement;
-		}
-
 		JdbcOperationQuerySelect getJdbcSelect() {
 			return jdbcSelect;
-		}
-
-		FromClauseAccess getTableGroupAccess() {
-			return tableGroupAccess;
 		}
 
 		Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> getJdbcParamsXref() {
@@ -565,14 +552,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 		public Map<SqmParameter<?>, MappingModelExpressible<?>> getSqmParameterMappingModelTypes() {
 			return sqmParameterMappingModelTypes;
-		}
-
-		JdbcParameterBindings getFirstParameterBindings() {
-			return firstParameterBindings;
-		}
-
-		void setFirstParameterBindings(JdbcParameterBindings firstParameterBindings) {
-			this.firstParameterBindings = firstParameterBindings;
 		}
 	}
 
@@ -602,6 +581,5 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			}
 			return hql;
 		}
-
 	}
 }

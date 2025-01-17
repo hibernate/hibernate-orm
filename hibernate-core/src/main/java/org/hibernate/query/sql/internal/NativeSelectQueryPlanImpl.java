@@ -5,7 +5,6 @@
 package org.hibernate.query.sql.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +27,8 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.ResultsConsumer;
+
+import static java.util.Collections.emptyList;
 
 /**
  * @author Steve Ebersole
@@ -67,7 +68,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 
 		final QueryParameterBindings queryParameterBindings = executionContext.getQueryParameterBindings();
 		if ( parameterList == null || parameterList.isEmpty() ) {
-			jdbcParameterBinders = Collections.emptyList();
+			jdbcParameterBinders = emptyList();
 			jdbcParameterBindings = JdbcParameterBindings.NO_BINDINGS;
 		}
 		else {
@@ -102,43 +103,43 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 	public List<R> performList(DomainQueryExecutionContext executionContext) {
 		final QueryOptions queryOptions = executionContext.getQueryOptions();
 		if ( queryOptions.getEffectiveLimit().getMaxRowsJpa() == 0 ) {
-			return Collections.emptyList();
-		}
-		final List<JdbcParameterBinder> jdbcParameterBinders;
-		final JdbcParameterBindings jdbcParameterBindings;
-
-		final QueryParameterBindings queryParameterBindings = executionContext.getQueryParameterBindings();
-		if ( parameterList == null || parameterList.isEmpty() ) {
-			jdbcParameterBinders = Collections.emptyList();
-			jdbcParameterBindings = JdbcParameterBindings.NO_BINDINGS;
+			return emptyList();
 		}
 		else {
-			jdbcParameterBinders = new ArrayList<>( parameterList.size() );
-			jdbcParameterBindings = new JdbcParameterBindingsImpl(
-					queryParameterBindings,
-					parameterList,
+			final List<JdbcParameterBinder> jdbcParameterBinders;
+			final JdbcParameterBindings jdbcParameterBindings;
+			if ( parameterList == null || parameterList.isEmpty() ) {
+				jdbcParameterBinders = emptyList();
+				jdbcParameterBindings = JdbcParameterBindings.NO_BINDINGS;
+			}
+			else {
+				jdbcParameterBinders = new ArrayList<>( parameterList.size() );
+				jdbcParameterBindings = new JdbcParameterBindingsImpl(
+						executionContext.getQueryParameterBindings(),
+						parameterList,
+						jdbcParameterBinders,
+						executionContext.getSession().getFactory()
+				);
+			}
+
+			final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
+					sql,
 					jdbcParameterBinders,
-					executionContext.getSession().getFactory()
+					resultSetMapping,
+					affectedTableNames
+			);
+
+			executionContext.getSession().autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
+			return executionContext.getSession().getJdbcServices().getJdbcSelectExecutor().list(
+					jdbcSelect,
+					jdbcParameterBindings,
+					SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),
+					null,
+					queryOptions.getUniqueSemantic() == null
+							? ListResultsConsumer.UniqueSemantic.NEVER
+							: queryOptions.getUniqueSemantic()
 			);
 		}
-
-		final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
-				sql,
-				jdbcParameterBinders,
-				resultSetMapping,
-				affectedTableNames
-		);
-
-		executionContext.getSession().autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
-		return executionContext.getSession().getJdbcServices().getJdbcSelectExecutor().list(
-				jdbcSelect,
-				jdbcParameterBindings,
-				SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),
-				null,
-				queryOptions.getUniqueSemantic() == null ?
-						ListResultsConsumer.UniqueSemantic.NEVER :
-						queryOptions.getUniqueSemantic()
-		);
 	}
 
 	@Override
@@ -146,39 +147,39 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
 			return EmptyScrollableResults.instance();
 		}
-		final List<JdbcParameterBinder> jdbcParameterBinders;
-		final JdbcParameterBindings jdbcParameterBindings;
-
-		final QueryParameterBindings queryParameterBindings = executionContext.getQueryParameterBindings();
-		if ( parameterList == null || parameterList.isEmpty() ) {
-			jdbcParameterBinders = Collections.emptyList();
-			jdbcParameterBindings = JdbcParameterBindings.NO_BINDINGS;
-		}
 		else {
-			jdbcParameterBinders = new ArrayList<>( parameterList.size() );
-			jdbcParameterBindings = new JdbcParameterBindingsImpl(
-					queryParameterBindings,
-					parameterList,
+			final List<JdbcParameterBinder> jdbcParameterBinders;
+			final JdbcParameterBindings jdbcParameterBindings;
+			if ( parameterList == null || parameterList.isEmpty() ) {
+				jdbcParameterBinders = emptyList();
+				jdbcParameterBindings = JdbcParameterBindings.NO_BINDINGS;
+			}
+			else {
+				jdbcParameterBinders = new ArrayList<>( parameterList.size() );
+				jdbcParameterBindings = new JdbcParameterBindingsImpl(
+						executionContext.getQueryParameterBindings(),
+						parameterList,
+						jdbcParameterBinders,
+						executionContext.getSession().getFactory()
+				);
+			}
+
+			final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
+					sql,
 					jdbcParameterBinders,
-					executionContext.getSession().getFactory()
+					resultSetMapping,
+					affectedTableNames
+			);
+
+			executionContext.getSession().autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
+			return executionContext.getSession().getJdbcServices().getJdbcSelectExecutor().scroll(
+					jdbcSelect,
+					scrollMode,
+					jdbcParameterBindings,
+					SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),
+					null,
+					-1
 			);
 		}
-
-		final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
-				sql,
-				jdbcParameterBinders,
-				resultSetMapping,
-				affectedTableNames
-		);
-
-		executionContext.getSession().autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
-		return executionContext.getSession().getJdbcServices().getJdbcSelectExecutor().scroll(
-				jdbcSelect,
-				scrollMode,
-				jdbcParameterBindings,
-				SqmJdbcExecutionContextAdapter.usingLockingAndPaging( executionContext ),
-				null,
-				-1
-		);
 	}
 }

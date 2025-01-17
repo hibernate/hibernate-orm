@@ -250,20 +250,20 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	/**
 	 * @deprecated currently used by Hibernate Reactive
 	 * This version of the constructor should handle the case in which we do actually have
-	 * the option to access the DatabaseMetaData, but since Hibernate Reactive is currently
-	 * not making use of it we take a shortcut.
+	 * the option to access the {@link DatabaseMetaData}, but since Hibernate Reactive is
+	 * currently not making use of it we take a shortcut.
 	 */
 	@Deprecated
 	public JdbcEnvironmentImpl(
 			ServiceRegistryImplementor serviceRegistry,
 			Dialect dialect,
-			DatabaseMetaData databaseMetaData
-			/*JdbcConnectionAccess jdbcConnectionAccess*/) throws SQLException {
-		this(serviceRegistry, dialect);
+			DatabaseMetaData databaseMetaData) {
+		this( serviceRegistry, dialect );
 	}
 
 	/**
-	 * The main constructor form.  Builds a JdbcEnvironment using the available DatabaseMetaData
+	 * The main constructor form.
+	 * Builds a {@code JdbcEnvironment} using the available {@link DatabaseMetaData}.
 	 *
 	 * @param serviceRegistry The service registry
 	 * @param dialect The resolved dialect
@@ -336,25 +336,9 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			DatabaseMetaData databaseMetaData,
 			ServiceRegistry serviceRegistry,
 			Dialect dialect) {
-		final Object setting =
-				serviceRegistry.requireService( ConfigurationService.class )
-						.getSettings().get( SCHEMA_NAME_RESOLVER );
-		final SchemaNameResolver schemaNameResolver;
-		if ( setting == null ) {
-			schemaNameResolver = dialect.getSchemaNameResolver();
-		}
-		else {
-			schemaNameResolver =
-					serviceRegistry.requireService( StrategySelector.class )
-							.resolveDefaultableStrategy(
-									SchemaNameResolver.class,
-									setting,
-									dialect.getSchemaNameResolver()
-							);
-		}
-
+		final SchemaNameResolver resolver = getSchemaNameResolver( serviceRegistry, dialect );
 		try {
-			return schemaNameResolver.resolveSchemaName( databaseMetaData.getConnection(), dialect );
+			return resolver.resolveSchemaName( databaseMetaData.getConnection(), dialect );
 		}
 		catch (Exception e) {
 			log.debug( "Unable to resolve connection default schema", e );
@@ -362,12 +346,23 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 	}
 
-	private SqlExceptionHelper buildSqlExceptionHelper(Dialect dialect, boolean logWarnings) {
-		SQLExceptionConversionDelegate dialectDelegate = dialect.buildSQLExceptionConversionDelegate();
-		SQLExceptionConversionDelegate[] delegates = dialectDelegate == null
+	private static SchemaNameResolver getSchemaNameResolver(ServiceRegistry serviceRegistry, Dialect dialect) {
+		final Object setting =
+				serviceRegistry.requireService( ConfigurationService.class )
+						.getSettings().get( SCHEMA_NAME_RESOLVER );
+		return setting == null
+				? dialect.getSchemaNameResolver()
+				: serviceRegistry.requireService( StrategySelector.class )
+						.resolveDefaultableStrategy( SchemaNameResolver.class, setting,
+								dialect.getSchemaNameResolver() );
+	}
+
+	private static SqlExceptionHelper buildSqlExceptionHelper(Dialect dialect, boolean logWarnings) {
+		final SQLExceptionConversionDelegate dialectDelegate = dialect.buildSQLExceptionConversionDelegate();
+		final SQLExceptionConversionDelegate[] delegates = dialectDelegate == null
 				? new SQLExceptionConversionDelegate[] { new SQLExceptionTypeDelegate( dialect ), new SQLStateConversionDelegate( dialect ) }
 				: new SQLExceptionConversionDelegate[] { dialectDelegate, new SQLExceptionTypeDelegate( dialect ), new SQLStateConversionDelegate( dialect ) };
-		return new SqlExceptionHelper( new StandardSQLExceptionConverter(delegates), logWarnings );
+		return new SqlExceptionHelper( new StandardSQLExceptionConverter( delegates ), logWarnings );
 	}
 
 	@Override

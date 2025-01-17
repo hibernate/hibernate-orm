@@ -8,7 +8,7 @@ package org.hibernate.orm.test.component.basic2;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests related to specifying joins on components (embedded values).

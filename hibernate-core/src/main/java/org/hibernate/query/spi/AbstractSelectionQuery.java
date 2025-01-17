@@ -282,7 +282,7 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	protected static <T> T uniqueElement(List<T> list) throws NonUniqueResultException {
-		int size = list.size();
+		final int size = list.size();
 		if ( size == 0 ) {
 			return null;
 		}
@@ -381,11 +381,13 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public SelectionQuery<R> enableFetchProfile(String profileName) {
-		if ( !getSession().getFactory().containsFetchProfileDefinition( profileName ) ) {
+		if ( getSession().getFactory().containsFetchProfileDefinition( profileName ) ) {
+			getQueryOptions().enableFetchProfile( profileName );
+			return this;
+		}
+		else {
 			throw new UnknownProfileException( profileName );
 		}
-		getQueryOptions().enableFetchProfile( profileName );
-		return this;
 	}
 
 	@Override

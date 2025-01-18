@@ -194,6 +194,8 @@ public final class Template {
 						continue;
 					}
 					else if ( nextToken != null && Character.isWhitespace( nextToken.charAt( 0 ) ) ) {
+						final StringTokenizer lookahead = lookahead( sqlWhereString, symbols, tokens);
+						String lookaheadToken = lookahead.hasMoreTokens() ? lookahead.nextToken() : null;
 						final StringBuilder additionalTokens = new StringBuilder();
 						TimeZoneTokens possibleNextToken = null;
 						do {
@@ -201,15 +203,18 @@ public final class Template {
 									? TimeZoneTokens.getPossibleNextTokens( lcToken )
 									: possibleNextToken.nextToken();
 							do {
-								additionalTokens.append( nextToken );
-								hasMore = tokens.hasMoreTokens();
-								nextToken = tokens.nextToken();
-							} while ( nextToken != null && Character.isWhitespace( nextToken.charAt( 0 ) ) );
-						} while ( nextToken != null && possibleNextToken.isToken( nextToken ) );
-						if ( "'".equals( nextToken ) ) {
+								additionalTokens.append( lookaheadToken );
+								lookaheadToken = lookahead.hasMoreTokens() ? lookahead.nextToken() : null;
+							} while ( lookaheadToken != null && Character.isWhitespace( lookaheadToken.charAt( 0 ) ) );
+						} while ( lookaheadToken != null && possibleNextToken.isToken( lookaheadToken ) );
+						if ( "'".equals( lookaheadToken ) ) {
 							// Don't prefix a literal
 							result.append( token );
 							result.append( additionalTokens );
+							while (tokens.countTokens() > lookahead.countTokens()) {
+								hasMore = tokens.hasMoreTokens();
+								nextToken = hasMore ? tokens.nextToken() : null;
+							}
 							continue;
 						}
 						else {
@@ -399,6 +404,24 @@ public final class Template {
 		}
 
 		return result.toString();
+	}
+
+	/**
+	 * Clone the given token stream, returning a token stream which begins
+	 * from the next token.
+	 *
+	 * @param sql     the full SQL we are scanning
+	 * @param symbols the delimiter symbols
+	 * @param tokens  the current token stream
+	 * @return a cloned token stream
+	 */
+	private static StringTokenizer lookahead(String sql, String symbols, StringTokenizer tokens) {
+		final StringTokenizer lookahead =
+				new StringTokenizer( sql, symbols, true );
+		while ( lookahead.countTokens() > tokens.countTokens() + 1) {
+			lookahead.nextToken();
+		}
+		return lookahead;
 	}
 
 	private enum TimeZoneTokens {

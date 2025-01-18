@@ -20,7 +20,9 @@ import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.FetchSettings;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -89,6 +91,7 @@ import static java.lang.Integer.parseInt;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BIT;
@@ -217,7 +220,7 @@ public class MySQLDialect extends Dialect {
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info, DatabaseVersion defaultVersion) {
 		final String versionString = info.getDatabaseVersion();
 		if ( versionString != null ) {
-			final String[] components = StringHelper.split( ".-", versionString );
+			final String[] components = split( ".-", versionString );
 			if ( components.length >= 3 ) {
 				try {
 					final int majorVersion = parseInt( components[0] );
@@ -241,26 +244,19 @@ public class MySQLDialect extends Dialect {
 	@Override
 	protected void initDefaultProperties() {
 		super.initDefaultProperties();
-		getDefaultProperties().setProperty( Environment.MAX_FETCH_DEPTH, "2" );
+		getDefaultProperties().setProperty( FetchSettings.MAX_FETCH_DEPTH, "2" );
 	}
 
 	private MySQLStorageEngine createStorageEngine() {
-		String storageEngine = Environment.getProperties().getProperty( Environment.STORAGE_ENGINE );
-		if (storageEngine == null) {
-			storageEngine = System.getProperty( Environment.STORAGE_ENGINE );
-		}
-		if (storageEngine == null) {
-			return getDefaultMySQLStorageEngine();
-		}
-		else if( "innodb".equalsIgnoreCase( storageEngine ) ) {
-			return InnoDBStorageEngine.INSTANCE;
-		}
-		else if( "myisam".equalsIgnoreCase( storageEngine ) ) {
-			return MyISAMStorageEngine.INSTANCE;
-		}
-		else {
-			throw new UnsupportedOperationException( "The " + storageEngine + " storage engine is not supported" );
-		}
+		final String storageEngine = Environment.getProperties().getProperty( AvailableSettings.STORAGE_ENGINE );
+		return storageEngine == null
+				? getDefaultMySQLStorageEngine()
+				: switch ( storageEngine ) {
+					case "innodb" -> InnoDBStorageEngine.INSTANCE;
+					case "myisam" -> MyISAMStorageEngine.INSTANCE;
+					default -> throw new UnsupportedOperationException(
+							"The '" + storageEngine + "' storage engine is not supported" );
+				};
 	}
 
 	@Override

@@ -204,7 +204,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	private static boolean isAnsiNull(DialectResolutionInfo info) {
 		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
-			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
+			try ( java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
 				final ResultSet rs = s.executeQuery( "SELECT @@options" );
 				if ( rs.next() ) {
 					final byte[] optionBytes = rs.getBytes( 1 );
@@ -223,7 +223,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	private int pageSize(DialectResolutionInfo info) {
 		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
-			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
+			try ( java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
 				final ResultSet rs = s.executeQuery( "SELECT @@maxpagesize" );
 				if ( rs.next() ) {
 					return rs.getInt( 1 );

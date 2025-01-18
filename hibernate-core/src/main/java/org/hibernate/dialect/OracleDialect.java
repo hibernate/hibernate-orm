@@ -19,6 +19,7 @@ import org.hibernate.Length;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.cfg.DialectSpecificSettings;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -108,8 +109,6 @@ import static org.hibernate.LockOptions.NO_WAIT;
 import static org.hibernate.LockOptions.SKIP_LOCKED;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
-import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_EXTENDED_STRING_SIZE;
-import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_AUTONOMOUS_DATABASE;
 import static org.hibernate.dialect.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.dialect.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -191,11 +190,10 @@ public class OracleDialect extends Dialect {
 		@Override
 		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
 			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
-			if ( dialect.getVersion().isBefore( 23, 6 ) && jdbcType.isXml() ) {
-				// ORA-00600 when selecting XML columns that have a check constraint was fixed in 23.6
-				return;
+			// ORA-00600 when selecting XML columns that have a check constraint was fixed in 23.6
+			if ( !dialect.getVersion().isBefore( 23, 6 ) || !jdbcType.isXml() ) {
+				super.applyAggregateColumnCheck( buf, aggregateColumn );
 			}
-			super.applyAggregateColumnCheck( buf, aggregateColumn );
 		}
 	};
 
@@ -237,40 +235,6 @@ public class OracleDialect extends Dialect {
 		applicationContinuity = serverConfiguration.isApplicationContinuity();
 		this.driverMinorVersion = serverConfiguration.getDriverMinorVersion();
 		this.driverMajorVersion = serverConfiguration.getDriverMajorVersion();
-	}
-
-	@Deprecated( since = "6.4" )
-	protected static boolean isExtended(DialectResolutionInfo info) {
-		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
-		if ( databaseMetaData != null ) {
-			try ( java.sql.Statement statement = databaseMetaData.getConnection().createStatement() ) {
-				statement.execute( "select cast('string' as varchar2(32000)) from dual" );
-				// succeeded, so MAX_STRING_SIZE == EXTENDED
-				return true;
-			}
-			catch ( SQLException ex ) {
-				// failed, so MAX_STRING_SIZE == STANDARD
-				// Ignore
-			}
-		}
-		// default to the dialect-specific configuration setting
-		return ConfigurationHelper.getBoolean( ORACLE_EXTENDED_STRING_SIZE, info.getConfigurationValues(), false );
-	}
-
-	@Deprecated( since = "6.4" )
-	protected static boolean isAutonomous(DialectResolutionInfo info) {
-		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
-		if ( databaseMetaData != null ) {
-			try ( java.sql.Statement statement = databaseMetaData.getConnection().createStatement() ) {
-				return statement.executeQuery( "select 1 from dual where sys_context('USERENV','CLOUD_SERVICE') in ('OLTP','DWCS','JSON')" )
-						.next();
-			}
-			catch ( SQLException ex ) {
-				// Ignore
-			}
-		}
-		// default to the dialect-specific configuration setting
-		return ConfigurationHelper.getBoolean( ORACLE_AUTONOMOUS_DATABASE, info.getConfigurationValues(), false );
 	}
 
 	public boolean isAutonomous() {
@@ -360,12 +324,12 @@ public class OracleDialect extends Dialect {
 		functionFactory.coalesce();
 
 		functionContributions.getFunctionRegistry()
-				.patternDescriptorBuilder( "bitor", "(?1+?2-bitand(?1,?2))")
+				.patternDescriptorBuilder( "bitor", "(?1+?2-bitand(?1,?2))" )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionContributions.getFunctionRegistry()
-				.patternDescriptorBuilder( "bitxor", "(?1+?2-2*bitand(?1,?2))")
+				.patternDescriptorBuilder( "bitxor", "(?1+?2-2*bitand(?1,?2))" )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
@@ -1065,10 +1029,10 @@ public class OracleDialect extends Dialect {
 				)
 		);
 
-		if(getVersion().isSameOrAfter(23)) {
+		if ( getVersion().isSameOrAfter(23) ) {
 			final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
-			jdbcTypeRegistry.addDescriptor(OracleEnumJdbcType.INSTANCE);
-			jdbcTypeRegistry.addDescriptor(OracleOrdinalEnumJdbcType.INSTANCE);
+			jdbcTypeRegistry.addDescriptor( OracleEnumJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( OracleOrdinalEnumJdbcType.INSTANCE );
 		}
 	}
 

@@ -172,7 +172,11 @@ public class OracleDialect extends Dialect {
 	/** Starting from 23c, 65535 parameters are supported for the IN condition. */
 	private static final int PARAM_LIST_SIZE_LIMIT_65535 = 65535;
 
-	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
+	/**
+	 * @deprecated Use {@link DialectSpecificSettings#ORACLE_PREFER_LONG_RAW}.
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
+	public static final String PREFER_LONG_RAW = DialectSpecificSettings.ORACLE_PREFER_LONG_RAW;
 
 	private static final String yqmSelect =
 			"(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH') + (least(extract(day from %2$s), extract(day from last_day(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH')))) - 1))";

@@ -38,6 +38,13 @@ public interface DialectSpecificSettings {
 
 	/**
 	 * Specifies whether this database's {@code ansinull} setting is enabled.
+	 * Enables the use of the deprecated type {@code LONGVARBINARY} on Oracle instead of {@code BLOB}.
+	 *
+	 * @settingDefault {@code false}
+	 */
+	String ORACLE_PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
+
+	/**
 	 *
 	 * @settingDefault {@code false}
 	 */

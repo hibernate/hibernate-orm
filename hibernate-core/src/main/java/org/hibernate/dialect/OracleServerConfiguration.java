@@ -130,7 +130,7 @@ public class OracleServerConfiguration {
 
 	private static boolean isExtended(Statement statement) {
 		try ( final ResultSet resultSet =
-					  statement.executeQuery( "select cast('string' as varchar2(32000)) from dual" ) ) {
+					statement.executeQuery( "select cast('string' as varchar2(32000)) from dual" ) ) {
 			resultSet.next();
 			// succeeded, so MAX_STRING_SIZE == EXTENDED
 			return true;
@@ -185,7 +185,7 @@ public class OracleServerConfiguration {
 
 	private static boolean isAutonomous(Statement statement) {
 		try ( final ResultSet resultSet =
-					  statement.executeQuery( "select sys_context('USERENV','CLOUD_SERVICE') from dual" ) ) {
+					statement.executeQuery( "select sys_context('USERENV','CLOUD_SERVICE') from dual" ) ) {
 			return resultSet.next()
 				&& isAutonomous( resultSet.getString(1) );
 		}

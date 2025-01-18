@@ -44,13 +44,6 @@ public interface DialectSpecificSettings {
 	String ORACLE_APPLICATION_CONTINUITY = "hibernate.dialect.oracle.application_continuity";
 
 	/**
-	 * Enables the use of the deprecated type {@code LONGVARBINARY} on Oracle instead of {@code BLOB}.
-	 *
-	 * @settingDefault {@code false}
-	 */
-	String ORACLE_PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
-
-	/**
 	 * Specifies whether the {@code ansinull} setting is enabled on Sybase.
 	 * <p>
 	 * Ignored if Hibernate is able to determine the value of {@code ansinull}

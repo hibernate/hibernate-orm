@@ -19,7 +19,6 @@ import org.hibernate.Length;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.cfg.DialectSpecificSettings;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -35,8 +34,6 @@ import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -87,7 +84,6 @@ import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
@@ -167,16 +163,11 @@ public class OracleDialect extends Dialect {
 	private static final Pattern SQL_STATEMENT_TYPE_PATTERN =
 			Pattern.compile( "^(?:/\\*.*?\\*/)?\\s*(select|insert|update|delete)\\s+.*?", CASE_INSENSITIVE );
 
-	private static final int PARAM_LIST_SIZE_LIMIT_1000 = 1000;
-
-	/** Starting from 23c, 65535 parameters are supported for the IN condition. */
-	private static final int PARAM_LIST_SIZE_LIMIT_65535 = 65535;
-
 	/**
-	 * @deprecated Use {@link DialectSpecificSettings#ORACLE_PREFER_LONG_RAW}.
+	 * Starting from 23c, 65535 parameters are supported for the {@code IN} condition.
 	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	public static final String PREFER_LONG_RAW = DialectSpecificSettings.ORACLE_PREFER_LONG_RAW;
+	private static final int PARAM_LIST_SIZE_LIMIT_65535 = 65535;
+	private static final int PARAM_LIST_SIZE_LIMIT_1000 = 1000;
 
 	private static final String yqmSelect =
 			"(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH') + (least(extract(day from %2$s), extract(day from last_day(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH')))) - 1))";
@@ -986,12 +977,6 @@ public class OracleDialect extends Dialect {
 		else {
 			typeContributions.contributeJdbcType( OracleReflectionStructJdbcType.INSTANCE );
 		}
-
-		// account for Oracle's deprecated support for LONGVARBINARY
-		// prefer BLOB, unless the user explicitly opts out
-		final boolean preferLong = serviceRegistry.requireService( ConfigurationService.class )
-				.getSetting( PREFER_LONG_RAW, StandardConverters.BOOLEAN, false );
-		typeContributions.contributeJdbcType( preferLong ? BlobJdbcType.PRIMITIVE_ARRAY_BINDING : BlobJdbcType.DEFAULT );
 
 		if ( getVersion().isSameOrAfter( 21 ) ) {
 			typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );

@@ -9,6 +9,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import oracle.jdbc.OracleType;
 import oracle.sql.json.OracleJsonDatum;
+import oracle.sql.json.OracleJsonFactory;
+import oracle.sql.json.OracleJsonGenerator;
+import oracle.sql.json.OracleJsonParser;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -19,9 +22,12 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.format.ObjectArrayOsonDocumentHandler;
+import org.hibernate.type.format.ObjectArrayOsonDocumentWriter;
 import org.hibernate.type.format.jackson.JacksonOsonFormatMapper;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -83,7 +89,12 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 				FormatMapper mapper = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
 
 				if (getEmbeddableMappingType()!= null) {
-					return ((JacksonOsonFormatMapper)mapper).fromObjectArray(value,javaType,options,getEmbeddableMappingType());
+					ByteArrayOutputStream out = new ByteArrayOutputStream();
+					OracleJsonGenerator generator = new OracleJsonFactory().createJsonBinaryGenerator( out );
+					ObjectArrayOsonDocumentWriter writer = new ObjectArrayOsonDocumentWriter(generator);
+					JsonHelper.serialize( getEmbeddableMappingType(), value,options,writer);
+					generator.close();
+					return out.toByteArray();
 				}
 				
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -137,8 +148,14 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 					// an array of objects. We use JsonParser to fetch values
 					// and build the array.(as opposed to let Jackson do it as we do not
 					// have a proper object definition at that stage).
-					return ((JacksonOsonFormatMapper)mapper).toObjectArray(
-							getEmbeddableMappingType(), osonBytes, options );
+					OracleJsonParser osonParser = new OracleJsonFactory().createJsonBinaryParser( ByteBuffer.wrap( osonBytes ) );
+
+					ObjectArrayOsonDocumentHandler handler = new ObjectArrayOsonDocumentHandler( getEmbeddableMappingType(),
+							options);
+
+					OsonHelper.consumeOsonTokens(osonParser, osonParser.next(), handler);
+
+					return (X) handler.getObjectArray();
 				}
 
 				JavaType <X> type = getJavaType();

@@ -6,6 +6,7 @@ package org.hibernate.vector;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -24,7 +25,8 @@ public class PGVectorFunctionContributor implements FunctionContributor {
 		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
 		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final Dialect dialect = functionContributions.getDialect();
-		if ( dialect instanceof PostgreSQLDialect ) {
+		if ( dialect instanceof PostgreSQLDialect ||
+			dialect instanceof CockroachDialect ) {
 			final BasicType<Double> doubleType = basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE );
 			final BasicType<Integer> integerType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
 			functionRegistry.patternDescriptorBuilder( "cosine_distance", "?1<=>?2" )

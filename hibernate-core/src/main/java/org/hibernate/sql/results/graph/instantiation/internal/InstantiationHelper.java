@@ -13,6 +13,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.hibernate.query.sqm.tree.expression.Compatibility.areAssignmentCompatible;
@@ -100,6 +101,59 @@ public class InstantiationHelper {
 		}
 		else {
 			return false;
+		}
+	}
+
+	public static List<MismatchConstructorFieldPositionInfo> findMismatchConstructorFieldPosition(Class<?> javaClass, List<Class<?>> argTypes, TypeConfiguration typeConfiguration) {
+		List<MismatchConstructorFieldPositionInfo> list = new ArrayList<>();
+
+		for (Constructor<?> constructor : javaClass.getDeclaredConstructors()) {
+			MismatchConstructorFieldPositionInfo positionInfo = findMismatchConstructorFieldPosition(constructor, argTypes, typeConfiguration);
+			if (positionInfo != null) {
+				list.add(positionInfo);
+			}
+		}
+		return list;
+	}
+
+	public static MismatchConstructorFieldPositionInfo findMismatchConstructorFieldPosition(
+			Constructor<?> constructor,
+			List<Class<?>> argumentTypes,
+			TypeConfiguration typeConfiguration) {
+		final Type[] genericParameterTypes = constructor.getGenericParameterTypes();
+		if (genericParameterTypes.length == argumentTypes.size()) {
+			for (int i = 0; i < argumentTypes.size(); i++) {
+				final Type parameterType = genericParameterTypes[i];
+				final Class<?> argumentType = argumentTypes.get(i);
+				final Class<?> type = parameterType instanceof Class<?>
+						? (Class<?>) parameterType
+						: typeConfiguration.getJavaTypeRegistry().resolveDescriptor(parameterType).getJavaTypeClass();
+
+				if (!areAssignmentCompatible(type, argumentType)) {
+					return new MismatchConstructorFieldPositionInfo(i, argumentType.getTypeName(),
+							parameterType.getTypeName());
+				}
+			}
+			return null;
+		} else {
+			return null;
+		}
+	}
+
+	public static class MismatchConstructorFieldPositionInfo {
+		private final int position;
+		private final String expectTypeName;
+		private final String actualTypeName;
+
+		public MismatchConstructorFieldPositionInfo(int index, String expectTypeName, String actualTypeName) {
+			this.position = index + 1;
+			this.expectTypeName = expectTypeName;
+			this.actualTypeName = actualTypeName;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("[%s](%s -> %s)", position, expectTypeName, actualTypeName);
 		}
 	}
 

@@ -406,7 +406,7 @@ public class SingleStoreDialect extends Dialect {
 
 	@Override
 	public String getQueryHintString(String query, String hints) {
-		return addQueryHints( query, hints );
+		return addUseIndexQueryHint( query, hints );
 	}
 
 	@Override

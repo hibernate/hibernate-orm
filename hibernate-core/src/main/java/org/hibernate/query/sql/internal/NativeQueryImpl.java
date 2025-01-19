@@ -269,15 +269,7 @@ public class NativeQueryImpl<R>
 
 	}
 
-	public NativeQueryImpl(
-			NamedNativeQueryMemento<?> memento,
-			Supplier<ResultSetMapping> resultSetMappingCreator,
-			ResultSetMappingHandler resultSetMappingHandler,
-			SharedSessionContractImplementor session) {
-		this( memento, resultSetMappingCreator, resultSetMappingHandler, null, session );
-	}
-
-	public NativeQueryImpl(
+	private NativeQueryImpl(
 			NamedNativeQueryMemento<?> memento,
 			Supplier<ResultSetMapping> resultSetMappingCreator,
 			ResultSetMappingHandler resultSetMappingHandler,
@@ -303,27 +295,30 @@ public class NativeQueryImpl<R>
 				resultSetMappingHandler.resolveResultSetMapping( resultSetMapping, querySpaces::add, this );
 
 		if ( resultType != null ) {
-			if ( !isResultTypeAlwaysAllowed( resultType ) ) {
-				switch ( resultSetMapping.getNumberOfResultBuilders() ) {
-					case 0:
-						throw new IllegalArgumentException( "Named query exists, but did not specify a resultClass" );
-					case 1:
-						final Class<?> actualResultJavaType = resultSetMapping.getResultBuilders().get( 0 )
-								.getJavaType();
-						if ( actualResultJavaType != null && !resultType.isAssignableFrom( actualResultJavaType ) ) {
-							throw buildIncompatibleException( resultType, actualResultJavaType );
-						}
-						break;
-					default:
-						throw new IllegalArgumentException(
-								"Cannot create TypedQuery for query with more than one return" );
-				}
+			if ( isResultTypeAlwaysAllowed( resultType ) ) {
+				setTupleTransformerForResultType( resultType );
 			}
 			else {
-				setTupleTransformerForResultType( resultType );
+				checkResulType( resultType );
 			}
 		}
 		applyOptions( memento );
+	}
+
+	private void checkResulType(Class<R> resultType) {
+		switch ( resultSetMapping.getNumberOfResultBuilders() ) {
+			case 0:
+				throw new IllegalArgumentException( "Named query exists, but did not specify a resultClass" );
+			case 1:
+				final Class<?> actualResultJavaType =
+						resultSetMapping.getResultBuilders().get( 0 ).getJavaType();
+				if ( actualResultJavaType != null && !resultType.isAssignableFrom( actualResultJavaType ) ) {
+					throw buildIncompatibleException( resultType, actualResultJavaType );
+				}
+				break;
+			default:
+				throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+		}
 	}
 
 	public NativeQueryImpl(

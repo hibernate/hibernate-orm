@@ -73,7 +73,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 			}
 		}
 
-		boolean last = prepareCurrentRow();
+		final boolean last = prepareCurrentRow();
 
 		beforeFirst = false;
 		currentPosition++;
@@ -130,15 +130,12 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 				// we are interested in processing
 				boolean firstPass = true;
 				final EntityKey lastKey = getEntityKey();
-
 				while ( getRowProcessingState().previous() ) {
-					EntityKey checkKey = getEntityKey();
-
+					final EntityKey checkKey = getEntityKey();
 					if ( firstPass ) {
 						firstPass = false;
 						keyToRead = checkKey;
 					}
-
 					if ( !lastKey.equals( checkKey ) ) {
 						break;
 					}
@@ -148,8 +145,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 			// Read backwards until we read past the first physical sequential
 			// row with the key we are interested in loading
 			while ( getRowProcessingState().previous() ) {
-				EntityKey checkKey = getEntityKey();
-
+				final EntityKey checkKey = getEntityKey();
 				if ( !keyToRead.equals( checkKey ) ) {
 					break;
 				}
@@ -223,7 +219,6 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 			}
 		}
 		else {
-			final RowProcessingStateStandardImpl rowProcessingState = getRowProcessingState();
 			if ( isResultSetEmpty() || afterLast ) {
 				// should not be able to reach last without maxPosition being set
 				// unless there are no results
@@ -243,10 +238,8 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 	@Override
 	public boolean first() {
 		beforeFirst();
-		boolean more = next();
-
+		final boolean more = next();
 		afterScrollOperation();
-
 		return more;
 	}
 

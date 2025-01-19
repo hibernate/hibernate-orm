@@ -46,7 +46,7 @@ class DialectTest {
 	@MethodSource("_addQueryHints")
 	@ParameterizedTest
 	void addQueryHints(String description, String expected, String query, String hints) {
-		final String queryWithHint = MySQLDialect.addQueryHints(query, hints);
+		final String queryWithHint = MySQLDialect.addUseIndexQueryHint(query, hints);
 		assertEquals(expected, queryWithHint, description);
 	}
 

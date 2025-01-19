@@ -101,6 +101,30 @@ In a container environment, you usually don't need to configure a connection poo
 Instead, you'll use a container-managed datasource, as we saw in <<basic-configuration-settings>>.
 ****
 
+A related important setting is the default JDBC fetch size.
+
+[[jdbc-fetch-size]]
+=== JDBC fetch size
+
+The _JDBC fetch size_ controls the maximum number of rows the JDBC driver fetches from the database in one round trip.
+In Hibernate we usually limit query result sets using <<pagination,pagination>>, and so we almost always prefer that the JDBC driver fetch the whole query result set in one trip.
+Most JDBC drivers accommodate this usage pattern by _not_ setting a default fetch size.
+However, there are a couple of exceptions to this and for the offending drivers you should probably override the default fetch size using the following configuration property.
+
+.Default JDBC fetch size
+[%breakable,cols="37,~"]
+|===
+| link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#STATEMENT_FETCH_SIZE[`hibernate.jdbc.fetch_size`] | The default JDBC fetch size
+|===
+
+The default fetch size can be overridden for a given query by calling link:{doc-javadoc-url}/org/hibernate/query/SelectionQuery.html#setFetchSize(int)[`setFetchSize()`], but this is rarely necessary.
+
+[WARNING]
+====
+The Oracle JDBC driver defaults to a JDBC fetch size of 10.
+You should _always_ set explicitly `hibernate.jdbc.fetch_size` if you're using Oracle.
+====
+
 [[statement-batching]]
 === Enabling statement batching
 

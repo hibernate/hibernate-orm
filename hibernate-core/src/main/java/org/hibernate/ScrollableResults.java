@@ -34,6 +34,11 @@ public interface ScrollableResults<R> extends AutoCloseable {
 	void close();
 
 	/**
+	 * @return {@code true} if {@link #close()} was already called
+	 */
+	boolean isClosed();
+
+	/**
 	 * Advance to the next result.
 	 *
 	 * @return {@code true} if there is another result

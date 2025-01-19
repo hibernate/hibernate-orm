@@ -18,6 +18,7 @@ import java.util.stream.StreamSupport;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -251,15 +252,12 @@ public abstract class AbstractSelectionQuery<R>
 		return stream();
 	}
 
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	@Override
-	public Stream stream() {
-		final ScrollableResultsImplementor scrollableResults = scroll( ScrollMode.FORWARD_ONLY );
-		final ScrollableResultsIterator iterator = new ScrollableResultsIterator<>( scrollableResults );
-		final Spliterator spliterator = spliteratorUnknownSize( iterator, Spliterator.NONNULL );
-
-		final Stream stream = StreamSupport.stream( spliterator, false );
-		return (Stream) stream.onClose( scrollableResults::close );
+	public Stream<R> stream() {
+		final ScrollableResults<R> results = scroll( ScrollMode.FORWARD_ONLY );
+		final Spliterator<R> spliterator =
+				spliteratorUnknownSize( new ScrollableResultsIterator<>( results ), Spliterator.NONNULL );
+		return StreamSupport.stream( spliterator, false ).onClose( results::close );
 	}
 
 	@Override
@@ -284,7 +282,7 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	protected static <T> T uniqueElement(List<T> list) throws NonUniqueResultException {
-		int size = list.size();
+		final int size = list.size();
 		if ( size == 0 ) {
 			return null;
 		}
@@ -383,11 +381,13 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public SelectionQuery<R> enableFetchProfile(String profileName) {
-		if ( !getSession().getFactory().containsFetchProfileDefinition( profileName ) ) {
+		if ( getSession().getFactory().containsFetchProfileDefinition( profileName ) ) {
+			getQueryOptions().enableFetchProfile( profileName );
+			return this;
+		}
+		else {
 			throw new UnknownProfileException( profileName );
 		}
-		getQueryOptions().enableFetchProfile( profileName );
-		return this;
 	}
 
 	@Override

@@ -1075,6 +1075,35 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		addCollection( collection, persister );
 	}
 
+	@Override
+	public void replaceCollection(CollectionPersister persister, PersistentCollection<?> oldCollection, PersistentCollection<?> collection) {
+		if ( !oldCollection.isDirectlyAccessible() ) {
+			throw new HibernateException(
+					"Replacement of not directly accessible collection found: " + oldCollection.getRole() );
+		}
+		assert !collection.isDirectlyAccessible();
+		final IdentityMap<PersistentCollection<?>, CollectionEntry> collectionEntries = getOrInitializeCollectionEntries();
+		final CollectionEntry oldEntry = collectionEntries.remove( oldCollection );
+		final CollectionEntry entry;
+		if ( oldEntry.getLoadedPersister() != null ) {
+			// This is an already existing/loaded collection so ensure the loadedPersister is initialized
+			entry = new CollectionEntry( collection, session.getFactory() );
+		}
+		else {
+			// A newly wrapped collection
+			entry = new CollectionEntry( persister, collection );
+		}
+		collectionEntries.put( collection, entry );
+		final Object key = collection.getKey();
+		if ( key != null ) {
+			final CollectionKey collectionKey = new CollectionKey( entry.getLoadedPersister(), key );
+			final PersistentCollection<?> old = addCollectionByKey( collectionKey, collection );
+			if ( old == null ) {
+				throw new HibernateException( "No collection for replacement found: " + collectionKey.getRole() );
+			}
+		}
+	}
+
 	/**
 	 * Add a collection to the cache, with a given collection entry.
 	 *
@@ -1090,13 +1119,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( old == coll ) {
 				throw new AssertionFailure( "bug adding collection twice" );
 			}
-			// or should it actually throw an exception?
-			old.unsetSession( session );
-			if ( collectionEntries != null ) {
-				collectionEntries.remove( old );
-			}
-			// watch out for a case where old is still referenced
-			// somewhere in the object graph! (which is a user error)
+			throw new HibernateException(
+					"Found shared references to a collection: " + collectionKey.getRole()
+			);
 		}
 	}
 

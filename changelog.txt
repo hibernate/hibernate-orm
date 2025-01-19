@@ -3,6 +3,20 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.5.Final (January 19, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32379
+
+** Bug
+    * [HHH-19011] - @ElementCollection comment overrides class level comment on an Entity
+    * [HHH-18819] - Error resolving persistent property of @MapperSuperclass if subtype @Embeddable used as @IdClass
+    * [HHH-17652] - Cannot invoke "org.hibernate.envers.internal.entities.EntityConfiguration.getRelationDescription(String)" because "entCfg" is null
+
+** Task
+    * [HHH-18972] - Upgrade to ByteBuddy 1.15.11
+
+
 Changes in 6.6.4.Final (December 18, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

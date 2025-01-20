@@ -184,6 +184,10 @@ public final class EnhancerConstants {
 	public static final String USE_TRACKER_GETTER_NAME = "$$_hibernate_useTracker";
 	public static final String USE_TRACKER_SETTER_NAME = "$$_hibernate_setUseTracker";
 
+	public static final String INSTANCE_ID_FIELD_NAME = "$$_hibernate_instanceId";
+	public static final String INSTANCE_ID_GETTER_NAME = "$$_hibernate_getInstanceId";
+	public static final String INSTANCE_ID_SETTER_NAME = "$$_hibernate_setInstanceId";
+
 
 	private EnhancerConstants() {
 	}

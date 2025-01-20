@@ -81,6 +81,8 @@ public class BasicSessionTest {
 		private transient ManagedEntity previous;
 		@Transient
 		private transient ManagedEntity next;
+		@Transient
+		private transient int instanceId;
 
 		MyEntity() {
 		}
@@ -132,6 +134,16 @@ public class BasicSessionTest {
 		@Override
 		public boolean $$_hibernate_useTracker() {
 			return false;
+		}
+
+		@Override
+		public int $$_hibernate_getInstanceId() {
+			return instanceId;
+		}
+
+		@Override
+		public void $$_hibernate_setInstanceId(int id) {
+			this.instanceId = id;
 		}
 	}
 }

@@ -74,6 +74,7 @@ public final class EnhancerImplConstants {
 	//Frequently used Types for method signatures:
 	final TypeDefinition TypeVoid = TypeDescription.ForLoadedType.of( void.class );
 	final TypeDefinition TypeBooleanPrimitive = TypeDescription.ForLoadedType.of( boolean.class );
+	final TypeDefinition TypeIntegerPrimitive = TypeDescription.ForLoadedType.of( int.class );
 	final TypeDefinition TypeManagedEntity = TypeDescription.ForLoadedType.of( ManagedEntity.class );
 	final TypeDefinition TypeEntityEntry = TypeDescription.ForLoadedType.of( EntityEntry.class );
 	final TypeDefinition TypePersistentAttributeInterceptor = TypeDescription.ForLoadedType.of( PersistentAttributeInterceptor.class );

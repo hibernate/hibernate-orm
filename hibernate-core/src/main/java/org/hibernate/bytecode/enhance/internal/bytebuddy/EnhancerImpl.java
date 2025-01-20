@@ -225,6 +225,14 @@ public class EnhancerImpl implements Enhancer {
 					EnhancerConstants.USE_TRACKER_SETTER_NAME
 			);
 
+			builder = addFieldWithGetterAndSetter(
+					builder,
+					constants.TypeIntegerPrimitive,
+					EnhancerConstants.INSTANCE_ID_FIELD_NAME,
+					EnhancerConstants.INSTANCE_ID_GETTER_NAME,
+					EnhancerConstants.INSTANCE_ID_SETTER_NAME
+			);
+
 			builder = addInterceptorHandling( builder, managedCtClass );
 
 			if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {

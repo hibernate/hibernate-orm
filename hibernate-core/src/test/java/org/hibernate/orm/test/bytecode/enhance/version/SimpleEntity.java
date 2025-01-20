@@ -67,4 +67,14 @@ public class SimpleEntity implements ManagedEntity {
 	public boolean $$_hibernate_useTracker() {
 		return false;
 	}
+
+	@Override
+	public int $$_hibernate_getInstanceId() {
+		return 0;
+	}
+
+	@Override
+	public void $$_hibernate_setInstanceId(int id) {
+
+	}
 }

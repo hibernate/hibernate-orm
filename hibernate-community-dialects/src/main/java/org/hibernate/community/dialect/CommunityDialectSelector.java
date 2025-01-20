@@ -50,6 +50,8 @@ public class CommunityDialectSelector implements DialectSelector {
 				return TimesTenDialect.class;
 			case "SingleStore":
 				return SingleStoreDialect.class;
+			case "Derby":
+				return DerbyDialect.class;
 		}
 		return null;
 	}

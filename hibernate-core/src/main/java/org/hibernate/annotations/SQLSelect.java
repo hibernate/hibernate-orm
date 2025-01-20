@@ -34,6 +34,22 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>the foreign key, in the case of a collection.
  * </ol>
  * <p>
+ * If the {@linkplain #querySpaces tables which affect the query results}
+ * are specified, then changes to those tables will be flushed before
+ * execution of the query.
+ * <p>
+ * For example:
+ * <pre>
+ * &#64;SQLSelect(sql = """
+ *                  SELECT id, created, text
+ *                  FROM records
+ *                  WHERE id = ? and deleted is null
+ *                  """
+ *            querySpaces = "records")
+ * &#64;Entity
+ * public class Record { ... }
+ * </pre>
+ * <p>
  * Optionally, an explicit {@linkplain #resultSetMapping result set mapping}
  * may be specified. It should have:
  * <ol>

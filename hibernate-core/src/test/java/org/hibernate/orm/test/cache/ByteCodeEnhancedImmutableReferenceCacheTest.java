@@ -238,6 +238,8 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		private transient ManagedEntity previous;
 		@Transient
 		private transient ManagedEntity next;
+		@Transient
+		private transient int instanceId;
 
 		public MyEnhancedReferenceData(Integer id, String name, String theValue) {
 			this.id = id;
@@ -315,6 +317,16 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		@Override
 		public boolean $$_hibernate_useTracker() {
 			return false;
+		}
+
+		@Override
+		public int $$_hibernate_getInstanceId() {
+			return instanceId;
+		}
+
+		@Override
+		public void $$_hibernate_setInstanceId(int id) {
+			this.instanceId = id;
 		}
 	}
 }

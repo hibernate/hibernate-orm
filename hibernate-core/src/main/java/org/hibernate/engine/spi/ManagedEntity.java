@@ -21,7 +21,7 @@ package org.hibernate.engine.spi;
  *
  * @author Steve Ebersole
  */
-public interface ManagedEntity extends Managed {
+public interface ManagedEntity extends Managed, InstanceIdentity {
 	/**
 	 * Obtain a reference to the entity instance.
 	 *

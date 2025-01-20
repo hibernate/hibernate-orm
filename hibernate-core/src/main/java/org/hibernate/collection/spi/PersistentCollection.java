@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.engine.spi.InstanceIdentity;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -52,7 +53,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Gavin King
  */
 @Incubating
-public interface PersistentCollection<E> extends LazyInitializable {
+public interface PersistentCollection<E> extends LazyInitializable, InstanceIdentity {
 	/**
 	 * Get the owning entity. Note that the owner is only
 	 * set during the flush cycle, and when a new collection

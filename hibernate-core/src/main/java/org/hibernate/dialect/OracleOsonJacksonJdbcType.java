@@ -23,7 +23,7 @@ import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.format.ObjectArrayOsonDocumentHandler;
-import org.hibernate.type.format.ObjectArrayOsonDocumentWriter;
+import org.hibernate.type.format.OsonDocumentWriter;
 import org.hibernate.type.format.jackson.JacksonOsonFormatMapper;
 
 import java.io.ByteArrayOutputStream;
@@ -88,12 +88,13 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 
 				FormatMapper mapper = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
 
-				if (getEmbeddableMappingType()!= null) {
+				if (getEmbeddableMappingType() != null) {
 					ByteArrayOutputStream out = new ByteArrayOutputStream();
-					OracleJsonGenerator generator = new OracleJsonFactory().createJsonBinaryGenerator( out );
-					ObjectArrayOsonDocumentWriter writer = new ObjectArrayOsonDocumentWriter(generator);
-					JsonHelper.serialize( getEmbeddableMappingType(), value,options,writer);
-					generator.close();
+					// OracleJsonFactory is used and not OracleOsonFactory as Jackson is not involved here
+					try (OracleJsonGenerator generator = new OracleJsonFactory().createJsonBinaryGenerator( out )) {
+						OsonDocumentWriter writer = new OsonDocumentWriter( generator);
+						JsonHelper.serialize( getEmbeddableMappingType(), value,options,writer);
+					}
 					return out.toByteArray();
 				}
 				

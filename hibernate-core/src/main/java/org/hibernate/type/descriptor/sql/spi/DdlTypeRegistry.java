@@ -267,7 +267,6 @@ public class DdlTypeRegistry implements Serializable {
 				return true;
 			}
 		}
-
 		return false;
 	}
 }

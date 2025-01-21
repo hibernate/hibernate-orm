@@ -82,7 +82,7 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 
 	@Internal
 	public UuidVersion7Strategy() {
-		this( Instant.EPOCH, Holder.numberGenerator.nextLong( MAX_RANDOM_SEQUENCE ) );
+		this( Instant.EPOCH, Long.MIN_VALUE );
 	}
 
 	@Internal

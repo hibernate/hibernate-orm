@@ -36,7 +36,7 @@ import java.util.UUID;
  *
  * @author Emmanuel Jannetti
  */
-public class ObjectArrayOsonDocumentWriter implements JsonDocumentWriter {
+public class OsonDocumentWriter implements JsonDocumentWriter {
 
 
 	private final OracleJsonGenerator generator;
@@ -45,7 +45,7 @@ public class ObjectArrayOsonDocumentWriter implements JsonDocumentWriter {
 	 * Creates a new OSON document writer
 	 * @param generator the JSON generator.
 	 */
-	public ObjectArrayOsonDocumentWriter(OracleJsonGenerator generator) {
+	public OsonDocumentWriter(OracleJsonGenerator generator) {
 		this.generator = generator;
 	}
 

@@ -8,19 +8,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import oracle.sql.json.OracleJsonFactory;
-import oracle.sql.json.OracleJsonGenerator;
-import org.hibernate.dialect.JsonHelper;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
-import org.hibernate.type.format.ObjectArrayOsonDocumentWriter;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 
@@ -60,32 +50,6 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 			throw new RuntimeException( "Cannot instanciate " + osonModuleKlass.getCanonicalName(), e );
 		}
 		objectMapper.disable( SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-	}
-
-
-	public <X>byte[] arrayToOson(X value,
-								JavaType<X> javaType,
-								JdbcType elementJdbcType,
-								WrapperOptions options) {
-
-		final Object[] domainObjects = javaType.unwrap( value, Object[].class, options );
-
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		OracleJsonGenerator generator = new OracleJsonFactory().createJsonBinaryGenerator( out );
-		ObjectArrayOsonDocumentWriter writer = new ObjectArrayOsonDocumentWriter(generator);
-
-		if ( elementJdbcType instanceof JsonJdbcType jsonElementJdbcType ) {
-			final EmbeddableMappingType embeddableMappingType = jsonElementJdbcType.getEmbeddableMappingType();
-			JsonHelper.serializeArray( embeddableMappingType, domainObjects, options,  writer);
-		}
-		else {
-			assert !( elementJdbcType instanceof AggregateJdbcType);
-			final JavaType<?> elementJavaType = ( (BasicPluralJavaType<?>) javaType ).getElementJavaType();
-			JsonHelper.serializeArray( elementJavaType, elementJdbcType, domainObjects, options, writer );
-		}
-
-		generator.close();
-		return out.toByteArray();
 	}
 
 	@Override

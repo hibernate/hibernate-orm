@@ -1568,8 +1568,7 @@ public class EntityBinder {
 		if ( synchronize != null ) {
 			final JdbcEnvironment jdbcEnvironment = getMetadataCollector().getDatabase().getJdbcEnvironment();
 			final boolean logical = synchronize.logical();
-			final String[] tableNames = synchronize.value();
-			for ( String tableName : tableNames ) {
+			for ( String tableName : synchronize.value() ) {
 				final String physicalName = logical ? toPhysicalName( jdbcEnvironment, tableName ) : tableName;
 				persistentClass.addSynchronizedTable( physicalName );
 			}

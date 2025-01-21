@@ -5,6 +5,7 @@
 package org.hibernate.type.format;
 
 import org.hibernate.dialect.JsonHelper;
+import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BooleanJavaType;
@@ -16,7 +17,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Stack;
+
 
 /**
  * Implementation of <code>JsonDocumentWriter</code> for String based OSON document.
@@ -48,7 +49,7 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 		ENDING_ARRAY,  // we are ending an array
 		ARRAY // we are piling array values
 	}
-	private Stack<PROCESSING_STATE> processingStates = new Stack<>();
+	private StandardStack<PROCESSING_STATE> processingStates = new StandardStack<>();
 
 	/**
 	 * Creates a new StringJsonDocumentWriter.
@@ -65,13 +66,13 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 	@Override
 	public void startObject() {
 		// Note: startArray and startObject must not call moveProcessingStateMachine()
-		if (this.processingStates.peek() == PROCESSING_STATE.STARTING_ARRAY) {
+		if (this.processingStates.getCurrent() == PROCESSING_STATE.STARTING_ARRAY) {
 			// are we building an array of objects?
 			// i.e, [{},...]
 			// move to PROCESSING_STATE.ARRAY first
 			this.processingStates.push( PROCESSING_STATE.ARRAY);
 		}
-		else if (this.processingStates.peek() == PROCESSING_STATE.ARRAY) {
+		else if (this.processingStates.getCurrent() == PROCESSING_STATE.ARRAY) {
 			// That means that we ae building an array of object ([{},...])
 			// JSON object hee are treat as array item.
 			// -> add the marker first
@@ -115,7 +116,7 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 
 	@Override
 	public void objectKey(String key) {
-		if (this.processingStates.peek().equals( PROCESSING_STATE.OBJECT )) {
+		if (this.processingStates.getCurrent().equals( PROCESSING_STATE.OBJECT )) {
 			// we have started an object, and we are adding an item key: we do add a separator.
 			this.appender.append( SEPARATOR_MARKER );
 		}
@@ -132,7 +133,7 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 	 * Separator is to separate array items or key/value pairs in an object.
 	 */
 	private void addItemsSeparator() {
-		if (this.processingStates.peek().equals( PROCESSING_STATE.ARRAY )) {
+		if (this.processingStates.getCurrent().equals( PROCESSING_STATE.ARRAY )) {
 			// We started to serialize an array and already added item to it:add a separator anytime.
 			this.appender.append( SEPARATOR_MARKER );
 		}
@@ -161,7 +162,7 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 	 *
 	 */
 	private void moveProcessingStateMachine() {
-		switch (this.processingStates.peek()) {
+		switch (this.processingStates.getCurrent()) {
 			case STARTING_OBJECT:
 				//after starting an object, we start adding key/value pairs
 				this.processingStates.push( PROCESSING_STATE.OBJECT );
@@ -177,7 +178,7 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 				// first pop ENDING_ARRAY
 				this.processingStates.pop();
 				// if we have ARRAY, so that's not an empty array. pop that state
-				if (this.processingStates.peek().equals( PROCESSING_STATE.ARRAY ))
+				if (this.processingStates.getCurrent().equals( PROCESSING_STATE.ARRAY ))
 					this.processingStates.pop();
 				assert this.processingStates.pop().equals( PROCESSING_STATE.STARTING_ARRAY );
 				break;
@@ -188,7 +189,7 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 				// first pop ENDING_OBJECT
 				this.processingStates.pop();
 				// if we have OBJECT, so that's not an empty object. pop that state
-				if (this.processingStates.peek().equals( PROCESSING_STATE.OBJECT ))
+				if (this.processingStates.getCurrent().equals( PROCESSING_STATE.OBJECT ))
 					this.processingStates.pop();
 				assert this.processingStates.pop().equals( PROCESSING_STATE.STARTING_OBJECT );
 				break;

@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.format;
 
+import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.type.BasicPluralType;
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
+
 
 /**
  * Implementation of <code>JsonDocumentHandler</code> for OSON document.
@@ -42,11 +43,11 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 	// Each mapping definition may contain sub mappings (sub embeddable mapping)
 	// This stack is used to keep a pointer on the current mapping to be used to assign correct types.
 	// see onStartObject()/onEndObject() methods
-	Stack<EmbeddableMappingType> embeddableMappingTypes = new Stack<>();
+	StandardStack<EmbeddableMappingType> embeddableMappingTypes = new StandardStack<>();
 	// As for mapping definitions, when "sub embeddable" is encountered, the array
 	// that needs to be filled with Objects is the one we allocate in the final result array slot.
 	// We use a stack to keep track of array ref
-	Stack<Object[]> objectArrays = new Stack<>();
+	StandardStack<Object[]> objectArrays = new StandardStack<>();
 
 
 	WrapperOptions wrapperOptions;
@@ -75,18 +76,20 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 			// We are dealing with a sub-object, allocate space for it then,
 			// otherwise, we have nothing to do.
 			// Push the new (sub)mapping definition.
-			this.currentSelectableIndexInResultArray = embeddableMappingTypes.peek().getSelectableIndex( currentKeyName );
+			assert embeddableMappingTypes.getCurrent() != null;
+			this.currentSelectableIndexInResultArray = embeddableMappingTypes.getCurrent().getSelectableIndex( currentKeyName );
 			assert currentSelectableIndexInResultArray != -1: "Cannot get index of " + currentKeyName;
 
-			final SelectableMapping selectable = embeddableMappingTypes.peek().getJdbcValueSelectable(
+			final SelectableMapping selectable = embeddableMappingTypes.getCurrent().getJdbcValueSelectable(
 					currentSelectableIndexInResultArray );
 			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) selectable.getJdbcMapping()
 					.getJdbcType();
 			final EmbeddableMappingType subMappingType = aggregateJdbcType.getEmbeddableMappingType();
-			this.objectArrays.peek()[currentSelectableIndexInResultArray] =
+			assert this.objectArrays.getCurrent() != null;
+			this.objectArrays.getCurrent()[currentSelectableIndexInResultArray] =
 					new Object[subMappingType.getJdbcValueCount()];
 			this.embeddableMappingTypes.push( subMappingType );
-			this.objectArrays.push( (Object[]) this.objectArrays.peek()[currentSelectableIndexInResultArray] );
+			this.objectArrays.push( (Object[]) this.objectArrays.getCurrent()[currentSelectableIndexInResultArray] );
 		}
 	}
 
@@ -113,7 +116,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 	public void onEndArray() {
 		assert (subArrayObjectList != null && subArrayObjectTypes != null) : "onEndArray called before onStartArray";
 		// flush array values
-		this.objectArrays.peek()[currentSelectableIndexInResultArray] = subArrayObjectTypes.getJdbcJavaType().wrap( subArrayObjectList, wrapperOptions );
+		this.objectArrays.getCurrent()[currentSelectableIndexInResultArray] = subArrayObjectTypes.getJdbcJavaType().wrap( subArrayObjectList, wrapperOptions );
 		// reset until we encounter next array element
 		subArrayObjectList = null;
 		subArrayObjectTypes = null;
@@ -123,17 +126,17 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 	public void onObjectKey(String key) {
 		this.currentKeyName = key;
 
-		currentSelectableIndexInResultArray = embeddableMappingTypes.peek().getSelectableIndex( currentKeyName );
+		currentSelectableIndexInResultArray = embeddableMappingTypes.getCurrent().getSelectableIndex( currentKeyName );
 		if ( currentSelectableIndexInResultArray >= 0 ) {
 			// we may not have a selectable mapping for that key
-			currentSelectableMapping = embeddableMappingTypes.peek().getJdbcValueSelectable( currentSelectableIndexInResultArray );
+			currentSelectableMapping = embeddableMappingTypes.getCurrent().getJdbcValueSelectable( currentSelectableIndexInResultArray );
 		}
 		else {
 			throw new IllegalArgumentException(
 					String.format(
 							"Could not find selectable [%s] in embeddable type [%s] for JSON processing.",
 							currentKeyName,
-							embeddableMappingTypes.peek().getMappedJavaType().getJavaTypeClass().getName()
+							embeddableMappingTypes.getCurrent().getMappedJavaType().getJavaTypeClass().getName()
 					)
 			);
 		}
@@ -146,7 +149,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 			subArrayObjectList.add( null );
 		}
 		else {
-			this.objectArrays.peek()[currentSelectableIndexInResultArray] = null;
+			this.objectArrays.getCurrent()[currentSelectableIndexInResultArray] = null;
 		}
 	}
 
@@ -157,7 +160,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 			subArrayObjectList.add( value?Boolean.TRUE:Boolean.FALSE);
 		}
 		else {
-			this.objectArrays.peek()[currentSelectableIndexInResultArray] = value?Boolean.TRUE:Boolean.FALSE;
+			this.objectArrays.getCurrent()[currentSelectableIndexInResultArray] = value?Boolean.TRUE:Boolean.FALSE;
 		}
 	}
 
@@ -169,7 +172,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 					subArrayObjectTypes.getElementType().getJdbcJavaType().fromEncodedString( value ,0,value.length()) );
 		}
 		else {
-			this.objectArrays.peek()[currentSelectableIndexInResultArray] =
+			this.objectArrays.getCurrent()[currentSelectableIndexInResultArray] =
 					currentSelectableMapping.getJdbcMapping().getJdbcJavaType().fromEncodedString( value,0,value.length());
 		}
 	}
@@ -190,7 +193,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 			subArrayObjectList.add( value );
 		}
 		else {
-			this.objectArrays.peek()[currentSelectableIndexInResultArray] =
+			this.objectArrays.getCurrent()[currentSelectableIndexInResultArray] =
 					currentSelectableMapping.getJdbcMapping().convertToDomainValue(
 					currentSelectableMapping.getJdbcMapping().getJdbcJavaType()
 							.wrap( value, wrapperOptions ) );
@@ -223,7 +226,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 			subArrayObjectList.add( theOneToBeUsed );
 		}
 		else {
-			this.objectArrays.peek()[currentSelectableIndexInResultArray] = theOneToBeUsed;
+			this.objectArrays.getCurrent()[currentSelectableIndexInResultArray] = theOneToBeUsed;
 		}
 	}
 
@@ -270,7 +273,7 @@ public class ObjectArrayOsonDocumentHandler implements JsonDocumentHandler {
 			subArrayObjectList.add( theOneToBeUsed );
 		}
 		else {
-			this.objectArrays.peek()[currentSelectableIndexInResultArray] = theOneToBeUsed;
+			this.objectArrays.getCurrent()[currentSelectableIndexInResultArray] = theOneToBeUsed;
 		}
 	}
 }

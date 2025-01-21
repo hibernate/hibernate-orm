@@ -56,30 +56,11 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 			//noinspection unchecked
 			return (ManagedBean<T>) existing;
 		}
-
-		final ManagedBean<T> bean;
-		if ( beanContainer == null ) {
-			bean = new FallbackContainedBean<>( beanClass, fallbackBeanInstanceProducer );
-		}
 		else {
-			final ContainedBean<T> containedBean = beanContainer.getBean(
-					beanClass,
-					this,
-					fallbackBeanInstanceProducer
-			);
-
-			if ( containedBean instanceof ManagedBean ) {
-				//noinspection unchecked
-				bean = (ManagedBean<T>) containedBean;
-			}
-			else {
-				bean = new ContainedBeanManagedBeanAdapter<>( beanClass, containedBean );
-			}
+			final ManagedBean<T> bean = createBean( beanClass, fallbackBeanInstanceProducer );
+			registrations.put( beanClass.getName(), bean );
+			return bean;
 		}
-
-		registrations.put( beanClass.getName(), bean );
-
-		return bean;
 	}
 
 	@Override
@@ -93,37 +74,51 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 			Class<T> beanContract,
 			BeanInstanceProducer fallbackBeanInstanceProducer) {
 		final String key = beanContract.getName() + ':' + beanName;
-
 		final ManagedBean<?> existing = registrations.get( key );
 		if ( existing != null ) {
 			//noinspection unchecked
 			return (ManagedBean<T>) existing;
 		}
+		else {
+			final ManagedBean<T> bean = createBean( beanName, beanContract, fallbackBeanInstanceProducer );
+			registrations.put( key, bean );
+			return bean;
+		}
+	}
 
-		final ManagedBean<T> bean;
+	private <T> ManagedBean<T> createBean(Class<T> beanClass, BeanInstanceProducer fallbackBeanInstanceProducer) {
 		if ( beanContainer == null ) {
-			bean = new FallbackContainedBean<>( beanName, beanContract, fallbackBeanInstanceProducer );
+			return new FallbackContainedBean<>( beanClass, fallbackBeanInstanceProducer );
 		}
 		else {
-			final ContainedBean<T> containedBean = beanContainer.getBean(
-					beanName,
-					beanContract,
-					this,
-					fallbackBeanInstanceProducer
-			);
-
+			final ContainedBean<T> containedBean =
+					beanContainer.getBean( beanClass, this, fallbackBeanInstanceProducer );
 			if ( containedBean instanceof ManagedBean ) {
 				//noinspection unchecked
-				bean = (ManagedBean<T>) containedBean;
+				return (ManagedBean<T>) containedBean;
 			}
 			else {
-				bean = new ContainedBeanManagedBeanAdapter<>( beanContract, containedBean );
+				return new ContainedBeanManagedBeanAdapter<>( beanClass, containedBean );
 			}
 		}
+	}
 
-		registrations.put( key, bean );
-
-		return bean;
+	private <T> ManagedBean<T> createBean(
+			String beanName, Class<T> beanContract, BeanInstanceProducer fallbackBeanInstanceProducer) {
+		if ( beanContainer == null ) {
+			return new FallbackContainedBean<>( beanName, beanContract, fallbackBeanInstanceProducer );
+		}
+		else {
+			final ContainedBean<T> containedBean =
+					beanContainer.getBean( beanName, beanContract, this, fallbackBeanInstanceProducer );
+			if ( containedBean instanceof ManagedBean ) {
+				//noinspection unchecked
+				return (ManagedBean<T>) containedBean;
+			}
+			else {
+				return new ContainedBeanManagedBeanAdapter<>( beanContract, containedBean );
+			}
+		}
 	}
 
 	@Override

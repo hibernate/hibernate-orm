@@ -4,6 +4,7 @@
  */
 package org.hibernate.resource.beans.spi;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.hibernate.InstantiationException;
@@ -15,14 +16,16 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.resource.beans.container.internal.CdiBeanContainerBuilder;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.internal.BeansMessageLogger;
 import org.hibernate.resource.beans.internal.ManagedBeanRegistryImpl;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
+import static org.hibernate.resource.beans.internal.BeansMessageLogger.BEANS_MSG_LOGGER;
+
 /**
- * Hibernate's standard initializer for the {@link ManagedBeanRegistry} service.
- *
- * Produces a {@link ManagedBeanRegistryImpl}
+ * Standard initializer for the {@link ManagedBeanRegistry} service.
+ * Always produces an instance of {@link ManagedBeanRegistryImpl}.
  *
  * @author Steve Ebersole
  */
@@ -44,94 +47,92 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 		return new ManagedBeanRegistryImpl( resolveBeanContainer( configurationValues, serviceRegistry ) );
 	}
 
-	private BeanContainer resolveBeanContainer(Map<?,?> configurationValues, ServiceRegistryImplementor serviceRegistry) {
-		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
-		final ConfigurationService cfgSvc = serviceRegistry.requireService( ConfigurationService.class );
-
+	private BeanContainer resolveBeanContainer(Map<?,?> configurationValues, ServiceRegistry serviceRegistry) {
 		// was a specific container explicitly specified?
 		final Object explicitBeanContainer = configurationValues.get( AvailableSettings.BEAN_CONTAINER );
-		if ( explicitBeanContainer != null ) {
-			return interpretExplicitBeanContainer( explicitBeanContainer, classLoaderService, serviceRegistry );
-		}
+		return explicitBeanContainer == null
+				? interpretImplicitBeanContainer( serviceRegistry )
+				: interpretExplicitBeanContainer( explicitBeanContainer, serviceRegistry );
+	}
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// simplified CDI support
+	private static BeanContainer interpretImplicitBeanContainer(ServiceRegistry serviceRegistry) {
+		final Collection<BeanContainer> beanContainers =
+				serviceRegistry.requireService( ClassLoaderService.class )
+						.loadJavaServices( BeanContainer.class );
+		return switch ( beanContainers.size() ) {
+			case 1 -> beanContainers.iterator().next();
+			case 0 -> interpretImplicitCdiBeanContainer( serviceRegistry );
+			default -> throw new ServiceException( "Multiple BeanContainer service implementations found"
+													+ " (set '" + AvailableSettings.BEAN_CONTAINER + "' explicitly)" );
+		};
+	}
 
-		final boolean isCdiAvailable = isCdiAvailable( classLoaderService );
-		Object beanManagerRef = cfgSvc.getSettings().get( AvailableSettings.CDI_BEAN_MANAGER );
-		if ( beanManagerRef == null ) {
-			beanManagerRef = cfgSvc.getSettings().get( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER );
+	// simplified CDI support
+	private static BeanContainer interpretImplicitCdiBeanContainer(ServiceRegistry serviceRegistry) {
+		final Map<String, Object> settings = serviceRegistry.requireService( ConfigurationService.class ).getSettings();
+		Object beanManager = settings.get( AvailableSettings.CDI_BEAN_MANAGER );
+		if ( beanManager == null ) {
+			beanManager = settings.get( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER );
 		}
-		if ( beanManagerRef != null ) {
+		final boolean isCdiAvailable = isCdiAvailable( serviceRegistry );
+		if ( beanManager != null ) {
 			if ( !isCdiAvailable ) {
-				BeansMessageLogger.BEANS_MSG_LOGGER.beanManagerButCdiNotAvailable( beanManagerRef );
+				BEANS_MSG_LOGGER.beanManagerButCdiNotAvailable( beanManager );
 			}
-
-			return CdiBeanContainerBuilder.fromBeanManagerReference( beanManagerRef, serviceRegistry );
+			return CdiBeanContainerBuilder.fromBeanManagerReference( beanManager, serviceRegistry );
 		}
 		else {
 			if ( isCdiAvailable ) {
-				BeansMessageLogger.BEANS_MSG_LOGGER.noBeanManagerButCdiAvailable();
+				BEANS_MSG_LOGGER.noBeanManagerButCdiAvailable();
 			}
+			return null;
 		}
-
-		return null;
 	}
 
-	private BeanContainer interpretExplicitBeanContainer(
-			Object explicitSetting,
-			ClassLoaderService classLoaderService, ServiceRegistryImplementor serviceRegistry) {
+	private BeanContainer interpretExplicitBeanContainer(Object explicitSetting, ServiceRegistry serviceRegistry) {
 		if ( explicitSetting == null ) {
 			return null;
 		}
-
-		if ( explicitSetting instanceof BeanContainer ) {
-			return (BeanContainer) explicitSetting;
+		else if ( explicitSetting instanceof BeanContainer beanContainer ) {
+			return beanContainer;
 		}
+		else {
+			// otherwise we ultimately need to resolve this to a class
+			final Class<?> containerClass = containerClass( explicitSetting, serviceRegistry );
+			try {
+				return (BeanContainer) containerClass.newInstance();
+			}
+			catch (Exception e) {
+				throw new InstantiationException( "Unable to instantiate specified BeanContainer", containerClass, e );
+			}
+		}
+	}
 
-		// otherwise we ultimately need to resolve this to a class
-		final Class<?> containerClass;
-		if ( explicitSetting instanceof Class ) {
-			containerClass = (Class<?>) explicitSetting;
+	private static Class<?> containerClass(Object explicitSetting, ServiceRegistry serviceRegistry) {
+		if ( explicitSetting instanceof Class<?> clazz ) {
+			return clazz;
 		}
 		else {
 			final String name = explicitSetting.toString();
 			// try the StrategySelector service
-			final Class<?> selected = serviceRegistry.requireService( StrategySelector.class )
-					.selectStrategyImplementor( BeanContainer.class, name );
-			if ( selected != null ) {
-				containerClass = selected;
-			}
-			else {
-				containerClass = classLoaderService.classForName( name );
-			}
-		}
-
-		try {
-			return (BeanContainer) containerClass.newInstance();
-		}
-		catch (Exception e) {
-			throw new InstantiationException( "Unable to instantiate specified BeanContainer", containerClass, e );
+			final Class<?> selected =
+					serviceRegistry.requireService( StrategySelector.class )
+							.selectStrategyImplementor( BeanContainer.class, name );
+			return selected == null
+					? serviceRegistry.requireService( ClassLoaderService.class ).classForName( name )
+					: selected;
 		}
 	}
 
-	private static boolean isCdiAvailable(ClassLoaderService classLoaderService) {
-		// is CDI available on our ClassLoader?
+	// is CDI available on our ClassLoader?
+	private static boolean isCdiAvailable(ServiceRegistry serviceRegistry) {
 		try {
-			cdiBeanManagerClass( classLoaderService );
+			serviceRegistry.requireService( ClassLoaderService.class )
+					.classForName( "jakarta.enterprise.inject.spi.BeanManager" );
 			return true;
 		}
 		catch (ClassLoadingException e) {
 			return false;
-		}
-	}
-
-	public static Class<?> cdiBeanManagerClass(ClassLoaderService classLoaderService) throws ClassLoadingException {
-		try {
-			return classLoaderService.classForName( "jakarta.enterprise.inject.spi.BeanManager" );
-		}
-		catch (ClassLoadingException e) {
-			return classLoaderService.classForName( "jakarta.enterprise.inject.spi.BeanManager" );
 		}
 	}
 

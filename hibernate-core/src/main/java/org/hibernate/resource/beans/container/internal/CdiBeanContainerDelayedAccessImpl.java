@@ -14,11 +14,10 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("unused")
 public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer {
 	private final BeanManager beanManager;
 
-	private CdiBeanContainerDelayedAccessImpl(BeanManager beanManager) {
+	CdiBeanContainerDelayedAccessImpl(BeanManager beanManager) {
 		this.beanManager = beanManager;
 	}
 

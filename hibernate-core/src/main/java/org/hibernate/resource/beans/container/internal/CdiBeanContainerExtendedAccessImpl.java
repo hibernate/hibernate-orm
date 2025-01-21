@@ -19,7 +19,6 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("unused")
 public class CdiBeanContainerExtendedAccessImpl
 		extends AbstractCdiBeanContainer
 		implements ExtendedBeanManager.LifecycleListener {
@@ -30,7 +29,7 @@ public class CdiBeanContainerExtendedAccessImpl
 
 	private BeanManager usableBeanManager;
 
-	private CdiBeanContainerExtendedAccessImpl(ExtendedBeanManager beanManager) {
+	CdiBeanContainerExtendedAccessImpl(ExtendedBeanManager beanManager) {
 		beanManager.registerLifecycleListener( this );
 		log.debugf( "Extended access requested to CDI BeanManager : %s", beanManager );
 	}

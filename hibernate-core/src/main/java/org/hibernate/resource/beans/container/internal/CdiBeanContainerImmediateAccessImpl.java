@@ -16,13 +16,12 @@ import org.jboss.logging.Logger;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("unused")
 public class CdiBeanContainerImmediateAccessImpl extends AbstractCdiBeanContainer {
 	private static final Logger log = Logger.getLogger( CdiBeanContainerImmediateAccessImpl.class );
 
 	private final BeanManager beanManager;
 
-	private CdiBeanContainerImmediateAccessImpl(BeanManager beanManager) {
+	CdiBeanContainerImmediateAccessImpl(BeanManager beanManager) {
 		log.debugf( "Standard access requested to CDI BeanManager : %s", beanManager );
 		this.beanManager = beanManager;
 	}

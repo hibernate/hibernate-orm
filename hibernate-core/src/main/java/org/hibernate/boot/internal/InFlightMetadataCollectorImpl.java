@@ -1373,16 +1373,6 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
-	public void addInferredMapsIdProperty(ClassDetails entityType, PropertyData property, String mapsIdValue) {
-		if ( propertiesAnnotatedWithMapsId == null ) {
-			propertiesAnnotatedWithMapsId = new HashMap<>();
-		}
-
-		propertiesAnnotatedWithMapsId.computeIfAbsent( entityType, k -> new HashMap<>() )
-				.put( mapsIdValue, property );
-	}
-
-	@Override
 	public PropertyData getPropertyAnnotatedWithIdAndToOne(ClassDetails entityType, String propertyName) {
 		if ( propertiesAnnotatedWithIdAndToOne == null ) {
 			return null;

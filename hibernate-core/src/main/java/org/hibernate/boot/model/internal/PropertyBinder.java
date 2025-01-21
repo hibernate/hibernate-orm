@@ -32,7 +32,6 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.Parent;
 import org.hibernate.binder.AttributeBinder;
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -67,11 +66,9 @@ import org.hibernate.usertype.CompositeUserType;
 
 
 import jakarta.persistence.Basic;
-import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
@@ -623,7 +620,6 @@ public class PropertyBinder {
 		final MemberDetails element = propertyAnnotatedElement.getAttributeMember();
 		if ( hasIdAnnotation( element ) ) {
 			inFlightPropertyDataList.add( idPropertyCounter, propertyAnnotatedElement );
-			handleInferredMapsIdProperty( propertyContainer, context, declaringClass, ownerType, element );
 			if ( hasToOneAnnotation( element ) ) {
 				context.getMetadataCollector()
 						.addToOneAndIdProperty( ownerType.determineRawClass(), propertyAnnotatedElement );
@@ -651,65 +647,6 @@ public class PropertyBinder {
 					+ "' is declared by '" + attributeMember.getDeclaringType().getName()
 					+ "' and may not be redeclared as an '@Id' by '" + property.getDeclaringType().getName() + "'" );
 		}
-	}
-
-	// The following code infers a "missing" @MapsId annotation when
-	// an @Id Column matches a @JoinColumn of another field. No test
-	// fails if I simply remove this code, and, indeed, it was broken
-	// and doing nothing before I got here. I've now "fixed" it to do
-	// what it was supposed to be doing, but honestly the semantics
-	// aren't clear: why should it be linked to the existence of an
-	// explicit @Column annotation? And there's still no test for it.
-	//
-	// The real work is done by ToOneBinder#handleInferredMapsId
-	private static void handleInferredMapsIdProperty(
-			PropertyContainer propertyContainer,
-			MetadataBuildingContext context,
-			ClassDetails declaringClass,
-			TypeVariableScope ownerType,
-			MemberDetails element) {
-		if ( context.getBuildingOptions().isMapsIdInferenceEnabled() ) {
-			//TODO support true/false/default on the property instead of present / not present
-			final SourceModelBuildingContext sourceModelContext =
-					context.getMetadataCollector().getSourceModelBuildingContext();
-			if ( element.hasDirectAnnotationUsage( Id.class )
-				//TODO Explicit @Column should not be mandatory here
-					&& element.hasDirectAnnotationUsage( Column.class ) ) {
-				final String columnName = element.getDirectAnnotationUsage( Column.class ).name();
-				declaringClass.forEachPersistableMember( memberDetails -> {
-					if ( !memberDetails.hasDirectAnnotationUsage( MapsId.class )
-							&& isJoinColumnPresent( columnName, memberDetails, sourceModelContext ) ) {
-						//create a PropertyData for the specJ property holding the mapping
-						context.getMetadataCollector().addInferredMapsIdProperty(
-								ownerType.determineRawClass(),
-								new PropertyInferredData(
-										declaringClass,
-										ownerType,
-										//same dec
-										memberDetails,
-										// the actual @XToOne property
-										propertyContainer.getClassLevelAccessType().getType(),
-										//TODO we should get the right accessor but the same as id would do
-										context
-								),
-								element.toString()
-						);
-					}
-				} );
-			}
-		}
-	}
-
-	private static boolean isJoinColumnPresent(String columnName, MemberDetails property, SourceModelBuildingContext modelContext) {
-		// The detection of a configured individual JoinColumn differs
-		// between Annotation and XML configuration processing.
-		for ( JoinColumn joinColumnAnnotation :
-				property.getRepeatedAnnotationUsages( JpaAnnotations.JOIN_COLUMN, modelContext ) ) {
-			if ( joinColumnAnnotation.name().equals( columnName ) ) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	static boolean hasIdAnnotation(MemberDetails element) {

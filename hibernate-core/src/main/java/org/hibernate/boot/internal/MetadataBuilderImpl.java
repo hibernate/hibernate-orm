@@ -343,11 +343,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		return this;
 	}
 
-	public MetadataBuilder enableMapsIdInference(boolean enabled) {
-		options.mapsIdInferenceEnabled = enabled;
-		return this;
-	}
-
 	public MetadataBuilder noConstraintByDefault() {
 		options.noConstraintByDefault = true;
 		return this;
@@ -644,7 +639,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private boolean implicitDiscriminatorsForJoinedInheritanceSupported;
 		private boolean implicitlyForceDiscriminatorInSelect;
 		private boolean useNationalizedCharacterData;
-		private boolean mapsIdInferenceEnabled;
 		private boolean noConstraintByDefault;
 
 		private final String schemaCharset;
@@ -733,12 +727,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					},
 					// by default, see if the defined RegionFactory (if one) defines a default
 					regionFactory == null ? null : regionFactory.getDefaultAccessType()
-			);
-
-			mapsIdInferenceEnabled = configService.getSetting(
-					"hibernate.enable_mapsid_inference",
-					BOOLEAN,
-					false
 			);
 
 			noConstraintByDefault = ConstraintMode.NO_CONSTRAINT.name().equalsIgnoreCase( configService.getSetting(
@@ -917,11 +905,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public boolean useNationalizedCharacterData() {
 			return useNationalizedCharacterData;
-		}
-
-		@Override
-		public boolean isMapsIdInferenceEnabled() {
-			return mapsIdInferenceEnabled;
 		}
 
 		@Override

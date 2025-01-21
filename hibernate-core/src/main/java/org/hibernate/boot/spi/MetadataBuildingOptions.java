@@ -206,12 +206,6 @@ public interface MetadataBuildingOptions {
 	boolean useNationalizedCharacterData();
 
 	/**
-	 * Do we attempt to infer missing {@link jakarta.persistence.MapsId}
-	 * annotations when they are not explicitly specified?
-	 */
-	boolean isMapsIdInferenceEnabled();
-
-	/**
 	 * Should we <em>disable</em> constraint creation when
 	 * {@link jakarta.persistence.ConstraintMode#PROVIDER_DEFAULT}?
 	 *

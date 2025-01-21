@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.boot.MetadataBuilder;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -21,12 +20,6 @@ import static org.junit.Assert.assertEquals;
  * @author Stale W. Pedersen
  */
 public class IdMapManyToOneSpecjTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
-		super.configureMetadataBuilder( metadataBuilder );
-		metadataBuilder.enableMapsIdInference( true );
-	}
 
 	@Test
 	public void testComplexIdClass() {

@@ -131,11 +131,6 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
-	public boolean isMapsIdInferenceEnabled() {
-		return delegate.isMapsIdInferenceEnabled();
-	}
-
-	@Override
 	public boolean isNoConstraintByDefault() {
 		return delegate.isNoConstraintByDefault();
 	}

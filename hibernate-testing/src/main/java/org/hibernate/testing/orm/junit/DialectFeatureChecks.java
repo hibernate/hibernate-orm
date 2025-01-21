@@ -1492,14 +1492,6 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public void addInferredMapsIdProperty(
-				ClassDetails entityClassDetails,
-				PropertyData specJPropertyData,
-				String s) {
-
-		}
-
-		@Override
 		public void addToOneAndIdProperty(ClassDetails entityClassDetails, PropertyData propertyAnnotatedElement) {
 
 		}

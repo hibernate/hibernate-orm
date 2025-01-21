@@ -30,6 +30,7 @@ public class OracleServerConfiguration {
 	private final boolean autonomous;
 	private final boolean extended;
 	private final boolean applicationContinuity;
+	private final int defaultFetchSize;
 	private final int driverMajorVersion;
 	private final int driverMinorVersion;
 
@@ -53,8 +54,12 @@ public class OracleServerConfiguration {
 		return driverMinorVersion;
 	}
 
+	public int getDefaultFetchSize() {
+		return defaultFetchSize;
+	}
+
 	public OracleServerConfiguration(boolean autonomous, boolean extended) {
-		this( autonomous, extended, false, 19, 0 );
+		this( autonomous, extended, false, -1, 19, 0 );
 	}
 
 	public OracleServerConfiguration(
@@ -62,18 +67,20 @@ public class OracleServerConfiguration {
 			boolean extended,
 			int driverMajorVersion,
 			int driverMinorVersion) {
-		this(autonomous, extended, false, driverMajorVersion, driverMinorVersion);
+		this(autonomous, extended, false, -1, driverMajorVersion, driverMinorVersion);
 	}
 
 	public OracleServerConfiguration(
 			boolean autonomous,
 			boolean extended,
 			boolean applicationContinuity,
+			int defaultFetchSize,
 			int driverMajorVersion,
 			int driverMinorVersion) {
 		this.autonomous = autonomous;
 		this.extended = extended;
 		this.applicationContinuity = applicationContinuity;
+		this.defaultFetchSize = defaultFetchSize;
 		this.driverMajorVersion = driverMajorVersion;
 		this.driverMinorVersion = driverMinorVersion;
 	}
@@ -82,6 +89,7 @@ public class OracleServerConfiguration {
 		Boolean extended = null;
 		Boolean autonomous = null;
 		Boolean applicationContinuity = null;
+		int defaultFetchSize = -1;
 		Integer majorVersion = null;
 		Integer minorVersion = null;
 		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
@@ -94,6 +102,8 @@ public class OracleServerConfiguration {
 				final Connection c = databaseMetaData.getConnection();
 
 				try (final Statement statement = c.createStatement()) {
+
+					defaultFetchSize = statement.getFetchSize();
 
 					// Use Oracle JDBC replay statistics information to determine if this
 					// connection is protected by Application Continuity
@@ -185,7 +195,8 @@ public class OracleServerConfiguration {
 			}
 
 		}
-		return new OracleServerConfiguration( autonomous, extended, applicationContinuity, majorVersion, minorVersion );
+		return new OracleServerConfiguration( autonomous, extended, applicationContinuity, defaultFetchSize,
+				majorVersion, minorVersion );
 	}
 
 	private static boolean isAutonomous(String cloudServiceParam) {

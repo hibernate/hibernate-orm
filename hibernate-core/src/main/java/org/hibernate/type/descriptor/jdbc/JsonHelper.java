@@ -241,15 +241,7 @@ public class JsonHelper {
 				}
 				final EmbeddableMappingType mappingType = (EmbeddableMappingType) attributeMapping.getMappedType();
 				final SelectableMapping aggregateMapping = mappingType.getAggregateMapping();
-				if ( mappingType.shouldSelectAggregateMapping()) {
-					final String name = aggregateMapping.getSelectableName();
-					appender.append( separator );
-					appender.append( '"' );
-					appender.append( name );
-					appender.append( "\":" );
-					toString( mappingType, values[i], options, appender );
-				}
-				else {
+				if ( aggregateMapping == null) {
 					toString(
 							mappingType,
 							options,
@@ -257,6 +249,14 @@ public class JsonHelper {
 							values[i],
 							separator
 					);
+				}
+				else {
+					final String name = aggregateMapping.getSelectableName();
+					appender.append( separator );
+					appender.append( '"' );
+					appender.append( name );
+					appender.append( "\":" );
+					toString( mappingType, values[i], options, appender );
 				}
 			}
 			else {

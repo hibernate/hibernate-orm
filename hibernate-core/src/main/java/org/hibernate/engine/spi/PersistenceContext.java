@@ -745,6 +745,12 @@ public interface PersistenceContext {
 	 */
 	void setReadOnly(Object entityOrProxy, boolean readOnly);
 
+	boolean isRemovingOrphanBeforeUpdates();
+
+	void beginRemoveOrphanBeforeUpdates();
+
+	void endRemoveOrphanBeforeUpdates();
+
 	void replaceDelayedEntityIdentityInsertKeys(EntityKey oldKey, Object generatedId);
 
 	@Internal
@@ -856,10 +862,9 @@ public interface PersistenceContext {
 	NaturalIdResolutions getNaturalIdResolutions();
 
 	/**
-		Remove the {@link EntityHolder} and set its state to DETACHED
+		Remove the {@link EntityHolder} and set its state to {@code DETACHED}.
 	 */
 	default @Nullable EntityHolder detachEntity(EntityKey key) {
-		EntityHolder entityHolder = removeEntityHolder( key );
-		return entityHolder;
+		return removeEntityHolder( key );
 	}
 }

@@ -55,7 +55,7 @@ import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.internal.StatefulPersistenceContext;
+import org.hibernate.engine.internal.PersistenceContexts;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -217,7 +217,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * session, and such actions are executed asynchronously when the session is {@linkplain #flush flushed}. The
  * motivation behind this architecture is two-fold: first, it enables customization by sophisticated extensions to
  * Hibernate ORM, and, second, it enables the transactional write-behind semantics of a stateful session. The stateful
- * session holds its state in an instance of {@link StatefulPersistenceContext}, which we may view as the first-level
+ * session holds its state in an instance of {@code StatefulPersistenceContext}, which we may view as the first-level
  * cache associated with the session.
  *
  * @author Gavin King
@@ -238,7 +238,7 @@ public class SessionImpl
 
 	private transient ActionQueue actionQueue;
 	private transient EventListenerGroups eventListenerGroups;
-	private transient StatefulPersistenceContext persistenceContext;
+	private transient PersistenceContext persistenceContext;
 
 	private transient LoadQueryInfluencers loadQueryInfluencers;
 
@@ -313,8 +313,8 @@ public class SessionImpl
 				: ConfigurationHelper.getFlushMode( getSessionProperty( HINT_FLUSH_MODE ), FlushMode.AUTO );
 	}
 
-	protected StatefulPersistenceContext createPersistenceContext() {
-		return new StatefulPersistenceContext( this );
+	protected PersistenceContext createPersistenceContext() {
+		return PersistenceContexts.createPersistenceContext( this );
 	}
 
 	protected ActionQueue createActionQueue() {
@@ -864,7 +864,7 @@ public class SessionImpl
 	@Override
 	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, DeleteContext transientEntities) {
 		checkOpenOrWaitingForAutoClose();
-		final boolean removingOrphanBeforeUpdates = persistenceContext.isRemovingOrphanBeforeUpates();
+		final boolean removingOrphanBeforeUpdates = persistenceContext.isRemovingOrphanBeforeUpdates();
 		final boolean traceEnabled = log.isTraceEnabled();
 		if ( traceEnabled && removingOrphanBeforeUpdates ) {
 			logRemoveOrphanBeforeUpdates( "before continuing", entityName, object );
@@ -2992,7 +2992,7 @@ public class SessionImpl
 
 		oos.defaultWriteObject();
 
-		persistenceContext.serialize( oos );
+		PersistenceContexts.serialize( persistenceContext, oos );
 		actionQueue.serialize( oos );
 
 		oos.writeObject( loadQueryInfluencers );
@@ -3014,7 +3014,7 @@ public class SessionImpl
 
 		ois.defaultReadObject();
 
-		persistenceContext = StatefulPersistenceContext.deserialize( ois, this );
+		persistenceContext = PersistenceContexts.deserialize( ois, this );
 		actionQueue = ActionQueue.deserialize( ois, this );
 
 		loadQueryInfluencers = (LoadQueryInfluencers) ois.readObject();

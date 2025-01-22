@@ -24,7 +24,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.internal.StatefulPersistenceContext;
+import org.hibernate.engine.internal.PersistenceContexts;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityHolder;
@@ -115,7 +115,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * cannot, unfortunately, reuse the various {@link org.hibernate.action.internal.EntityAction} subtypes. This is
  * a pity, since it results in some code duplication. On the other hand, a {@code StatelessSession} is easier to
  * debug and understand. A {@code StatelessSession} does hold state in a long-lived {@link PersistenceContext},
- * but it does temporarily keep state within an instance of {@link StatefulPersistenceContext} while processing
+ * but it does temporarily keep state within an instance of {@code StatefulPersistenceContext} while processing
  * the results of a given query.
  *
  * @author Gavin King
@@ -134,7 +134,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public StatelessSessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 		connectionProvided = options.getConnection() != null;
-		temporaryPersistenceContext = new StatefulPersistenceContext( this );
+		temporaryPersistenceContext = PersistenceContexts.createPersistenceContext( this );
 		influencers = new LoadQueryInfluencers( getFactory() );
 		eventListenerGroups = factory.getEventListenerGroups();
 		setUpMultitenancy( factory, influencers );

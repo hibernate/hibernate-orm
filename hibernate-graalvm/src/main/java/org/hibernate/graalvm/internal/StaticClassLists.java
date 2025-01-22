@@ -76,6 +76,10 @@ final class StaticClassLists {
 		};
 	}
 
+	/**
+	 * The classes listed below use a SecureRandom. We need to avoid static initialization at build time of these,
+	 * for it will trigger an error in GraalVM native images.
+	 */
 	public static Class<?>[] typesNeedingRuntimeInitialization() {
 		return new Class[] {
 				org.hibernate.id.uuid.UuidVersion6Strategy.Holder.class,

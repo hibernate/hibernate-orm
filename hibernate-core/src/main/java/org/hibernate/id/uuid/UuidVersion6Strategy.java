@@ -36,7 +36,7 @@ import org.hibernate.id.UUIDGenerationStrategy;
 public class UuidVersion6Strategy implements UUIDGenerationStrategy, UuidValueGenerator {
 	public static final UuidVersion6Strategy INSTANCE = new UuidVersion6Strategy();
 
-	private static class Holder {
+	public static class Holder {
 		static final SecureRandom numberGenerator = new SecureRandom();
 		private static long nextLong(long bound) {
 			return numberGenerator.nextLong() & (bound-1);

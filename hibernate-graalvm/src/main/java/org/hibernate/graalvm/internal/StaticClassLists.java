@@ -119,4 +119,10 @@ final class StaticClassLists {
 		};
 	}
 
+	public static Class<?>[] typesNeedingRuntimeInitialization() {
+		return new Class[] {
+				org.hibernate.id.uuid.UuidVersion6Strategy.Holder.class,
+				org.hibernate.id.uuid.UuidVersion7Strategy.Holder.class,
+		};
+	}
 }

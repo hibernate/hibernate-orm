@@ -10,6 +10,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.util.ArrayList;
 
+import org.graalvm.nativeimage.hosted.RuntimeClassInitialization;
 import org.hibernate.internal.util.ReflectHelper;
 
 import org.graalvm.nativeimage.hosted.Feature;
@@ -38,6 +39,7 @@ public class GraalVMStaticFeature implements Feature {
 	public void beforeAnalysis(Feature.BeforeAnalysisAccess before) {
 		final Class<?>[] needsHavingSimpleConstructors = StaticClassLists.typesNeedingDefaultConstructorAccessible();
 		final Class<?>[] needingAllConstructorsAccessible = StaticClassLists.typesNeedingAllConstructorsAccessible();
+		final Class<?>[] typesNeedingRuntimeInitialization = StaticClassLists.typesNeedingRuntimeInitialization();
 		//Size formula is just a reasonable guess:
 		ArrayList<Executable> executables = new ArrayList<>( needsHavingSimpleConstructors.length + needingAllConstructorsAccessible.length * 3 );
 		for ( Class<?> c : needsHavingSimpleConstructors ) {
@@ -52,6 +54,8 @@ public class GraalVMStaticFeature implements Feature {
 		RuntimeReflection.register( needingAllConstructorsAccessible );
 		RuntimeReflection.register( StaticClassLists.typesNeedingArrayCopy() );
 		RuntimeReflection.register( executables.toArray(new Executable[0]) );
+
+		RuntimeClassInitialization.initializeAtRunTime( typesNeedingRuntimeInitialization );
 	}
 
 	@Override

@@ -13,6 +13,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.Parameter;
@@ -61,8 +62,9 @@ public class GeneratorAnnotationHelper {
 	public static <A extends Annotation> A findLocalizedMatch(
 			AnnotationDescriptor<A> generatorAnnotationType,
 			MemberDetails idMember,
-			Function<A,String> nameExtractor,
-			String matchName,
+			ClassDetails entityType,
+			@Nullable Function<A,String> nameExtractor,
+			@Nullable String matchName,
 			MetadataBuildingContext context) {
 		final SourceModelBuildingContext sourceModelContext =
 				context.getMetadataCollector().getSourceModelBuildingContext();
@@ -88,7 +90,26 @@ public class GeneratorAnnotationHelper {
 			}
 		}
 
-		// next, on the class
+		// next, on the entity class
+		for ( A generatorAnnotation :
+				entityType.getRepeatedAnnotationUsages( generatorAnnotationType, sourceModelContext ) ) {
+			if ( nameExtractor != null ) {
+				final String registrationName = nameExtractor.apply( generatorAnnotation );
+				if ( registrationName.isEmpty() ) {
+					if ( possibleMatch == null ) {
+						possibleMatch = generatorAnnotation;
+					}
+				}
+				else if ( registrationName.equals( matchName ) ) {
+					return generatorAnnotation;
+				}
+			}
+			else {
+				return generatorAnnotation;
+			}
+		}
+
+		// next, on the declaring class
 		for ( A generatorAnnotation:
 				idMember.getDeclaringType().getRepeatedAnnotationUsages( generatorAnnotationType, sourceModelContext ) ) {
 			if ( nameExtractor != null ) {
@@ -296,10 +317,12 @@ public class GeneratorAnnotationHelper {
 	public static void handleUuidStrategy(
 			SimpleValue idValue,
 			MemberDetails idMember,
+			ClassDetails entityClass,
 			MetadataBuildingContext context) {
 		final org.hibernate.annotations.UuidGenerator generatorConfig = findLocalizedMatch(
 				HibernateAnnotations.UUID_GENERATOR,
 				idMember,
+				entityClass,
 				null,
 				null,
 				context

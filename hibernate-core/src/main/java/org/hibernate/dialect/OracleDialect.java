@@ -34,8 +34,6 @@ import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -86,7 +84,6 @@ import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
@@ -108,8 +105,6 @@ import static org.hibernate.LockOptions.NO_WAIT;
 import static org.hibernate.LockOptions.SKIP_LOCKED;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
-import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_EXTENDED_STRING_SIZE;
-import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_AUTONOMOUS_DATABASE;
 import static org.hibernate.dialect.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.dialect.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -168,12 +163,11 @@ public class OracleDialect extends Dialect {
 	private static final Pattern SQL_STATEMENT_TYPE_PATTERN =
 			Pattern.compile( "^(?:/\\*.*?\\*/)?\\s*(select|insert|update|delete)\\s+.*?", CASE_INSENSITIVE );
 
-	private static final int PARAM_LIST_SIZE_LIMIT_1000 = 1000;
-
-	/** Starting from 23c, 65535 parameters are supported for the IN condition. */
+	/**
+	 * Starting from 23c, 65535 parameters are supported for the {@code IN} condition.
+	 */
 	private static final int PARAM_LIST_SIZE_LIMIT_65535 = 65535;
-
-	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
+	private static final int PARAM_LIST_SIZE_LIMIT_1000 = 1000;
 
 	private static final String yqmSelect =
 			"(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH') + (least(extract(day from %2$s), extract(day from last_day(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH')))) - 1))";
@@ -191,11 +185,10 @@ public class OracleDialect extends Dialect {
 		@Override
 		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
 			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
-			if ( dialect.getVersion().isBefore( 23, 6 ) && jdbcType.isXml() ) {
-				// ORA-00600 when selecting XML columns that have a check constraint was fixed in 23.6
-				return;
+			// ORA-00600 when selecting XML columns that have a check constraint was fixed in 23.6
+			if ( !dialect.getVersion().isBefore( 23, 6 ) || !jdbcType.isXml() ) {
+				super.applyAggregateColumnCheck( buf, aggregateColumn );
 			}
-			super.applyAggregateColumnCheck( buf, aggregateColumn );
 		}
 	};
 
@@ -237,40 +230,6 @@ public class OracleDialect extends Dialect {
 		applicationContinuity = serverConfiguration.isApplicationContinuity();
 		this.driverMinorVersion = serverConfiguration.getDriverMinorVersion();
 		this.driverMajorVersion = serverConfiguration.getDriverMajorVersion();
-	}
-
-	@Deprecated( since = "6.4" )
-	protected static boolean isExtended(DialectResolutionInfo info) {
-		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
-		if ( databaseMetaData != null ) {
-			try ( java.sql.Statement statement = databaseMetaData.getConnection().createStatement() ) {
-				statement.execute( "select cast('string' as varchar2(32000)) from dual" );
-				// succeeded, so MAX_STRING_SIZE == EXTENDED
-				return true;
-			}
-			catch ( SQLException ex ) {
-				// failed, so MAX_STRING_SIZE == STANDARD
-				// Ignore
-			}
-		}
-		// default to the dialect-specific configuration setting
-		return ConfigurationHelper.getBoolean( ORACLE_EXTENDED_STRING_SIZE, info.getConfigurationValues(), false );
-	}
-
-	@Deprecated( since = "6.4" )
-	protected static boolean isAutonomous(DialectResolutionInfo info) {
-		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
-		if ( databaseMetaData != null ) {
-			try ( java.sql.Statement statement = databaseMetaData.getConnection().createStatement() ) {
-				return statement.executeQuery( "select 1 from dual where sys_context('USERENV','CLOUD_SERVICE') in ('OLTP','DWCS','JSON')" )
-						.next();
-			}
-			catch ( SQLException ex ) {
-				// Ignore
-			}
-		}
-		// default to the dialect-specific configuration setting
-		return ConfigurationHelper.getBoolean( ORACLE_AUTONOMOUS_DATABASE, info.getConfigurationValues(), false );
 	}
 
 	public boolean isAutonomous() {
@@ -360,12 +319,12 @@ public class OracleDialect extends Dialect {
 		functionFactory.coalesce();
 
 		functionContributions.getFunctionRegistry()
-				.patternDescriptorBuilder( "bitor", "(?1+?2-bitand(?1,?2))")
+				.patternDescriptorBuilder( "bitor", "(?1+?2-bitand(?1,?2))" )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionContributions.getFunctionRegistry()
-				.patternDescriptorBuilder( "bitxor", "(?1+?2-2*bitand(?1,?2))")
+				.patternDescriptorBuilder( "bitxor", "(?1+?2-2*bitand(?1,?2))" )
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
@@ -1019,12 +978,6 @@ public class OracleDialect extends Dialect {
 			typeContributions.contributeJdbcType( OracleReflectionStructJdbcType.INSTANCE );
 		}
 
-		// account for Oracle's deprecated support for LONGVARBINARY
-		// prefer BLOB, unless the user explicitly opts out
-		final boolean preferLong = serviceRegistry.requireService( ConfigurationService.class )
-				.getSetting( PREFER_LONG_RAW, StandardConverters.BOOLEAN, false );
-		typeContributions.contributeJdbcType( preferLong ? BlobJdbcType.PRIMITIVE_ARRAY_BINDING : BlobJdbcType.DEFAULT );
-
 		if ( getVersion().isSameOrAfter( 21 ) ) {
 			typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
 			typeContributions.contributeJdbcTypeConstructor( OracleJsonArrayJdbcTypeConstructor.NATIVE_INSTANCE );
@@ -1065,10 +1018,10 @@ public class OracleDialect extends Dialect {
 				)
 		);
 
-		if(getVersion().isSameOrAfter(23)) {
+		if ( getVersion().isSameOrAfter(23) ) {
 			final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
-			jdbcTypeRegistry.addDescriptor(OracleEnumJdbcType.INSTANCE);
-			jdbcTypeRegistry.addDescriptor(OracleOrdinalEnumJdbcType.INSTANCE);
+			jdbcTypeRegistry.addDescriptor( OracleEnumJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( OracleOrdinalEnumJdbcType.INSTANCE );
 		}
 	}
 

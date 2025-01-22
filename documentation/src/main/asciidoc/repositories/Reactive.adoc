@@ -1,0 +1,98 @@
+[[reactive-repositories]]
+== Reactive repositories
+
+Hibernate Data Repositories provides repositories backed by https://hibernate.org/reactive/[Hibernate Reactive] for use in reactive programming.
+The methods of a reactive repository are non-blocking, and so every operation returns a reactive stream.
+This is an extension to the programming model defined by Jakarta Data.
+
+[NOTE]
+====
+The Jakarta Data specification has not yet defined a way to write repositories for use in reactive programming, but the spec was written to accommodate such extensions, and this capability might be standardized in a future release.
+====
+
+In Hibernate Data Repositories we use https://smallrye.io/smallrye-mutiny/[Mutiny] to work with reactive streams.
+
+[WARNING]
+====
+If and when Jakarta Data _does_ provide standard support for reactive repositories, the functionality will almost certainly be based on Java's `CompletionStage`, and not on Mutiny.
+====
+
+In our opinion, Mutiny is a _much_ more comfortable API than `CompletionStage`.
+
+=== Defining a reactive repository
+
+In the following code example we notice the two requirements for a reactive repository in Hibernate Data Repositories:
+
+1. there must be a resource accessor method returning the underlying `Mutiny.StatelessSession` from Hibernate Reactive, and
+2. the return type of every other operation is `Uni`, a reactive stream type defined by Mutiny.
+
+For example, a `@Find` method which would return `Book` in a regular Jakarta Data repository must return `Uni<Book>` in a reactive repository.
+Similarly, lifecycle methods usually return `Uni<Void>` instead of `void`.
+
+[source,java]
+----
+@Repository
+interface Library {
+
+    Mutiny.StatelessSession session();
+
+    @Find
+    Uni<Book> book(String isbn);
+
+    @Insert
+    Uni<Void> add(Book book);
+
+    @Find
+    Uni<List<Book>> books(@By("isbn") String[] ibsns);
+}
+----
+
+It's _not_ possible to mix blocking and non-blocking operations in the same repository interface.
+
+=== Obtaining a reactive repository
+
+To make use of our reactive repository, we'll need to bootstrap Hibernate Reactive and obtain a `Mutiny.SessionFactory`.
+For example, if we have a persistence unit named `example` in our `persistence.xml` file, we can obtain a `SessionFactory` like this:
+
+[source,java]
+----
+Mutiny.SessionFactory factory =
+        createEntityManagerFactory("example")
+                .unwrap(Mutiny.SessionFactory.class);
+----
+
+Please refer to the documentation for Hibernate Reactive for more information on this topic.
+
+Once we have the `SessionFactory`, we can easily obtain a `Mutiny.StatelessSession`, and use it to instantiate our repository:
+
+[source,java]
+----
+factory.withStatelessTransaction(session -> {
+    Library library = new Library_(session);
+    ...
+})
+----
+
+TIP: In Quarkus, all this is unnecessary, and you can directly inject the `Library`.
+
+=== Calling a reactive repository
+
+To actually make use of a reactive repository, you'll need to be familiar with the programming model of reactive streams.
+For this, we refer you to the Mutiny documentation, and to the documentation for Hibernate Reactive, which goes over some gotchas.
+
+The most important thing to understand is that a code fragment like the following does _not_ result in any immediate interaction with the database:
+
+[source,java]
+----
+Uni<Void> uni =
+        factory.withStatelessTransaction(session -> {
+            Library library = new Library_(session);
+            return library.book("9781932394153");
+        })
+        .invoke(book -> out.println(book.title))
+        .replaceWithVoid();
+----
+
+This code does no more than construct a reactive stream.
+We can execute the stream blockingly by calling `uni.await().indefinitely()`, but that's not something we would ever do in real code.
+Instead, what we usually do is simply return the stream, allowing it to be executed in a non-blocking way.

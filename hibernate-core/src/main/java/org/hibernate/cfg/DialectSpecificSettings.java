@@ -15,13 +15,18 @@ package org.hibernate.cfg;
 public interface DialectSpecificSettings {
 	/**
 	 * Specifies whether this database is running on an Autonomous Database Cloud Service.
+	 * <p>
+	 * Ignored if Hibernate is able to determine this by querying the Oracle server at startup.
 	 *
 	 * @settingDefault {@code false}
 	 */
 	String ORACLE_AUTONOMOUS_DATABASE = "hibernate.dialect.oracle.is_autonomous";
 
 	/**
-	 * Specifies whether this database's {@code MAX_STRING_SIZE} is set to {@code EXTENDED}.
+	 * Specifies whether {@code MAX_STRING_SIZE} is set to {@code EXTENDED} on Oracle.
+	 * <p>
+	 * Ignored if Hibernate is able to determine the value of {@code MAX_STRING_SIZE} by
+	 * querying the Oracle server at startup.
 	 *
 	 * @settingDefault {@code false}
 	 */
@@ -29,6 +34,8 @@ public interface DialectSpecificSettings {
 
 	/**
 	 * Specifies whether this database is accessed using a database service protected by Application Continuity.
+	 * <p>
+	 * Ignored if Hibernate is able to determine this by querying the Oracle server at startup.
 	 *
 	 * @settingDefault {@code false}
 	 *
@@ -37,7 +44,10 @@ public interface DialectSpecificSettings {
 	String ORACLE_APPLICATION_CONTINUITY = "hibernate.dialect.oracle.application_continuity";
 
 	/**
-	 * Specifies whether this database's {@code ansinull} setting is enabled.
+	 * Specifies whether the {@code ansinull} setting is enabled on Sybase.
+	 * <p>
+	 * Ignored if Hibernate is able to determine the value of {@code ansinull}
+	 * by querying the server {@code @@options} at startup.
 	 *
 	 * @settingDefault {@code false}
 	 */
@@ -45,6 +55,9 @@ public interface DialectSpecificSettings {
 
 	/**
 	 * Specifies the maximum page size on Sybase.
+	 * <p>
+	 * Ignored if Hibernate is able to determine the page size by querying the
+	 * server {@code @@maxpagesize} at startup.
 	 *
 	 * @settingDefault {@value org.hibernate.dialect.SybaseASEDialect#MAX_PAGE_SIZE}
 	 */
@@ -53,6 +66,9 @@ public interface DialectSpecificSettings {
 	/**
 	 * Specifies the bytes per character to use based on the database's configured
 	 * <a href="https://dev.mysql.com/doc/refman/8.0/en/charset-charsets.html">charset</a>.
+	 * <p>
+	 * Ignored if Hibernate is able to determine the character set by querying the
+	 * server {@code @@character_set_database} at startup.
 	 *
 	 * @settingDefault {@code 4}
 	 */
@@ -60,6 +76,9 @@ public interface DialectSpecificSettings {
 
 	/**
 	 * Specifies whether the {@code NO_BACKSLASH_ESCAPES} sql mode is enabled.
+	 * <p>
+	 * Ignored if Hibernate is able to determine this by querying the server
+	 * {@code @@sql_mode} at startup.
 	 *
 	 * @settingDefault {@code false}
 	 */
@@ -69,18 +88,28 @@ public interface DialectSpecificSettings {
 	 * Specifies a custom CockroachDB version string. The expected format of the string is
 	 * the one returned from the {@code version()} function, e.g.:
 	 * {@code "CockroachDB CCL v23.1.8 (x86_64-pc-linux-gnu, built 2023/08/04 18:11:44, go1.19.10)"}
+	 * <p>
+	 * Ignored if Hibernate is able to obtain the version string by querying the server at startup.
 	 */
 	String COCKROACH_VERSION_STRING = "hibernate.dialect.cockroach.version_string";
 
 	/**
-	 * Specifies the compatibility level of the SQL Server database as returned by {@code select compatibility_level from sys.databases}.
-	 * The number has three digits, the first two digits are the major version, the last digit is the minor version.
+	 * Specifies the compatibility level of the SQL Server database as returned by
+	 * {@code select compatibility_level from sys.databases}.
+	 * <p>
+	 * The number has three digits: the first two digits are the major version,
+	 * the last digit is the minor version.
+	 * <p>
+	 * Ignored if Hibernate is able to determine this by querying the {@code sys.databases}
+	 * table at startup.
 	 */
 	String SQL_SERVER_COMPATIBILITY_LEVEL = "hibernate.dialect.sqlserver.compatibility_level";
 
 	/**
-	 * Specifies the LOB prefetch size. LOBs larger than this value will be read into memory as the HANA JDBC driver closes
-	 * the LOB when the result set is closed.
+	 * Specifies the LOB prefetch size. LOBs larger than this value will be read into
+	 * memory as the HANA JDBC driver closes the LOB when the result set is closed.
+	 * <p>
+	 * Ignored if Hibernate is able to determine this by querying the server at startup.
 	 *
 	 * @settingDefault {@code 1024}
 	 */

@@ -220,7 +220,13 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 		// Implicit handling of UUID generation
 		if ( idMember.getType().isImplementor( UUID.class )
 				|| idMember.getType().isImplementor( String.class ) ) {
-			handleUuidStrategy( idValue, idMember, buildingContext );
+			handleUuidStrategy(
+					idValue,
+					idMember,
+					buildingContext.getMetadataCollector().getClassDetailsRegistry()
+							.getClassDetails( entityMapping.getClassName() ),
+					buildingContext
+			);
 			return;
 		}
 

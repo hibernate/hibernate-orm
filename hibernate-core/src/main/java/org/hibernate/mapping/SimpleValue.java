@@ -88,6 +88,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	private String typeName;
 	private Properties typeParameters;
+	private Annotation typeAnnotation;
 	private boolean isVersion;
 	private boolean isNationalized;
 	private boolean isLob;
@@ -127,6 +128,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.partitionKey = original.partitionKey;
 		this.typeName = original.typeName;
 		this.typeParameters = original.typeParameters == null ? null : new Properties( original.typeParameters );
+		this.typeAnnotation = original.typeAnnotation;
 		this.isVersion = original.isVersion;
 		this.isNationalized = original.isNationalized;
 		this.isLob = original.isLob;
@@ -792,11 +794,19 @@ public abstract class SimpleValue implements KeyValue {
 		}
 	}
 
+	public void setTypeAnnotation(Annotation typeAnnotation) {
+		this.typeAnnotation = typeAnnotation;
+	}
+
 	public Properties getTypeParameters() {
 		return typeParameters;
 	}
 
-	public void copyTypeFrom( SimpleValue sourceValue ) {
+	public Annotation getTypeAnnotation() {
+		return typeAnnotation;
+	}
+
+	public void copyTypeFrom(SimpleValue sourceValue ) {
 		setTypeName( sourceValue.getTypeName() );
 		setTypeParameters( sourceValue.getTypeParameters() );
 
@@ -818,6 +828,7 @@ public abstract class SimpleValue implements KeyValue {
 		return Objects.equals( columns, other.columns )
 			&& Objects.equals( typeName, other.typeName )
 			&& Objects.equals( typeParameters, other.typeParameters )
+			&& Objects.equals( typeAnnotation, other.typeAnnotation )
 			&& Objects.equals( table, other.table )
 			&& Objects.equals( foreignKeyName, other.foreignKeyName )
 			&& Objects.equals( foreignKeyDefinition, other.foreignKeyDefinition );

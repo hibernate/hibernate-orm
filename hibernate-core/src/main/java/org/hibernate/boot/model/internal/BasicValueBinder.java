@@ -102,7 +102,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	// in-flight info
 
 	private Class<? extends UserType<?>> explicitCustomType;
-	private Map<String,String> explicitLocalTypeParams;
+	private Map<String,String> explicitLocalCustomTypeParams;
+	private Annotation explicitCustomTypeAnnotation;
 
 	private Function<TypeConfiguration, JdbcType> explicitJdbcTypeAccess;
 	private Function<TypeConfiguration, BasicJavaType<?>> explicitJavaTypeAccess;
@@ -338,8 +339,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		final var modelContext = getSourceModelContext();
 		final var userTypeImpl = kind.mappingAccess.customType( memberDetails, modelContext );
 		if ( userTypeImpl != null ) {
-			applyExplicitType( userTypeImpl,
-					kind.mappingAccess.customTypeParameters( memberDetails, modelContext ) );
+			this.explicitCustomType = userTypeImpl;
+			this.explicitLocalCustomTypeParams = kind.mappingAccess.customTypeParameters( memberDetails, modelContext );
+			this.explicitCustomTypeAnnotation = kind.mappingAccess.customTypeAnnotation( memberDetails, modelContext );
 			// An explicit custom UserType has top precedence when we get to BasicValue resolution.
 			return true;
 		}
@@ -349,7 +351,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			final var registeredUserTypeImpl =
 					getMetadataCollector().findRegisteredUserType( basicClass );
 			if ( registeredUserTypeImpl != null ) {
-				applyExplicitType( registeredUserTypeImpl, emptyMap() );
+				this.explicitCustomType = registeredUserTypeImpl;
+				this.explicitLocalCustomTypeParams = emptyMap();
 				return true;
 			}
 		}
@@ -382,11 +385,6 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			default:
 				throw new IllegalArgumentException( "Unexpected binder type : " + kind );
 		}
-	}
-
-	private void applyExplicitType(Class<? extends UserType<?>> userTypeImpl, Map<String,String> parameters) {
-		explicitCustomType = userTypeImpl;
-		explicitLocalTypeParams = parameters;
 	}
 
 	private void prepareCollectionId(MemberDetails attribute) {
@@ -1195,7 +1193,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	public void fillSimpleValue() {
-		basicValue.setExplicitTypeParams( explicitLocalTypeParams );
+		basicValue.setExplicitTypeParams( explicitLocalCustomTypeParams );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// todo (6.0) : we are dropping support for @Type and @TypeDef from annotations
@@ -1209,6 +1207,10 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		if ( explicitCustomType != null
 				&& DynamicParameterizedType.class.isAssignableFrom( explicitCustomType ) ) {
 			basicValue.setTypeParameters( createDynamicParameterizedTypeParameters() );
+		}
+
+		if ( explicitCustomType != null ) {
+			basicValue.setTypeAnnotation( explicitCustomTypeAnnotation );
 		}
 
 		if ( converterDescriptor != null ) {
@@ -1282,8 +1284,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			parameters.put( DynamicParameterizedType.ACCESS_TYPE, accessType.getType() );
 		}
 
-		if ( explicitLocalTypeParams != null ) {
-			parameters.putAll( explicitLocalTypeParams );
+		if ( explicitLocalCustomTypeParams != null ) {
+			parameters.putAll( explicitLocalCustomTypeParams );
 		}
 
 		return parameters;
@@ -1295,6 +1297,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private interface BasicMappingAccess {
 		Class<? extends UserType<?>> customType(MemberDetails attribute, ModelsContext context);
 		Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context);
+		Annotation customTypeAnnotation(MemberDetails attribute, ModelsContext context);
 	}
 
 	private static class ValueMappingAccess implements BasicMappingAccess {
@@ -1311,6 +1314,12 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			final var customType = attribute.locateAnnotationUsage( Type.class, context );
 			return customType == null ? null : extractParameterMap( customType.parameters() );
 		}
+
+		@Override
+		public Annotation customTypeAnnotation(MemberDetails attribute, ModelsContext context) {
+			final var annotations = attribute.getMetaAnnotated( Type.class, context );
+			return annotations == null || annotations.isEmpty() ? null : annotations.get( 0 );
+		}
 	}
 
 	private static class AnyDiscriminatorMappingAccess implements BasicMappingAccess {
@@ -1325,6 +1334,11 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		public Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context) {
 			return emptyMap();
 		}
+
+		@Override
+		public Annotation customTypeAnnotation(MemberDetails attribute, ModelsContext context) {
+			return null;
+		}
 	}
 
 	private static class AnyKeyMappingAccess implements BasicMappingAccess {
@@ -1338,6 +1352,11 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		@Override
 		public Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context) {
 			return emptyMap();
+		}
+
+		@Override
+		public Annotation customTypeAnnotation(MemberDetails attribute, ModelsContext context) {
+			return null;
 		}
 	}
 
@@ -1357,6 +1376,12 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			return customType == null ? null : extractParameterMap( customType.parameters() );
 
 		}
+
+		@Override
+		public Annotation customTypeAnnotation(MemberDetails attribute, ModelsContext context) {
+			final var annotations = attribute.getMetaAnnotated( MapKeyType.class, context );
+			return annotations == null || annotations.isEmpty() ? null : annotations.get( 0 );
+		}
 	}
 
 	private static class CollectionIdMappingAccess implements BasicMappingAccess {
@@ -1373,7 +1398,12 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		public Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context) {
 			final var customType = attribute.locateAnnotationUsage( CollectionIdType.class, context );
 			return customType == null ? null : extractParameterMap( customType.parameters() );
+		}
 
+		@Override
+		public Annotation customTypeAnnotation(MemberDetails attribute, ModelsContext context) {
+			final var annotations = attribute.getMetaAnnotated( CollectionIdType.class, context );
+			return annotations == null || annotations.isEmpty() ? null : annotations.get( 0 );
 		}
 	}
 
@@ -1388,6 +1418,11 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		@Override
 		public Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context) {
 			return emptyMap();
+		}
+
+		@Override
+		public Annotation customTypeAnnotation(MemberDetails attribute, ModelsContext context) {
+			return null;
 		}
 	}
 

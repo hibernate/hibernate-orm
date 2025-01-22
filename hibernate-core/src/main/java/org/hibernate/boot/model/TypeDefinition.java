@@ -5,12 +5,8 @@
 package org.hibernate.boot.model;
 
 import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.Types;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -42,6 +38,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.UserType;
 
+import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.model.process.internal.InferredBasicValueResolver.resolveSqlTypeIndicators;
 import static org.hibernate.mapping.MappingHelper.injectParameters;
 
@@ -101,27 +98,25 @@ public class TypeDefinition implements Serializable {
 
 	public BasicValue.Resolution<?> resolve(
 			Map<?,?> localConfigParameters,
-			Annotation typeAnnotation,
 			MutabilityPlan<?> explicitMutabilityPlan,
 			MetadataBuildingContext context,
 			JdbcTypeIndicators indicators) {
 		if ( CollectionHelper.isEmpty( localConfigParameters ) ) {
 			// we can use the re-usable resolution...
 			if ( reusableResolution == null ) {
-				reusableResolution = createResolution( name, Collections.emptyMap(), typeAnnotation, indicators, context );
+				reusableResolution = createResolution( name, emptyMap(), indicators, context );
 			}
 			return reusableResolution;
 		}
 		else {
 			final String name = this.name + ":" + NAME_COUNTER.getAndIncrement();
-			return createResolution( name, localConfigParameters, typeAnnotation, indicators, context );
+			return createResolution( name, localConfigParameters, indicators, context );
 		}
 	}
 
 	private BasicValue.Resolution<?> createResolution(
 			String name,
 			Map<?,?> usageSiteProperties,
-			Annotation typeAnnotation,
 			JdbcTypeIndicators indicators,
 			MetadataBuildingContext context) {
 		return createResolution(
@@ -129,7 +124,6 @@ public class TypeDefinition implements Serializable {
 				typeImplementorClass,
 				parameters,
 				usageSiteProperties,
-				typeAnnotation,
 				indicators,
 				context
 		);
@@ -140,7 +134,6 @@ public class TypeDefinition implements Serializable {
 			Class<T> typeImplementorClass,
 			Map<?,?> parameters,
 			Map<?,?> usageSiteProperties,
-			Annotation typeAnnotation,
 			JdbcTypeIndicators indicators,
 			MetadataBuildingContext context) {
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
@@ -154,7 +147,8 @@ public class TypeDefinition implements Serializable {
 		if ( isKnownType ) {
 
 			final T typeInstance =
-					instantiateType( name, typeImplementorClass, typeAnnotation, context, bootstrapContext );
+					instantiateType( bootstrapContext.getServiceRegistry(), context.getBuildingOptions(),
+							name, typeImplementorClass, bootstrapContext.getCustomTypeProducer() );
 
 			if ( typeInstance instanceof TypeConfigurationAware configurationAware ) {
 				configurationAware.setTypeConfiguration( typeConfiguration );
@@ -174,7 +168,7 @@ public class TypeDefinition implements Serializable {
 				@SuppressWarnings("unchecked")
 				final UserType<T> userType = (UserType<T>) typeInstance;
 				final CustomType<T> customType = new CustomType<>( userType, typeConfiguration );
-				return new UserTypeResolution<>( customType, null, combinedTypeParameters, typeAnnotation );
+				return new UserTypeResolution<>( customType, null, combinedTypeParameters );
 			}
 
 			if ( typeInstance instanceof BasicType ) {
@@ -229,28 +223,6 @@ public class TypeDefinition implements Serializable {
 
 		// Series of backward compatible special cases
 		return resolveLegacyCases( typeImplementorClass, indicators, typeConfiguration );
-	}
-
-	private static <T> T instantiateType(
-			String name, Class<T> typeImplementorClass, Annotation typeAnnotation,
-			MetadataBuildingContext context, BootstrapContext bootstrapContext) {
-		if ( typeAnnotation != null ) {
-			// attempt to instantiate it with the annotation as a constructor argument
-			try {
-				final Constructor<T> constructor = typeImplementorClass.getConstructor( typeAnnotation.annotationType() );
-				constructor.setAccessible( true );
-				return constructor.newInstance( typeAnnotation );
-			}
-			catch ( NoSuchMethodException ignored ) {
-				// no such constructor, instantiate it the old way
-			}
-			catch (InvocationTargetException|InstantiationException|IllegalAccessException e) {
-				throw new org.hibernate.InstantiationException( "Could not instantiate custom type", typeImplementorClass, e );
-			}
-		}
-
-		return instantiateType( bootstrapContext.getServiceRegistry(), context.getBuildingOptions(),
-						name, typeImplementorClass, bootstrapContext.getCustomTypeProducer() );
 	}
 
 	private static <T> BasicValue.Resolution<T> resolveLegacyCases(
@@ -345,14 +317,12 @@ public class TypeDefinition implements Serializable {
 			String name,
 			Class<?> typeImplementorClass,
 			Map<?,?> localTypeParams,
-			Annotation typeAnnotation,
 			MetadataBuildingContext buildingContext) {
 		return createResolution(
 				name + ':' + NAME_COUNTER.getAndIncrement(),
 				typeImplementorClass,
 				localTypeParams,
 				null,
-				typeAnnotation,
 				buildingContext.getBootstrapContext().getTypeConfiguration().getCurrentBaseSqlTypeIndicators(),
 				buildingContext
 		);

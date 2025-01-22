@@ -437,9 +437,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 					explicitMutabilityPlanAccess,
 					getAttributeConverterDescriptor(),
 					typeParameters,
-					getTypeAnnotation(),
 					this::setTypeParameters,
-					this::setTypeAnnotation,
 					this,
 					getBuildingContext()
 			);
@@ -644,7 +642,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 					context.getTypeDefinitionRegistry().resolveAutoApplied( castType );
 			if ( autoAppliedTypeDef != null ) {
 				log.debug("BasicValue resolution matched auto-applied type-definition");
-				return autoAppliedTypeDef.resolve( getTypeParameters(), null, null, context, this );
+				return autoAppliedTypeDef.resolve( getTypeParameters(), null, context, this );
 			}
 		}
 
@@ -812,9 +810,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			ConverterDescriptor converterDescriptor,
 			Map<Object,Object> localTypeParams,
-			Annotation typeAnnotation,
 			Consumer<Properties> combinedParameterConsumer,
-			Consumer<Annotation> annotationConsumer,
 			JdbcTypeIndicators stdIndicators,
 			MetadataBuildingContext context) {
 
@@ -897,14 +893,12 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		if ( typeDefinition != null ) {
 			final Resolution<?> resolution = typeDefinition.resolve(
 					localTypeParams,
-					typeAnnotation,
 					explicitMutabilityPlanAccess != null
 							? explicitMutabilityPlanAccess.apply( typeConfiguration )
 							: null,
 					context,
 					stdIndicators
 			);
-			annotationConsumer.accept( resolution.getTypeAnnotation() );
 			combinedParameterConsumer.accept( resolution.getCombinedTypeParameters() );
 			return resolution;
 		}
@@ -920,7 +914,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				context.getTypeDefinitionRegistry().register( implicitDefinition );
 				return implicitDefinition.resolve(
 						localTypeParams,
-						typeAnnotation,
 						explicitMutabilityPlanAccess != null
 								? explicitMutabilityPlanAccess.apply( typeConfiguration )
 								: null,
@@ -929,7 +922,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				);
 			}
 
-			return TypeDefinition.createLocalResolution( name, typeNamedClass, localTypeParams, typeAnnotation, context );
+			return TypeDefinition.createLocalResolution( name, typeNamedClass, localTypeParams, context );
 		}
 		catch (ClassLoadingException e) {
 			// allow the exception below to trigger
@@ -1039,8 +1032,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 								getTypeConfiguration()
 						),
 						null,
-						typeProperties,
-						typeAnnotation
+						typeProperties
 				);
 			}
 		}
@@ -1176,10 +1168,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		 * as from the applied type-def, if one
 		 */
 		default Properties getCombinedTypeParameters() {
-			return null;
-		}
-
-		default Annotation getTypeAnnotation() {
 			return null;
 		}
 

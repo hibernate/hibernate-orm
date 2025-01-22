@@ -2261,7 +2261,6 @@ public class ModelBinder {
 			final BasicValue.Resolution<?> resolution = typeDefinition.resolve(
 					parameters,
 					null,
-					null,
 					metadataBuildingContext,
 					typeConfiguration.getCurrentBaseSqlTypeIndicators()
 			);

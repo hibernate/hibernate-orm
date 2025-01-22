@@ -4,6 +4,8 @@
  */
 package org.hibernate.mapping;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -1055,13 +1057,15 @@ public class BasicValue extends SimpleValue
 				throw new UnsupportedOperationException( "Unsupported attempt to set an explicit-custom-type when value is already resolved" );
 			}
 			else {
+				final var typeProperties = getCustomTypeProperties();
+				final var typeAnnotation = getTypeAnnotation();
 				resolution = new UserTypeResolution<>(
 						new CustomType<>(
-								getConfiguredUserTypeBean( explicitCustomType, getCustomTypeProperties() ),
+								getConfiguredUserTypeBean( explicitCustomType, typeProperties, typeAnnotation ),
 								getTypeConfiguration()
 						),
 						null,
-						getCustomTypeProperties()
+						typeProperties
 				);
 			}
 		}
@@ -1078,11 +1082,9 @@ public class BasicValue extends SimpleValue
 		return properties;
 	}
 
-	private UserType<?> getConfiguredUserTypeBean(Class<? extends UserType<?>> explicitCustomType, Properties properties) {
-		final var typeInstance =
-				getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
-						? getUserTypeBean( explicitCustomType, properties ).getBeanInstance()
-						: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( explicitCustomType );
+	private UserType<?> getConfiguredUserTypeBean(
+			Class<? extends UserType<?>> explicitCustomType, Properties properties, Annotation typeAnnotation) {
+		final var typeInstance = instantiateUserType( explicitCustomType, properties, typeAnnotation );
 
 		if ( typeInstance instanceof TypeConfigurationAware configurationAware ) {
 			configurationAware.setTypeConfiguration( getTypeConfiguration() );
@@ -1101,6 +1103,28 @@ public class BasicValue extends SimpleValue
 		setTypeParameters( properties );
 
 		return typeInstance;
+	}
+
+	private <T extends UserType<?>> T instantiateUserType(
+			Class<T> customType, Properties properties, Annotation typeAnnotation) {
+		if ( typeAnnotation != null ) {
+			// attempt to instantiate it with the annotation as a constructor argument
+			try {
+				final var constructor = customType.getDeclaredConstructor( typeAnnotation.annotationType() );
+				constructor.setAccessible( true );
+				return constructor.newInstance( typeAnnotation );
+			}
+			catch ( NoSuchMethodException ignored ) {
+				// no such constructor, instantiate it the old way
+			}
+			catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+				throw new org.hibernate.InstantiationException( "Could not instantiate custom type", customType, e );
+			}
+		}
+
+		return getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
+				? getUserTypeBean( customType, properties ).getBeanInstance()
+				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( customType );
 	}
 
 	private <T> ManagedBean<? extends T> getUserTypeBean(Class<T> explicitCustomType, Properties properties) {

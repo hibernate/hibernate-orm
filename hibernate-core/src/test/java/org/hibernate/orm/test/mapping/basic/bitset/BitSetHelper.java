@@ -16,7 +16,7 @@ public class BitSetHelper {
 	public static String bitSetToString(BitSet bitSet) {
 		StringBuilder builder = new StringBuilder();
 		for (long token : bitSet.toLongArray()) {
-			if (builder.length() > 0) {
+			if ( !builder.isEmpty() ) {
 				builder.append(DELIMITER);
 			}
 			builder.append(Long.toString(token, 2));

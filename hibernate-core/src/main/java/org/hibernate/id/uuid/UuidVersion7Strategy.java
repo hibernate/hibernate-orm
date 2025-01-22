@@ -39,7 +39,7 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 
 	public static final UuidVersion7Strategy INSTANCE = new UuidVersion7Strategy();
 
-	private static class Holder {
+	public static class Holder {
 		private static final SecureRandom numberGenerator = new SecureRandom();
 
 	}

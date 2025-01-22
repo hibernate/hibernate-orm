@@ -89,7 +89,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Steve Ebersole
  * @author Sanne Grinovero
  */
-public class StatefulPersistenceContext implements PersistenceContext {
+class StatefulPersistenceContext implements PersistenceContext {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			CoreMessageLogger.class,
@@ -173,7 +173,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 *
 	 * @param session The session "owning" this context.
 	 */
-	public StatefulPersistenceContext(SharedSessionContractImplementor session) {
+	StatefulPersistenceContext(SharedSessionContractImplementor session) {
 		this.session = session;
 		this.entityEntryContext = new EntityEntryContext( this );
 	}
@@ -430,7 +430,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public @Nullable EntityHolderImpl getEntityHolder(EntityKey key) {
+	public @Nullable EntityHolder getEntityHolder(EntityKey key) {
 		return entitiesByKey == null ? null : entitiesByKey.get( key );
 	}
 
@@ -535,7 +535,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object removeEntity(EntityKey key) {
-		final EntityHolderImpl holder = removeEntityHolder( key );
+		final EntityHolderImpl holder = removeHolder( key );
 		if ( holder != null ) {
 			final Object entity = holder.entity;
 			if ( holder.proxy != null ) {
@@ -549,7 +549,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public @Nullable EntityHolderImpl removeEntityHolder(EntityKey key) {
+	public @Nullable EntityHolder removeEntityHolder(EntityKey key) {
+		return removeHolder( key );
+	}
+
+	private EntityHolderImpl removeHolder(EntityKey key) {
 		final EntityHolderImpl holder;
 		if ( entitiesByKey != null ) {
 			holder = entitiesByKey.remove( key );
@@ -1423,10 +1427,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 	}
 
-	public boolean isRemovingOrphanBeforeUpates() {
+	@Override
+	public boolean isRemovingOrphanBeforeUpdates() {
 		return removeOrphanBeforeUpdatesCounter > 0;
 	}
 
+	@Override
 	public void beginRemoveOrphanBeforeUpdates() {
 		if ( getCascadeLevel() < 1 ) {
 			throw new IllegalStateException( "Attempt to remove orphan when not cascading." );
@@ -1443,6 +1449,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		removeOrphanBeforeUpdatesCounter++;
 	}
 
+	@Override
 	public void endRemoveOrphanBeforeUpdates() {
 		if ( getCascadeLevel() < 1 ) {
 			throw new IllegalStateException( "Finished removing orphan when not cascading." );
@@ -2317,7 +2324,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public EntityHolder detachEntity(EntityKey key) {
-		final EntityHolderImpl entityHolder = removeEntityHolder( key );
+		final EntityHolderImpl entityHolder = removeHolder( key );
 		if ( entityHolder != null ) {
 			entityHolder.state = EntityHolderState.DETACHED;
 		}

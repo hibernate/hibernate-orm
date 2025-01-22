@@ -48,7 +48,6 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.ImmutableEntityEntryFactory;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
-import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
@@ -3853,13 +3852,16 @@ public abstract class AbstractEntityPersister
 		// for reattachment of mutable natural-ids, we absolutely positively have to grab the snapshot from the
 		// database, because we have no other way to know if the state changed while detached.
 		final Object[] entitySnapshot = persistenceContext.getDatabaseSnapshot( id, this );
-		final Object naturalIdSnapshot = entitySnapshot == StatefulPersistenceContext.NO_ROW
-				? null
-				: naturalIdMapping.extractNaturalIdFromEntityState( entitySnapshot );
+		final Object naturalIdSnapshot = naturalIdFromSnapshot( entitySnapshot );
 
 		naturalIdResolutions.removeSharedResolution( id, naturalIdSnapshot, this, false );
 		final Object naturalId = naturalIdMapping.extractNaturalIdFromEntity( entity );
 		naturalIdResolutions.manageLocalResolution( id, naturalId, this, CachedNaturalIdValueSource.UPDATE );
+	}
+
+	private Object naturalIdFromSnapshot(Object[] entitySnapshot) {
+		return entitySnapshot == PersistenceContext.NO_ROW ? null
+				: naturalIdMapping.extractNaturalIdFromEntityState( entitySnapshot );
 	}
 
 	@Override

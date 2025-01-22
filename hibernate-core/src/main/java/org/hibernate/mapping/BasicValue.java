@@ -4,6 +4,9 @@
  */
 package org.hibernate.mapping;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -434,7 +437,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 					explicitMutabilityPlanAccess,
 					getAttributeConverterDescriptor(),
 					typeParameters,
+					getTypeAnnotation(),
 					this::setTypeParameters,
+					this::setTypeAnnotation,
 					this,
 					getBuildingContext()
 			);
@@ -632,14 +637,14 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			throw new MappingException( "Unable to determine JavaType to use : " + this );
 		}
 
-		if ( basicJavaType instanceof BasicJavaType<?>
-				&& ( !basicJavaType.getJavaTypeClass().isEnum() || enumerationStyle == null ) ) {
+		final MetadataBuildingContext context = getBuildingContext();
+		if ( basicJavaType instanceof BasicJavaType<?> castType
+			&& ( !basicJavaType.getJavaTypeClass().isEnum() || enumerationStyle == null ) ) {
 			final TypeDefinition autoAppliedTypeDef =
-					getBuildingContext().getTypeDefinitionRegistry()
-							.resolveAutoApplied( (BasicJavaType<?>) basicJavaType );
+					context.getTypeDefinitionRegistry().resolveAutoApplied( castType );
 			if ( autoAppliedTypeDef != null ) {
 				log.debug("BasicValue resolution matched auto-applied type-definition");
-				return autoAppliedTypeDef.resolve( getTypeParameters(), null, getBuildingContext(), this );
+				return autoAppliedTypeDef.resolve( getTypeParameters(), null, null, context, this );
 			}
 		}
 
@@ -654,7 +659,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				getColumn(),
 				ownerName,
 				propertyName,
-				getBuildingContext()
+				context
 		);
 	}
 
@@ -807,7 +812,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			ConverterDescriptor converterDescriptor,
 			Map<Object,Object> localTypeParams,
+			Annotation typeAnnotation,
 			Consumer<Properties> combinedParameterConsumer,
+			Consumer<Annotation> annotationConsumer,
 			JdbcTypeIndicators stdIndicators,
 			MetadataBuildingContext context) {
 
@@ -890,12 +897,14 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		if ( typeDefinition != null ) {
 			final Resolution<?> resolution = typeDefinition.resolve(
 					localTypeParams,
+					typeAnnotation,
 					explicitMutabilityPlanAccess != null
 							? explicitMutabilityPlanAccess.apply( typeConfiguration )
 							: null,
 					context,
 					stdIndicators
 			);
+			annotationConsumer.accept( resolution.getTypeAnnotation() );
 			combinedParameterConsumer.accept( resolution.getCombinedTypeParameters() );
 			return resolution;
 		}
@@ -911,6 +920,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				context.getTypeDefinitionRegistry().register( implicitDefinition );
 				return implicitDefinition.resolve(
 						localTypeParams,
+						typeAnnotation,
 						explicitMutabilityPlanAccess != null
 								? explicitMutabilityPlanAccess.apply( typeConfiguration )
 								: null,
@@ -919,7 +929,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				);
 			}
 
-			return TypeDefinition.createLocalResolution( name, typeNamedClass, localTypeParams, context );
+			return TypeDefinition.createLocalResolution( name, typeNamedClass, localTypeParams, typeAnnotation, context );
 		}
 		catch (ClassLoadingException e) {
 			// allow the exception below to trigger
@@ -1021,13 +1031,16 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				throw new UnsupportedOperationException( "Unsupported attempt to set an explicit-custom-type when value is already resolved" );
 			}
 			else {
+				final Properties typeProperties = getCustomTypeProperties();
+				final Annotation typeAnnotation = getTypeAnnotation();
 				resolution = new UserTypeResolution<>(
 						new CustomType<>(
-								getConfiguredUserTypeBean( explicitCustomType, getCustomTypeProperties() ),
+								getConfiguredUserTypeBean( explicitCustomType, typeProperties, typeAnnotation ),
 								getTypeConfiguration()
 						),
 						null,
-						getCustomTypeProperties()
+						typeProperties,
+						typeAnnotation
 				);
 			}
 		}
@@ -1044,11 +1057,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		return properties;
 	}
 
-	private UserType<?> getConfiguredUserTypeBean(Class<? extends UserType<?>> explicitCustomType, Properties properties) {
-		final UserType<?> typeInstance =
-				getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
-						? getUserTypeBean( explicitCustomType, properties ).getBeanInstance()
-						: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( explicitCustomType );
+	private UserType<?> getConfiguredUserTypeBean(
+			Class<? extends UserType<?>> explicitCustomType, Properties properties, Annotation typeAnnotation) {
+		final UserType<?> typeInstance = instantiateUserType( explicitCustomType, properties, typeAnnotation );
 
 		if ( typeInstance instanceof TypeConfigurationAware configurationAware ) {
 			configurationAware.setTypeConfiguration( getTypeConfiguration() );
@@ -1067,6 +1078,28 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		setTypeParameters( properties );
 
 		return typeInstance;
+	}
+
+	private <T extends UserType<?>> T instantiateUserType(
+			Class<T> customType, Properties properties, Annotation typeAnnotation) {
+		if ( typeAnnotation != null ) {
+			// attempt to instantiate it with the annotation as a constructor argument
+			try {
+				final Constructor<T> constructor = customType.getDeclaredConstructor( typeAnnotation.annotationType() );
+				constructor.setAccessible( true );
+				return constructor.newInstance( typeAnnotation );
+			}
+			catch ( NoSuchMethodException ignored ) {
+				// no such constructor, instantiate it the old way
+			}
+			catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+				throw new org.hibernate.InstantiationException( "Could not instantiate custom type", customType, e );
+			}
+		}
+
+		return getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
+				? getUserTypeBean( customType, properties ).getBeanInstance()
+				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( customType );
 	}
 
 	private <T> ManagedBean<T> getUserTypeBean(Class<T> explicitCustomType, Properties properties) {
@@ -1143,6 +1176,10 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		 * as from the applied type-def, if one
 		 */
 		default Properties getCombinedTypeParameters() {
+			return null;
+		}
+
+		default Annotation getTypeAnnotation() {
 			return null;
 		}
 

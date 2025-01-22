@@ -2185,8 +2185,9 @@ public class ModelBinder {
 		}
 		else {
 			discriminatorTypeName = StandardBasicTypes.STRING.getName();
-			discriminatorType = metadataBuildingContext.getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry()
-					.resolve( StandardBasicTypes.STRING );
+			discriminatorType =
+					metadataBuildingContext.getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.STRING );
 		}
 
 		anyBinding.setMetaType( discriminatorTypeName );
@@ -2196,7 +2197,9 @@ public class ModelBinder {
 		anyMapping.getDiscriminatorSource().getValueMappings().forEach(
 				(discriminatorValueString, entityName) -> {
 					try {
-						final Object discriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( discriminatorValueString );
+						final Object discriminatorValue =
+								discriminatorType.getJavaTypeDescriptor()
+										.fromString( discriminatorValueString );
 						discriminatorValueToEntityNameMap.put( discriminatorValue, entityName );
 					}
 					catch (Exception e) {
@@ -2257,6 +2260,7 @@ public class ModelBinder {
 		if ( typeDefinition != null ) {
 			final BasicValue.Resolution<?> resolution = typeDefinition.resolve(
 					parameters,
+					null,
 					null,
 					metadataBuildingContext,
 					typeConfiguration.getCurrentBaseSqlTypeIndicators()

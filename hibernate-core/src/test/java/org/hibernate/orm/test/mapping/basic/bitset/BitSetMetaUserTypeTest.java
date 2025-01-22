@@ -4,13 +4,6 @@
  */
 package org.hibernate.orm.test.mapping.basic.bitset;
 
-import java.util.BitSet;
-
-import org.hibernate.annotations.Type;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
@@ -18,14 +11,20 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.Type;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.util.BitSet;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
-/**
- * @author Vlad Mihalcea
- */
-public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
+
+public class BitSetMetaUserTypeTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -33,19 +32,6 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 			Product.class
 		};
 	}
-
-	// Note that the following is just for legacy documentation purposes
-	/*
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		//tag::basic-custom-type-register-UserType-example[]
-		configuration.registerTypeContributor( (typeContributions, serviceRegistry) -> {
-			typeContributions.contributeType( BitSetUserType.INSTANCE, "bitset");
-		} );
-		//end::basic-custom-type-register-UserType-example[]
-	}
-	*/
 
 	@Test
 	public void test() {
@@ -91,13 +77,17 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 		return true;
 	}
 
+	@Type(BitSetUserType.class)
+	@Retention(RetentionPolicy.RUNTIME)
+	@interface BitSetType {}
+
 	@NamedNativeQuery(
 		name = "find_person_by_bitset",
 		query =
 			"SELECT " +
 			"   pr.id AS \"pr.id\", " +
 			"   pr.bitset_col AS \"pr.bitset\" " +
-			"FROM Product pr " +
+			"FROM products pr " +
 			"WHERE pr.id = :id",
 		resultSetMapping = "Person"
 	)
@@ -111,19 +101,17 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 			}
 		)
 	)
-	//tag::basic-custom-type-BitSetUserType-mapping-example[]
 	@Entity(name = "Product")
+	@Table(name = "products")
 	public static class Product {
 
 		@Id
 		private Integer id;
 
-		@Type(BitSetUserType.class)
+		@BitSetType
 		@Column(name = "bitset_col")
 		private BitSet bitSet;
 
-		//Constructors, getters, and setters are omitted for brevity
-	//end::basic-custom-type-BitSetUserType-mapping-example[]
 		public Product() {
 		}
 
@@ -147,7 +135,5 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 		public void setBitSet(BitSet bitSet) {
 			this.bitSet = bitSet;
 		}
-	//tag::basic-custom-type-BitSetUserType-mapping-example[]
 	}
-	//end::basic-custom-type-BitSetUserType-mapping-example[]
 }

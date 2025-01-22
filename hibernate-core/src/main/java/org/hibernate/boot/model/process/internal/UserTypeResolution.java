@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.model.process.internal;
 
+import java.lang.annotation.Annotation;
 import java.util.Properties;
 
 import org.hibernate.mapping.BasicValue;
@@ -27,13 +28,16 @@ public class UserTypeResolution<T> implements BasicValue.Resolution<T> {
 	 * and builds its own :(
 	 */
 	private final Properties combinedTypeParameters;
+	private final Annotation typeAnnotation;
 
 	public UserTypeResolution(
 			CustomType<T> userTypeAdapter,
 			MutabilityPlan<T> explicitMutabilityPlan,
-			Properties combinedTypeParameters) {
+			Properties combinedTypeParameters,
+			Annotation typeAnnotation) {
 		this.userTypeAdapter = userTypeAdapter;
 		this.combinedTypeParameters = combinedTypeParameters;
+		this.typeAnnotation = typeAnnotation;
 		this.mutabilityPlan = explicitMutabilityPlan != null
 				? explicitMutabilityPlan
 				: new UserTypeMutabilityPlanAdapter<>( userTypeAdapter.getUserType() );
@@ -75,6 +79,10 @@ public class UserTypeResolution<T> implements BasicValue.Resolution<T> {
 	@Override
 	public Properties getCombinedTypeParameters() {
 		return combinedTypeParameters;
+	}
+
+	public Annotation getTypeAnnotation() {
+		return typeAnnotation;
 	}
 
 	@Override

@@ -45,6 +45,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @see org.hibernate.LockMode
  * @see jakarta.persistence.LockModeType
+ * @see OptimisticLock
  */
 @Target( TYPE )
 @Retention( RUNTIME )

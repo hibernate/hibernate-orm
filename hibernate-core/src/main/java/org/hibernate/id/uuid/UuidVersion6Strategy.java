@@ -34,6 +34,7 @@ import org.hibernate.id.UUIDGenerationStrategy;
 public class UuidVersion6Strategy implements UUIDGenerationStrategy, UuidValueGenerator {
 	public static final UuidVersion6Strategy INSTANCE = new UuidVersion6Strategy();
 
+	@Internal
 	public static class Holder {
 		static final SecureRandom numberGenerator = new SecureRandom();
 		static final long EPOCH_1582_SECONDS = LocalDate.of( 1582, 10, 15 )

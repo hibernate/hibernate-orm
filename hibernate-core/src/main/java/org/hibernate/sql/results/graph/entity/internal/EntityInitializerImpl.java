@@ -131,6 +131,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	private final @Nullable DomainResultAssembler<Object> rowIdAssembler;
 
 	private final DomainResultAssembler<?>[][] assemblers;
+	private final @Nullable Initializer<?>[] allInitializers;
 	private final @Nullable Initializer<?>[][] subInitializers;
 	private final @Nullable Initializer<?>[][] subInitializersForResolveFromInitialized;
 	private final @Nullable Initializer<?>[][] collectionContainingSubInitializers;
@@ -283,8 +284,10 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				? rowIdResult.createResultAssembler( this, creationState )
 				: null;
 
+		final int fetchableCount = entityDescriptor.getNumberOfFetchables();
 		final Collection<EntityMappingType> subMappingTypes = rootEntityDescriptor.getSubMappingTypes();
 		final DomainResultAssembler<?>[][] assemblers = new DomainResultAssembler[subMappingTypes.size() + 1][];
+		final Initializer<?>[] allInitializers = new Initializer<?>[fetchableCount];
 		final Initializer<?>[][] subInitializers = new Initializer<?>[subMappingTypes.size() + 1][];
 		final Initializer<?>[][] eagerSubInitializers = new Initializer<?>[subMappingTypes.size() + 1][];
 		final Initializer<?>[][] collectionContainingSubInitializers = new Initializer<?>[subMappingTypes.size() + 1][];
@@ -304,8 +307,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		}
 
 		boolean hasLazySubInitializers = false;
-		final int size = entityDescriptor.getNumberOfFetchables();
-		for ( int i = 0; i < size; i++ ) {
+		for ( int i = 0; i < fetchableCount; i++ ) {
 			final AttributeMapping attributeMapping = entityDescriptor.getFetchable( i ).asAttributeMapping();
 			final Fetch fetch = resultDescriptor.findFetch( attributeMapping );
 			final DomainResultAssembler<?> stateAssembler = fetch == null
@@ -318,12 +320,13 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 
 			final Initializer<?> subInitializer = stateAssembler.getInitializer();
 			if ( subInitializer != null ) {
+				allInitializers[i] = subInitializer;
 				if ( subInitializers[subclassId] == null ) {
-					subInitializers[subclassId] = new Initializer<?>[size];
-					eagerSubInitializers[subclassId] = new Initializer<?>[size];
-					collectionContainingSubInitializers[subclassId] = new Initializer<?>[size];
-					lazySets[subclassId] = new BitSet( size );
-					maybeLazySets[subclassId] = new BitSet( size );
+					subInitializers[subclassId] = new Initializer<?>[fetchableCount];
+					eagerSubInitializers[subclassId] = new Initializer<?>[fetchableCount];
+					collectionContainingSubInitializers[subclassId] = new Initializer<?>[fetchableCount];
+					lazySets[subclassId] = new BitSet( fetchableCount );
+					maybeLazySets[subclassId] = new BitSet( fetchableCount );
 				}
 				subInitializers[subclassId][stateArrayPosition] = subInitializer;
 				if ( subInitializer.isEager() ) {
@@ -358,11 +361,11 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 						updatableAttributeMutabilityPlans[subclassId][stateArrayPosition];
 				if ( subInitializer != null ) {
 					if ( subInitializers[subMappingType.getSubclassId()] == null ) {
-						subInitializers[subMappingType.getSubclassId()] = new Initializer<?>[size];
-						eagerSubInitializers[subMappingType.getSubclassId()] = new Initializer<?>[size];
-						collectionContainingSubInitializers[subMappingType.getSubclassId()] = new Initializer<?>[size];
-						lazySets[subMappingType.getSubclassId()] = new BitSet(size);
-						maybeLazySets[subMappingType.getSubclassId()] = new BitSet(size);
+						subInitializers[subMappingType.getSubclassId()] = new Initializer<?>[fetchableCount];
+						eagerSubInitializers[subMappingType.getSubclassId()] = new Initializer<?>[fetchableCount];
+						collectionContainingSubInitializers[subMappingType.getSubclassId()] = new Initializer<?>[fetchableCount];
+						lazySets[subMappingType.getSubclassId()] = new BitSet(fetchableCount);
+						maybeLazySets[subMappingType.getSubclassId()] = new BitSet(fetchableCount);
 					}
 					subInitializers[subMappingType.getSubclassId()][stateArrayPosition] = subInitializer;
 					eagerSubInitializers[subMappingType.getSubclassId()][stateArrayPosition] =
@@ -422,6 +425,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		}
 
 		this.assemblers = assemblers;
+		this.allInitializers = allInitializers;
 		this.subInitializers = subInitializers;
 		this.subInitializersForResolveFromInitialized =
 				rootEntityDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
@@ -1780,11 +1784,9 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		}
 		final EntityInitializerData entityInitializerData = (EntityInitializerData) data;
 		if ( entityInitializerData.concreteDescriptor == null ) {
-			for ( Initializer<?>[] initializers : subInitializers ) {
-				for ( Initializer<?> initializer : initializers ) {
-					if ( initializer != null ) {
-						consumer.accept( initializer, rowProcessingState );
-					}
+			for ( Initializer<?> initializer : allInitializers ) {
+				if ( initializer != null ) {
+					consumer.accept( initializer, rowProcessingState );
 				}
 			}
 		}

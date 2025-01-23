@@ -112,8 +112,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private Map<String,String> explicitLocalTypeParams;
 
 	private Function<TypeConfiguration, JdbcType> explicitJdbcTypeAccess;
-	private Function<TypeConfiguration, BasicJavaType> explicitJavaTypeAccess;
-	private Function<TypeConfiguration, MutabilityPlan> explicitMutabilityAccess;
+	private Function<TypeConfiguration, BasicJavaType<?>> explicitJavaTypeAccess;
+	private Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityAccess;
 	private Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess;
 
 	private MemberDetails memberDetails;
@@ -749,8 +749,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		if ( elementCollectionAnn != null ) {
 			final Class<?> targetClassDetails = elementCollectionAnn.targetClass();
 			if ( targetClassDetails != void.class) {
-				//noinspection rawtypes
-				final Function<TypeConfiguration, BasicJavaType> original = explicitJavaTypeAccess;
+				final Function<TypeConfiguration, BasicJavaType<?>> original = explicitJavaTypeAccess;
 				explicitJavaTypeAccess = typeConfiguration -> {
 					final BasicJavaType<?> originalResult = original.apply( typeConfiguration );
 					if ( originalResult != null ) {

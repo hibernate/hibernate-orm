@@ -904,11 +904,10 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
-		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
-			return discriminatorMapping;
-		}
+		return EntityDiscriminatorMapping.matchesRoleName( name )
+				? discriminatorMapping
+				: super.findSubPart( name, treatTargetType );
 
-		return super.findSubPart( name, treatTargetType );
 	}
 
 	@Override

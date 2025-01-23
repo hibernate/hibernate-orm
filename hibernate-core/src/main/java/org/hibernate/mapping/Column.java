@@ -770,7 +770,7 @@ public sealed class Column
 	 */
 	@Override
 	public Column clone() {
-		Column copy = new Column();
+		final Column copy = new Column();
 		copy.length = length;
 		copy.precision = precision;
 		copy.scale = scale;

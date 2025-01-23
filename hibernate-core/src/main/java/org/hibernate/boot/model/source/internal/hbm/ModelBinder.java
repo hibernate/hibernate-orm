@@ -2141,15 +2141,10 @@ public class ModelBinder {
 
 		anyBinding.createForeignKey();
 
-		Property prop = new Property();
-		prop.setValue( anyBinding );
-		bindProperty(
-				sourceDocument,
-				anyMapping,
-				prop
-		);
-
-		return prop;
+		final Property property = new Property();
+		property.setValue( anyBinding );
+		bindProperty( sourceDocument, anyMapping, property );
+		return property;
 	}
 
 	private void bindAny(

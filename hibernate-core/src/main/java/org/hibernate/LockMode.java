@@ -21,7 +21,7 @@ import java.util.Locale;
  * <p>
  * A partial order of lock modes is defined such that every
  * optimistic lock mode is considered a weaker sort of lock than
- * evey pessimistic lock mode. If a session already holds a
+ * every pessimistic lock mode. If a session already holds a
  * stronger lock level on a given entity when a weaker lock level
  * is requested, then the request for the weaker lock level has
  * no effect.

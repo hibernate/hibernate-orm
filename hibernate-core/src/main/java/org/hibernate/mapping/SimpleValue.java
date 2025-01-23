@@ -138,6 +138,8 @@ public abstract class SimpleValue implements KeyValue {
 		this.attributeConverterDescriptor = original.attributeConverterDescriptor;
 		this.type = original.type;
 		this.customIdGeneratorCreator = original.customIdGeneratorCreator;
+		this.nullValueSemantic = original.nullValueSemantic;
+		this.foreignKeyOptions = original.foreignKeyOptions;
 	}
 
 	@Override

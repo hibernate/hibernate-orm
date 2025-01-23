@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-public class UUidV6V7GenetartorTest {
+public class UUidV6V7GeneratorTest {
 
 	private static final UUID NIL_UUID = new UUID( 0L, 0L );
 	private static final int ITERATIONS = 1_000_000;

@@ -141,11 +141,12 @@ public class StandardHqlTranslator implements HqlTranslator {
 			RecognitionException e,
 			String hql,
 			boolean includeLocation) {
+		String token = null;
 		String errorText = "";
 		if ( includeLocation ) {
 			errorText += "At " + line + ":" + charPositionInLine;
 			if ( offendingSymbol instanceof CommonToken ) {
-				String token = ( (CommonToken) offendingSymbol).getText();
+				token = ( (CommonToken) offendingSymbol).getText();
 				if ( token != null && !token.isEmpty() ) {
 					errorText += " and token '" + token + "'";
 				}
@@ -160,6 +161,15 @@ public class StandardHqlTranslator implements HqlTranslator {
 			else {
 				String lineText = hql.lines().collect( toList() ).get( line -1 );
 				String text = lineText.substring( 0, charPositionInLine) + "*" + lineText.substring(charPositionInLine);
+				if ( token != null && !token.isEmpty() && token.equals( "LIMIT" ) ) {
+					int orderByIndex = lineText.substring( charPositionInLine ).indexOf( "ORDER BY" );
+					if ( orderByIndex == -1 ) {
+						String limitMessage = "Use of LIMIT without ORDER BY in subquery ";
+						String messageToReplace = message.substring( 0, message.indexOf('\'') );
+						errorText = errorText.replace( messageToReplace, limitMessage );
+					}
+				}
+
 				errorText += "'" + text + "'";
 			}
 		}

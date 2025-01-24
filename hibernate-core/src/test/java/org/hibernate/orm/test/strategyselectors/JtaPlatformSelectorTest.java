@@ -10,8 +10,6 @@ import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaP
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.GlassFishJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
@@ -95,19 +93,6 @@ public class JtaPlatformSelectorTest {
 				"org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform"
 		);
 
-		testJtaPlatformResolves(
-				strategySelector,
-				WebSphereJtaPlatform.class,
-				"WebSphere",
-				"org.hibernate.service.jta.platform.internal.WebSphereJtaPlatform"
-		);
-
-		testJtaPlatformResolves(
-				strategySelector,
-				WebSphereExtendedJtaPlatform.class,
-				"WebSphereExtended",
-				"org.hibernate.service.jta.platform.internal.WebSphereExtendedJtaPlatform"
-		);
 	}
 
 	private static void testJtaPlatformResolves(final DefaultJtaPlatformSelector strategySelector, final Class expectedType, final String shortname, final String longname) {

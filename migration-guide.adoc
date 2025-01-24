@@ -516,13 +516,15 @@ We encourage migration to the use of the new JPA-standard operations.
 ** Removed `AdditionalJaxbMappingProducer` -> `AdditionalMappingContributor`
 ** Removed `MetadataContributor` -> `AdditionalMappingContributor`
 ** Removed `EmptyInterceptor` -> implement `org.hibernate.Interceptor` directly
+** Removed `Session.LockRequest` -> use `LockOptions`
 
 * Behavior
 ** Removed `org.hibernate.Session#save` in favor of `org.hibernate.Session#persist`
-** Removed `org.hibernate.Session#saveOrUpdate` in favor `#persist` if the entity is transient or `#merge` if the entity is detached.
+** Removed `org.hibernate.Session#saveOrUpdate` in favor `#persist` if the entity is transient or `#merge` if the entity is detached
 ** Removed `org.hibernate.Session#update` in favor of `org.hibernate.Session.merge`
 ** Removed `org.hibernate.annotations.CascadeType.SAVE_UPDATE` in favor of `org.hibernate.annotations.CascadeType.PERSIST` + `org.hibernate.annotations.CascadeType.MERGE`
 ** Removed `org.hibernate.Session#delete` in favor of `org.hibernate.Session#remove`
+** Removed `org.hibernate.Session#load` in favor of `org.hibernate.Session#find`
 ** Removed `org.hibernate.annotations.CascadeType.DELETE` in favor of `org.hibernate.annotations.CascadeType#REMOVE`
 ** Removed `org.hibernate.Session#refresh(String entityName, Object object)` in favor of `org.hibernate.Session#refresh(Object object)`
 ** Removed `org.hibernate.Session#refresh(String entityName, Object object, LockOptions lockOptions)` in favor of `org.hibernate.Session#refresh(Object object, LockOptions lockOptions)`
@@ -548,7 +550,7 @@ We encourage migration to the use of the new JPA-standard operations.
 [[reorg]]
 == Reorganize Packages (for api/spi/internal, etc)
 
-* Re-organized the `org.hibernate.query.results` package
+* Reorganized the `org.hibernate.query.results` package
 
 
 [[todo]]

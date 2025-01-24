@@ -76,13 +76,13 @@ Hibernate tries to discover the `JtaPlatform` it should use through the use of a
 If that resolution does not work, or if you wish to provide a custom implementation you will need to specify the `hibernate.transaction.jta.platform` setting.
 Hibernate provides many implementations of the `JtaPlatform` contract, all with short names:
 
-`Atomikos`:: `JtaPlatform` for Atomikos.
 `JBossAS`:: `JtaPlatform` for Arjuna/JBossTransactions/Narayana when used within the JBoss/WildFly Application Server.
 `JBossTS`:: `JtaPlatform` for Arjuna/JBossTransactions/Narayana when used standalone.
+`Atomikos`:: `JtaPlatform` for Atomikos.
+`GlassFish`, `Payara`:: `JtaPlatform` for GlassFish or Payara.
 `Resin`:: `JtaPlatform` for the Resin Application Server.
 `Weblogic`:: `JtaPlatform` for the Weblogic Application Server.
-`WebSphere`:: `JtaPlatform` for older versions of the WebSphere Application Server.
-`WebSphereExtended`:: `JtaPlatform` for newer versions of the WebSphere Application Server.
+`WebSphere`, `WebSphereLiberty`:: `JtaPlatform` for newer versions of the WebSphere Application Server.
 
 [[transactions-api]]
 === Hibernate Transaction API

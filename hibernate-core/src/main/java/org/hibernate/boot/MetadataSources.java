@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -37,6 +36,9 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SerializationException;
 
+import static java.util.Collections.addAll;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
@@ -132,7 +134,7 @@ public class MetadataSources implements Serializable {
 	@Deprecated(since = "7.0")
 	public List<Binding<JaxbBindableMappingDescriptor>> getXmlBindings() {
 		if ( mappingXmlBindings == null && hbmXmlBindings == null ) {
-			return Collections.emptyList();
+			return emptyList();
 		}
 
 		if ( hbmXmlBindings == null ) {
@@ -143,30 +145,31 @@ public class MetadataSources implements Serializable {
 			return (List) hbmXmlBindings;
 		}
 
-		final ArrayList<Binding<JaxbBindableMappingDescriptor>> combined = arrayList( mappingXmlBindings.size() + hbmXmlBindings.size() );
+		final ArrayList<Binding<JaxbBindableMappingDescriptor>> combined =
+				arrayList( mappingXmlBindings.size() + hbmXmlBindings.size() );
 		combined.addAll( (List) mappingXmlBindings );
 		combined.addAll( (List) hbmXmlBindings );
 		return combined;
 	}
 
 	public List<Binding<JaxbEntityMappingsImpl>> getMappingXmlBindings() {
-		return mappingXmlBindings == null ? Collections.emptyList() : mappingXmlBindings;
+		return mappingXmlBindings == null ? emptyList() : mappingXmlBindings;
 	}
 
 	public List<Binding<JaxbHbmHibernateMapping>> getHbmXmlBindings() {
-		return hbmXmlBindings == null ? Collections.emptyList() : hbmXmlBindings;
+		return hbmXmlBindings == null ? emptyList() : hbmXmlBindings;
 	}
 
 	public Collection<String> getAnnotatedPackages() {
-		return annotatedPackages == null ? Collections.emptySet() : annotatedPackages;
+		return annotatedPackages == null ? emptySet() : annotatedPackages;
 	}
 
 	public Collection<Class<?>> getAnnotatedClasses() {
-		return annotatedClasses == null ? Collections.emptySet() : annotatedClasses;
+		return annotatedClasses == null ? emptySet() : annotatedClasses;
 	}
 
 	public Collection<String> getAnnotatedClassNames() {
-		return annotatedClassNames == null ? Collections.emptySet() : annotatedClassNames;
+		return annotatedClassNames == null ? emptySet() : annotatedClassNames;
 	}
 
 	public Map<String,Class<?>> getExtraQueryImports() {
@@ -269,7 +272,7 @@ public class MetadataSources implements Serializable {
 			if ( this.annotatedClasses == null ) {
 				this.annotatedClasses = new LinkedHashSet<>();
 			}
-			Collections.addAll( this.annotatedClasses, annotatedClasses );
+			addAll( this.annotatedClasses, annotatedClasses );
 		}
 		return this;
 	}
@@ -297,7 +300,7 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addAnnotatedClassNames(String... annotatedClassNames) {
 		if ( annotatedClassNames != null && annotatedClassNames.length > 0 ) {
-			Collections.addAll( this.annotatedClassNames, annotatedClassNames );
+			addAll( this.annotatedClassNames, annotatedClassNames );
 		}
 		return this;
 	}

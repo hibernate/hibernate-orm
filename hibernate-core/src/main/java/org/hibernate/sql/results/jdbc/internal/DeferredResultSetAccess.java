@@ -112,13 +112,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 						lockOptionsToUse.setTimeOut( lockOptions.getTimeOut() );
 						lockOptionsToUse.setLockScope( lockOptions.getLockScope() );
 
-						executionContext.getCallback().registerAfterLoadAction( (entity, persister, session) ->
-								session.asSessionImplementor().lock(
-										persister.getEntityName(),
-										entity,
-										lockOptionsToUse
-								)
-						);
+						registerAfterLoadAction( executionContext, lockOptionsToUse );
 					}
 				}
 				else {
@@ -134,6 +128,19 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 					executionContext.getSession().getFactory().getSessionFactoryOptions().isCommentsEnabled()
 			);
 		}
+	}
+
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected void registerAfterLoadAction(ExecutionContext executionContext, LockOptions lockOptionsToUse) {
+		executionContext.getCallback().registerAfterLoadAction( (entity, persister, session) ->
+				session.asSessionImplementor().lock(
+						persister.getEntityName(),
+						entity,
+						lockOptionsToUse
+				)
+		);
 	}
 
 	private static boolean useFollowOnLocking(

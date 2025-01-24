@@ -7,7 +7,6 @@ package org.hibernate.boot.model;
 import java.io.Serializable;
 import java.sql.Types;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -39,6 +38,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.UserType;
 
+import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.model.process.internal.InferredBasicValueResolver.resolveSqlTypeIndicators;
 import static org.hibernate.mapping.MappingHelper.injectParameters;
 
@@ -104,7 +104,7 @@ public class TypeDefinition implements Serializable {
 		if ( CollectionHelper.isEmpty( localConfigParameters ) ) {
 			// we can use the re-usable resolution...
 			if ( reusableResolution == null ) {
-				reusableResolution = createResolution( name, Collections.emptyMap(), indicators, context );
+				reusableResolution = createResolution( name, emptyMap(), indicators, context );
 			}
 			return reusableResolution;
 		}
@@ -138,16 +138,17 @@ public class TypeDefinition implements Serializable {
 			MetadataBuildingContext context) {
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
-		final BeanInstanceProducer instanceProducer = bootstrapContext.getCustomTypeProducer();
+
 		final boolean isKnownType =
 				Type.class.isAssignableFrom( typeImplementorClass )
 				|| UserType.class.isAssignableFrom( typeImplementorClass );
 
 		// support for AttributeConverter would be nice too
 		if ( isKnownType ) {
+
 			final T typeInstance =
 					instantiateType( bootstrapContext.getServiceRegistry(), context.getBuildingOptions(),
-							name, typeImplementorClass, instanceProducer );
+							name, typeImplementorClass, bootstrapContext.getCustomTypeProducer() );
 
 			if ( typeInstance instanceof TypeConfigurationAware configurationAware ) {
 				configurationAware.setTypeConfiguration( typeConfiguration );

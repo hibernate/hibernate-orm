@@ -11,8 +11,6 @@ import org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaP
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.ResinJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.GlassFishJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJtaPlatform;
-import org.hibernate.engine.transaction.jta.platform.internal.WebSphereJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WebSphereLibertyJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.WeblogicJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
@@ -33,9 +31,7 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 				case "JBossAS" -> JBossAppServerJtaPlatform.class;
 				case "JBossTS" -> JBossStandAloneJtaPlatform.class;
 				case "Weblogic" -> WeblogicJtaPlatform.class;
-				case "WebSphereLiberty" -> WebSphereLibertyJtaPlatform.class;
-				case "WebSphere" -> WebSphereJtaPlatform.class;
-				case "WebSphereExtended" -> WebSphereExtendedJtaPlatform.class;
+				case "WebSphere", "WebSphereLiberty" -> WebSphereLibertyJtaPlatform.class;
 				case "Atomikos" -> AtomikosJtaPlatform.class;
 				case "Resin" -> ResinJtaPlatform.class;
 				case "GlassFish", "Payara", "SunOne" -> GlassFishJtaPlatform.class;

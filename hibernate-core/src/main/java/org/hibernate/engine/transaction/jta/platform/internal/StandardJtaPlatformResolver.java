@@ -96,17 +96,6 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		catch (ClassLoadingException ignore) {
 		}
 
-		// WebSphere traditional ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		for ( WebSphereJtaPlatform.WebSphereEnvironment webSphereEnvironment
-				: WebSphereJtaPlatform.WebSphereEnvironment.values() ) {
-			try {
-				final Class<?> accessClass = classLoaderService.classForName( webSphereEnvironment.getTmAccessClassName() );
-				return new WebSphereJtaPlatform( accessClass, webSphereEnvironment );
-			}
-			catch (ClassLoadingException ignore) {
-			}
-		}
-
 		// Finally, return the default...
 		log.debugf( "Could not resolve JtaPlatform, using default [%s]", NoJtaPlatform.class.getName() );
 		return NoJtaPlatform.INSTANCE;

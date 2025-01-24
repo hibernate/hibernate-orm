@@ -8,7 +8,10 @@ import jakarta.persistence.Query;
 import org.hibernate.orm.test.subquery.EntityA;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.junit.jupiter.api.Test;
+import org.hibernate.testing.orm.junit.JiraKey;
 
+
+@JiraKey(value = "HHH-16789")
 public class LimitWithoutOrderByQueryTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override

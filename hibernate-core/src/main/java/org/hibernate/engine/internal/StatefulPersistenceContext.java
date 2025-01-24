@@ -489,7 +489,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 						getSession()
 				);
 			}
-			( (EntityHolderImpl) holder ).entityInitializer = null;
+			holder.resetEntityInitialier();
 		}
 	}
 
@@ -2295,6 +2295,11 @@ class StatefulPersistenceContext implements PersistenceContext {
 		@Override
 		public boolean isDetached() {
 			return state == EntityHolderState.DETACHED;
+		}
+
+		@Override
+		public void resetEntityInitialier(){
+			entityInitializer = null;
 		}
 
 		public EntityHolderImpl withEntity(EntityKey entityKey, EntityPersister descriptor, Object entity) {

@@ -145,8 +145,10 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		}
 	}
 
-
-	private void finishLoadingCollections() {
+	/**
+	 * For Hibernate Reactive
+	 */
+	public void finishLoadingCollections() {
 		if ( loadingCollectionMap != null ) {
 			for ( LoadingCollectionEntry loadingCollectionEntry : loadingCollectionMap.values() ) {
 				loadingCollectionEntry.finishLoading( getExecutionContext() );

@@ -70,4 +70,12 @@ public interface EntityHolder {
 	 * Whether the entity is detached.
 	 */
 	boolean isDetached();
+
+
+	/**
+	 * For Hibernate Reactive
+	 *
+	 * Set the EntityInitializer to null
+	 */
+	void resetEntityInitialier();
 }

@@ -132,9 +132,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	public BasicValue(BasicValue original) {
 		super( original );
 		this.explicitTypeName = original.explicitTypeName;
-		this.explicitLocalTypeParams = original.explicitLocalTypeParams == null
-				? null
-				: new HashMap<>(original.explicitLocalTypeParams);
+		this.explicitLocalTypeParams =
+				original.explicitLocalTypeParams == null ? null
+						: new HashMap<>( original.explicitLocalTypeParams );
 		this.explicitJavaTypeAccess = original.explicitJavaTypeAccess;
 		this.explicitJdbcTypeAccess = original.explicitJdbcTypeAccess;
 		this.explicitMutabilityPlanAccess = original.explicitMutabilityPlanAccess;

@@ -519,25 +519,25 @@ We encourage migration to the use of the new JPA-standard operations.
 ** Removed `Session.LockRequest` -> use `LockOptions`
 
 * Behavior
-** Removed `org.hibernate.Session#save` in favor of `org.hibernate.Session#persist`
-** Removed `org.hibernate.Session#saveOrUpdate` in favor `#persist` if the entity is transient or `#merge` if the entity is detached
-** Removed `org.hibernate.Session#update` in favor of `org.hibernate.Session.merge`
+** Removed `Session.save` in favor of `Session.persist`
+** Removed `Session.saveOrUpdate` in favor `persist` if the entity is transient or `merge` if the entity is detached
+** Removed `Session.update` in favor of `Session.merge`
 ** Removed `org.hibernate.annotations.CascadeType.SAVE_UPDATE` in favor of `org.hibernate.annotations.CascadeType.PERSIST` + `org.hibernate.annotations.CascadeType.MERGE`
-** Removed `org.hibernate.Session#delete` in favor of `org.hibernate.Session#remove`
-** Removed `org.hibernate.Session#load` in favor of `org.hibernate.Session#find`
-** Removed `org.hibernate.annotations.CascadeType.DELETE` in favor of `org.hibernate.annotations.CascadeType#REMOVE`
-** Removed `org.hibernate.Session#refresh(String entityName, Object object)` in favor of `org.hibernate.Session#refresh(Object object)`
-** Removed `org.hibernate.Session#refresh(String entityName, Object object, LockOptions lockOptions)` in favor of `org.hibernate.Session#refresh(Object object, LockOptions lockOptions)`
-** Removed `org.hibernate.integrator.spi.Integrator#integrate(Metadata,SessionFactoryImplementor,SessionFactoryServiceRegistry)` in favor of `org.hibernate.integrator.spi.Integrator#integrate(Metadata,BootstrapContext,SessionFactoryImplementor)`
-** Removed `org.hibernate.Interceptor#onLoad(Object, Serializable, Object[] , String[] , Type[] )` in favour of `org.hibernate.Interceptor#onLoad(Object, Object, Object[], String[], Type[] )`
-** Removed `org.hibernate.Interceptor#onFlushDirty(Object, Serializable, Object[] , Object[], String[] , Type[] )` in favour of `org.hibernate.Interceptor#onLoad(Object, Object, Object[], Object[], String[] , Type[] )`
-** Removed `org.hibernate.Interceptor#onSave(Object, Serializable, Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#onSave(Object, Object, Object[], String[], Type[])`
-** Removed `org.hibernate.Interceptor#onDelete(Object, Serializable, Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#onDelete(Object, Serializable, Object[], String[], Type[])`
-** Removed `org.hibernate.Interceptor#onCollectionRecreate(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionRecreate(Object, Object)`
-** Removed `org.hibernate.Interceptor#onCollectionRemove(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionRemove(Object, Object)`
-** Removed `org.hibernate.Interceptor#onCollectionUpdate(Object, Serializable)` in favour of `org.hibernate.Interceptor#onCollectionUpdate(Object, Object)`
-** Removed `org.hibernate.Interceptor#findDirty(Object, Serializable, Object[], Object[], String[], Type[])` in favour of `org.hibernate.Interceptor#findDirty(Object, Object, Object[], Object[], String[], Type[])`
-** Removed `org.hibernate.Interceptor#getEntity(String, Serializable)` in favour of `org.hibernate.Interceptor#getEntity(String, Serializable)`
+** Removed `Session.delete` in favor of `Session.remove`
+** Removed `Session.load` in favor of `Session.find`
+** Removed `org.hibernate.annotations.CascadeType.DELETE` in favor of `org.hibernate.annotations.CascadeType.REMOVE`
+** Removed `Session.refresh(String entityName, Object object)` in favor of `Session.refresh(Object object)`
+** Removed `Session.refresh(String entityName, Object object, LockOptions lockOptions)` in favor of `Session.refresh(Object object, LockOptions lockOptions)`
+** Removed `org.hibernate.integrator.spi.Integrator.integrate(Metadata,SessionFactoryImplementor,SessionFactoryServiceRegistry)` in favor of `org.hibernate.integrator.spi.Integrator.integrate(Metadata,BootstrapContext,SessionFactoryImplementor)`
+** Removed `Interceptor.onLoad(Object, Serializable, Object[] , String[] , Type[] )` in favour of `Interceptor.onLoad(Object, Object, Object[], String[], Type[] )`
+** Removed `Interceptor.onFlushDirty(Object, Serializable, Object[] , Object[], String[] , Type[] )` in favour of `Interceptor.onLoad(Object, Object, Object[], Object[], String[] , Type[] )`
+** Removed `Interceptor.onSave(Object, Serializable, Object[], String[], Type[])` in favour of `Interceptor.onSave(Object, Object, Object[], String[], Type[])`
+** Removed `Interceptor.onDelete(Object, Serializable, Object[], String[], Type[])` in favour of `Interceptor.onDelete(Object, Serializable, Object[], String[], Type[])`
+** Removed `Interceptor.onCollectionRecreate(Object, Serializable)` in favour of `Interceptor.onCollectionRecreate(Object, Object)`
+** Removed `Interceptor.onCollectionRemove(Object, Serializable)` in favour of `Interceptor.onCollectionRemove(Object, Object)`
+** Removed `Interceptor.onCollectionUpdate(Object, Serializable)` in favour of `Interceptor.onCollectionUpdate(Object, Object)`
+** Removed `Interceptor.findDirty(Object, Serializable, Object[], Object[], String[], Type[])` in favour of `Interceptor.findDirty(Object, Object, Object[], Object[], String[], Type[])`
+** Removed `Interceptor.getEntity(String, Serializable)` in favour of `Interceptor.getEntity(String, Serializable)`
 ** Removed `org.hibernate.metamodel.spi.MetamodelImplementor` in favor of `org.hibernate.metamodela.MappingMetmodel` or `org.hibernate.metamodel.model.domain.JpaMetamodel`
 ** Removed `org.hibernate.Metamodel` in favor of `org.hibernate.metamodel.model.domain.JpaMetamodel`
 ** Removed `NaturalIdLoadAccess.using(Map)` and `NaturalIdMultiLoadAccess.compoundValue()` in favor of `Map.of()`

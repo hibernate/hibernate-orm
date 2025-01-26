@@ -476,11 +476,11 @@ public class GeneratorBinder {
 	 * @param beanContainer an optional {@code BeanContainer}
 	 * @param generatorClass a class which implements {@code Generator}
 	 */
-	private static Generator instantiateGeneratorAsBean(
+	private static <T extends Generator> Generator instantiateGeneratorAsBean(
 			Annotation annotation,
 			BeanContainer beanContainer,
 			GeneratorCreationContext creationContext,
-			Class<? extends Generator> generatorClass,
+			Class<T> generatorClass,
 			MemberDetails memberDetails,
 			Class<? extends Annotation> annotationType) {
 		return Helper.getBean(

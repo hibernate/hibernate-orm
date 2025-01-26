@@ -36,7 +36,7 @@ public class FallbackBeanInstanceProducer implements BeanInstanceProducer {
 	public <B> B produceBeanInstance(Class<B> beanType) {
 		log.tracef( "Creating ManagedBean(%s) using direct instantiation", beanType.getName() );
 		try {
-			Constructor<B> constructor = beanType.getDeclaredConstructor();
+			final Constructor<B> constructor = beanType.getDeclaredConstructor();
 			constructor.setAccessible( true );
 			return constructor.newInstance();
 		}

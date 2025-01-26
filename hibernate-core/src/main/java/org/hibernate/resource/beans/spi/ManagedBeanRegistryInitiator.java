@@ -12,7 +12,6 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.resource.beans.container.internal.CdiBeanContainerBuilder;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
@@ -21,6 +20,9 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
+import static org.hibernate.cfg.ManagedBeanSettings.BEAN_CONTAINER;
+import static org.hibernate.cfg.ManagedBeanSettings.CDI_BEAN_MANAGER;
+import static org.hibernate.cfg.ManagedBeanSettings.JAKARTA_CDI_BEAN_MANAGER;
 import static org.hibernate.resource.beans.internal.BeansMessageLogger.BEANS_MSG_LOGGER;
 
 /**
@@ -49,7 +51,7 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 
 	private BeanContainer resolveBeanContainer(Map<?,?> configurationValues, ServiceRegistry serviceRegistry) {
 		// was a specific container explicitly specified?
-		final Object explicitBeanContainer = configurationValues.get( AvailableSettings.BEAN_CONTAINER );
+		final Object explicitBeanContainer = configurationValues.get( BEAN_CONTAINER );
 		return explicitBeanContainer == null
 				? interpretImplicitBeanContainer( serviceRegistry )
 				: interpretExplicitBeanContainer( explicitBeanContainer, serviceRegistry );
@@ -63,21 +65,18 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 			case 1 -> beanContainers.iterator().next();
 			case 0 -> interpretImplicitCdiBeanContainer( serviceRegistry );
 			default -> throw new ServiceException( "Multiple BeanContainer service implementations found"
-													+ " (set '" + AvailableSettings.BEAN_CONTAINER + "' explicitly)" );
+													+ " (set '" + BEAN_CONTAINER + "' explicitly)" );
 		};
 	}
 
 	// simplified CDI support
 	private static BeanContainer interpretImplicitCdiBeanContainer(ServiceRegistry serviceRegistry) {
-		final Map<String, Object> settings = serviceRegistry.requireService( ConfigurationService.class ).getSettings();
-		Object beanManager = settings.get( AvailableSettings.CDI_BEAN_MANAGER );
-		if ( beanManager == null ) {
-			beanManager = settings.get( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER );
-		}
+		final Object beanManager = getConfiguredBeanManager( serviceRegistry );
 		final boolean isCdiAvailable = isCdiAvailable( serviceRegistry );
 		if ( beanManager != null ) {
 			if ( !isCdiAvailable ) {
-				BEANS_MSG_LOGGER.beanManagerButCdiNotAvailable( beanManager );
+				throw new ServiceException( "A bean manager was provided via '" + JAKARTA_CDI_BEAN_MANAGER
+											+ "' but CDI is not available on the Hibernate class loader");
 			}
 			return CdiBeanContainerBuilder.fromBeanManagerReference( beanManager, serviceRegistry );
 		}
@@ -87,6 +86,12 @@ public class ManagedBeanRegistryInitiator implements StandardServiceInitiator<Ma
 			}
 			return null;
 		}
+	}
+
+	private static Object getConfiguredBeanManager(ServiceRegistry serviceRegistry) {
+		final Map<String, Object> settings = serviceRegistry.requireService( ConfigurationService.class ).getSettings();
+		final Object beanManager = settings.get( JAKARTA_CDI_BEAN_MANAGER );
+		return beanManager != null ? beanManager : settings.get( CDI_BEAN_MANAGER );
 	}
 
 	private BeanContainer interpretExplicitBeanContainer(Object explicitSetting, ServiceRegistry serviceRegistry) {

@@ -6,12 +6,13 @@ package org.hibernate.resource.beans.container.internal;
 
 import jakarta.enterprise.inject.spi.BeanManager;
 import org.hibernate.AssertionFailure;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.service.ServiceRegistry;
+
+import static org.hibernate.cfg.ManagedBeanSettings.DELAY_CDI_ACCESS;
 
 /**
  * Helper class for building a CDI-based {@link BeanContainer}.
@@ -36,6 +37,6 @@ public class CdiBeanContainerBuilder {
 
 	private static boolean delayCdiAccess(ServiceRegistry serviceRegistry) {
 		return serviceRegistry.requireService( ConfigurationService.class )
-				.getSetting( AvailableSettings.DELAY_CDI_ACCESS, StandardConverters.BOOLEAN, false );
+				.getSetting( DELAY_CDI_ACCESS, StandardConverters.BOOLEAN, false );
 	}
 }

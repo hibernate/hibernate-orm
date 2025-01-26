@@ -141,8 +141,8 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 				beanInstance = fallbackProducer.produceBeanInstance( beanType );
 
 				try {
-					if ( this.creationalContext != null ) {
-						this.creationalContext.release();
+					if ( creationalContext != null ) {
+						creationalContext.release();
 					}
 				}
 				catch (Exception ignore) {

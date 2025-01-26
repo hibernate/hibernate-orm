@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service.spi;
+
 import org.hibernate.HibernateException;
 
 /**

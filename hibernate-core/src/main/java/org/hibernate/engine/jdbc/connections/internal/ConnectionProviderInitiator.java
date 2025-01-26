@@ -105,7 +105,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			}
 			else if ( explicitSetting instanceof Class<?> providerClass ) {
 				LOG.instantiatingExplicitConnectionProvider( providerClass.getName() );
-				return instantiateExplicitConnectionProvider( providerClass, beanContainer );
+				return instantiateExplicitConnectionProvider( connectionProviderClass( providerClass ), beanContainer );
 			}
 			else {
 				final String providerName = nullIfBlank( explicitSetting.toString() );
@@ -118,10 +118,21 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		return instantiateConnectionProvider( configurationValues, strategySelector, beanContainer );
 	}
 
+	private static Class<? extends ConnectionProvider> connectionProviderClass(Class<?> providerClass) {
+		if ( !ConnectionProvider.class.isAssignableFrom( providerClass ) ) {
+			throw new ConnectionProviderConfigurationException( "Class '" + providerClass.getName()
+																+ "' does not implement 'ConnectionProvider'" );
+		}
+		@SuppressWarnings("unchecked")
+		final Class<? extends ConnectionProvider> connectionProviderClass =
+				(Class<? extends ConnectionProvider>) providerClass;
+		return connectionProviderClass;
+	}
+
 	private ConnectionProvider instantiateNamedConnectionProvider(
 			String providerName, StrategySelector strategySelector, BeanContainer beanContainer) {
 		LOG.instantiatingExplicitConnectionProvider( providerName );
-		final Class<?> providerClass =
+		final Class<? extends ConnectionProvider> providerClass =
 				strategySelector.selectStrategyImplementor( ConnectionProvider.class, providerName );
 		try {
 			return instantiateExplicitConnectionProvider( providerClass, beanContainer );
@@ -192,7 +203,8 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 				: null;
 	}
 
-	private ConnectionProvider instantiateExplicitConnectionProvider(Class<?> providerClass, BeanContainer beanContainer) {
+	private <T extends ConnectionProvider> T instantiateExplicitConnectionProvider(
+			Class<T> providerClass, BeanContainer beanContainer) {
 		try {
 			if ( beanContainer != null ) {
 				return Helper.getBean(
@@ -202,7 +214,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 					true,
 					() -> {
 						try {
-							return (ConnectionProvider) providerClass.getConstructor().newInstance();
+							return providerClass.getConstructor().newInstance();
 						}
 						catch (Exception e) {
 							throw new HibernateException( "Could not instantiate connection provider [" + providerClass.getName() + "]", e );
@@ -211,7 +223,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 				);
 			}
 			else {
-				return (ConnectionProvider) providerClass.getConstructor().newInstance();
+				return providerClass.getConstructor().newInstance();
 			}
 		}
 		catch (Exception e) {

@@ -5,7 +5,6 @@
 package org.hibernate.resource.beans.container.internal;
 
 import jakarta.enterprise.inject.spi.BeanManager;
-
 import org.hibernate.Internal;
 import org.hibernate.resource.beans.container.spi.AbstractCdiBeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
@@ -14,7 +13,7 @@ import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.resource.beans.internal.BeansMessageLogger.BEANS_MSG_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -23,15 +22,13 @@ public class CdiBeanContainerExtendedAccessImpl
 		extends AbstractCdiBeanContainer
 		implements ExtendedBeanManager.LifecycleListener {
 
-	// NOTE : we continue to use the deprecated form for now since that is what WildFly needs for the time being still
-
-	private static final Logger log = Logger.getLogger( CdiBeanContainerExtendedAccessImpl.class );
+	// NOTE : we continue to use the deprecated form for now since that is what WildFly needs for the time being
 
 	private BeanManager usableBeanManager;
 
 	CdiBeanContainerExtendedAccessImpl(ExtendedBeanManager beanManager) {
 		beanManager.registerLifecycleListener( this );
-		log.debugf( "Extended access requested to CDI BeanManager : %s", beanManager );
+		BEANS_MSG_LOGGER.extendedAccessToBeanManager();
 	}
 
 	@Override

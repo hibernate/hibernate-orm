@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.container.spi.FallbackContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
@@ -87,38 +86,16 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 	}
 
 	private <T> ManagedBean<T> createBean(Class<T> beanClass, BeanInstanceProducer fallbackBeanInstanceProducer) {
-		if ( beanContainer == null ) {
-			return new FallbackContainedBean<>( beanClass, fallbackBeanInstanceProducer );
-		}
-		else {
-			final ContainedBean<T> containedBean =
-					beanContainer.getBean( beanClass, this, fallbackBeanInstanceProducer );
-			if ( containedBean instanceof ManagedBean ) {
-				//noinspection unchecked
-				return (ManagedBean<T>) containedBean;
-			}
-			else {
-				return new ContainedBeanManagedBeanAdapter<>( beanClass, containedBean );
-			}
-		}
+		return beanContainer == null
+				? new FallbackContainedBean<>( beanClass, fallbackBeanInstanceProducer )
+				: beanContainer.getBean( beanClass, this, fallbackBeanInstanceProducer );
 	}
 
 	private <T> ManagedBean<T> createBean(
 			String beanName, Class<T> beanContract, BeanInstanceProducer fallbackBeanInstanceProducer) {
-		if ( beanContainer == null ) {
-			return new FallbackContainedBean<>( beanName, beanContract, fallbackBeanInstanceProducer );
-		}
-		else {
-			final ContainedBean<T> containedBean =
-					beanContainer.getBean( beanName, beanContract, this, fallbackBeanInstanceProducer );
-			if ( containedBean instanceof ManagedBean ) {
-				//noinspection unchecked
-				return (ManagedBean<T>) containedBean;
-			}
-			else {
-				return new ContainedBeanManagedBeanAdapter<>( beanContract, containedBean );
-			}
-		}
+		return beanContainer == null
+				? new FallbackContainedBean<>( beanName, beanContract, fallbackBeanInstanceProducer )
+				: beanContainer.getBean( beanName, beanContract, this, fallbackBeanInstanceProducer );
 	}
 
 	@Override
@@ -127,25 +104,5 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 			beanContainer.stop();
 		}
 		registrations.clear();
-	}
-
-	private static class ContainedBeanManagedBeanAdapter<B> implements ManagedBean<B> {
-		private final Class<B> beanClass;
-		private final ContainedBean<B> containedBean;
-
-		private ContainedBeanManagedBeanAdapter(Class<B> beanClass, ContainedBean<B> containedBean) {
-			this.beanClass = beanClass;
-			this.containedBean = containedBean;
-		}
-
-		@Override
-		public Class<B> getBeanClass() {
-			return beanClass;
-		}
-
-		@Override
-		public B getBeanInstance() {
-			return containedBean.getBeanInstance();
-		}
 	}
 }

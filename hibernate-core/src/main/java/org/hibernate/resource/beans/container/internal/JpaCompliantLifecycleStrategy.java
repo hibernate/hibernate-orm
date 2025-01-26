@@ -17,6 +17,8 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
 import org.jboss.logging.Logger;
 
+import java.util.Set;
+
 /**
  * A {@link BeanLifecycleStrategy} to use when JPA compliance is required
  * (i.e. when the bean lifecycle is to be managed by the JPA runtime, not the CDI runtime).
@@ -77,13 +79,15 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 
 		private B beanInstance;
 
-		public BeanImpl(
-				Class<B> beanType,
-				BeanInstanceProducer fallbackProducer,
-				BeanManager beanManager) {
+		public BeanImpl(Class<B> beanType, BeanInstanceProducer fallbackProducer, BeanManager beanManager) {
 			this.beanType = beanType;
 			this.fallbackProducer = fallbackProducer;
 			this.beanManager = beanManager;
+		}
+
+		@Override
+		public Class<B> getBeanClass() {
+			return beanType;
 		}
 
 		@Override
@@ -206,6 +210,11 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 		}
 
 		@Override
+		public Class<B> getBeanClass() {
+			return beanType;
+		}
+
+		@Override
 		public B getBeanInstance() {
 			if ( beanInstance == null ) {
 				initialize();
@@ -214,7 +223,6 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public void initialize() {
 			if ( beanInstance != null ) {
 				return;
@@ -243,8 +251,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 			}
 
 			try {
-				bean = (Bean<B>) beanManager.resolve( beanManager.getBeans( beanType,
-						new NamedBeanQualifier( beanName ) ) );
+				bean = resolveBean();
 				beanInstance = bean.create( creationalContext );
 			}
 			catch (Exception e) {
@@ -262,6 +269,12 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 				creationalContext = null;
 				bean = null;
 			}
+		}
+
+		@SuppressWarnings("unchecked")
+		private Bean<B> resolveBean() {
+			final Set<Bean<?>> beans = beanManager.getBeans( beanType, new NamedBeanQualifier( beanName ) );
+			return (Bean<B>) beanManager.resolve( beans );
 		}
 
 		@Override

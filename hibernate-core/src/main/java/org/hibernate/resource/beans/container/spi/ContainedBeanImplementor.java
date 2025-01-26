@@ -5,9 +5,9 @@
 package org.hibernate.resource.beans.container.spi;
 
 /**
- * Release-able extension to {@link ContainedBean}.  We make the split to make it
- * clear that generally speaking the callers to BeanContainer should not perform
- * the release
+ * Releasable extension to {@link ContainedBean}. We make this split to clarify
+ * that clients of {@link BeanContainer} are not usually responsible for calling
+ * {@link #initialize()} and {@link #release()}.
  *
  * @author Steve Ebersole
  */

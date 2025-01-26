@@ -60,6 +60,11 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 		}
 
 		@Override
+		public Class<B> getBeanClass() {
+			return beanType;
+		}
+
+		@Override
 		public void initialize() {
 			if ( delegateBean == null ) {
 				delegateBean = lifecycleStrategy.createBean( beanType, fallbackProducer, CdiBeanContainerDelayedAccessImpl.this );
@@ -97,6 +102,11 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 			this.beanType = beanType;
 			this.lifecycleStrategy = lifecycleStrategy;
 			this.fallbackProducer = fallbackProducer;
+		}
+
+		@Override
+		public Class<B> getBeanClass() {
+			return beanType;
 		}
 
 		@Override

@@ -65,10 +65,28 @@ public class UserDefinedGeneratorsTests {
 			if (beanType == TestIdentifierGenerator.class) {
 				assertThat( options.canUseCachedReferences(), is( false ) );
 				assertThat( options.useJpaCompliantCreation(), is( true ) );
-				return (ContainedBean<?>) TestIdentifierGenerator::new;
+				return new ContainedBean<TestIdentifierGenerator>() {
+					@Override
+					public TestIdentifierGenerator getBeanInstance() {
+						return new TestIdentifierGenerator();
+					}
+					@Override
+					public Class<TestIdentifierGenerator> getBeanClass() {
+						return TestIdentifierGenerator.class;
+					}
+				};
 			}
 			else {
-				return (ContainedBean<?>) () -> ( ( BeanInstanceProducer ) invocation.getArguments()[2] ).produceBeanInstance( beanType );
+				return new ContainedBean<>() {
+					@Override
+					public Object getBeanInstance() {
+						return ( ( BeanInstanceProducer ) invocation.getArguments()[2] ).produceBeanInstance( beanType );
+					}
+					@Override
+					public Class getBeanClass() {
+						return beanType;
+					}
+				};
 			}
 		} );
 

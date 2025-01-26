@@ -104,6 +104,10 @@ public class CdiBeanContainerExtendedAccessImpl
 			this.fallbackProducer = fallbackProducer;
 		}
 
+		@Override
+		public Class<B> getBeanClass() {
+			return beanType;
+		}
 
 		@Override
 		public void initialize() {
@@ -148,14 +152,15 @@ public class CdiBeanContainerExtendedAccessImpl
 		}
 
 		@Override
+		public Class<B> getBeanClass() {
+			return beanType;
+		}
+
+		@Override
 		public void initialize() {
 			if ( delegateContainedBean == null ) {
-				delegateContainedBean = lifecycleStrategy.createBean(
-						name,
-						beanType,
-						fallbackProducer,
-						DUMMY_BEAN_CONTAINER
-				);
+				delegateContainedBean =
+						lifecycleStrategy.createBean( name, beanType, fallbackProducer, DUMMY_BEAN_CONTAINER );
 				delegateContainedBean.initialize();
 			}
 		}

@@ -73,6 +73,11 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 		}
 
 		@Override
+		public Class<B> getBeanClass() {
+			return beanType;
+		}
+
+		@Override
 		public B getBeanInstance() {
 			if ( beanInstance == null ) {
 				initialize();

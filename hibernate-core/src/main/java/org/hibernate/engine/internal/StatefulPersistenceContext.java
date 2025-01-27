@@ -330,10 +330,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		}
 		else {
 			final Object[] snapshot = persister.getDatabaseSnapshot( id, session );
-			if ( entitySnapshotsByKey == null ) {
-				entitySnapshotsByKey = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
-			}
-			entitySnapshotsByKey.put( key, snapshot == null ? NO_ROW : snapshot );
+			getOrInitializeEntitySnapshotsByKey().put( key, snapshot == null ? NO_ROW : snapshot );
 			return snapshot;
 		}
 	}
@@ -1187,7 +1184,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 		initializeNonLazyCollections( PersistentCollection::forceInitialization );
 	}
 
-	protected void initializeNonLazyCollections(Consumer<PersistentCollection<?>> initializeAction ) {
+	@Override
+	public void initializeNonLazyCollections(Consumer<PersistentCollection<?>> initializeAction ) {
 		if ( loadCounter == 0 ) {
 			LOG.trace( "Initializing non-lazy collections" );
 
@@ -1312,6 +1310,21 @@ class StatefulPersistenceContext implements PersistenceContext {
 			}
 		}
 		return result;
+	}
+
+	// Used by Hibernate Reactive
+	@Override
+	public Map<EntityKey, Object> getEntitySnapshotsByKey() {
+		return entitySnapshotsByKey;
+	}
+
+	// Used by Hibernate Reactive
+	@Override
+	public Map<EntityKey, Object> getOrInitializeEntitySnapshotsByKey() {
+		if ( entitySnapshotsByKey == null ) {
+			entitySnapshotsByKey = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
+		}
+		return entitySnapshotsByKey;
 	}
 
 	@Override

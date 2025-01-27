@@ -445,6 +445,18 @@ public interface PersistenceContext {
 	void initializeNonLazyCollections() throws HibernateException;
 
 	/**
+	 * Force initialization of all non-lazy collections encountered during
+	 * the current two-phase load (actually, this is a no-op, unless this
+	 * is the "outermost" load) allowing to customize how the initialization
+	 *  should occur
+	 *
+	 * @see #initializeNonLazyCollections()
+	 * @param initializeAction the function that initialize the collection
+	 */
+	// Used by Hibernate Reactive
+	void initializeNonLazyCollections(Consumer<PersistentCollection<?>> initializeAction);
+
+	/**
 	 * Get the {@code PersistentCollection} object for an array
 	 */
 	PersistentCollection<?> getCollectionHolder(Object array);
@@ -532,6 +544,14 @@ public interface PersistenceContext {
 	 */
 	@Internal
 	Map<EntityKey,Object> getEntitiesByKey();
+
+	// Used by Hibernate Reactive
+	@Internal
+	Map<EntityKey,Object> getEntitySnapshotsByKey();
+
+	// Used by Hibernate Reactive
+	@Internal
+	Map<EntityKey,Object> getOrInitializeEntitySnapshotsByKey();
 
 	/**
 	 * Doubly internal

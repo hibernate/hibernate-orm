@@ -481,14 +481,14 @@ class ChangeLogFile {
     }
 
     private static getVersionId(jsonReleaseNotes, String restReleaseVersion) {
-        def fixVersions = jsonReleaseNotes.issues.get( 0 ).fields.fixVersions
-
-        for ( def fixVersion : fixVersions ) {
-            if ( fixVersion.name.equals( restReleaseVersion ) ) {
-                return fixVersion.id
+        for ( def issue : jsonReleaseNotes.issues ) {
+            for ( def fixVersion : issue.fields.fixVersions ) {
+                if ( fixVersion.name == restReleaseVersion ) {
+                    return fixVersion.id
+                }
             }
         }
-        throw new GradleException( "Unable to determine the version id of the current release." )
+        throw new GradleException("No issues found for current release version (" + restReleaseVersion + "), aborting.")
     }
 }
 

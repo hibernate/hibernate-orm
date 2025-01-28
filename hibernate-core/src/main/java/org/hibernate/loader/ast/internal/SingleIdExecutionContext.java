@@ -76,4 +76,8 @@ class SingleIdExecutionContext extends BaseExecutionContext {
 		subSelectFetchableKeysHandler.addKey( holder );
 	}
 
+	@Override
+	public boolean upgradeLocks() {
+		return true;
+	}
 }

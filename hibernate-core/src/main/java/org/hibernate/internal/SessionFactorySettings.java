@@ -19,6 +19,7 @@ import java.util.Map;
 
 import static org.hibernate.cfg.PersistenceSettings.PERSISTENCE_UNIT_NAME;
 import static org.hibernate.cfg.PersistenceSettings.SESSION_FACTORY_JNDI_NAME;
+import static org.hibernate.cfg.PersistenceSettings.SESSION_FACTORY_NAME;
 import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_FACTORY;
 import static org.hibernate.cfg.ValidationSettings.JPA_VALIDATION_FACTORY;
 import static org.hibernate.engine.config.spi.StandardConverters.STRING;
@@ -95,6 +96,10 @@ class SessionFactorySettings {
 			return explicitJndiName;
 		}
 		else {
+			final String expliciSessionFactoryname = configService.getSetting( SESSION_FACTORY_NAME, STRING );
+			if ( isNotEmpty( expliciSessionFactoryname ) ) {
+				return expliciSessionFactoryname;
+			}
 			final String unitName = configService.getSetting( PERSISTENCE_UNIT_NAME, STRING );
 			// do not use name for JNDI if explicitly asked not to or if name comes from JPA persistence-unit name
 			final boolean nameIsNotJndiName =

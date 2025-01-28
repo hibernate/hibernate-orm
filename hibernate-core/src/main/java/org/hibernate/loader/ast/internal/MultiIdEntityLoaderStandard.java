@@ -173,7 +173,8 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 				new ExecutionContextWithSubselectFetchHandler(
 						session,
 						fetchableKeysHandler( session, sqlAst, jdbcParameters, jdbcParameterBindings ),
-						TRUE.equals( loadOptions.getReadOnly( session ) )
+						TRUE.equals( loadOptions.getReadOnly( session ) ),
+						lockOptions
 				),
 				RowTransformerStandardImpl.instance(),
 				null,

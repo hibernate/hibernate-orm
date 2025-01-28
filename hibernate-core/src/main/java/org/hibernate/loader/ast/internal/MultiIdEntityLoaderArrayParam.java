@@ -142,7 +142,8 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 								JdbcParametersList.singleton( jdbcParameter ),
 								jdbcParameterBindings
 						),
-						TRUE.equals( loadOptions.getReadOnly( session ) )
+						TRUE.equals( loadOptions.getReadOnly( session ) ),
+						lockOptions
 				),
 				RowTransformerStandardImpl.instance(),
 				null,

@@ -68,7 +68,6 @@ public class JacksonJsonFormatMapper extends AbstractJsonFormatMapper {
 
 	@Override
 	public <T> T readFromSource(JavaType<T> javaType, Object source, WrapperOptions options) throws IOException {
-
 		try {
 			return objectMapper.readValue( ((CharSequence)source).toString(), objectMapper.constructType( javaType.getJavaType() ) );
 		}

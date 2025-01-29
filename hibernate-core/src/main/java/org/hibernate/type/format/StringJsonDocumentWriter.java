@@ -5,7 +5,6 @@
 package org.hibernate.type.format;
 
 import org.hibernate.dialect.JsonHelper;
-import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BooleanJavaType;
@@ -20,36 +19,17 @@ import java.time.format.DateTimeFormatter;
 
 
 /**
- * Implementation of <code>JsonDocumentWriter</code> for String based OSON document.
+ * Implementation of <code>JsonDocumentWriter</code> for String-based OSON document.
  * This implementation will receive a {@link JsonHelper.JsonAppender } to a serialze JSON object to it
  * @author Emmanuel Jannetti
  */
-public class StringJsonDocumentWriter implements JsonDocumentWriter{
+public class StringJsonDocumentWriter extends StringJsonDocument implements JsonDocumentWriter {
 
-	private static final char ARRAY_END_MARKER = ']';
-	private static final char ARRAY_START_MARKER = '[';
-	private static final char OBJECT_END_MARKER = '}';
-	private static final char OBJECT_START_MARKER = '{';
-	private static final char SEPARATOR_MARKER = ',';
-	private static final char TOKEN_QUOTE = '"';
+
 
 	private JsonHelper.JsonAppender appender;
 
-	/**
-	 * Processing states. This can be (nested)Object or Arrays.
-	 * When processing objects, values are stored as [,]"key":"value"[,]. we add separator when adding new key
-	 * When processing arrays, values are stored as [,]"value"[,]. we add separator when adding new value
-	 */
-	private enum PROCESSING_STATE {
-		NONE,
-		STARTING_OBJECT, // object started but no value added
-		OBJECT, // object started, and we've started adding key/value pairs
-		ENDING_OBJECT, // we are ending an object
-		STARTING_ARRAY,  // array started but no value added
-		ENDING_ARRAY,  // we are ending an array
-		ARRAY // we are piling array values
-	}
-	private StandardStack<PROCESSING_STATE> processingStates = new StandardStack<>();
+
 
 	/**
 	 * Creates a new StringJsonDocumentWriter.
@@ -64,7 +44,7 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 	 * Callback to be called when the start of an JSON object is encountered.
 	 */
 	@Override
-	public void startObject() {
+	public JsonDocumentWriter startObject() {
 		// Note: startArray and startObject must not call moveProcessingStateMachine()
 		if (this.processingStates.getCurrent() == PROCESSING_STATE.STARTING_ARRAY) {
 			// are we building an array of objects?
@@ -76,54 +56,63 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 			// That means that we ae building an array of object ([{},...])
 			// JSON object hee are treat as array item.
 			// -> add the marker first
-			this.appender.append(SEPARATOR_MARKER);
+			this.appender.append(StringJsonDocumentMarker.SEPARATOR.getMarkerCharacter());
 		}
-		this.appender.append( OBJECT_START_MARKER);
+		this.appender.append( StringJsonDocumentMarker.OBJECT_START.getMarkerCharacter());
 		this.processingStates.push( PROCESSING_STATE.STARTING_OBJECT );
+		return this;
 	}
 
 	/**
 	 * Callback to be called when the end of an JSON object is encountered.
 	 */
 	@Override
-	public void endObject() {
-		this.appender.append( OBJECT_END_MARKER );
+	public JsonDocumentWriter endObject() {
+		this.appender.append( StringJsonDocumentMarker.OBJECT_END.getMarkerCharacter() );
 		this.processingStates.push( PROCESSING_STATE.ENDING_OBJECT);
 		moveProcessingStateMachine();
+		return this;
 	}
 
 	/**
 	 * Callback to be called when the start of an array is encountered.
 	 */
 	@Override
-	public void startArray() {
+	public JsonDocumentWriter startArray() {
 		this.processingStates.push( PROCESSING_STATE.STARTING_ARRAY );
 		// Note: startArray and startObject do not call moveProcessingStateMachine()
-		this.appender.append( ARRAY_START_MARKER );
-
+		this.appender.append( StringJsonDocumentMarker.ARRAY_START.getMarkerCharacter() );
+		return this;
 	}
 
 	/**
 	 * Callback to be called when the end of an array is encountered.
 	 */
 	@Override
-	public void endArray() {
-		this.appender.append( ARRAY_END_MARKER );
+	public JsonDocumentWriter endArray() {
+		this.appender.append( StringJsonDocumentMarker.ARRAY_END.getMarkerCharacter() );
 		this.processingStates.push( PROCESSING_STATE.ENDING_ARRAY);
 		moveProcessingStateMachine();
+		return this;
 	}
 
 
 	@Override
-	public void objectKey(String key) {
+	public JsonDocumentWriter objectKey(String key) {
+
+		if (key == null || key.length() == 0) {
+			throw new IllegalArgumentException( "key cannot be null or empty" );
+		}
+
 		if (this.processingStates.getCurrent().equals( PROCESSING_STATE.OBJECT )) {
 			// we have started an object, and we are adding an item key: we do add a separator.
-			this.appender.append( SEPARATOR_MARKER );
+			this.appender.append( StringJsonDocumentMarker.SEPARATOR.getMarkerCharacter() );
 		}
-		this.appender.append( TOKEN_QUOTE );
+		this.appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 		this.appender.append( key );
 		this.appender.append( "\":" );
 		moveProcessingStateMachine();
+		return this;
 	}
 
 	/**
@@ -135,7 +124,7 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 	private void addItemsSeparator() {
 		if (this.processingStates.getCurrent().equals( PROCESSING_STATE.ARRAY )) {
 			// We started to serialize an array and already added item to it:add a separator anytime.
-			this.appender.append( SEPARATOR_MARKER );
+			this.appender.append( StringJsonDocumentMarker.SEPARATOR.getMarkerCharacter() );
 		}
 	}
 
@@ -168,7 +157,7 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 				this.processingStates.push( PROCESSING_STATE.OBJECT );
 				break;
 			case STARTING_ARRAY:
-				//after starting an object, we start adding value to it
+				//after starting an array, we start adding value to it
 				this.processingStates.push( PROCESSING_STATE.ARRAY );
 				break;
 			case ENDING_ARRAY:
@@ -199,46 +188,53 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 	}
 
 	@Override
-	public void nullValue() {
+	public JsonDocumentWriter nullValue() {
 		addItemsSeparator();
 		this.appender.append( "null" );
 		moveProcessingStateMachine();
+		return this;
 	}
 
 	@Override
-	public void booleanValue(boolean value) {
+	public JsonDocumentWriter booleanValue(boolean value) {
 		addItemsSeparator();
 		BooleanJavaType.INSTANCE.appendEncodedString( this.appender, value);
 		moveProcessingStateMachine();
+		return this;
 	}
 
 	@Override
-	public void stringValue(String value) {
+	public JsonDocumentWriter stringValue(String value) {
 		addItemsSeparator();
 
-		appender.append( TOKEN_QUOTE);
+		appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter());
 		appender.startEscaping();
 		appender.append( value );
 		appender.endEscaping();
-		appender.append(TOKEN_QUOTE );
+		appender.append(StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 
 		moveProcessingStateMachine();
-
+		return this;
 	}
 
 	@Override
-	public void numberValue(Number value) {
+	public JsonDocumentWriter numberValue(Number value) {
+		if (value == null ) {
+			throw new IllegalArgumentException( "value cannot be null" );
+		}
 		addItemsSeparator();
 		this.appender.append( value.toString() );
 		moveProcessingStateMachine();
+		return this;
 	}
 
 
 	@Override
-	public void serializeJsonValue(Object value, JavaType<Object> javaType, JdbcType jdbcType, WrapperOptions options) {
+	public JsonDocumentWriter serializeJsonValue(Object value, JavaType<Object> javaType, JdbcType jdbcType, WrapperOptions options) {
 		addItemsSeparator();
 		convertedBasicValueToString(value, options,this.appender,javaType,jdbcType);
 		moveProcessingStateMachine();
+		return this;
 	}
 
 	/**
@@ -284,9 +280,9 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 			case SqlTypes.NVARCHAR:
 				if ( value instanceof Boolean ) {
 					// BooleanJavaType has this as an implicit conversion
-					appender.append( TOKEN_QUOTE );
+					appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 					appender.append( (Boolean) value ? 'Y' : 'N' );
-					appender.append( TOKEN_QUOTE);
+					appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter());
 					break;
 				}
 			case SqlTypes.LONGVARCHAR:
@@ -300,55 +296,55 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 			case SqlTypes.ENUM:
 			case SqlTypes.NAMED_ENUM:
 				// These literals can contain the '"' character, so we need to escape it
-				appender.append( TOKEN_QUOTE );
+				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				appender.startEscaping();
 				javaType.appendEncodedString( appender, value );
 				appender.endEscaping();
-				appender.append( TOKEN_QUOTE );
+				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
 			case SqlTypes.DATE:
-				appender.append( TOKEN_QUOTE );
+				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				JdbcDateJavaType.INSTANCE.appendEncodedString(
 						appender,
 						javaType.unwrap( value, java.sql.Date.class, options )
 				);
-				appender.append( TOKEN_QUOTE );
+				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
 			case SqlTypes.TIME:
 			case SqlTypes.TIME_WITH_TIMEZONE:
 			case SqlTypes.TIME_UTC:
-				appender.append( TOKEN_QUOTE );
+				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				JdbcTimeJavaType.INSTANCE.appendEncodedString(
 						appender,
 						javaType.unwrap( value, java.sql.Time.class, options )
 				);
-				appender.append( TOKEN_QUOTE );
+				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
 			case SqlTypes.TIMESTAMP:
-				appender.append( TOKEN_QUOTE );
+				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				JdbcTimestampJavaType.INSTANCE.appendEncodedString(
 						appender,
 						javaType.unwrap( value, java.sql.Timestamp.class, options )
 				);
-				appender.append( TOKEN_QUOTE );
+				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
 			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 			case SqlTypes.TIMESTAMP_UTC:
-				appender.append( TOKEN_QUOTE );
+				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				DateTimeFormatter.ISO_OFFSET_DATE_TIME.formatTo(
 						javaType.unwrap( value, OffsetDateTime.class, options ),
 						appender
 				);
-				appender.append( TOKEN_QUOTE );
+				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
 			case SqlTypes.DECIMAL:
 			case SqlTypes.NUMERIC:
 			case SqlTypes.DURATION:
 			case SqlTypes.UUID:
 				// These types need to be serialized as JSON string, but don't have a need for escaping
-				appender.append( TOKEN_QUOTE );
+				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				javaType.appendEncodedString( appender, value );
-				appender.append( TOKEN_QUOTE );
+				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
 			case SqlTypes.BINARY:
 			case SqlTypes.VARBINARY:
@@ -357,9 +353,9 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 			case SqlTypes.BLOB:
 			case SqlTypes.MATERIALIZED_BLOB:
 				// These types need to be serialized as JSON string, and for efficiency uses appendString directly
-				appender.append( TOKEN_QUOTE );
+				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				appender.write( javaType.unwrap( value, byte[].class, options ) );
-				appender.append( TOKEN_QUOTE );
+				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
 			case SqlTypes.ARRAY:
 			case SqlTypes.JSON_ARRAY:
@@ -370,4 +366,8 @@ public class StringJsonDocumentWriter implements JsonDocumentWriter{
 		}
 	}
 
+	@Override
+	public String toString() {
+		return appender.toString();
+	}
 }

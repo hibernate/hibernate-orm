@@ -27,6 +27,7 @@ import org.hibernate.type.format.OsonDocumentWriter;
 import org.hibernate.type.format.jackson.JacksonOsonFormatMapper;
 
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -131,7 +132,7 @@ public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
 
 		return new BasicExtractor<>( javaType, this ) {
 
-			private X fromOson(byte[] osonBytes, WrapperOptions options) throws Exception {
+			private X fromOson(InputStream osonBytes, WrapperOptions options) throws Exception {
 				FormatMapper mapper = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
 				JsonFactory osonFactory = (JsonFactory) osonFactoryKlass.getDeclaredConstructor().newInstance();
 				JsonParser osonParser = osonFactory.createParser( osonBytes );
@@ -142,7 +143,7 @@ public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
 				if ( datum == null ) {
 					return null;
 				}
-				byte[] osonBytes = datum.shareBytes();
+				InputStream osonBytes = datum.getStream();
 				try {
 					return fromOson( osonBytes ,options);
 				}

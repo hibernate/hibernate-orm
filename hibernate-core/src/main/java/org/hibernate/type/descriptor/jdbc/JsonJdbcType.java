@@ -23,6 +23,7 @@ import org.hibernate.type.format.StringJsonDocumentWriter;
  * Specialized type mapping for {@code JSON} and the JSON SQL data type.
  *
  * @author Christian Beikov
+ * @author Emmanuel Jannetti
  */
 public class JsonJdbcType implements AggregateJdbcType {
 	/**
@@ -75,7 +76,7 @@ public class JsonJdbcType implements AggregateJdbcType {
 			return null;
 		}
 		if ( embeddableMappingType != null ) {
-			return JsonHelper.fromString(
+			return (X) JsonHelper.deserialize(
 					embeddableMappingType,
 					string,
 					javaType.getJavaTypeClass() != Object[].class,
@@ -88,23 +89,30 @@ public class JsonJdbcType implements AggregateJdbcType {
 	@Override
 	public Object createJdbcValue(Object domainValue, WrapperOptions options) throws SQLException {
 		assert embeddableMappingType != null;
-		return JsonHelper.toString( embeddableMappingType, domainValue, options );
+		StringBuilder sb = new StringBuilder();
+		StringJsonDocumentWriter writer = new StringJsonDocumentWriter(new JsonHelper.JsonAppender(sb) );
+		try {
+			JsonHelper.serialize( embeddableMappingType ,domainValue,options, writer );
+			return writer.toString();
+		}
+		catch (IOException e) {
+			throw new SQLException( e );
+		}
 	}
 
 	@Override
 	public Object[] extractJdbcValues(Object rawJdbcValue, WrapperOptions options) throws SQLException {
 		assert embeddableMappingType != null;
-		return JsonHelper.fromString( embeddableMappingType, (String) rawJdbcValue, false, options );
+		return JsonHelper.deserialize( embeddableMappingType, (String) rawJdbcValue, false, options );
 	}
 
 	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
 		if ( embeddableMappingType != null ) {
-			// used to be JsonHelper.toString( embeddableMappingType, value, options );
 			try {
 				StringBuilder sb = new StringBuilder();
 				StringJsonDocumentWriter writer = new StringJsonDocumentWriter(new JsonHelper.JsonAppender(sb) );
 				JsonHelper.serialize( embeddableMappingType, value, options, writer);
-				return sb.toString();
+				return writer.toString();
 			}
 			catch (IOException e) {
 				throw new RuntimeException("Failed to serialize JSON mapping", e );

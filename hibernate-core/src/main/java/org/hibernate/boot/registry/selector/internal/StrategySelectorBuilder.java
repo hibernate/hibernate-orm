@@ -314,7 +314,8 @@ public class StrategySelectorBuilder {
 					JacksonOsonFormatMapper.SHORT_NAME,
 					JacksonOsonFormatMapper.class
 			);
-		} else {
+		}
+		else {
 			strategySelector.registerStrategyImplementor(
 					FormatMapper.class,
 					JacksonJsonFormatMapper.SHORT_NAME,

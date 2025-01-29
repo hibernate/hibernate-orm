@@ -1026,6 +1026,7 @@ public class OracleDialect extends Dialect {
 				StandardConverters.STRING,JACKSON_MAPPER_NAME);
 
 		if ( getVersion().isSameOrAfter( 21 ) ) {
+
 			if ( JacksonIntegration.isOracleOsonExtensionAvailable() && JACKSON_MAPPER_NAME.equalsIgnoreCase( mapperName )) {
 				// We must check that that extension is available and actually used.
 				typeContributions.contributeJdbcType( OracleOsonJacksonJdbcType.INSTANCE );

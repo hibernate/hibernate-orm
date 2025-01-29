@@ -22,12 +22,11 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.format.FormatMapper;
-import org.hibernate.type.format.ObjectArrayOsonDocumentHandler;
 import org.hibernate.type.format.OsonDocumentWriter;
 import org.hibernate.type.format.jackson.JacksonOsonFormatMapper;
 
 import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
+import java.io.InputStream;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -139,7 +138,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 
 		return new BasicExtractor<>( javaType, this ) {
 
-			private X fromOson(byte[] osonBytes, WrapperOptions options) throws Exception {
+			private X fromOson(InputStream osonBytes, WrapperOptions options) throws Exception {
 
 				FormatMapper mapper = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
 
@@ -149,14 +148,23 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 					// an array of objects. We use JsonParser to fetch values
 					// and build the array.(as opposed to let Jackson do it as we do not
 					// have a proper object definition at that stage).
-					OracleJsonParser osonParser = new OracleJsonFactory().createJsonBinaryParser( ByteBuffer.wrap( osonBytes ) );
+					OracleJsonParser osonParser = new OracleJsonFactory().createJsonBinaryParser( osonBytes );
 
-					ObjectArrayOsonDocumentHandler handler = new ObjectArrayOsonDocumentHandler( getEmbeddableMappingType(),
-							options);
 
-					OsonHelper.consumeOsonTokens(osonParser, osonParser.next(), handler);
+					//ObjectArrayOsonDocumentHandler handler = new ObjectArrayOsonDocumentHandler( getEmbeddableMappingType(),
+						//	options);
+					//OsonHelper.consumeOsonTokens(osonParser, osonParser.next(), handler);
 
-					return (X) handler.getObjectArray();
+					//osonBytes.reset();
+					//OracleJsonParser osonParser2 = new OracleJsonFactory().createJsonBinaryParser( osonBytes);
+					Object[] objects =  JsonHelper.deserialize(
+							getEmbeddableMappingType(),
+							osonParser,
+							javaType.getJavaTypeClass() != Object[].class,
+							options
+					);
+					//Object[] objects2 = (Object[]) handler.getObjectArray();
+					return (X) objects;
 				}
 
 				JavaType <X> type = getJavaType();
@@ -175,7 +183,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 				if ( datum == null ) {
 					return null;
 				}
-				byte[] osonBytes = datum.shareBytes();
+				InputStream osonBytes = datum.getStream();
 				try {
 					return fromOson( osonBytes ,options);
 				}

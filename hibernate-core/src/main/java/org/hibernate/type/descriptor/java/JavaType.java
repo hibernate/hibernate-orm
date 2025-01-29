@@ -268,6 +268,10 @@ public interface JavaType<T> extends Serializable {
 		return fromString( CharSequenceHelper.subSequence( charSequence, start, end ) );
 	}
 
+	default T fromEncodedString(CharSequence charSequence) {
+		return fromEncodedString( charSequence, 0, charSequence.length()  );
+	}
+
 	/**
 	 * Unwrap an instance of our handled Java type into the requested type.
 	 * <p>

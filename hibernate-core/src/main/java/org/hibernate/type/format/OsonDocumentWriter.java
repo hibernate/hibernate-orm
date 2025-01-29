@@ -51,61 +51,71 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 
 
 	@Override
-	public void startObject() {
+	public JsonDocumentWriter startObject() {
 		this.generator.writeStartObject();
+		return this;
 	}
 
 
 	@Override
-	public void endObject() {
+	public JsonDocumentWriter endObject() {
 		this.generator.writeEnd();
+		return this;
 	}
 
 
 	@Override
-	public void startArray() {
+	public JsonDocumentWriter startArray() {
 		generator.writeStartArray();
+		return this;
 	}
 
 
 	@Override
-	public void endArray() {
+	public JsonDocumentWriter endArray() {
 		generator.writeEnd();
+		return this;
 	}
 
 
 	@Override
-	public void objectKey(String key) {
+	public JsonDocumentWriter objectKey(String key) {
 		this.generator.writeKey( key );
+		return this;
 	}
 
 
 	@Override
-	public void nullValue() {
+	public JsonDocumentWriter nullValue() {
 		this.generator.writeNull();
+		return this;
 	}
 
 
 	@Override
-	public void booleanValue(boolean value) {
+	public JsonDocumentWriter booleanValue(boolean value) {
 		this.generator.write(value);
+		return this;
 	}
 
 
 	@Override
-	public void stringValue(String value) {
+	public JsonDocumentWriter stringValue(String value) {
 		this.generator.write(value);
+		return this;
 	}
 
 
 	@Override
-	public void numberValue(Number value) {
+	public JsonDocumentWriter numberValue(Number value) {
 		this.generator.write((BigDecimal) value );
+		return this;
 	}
 
 	@Override
-	public void serializeJsonValue(Object value, JavaType<Object> javaType, JdbcType jdbcType, WrapperOptions options) {
+	public JsonDocumentWriter serializeJsonValue(Object value, JavaType<Object> javaType, JdbcType jdbcType, WrapperOptions options) {
 		serializeValue(value, javaType, jdbcType, options);
+		return this;
 	}
 
 	/**

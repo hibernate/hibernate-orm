@@ -21,56 +21,66 @@ import java.io.IOException;
 public interface JsonDocumentWriter {
 	/**
 	 * Starts a new JSON Objects.
+	 * @return this instance
 	 */
-	void startObject();
+	JsonDocumentWriter startObject();
 
 	/**
 	 * Ends a new JSON Objects
+	 * @return this instance
 	 */
-	void endObject();
+	JsonDocumentWriter endObject();
 
 	/**
 	 * Starts a new JSON array.
+	 * @return this instance
 	 * @throws IOException an I/O error roccured while starting the object.
 	 */
-	void startArray();
+	JsonDocumentWriter startArray();
 
 	/**
 	 * Ends a new JSON array.
+	 * @return this instance
 	 * @throws IOException an I/O error roccured while starting the object.
 	 */
-	void endArray();
+	JsonDocumentWriter endArray();
 
 	/**
 	 * Adds a new JSON element name.
 	 * @param key the element name.
-	 * @throws IOException an I/O error roccured while starting the object.
+	 * @return this instance
+	 * @throws IllegalArgumentException key name does not follow JSON specification.
+	 * @throws IOException an I/O error occurred while starting the object.
 	 */
-	void objectKey(String key);
+	JsonDocumentWriter objectKey(String key);
 
 	/**
 	 * Adds a new JSON element null value.
+	 * @return this instance
 	 * @throws IOException an I/O error roccured while starting the object.
 	 */
-	void nullValue();
+	JsonDocumentWriter nullValue();
 
 	/**
 	 * Adds a new JSON element boolean value.
+	 * @return this instance
 	 * @param value the element boolean name.
 	 */
-	void booleanValue(boolean value);
+	JsonDocumentWriter booleanValue(boolean value);
 
 	/**
 	 * Adds a new JSON element string value.
+	 * @return this instance
 	 * @param value the element string name.
 	 */
-	void stringValue(String value);
+	JsonDocumentWriter stringValue(String value);
 
 	/**
 	 * Adds a new JSON element Number value.
+	 * @return this instance
 	 * @param value the element Number name.
 	 */
-	void numberValue(Number value);
+	JsonDocumentWriter numberValue(Number value);
 
 	/**
 	 * Adds a JSON value to the document
@@ -78,8 +88,9 @@ public interface JsonDocumentWriter {
 	 * @param javaType the Java type of the value
 	 * @param jdbcType the JDBC type for the value to be serialized
 	 * @param options the wrapping options
+	 * @return this instance
 	 */
-	void serializeJsonValue(Object value,
+	JsonDocumentWriter serializeJsonValue(Object value,
 							JavaType<Object> javaType,
 							JdbcType jdbcType,
 							WrapperOptions options);

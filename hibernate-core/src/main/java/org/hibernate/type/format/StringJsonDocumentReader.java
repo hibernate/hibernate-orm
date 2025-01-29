@@ -125,7 +125,7 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 	 * @throws IllegalStateException not a well-formed JSON string.
 	 */
 	@Override
-	public JsonDocumentItem.JsonDocumentItemType next() {
+	public JsonDocumentItemType next() {
 
 		if ( !hasNext()) throw new NoSuchElementException("no more elements");
 
@@ -137,19 +137,19 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 				case OBJECT_START:
 					//this.processingStates.push( PROCESSING_STATE.STARTING_OBJECT );
 					resetValueWindow();
-					return JsonDocumentItem.JsonDocumentItemType.OBJECT_START;
+					return JsonDocumentItemType.OBJECT_START;
 				case OBJECT_END:
 					resetValueWindow();
 					//this.processingStates.pop(); // closing an object or a nested one.
-					return JsonDocumentItem.JsonDocumentItemType.OBJECT_END;
+					return JsonDocumentItemType.OBJECT_END;
 				case ARRAY_START:
 					resetValueWindow();
 					//this.processingStates.push( PROCESSING_STATE.STARTING_ARRAY );
-					return JsonDocumentItem.JsonDocumentItemType.ARRAY_START;
+					return JsonDocumentItemType.ARRAY_START;
 				case ARRAY_END:
 					resetValueWindow();
 					//this.processingStates.pop();
-					return JsonDocumentItem.JsonDocumentItemType.ARRAY_END;
+					return JsonDocumentItemType.ARRAY_END;
 				case QUOTE:  // that's the start of an attribute key or a quoted value
 					// put back the quote
 					moveBufferPosition(-1);
@@ -164,17 +164,17 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 					switch ( this.processingStates.getCurrent() ) {
 						case PROCESSING_STATE.STARTING_ARRAY:
 							//this.processingStates.push( PROCESSING_STATE.ARRAY );
-							return JsonDocumentItem.JsonDocumentItemType.VALUE;
+							return JsonDocumentItemType.VALUE;
 						case PROCESSING_STATE.ARRAY:
-							return JsonDocumentItem.JsonDocumentItemType.VALUE;
+							return JsonDocumentItemType.VALUE;
 						case PROCESSING_STATE.STARTING_OBJECT:
 							//this.processingStates.push( PROCESSING_STATE.OBJECT );
 							//this.processingStates.push( PROCESSING_STATE.OBJECT_KEY_NAME );
-							return JsonDocumentItem.JsonDocumentItemType.VALUE_KEY;
+							return JsonDocumentItemType.VALUE_KEY;
 						case PROCESSING_STATE.OBJECT: // we are processing object attribute value elements
-							return JsonDocumentItem.JsonDocumentItemType.VALUE;
+							return JsonDocumentItemType.VALUE;
 						case PROCESSING_STATE.OBJECT_KEY_NAME: // we are processing object elements key
-							return JsonDocumentItem.JsonDocumentItemType.VALUE_KEY;
+							return JsonDocumentItemType.VALUE_KEY;
 						default:
 							throw new IllegalStateException( "unexpected quote read in current processing state " +
 															this.processingStates.getCurrent() );
@@ -223,20 +223,20 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 	 * @param jsonValueWindow the value
 	 * @return the type of the value
 	 */
-	private JsonDocumentItem.JsonDocumentItemType getUnquotedValueType(CharBuffer jsonValueWindow) {
+	private JsonDocumentItemType getUnquotedValueType(CharBuffer jsonValueWindow) {
 		final int size = jsonValueWindow.remaining();
 		switch(jsonValueWindow.charAt( 0 )) {
 			case 't': {
 				//true
-				return JsonDocumentItem.JsonDocumentItemType.BOOLEAN_VALUE;
+				return JsonDocumentItemType.BOOLEAN_VALUE;
 			}
 			case 'f': {
 				//false
-				return JsonDocumentItem.JsonDocumentItemType.BOOLEAN_VALUE;
+				return JsonDocumentItemType.BOOLEAN_VALUE;
 			}
 			case 'n' : {
 					// null
-					return JsonDocumentItem.JsonDocumentItemType.NULL_VALUE;
+					return JsonDocumentItemType.NULL_VALUE;
 				}
 			case '-':
 			case '0':
@@ -249,10 +249,10 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 			case '7':
 			case '8':
 			case '9': {
-				return JsonDocumentItem.JsonDocumentItemType.NUMERIC_VALUE;
+				return JsonDocumentItemType.NUMERIC_VALUE;
 			}
 			default :
-				return JsonDocumentItem.JsonDocumentItemType.VALUE;
+				return JsonDocumentItemType.VALUE;
 			}
 	}
 

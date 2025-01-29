@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.util;
 
-import org.hibernate.type.format.JsonDocumentItem;
+import org.hibernate.type.format.JsonDocumentItemType;
 import org.hibernate.type.format.StringJsonDocumentReader;
 import org.junit.jupiter.api.Test;
 
@@ -32,24 +32,24 @@ public class StringJsonDocumentReaderTest {
 	public void testEmptyJsonObject() {
 		final StringJsonDocumentReader reader = new StringJsonDocumentReader( "{}" );
 		assertTrue(reader.hasNext(), "should have more element");
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_START, reader.next());
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 		assertFalse(reader.hasNext(), "Should not have  anymore element");
 	}
 	@Test
 	public void testEmptyJsonArray() {
 		final StringJsonDocumentReader reader = new StringJsonDocumentReader( "[]" );
 		assertTrue(reader.hasNext(), "should have more element");
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.ARRAY_START, reader.next());
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.ARRAY_END, reader.next());
+		assertEquals( JsonDocumentItemType.ARRAY_START, reader.next());
+		assertEquals( JsonDocumentItemType.ARRAY_END, reader.next());
 		assertFalse(reader.hasNext(), "Should not have  anymore element");
 	}
 	@Test
 	public void testWrongNext() {
 		final StringJsonDocumentReader reader = new StringJsonDocumentReader( "{}" );
 		assertTrue(reader.hasNext(), "should have more element");
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_START, reader.next());
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 		assertFalse(reader.hasNext(), "Should not have  anymore element");
 		assertThrows( NoSuchElementException.class, () -> {reader.next();} );
 	}
@@ -57,15 +57,15 @@ public class StringJsonDocumentReaderTest {
 	public void testSimpleDocument() {
 		final StringJsonDocumentReader reader = new StringJsonDocumentReader( "{ \"key1\" :\"value1\"    }" );
 		assertTrue(reader.hasNext(), "should have more element");
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_START, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START, reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals("key1", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE, reader.next());
+		assertEquals( JsonDocumentItemType.VALUE, reader.next());
 		assertEquals("value1", reader.getStringValue());
 
 
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 		assertFalse(reader.hasNext(), "Should not have  anymore element");
 		assertThrows( NoSuchElementException.class, () -> {reader.next();} );
 	}
@@ -73,19 +73,19 @@ public class StringJsonDocumentReaderTest {
 	public void testSimpleDoubleValueDocument() {
 		final StringJsonDocumentReader reader = new StringJsonDocumentReader( "{ \"key1\":\"\",\"key2\" : \" x value2 x \" }" );
 		assertTrue(reader.hasNext(), "should have more element");
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_START, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START, reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "key1", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE,reader.next());
 		assertEquals( "", reader.getStringValue());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "key2", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE,reader.next());
 		assertTrue( reader.getStringValue().equals(" x value2 x "));
 
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 		assertFalse(reader.hasNext(), "Should not have  anymore element");
 		assertThrows( NoSuchElementException.class, () -> {reader.next();} );
 	}
@@ -93,27 +93,27 @@ public class StringJsonDocumentReaderTest {
 	public void testNonStringValueDocument() {
 		final StringJsonDocumentReader reader = new StringJsonDocumentReader( "{ \"aNull\":null, \"aNumber\" : 12 , \"aBoolean\" : true}" );
 		assertTrue(reader.hasNext(), "should have more element");
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_START, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START, reader.next());
 
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "aNull", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.NULL_VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.NULL_VALUE,reader.next());
 		assertEquals( "null", reader.getStringValue());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "aNumber", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.NUMERIC_VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.NUMERIC_VALUE,reader.next());
 		assertEquals( 12, reader.getIntegerValue());
 		assertEquals( "12", reader.getStringValue());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "aBoolean", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.BOOLEAN_VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.BOOLEAN_VALUE,reader.next());
 		assertEquals( true, reader.getBooleanValue());
 		assertEquals( "true", reader.getStringValue());
 
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 		assertFalse(reader.hasNext(), "Should not have  anymore element");
 		assertThrows( NoSuchElementException.class, () -> {reader.next();} );
 	}
@@ -122,11 +122,11 @@ public class StringJsonDocumentReaderTest {
 	public void testNonAvailableValueDocument() {
 		final StringJsonDocumentReader reader = new StringJsonDocumentReader( "{}" );
 		assertTrue(reader.hasNext(), "should have more element");
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_START, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START, reader.next());
 
 		assertThrows( IllegalStateException.class, () -> {reader.getStringValue();} );
 
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 		assertFalse(reader.hasNext(), "Should not have  anymore element");
 		assertThrows( NoSuchElementException.class, () -> {reader.next();} );
 	}
@@ -135,16 +135,16 @@ public class StringJsonDocumentReaderTest {
 	public void testBooleanValueDocument() {
 		final StringJsonDocumentReader reader = new StringJsonDocumentReader( "{ \"aBoolean\" : true}" );
 		assertTrue(reader.hasNext(), "should have more element");
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_START, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START, reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "aBoolean", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.BOOLEAN_VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.BOOLEAN_VALUE,reader.next());
 		assertTrue( reader.getBooleanValue() );
 		assertEquals( "true",reader.getStringValue());
 		assertTrue(reader.getBooleanValue());
 
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 		assertFalse(reader.hasNext(), "Should not have  anymore element");
 		assertThrows( NoSuchElementException.class, () -> {reader.next();} );
 	}
@@ -154,31 +154,31 @@ public class StringJsonDocumentReaderTest {
 		final StringJsonDocumentReader reader =
 				new StringJsonDocumentReader( "{ \"aInteger\" : 12, \"aDouble\" : 123.456 , \"aLong\" : 123456, \"aShort\" : 1}" );
 		assertTrue(reader.hasNext(), "should have more element");
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_START, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START, reader.next());
 
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "aInteger", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.NUMERIC_VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.NUMERIC_VALUE,reader.next());
 		assertEquals( (int)12 , reader.getIntegerValue());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "aDouble", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.NUMERIC_VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.NUMERIC_VALUE,reader.next());
 		assertEquals( (double)123.456 ,reader.getDoubleValue()  );
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "aLong", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.NUMERIC_VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.NUMERIC_VALUE,reader.next());
 		assertEquals( (long)123456 , reader.getLongValue()  );
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "aShort", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.NUMERIC_VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.NUMERIC_VALUE,reader.next());
 		assertEquals( (short)1, reader.getLongValue()  );
 
 
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 		assertFalse(reader.hasNext(), "Should not have  anymore element");
 		assertThrows( NoSuchElementException.class, () -> {reader.next();} );
 	}
@@ -188,25 +188,25 @@ public class StringJsonDocumentReaderTest {
 		final StringJsonDocumentReader reader =
 				new StringJsonDocumentReader( "{ \"anEmptyArray\" : [], \"anArray\" : [1,2,3] }" );
 		assertTrue(reader.hasNext());
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_START, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START, reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "anEmptyArray", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.ARRAY_START,reader.next());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.ARRAY_END,reader.next());
+		assertEquals( JsonDocumentItemType.ARRAY_START,reader.next());
+		assertEquals( JsonDocumentItemType.ARRAY_END,reader.next());
 
-		assertEquals(  JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals(  JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "anArray", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.ARRAY_START,reader.next());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.NUMERIC_VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.ARRAY_START,reader.next());
+		assertEquals( JsonDocumentItemType.NUMERIC_VALUE,reader.next());
 		assertEquals(1,  reader.getIntegerValue());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.NUMERIC_VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.NUMERIC_VALUE,reader.next());
 		assertEquals(2,  reader.getIntegerValue());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.NUMERIC_VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.NUMERIC_VALUE,reader.next());
 		assertEquals(3,  reader.getIntegerValue());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.ARRAY_END,reader.next());
+		assertEquals( JsonDocumentItemType.ARRAY_END,reader.next());
 
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 		assertFalse(reader.hasNext(), "Should not have  anymore element");
 		assertThrows( NoSuchElementException.class, () -> {reader.next();} );
 	}
@@ -216,30 +216,30 @@ public class StringJsonDocumentReaderTest {
 				new StringJsonDocumentReader( "{ \"anArray\" : [1, null, \"2\" ,  {\"foo\":\"bar\"}  ]  \n"
 											+ "     }" );
 		assertTrue(reader.hasNext());
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_START, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START, reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "anArray", reader.getObjectKeyName());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.ARRAY_START,reader.next());
+		assertEquals( JsonDocumentItemType.ARRAY_START,reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.NUMERIC_VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.NUMERIC_VALUE,reader.next());
 		assertEquals("1",  reader.getStringValue());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.NULL_VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.NULL_VALUE,reader.next());
 		assertEquals("null",  reader.getStringValue());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE,reader.next());
 		assertEquals(2,  reader.getIntegerValue());
 
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_START, reader.next());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START, reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "foo", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE,reader.next());
 		assertEquals("bar",  reader.getStringValue());
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.ARRAY_END,reader.next());
+		assertEquals( JsonDocumentItemType.ARRAY_END,reader.next());
 
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 
 		assertFalse(reader.hasNext(), "Should not have  anymore element");
 		assertThrows( NoSuchElementException.class, () -> {reader.next();} );
@@ -249,24 +249,24 @@ public class StringJsonDocumentReaderTest {
 		final StringJsonDocumentReader reader =
 				new StringJsonDocumentReader( "{ \"str1\" : \"abc\" , \"str2\" : \"\\\"abc\\\"\" , \"str3\" : \"a\\\"b\\\"c\" }" );
 		assertTrue(reader.hasNext());
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_START, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START, reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "str1", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE,reader.next());
 		assertEquals("abc",  reader.getStringValue());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "str2", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE,reader.next());
 		assertEquals("\"abc\"",  reader.getStringValue());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "str3", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE,reader.next());
 		assertEquals("a\"b\"c",  reader.getStringValue());
 
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 
 		assertFalse(reader.hasNext(), "Should not have  anymore element");
 		assertThrows( NoSuchElementException.class, () -> {reader.next();} );
@@ -292,57 +292,57 @@ public class StringJsonDocumentReaderTest {
 							}
 						""");
 
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_START, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START, reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "nested", reader.getObjectKeyName());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.OBJECT_START,reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START,reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "converted_gender", reader.getObjectKeyName());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE,reader.next());
 		assertEquals("M",  reader.getStringValue());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "theInteger", reader.getObjectKeyName());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.NUMERIC_VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.NUMERIC_VALUE,reader.next());
 		assertEquals(-1,  reader.getIntegerValue());
 
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "doubleNested", reader.getObjectKeyName());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.OBJECT_START,reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START,reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "theNested", reader.getObjectKeyName());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.OBJECT_START,reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START,reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "theLeaf", reader.getObjectKeyName());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.OBJECT_START,reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START,reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "stringField", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE,reader.next());
 		assertEquals("String \"<abc>A&B</abc>\"",  reader.getStringValue());
 
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "integerField", reader.getObjectKeyName());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.NUMERIC_VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.NUMERIC_VALUE,reader.next());
 		assertEquals("10",  reader.getStringValue());
 
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 	}
 
 	@Test
@@ -357,28 +357,28 @@ public class StringJsonDocumentReaderTest {
 									]
 							}
 						""");
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_START, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START, reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "nested", reader.getObjectKeyName());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.ARRAY_START,reader.next());
+		assertEquals( JsonDocumentItemType.ARRAY_START,reader.next());
 
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_START, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_START, reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
 		assertEquals( "anArray", reader.getObjectKeyName());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.ARRAY_START,reader.next());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.NUMERIC_VALUE,reader.next());
+		assertEquals( JsonDocumentItemType.ARRAY_START,reader.next());
+		assertEquals( JsonDocumentItemType.NUMERIC_VALUE,reader.next());
 		assertEquals(1L,  reader.getLongValue());
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.ARRAY_END,reader.next());
+		assertEquals( JsonDocumentItemType.ARRAY_END,reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.OBJECT_END,reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END,reader.next());
 
-		assertEquals( JsonDocumentItem.JsonDocumentItemType.ARRAY_END,reader.next());
+		assertEquals( JsonDocumentItemType.ARRAY_END,reader.next());
 
-		assertEquals(JsonDocumentItem.JsonDocumentItemType.OBJECT_END, reader.next());
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 	}
 
 }

@@ -36,7 +36,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.format.JsonDocumentItem;
+import org.hibernate.type.format.JsonDocumentItemType;
 import org.hibernate.type.format.JsonDocumentReader;
 import org.hibernate.type.format.JsonDocumentReaderFactory;
 import org.hibernate.type.format.JsonDocumentWriter;
@@ -257,7 +257,7 @@ public class JsonHelper {
 		objectArrays.push( objectArrayResult );
 
 		while(reader.hasNext()) {
-			JsonDocumentItem.JsonDocumentItemType type = reader.next();
+			JsonDocumentItemType type = reader.next();
 			switch (type) {
 				case VALUE_KEY:
 					currentKeyName = reader.getObjectKeyName();
@@ -429,12 +429,12 @@ public class JsonHelper {
 		JsonValueJDBCTypeAdapter adapter = JsonValueJDBCTypeAdapterFactory.getAdapter(reader,false);
 
 		assert reader.hasNext():"Invalid array string";
-		assert reader.next() == JsonDocumentItem.JsonDocumentItemType.ARRAY_START:"Invalid start of array";
+		assert reader.next() == JsonDocumentItemType.ARRAY_START:"Invalid start of array";
 		boolean endArrayFound = false;
 		while(reader.hasNext()) {
-			JsonDocumentItem.JsonDocumentItemType type = reader.next();
+			JsonDocumentItemType type = reader.next();
 			switch ( type ) {
-				case JsonDocumentItem.JsonDocumentItemType.ARRAY_END:
+				case JsonDocumentItemType.ARRAY_END:
 					endArrayFound=true;
 					break;
 				case NULL_VALUE:

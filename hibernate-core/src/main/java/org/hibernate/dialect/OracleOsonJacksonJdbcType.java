@@ -149,21 +149,12 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 					// and build the array.(as opposed to let Jackson do it as we do not
 					// have a proper object definition at that stage).
 					OracleJsonParser osonParser = new OracleJsonFactory().createJsonBinaryParser( osonBytes );
-
-
-					//ObjectArrayOsonDocumentHandler handler = new ObjectArrayOsonDocumentHandler( getEmbeddableMappingType(),
-						//	options);
-					//OsonHelper.consumeOsonTokens(osonParser, osonParser.next(), handler);
-
-					//osonBytes.reset();
-					//OracleJsonParser osonParser2 = new OracleJsonFactory().createJsonBinaryParser( osonBytes);
 					Object[] objects =  JsonHelper.deserialize(
 							getEmbeddableMappingType(),
 							osonParser,
 							javaType.getJavaTypeClass() != Object[].class,
 							options
 					);
-					//Object[] objects2 = (Object[]) handler.getObjectArray();
 					return (X) objects;
 				}
 

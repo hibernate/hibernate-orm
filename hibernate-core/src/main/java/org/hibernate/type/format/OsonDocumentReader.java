@@ -42,7 +42,7 @@ public class OsonDocumentReader implements JsonDocumentReader {
 	}
 
 	@Override
-	public JsonDocumentItem.JsonDocumentItemType next() {
+	public JsonDocumentItemType next() {
 		if (!this.parser.hasNext())
 			throw new NoSuchElementException("No more item in JSON document");
 		OracleJsonParser.Event evt = this.parser.next();
@@ -51,54 +51,54 @@ public class OsonDocumentReader implements JsonDocumentReader {
 		currentValueIsAString = false;
 		switch (evt) {
 			case OracleJsonParser.Event.START_OBJECT:
-				return JsonDocumentItem.JsonDocumentItemType.OBJECT_START;
+				return JsonDocumentItemType.OBJECT_START;
 			case OracleJsonParser.Event.END_OBJECT:
-				return JsonDocumentItem.JsonDocumentItemType.OBJECT_END;
+				return JsonDocumentItemType.OBJECT_END;
 			case OracleJsonParser.Event.START_ARRAY:
-				return JsonDocumentItem.JsonDocumentItemType.ARRAY_START;
+				return JsonDocumentItemType.ARRAY_START;
 			case OracleJsonParser.Event.END_ARRAY:
-				return JsonDocumentItem.JsonDocumentItemType.ARRAY_END;
+				return JsonDocumentItemType.ARRAY_END;
 			case OracleJsonParser.Event.KEY_NAME:
 				currentKeyName = this.parser.getString();
-				return JsonDocumentItem.JsonDocumentItemType.VALUE_KEY;
+				return JsonDocumentItemType.VALUE_KEY;
 			case OracleJsonParser.Event.VALUE_TIMESTAMPTZ:
 				currentValue = this.parser.getOffsetDateTime();
-				return JsonDocumentItem.JsonDocumentItemType.VALUE;
+				return JsonDocumentItemType.VALUE;
 			case OracleJsonParser.Event.VALUE_DATE:
 			case OracleJsonParser.Event.VALUE_TIMESTAMP:
 				currentValue = this.parser.getLocalDateTime();
-				return JsonDocumentItem.JsonDocumentItemType.VALUE;
+				return JsonDocumentItemType.VALUE;
 			case OracleJsonParser.Event.VALUE_INTERVALDS:
 				currentValue = this.parser.getDuration();
-				return JsonDocumentItem.JsonDocumentItemType.VALUE;
+				return JsonDocumentItemType.VALUE;
 			case OracleJsonParser.Event.VALUE_INTERVALYM:
 				currentValue = this.parser.getPeriod();
-				return JsonDocumentItem.JsonDocumentItemType.VALUE;
+				return JsonDocumentItemType.VALUE;
 			case OracleJsonParser.Event.VALUE_STRING:
 				currentValue = this.parser.getString();
 				currentValueIsAString = true;
-				return JsonDocumentItem.JsonDocumentItemType.VALUE;
+				return JsonDocumentItemType.VALUE;
 			case OracleJsonParser.Event.VALUE_TRUE:
 				currentValue = Boolean.TRUE;
-				return JsonDocumentItem.JsonDocumentItemType.BOOLEAN_VALUE;
+				return JsonDocumentItemType.BOOLEAN_VALUE;
 			case OracleJsonParser.Event.VALUE_FALSE:
 				currentValue = Boolean.FALSE;
-				return JsonDocumentItem.JsonDocumentItemType.BOOLEAN_VALUE;
+				return JsonDocumentItemType.BOOLEAN_VALUE;
 			case OracleJsonParser.Event.VALUE_NULL:
 				currentValue = null;
-				return JsonDocumentItem.JsonDocumentItemType.NULL_VALUE;
+				return JsonDocumentItemType.NULL_VALUE;
 			case OracleJsonParser.Event.VALUE_DECIMAL:
 				currentValue = this.parser.getBigDecimal();
-				return JsonDocumentItem.JsonDocumentItemType.VALUE;
+				return JsonDocumentItemType.VALUE;
 			case OracleJsonParser.Event.VALUE_DOUBLE:
 				currentValue = this.parser.getDouble();
-				return JsonDocumentItem.JsonDocumentItemType.VALUE;
+				return JsonDocumentItemType.VALUE;
 			case OracleJsonParser.Event.VALUE_FLOAT:
 				currentValue = this.parser.getFloat();
-				return JsonDocumentItem.JsonDocumentItemType.VALUE;
+				return JsonDocumentItemType.VALUE;
 			case OracleJsonParser.Event.VALUE_BINARY:
 				currentValue = this.parser.getBytes();
-				return JsonDocumentItem.JsonDocumentItemType.VALUE;
+				return JsonDocumentItemType.VALUE;
 			default :
 				assert false:"Unknown OSON event";
 		}

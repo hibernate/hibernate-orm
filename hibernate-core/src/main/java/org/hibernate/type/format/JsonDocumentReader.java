@@ -79,7 +79,7 @@ import java.util.Iterator;
  *
  * @author Emmanuel Jannetti
  */
-public interface JsonDocumentReader extends Iterator<JsonDocumentItem.JsonDocumentItemType> {
+public interface JsonDocumentReader extends Iterator<JsonDocumentItemType> {
 	default void forEachRemaining() {
 		throw new UnsupportedOperationException("forEachRemaining");
 	}

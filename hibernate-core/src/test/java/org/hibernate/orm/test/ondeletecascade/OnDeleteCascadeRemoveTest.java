@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.ondeletecascade;
 
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -13,8 +14,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.annotations.SQLDelete;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.Statistics;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -32,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		OnDeleteCascadeRemoveTest.Child.class},
 		generateStatistics = true,
 		useCollectingStatementInspector = true)
+//@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
 class OnDeleteCascadeRemoveTest {
 	@Test
 	void testOnDeleteCascadeRemove1(EntityManagerFactoryScope scope) {
@@ -39,7 +41,8 @@ class OnDeleteCascadeRemoveTest {
 				scope.getEntityManagerFactory().unwrap( SessionFactory.class )
 						.getStatistics();
 		statistics.clear();
-		scope.getCollectingStatementInspector().clear();
+		var inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
 		scope.inTransaction( em -> {
 			Parent parent = new Parent();
 			Child child = new Child();
@@ -54,8 +57,9 @@ class OnDeleteCascadeRemoveTest {
 			// note: ideally we would skip the initialization here
 			assertTrue( Hibernate.isInitialized( parent.children ) );
 		});
-		assertEquals( 1L,statistics.getEntityStatistics(Child.class.getName()).getDeleteCount() );
-		assertEquals( 5, scope.getCollectingStatementInspector().getSqlQueries().size() );
+		EntityStatistics entityStatistics = statistics.getEntityStatistics( Child.class.getName() );
+		assertEquals( 1L, entityStatistics.getDeleteCount() );
+		inspector.assertExecutedCount( scope.getDialect().supportsCascadeDelete() ? 5 : 6 );
 		long children =
 				scope.fromTransaction( em -> em.createQuery( "select count(*) from CascadeChild", Long.class )
 						.getSingleResult() );
@@ -68,7 +72,8 @@ class OnDeleteCascadeRemoveTest {
 				scope.getEntityManagerFactory().unwrap( SessionFactory.class )
 						.getStatistics();
 		statistics.clear();
-		scope.getCollectingStatementInspector().clear();
+		var inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
 		scope.inTransaction( em -> {
 			Parent parent = new Parent();
 			Child child = new Child();
@@ -86,10 +91,11 @@ class OnDeleteCascadeRemoveTest {
 					.getEntry( parent.children.iterator().next() )
 					.getStatus().isDeletedOrGone() );
 		});
-		assertEquals( 1L, statistics.getEntityStatistics(Child.class.getName()).getDeleteCount() );
-		assertEquals( 5, scope.getCollectingStatementInspector().getSqlQueries().size() );
+		EntityStatistics entityStatistics = statistics.getEntityStatistics( Child.class.getName() );
+		assertEquals( 1L, entityStatistics.getDeleteCount() );
+		inspector.assertExecutedCount( scope.getDialect().supportsCascadeDelete() ? 5 : 6 );
 		long children =
-				scope.fromTransaction( em -> em.createQuery( "select count(*) from CascadeChild", Long.class )
+				scope.fromTransaction( em -> em.createQuery( "select count(c.id) from CascadeChild c", Long.class )
 						.getSingleResult() );
 		assertEquals( 0L, children );
 	}
@@ -104,7 +110,8 @@ class OnDeleteCascadeRemoveTest {
 		Set<Child> children = new HashSet<>();
 	}
 	@Entity(name="CascadeChild")
-	@SQLDelete( sql = "should never happen" )
+	@Cacheable
+//	@SQLDelete( sql = "should never happen" )
 	static class Child {
 		@Id
 		long id;

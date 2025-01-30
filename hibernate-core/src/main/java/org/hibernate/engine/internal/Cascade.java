@@ -14,6 +14,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
@@ -137,6 +138,7 @@ public final class Cascade {
 				final boolean isUninitializedProperty =
 						hasUninitializedLazyProperties &&
 						!persister.getBytecodeEnhancementMetadata().isAttributeLoaded( parent, propertyName );
+				final boolean isCascadeDeleteEnabled = cascadeDeleteEnabled( action, persister, i );
 
 				if ( style.doCascade( action ) ) {
 					final Object child;
@@ -200,7 +202,7 @@ public final class Cascade {
 							style,
 							propertyName,
 							anything,
-							false
+							isCascadeDeleteEnabled
 					);
 				}
 				else {
@@ -215,7 +217,7 @@ public final class Cascade {
 								type,
 								style,
 								propertyName,
-								false
+								isCascadeDeleteEnabled
 						);
 					}
 				}
@@ -471,8 +473,8 @@ public final class Cascade {
 						componentPropertyStyle,
 						subPropertyName,
 						anything,
-						false
-					);
+						cascadeDeleteEnabled( action, componentType, i )
+				);
 			}
 		}
 	}
@@ -542,7 +544,7 @@ public final class Cascade {
 				style,
 				elemType,
 				anything,
-				persister.isCascadeDeleteEnabled()
+				cascadeDeleteEnabled( action, persister )
 			);
 		}
 	}
@@ -677,5 +679,20 @@ public final class Cascade {
 				eventSource.delete( entityName, orphan, false, DeleteContext.create() );
 			}
 		}
+	}
+
+	private static <T> boolean cascadeDeleteEnabled(CascadingAction<T> action, CollectionPersister persister) {
+		return action.directionAffectedByCascadeDelete() == ForeignKeyDirection.FROM_PARENT
+			&& persister.isCascadeDeleteEnabled();
+	}
+
+	private static <T> boolean cascadeDeleteEnabled(CascadingAction<T> action, EntityPersister persister, int i) {
+		return action.directionAffectedByCascadeDelete() == ForeignKeyDirection.TO_PARENT
+			&& persister.getEntityMetamodel().getPropertyOnDeleteActions()[i] == OnDeleteAction.CASCADE;
+	}
+
+	private static <T> boolean cascadeDeleteEnabled(CascadingAction<T> action, CompositeType componentType, int i) {
+		return action.directionAffectedByCascadeDelete() == ForeignKeyDirection.TO_PARENT
+			&& componentType.getOnDeleteAction( i ) == OnDeleteAction.CASCADE;
 	}
 }

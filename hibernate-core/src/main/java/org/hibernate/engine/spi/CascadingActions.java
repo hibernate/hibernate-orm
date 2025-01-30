@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.spi;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
@@ -21,6 +22,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
@@ -87,6 +89,11 @@ public class CascadingActions {
 		@Override
 		public boolean anythingToCascade(EntityPersister persister) {
 			return persister.hasCascadeDelete();
+		}
+
+		@Override
+		public ForeignKeyDirection directionAffectedByCascadeDelete() {
+			return ForeignKeyDirection.FROM_PARENT;
 		}
 
 		@Override
@@ -387,7 +394,7 @@ public class CascadingActions {
 				Void nothing,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			if ( child != null && isChildTransient( session, child, childEntityName ) ) {
+			if ( child != null && isChildTransient( session, child, childEntityName, isCascadeDeleteEnabled ) ) {
 				throw new TransientPropertyValueException(
 						"Persistent instance of '" + parentEntityName
 							+ "' references an unsaved transient instance of '" + childEntityName
@@ -482,12 +489,17 @@ public class CascadingActions {
 		}
 
 		@Override
+		public ForeignKeyDirection directionAffectedByCascadeDelete() {
+			return ForeignKeyDirection.TO_PARENT;
+		}
+
+		@Override
 		public String toString() {
 			return "ACTION_CHECK_ON_FLUSH";
 		}
 	};
 
-	private static boolean isChildTransient(EventSource session, Object child, String entityName) {
+	private static boolean isChildTransient(EventSource session, Object child, String entityName, boolean isCascadeDeleteEnabled) {
 		if ( isHibernateProxy( child ) ) {
 			// a proxy is always non-transient
 			// and ForeignKeys.isTransient()
@@ -502,7 +514,11 @@ public class CascadingActions {
 				// we are good, even if it's not yet
 				// inserted, since ordering problems
 				// are detected and handled elsewhere
-				return entry.getStatus().isDeletedOrGone();
+				return entry.getStatus().isDeletedOrGone()
+					// if the foreign key is 'on delete cascade'
+					// we don't have to throw because the database
+					// will delete the parent for us
+					&& !isCascadeDeleteEnabled;
 			}
 			else {
 				// TODO: check if it is a merged entity which has not yet been flushed
@@ -579,6 +595,11 @@ public class CascadingActions {
 				AssociationType associationType,
 				SessionFactoryImplementor factory) {
 			return associationType.getForeignKeyDirection().cascadeNow( cascadePoint );
+		}
+
+		@Override @Nullable
+		public ForeignKeyDirection directionAffectedByCascadeDelete() {
+			return null;
 		}
 	}
 

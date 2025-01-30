@@ -16,6 +16,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
@@ -60,6 +61,7 @@ public class ComponentType extends AbstractType
 	private final int[] originalPropertyOrder;
 	protected final int propertySpan;
 	private final CascadeStyle[] cascade;
+	private final OnDeleteAction[] onDeleteAction;
 	private final FetchMode[] joinedFetch;
 	private final int discriminatorColumnSpan;
 
@@ -84,11 +86,18 @@ public class ComponentType extends AbstractType
 		this.propertySpan = component.getPropertySpan();
 		this.originalPropertyOrder = originalPropertyOrder;
 		final Value discriminator = component.getDiscriminator();
-		this.propertyNames = new String[propertySpan + ( component.isPolymorphic() ? 1 : 0 )];
-		this.propertyTypes = new Type[propertySpan + ( component.isPolymorphic() ? 1 : 0 )];
-		this.propertyNullability = new boolean[propertySpan + ( component.isPolymorphic() ? 1 : 0 )];
-		this.cascade = new CascadeStyle[propertySpan + ( component.isPolymorphic() ? 1 : 0 )];
-		this.joinedFetch = new FetchMode[propertySpan + ( component.isPolymorphic() ? 1 : 0 )];
+		final int length = propertySpan + (component.isPolymorphic() ? 1 : 0);
+		this.propertyNames = new String[length];
+		this.propertyTypes = new Type[length];
+		this.propertyNullability = new boolean[length];
+		this.cascade = new CascadeStyle[length];
+		this.onDeleteAction = new OnDeleteAction[length];
+		this.joinedFetch = new FetchMode[length];
+
+		final boolean supportsCascadeDelete =
+				component.getBuildingContext().getMetadataCollector()
+						.getDatabase().getDialect()
+						.supportsCascadeDelete();
 
 		int i = 0;
 		for ( Property property : component.getProperties() ) {
@@ -97,6 +106,7 @@ public class ComponentType extends AbstractType
 			this.propertyNullability[i] = property.isOptional();
 			this.cascade[i] = property.getCascadeStyle();
 			this.joinedFetch[i] = property.getValue().getFetchMode();
+			onDeleteAction[i] = supportsCascadeDelete ? property.getOnDeleteAction() : null;
 			if ( !property.isOptional() ) {
 				hasNotNullProperty = true;
 			}
@@ -581,6 +591,11 @@ public class ComponentType extends AbstractType
 	@Override
 	public CascadeStyle getCascadeStyle(int i) {
 		return cascade[i];
+	}
+
+	@Override
+	public OnDeleteAction getOnDeleteAction(int i) {
+		return onDeleteAction[i];
 	}
 
 	@Override

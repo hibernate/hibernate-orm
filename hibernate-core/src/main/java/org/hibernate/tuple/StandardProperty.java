@@ -5,6 +5,7 @@
 package org.hibernate.tuple;
 
 import org.hibernate.FetchMode;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.type.Type;
 
@@ -37,6 +38,7 @@ public class StandardProperty extends AbstractNonIdentifierAttribute implements 
 			boolean checkable,
 			boolean versionable,
 			CascadeStyle cascadeStyle,
+			OnDeleteAction onDeleteAction,
 			FetchMode fetchMode) {
 		super(
 				null,
@@ -52,6 +54,7 @@ public class StandardProperty extends AbstractNonIdentifierAttribute implements 
 						.setDirtyCheckable( checkable )
 						.setVersionable( versionable )
 						.setCascadeStyle( cascadeStyle )
+						.setOnDeleteAction( onDeleteAction )
 						.setFetchMode( fetchMode )
 						.createInformation()
 		);

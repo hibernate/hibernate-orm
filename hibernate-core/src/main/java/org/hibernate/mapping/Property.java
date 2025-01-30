@@ -12,6 +12,7 @@ import java.util.StringTokenizer;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
@@ -132,6 +133,10 @@ public class Property implements Serializable, MetaAttributable {
 				column.setNullable( optional );
 			}
 		}
+	}
+
+	public OnDeleteAction getOnDeleteAction() {
+		return value instanceof ToOne toOne ? toOne.getOnDeleteAction() : null;
 	}
 
 	public CascadeStyle getCascadeStyle() throws MappingException {

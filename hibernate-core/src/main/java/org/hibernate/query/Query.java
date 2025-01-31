@@ -228,8 +228,8 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * {@link QueryProducer#createMutationQuery(String)},
 	 * {@link QueryProducer#createNamedMutationQuery(String)},
 	 * {@link QueryProducer#createNativeMutationQuery(String)},
-	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
-	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaDelete)}.
+	 * {@link QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
+	 * {@link QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)}.
 	 *
 	 * @return the number of affected entity instances
 	 *         (may differ from the number of affected rows)
@@ -238,6 +238,8 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * @see QueryProducer#createMutationQuery(String)
 	 * @see QueryProducer#createNamedMutationQuery(String)
 	 * @see QueryProducer#createNativeMutationQuery(String)
+	 * @see QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)
+	 * @see QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)
 	 *
 	 * @see jakarta.persistence.Query#executeUpdate()
 	 *

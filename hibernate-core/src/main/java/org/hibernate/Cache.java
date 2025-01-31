@@ -50,6 +50,11 @@ package org.hibernate;
  * evict a whole cache region, or {@link #evictEntityData(Class, Object)}, to evict
  * a single item.
  * <p>
+ * The second-level cache is never aware of changes made externally to Hibernate,
+ * for example, directly via JDBC, or by another program. Therefore, programmatic
+ * eviction might be required in order to ensure that such updates do not result
+ * in stale data being read from the cache.
+ * <p>
  * If multiple entities or roles are mapped to the same cache region, they share
  * policies and even the same FIFO-type expiry queue (if any). This sounds useful,
  * but comes with the downside that {@link #evictEntityData(Class)} for any one of

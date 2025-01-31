@@ -69,7 +69,8 @@ public class OutputsImpl implements Outputs {
 			executeStartNanos = System.nanoTime();
 		}
 		final EventMonitor eventMonitor = context.getSession().getEventMonitor();
-		final DiagnosticEvent jdbcPreparedStatementExecutionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
+		final DiagnosticEvent jdbcPreparedStatementExecutionEvent =
+				eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			final boolean isResultSet = jdbcStatement.execute();
 			currentReturnState = buildCurrentReturnState( isResultSet );
@@ -102,19 +103,13 @@ public class OutputsImpl implements Outputs {
 	}
 
 	protected JDBCException convert(SQLException e, String message) {
-		return context.getSession().getJdbcServices().getSqlExceptionHelper().convert(
-				e,
-				message,
-				jdbcStatement.toString()
-		);
+		return context.getSession().getJdbcServices().getSqlExceptionHelper()
+				.convert( e, message, jdbcStatement.toString() );
 	}
 
 	@Override
 	public Output getCurrent() {
-		if ( currentReturnState == null ) {
-			return null;
-		}
-		return currentReturnState.getOutput();
+		return currentReturnState == null ? null : currentReturnState.getOutput();
 	}
 
 	@Override
@@ -154,11 +149,8 @@ public class OutputsImpl implements Outputs {
 
 	protected List<Object> extractResults(ResultSet resultSet) {
 
-		final DirectResultSetAccess resultSetAccess = new DirectResultSetAccess(
-				context.getSession(),
-				jdbcStatement,
-				resultSet
-		);
+		final DirectResultSetAccess resultSetAccess =
+				new DirectResultSetAccess( context.getSession(), jdbcStatement, resultSet );
 
 		final ProcedureCallImpl<?> procedureCall = (ProcedureCallImpl<?>) context;
 		final ResultSetMapping resultSetMapping = procedureCall.getResultSetMapping();
@@ -178,8 +170,7 @@ public class OutputsImpl implements Outputs {
 
 		try {
 
-			//noinspection unchecked
-			final RowReader<Object> rowReader = ResultsHelper.createRowReader(
+			final RowReader<?> rowReader = ResultsHelper.createRowReader(
 					getSessionFactory(),
 					RowTransformerStandardImpl.instance(),
 					null,

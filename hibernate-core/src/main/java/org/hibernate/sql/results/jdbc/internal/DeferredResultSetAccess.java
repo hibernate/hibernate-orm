@@ -142,16 +142,13 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			QueryOptions queryOptions,
 			LockOptions lockOptions,
 			Dialect dialect) {
-		switch ( jdbcLockStrategy ) {
-			case FOLLOW_ON:
-				return true;
-			case AUTO:
-				return lockOptions.getFollowOnLocking() == null
+		return switch ( jdbcLockStrategy ) {
+			case FOLLOW_ON -> true;
+			case AUTO -> lockOptions.getFollowOnLocking() == null
 					? dialect.useFollowOnLocking( sql, queryOptions )
 					: lockOptions.getFollowOnLocking();
-			default:
-				return false;
-		}
+			default -> false;
+		};
 	}
 
 	public LimitHandler getLimitHandler() {
@@ -223,7 +220,8 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 	}
 
 	private void executeQuery() {
-		final LogicalConnectionImplementor logicalConnection = getPersistenceContext().getJdbcCoordinator().getLogicalConnection();
+		final LogicalConnectionImplementor logicalConnection =
+				getPersistenceContext().getJdbcCoordinator().getLogicalConnection();
 
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		try {
@@ -241,7 +239,8 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 				executeStartNanos = System.nanoTime();
 			}
 			final EventMonitor eventMonitor = session.getEventMonitor();
-			final DiagnosticEvent jdbcPreparedStatementExecutionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
+			final DiagnosticEvent jdbcPreparedStatementExecutionEvent =
+					eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				eventListenerManager.jdbcExecuteStatementStart();
 				resultSet = wrapResultSet( preparedStatement.executeQuery() );

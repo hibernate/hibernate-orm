@@ -188,12 +188,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 		final int numberOfResults;
 		final int rowSize = jdbcResultsMetadata.getColumnCount();
 
-		if ( resultBuilders == null ) {
-			numberOfResults = rowSize;
-		}
-		else {
-			numberOfResults = resultBuilders.size();
-		}
+		numberOfResults = resultBuilders == null ? rowSize : resultBuilders.size();
 
 		final List<SqlSelection> sqlSelections = new ArrayList<>( rowSize );
 		final List<DomainResult<?>> domainResults = new ArrayList<>( numberOfResults );

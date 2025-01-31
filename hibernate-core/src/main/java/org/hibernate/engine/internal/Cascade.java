@@ -601,14 +601,10 @@ public final class Cascade {
 		}
 
 		// a newly instantiated collection can't have orphans
-		final PersistentCollection<?> persistentCollection;
-		if ( child instanceof PersistentCollection<?> pc ) {
-			persistentCollection = pc;
-		}
-		else {
-			persistentCollection = eventSource.getPersistenceContext()
-					.getCollectionHolder( child );
-		}
+		final PersistentCollection<?> persistentCollection =
+				child instanceof PersistentCollection<?> collection
+						? collection
+						: eventSource.getPersistenceContext().getCollectionHolder( child );
 
 		final boolean deleteOrphans = style.hasOrphanDelete()
 				&& action.deleteOrphans()

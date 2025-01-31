@@ -503,14 +503,14 @@ public class SessionLazyDelegator implements Session {
 	@SuppressWarnings("rawtypes")
 	@Override
 	@Deprecated
-	public Query createQuery(CriteriaDelete deleteQuery) {
+	public Query createQuery(CriteriaDelete<?> deleteQuery) {
 		return this.lazySession.get().createQuery( deleteQuery );
 	}
 
 	@SuppressWarnings("rawtypes")
 	@Override
 	@Deprecated
-	public Query createQuery(CriteriaUpdate updateQuery) {
+	public Query createQuery(CriteriaUpdate<?> updateQuery) {
 		return this.lazySession.get().createQuery( updateQuery );
 	}
 
@@ -684,22 +684,22 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery) {
+	public MutationQuery createMutationQuery(CriteriaUpdate<?> updateQuery) {
 		return this.lazySession.get().createMutationQuery( updateQuery );
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery) {
+	public MutationQuery createMutationQuery(CriteriaDelete<?> deleteQuery) {
 		return this.lazySession.get().createMutationQuery( deleteQuery );
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect) {
+	public MutationQuery createMutationQuery(JpaCriteriaInsertSelect<?> insertSelect) {
 		return this.lazySession.get().createMutationQuery( insertSelect );
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect) {
+	public MutationQuery createMutationQuery(JpaCriteriaInsert<?> insertSelect) {
 		return this.lazySession.get().createMutationQuery( insertSelect );
 	}
 

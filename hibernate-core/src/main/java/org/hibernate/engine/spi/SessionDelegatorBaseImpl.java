@@ -518,25 +518,25 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery) {
+	public MutationQuery createMutationQuery(CriteriaUpdate<?> updateQuery) {
 		//noinspection resource
 		return delegate().createMutationQuery( updateQuery );
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery) {
+	public MutationQuery createMutationQuery(CriteriaDelete<?> deleteQuery) {
 		//noinspection resource
 		return delegate().createMutationQuery( deleteQuery );
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect) {
+	public MutationQuery createMutationQuery(JpaCriteriaInsertSelect<?> insertSelect) {
 		//noinspection resource
 		return delegate().createMutationQuery( insertSelect );
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect) {
+	public MutationQuery createMutationQuery(JpaCriteriaInsert<?> insertSelect) {
 		//noinspection resource
 		return delegate().createMutationQuery( insertSelect );
 	}
@@ -547,12 +547,12 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(CriteriaUpdate updateQuery) {
+	public QueryImplementor createQuery(CriteriaUpdate<?> updateQuery) {
 		return queryDelegate().createQuery( updateQuery );
 	}
 
 	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(CriteriaDelete deleteQuery) {
+	public QueryImplementor createQuery(CriteriaDelete<?> deleteQuery) {
 		return queryDelegate().createQuery( deleteQuery );
 	}
 

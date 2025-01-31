@@ -410,7 +410,7 @@ Therefore, by default, an entity is not eligible for storage in the second-level
 We must explicitly mark each entity that will  be stored in the second-level cache with the link:{doc-javadoc-url}/org/hibernate/annotations/Cache.html[`@Cache`] annotation from `org.hibernate.annotations`.
 
 But that's still not enough.
-Hibernate does not itself contain an implementation of a second-level cache, so it's necessary to configure an external _cache provider_.
+Hibernate does not itself contain an implementation of a second-level cache, so it's also necessary to configure an external _cache provider_.
 
 [CAUTION]
 // .Caching is disabled by default
@@ -429,6 +429,14 @@ For example, there might be separate cache regions for `Author`, `Book`, `Author
 Each region is permitted its own policies for expiry, persistence, and replication. These policies must be configured externally to Hibernate.
 
 The appropriate policies depend on the kind of data an entity represents. For example, a program might have different caching policies for "reference" data, for transactional data, and for data used for analytics. Ordinarily, the implementation of those policies is the responsibility of the underlying cache implementation.
+
+[WARNING]
+====
+The second-level cache is never aware of any changes to data which are made externally to Hibernate.
+Updates made via direct JDBC--or by some other program--are never visible in the second-level cache.
+When such updates occur, we might need to <<second-level-cache-management,explicitly invalidate cached data>>.
+Alternatively, in cases where the program is able to tolerate somewhat stale data, an expiry policy might be an acceptable solution.
+====
 
 [[enable-second-level-cache]]
 === Specifying which data is cached
@@ -850,8 +858,13 @@ sessionFactory.inSession(session -> {
 ----
 ====
 
-Very occasionally, it's necessary or advantageous to control the cache explicitly, for example, to evict some data that we know to be stale.
-The `Cache` interface allows programmatic eviction of cached items.
+Very occasionally, it's necessary or advantageous to control the cache explicitly.
+For example, we might need to evict some data that we know to be stale because it was updated:
+
+- via direct JDBC, or
+- by some other program.
+
+The link:{doc-javadoc-url}org/hibernate/Cache.html[`Cache`] interface allows programmatic eviction of cached items.
 
 [source,java]
 ----

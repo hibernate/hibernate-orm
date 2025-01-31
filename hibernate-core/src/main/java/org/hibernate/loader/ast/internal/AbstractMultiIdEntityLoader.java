@@ -184,12 +184,8 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			EntityKey entityKey,
 			List<Object> result,
 			int i) {
-		if ( loadOptions.isSessionCheckingEnabled() || loadOptions.isSecondLevelCacheCheckingEnabled() ) {
-			return isLoadFromCaches( loadOptions, entityKey, lockOptions, result, i, session );
-		}
-		else {
-			return false;
-		}
+		return ( loadOptions.isSessionCheckingEnabled() || loadOptions.isSecondLevelCacheCheckingEnabled() )
+			&& isLoadFromCaches( loadOptions, entityKey, lockOptions, result, i, session );
 	}
 
 	private boolean isLoadFromCaches(
@@ -321,24 +317,30 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			EntityKey entityKey,
 			List<Object> unresolvedIds, int i,
 			EventSource session) {
-		Object cachedEntity = null;
 
 		// look for it in the Session first
 		final PersistenceContextEntry persistenceContextEntry =
 				loadFromSessionCache( entityKey, lockOptions, GET, session );
+		final Object sessionEntity;
 		if ( loadOptions.isSessionCheckingEnabled() ) {
-			cachedEntity = persistenceContextEntry.entity();
-			if ( cachedEntity != null
+			sessionEntity = persistenceContextEntry.entity();
+			if ( sessionEntity != null
 					&& !loadOptions.isReturnOfDeletedEntitiesEnabled()
 					&& !persistenceContextEntry.isManaged() ) {
 				resolutionConsumer.consume( i, entityKey, null );
 				return unresolvedIds;
 			}
 		}
+		else {
+			sessionEntity = null;
+		}
 
-		if ( cachedEntity == null && loadOptions.isSecondLevelCacheCheckingEnabled() ) {
-			final EntityPersister persister = getLoadable().getEntityPersister();
-			cachedEntity = session.loadFromSecondLevelCache( persister, entityKey, null, lockOptions.getLockMode() );
+		final Object cachedEntity;
+		if ( sessionEntity == null && loadOptions.isSecondLevelCacheCheckingEnabled() ) {
+			cachedEntity = session.loadFromSecondLevelCache( getLoadable().getEntityPersister(), entityKey, null, lockOptions.getLockMode() );
+		}
+		else {
+			cachedEntity = sessionEntity;
 		}
 
 		if ( cachedEntity != null ) {

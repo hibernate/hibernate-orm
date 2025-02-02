@@ -257,7 +257,10 @@ public final class ClassWriter {
 	}
 
 	private static String getGeneratedSuperclassName(Element superClassElement, boolean jakartaDataStyle) {
-		final TypeElement typeElement = (TypeElement) superClassElement;
+		return getGeneratedClassName( (TypeElement) superClassElement, jakartaDataStyle );
+	}
+
+	private static String getGeneratedClassName(TypeElement typeElement, boolean jakartaDataStyle) {
 		final String simpleName = typeElement.getSimpleName().toString();
 		final Element enclosingElement = typeElement.getEnclosingElement();
 		return (enclosingElement instanceof TypeElement

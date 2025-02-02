@@ -17,6 +17,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
@@ -512,6 +513,14 @@ public final class TypeUtils {
 		return kind.isClass() && kind != ElementKind.ENUM;
 	}
 
+	public static boolean isClassRecordOrInterfaceType(Element element) {
+		final ElementKind kind = element.getKind();
+		// we want to accept classes and records but not enums,
+		// and we want to avoid depending on ElementKind.RECORD
+		return kind.isClass() && kind != ElementKind.ENUM
+			|| kind.isInterface() && kind != ElementKind.ANNOTATION_TYPE;
+	}
+
 	public static boolean primitiveClassMatchesKind(Class<?> itemType, TypeKind kind) {
 		return switch ( kind ) {
 			case SHORT -> itemType.equals( Short.class );
@@ -666,10 +675,23 @@ public final class TypeUtils {
 		return element.getEnclosingElement() instanceof TypeElement;
 	}
 
+	public static String getGeneratedClassFullyQualifiedName(TypeElement typeElement, boolean jakartaDataStyle) {
+		final String simpleName = typeElement.getSimpleName().toString();
+		final Element enclosingElement = typeElement.getEnclosingElement();
+		return (enclosingElement instanceof TypeElement
+				? getGeneratedClassFullyQualifiedName( (TypeElement) enclosingElement, jakartaDataStyle )
+				: ((PackageElement) enclosingElement).getQualifiedName().toString())
+			+ "." + (jakartaDataStyle ? '_' + simpleName : simpleName + '_');
+	}
+
+
 	public static String getGeneratedClassFullyQualifiedName(TypeElement element, String packageName, boolean jakartaDataStyle) {
-		final StringBuilder builder = new StringBuilder( packageName.isEmpty() ? "" : packageName + "." );
+		final StringBuilder builder = new StringBuilder( packageName );
 		for ( String s : split( ".", element.getQualifiedName().toString().substring( builder.length() ) ) ) {
 			final String part = removeDollar( s );
+			if ( !builder.isEmpty() ) {
+				builder.append( "." );
+			}
 			builder.append( jakartaDataStyle ? '_' + part : part + '_' );
 		}
 		return builder.toString();

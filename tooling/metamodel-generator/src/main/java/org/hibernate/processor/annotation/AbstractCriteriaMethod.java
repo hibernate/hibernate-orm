@@ -7,9 +7,11 @@ package org.hibernate.processor.annotation;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 
 /**
@@ -185,11 +187,13 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	private void path(StringBuilder declaration, String paramName) {
 		final StringTokenizer tokens = new StringTokenizer(paramName, ".");
 		String typeName = entity;
-		while ( typeName!= null && tokens.hasMoreTokens() ) {
+		while ( typeName != null && tokens.hasMoreTokens() ) {
+			final TypeElement typeElement = annotationMetaEntity.getContext().getElementUtils()
+					.getTypeElement( typeName );
 			final String memberName = tokens.nextToken();
 			declaration
 					.append(".get(")
-					.append(annotationMetaEntity.importType(typeName + '_'))
+					.append( annotationMetaEntity.importType( getGeneratedClassFullyQualifiedName( typeElement, false ) ) )
 					.append('.')
 					.append(memberName)
 					.append(')');

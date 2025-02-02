@@ -8,6 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import java.util.List;
 import java.util.Set;
 
@@ -36,6 +37,7 @@ import static org.hibernate.processor.util.Constants.QUERY;
 import static org.hibernate.processor.util.Constants.SESSION_TYPES;
 import static org.hibernate.processor.util.Constants.STREAM;
 import static org.hibernate.processor.util.Constants.TYPED_QUERY;
+import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 
 /**
@@ -310,12 +312,15 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 							.append( ")\n" );
 				}
 			}
-			else if ( isRangeParam(paramType) ) {
+			else if ( isRangeParam(paramType) && returnTypeName!= null ) {
+				final TypeElement entityElement = annotationMetaEntity.getContext().getElementUtils()
+						.getTypeElement( returnTypeName );
 				declaration
 						.append("\t\t\t.addRestriction(")
 						.append(annotationMetaEntity.importType(HIB_RESTRICTION))
 						.append(".restrict(")
-						.append(annotationMetaEntity.importType(returnTypeName + '_'))
+						.append(annotationMetaEntity.importType(
+										getGeneratedClassFullyQualifiedName( entityElement, false ) ))
 						.append('.')
 						.append(paramName)
 						.append(", ")

@@ -184,8 +184,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						jakartaDataStaticModel ) );
 	}
 
-	public static AnnotationMetaEntity create(TypeElement element, Context context) {
-		return create( element,context, false, false, false, null );
+	public static AnnotationMetaEntity create(TypeElement element, Context context, @Nullable AnnotationMetaEntity parent) {
+		return create( element,context, false, false, false, parent );
 	}
 
 	public static AnnotationMetaEntity create(

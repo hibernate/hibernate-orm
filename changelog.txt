@@ -3,6 +3,22 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.6.Final (February 02, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32382
+
+** Bug
+    * [HHH-19079] - ComponentType.replace can cause ArrayIndexOutOfBoundsException when used with embeddable inheritance
+    * [HHH-19069] - Performance regression for wide inheritance models
+    * [HHH-19034] - Wrong reuse of a Join 
+    * [HHH-18961] - JtaIsolationDelegate, obtaining connection : NPE when SQLExceptionConversionDelegate#convert returns null
+    * [HHH-18933] - the ordering of the class declaration in persistence.xml seems to affect the metamodel
+
+** Task
+    * [HHH-19078] - Improve release process error message when no issues with corresponding version are found
+
+
 Changes in 6.6.5.Final (January 19, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

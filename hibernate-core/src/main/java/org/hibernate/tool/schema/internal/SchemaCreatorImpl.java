@@ -60,7 +60,9 @@ import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CHARSET_NAME;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_IMPORT_FILES;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_LOAD_SCRIPT_SOURCE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE;
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_SKIP_DEFAULT_IMPORT_FILE;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 import static org.hibernate.tool.schema.internal.Helper.applyScript;
 import static org.hibernate.tool.schema.internal.Helper.applySqlStrings;
@@ -597,9 +599,22 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				commandExtractor,
 				dialect,
 				formatter,
-				hasDefaultImportFileScriptBeenExecuted ? "" : DEFAULT_IMPORT_FILE,
+				hasDefaultImportFileScriptBeenExecuted ? "" : getDefaultImportFile( options ),
 				targets
 		);
+	}
+
+	private String getDefaultImportFile(ExecutionOptions options) {
+		if ( skipDefaultFileImport( options ) ) {
+			return "";
+		}
+		else {
+			return DEFAULT_IMPORT_FILE;
+		}
+	}
+
+	private static boolean skipDefaultFileImport(ExecutionOptions options) {
+		return getBoolean( HBM2DDL_SKIP_DEFAULT_IMPORT_FILE, options.getConfigurationValues(), false );
 	}
 
 	/**
@@ -642,16 +657,19 @@ public class SchemaCreatorImpl implements SchemaCreator {
 					formatter,
 					targets
 			);
-			return containsDefaultImportFile( importScriptInput );
+			return containsDefaultImportFile( importScriptInput, options );
 		}
 		else {
 			return false;
 		}
 	}
 
-	private boolean containsDefaultImportFile(ScriptSourceInput importScriptInput) {
+	private boolean containsDefaultImportFile(ScriptSourceInput importScriptInput,ExecutionOptions options ) {
+		if ( skipDefaultFileImport( options ) ) {
+			return false;
+		}
 		final URL defaultImportFileUrl = getClassLoaderService().locateResource( DEFAULT_IMPORT_FILE );
-		return defaultImportFileUrl != null && importScriptInput.containsScript(defaultImportFileUrl);
+		return defaultImportFileUrl != null && importScriptInput.containsScript( defaultImportFileUrl );
 	}
 
 	/**

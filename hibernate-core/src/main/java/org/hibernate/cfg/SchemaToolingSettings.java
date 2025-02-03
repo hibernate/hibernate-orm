@@ -392,6 +392,14 @@ public interface SchemaToolingSettings {
 	String HBM2DDL_IMPORT_FILES = "hibernate.hbm2ddl.import_files";
 
 	/**
+	 * Specifies if the default {@code /import.sql} script file should not be executed
+	 * when {@link #HBM2DDL_IMPORT_FILES} is not specified and {@value #HBM2DDL_AUTO} is set to {@code create} or {@code create-drop}.
+	 *
+	 * The default value is {@code false}.
+	 */
+	String HBM2DDL_SKIP_DEFAULT_IMPORT_FILE = "hibernate.hbm2ddl.skip_default_import_file";
+
+	/**
 	 * Specifies whether to automatically create also the database schema/catalog.
 	 * The default is false.
 	 *

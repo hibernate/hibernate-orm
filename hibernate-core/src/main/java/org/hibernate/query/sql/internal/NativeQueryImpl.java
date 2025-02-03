@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import jakarta.persistence.EntityGraph;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -593,6 +594,11 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public Query<R> applyGraph(@SuppressWarnings("rawtypes") RootGraph graph, GraphSemantic semantic) {
+		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
+	}
+
+	@Override
+	public EntityGraph<? super R> getNamedEntityGraph(String graphName) {
 		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
 	}
 

@@ -129,7 +129,7 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public QueryImplementor<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
+	public QueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
 		super.setEntityGraph( graph, semantic );
 		return this;
 	}

@@ -372,8 +372,8 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
-		applyGraph( (RootGraphImplementor<R>) graph, semantic );
+	public SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
+		applyGraph( (RootGraphImplementor<? super R>) graph, semantic );
 		return this;
 	}
 

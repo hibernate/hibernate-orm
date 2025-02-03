@@ -810,7 +810,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public Query<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
+	public Query<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
 		super.setEntityGraph( graph, semantic );
 		return this;
 	}

@@ -293,7 +293,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 *
 	 * @since 6.3
 	 */
-	SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic);
+	SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
 
 	/**
 	 * Enable the {@linkplain org.hibernate.annotations.FetchProfile fetch

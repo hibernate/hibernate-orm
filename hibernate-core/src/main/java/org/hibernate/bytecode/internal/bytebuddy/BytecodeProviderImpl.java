@@ -1213,7 +1213,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				getterMember = getter.getMethod();
 			}
 			else if ( getter instanceof GetterFieldImpl ) {
-				getterMember = getter.getMember();
+				getterMember = ((GetterFieldImpl) getter).getField();
 			}
 			else {
 				throw new InvalidPropertyAccessorException(

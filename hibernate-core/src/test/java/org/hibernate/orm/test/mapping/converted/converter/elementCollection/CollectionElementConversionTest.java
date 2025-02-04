@@ -30,6 +30,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-8529")
 @DomainModel( annotatedClasses = { CollectionElementConversionTest.Customer.class, CollectionElementConversionTest.ColorConverter.class } )
 @SessionFactory

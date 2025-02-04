@@ -409,5 +409,14 @@ public class SessionFactoryExtension
 
 			TransactionUtil.inTransaction( session, action );
 		}
+
+		@Override
+		public void dropData() {
+			if ( sessionFactory == null ) {
+				return;
+			}
+
+			sessionFactory.getSchemaManager().truncateMappedObjects();
+		}
 	}
 }

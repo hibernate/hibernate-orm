@@ -40,4 +40,6 @@ public interface SessionFactoryScope {
 	void inStatelessSession(Consumer<StatelessSession> action);
 	void inStatelessTransaction(Consumer<StatelessSession> action);
 	void inStatelessTransaction(StatelessSession session, Consumer<StatelessSession> action);
+
+	void dropData();
 }

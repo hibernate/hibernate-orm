@@ -76,6 +76,8 @@ public @interface ServiceRegistry {
 
 	SettingProvider[] settingProviders() default {};
 
+	SettingConfiguration[] settingConfigurations() default {};
+
 	/**
 	 * A Hibernate Service registration
 	 */

@@ -35,11 +35,14 @@ public class GetterFieldImpl implements Getter {
 	private final @Nullable Method getterMethod;
 
 	public GetterFieldImpl(Class<?> containerClass, String propertyName, Field field) {
+		this ( containerClass, propertyName, field, ReflectHelper.findGetterMethodForFieldAccess( field, propertyName ) );
+	}
+
+	GetterFieldImpl(Class<?> containerClass, String propertyName, Field field, Method getterMethod) {
 		this.containerClass = containerClass;
 		this.propertyName = propertyName;
 		this.field = field;
-
-		this.getterMethod = ReflectHelper.findGetterMethodForFieldAccess( field, propertyName );
+		this.getterMethod = getterMethod;
 	}
 
 	@Override
@@ -78,9 +81,13 @@ public class GetterFieldImpl implements Getter {
 		return field.getGenericType();
 	}
 
+	public Field getField() {
+		return field;
+	}
+
 	@Override
 	public Member getMember() {
-		return field;
+		return getField();
 	}
 
 	@Override

@@ -1199,8 +1199,8 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			if ( getter instanceof GetterMethodImpl ) {
 				getterMember = getter.getMethod();
 			}
-			else if ( getter instanceof GetterFieldImpl ) {
-				getterMember = getter.getMember();
+			else if ( getter instanceof GetterFieldImpl getterField ) {
+				getterMember = getterField.getField();
 			}
 			else {
 				throw new InvalidPropertyAccessorException(

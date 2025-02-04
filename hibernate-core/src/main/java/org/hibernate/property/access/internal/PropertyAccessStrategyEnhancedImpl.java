@@ -29,18 +29,18 @@ public class PropertyAccessStrategyEnhancedImpl implements PropertyAccessStrateg
 		};
 	}
 
-	private final @Nullable AccessType getterAccessType;
+	private final @Nullable AccessType classAccessType;
 
 	public static PropertyAccessStrategyEnhancedImpl STANDARD = new PropertyAccessStrategyEnhancedImpl( null );
 	public static PropertyAccessStrategyEnhancedImpl FIELD = new PropertyAccessStrategyEnhancedImpl( AccessType.FIELD );
 	public static PropertyAccessStrategyEnhancedImpl PROPERTY = new PropertyAccessStrategyEnhancedImpl( AccessType.PROPERTY );
 
-	public PropertyAccessStrategyEnhancedImpl(@Nullable AccessType getterAccessType) {
-		this.getterAccessType = getterAccessType;
+	public PropertyAccessStrategyEnhancedImpl(@Nullable AccessType classAccessType) {
+		this.classAccessType = classAccessType;
 	}
 
 	@Override
 	public PropertyAccess buildPropertyAccess(Class<?> containerJavaType, final String propertyName, boolean setterRequired) {
-		return new PropertyAccessEnhancedImpl( this, containerJavaType, propertyName, getterAccessType );
+		return new PropertyAccessEnhancedImpl( this, containerJavaType, propertyName, classAccessType );
 	}
 }

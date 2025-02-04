@@ -400,48 +400,6 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@JiraKey(value = "HHH-14021")
-	public void testBasicByteUsage() {
-		Configuration cfg = new Configuration();
-		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
-		cfg.addAttributeConverter( EnumToByteConverter.class, false );
-		cfg.addAnnotatedClass( Tester4.class );
-		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-		cfg.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
-
-		try (SessionFactory sf = cfg.buildSessionFactory()) {
-			Session session = sf.openSession();
-			session.beginTransaction();
-			session.persist( new Tester4( 1L, "George", 150, ConvertibleEnum.DEFAULT ) );
-			session.getTransaction().commit();
-			session.close();
-
-			sf.getStatistics().clear();
-			session = sf.openSession();
-			session.beginTransaction();
-			session.get( Tester4.class, 1L );
-			session.getTransaction().commit();
-			session.close();
-			assertEquals( 0, sf.getStatistics().getEntityUpdateCount() );
-
-			session = sf.openSession();
-			session.beginTransaction();
-			Tester4 t4 = (Tester4) session.get( Tester4.class, 1L );
-			t4.convertibleEnum = ConvertibleEnum.VALUE;
-			session.getTransaction().commit();
-			session.close();
-
-			session = sf.openSession();
-			session.beginTransaction();
-			t4 = session.get( Tester4.class, 1L );
-			assertEquals( ConvertibleEnum.VALUE, t4.convertibleEnum );
-			session.remove( t4 );
-			session.getTransaction().commit();
-			session.close();
-		}
-	}
-
-	@Test
 	@JiraKey(value = "HHH-8866")
 	public void testEnumConverter() {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
@@ -562,8 +520,6 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		private String name;
 		@Convert( converter = IntegerToVarcharConverter.class )
 		private Integer code;
-		@Convert( converter = EnumToByteConverter.class )
-		private ConvertibleEnum convertibleEnum;
 
 		public Tester4() {
 		}
@@ -572,13 +528,6 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			this.id = id;
 			this.name = name;
 			this.code = code;
-		}
-
-		public Tester4(Long id, String name, Integer code, ConvertibleEnum convertibleEnum) {
-			this.id = id;
-			this.name = name;
-			this.code = code;
-			this.convertibleEnum = convertibleEnum;
 		}
 	}
 

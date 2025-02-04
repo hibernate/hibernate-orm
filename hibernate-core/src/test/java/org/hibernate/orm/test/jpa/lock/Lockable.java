@@ -9,8 +9,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 @Entity

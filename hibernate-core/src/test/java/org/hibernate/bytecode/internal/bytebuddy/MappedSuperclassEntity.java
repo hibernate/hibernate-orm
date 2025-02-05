@@ -5,7 +5,6 @@
 package org.hibernate.bytecode.internal.bytebuddy;
 
 import jakarta.persistence.Entity;
-import org.hibernate.bytecode.internal.bytebuddy.mappedsuperclass.BaseMappedSuperclass;
 
 @Entity
 public class MappedSuperclassEntity extends BaseMappedSuperclass {

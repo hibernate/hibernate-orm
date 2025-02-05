@@ -186,4 +186,9 @@ public abstract class ReflectionTools {
 			throw new ClassLoadingException( "Unable to load class [" + name + "]", e );
 		}
 	}
+
+	public static void reset() {
+		SETTER_CACHE.clear();
+		GETTER_CACHE.clear();
+	}
 }

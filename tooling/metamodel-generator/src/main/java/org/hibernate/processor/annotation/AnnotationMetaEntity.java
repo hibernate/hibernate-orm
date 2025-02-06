@@ -2136,7 +2136,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final AccessType accessType = getAccessType(entityType);
 		final String nextToken = tokens.nextToken();
 		for ( Element member : context.getAllMembers(entityType) ) {
-			if ( isIdRef(nextToken) && hasAnnotation( member, ID) ) {
+			if ( isIdRef(nextToken) && hasAnnotation(member, ID, EMBEDDED_ID) ) {
 				return member;
 			}
 			final Element match =

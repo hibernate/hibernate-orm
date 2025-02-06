@@ -188,6 +188,8 @@ public final class EnhancerConstants {
 	public static final String INSTANCE_ID_GETTER_NAME = "$$_hibernate_getInstanceId";
 	public static final String INSTANCE_ID_SETTER_NAME = "$$_hibernate_setInstanceId";
 
+	public static final String PERSISTENCE_INFO_SETTER_NAME = "$$_hibernate_setPersistenceInfo";
+
 
 	private EnhancerConstants() {
 	}

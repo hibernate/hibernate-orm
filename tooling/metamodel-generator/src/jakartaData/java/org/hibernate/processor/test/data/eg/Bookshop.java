@@ -11,17 +11,19 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
+import static jakarta.transaction.Transactional.TxType.REQUIRES_NEW;
+
 @Repository
 public interface Bookshop extends CrudRepository<Book,String> {
     @Find
-    @Transactional
+    @Transactional(REQUIRES_NEW)
     List<Book> byPublisher(String publisher_name);
 
     @Find
     List<Book> byTitle(@Nonnull String title);
 
     @Query("select isbn where title like ?1 order by isbn")
-	String[] ssns(@NotBlank String title);
+    String[] ssns(@NotBlank String title);
 
     @Query("select count(this) where title like ?1 order by isbn")
     long count1(@NotNull String title);
@@ -33,7 +35,7 @@ public interface Bookshop extends CrudRepository<Book,String> {
     int length(@Nonnull String title);
 
     @Query("select count(this)")
-	long countAll();
+    long countAll();
 
     @Query("where isbn in :isbns and type = Book")
     List<Book> books(List<String> isbns);

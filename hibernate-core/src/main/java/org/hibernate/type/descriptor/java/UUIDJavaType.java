@@ -25,6 +25,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 	public static final UUIDJavaType INSTANCE = new UUIDJavaType();
 
+
 	public UUIDJavaType() {
 		super( UUID.class );
 	}

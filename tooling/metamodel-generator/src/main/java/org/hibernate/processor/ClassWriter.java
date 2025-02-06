@@ -10,8 +10,11 @@ import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 
 import javax.annotation.processing.FilerException;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import java.io.IOException;
@@ -94,7 +97,11 @@ public final class ClassWriter {
 			if ( context.addSuppressWarningsAnnotation() ) {
 				pw.println( writeSuppressWarnings(context) );
 			}
-			entity.inheritedAnnotations().forEach(pw::println);
+			entity.inheritedAnnotations()
+					.forEach( annotation -> {
+						printAnnotation( annotation, pw );
+						pw.print('\n');
+					} );
 
 			printClassDeclaration( entity, pw );
 
@@ -116,9 +123,10 @@ public final class ClassWriter {
 								pw.println('\t' + line);
 								if ( line.trim().startsWith("@Override") ) {
 									metaMember.inheritedAnnotations()
-											.forEach(x -> {
+											.forEach(annotation -> {
 												pw.print('\t');
-												pw.println(x);
+												printAnnotation( annotation, pw );
+												pw.print('\n');
 											});
 								}
 							});
@@ -128,6 +136,62 @@ public final class ClassWriter {
 			pw.println();
 			pw.println("}");
 			return sw.getBuffer();
+		}
+	}
+
+	private static void printAnnotation(AnnotationMirror annotation, PrintWriter pw) {
+		pw.print('@');
+		final TypeElement type = (TypeElement) annotation.getAnnotationType().asElement();
+		pw.print( type.getQualifiedName().toString() );
+		var elementValues = annotation.getElementValues();
+		if (!elementValues.isEmpty()) {
+			pw.print('(');
+			boolean first = true;
+			for (var entry : elementValues.entrySet()) {
+				if (first) {
+					first = false;
+				}
+				else {
+					pw.print(',');
+				}
+				pw.print( entry.getKey().getSimpleName() );
+				pw.print( '=' );
+				printAnnotationValue( pw, entry.getValue() );
+			}
+			pw.print(')');
+		}
+	}
+
+	private static void printAnnotationValue(PrintWriter pw, AnnotationValue value) {
+		final Object argument = value.getValue();
+		if (argument instanceof VariableElement) {
+			VariableElement variable = (VariableElement) argument;
+			pw.print( variable.getEnclosingElement() );
+			pw.print('.');
+			pw.print( variable.getSimpleName().toString() );
+		}
+		else if (argument instanceof AnnotationMirror) {
+			AnnotationMirror childAnnotation = (AnnotationMirror) argument;
+			printAnnotation( childAnnotation, pw );
+		}
+		else if (argument instanceof List) {
+			final List<? extends AnnotationValue> list =
+					(List<? extends AnnotationValue>) argument;
+			pw.print('{');
+			boolean first = true;
+			for (AnnotationValue listedValue : list) {
+				if (first) {
+					first = false;
+				}
+				else {
+					pw.print(',');
+				}
+				printAnnotationValue( pw, listedValue );
+			}
+			pw.print('}');
+		}
+		else {
+			pw.print( argument );
 		}
 	}
 

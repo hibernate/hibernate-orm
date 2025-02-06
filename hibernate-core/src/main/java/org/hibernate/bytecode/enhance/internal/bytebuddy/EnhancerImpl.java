@@ -245,6 +245,13 @@ public class EnhancerImpl implements Enhancer {
 					EnhancerConstants.INSTANCE_ID_SETTER_NAME
 			);
 
+			builder = addSetPersistenceInfoMethod(
+					builder,
+					constants.TypeEntityEntry,
+					constants.TypeManagedEntity,
+					constants.TypeIntegerPrimitive
+			);
+
 			builder = addInterceptorHandling( builder, managedCtClass );
 
 			if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
@@ -702,6 +709,19 @@ public class EnhancerImpl implements Enhancer {
 				.defineMethod( setterName, constants.TypeVoid, constants.methodModifierPUBLIC )
 						.withParameters( type )
 						.intercept( FieldAccessor.ofField( fieldName ) );
+	}
+
+	private DynamicType.Builder<?> addSetPersistenceInfoMethod(
+			DynamicType.Builder<?> builder,
+			TypeDefinition entityEntryType,
+			TypeDefinition managedEntityType,
+			TypeDefinition intType) {
+		return builder
+				// returns previous entity entry
+				.defineMethod( EnhancerConstants.PERSISTENCE_INFO_SETTER_NAME, entityEntryType, constants.methodModifierPUBLIC )
+				// previous, next, instance-id
+				.withParameters( entityEntryType, managedEntityType, managedEntityType, intType )
+				.intercept( constants.implementationSetPersistenceInfo );
 	}
 
 	private List<AnnotatedFieldDescription> collectCollectionFields(TypeDescription managedCtClass) {

@@ -52,7 +52,7 @@ public class EntityEntryContext {
 	private final transient PersistenceContext persistenceContext;
 
 	private transient InstanceIdentityStore<ImmutableManagedEntityHolder> immutableManagedEntityXref;
-	private transient int currentInstanceId;
+	private transient int currentInstanceId = 1;
 
 	private transient ManagedEntity head;
 	private transient ManagedEntity tail;
@@ -97,10 +97,13 @@ public class EntityEntryContext {
 		// Throw an exception if entity is a mutable ManagedEntity that is associated with a different
 		// PersistenceContext.
 		ManagedEntity managedEntity = getAssociatedManagedEntity( entity );
+
+		int instanceId = nextManagedEntityInstanceId();
 		final boolean alreadyAssociated = managedEntity != null;
 		if ( !alreadyAssociated ) {
 			if ( isManagedEntity( entity ) ) {
 				final ManagedEntity managed = asManagedEntity( entity );
+				assert managed.$$_hibernate_getInstanceId() == 0;
 				if ( entityEntry.getPersister().isMutable() ) {
 					managedEntity = managed;
 					// We know that managedEntity is not associated with the same PersistenceContext.
@@ -111,11 +114,11 @@ public class EntityEntryContext {
 					// Create a holder for PersistenceContext-related data.
 					managedEntity = new ImmutableManagedEntityHolder( managed );
 					if ( !isReferenceCachingEnabled( entityEntry.getPersister() ) ) {
-						managed.$$_hibernate_setInstanceId( nextManagedEntityInstanceId() );
-						putImmutableManagedEntity( managed, (ImmutableManagedEntityHolder) managedEntity );
+						putImmutableManagedEntity( managed, instanceId, (ImmutableManagedEntityHolder) managedEntity );
 					}
 					else {
 						// When reference caching is enabled we cannot set the instance-id on the entity instance
+						instanceId = 0;
 						putManagedEntity( entity, managedEntity );
 					}
 				}
@@ -126,34 +129,33 @@ public class EntityEntryContext {
 			}
 		}
 
-		// associate the EntityEntry with the entity
-		managedEntity.$$_hibernate_setEntityEntry( entityEntry );
-
 		if ( alreadyAssociated ) {
 			// if the entity was already associated with the context, skip the linking step.
+			managedEntity.$$_hibernate_setEntityEntry( entityEntry );
 			return;
 		}
 
 		// TODO: can dirty be set to true here?
 
 		// finally, set up linking and count
+		final ManagedEntity previous;
 		if ( tail == null ) {
 			assert head == null;
-			// Protect against stale data in the ManagedEntity and nullify previous/next references.
-			managedEntity.$$_hibernate_setPreviousManagedEntity( null );
-			managedEntity.$$_hibernate_setNextManagedEntity( null );
+			// Protect against stale data in the ManagedEntity and nullify previous reference.
+			previous = null;
 			head = managedEntity;
 			tail = head;
 			count = 1;
 		}
 		else {
 			tail.$$_hibernate_setNextManagedEntity( managedEntity );
-			managedEntity.$$_hibernate_setPreviousManagedEntity( tail );
-			// Protect against stale data left in the ManagedEntity nullify next reference.
-			managedEntity.$$_hibernate_setNextManagedEntity( null );
+			previous = tail;
 			tail = managedEntity;
 			count++;
 		}
+
+		// Protect against stale data left in the ManagedEntity nullify next reference.
+		managedEntity.$$_hibernate_setPersistenceInfo( entityEntry, previous, null, instanceId );
 	}
 
 	private static boolean isReferenceCachingEnabled(EntityPersister persister) {
@@ -201,11 +203,11 @@ public class EntityEntryContext {
 		return currentInstanceId++;
 	}
 
-	private void putImmutableManagedEntity(ManagedEntity managed, ImmutableManagedEntityHolder holder) {
+	private void putImmutableManagedEntity(ManagedEntity managed, int instanceId, ImmutableManagedEntityHolder holder) {
 		if ( immutableManagedEntityXref == null ) {
 			immutableManagedEntityXref = new InstanceIdentityStore<>();
 		}
-		immutableManagedEntityXref.put( managed, holder );
+		immutableManagedEntityXref.put( managed, instanceId, holder );
 	}
 
 	private void checkNotAssociatedWithOtherPersistenceContextIfMutable(ManagedEntity managedEntity) {
@@ -288,12 +290,6 @@ public class EntityEntryContext {
 			nonEnhancedEntityXref.remove( entity );
 		}
 
-		// prepare for re-linking...
-		final ManagedEntity previous = managedEntity.$$_hibernate_getPreviousManagedEntity();
-		final ManagedEntity next = managedEntity.$$_hibernate_getNextManagedEntity();
-		managedEntity.$$_hibernate_setPreviousManagedEntity( null );
-		managedEntity.$$_hibernate_setNextManagedEntity( null );
-
 		// re-link
 		count--;
 
@@ -302,11 +298,13 @@ public class EntityEntryContext {
 			head = null;
 			tail = null;
 
-			assert previous == null;
-			assert next == null;
+			assert managedEntity.$$_hibernate_getPreviousManagedEntity() == null;
+			assert managedEntity.$$_hibernate_getNextManagedEntity() == null;
 		}
 		else {
 			// otherwise, previous or next (or both) should be non-null
+			final ManagedEntity previous = managedEntity.$$_hibernate_getPreviousManagedEntity();
+			final ManagedEntity next = managedEntity.$$_hibernate_getNextManagedEntity();
 			if ( previous == null ) {
 				// we are removing head
 				assert managedEntity == head;
@@ -327,9 +325,7 @@ public class EntityEntryContext {
 		}
 
 		// finally clean out the ManagedEntity and return the associated EntityEntry
-		final EntityEntry theEntityEntry = managedEntity.$$_hibernate_getEntityEntry();
-		managedEntity.$$_hibernate_setEntityEntry( null );
-		return theEntityEntry;
+		return clearManagedEntity( managedEntity );
 	}
 
 	/**
@@ -379,7 +375,7 @@ public class EntityEntryContext {
 			nextManagedEntity = current.$$_hibernate_getNextManagedEntity();
 			Object toProcess = current.$$_hibernate_getEntityInstance();
 			unsetSession( asPersistentAttributeInterceptableOrNull( toProcess ) );
-			clearManagedEntity( current );//careful this also unlinks from the "next" entry in the list
+			clearManagedEntity( current ); //careful this also unlinks from the "next" entry in the list
 		}
 	}
 
@@ -413,13 +409,17 @@ public class EntityEntryContext {
 		count = 0;
 
 		reentrantSafeEntries = null;
-		currentInstanceId = 0;
+		currentInstanceId = 1;
 	}
 
-	private static void clearManagedEntity(final ManagedEntity node) {
-		node.$$_hibernate_setEntityEntry( null );
-		node.$$_hibernate_setPreviousManagedEntity( null );
-		node.$$_hibernate_setNextManagedEntity( null );
+	/**
+	 * Resets the persistence information in a managed entity, and returns its previous {@link EntityEntry}
+	 *
+	 * @param node the managed entity to clear
+	 * @return the previous {@link EntityEntry} contained in the managed entity
+	 */
+	private static EntityEntry clearManagedEntity(final ManagedEntity node) {
+		return node.$$_hibernate_setPersistenceInfo( null, null, null, 0 );
 	}
 
 	/**
@@ -503,6 +503,7 @@ public class EntityEntryContext {
 
 			final EntityEntry entry = deserializeEntityEntry( entityEntryClassNameArr, ois, rtn );
 
+			final int instanceId = context.nextManagedEntityInstanceId();
 			final ManagedEntity managedEntity;
 			if ( isEnhanced ) {
 				final ManagedEntity castedEntity = asManagedEntity( entity );
@@ -512,8 +513,7 @@ public class EntityEntryContext {
 				else {
 					managedEntity = new ImmutableManagedEntityHolder( castedEntity );
 					if ( !isReferenceCachingEnabled( entry.getPersister() ) ) {
-						castedEntity.$$_hibernate_setInstanceId( context.nextManagedEntityInstanceId() );
-						context.putImmutableManagedEntity( castedEntity, (ImmutableManagedEntityHolder) managedEntity );
+						context.putImmutableManagedEntity( castedEntity, instanceId, (ImmutableManagedEntityHolder) managedEntity );
 					}
 					else {
 						context.putManagedEntity( entity, castedEntity );
@@ -525,15 +525,14 @@ public class EntityEntryContext {
 				context.putManagedEntity( entity, managedEntity );
 			}
 
-			managedEntity.$$_hibernate_setEntityEntry( entry );
-
 			if ( previous == null ) {
 				context.head = managedEntity;
 			}
 			else {
 				previous.$$_hibernate_setNextManagedEntity( managedEntity );
-				managedEntity.$$_hibernate_setPreviousManagedEntity( previous );
 			}
+
+			managedEntity.$$_hibernate_setPersistenceInfo( entry, previous, null, instanceId );
 
 			previous = managedEntity;
 		}
@@ -631,11 +630,20 @@ public class EntityEntryContext {
 
 		@Override
 		public int $$_hibernate_getInstanceId() {
-			return -1;
+			return 0;
 		}
 
 		@Override
 		public void $$_hibernate_setInstanceId(int id) {
+		}
+
+		@Override
+		public EntityEntry $$_hibernate_setPersistenceInfo(EntityEntry entityEntry, ManagedEntity previous, ManagedEntity next, int instanceId) {
+			final EntityEntry oldEntry = this.entityEntry;
+			this.entityEntry = entityEntry;
+			this.previous = previous;
+			this.next = next;
+			return oldEntry;
 		}
 	}
 
@@ -662,7 +670,7 @@ public class EntityEntryContext {
 		public void $$_hibernate_setEntityEntry(EntityEntry entityEntry) {
 			// need to think about implications for memory leaks here if we don't removed reference to EntityEntry
 			if ( entityEntry == null ) {
-				if ( canClearEntityEntryReference() ) {
+				if ( canClearEntityEntryReference( managedEntity.$$_hibernate_getEntityEntry() ) ) {
 					managedEntity.$$_hibernate_setEntityEntry( null );
 				}
 				// otherwise, do nothing.
@@ -720,10 +728,9 @@ public class EntityEntryContext {
 
 		// Check instance type of EntityEntry and if type is ImmutableEntityEntry,
 		// check to see if entity is referenced cached in the second level cache
-		private boolean canClearEntityEntryReference() {
-			EntityEntry entityEntry = managedEntity.$$_hibernate_getEntityEntry();
+		private static boolean canClearEntityEntryReference(EntityEntry entityEntry) {
 			return !(entityEntry instanceof ImmutableEntityEntry)
-				|| !entityEntry.getPersister().canUseReferenceCacheEntries();
+				|| !isReferenceCachingEnabled( entityEntry.getPersister() );
 		}
 
 		@Override
@@ -734,6 +741,25 @@ public class EntityEntryContext {
 		@Override
 		public void $$_hibernate_setInstanceId(int id) {
 			managedEntity.$$_hibernate_setInstanceId( id );
+		}
+
+		@Override
+		public EntityEntry $$_hibernate_setPersistenceInfo(EntityEntry entityEntry, ManagedEntity previous, ManagedEntity next, int instanceId) {
+			final EntityEntry oldEntry;
+			if ( entityEntry == null ) {
+				oldEntry = managedEntity.$$_hibernate_getEntityEntry();
+				if ( canClearEntityEntryReference( oldEntry ) ) {
+					managedEntity.$$_hibernate_setEntityEntry( null );
+				}
+			}
+			else {
+				managedEntity.$$_hibernate_setEntityEntry( entityEntry );
+				oldEntry = null; // no need to retrieve the previous entity entry
+			}
+			this.previous = previous;
+			this.next = next;
+			managedEntity.$$_hibernate_setInstanceId( instanceId );
+			return oldEntry;
 		}
 	}
 

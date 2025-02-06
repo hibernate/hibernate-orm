@@ -70,7 +70,7 @@ public class InstanceIdentityMapTest {
 
 	@Test
 	public void testMapIteration() {
-		for ( int i = 0; i < 100; i++ ) {
+		for ( int i = 1; i <= 100; i++ ) {
 			testMap.put( new TestInstance( i ), "instance_" + i );
 		}
 
@@ -78,7 +78,7 @@ public class InstanceIdentityMapTest {
 
 		final AtomicInteger count = new AtomicInteger();
 		testMap.forEach( (k, v) -> {
-			assertThat( k.$$_hibernate_getInstanceId() ).isBetween( 0, 99 );
+			assertThat( k.$$_hibernate_getInstanceId() ).isBetween( 1, 100 );
 			assertThat( v ).isEqualTo( "instance_" + k.$$_hibernate_getInstanceId() );
 			count.getAndIncrement();
 		} );
@@ -88,7 +88,7 @@ public class InstanceIdentityMapTest {
 	@Test
 	public void testSets() {
 		final Map<TestInstance, String> map = new HashMap<TestInstance, String>();
-		for ( int i = 0; i < 100; i++ ) {
+		for ( int i = 1; i <= 100; i++ ) {
 			map.put( new TestInstance( i ), "instance_" + i );
 		}
 

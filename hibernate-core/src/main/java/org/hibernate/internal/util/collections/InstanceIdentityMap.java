@@ -27,6 +27,9 @@ import java.util.function.BiConsumer;
  * but, contrary to the store, it initializes {@link Map.Entry}s eagerly to optimize iteration
  * performance and avoid type-pollution issues when checking the type of contained objects.
  * <p>
+ * Instance ids are considered to start from 1, and if two instances are found to have the
+ * same identifier a {@link java.util.ConcurrentModificationException will be thrown}.
+ * <p>
  * Methods accessing / modifying the map with {@link Object} typed parameters will need
  * to type check against the instance identity interface which might be inefficient,
  * so it's recommended to use the position (int) based variant of those methods.
@@ -107,9 +110,21 @@ public class InstanceIdentityMap<K extends InstanceIdentity, V> extends Abstract
 	 * equality check ({@code ==}) with the provided key to ensure it corresponds to the mapped one
 	 */
 	public @Nullable V get(int instanceId, Object key) {
-		final Entry<K, V> entry = get( instanceId );
-		if ( entry != null && entry.getKey() == key ) {
-			return entry.getValue();
+		if ( instanceId <= 0 ) {
+			return null;
+		}
+
+		final Entry<K, V> entry = get( instanceId - 1 );
+		if ( entry != null ) {
+			if ( entry.getKey() == key ) {
+				return entry.getValue();
+			}
+			else {
+				throw new ConcurrentModificationException(
+						"Found a different instance corresponding to instanceId [" + instanceId +
+						"], this might indicate a concurrent access to this persistence context."
+				);
+			}
 		}
 		return null;
 	}
@@ -133,8 +148,12 @@ public class InstanceIdentityMap<K extends InstanceIdentity, V> extends Abstract
 			throw new NullPointerException( "This map does not support null keys" );
 		}
 
-		final int instanceId = key.$$_hibernate_getInstanceId();
-		final Map.Entry<K, V> old = set( instanceId, new AbstractMap.SimpleImmutableEntry<>( key, value ) );
+		final int index = key.$$_hibernate_getInstanceId() - 1;
+		if ( index < 0 ) {
+			throw new IllegalArgumentException( "Instance ID must be a positive value" );
+		}
+
+		final Map.Entry<K, V> old = set( index, new AbstractMap.SimpleImmutableEntry<>( key, value ) );
 		if ( old == null ) {
 			size++;
 			return null;
@@ -154,9 +173,14 @@ public class InstanceIdentityMap<K extends InstanceIdentity, V> extends Abstract
 	 * equality check ({@code ==}) with the provided key to ensure it corresponds to the mapped one
 	 */
 	public @Nullable V remove(int instanceId, Object key) {
-		final Page<Map.Entry<K, V>> page = getPage( instanceId );
+		if ( instanceId <= 0 ) {
+			return null;
+		}
+
+		final int index = instanceId - 1;
+		final Page<Map.Entry<K, V>> page = getPage( index );
 		if ( page != null ) {
-			final int pageOffset = toPageOffset( instanceId );
+			final int pageOffset = toPageOffset( index );
 			final Map.Entry<K, V> entry = page.set( pageOffset, null );
 			// Check that the provided instance really matches with the key contained in the map
 			if ( entry != null ) {
@@ -165,8 +189,10 @@ public class InstanceIdentityMap<K extends InstanceIdentity, V> extends Abstract
 					return entry.getValue();
 				}
 				else {
-					// If it doesn't, reset the array value to the old key
-					page.set( pageOffset, entry );
+					throw new ConcurrentModificationException(
+							"Found a different instance corresponding to instanceId [" + instanceId +
+							"], this might indicate a concurrent access to this persistence context."
+					);
 				}
 			}
 		}

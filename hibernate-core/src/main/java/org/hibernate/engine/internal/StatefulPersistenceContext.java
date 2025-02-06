@@ -134,7 +134,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	private InstanceIdentityMap<PersistentCollection<?>, CollectionEntry> collectionEntries;
 
 	// Current collection instance id
-	private transient int currentCollectionInstanceId;
+	private transient int currentCollectionInstanceId = 1;
 
 	// Collection wrappers, by the CollectionKey
 	private HashMap<CollectionKey, PersistentCollection<?>> collectionsByKey;
@@ -258,7 +258,10 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 		final SharedSessionContractImplementor session = getSession();
 		if ( collectionEntries != null ) {
-			collectionEntries.forEach( (k, v) -> k.unsetSession( session ) );
+			collectionEntries.forEach( (k, v) -> {
+				k.$$_hibernate_setInstanceId( 0 );
+				k.unsetSession( session );
+			} );
 		}
 
 		arrayHolders = null;
@@ -270,7 +273,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		collectionsByKey = null;
 		nonlazyCollections = null;
 		collectionEntries = null;
-		currentCollectionInstanceId = 0;
+		currentCollectionInstanceId = 1;
 		unownedCollections = null;
 		nullifiableEntityKeys = null;
 		deletedUnloadedEntityKeys = null;
@@ -1133,6 +1136,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		if ( this.collectionEntries == null ) {
 			this.collectionEntries = new InstanceIdentityMap<>();
 		}
+		assert collection.$$_hibernate_getInstanceId() == 0;
 		collection.$$_hibernate_setInstanceId( nextCollectionInstanceId() );
 		this.collectionEntries.put( collection, entry );
 	}
@@ -2203,7 +2207,9 @@ class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public CollectionEntry removeCollectionEntry(PersistentCollection<?> collection) {
 		if ( collectionEntries != null ) {
-			return collectionEntries.remove( collection.$$_hibernate_getInstanceId(), collection );
+			final int instanceId = collection.$$_hibernate_getInstanceId();
+			collection.$$_hibernate_setInstanceId( 0 );
+			return collectionEntries.remove( instanceId, collection );
 		}
 		else {
 			return null;

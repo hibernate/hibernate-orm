@@ -1033,6 +1033,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					}
 				}
 				finally {
+					collection.$$_hibernate_setInstanceId( 0 );
 					collection.unsetSession( this );
 					if ( persistenceContext.isLoadFinished() ) {
 						persistenceContext.clear();

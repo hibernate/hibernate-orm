@@ -121,7 +121,7 @@ def changeToReleaseVersionTask = tasks.register( "changeToReleaseVersion" ) {
     doFirst {
         def releaseVersion = ormBuildDetails.releaseDetails.releaseVersion
         logger.lifecycle( "Updating version-file to release-version : `${releaseVersion}`" )
-        updateVersionFile( releaseVersion )
+        updateVersionFile( releaseVersion.toString() )
     }
 }
 
@@ -159,7 +159,7 @@ def gitPostStepsTask = tasks.register( 'gitPostSteps' ) {
         }
 
         logger.lifecycle( "Updating version-file to development-version : `${developmentVersion.fullName}`" )
-        updateVersionFile( developmentVersion )
+        updateVersionFile( developmentVersion.toString() )
 
         logger.lifecycle( "Performing post-steps Git commit : `${releaseVersion}`" )
         executeGitCommand( 'add', '.' )
@@ -508,7 +508,7 @@ class ChangeLogFile {
         return releaseNotes.notes
     }
 
-    private static getVersionId(jsonReleaseNotes, String restReleaseVersion) {
+    private static String getVersionId(jsonReleaseNotes, String restReleaseVersion) {
         for ( def issue : jsonReleaseNotes.issues ) {
             for ( def fixVersion : issue.fields.fixVersions ) {
                 if ( fixVersion.name == restReleaseVersion ) {

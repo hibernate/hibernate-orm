@@ -49,7 +49,6 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
-import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
@@ -62,7 +61,9 @@ import org.hibernate.jpa.spi.NativeQueryConstructorTransformer;
 import org.hibernate.jpa.spi.NativeQueryListTransformer;
 import org.hibernate.jpa.spi.NativeQueryMapTransformer;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
@@ -158,7 +159,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private transient JdbcSessionContext jdbcSessionContext;
 	private transient JdbcCoordinator jdbcCoordinator;
 
-	private transient TransactionImplementor currentHibernateTransaction;
+	private transient Transaction currentHibernateTransaction;
 	private transient TransactionCoordinator transactionCoordinator;
 	private transient CacheTransactionSynchronization cacheTransactionSync;
 
@@ -679,7 +680,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	protected TransactionImplementor getCurrentTransaction() {
+	protected Transaction getCurrentTransaction() {
 		return currentHibernateTransaction;
 	}
 
@@ -1002,7 +1003,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		else if ( List.class.equals( resultClass ) ) {
 			query.setTupleTransformer( NativeQueryListTransformer.INSTANCE );
 		}
-		else if ( getFactory().getMappingMetamodel().isEntityClass( resultClass ) ) {
+		else if ( getMappingMetamodel().isEntityClass( resultClass ) ) {
 			query.addEntity( resultClass, LockMode.READ );
 		}
 		else if ( resultClass != Object.class && resultClass != Object[].class ) {
@@ -1016,6 +1017,22 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
+	final EntityPersister requireEntityPersister(Class<?> entityClass) {
+		return getMappingMetamodel().getEntityDescriptor( entityClass );
+	}
+
+	final EntityPersister requireEntityPersister(String entityName) {
+		return getMappingMetamodel().getEntityDescriptor( entityName );
+	}
+
+	final CollectionPersister requireCollectionPersister(String roleName) {
+		return getMappingMetamodel().getCollectionDescriptor( roleName );
+	}
+
+	private MappingMetamodel getMappingMetamodel() {
+		return getFactory().getMappingMetamodel();
+	}
+
 	private <T> boolean hasJavaTypeDescriptor(Class<T> resultClass) {
 		final JavaType<Object> descriptor = getTypeConfiguration().getJavaTypeRegistry().findDescriptor( resultClass );
 		return descriptor != null && descriptor.getClass() != UnknownBasicJavaType.class;
@@ -1025,7 +1042,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public <T> NativeQueryImplementor<T> createNativeQuery(String sqlString, Class<T> resultClass, String tableAlias) {
 		@SuppressWarnings("unchecked")
 		final NativeQueryImplementor<T> query = createNativeQuery( sqlString );
-		if ( getFactory().getMappingMetamodel().isEntityClass( resultClass ) ) {
+		if ( getMappingMetamodel().isEntityClass( resultClass ) ) {
 			query.addEntity( tableAlias, resultClass.getName(), LockMode.READ );
 			return query;
 		}

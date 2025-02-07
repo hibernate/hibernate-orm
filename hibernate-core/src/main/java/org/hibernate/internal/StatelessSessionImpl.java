@@ -709,7 +709,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public Object get(String entityName, Object id, LockMode lockMode) {
 		checkOpen();
 
-		final EntityPersister persister = getEntityPersister( entityName );
+		final EntityPersister persister = requireEntityPersister( entityName );
 		if ( persister.canReadFromCache() ) {
 			final Object cachedEntity =
 					loadFromSecondLevelCache( this, null, lockMode, persister,
@@ -757,7 +757,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				throw new IllegalArgumentException("Null id");
 			}
 		}
-		final EntityPersister persister = getEntityPersister( entityClass.getName() );
+		final EntityPersister persister = requireEntityPersister( entityClass.getName() );
 		final JpaCriteriaQuery<T> query = getCriteriaBuilder().createQuery(entityClass);
 		final JpaRoot<T> from = query.from(entityClass);
 		query.where( from.get( persister.getIdentifierPropertyName() ).in(ids) );
@@ -772,10 +772,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			list.add( pos < 0 ? null : resultList.get(pos) );
 		}
 		return list;
-	}
-
-	private EntityPersister getEntityPersister(String entityName) {
-		return getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
 	@Override
@@ -868,7 +864,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public Object instantiate(String entityName, Object id) {
-		return instantiate( getEntityPersister( entityName ), id );
+		return instantiate( requireEntityPersister( entityName ), id );
 	}
 
 	@Override
@@ -885,7 +881,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			boolean nullable) {
 		checkOpen();
 
-		final EntityPersister persister = getEntityPersister( entityName );
+		final EntityPersister persister = requireEntityPersister( entityName );
 		final EntityKey entityKey = generateEntityKey( id, persister );
 
 		// first, try to load it from the temp PC associated to this SS
@@ -1015,8 +1011,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		else if ( association instanceof PersistentCollection<?> collection ) {
 			if ( !collection.wasInitialized() ) {
-				final CollectionPersister collectionDescriptor = getFactory().getMappingMetamodel()
-						.getCollectionDescriptor( collection.getRole() );
+				final CollectionPersister collectionDescriptor = requireCollectionPersister( collection.getRole() );
 				final Object key = collection.getKey();
 				persistenceContext.addUninitializedCollection( collectionDescriptor, collection, key );
 				collection.setCurrentSession( this );
@@ -1109,8 +1104,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public EntityPersister getEntityPersister(String entityName, Object object) {
 		checkOpen();
 		return entityName == null
-				? getEntityPersister( guessEntityName( object ) )
-				: getEntityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
+				? requireEntityPersister( guessEntityName( object ) )
+				: requireEntityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
 	}
 
 	@Override

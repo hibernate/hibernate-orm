@@ -50,6 +50,7 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
+import org.hibernate.Transaction;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
@@ -70,7 +71,6 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
@@ -2271,15 +2271,15 @@ public class SessionImpl
 		}
 
 		@Override
-		public TransactionImplementor getTransaction() {
+		public Transaction getTransaction() {
 			return shareTransactionContext ? session.getCurrentTransaction() : null;
 		}
 
 		@Override
 		public TransactionCompletionProcesses getTransactionCompletionProcesses() {
-			return shareTransactionContext ?
-					session.getActionQueue().getTransactionCompletionProcesses() :
-					null;
+			return shareTransactionContext
+					? session.getActionQueue().getTransactionCompletionProcesses()
+					: null;
 		}
 	}
 
@@ -2314,14 +2314,6 @@ public class SessionImpl
 	protected void removeSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
 		super.removeSharedSessionTransactionObserver( transactionCoordinator );
 		transactionCoordinator.removeObserver( transactionObserver );
-	}
-
-	private EntityPersister requireEntityPersister(Class<?> entityClass) {
-		return getFactory().getMappingMetamodel().getEntityDescriptor( entityClass );
-	}
-
-	private EntityPersister requireEntityPersister(String entityName) {
-		return getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
 	@Override
@@ -2360,7 +2352,8 @@ public class SessionImpl
 		}
 		else {
 			final TransactionStatus status = getCurrentTransaction().getStatus();
-			return status == TransactionStatus.ACTIVE || status == TransactionStatus.COMMITTING;
+			return status == TransactionStatus.ACTIVE
+				|| status == TransactionStatus.COMMITTING;
 		}
 	}
 

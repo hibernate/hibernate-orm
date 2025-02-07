@@ -108,9 +108,7 @@ import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
-import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
-import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOGRAPHY;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
@@ -204,25 +202,10 @@ public class GaussDBDialect extends Dialect {
 			case NCHAR -> columnType( CHAR );
 			case NVARCHAR -> columnType( VARCHAR );
 
-			// since there's no real difference between TEXT and VARCHAR,
-			// except for the length limit, we can just use 'text' for the
-			// "long" string types
 			case LONG32VARCHAR, LONG32NVARCHAR -> "text";
+			case NCLOB -> "clob";
 
-			// use oid as the blob/clob type because
-			// the JDBC driver doesn't allow using bytea/text via
-			// LOB APIs
-			case BLOB, CLOB, NCLOB -> "oid";
-
-			// use bytea as the "long" binary type (that there is no
-			// real VARBINARY type, so we always use this)
 			case BINARY, VARBINARY, LONG32VARBINARY -> "bytea";
-
-			// We do not use the 'time with timezone' type because PG
-			// deprecated it, and it lacks certain operations like
-			// subtraction
-//			case TIME_UTC:
-//				return columnType( TIME_WITH_TIMEZONE );
 
 			case TIMESTAMP_UTC -> columnType( TIMESTAMP_WITH_TIMEZONE );
 
@@ -235,6 +218,7 @@ public class GaussDBDialect extends Dialect {
 		return switch (sqlTypeCode) {
 			case CHAR, NCHAR, VARCHAR, NVARCHAR -> "varchar";
 			case LONG32VARCHAR, LONG32NVARCHAR -> "text";
+			case NCLOB -> "clob";
 			case BINARY, VARBINARY, LONG32VARBINARY -> "bytea";
 			default -> super.castType( sqlTypeCode );
 		};

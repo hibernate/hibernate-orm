@@ -10,6 +10,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -33,11 +34,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 		settings = @Setting( name = GENERATE_STATISTICS, value = "true" )
 )
 @DomainModel( annotatedClasses = {
-		EntityLoadedInTwoPhaseLoadTest.Start.class,
-		EntityLoadedInTwoPhaseLoadTest.Mid.class,
-		EntityLoadedInTwoPhaseLoadTest.Finish.class,
-		EntityLoadedInTwoPhaseLoadTest.Via1.class,
-		EntityLoadedInTwoPhaseLoadTest.Via2.class
+		EntityLoadedInTwoPhaseLoadTest.StartNode.class,
+		EntityLoadedInTwoPhaseLoadTest.MiddleNode.class,
+		EntityLoadedInTwoPhaseLoadTest.TerminalNode.class,
+		EntityLoadedInTwoPhaseLoadTest.Branch1Node.class,
+		EntityLoadedInTwoPhaseLoadTest.Branch2Node.class
 } )
 @SessionFactory
 public class EntityLoadedInTwoPhaseLoadTest {
@@ -48,9 +49,9 @@ public class EntityLoadedInTwoPhaseLoadTest {
 		final StatisticsImplementor statistics = sessions.getSessionFactory().getStatistics();
 		statistics.clear();
 
-		final Start start = sessions.fromTransaction( (session) -> {
+		final StartNode startNode = sessions.fromTransaction( (session) -> {
 			session.enableFetchProfile( FETCH_PROFILE_NAME );
-			return session.find( Start.class, 1 );
+			return session.find( StartNode.class, 1 );
 		} );
 
 		// should have loaded all the data
@@ -60,8 +61,7 @@ public class EntityLoadedInTwoPhaseLoadTest {
 
 		try {
 			// access the data which was supposed to have been fetched
-			//noinspection ResultOfMethodCallIgnored
-			start.getVia2().getMid().getFinish().getValue();
+			assertThat( startNode.branch2Node.middleNode.terminalNode.name ).isNotNull();
 		}
 		catch (LazyInitializationException e) {
 			fail( "Everything should be initialized" );
@@ -71,12 +71,12 @@ public class EntityLoadedInTwoPhaseLoadTest {
 	@BeforeEach
 	void createTestData(SessionFactoryScope sessions) {
 		sessions.inTransaction( (session) -> {
-			Finish finish = new Finish( 1, "foo" );
-			Mid mid = new Mid( 1, finish );
-			Via2 via2 = new Via2( 1, mid );
-			Start start = new Start( 1, null, via2 );
+			TerminalNode terminalNode = new TerminalNode( 1, "foo" );
+			MiddleNode middleNode = new MiddleNode( 1, terminalNode );
+			Branch2Node branch2Node = new Branch2Node( 1, middleNode );
+			StartNode startNode = new StartNode( 1, null, branch2Node );
 
-			session.persist( start );
+			session.persist( startNode );
 		} );
 	}
 
@@ -85,171 +85,107 @@ public class EntityLoadedInTwoPhaseLoadTest {
 		sessions.dropData();
 	}
 
-	@Entity(name = "FinishEntity")
-	public static class Finish {
-		@Id
-		private Integer id;
-		@Column(name = "val", nullable = false)
-		private String value;
-
-		public Finish() {
-		}
-
-		public Finish(Integer id, String value) {
-			this.id = id;
-			this.value = value;
-		}
-
-		public Integer getId() {
-			return id;
-		}
-
-		public String getValue() {
-			return value;
-		}
-
-		public void setValue(String value) {
-			this.value = value;
-		}
-	}
-
-	@Entity(name = "MidEntity")
+	@Entity
+	@Table(name="start_node")
 	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
-			@FetchProfile.FetchOverride(entity = Mid.class, association = "finish")
+			@FetchProfile.FetchOverride(entity = StartNode.class, association = "branch1Node"),
+			@FetchProfile.FetchOverride(entity = StartNode.class, association = "branch2Node")
 	})
-	public static class Mid {
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
+	public static class StartNode {
 		@Id
 		private Integer id;
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-		private Finish finish;
-
-		public Mid() {
-		}
-
-		public Mid(Integer id, Finish finish) {
-			this.id = id;
-			this.finish = finish;
-		}
-
-		public Integer getId() {
-			return id;
-		}
-
-		public Finish getFinish() {
-			return finish;
-		}
-
-		public void setFinish(Finish finish) {
-			this.finish = finish;
-		}
-
-	}
-
-	@Entity(name = "StartEntity")
-	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
-			@FetchProfile.FetchOverride(entity = Start.class, association = "via1"),
-			@FetchProfile.FetchOverride(entity = Start.class, association = "via2")
-	})
-	public static class Start {
-		@Id
-		private Integer id;
+		private Branch1Node branch1Node;
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-		private Via1 via1;
-		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-		private Via2 via2;
+		private Branch2Node branch2Node;
 
-		public Start() {
+		public StartNode() {
 		}
 
-		public Start(Integer id, Via1 via1, Via2 via2) {
+		public StartNode(Integer id, Branch1Node branch1Node, Branch2Node branch2Node) {
 			this.id = id;
-			this.via1 = via1;
-			this.via2 = via2;
+			this.branch1Node = branch1Node;
+			this.branch2Node = branch2Node;
 		}
-
-		public Integer getId() {
-			return id;
-		}
-
-		public Via1 getVia1() {
-			return via1;
-		}
-
-		public void setVia1(Via1 via1) {
-			this.via1 = via1;
-		}
-
-		public Via2 getVia2() {
-			return via2;
-		}
-
-		public void setVia2(Via2 via2) {
-			this.via2 = via2;
-		}
-
 	}
 
 	@Entity(name = "Via1Entity")
 	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
-			@FetchProfile.FetchOverride(entity = Via1.class, association = "mid")
+			@FetchProfile.FetchOverride(entity = Branch1Node.class, association = "middleNode")
 	})
-	public static class Via1 {
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
+	public static class Branch1Node {
 		@Id
 		private Integer id;
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-		private Mid mid;
+		private MiddleNode middleNode;
 
-		public Via1() {
+		public Branch1Node() {
 		}
 
-		public Via1(Integer id, Mid mid) {
+		public Branch1Node(Integer id, MiddleNode middleNode) {
 			this.id = id;
-			this.mid = mid;
+			this.middleNode = middleNode;
 		}
-
-		public Integer getId() {
-			return id;
-		}
-
-		public Mid getMid() {
-			return mid;
-		}
-
-		public void setMid(Mid mid) {
-			this.mid = mid;
-		}
-
 	}
 
 	@Entity(name = "Via2Entity")
 	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
-			@FetchProfile.FetchOverride(entity = Via2.class, association = "mid")
+			@FetchProfile.FetchOverride(entity = Branch2Node.class, association = "middleNode")
 	})
-	public static class Via2 {
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
+	public static class Branch2Node {
 		@Id
 		private Integer id;
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-		private Mid mid;
+		private MiddleNode middleNode;
 
-		public Via2() {
+		public Branch2Node() {
 		}
 
-		public Via2(Integer id, Mid mid) {
+		public Branch2Node(Integer id, MiddleNode middleNode) {
 			this.id = id;
-			this.mid = mid;
+			this.middleNode = middleNode;
+		}
+	}
+
+	@Entity
+	@Table(name="middle_node")
+	@FetchProfile(name = FETCH_PROFILE_NAME, fetchOverrides = {
+			@FetchProfile.FetchOverride(entity = MiddleNode.class, association = "terminalNode")
+	})
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
+	public static class MiddleNode {
+		@Id
+		private Integer id;
+		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+		private TerminalNode terminalNode;
+
+		public MiddleNode() {
 		}
 
-		public Integer getId() {
-			return id;
+		public MiddleNode(Integer id, TerminalNode terminalNode) {
+			this.id = id;
+			this.terminalNode = terminalNode;
+		}
+	}
+
+	@Entity
+	@Table(name="terminal_node")
+	@SuppressWarnings({"FieldCanBeLocal", "unused"})
+	public static class TerminalNode {
+		@Id
+		private Integer id;
+		@Column(nullable = false)
+		private String name;
+
+		public TerminalNode() {
 		}
 
-		public Mid getMid() {
-			return mid;
+		public TerminalNode(Integer id, String name) {
+			this.id = id;
+			this.name = name;
 		}
-
-		public void setMid(Mid mid) {
-			this.mid = mid;
-		}
-
 	}
 }

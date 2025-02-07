@@ -176,20 +176,24 @@ pipeline {
                     }
                 }
             }
+            post {
+                always {
+                    script {
+                        def containerName
+                        if ( params.RDBMS == 'postgresql' ) {
+                            containerName = 'postgres'
+                        }
+                        else {
+                            containerName = params.RDBMS
+                        }
+                        sh "docker rm -f ${containerName}"
+                    }
+                }
+            }
         }
     }
     post {
         always {
-        	script {
-				def containerName
-				if ( params.RDBMS == 'postgresql' ) {
-					containerName = 'postgres'
-				}
-				else {
-					containerName = params.RDBMS
-				}
-				sh "docker rm -f ${containerName}"
-        	}
     		configFileProvider([configFile(fileId: 'job-configuration.yaml', variable: 'JOB_CONFIGURATION_FILE')]) {
                 notifyBuildResult maintainers: "andrea@hibernate.org steve@hibernate.org christian.beikov@gmail.com mbellade@redhat.com"
             }

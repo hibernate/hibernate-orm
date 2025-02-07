@@ -22,17 +22,21 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.SkipForDialectGroup;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,6 +61,15 @@ import jakarta.persistence.Id;
 		}
 )
 @JiraKey(value = "HHH-18992")
+@FailureExpected(reason = "Ordered loading by multiple natural-id values is not yet supported", jiraKey = "HHH-19115")
+// TODO remove the SkipForDialectGroup when the @FailureExpected is removed
+@SkipForDialectGroup(
+		// The tests don't actually fail for the dialects below, skipping them so that the non-occurring expected failure doesn't fail the Test case
+		value = {
+				@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true),
+				@SkipForDialect(dialectClass = HSQLDialect.class),
+		}
+)
 public class MultiLoadLockingTest {
 
 	private SQLStatementInspector sqlStatementInspector;

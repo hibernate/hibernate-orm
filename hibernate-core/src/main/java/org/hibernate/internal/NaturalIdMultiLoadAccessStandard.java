@@ -34,7 +34,7 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 
 	private Integer batchSize;
 	private boolean returnOfDeletedEntitiesEnabled;
-	private boolean orderedReturnEnabled = false;
+	private boolean orderedReturnEnabled = true;
 
 	public NaturalIdMultiLoadAccessStandard(EntityPersister entityDescriptor, SessionImpl session) {
 		this.entityDescriptor = entityDescriptor;

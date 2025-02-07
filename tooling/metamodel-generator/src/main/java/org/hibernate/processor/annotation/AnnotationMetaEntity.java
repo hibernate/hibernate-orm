@@ -349,10 +349,26 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public String scope() {
-		if (jakartaDataRepository) {
-			return context.addTransactionScopedAnnotation()
-					? "jakarta.transaction.TransactionScoped"
-					: "jakarta.enterprise.context.RequestScoped";
+		if ( jakartaDataRepository ) {
+			return element.getAnnotationMirrors().stream()
+					.map( AnnotationMirror::getAnnotationType )
+					.map( DeclaredType::asElement )
+					.map( t -> (TypeElement) t )
+					.map( TypeElement::getQualifiedName )
+					.map( Name::toString )
+					.filter( List.of(
+							"jakarta.enterprise.context.ApplicationScoped",
+							"jakarta.enterprise.context.Dependent",
+							"jakarta.enterprise.context.RequestScoped",
+							"jakarta.enterprise.context.SessionScoped",
+							"jakarta.enterprise.context.ConversationScoped",
+							"jakarta.transaction.TransactionScoped",
+							"jakarta.inject.Singleton"
+					)::contains )
+					.findFirst()
+					.orElseGet( () -> context.addTransactionScopedAnnotation()
+							? "jakarta.transaction.TransactionScoped"
+							: "jakarta.enterprise.context.RequestScoped" );
 		}
 		else {
 			return "jakarta.enterprise.context.Dependent";

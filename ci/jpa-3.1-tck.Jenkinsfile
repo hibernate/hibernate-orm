@@ -107,9 +107,7 @@ pipeline {
     }
     post {
         always {
-    		configFileProvider([configFile(fileId: 'job-configuration.yaml', variable: 'JOB_CONFIGURATION_FILE')]) {
-            	notifyBuildResult maintainers: (String) readYaml(file: env.JOB_CONFIGURATION_FILE).notification?.email?.recipients
-            }
+            notifyBuildResult maintainers: "andrea@hibernate.org steve@hibernate.org christian.beikov@gmail.com mbellade@redhat.com"
         }
     }
 }

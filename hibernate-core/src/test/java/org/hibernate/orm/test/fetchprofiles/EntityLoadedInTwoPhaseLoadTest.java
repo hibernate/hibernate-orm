@@ -8,101 +8,100 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-
 import org.hibernate.LazyInitializationException;
 import org.hibernate.annotations.FetchProfile;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-
+import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.StatisticsSettings.GENERATE_STATISTICS;
+import static org.junit.jupiter.api.Assertions.fail;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-12297")
-public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
-
+@ServiceRegistry(
+		settings = @Setting( name = GENERATE_STATISTICS, value = "true" )
+)
+@DomainModel( annotatedClasses = {
+		EntityLoadedInTwoPhaseLoadTest.Start.class,
+		EntityLoadedInTwoPhaseLoadTest.Mid.class,
+		EntityLoadedInTwoPhaseLoadTest.Finish.class,
+		EntityLoadedInTwoPhaseLoadTest.Via1.class,
+		EntityLoadedInTwoPhaseLoadTest.Via2.class
+} )
+@SessionFactory
+public class EntityLoadedInTwoPhaseLoadTest {
 	static final String FETCH_PROFILE_NAME = "fp1";
 
-	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.GENERATE_STATISTICS, true );
-	}
-
 	@Test
-	public void testIfAllRelationsAreInitialized() {
-		long startId = this.createSampleData();
-		sessionFactory().getStatistics().clear();
+	public void testIfAllRelationsAreInitialized(SessionFactoryScope sessions) {
+		final StatisticsImplementor statistics = sessions.getSessionFactory().getStatistics();
+		statistics.clear();
+
+		final Start start = sessions.fromTransaction( (session) -> {
+			session.enableFetchProfile( FETCH_PROFILE_NAME );
+			return session.find( Start.class, 1 );
+		} );
+
+		// should have loaded all the data
+		assertThat( statistics.getEntityLoadCount() ).isEqualTo( 4 );
+		// should have loaded it in one query (join fetch)
+		assertThat( statistics.getPrepareStatementCount() ).isEqualTo( 1 );
+
 		try {
-			Start start = this.loadStartWithFetchProfile( startId );
-			@SuppressWarnings( "unused" )
-			String value = start.getVia2().getMid().getFinish().getValue();
-			assertEquals( 4, sessionFactory().getStatistics().getEntityLoadCount() );
+			// access the data which was supposed to have been fetched
+			//noinspection ResultOfMethodCallIgnored
+			start.getVia2().getMid().getFinish().getValue();
 		}
 		catch (LazyInitializationException e) {
 			fail( "Everything should be initialized" );
 		}
 	}
 
-	public Start loadStartWithFetchProfile(long startId) {
-		return doInHibernate( this::sessionFactory, session -> {
-			session.enableFetchProfile( FETCH_PROFILE_NAME );
-			return session.get( Start.class, startId );
-		} );
-	}
-
-	private long createSampleData() {
-		return doInHibernate( this::sessionFactory, session -> {
-			Finish finish = new Finish( "foo" );
-			Mid mid = new Mid( finish );
-			Via2 via2 = new Via2( mid );
-			Start start = new Start( null, via2 );
+	@BeforeEach
+	void createTestData(SessionFactoryScope sessions) {
+		sessions.inTransaction( (session) -> {
+			Finish finish = new Finish( 1, "foo" );
+			Mid mid = new Mid( 1, finish );
+			Via2 via2 = new Via2( 1, mid );
+			Start start = new Start( 1, null, via2 );
 
 			session.persist( start );
-
-			return start.getId();
 		} );
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Start.class,
-				Mid.class,
-				Finish.class,
-				Via1.class,
-				Via2.class
-		};
+	@AfterEach
+	void dropTestData(SessionFactoryScope sessions) {
+		sessions.dropData();
 	}
 
 	@Entity(name = "FinishEntity")
 	public static class Finish {
-
 		@Id
-		@GeneratedValue
-		private long id;
-
+		private Integer id;
 		@Column(name = "val", nullable = false)
 		private String value;
 
 		public Finish() {
 		}
 
-		public Finish(String value) {
+		public Finish(Integer id, String value) {
+			this.id = id;
 			this.value = value;
 		}
 
-		public long getId() {
+		public Integer getId() {
 			return id;
-		}
-
-		public void setId(long id) {
-			this.id = id;
 		}
 
 		public String getValue() {
@@ -119,27 +118,21 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 			@FetchProfile.FetchOverride(entity = Mid.class, association = "finish")
 	})
 	public static class Mid {
-
 		@Id
-		@GeneratedValue
-		private long id;
-
+		private Integer id;
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		private Finish finish;
 
 		public Mid() {
 		}
 
-		public Mid(Finish finish) {
+		public Mid(Integer id, Finish finish) {
+			this.id = id;
 			this.finish = finish;
 		}
 
-		public long getId() {
+		public Integer getId() {
 			return id;
-		}
-
-		public void setId(long id) {
-			this.id = id;
 		}
 
 		public Finish getFinish() {
@@ -158,31 +151,24 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 			@FetchProfile.FetchOverride(entity = Start.class, association = "via2")
 	})
 	public static class Start {
-
 		@Id
-		@GeneratedValue
-		private long id;
-
+		private Integer id;
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		private Via1 via1;
-
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		private Via2 via2;
 
 		public Start() {
 		}
 
-		public Start(Via1 via1, Via2 via2) {
+		public Start(Integer id, Via1 via1, Via2 via2) {
+			this.id = id;
 			this.via1 = via1;
 			this.via2 = via2;
 		}
 
-		public long getId() {
+		public Integer getId() {
 			return id;
-		}
-
-		public void setId(long id) {
-			this.id = id;
 		}
 
 		public Via1 getVia1() {
@@ -208,27 +194,21 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 			@FetchProfile.FetchOverride(entity = Via1.class, association = "mid")
 	})
 	public static class Via1 {
-
 		@Id
-		@GeneratedValue
-		private long id;
-
+		private Integer id;
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		private Mid mid;
 
 		public Via1() {
 		}
 
-		public Via1(Mid mid) {
+		public Via1(Integer id, Mid mid) {
+			this.id = id;
 			this.mid = mid;
 		}
 
-		public long getId() {
+		public Integer getId() {
 			return id;
-		}
-
-		public void setId(long id) {
-			this.id = id;
 		}
 
 		public Mid getMid() {
@@ -246,27 +226,21 @@ public class EntityLoadedInTwoPhaseLoadTest extends BaseCoreFunctionalTestCase {
 			@FetchProfile.FetchOverride(entity = Via2.class, association = "mid")
 	})
 	public static class Via2 {
-
 		@Id
-		@GeneratedValue
-		private long id;
-
+		private Integer id;
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		private Mid mid;
 
 		public Via2() {
 		}
 
-		public Via2(Mid mid) {
+		public Via2(Integer id, Mid mid) {
+			this.id = id;
 			this.mid = mid;
 		}
 
-		public long getId() {
+		public Integer getId() {
 			return id;
-		}
-
-		public void setId(long id) {
-			this.id = id;
 		}
 
 		public Mid getMid() {

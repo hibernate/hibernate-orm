@@ -14,9 +14,7 @@ if ( !env.CHANGE_ID ) {
 }
 
 pipeline {
-    agent {
-        label 'LongDuration'
-    }
+    agent none
     tools {
         jdk 'OpenJDK 17 Latest'
     }
@@ -26,7 +24,15 @@ pipeline {
         skipDefaultCheckout()
     }
     stages {
+        stage('Checks') {
+        	steps {
+                requireApprovalForPullRequest 'hibernate'
+            }
+        }
         stage('Build') {
+            agent {
+                label 'LongDuration'
+            }
         	steps {
                 requireApprovalForPullRequest 'hibernate'
 				script {

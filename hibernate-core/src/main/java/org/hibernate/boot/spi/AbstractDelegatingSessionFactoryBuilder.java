@@ -287,12 +287,6 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyJdbcBatchingForVersionedEntities(boolean enabled) {
-		delegate.applyJdbcBatchingForVersionedEntities( enabled );
-		return getThis();
-	}
-
-	@Override
 	public T applyScrollableResultsSupport(boolean enabled) {
 		delegate.applyScrollableResultsSupport( enabled );
 		return getThis();

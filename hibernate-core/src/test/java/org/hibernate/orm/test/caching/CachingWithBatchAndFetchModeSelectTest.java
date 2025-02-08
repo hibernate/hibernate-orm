@@ -34,7 +34,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		},
 		integrationSettings = {
 				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true"),
-				@Setting(name = AvailableSettings.BATCH_VERSIONED_DATA, value = "true")
 		}
 
 )

@@ -20,8 +20,21 @@ import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.*;
+import org.hibernate.dialect.BooleanDecoder;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.OracleBooleanJdbcType;
+import org.hibernate.dialect.OracleJdbcHelper;
+import org.hibernate.dialect.OracleJsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.OracleJsonJdbcType;
+import org.hibernate.dialect.OracleReflectionStructJdbcType;
+import org.hibernate.dialect.OracleTypes;
+import org.hibernate.dialect.OracleUserDefinedTypeExporter;
+import org.hibernate.dialect.OracleXmlJdbcType;
+import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -786,13 +799,6 @@ public class OracleLegacyDialect extends Dialect {
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
 		return getVersion().isSameOrAfter( 9 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
-	}
-
-	@Override
-	protected void initDefaultProperties() {
-		super.initDefaultProperties();
-		String newerVersion = Boolean.toString( getVersion().isSameOrAfter( 12 ) );
-		getDefaultProperties().setProperty( Environment.BATCH_VERSIONED_DATA, newerVersion );
 	}
 
 	@Override

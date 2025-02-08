@@ -305,11 +305,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public boolean isJdbcBatchVersionedData() {
-		return delegate.isJdbcBatchVersionedData();
-	}
-
-	@Override
 	public boolean isScrollableResultSetsEnabled() {
 		return delegate.isScrollableResultSetsEnabled();
 	}

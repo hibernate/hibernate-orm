@@ -3392,13 +3392,6 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * GaussDB array_to_string() function
-	 */
-	public void arrayToString_gaussdb() {
-		functionRegistry.register( "array_to_string", new ArrayToStringFunction( typeConfiguration ) );
-	}
-
-	/**
 	 * Oracle array_to_string() function
 	 */
 	public void arrayToString_oracle() {

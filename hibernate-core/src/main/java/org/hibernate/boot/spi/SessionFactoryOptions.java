@@ -298,11 +298,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	int getJdbcBatchSize();
 
 	/**
-	 * @see org.hibernate.cfg.BatchSettings#BATCH_VERSIONED_DATA
-	 */
-	boolean isJdbcBatchVersionedData();
-
-	/**
 	 * @see org.hibernate.cfg.JdbcSettings#USE_SCROLLABLE_RESULTSET
 	 */
 	boolean isScrollableResultSetsEnabled();

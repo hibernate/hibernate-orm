@@ -54,16 +54,6 @@ public interface BatchSettings {
 	String ORDER_INSERTS = "hibernate.order_inserts";
 
 	/**
-	 * When enabled, specifies that {@linkplain jakarta.persistence.Version versioned}
-	 * data should be included in batching.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchingForVersionedEntities(boolean)
-	 *
-	 * @settingDefault Generally {@code true}, though can vary based on Dialect
-	 */
-	String BATCH_VERSIONED_DATA = "hibernate.jdbc.batch_versioned_data";
-
-	/**
 	 * @deprecated Use {@link #BUILDER} instead
 	 */
 	@Deprecated(since="6.4")

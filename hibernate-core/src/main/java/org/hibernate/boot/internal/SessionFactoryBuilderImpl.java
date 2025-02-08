@@ -319,12 +319,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyJdbcBatchingForVersionedEntities(boolean enabled) {
-		this.optionsBuilder.enableJdbcBatchingForVersionedEntities( enabled );
-		return this;
-	}
-
-	@Override
 	public SessionFactoryBuilder applyScrollableResultsSupport(boolean enabled) {
 		this.optionsBuilder.enableScrollableResultSupport( enabled );
 		return this;

@@ -104,7 +104,6 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static org.hibernate.LockOptions.NO_WAIT;
 import static org.hibernate.LockOptions.SKIP_LOCKED;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
-import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
 import static org.hibernate.dialect.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.dialect.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -832,12 +831,6 @@ public class OracleDialect extends Dialect {
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
 		return TimeZoneSupport.NATIVE;
-	}
-
-	@Override
-	protected void initDefaultProperties() {
-		super.initDefaultProperties();
-		getDefaultProperties().setProperty( BATCH_VERSIONED_DATA, "true" );
 	}
 
 	@Override

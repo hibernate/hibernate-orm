@@ -565,19 +565,6 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyJdbcBatchSize(int size);
 
 	/**
-	 * This setting controls whether versioned entities will be included in JDBC batching.  The reason
-	 * being that some JDBC drivers have a problems returning "accurate" update counts from batch statements.
-	 * This is setting is {@code false} by default.
-	 *
-	 * @param enabled The batch size to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#BATCH_VERSIONED_DATA
-	 */
-	SessionFactoryBuilder applyJdbcBatchingForVersionedEntities(boolean enabled);
-
-	/**
 	 * Should scrollable results be supported in queries?  We ask the JDBC driver whether it
 	 * supports scrollable result sets as the default for this setting, but some drivers do not
 	 * accurately report this via DatabaseMetaData.  Also, needed if user is supplying connections

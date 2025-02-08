@@ -222,7 +222,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	// JDBC Handling
 	private boolean getGeneratedKeysEnabled;
 	private int jdbcBatchSize;
-	private boolean jdbcBatchVersionedData;
 	private Integer jdbcFetchSize;
 	private boolean scrollableResultSetsEnabled;
 	private boolean commentsEnabled;
@@ -464,8 +463,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		jdbcBatchSize = disallowBatchUpdates( dialect, meta ) ? 0
 				: getInt( STATEMENT_BATCH_SIZE, settings, 1 );
-
-		jdbcBatchVersionedData = getBoolean( BATCH_VERSIONED_DATA, settings, true );
 
 		scrollableResultSetsEnabled =
 				getBoolean( USE_SCROLLABLE_RESULTSET, settings, meta.supportsScrollableResults() );
@@ -1055,11 +1052,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public boolean isJdbcBatchVersionedData() {
-		return jdbcBatchVersionedData;
-	}
-
-	@Override
 	public boolean isScrollableResultSetsEnabled() {
 		return scrollableResultSetsEnabled;
 	}
@@ -1467,10 +1459,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void applyJdbcBatchSize(int size) {
 		this.jdbcBatchSize = size;
-	}
-
-	public void enableJdbcBatchingForVersionedEntities(boolean enabled) {
-		this.jdbcBatchVersionedData = enabled;
 	}
 
 	public void enableScrollableResultSupport(boolean enabled) {

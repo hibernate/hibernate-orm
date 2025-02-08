@@ -84,8 +84,6 @@ import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
-import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
@@ -1368,12 +1366,6 @@ public class GaussDBDialect extends Dialect {
 		// For how BLOB affects Hibernate, see:
 		//     http://in.relation.to/15492.lace
 
-		// Force BLOB binding.  Otherwise, byte[] fields annotated
-		// with @Lob will attempt to use
-		// BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING.  Since the
-		// dialect uses oid for Blobs, byte arrays cannot be used.
-		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.BLOB_BINDING );
-		jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.CLOB_BINDING );
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 
 		jdbcTypeRegistry.addDescriptorIfAbsent( GaussDBCastingInetJdbcType.INSTANCE );

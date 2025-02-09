@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -47,6 +48,8 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 
 import org.jboss.logging.Logger;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A type that handles Hibernate {@code PersistentCollection}s (including arrays).
@@ -366,7 +369,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @param session The session from which the request is originating.
 	 * @return The collection owner's key
 	 */
-	public Object getKeyOfOwner(Object owner, SharedSessionContractImplementor session) {
+	public @Nullable Object getKeyOfOwner(Object owner, SharedSessionContractImplementor session) {
 		final PersistenceContext pc = session.getPersistenceContextInternal();
 
 		EntityEntry entityEntry = pc.getEntry( owner );
@@ -380,28 +383,10 @@ public abstract class CollectionType extends AbstractType implements Association
 			return entityEntry.getId();
 		}
 		else {
-			// TODO: at the point where we are resolving collection references, we don't
-			// know if the uk value has been resolved (depends if it was earlier or
-			// later in the mapping document) - now, we could try and use e.getStatus()
-			// to decide to semiResolve(), trouble is that initializeEntity() reuses
-			// the same array for resolved and hydrated values
-			Object id = entityEntry.getLoadedState() != null
-					? entityEntry.getLoadedValue( foreignKeyPropertyName )
-					: entityEntry.getPersister().getPropertyValue( owner, foreignKeyPropertyName );
-
-			// NOTE VERY HACKISH WORKAROUND!!
-			// TODO: Fix this so it will work for non-POJO entity mode
-			Type keyType = getPersister( session ).getKeyType();
-			if ( !keyType.getReturnedClass().isInstance( id ) ) {
-				throw new UnsupportedOperationException( "Re-work support for semi-resolve" );
-//				id = keyType.semiResolve(
-//						entityEntry.getLoadedValue( foreignKeyPropertyName ),
-//						session,
-//						owner
-//				);
-			}
-
-			return id;
+			final Object loadedValue = entityEntry.getLoadedValue( foreignKeyPropertyName );
+			return loadedValue == null
+					? entityEntry.getPersister().getPropertyValue( owner, foreignKeyPropertyName )
+					: loadedValue;
 		}
 	}
 

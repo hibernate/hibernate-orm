@@ -18,6 +18,7 @@ import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 
@@ -118,8 +119,9 @@ public final class CollectionEntry implements Serializable {
 		ignore = false;
 
 		loadedKey = collection.getKey();
+		role = collection.getRole();
 		setLoadedPersister(
-				factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( collection.getRole() )
+				factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( NullnessUtil.castNonNull( role ) )
 		);
 
 		snapshot = collection.getStoredSnapshot();

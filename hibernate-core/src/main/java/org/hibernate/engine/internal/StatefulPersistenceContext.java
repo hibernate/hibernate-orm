@@ -875,8 +875,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void addUninitializedDetachedCollection(CollectionPersister persister, PersistentCollection<?> collection) {
-		final CollectionEntry ce = new CollectionEntry( persister, collection.getKey() );
-		addCollection( collection, ce, collection.getKey() );
+		final Object key = collection.getKey();
+		assert key != null;
+		final CollectionEntry ce = new CollectionEntry( persister, key );
+		addCollection( collection, ce, key );
 		if ( persister.getBatchSize() > 1 ) {
 			getBatchFetchQueue().addBatchLoadableCollection( collection, ce );
 		}
@@ -934,7 +936,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void addInitializedDetachedCollection(CollectionPersister collectionPersister, PersistentCollection<?> collection)
 			throws HibernateException {
-		if ( collection.isUnreferenced() ) {
+		if ( collection.isUnreferenced() || collection.getKey() == null ) {
 			//treat it just like a new collection
 			addCollection( collection, collectionPersister );
 		}

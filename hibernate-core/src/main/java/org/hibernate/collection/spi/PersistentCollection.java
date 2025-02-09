@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -60,7 +61,7 @@ public interface PersistentCollection<E> extends LazyInitializable {
 	 *
 	 * @return The owner
 	 */
-	Object getOwner();
+	@Nullable Object getOwner();
 
 	/**
 	 * Set the reference to the owning entity
@@ -403,14 +404,14 @@ public interface PersistentCollection<E> extends LazyInitializable {
 	 *
 	 * @return the current collection key value
 	 */
-	Object getKey();
+	@Nullable Object getKey();
 
 	/**
 	 * Get the current role name
 	 *
 	 * @return the collection role name
 	 */
-	String getRole();
+	@Nullable String getRole();
 
 	/**
 	 * Is the collection unreferenced?
@@ -459,7 +460,7 @@ public interface PersistentCollection<E> extends LazyInitializable {
 	 *
 	 * @return The internally stored snapshot state
 	 */
-	Serializable getStoredSnapshot();
+	@Nullable Serializable getStoredSnapshot();
 
 	/**
 	 * Mark the collection as dirty

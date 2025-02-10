@@ -70,8 +70,7 @@ publishingExtension.publications.named("publishedArtifacts", MavenPublication) {
     from components.javaPlatform
 }
 
-tasks.register("publishReleaseArtifacts") {
-    // mirror for `:release:publishReleaseArtifacts`
+project( ":release" ).getTasks().named( "publishReleaseArtifacts" ).configure {
     dependsOn tasks.release
 }
 

@@ -13,8 +13,6 @@ plugins {
 description = 'Hibernate\'s core ORM functionality'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply from: rootProject.file( 'gradle/group-relocation.gradle' )
-
 apply plugin: 'org.hibernate.orm.antlr'
 apply plugin: 'org.hibernate.matrix-test'
 

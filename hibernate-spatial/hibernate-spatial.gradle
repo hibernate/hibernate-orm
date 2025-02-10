@@ -8,8 +8,6 @@
 description = 'Integrate support for Spatial/GIS data into Hibernate O/RM'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply from: rootProject.file( 'gradle/group-relocation.gradle' )
-
 apply plugin: 'org.hibernate.matrix-test'
 
 

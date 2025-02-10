@@ -59,7 +59,7 @@ tasks.named( "javadoc", Javadoc ) {
     }
 }
 
-tasks.register("javadocJar", Jar) {
+task javadocJar(type: Jar) {
     from project.tasks.javadoc.outputs
     manifest {
         attributes(

@@ -1,7 +1,6 @@
 description = 'Integration for Micrometer metrics into Hibernate as a metrics collection package'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply from: rootProject.file( 'gradle/group-relocation.gradle' )
 
 dependencies {
     implementation project( ':hibernate-core' )

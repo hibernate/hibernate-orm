@@ -8,7 +8,6 @@
 description = 'Integration for Agroal as a ConnectionProvider for Hibernate ORM'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply from: rootProject.file( 'gradle/group-relocation.gradle' )
 
 dependencies {
     implementation project( ':hibernate-core' )

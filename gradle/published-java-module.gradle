@@ -5,20 +5,18 @@
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 
+apply from: rootProject.file( 'gradle/releasable.gradle' )
 apply from: rootProject.file( 'gradle/java-module.gradle' )
-apply from: rootProject.file( 'gradle/publishing.gradle' )
+apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
-tasks.register("publishReleaseArtifacts") {
-	// mirror for `:release:publishReleaseArtifacts`
-	dependsOn tasks.release
-}
+apply plugin: 'signing'
+
+// Make sure that the publishReleaseArtifacts task of the release module runs the release task of this sub module
+tasks.getByPath( ':release:publishReleaseArtifacts' ).dependsOn tasks.release
 
 configurations {
 	javadocSources {
-		description = "All Java sources for the project's Javadoc"
-		canBeConsumed = true
-		canBeResolved = false
-		visible = false
+		description 'Used to aggregate javadocs for the whole project'
 	}
 }
 
@@ -38,16 +36,127 @@ java {
 	withSourcesJar()
 }
 
+publishing {
+	publications {
+		// main publication
+		publishedArtifacts {
+			from components.java
+		}
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Publishing
+		// relocation for the published artifacts based on the old groupId
+		relocationPom( MavenPublication ) {
+			pom {
+				name = project.name + ' - relocation'
+				groupId = 'org.hibernate'
+				artifactId = project.name
+				version = project.version
 
-var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
-publishingExtension.publications.named("publishedArtifacts", MavenPublication) {
-	// Add the Java component to the main publication
-	from components.java
+				description = project.description
+				url = 'https://hibernate.org/orm'
+
+				organization {
+					name = 'Hibernate.org'
+					url = 'https://hibernate.org'
+				}
+
+				licenses {
+					license {
+						name = 'GNU Library General Public License v2.1 or later'
+						url = 'https://www.opensource.org/licenses/LGPL-2.1'
+						comments = 'See discussion at https://hibernate.org/community/license/ for more details.'
+						distribution = 'repo'
+					}
+				}
+
+				scm {
+					url = 'https://github.com/hibernate/hibernate-orm'
+					connection = 'scm:git:https://github.com/hibernate/hibernate-orm.git'
+					developerConnection = 'scm:git:git@github.com:hibernate/hibernate-orm.git'
+				}
+
+				developers {
+					developer {
+						id = 'hibernate-team'
+						name = 'The Hibernate Development Team'
+						organization = 'Hibernate.org'
+						organizationUrl = 'https://hibernate.org'
+					}
+				}
+
+				issueManagement {
+					system = 'jira'
+					url = 'https://hibernate.atlassian.net/browse/HHH'
+				}
+
+				distributionManagement {
+					relocation {
+						groupId = 'org.hibernate.orm'
+						artifactId = project.name
+						version = project.version
+					}
+				}
+			}
+		}
+	}
 }
 
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Signing
+
+
+def signingKey = resolveSigningKey()
+def signingPassphrase = resolveSigningPassphrase()
+
+var signingExtension = project.getExtensions().getByType(SigningExtension) as SigningExtension
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+signingExtension.sign publishingExtension.publications.publishedArtifacts
+signingExtension.useInMemoryPgpKeys(signingKey, signingPassphrase)
+
+gradle.taskGraph.whenReady { TaskExecutionGraph graph ->
+	boolean wasPublishingRequested = false
+
+	graph.allTasks.each {task ->
+		if ( task instanceof PublishToMavenRepository ) {
+			wasPublishingRequested = true
+		}
+	}
+
+	if ( wasPublishingRequested ) {
+		def ossrhUser = System.getenv().get( "ORG_GRADLE_PROJECT_sonatypeUsername" )
+		def ossrhPass = System.getenv().get( "ORG_GRADLE_PROJECT_sonatypePassword" )
+		if ( ossrhUser == null || ossrhPass == null ) {
+			throw new RuntimeException( "Cannot perform publishing to OSSRH without credentials." )
+		}
+		logger.lifecycle "Publishing {} : {} : {}", project.group, project.name, project.version
+		signingExtension.required = true
+	}
+	else if ( signingKey == null || signingPassphrase == null ) {
+		tasks.withType( Sign ).each { t-> t.enabled = false }
+	}
+}
+
+static String resolveSigningKey() {
+	var key = System.getenv().get( "SIGNING_GPG_PRIVATE_KEY" )
+	if ( key != null ) {
+		return key
+	}
+
+	var keyFile = System.getenv().get( "SIGNING_GPG_PRIVATE_KEY_PATH" )
+	if ( keyFile != null ) {
+		return new File( keyFile ).text
+	}
+
+	return null
+}
+
+static String resolveSigningPassphrase() {
+	return System.getenv().get( "SIGNING_GPG_PASSPHRASE" )
+}
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -62,6 +171,21 @@ tasks.release.dependsOn tasks.test, tasks.publishToSonatype
 tasks.preVerifyRelease.dependsOn build
 tasks.preVerifyRelease.dependsOn generateMetadataFileForPublishedArtifactsPublication
 tasks.preVerifyRelease.dependsOn generatePomFileForPublishedArtifactsPublication
+tasks.preVerifyRelease.dependsOn generatePomFileForRelocationPomPublication
 
 tasks.publishToSonatype.mustRunAfter test
 
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Ancillary tasks
+
+task showPublications {
+	doFirst {
+		project.publishing.publications.each { publication ->
+			println "Publication (${publication.name}): ${publication.groupId}:${publication.artifactId}:${publication.version}"
+			publication.artifacts.each { artifact ->
+				println "    > ${artifact}"
+			}
+		}
+	}
+}

@@ -856,7 +856,6 @@ public class OracleDialect extends Dialect {
 		}
 		// We need the DDL type during runtime to produce the proper encoding in certain functions
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( BIT, "number(1,0)", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( oracle.jdbc.OracleTypes.INTERVALDS, "interval day to second", this ) );
 
 	}
 
@@ -889,8 +888,6 @@ public class OracleDialect extends Dialect {
 		switch ( jdbcTypeCode ) {
 			case OracleTypes.JSON:
 				return jdbcTypeRegistry.getDescriptor( JSON );
-			case oracle.jdbc.OracleTypes.INTERVALDS:
-				return jdbcTypeRegistry.getDescriptor( DURATION );
 			case STRUCT:
 				if ( "MDSYS.SDO_GEOMETRY".equals( columnTypeName ) ) {
 					jdbcTypeCode = GEOMETRY;

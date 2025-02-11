@@ -648,4 +648,4 @@ Infinispan is a distributed in-memory key/value data store, available as a cache
 It supports advanced functionality such as transactions, events, querying, distributed processing, off-heap and geographical failover.
 
 For more details, check out the
-https://infinispan.org/docs/stable/titles/integrating/integrating.html#integrating_jpa_hibernate[Infinispan User Guide].
+https://infinispan.org/docs/stable/titles/hibernate/hibernate.html[Infinispan User Guide].

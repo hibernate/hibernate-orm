@@ -79,34 +79,17 @@ public class BasicFormatterImpl implements Formatter {
 				}
 
 				lcToken = token.toLowerCase( Locale.ROOT );
-				StringBuilder sb = new StringBuilder();
 				switch ( lcToken ) {
 					case "'":
 					case "`":
 					case "\"":
-						String t;
-						sb.append( this.token );
-						do {
-							t = tokens.nextToken();
-							sb.append( t );
-						}
-						while ( !lcToken.equals( t ) && tokens.hasMoreTokens() );
-						this.token = sb.toString();
-						lcToken = token;
+						appendUntilToken(lcToken);
 						misc();
 						break;
 					// SQL Server uses "[" and "]" to escape reserved words
 					// see SQLServerDialect.openQuote and SQLServerDialect.closeQuote
 					case "[":
-						String tt;
-						sb.append( this.token );
-						do {
-							tt = tokens.nextToken();
-							sb.append( tt );
-						}
-						while ( !"]".equals( tt ) && tokens.hasMoreTokens() );
-						this.token = sb.toString();
-						lcToken = token;
+						appendUntilToken("]");
 						misc();
 						break;
 
@@ -394,8 +377,8 @@ public class BasicFormatterImpl implements Formatter {
 			newline();
 			afterBeginBeforeEnd = false;
 			afterByOrSetOrFromOrSelect = "by".equals( lcToken )
-					|| "set".equals( lcToken )
-					|| "from".equals( lcToken );
+										 || "set".equals( lcToken )
+										 || "from".equals( lcToken );
 		}
 
 		private void beginNewClause() {
@@ -513,6 +496,19 @@ public class BasicFormatterImpl implements Formatter {
 			result.append( System.lineSeparator() )
 					.append( INDENT_STRING.repeat( indent ) );
 			beginLine = true;
+		}
+
+		private void appendUntilToken(String stopToken) {
+			StringBuilder sb = new StringBuilder();
+			String t;
+			sb.append( this.token );
+			do {
+				t = tokens.nextToken();
+				sb.append( t );
+			}
+			while ( !stopToken.equals( t ) && tokens.hasMoreTokens() );
+			this.token = sb.toString();
+			lcToken = token;
 		}
 	}
 

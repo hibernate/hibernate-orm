@@ -197,7 +197,11 @@ class ColumnDefinitions {
 			}
 			final String identityColumnString = dialect.getIdentityColumnSupport()
 					.getIdentityColumnString( column.getSqlTypeCode( metadata ) );
-			definition.append( ' ' ).append( identityColumnString );
+			// the custom columnDefinition might have already included the
+			// identity column generation clause, so try not to add it twice
+			if ( !definition.toString().toLowerCase(Locale.ROOT).contains( identityColumnString ) ) {
+				definition.append( ' ' ).append( identityColumnString );
+			}
 		}
 		else {
 			final String columnType = column.getSqlType( metadata );

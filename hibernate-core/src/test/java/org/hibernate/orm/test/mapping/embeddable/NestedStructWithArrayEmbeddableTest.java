@@ -56,7 +56,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 @RequiresDialect( PostgreSQLDialect.class )
 @RequiresDialect( OracleDialect.class )
-@SkipForDialect(dialectClass = OracleDialect.class, reason = "Waiting for the fix of a bug that prevent creation of INTERVALDS from Duration")
 @BootstrapServiceRegistry(
 		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class

@@ -149,10 +149,6 @@ public class Aggregate {
 		this.convertedGender = convertedGender;
 	}
 
-	public Boolean getTheBoolean() {
-		return theBoolean;
-	}
-
 	@Column(name = "ordinal_gender")
 	public EntityOfBasics.Gender getOrdinalGender() {
 		return ordinalGender;

@@ -499,9 +499,8 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void appendUntilToken(String stopToken) {
-			StringBuilder sb = new StringBuilder();
+			final StringBuilder sb = new StringBuilder( this.token );
 			String t;
-			sb.append( this.token );
 			do {
 				t = tokens.nextToken();
 				sb.append( t );

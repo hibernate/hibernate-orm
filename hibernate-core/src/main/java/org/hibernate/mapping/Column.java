@@ -29,7 +29,6 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -200,15 +199,19 @@ public sealed class Column
 		final int lastLetter = lastIndexOfLetter( name );
 		final String suffix = AliasConstantsHelper.get( uniqueInteger );
 
-		String alias = name.toLowerCase( Locale.ROOT );
+		final String alias;
 		if ( lastLetter == -1 ) {
 			alias = "column";
 		}
-		else if ( alias.length() > lastLetter + 1 ) {
-			alias = alias.substring( 0, lastLetter + 1 );
+		else {
+			final String lowerCaseName = name.toLowerCase( Locale.ROOT );
+			alias = lowerCaseName.length() > lastLetter + 1
+					? lowerCaseName.substring( 0, lastLetter + 1 )
+					: lowerCaseName;
 		}
 
-		boolean useRawName = name.length() + suffix.length() <= dialect.getMaxAliasLength()
+		final boolean useRawName =
+				name.length() + suffix.length() <= dialect.getMaxAliasLength()
 				&& !quoted
 				&& !name.equalsIgnoreCase( dialect.rowId(null) );
 		if ( !useRawName ) {
@@ -221,7 +224,7 @@ public sealed class Column
 				);
 			}
 			if ( alias.length() + suffix.length() > dialect.getMaxAliasLength() ) {
-				alias = alias.substring( 0, dialect.getMaxAliasLength() - suffix.length() );
+				return alias.substring( 0, dialect.getMaxAliasLength() - suffix.length() ) + suffix;
 			}
 		}
 		return alias + suffix;
@@ -318,14 +321,10 @@ public sealed class Column
 			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
 			final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 			final int sqlTypeCode = getSqlTypeCode( mapping );
-			final JdbcTypeConstructor constructor = jdbcTypeRegistry.getConstructor( sqlTypeCode );
-			final JdbcType jdbcType;
-			if ( constructor == null ) {
-				jdbcType = jdbcTypeRegistry.findDescriptor( sqlTypeCode );
-			}
-			else {
-				jdbcType = ( (BasicType<?>) getUnderlyingType( mapping, getValue().getType(), typeIndex ) ).getJdbcType();
-			}
+			final JdbcType jdbcType =
+					jdbcTypeRegistry.getConstructor( sqlTypeCode ) == null
+							? jdbcTypeRegistry.findDescriptor( sqlTypeCode )
+							: ( (BasicType<?>) getUnderlyingType( mapping, getValue().getType(), typeIndex ) ).getJdbcType();
 			final DdlType descriptor = jdbcType == null
 					? null
 					: ddlTypeRegistry.getDescriptor( jdbcType.getDdlTypeCode() );
@@ -370,7 +369,7 @@ public sealed class Column
 		if ( type instanceof ComponentType componentType ) {
 			int cols = 0;
 			for ( Type subtype : componentType.getSubtypes() ) {
-				int columnSpan = subtype.getColumnSpan( mappingContext );
+				final int columnSpan = subtype.getColumnSpan( mappingContext );
 				if ( cols+columnSpan > typeIndex ) {
 					return getUnderlyingType( mappingContext, subtype, typeIndex-cols );
 				}

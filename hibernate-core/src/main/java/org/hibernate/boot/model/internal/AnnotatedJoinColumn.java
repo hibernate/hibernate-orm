@@ -316,7 +316,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			Column referencedColumn,
 			PersistentClass referencedEntity,
 			SimpleValue value) {
-		int columnIndex = getParent().getJoinColumns().indexOf(this);
+		final int columnIndex = getParent().getJoinColumns().indexOf( this );
 		linkValueUsingDefaultColumnNaming( columnIndex, referencedColumn, referencedEntity, value );
 	}
 
@@ -343,7 +343,9 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 				referencedColumn.getTemporalPrecision(),
 				referencedColumn.getArrayLength(),
 				mappingColumn != null && mappingColumn.isNullable(),
-				referencedColumn.getSqlType(),
+				mappingColumn != null && mappingColumn.getSqlType() != null
+						? mappingColumn.getSqlType()
+						: referencedColumn.getSqlType(),
 				mappingColumn != null && mappingColumn.isUnique(),
 				false
 		);

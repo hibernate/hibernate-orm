@@ -1068,9 +1068,6 @@ public class OracleDialect extends Dialect {
 		// Oracle requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcType( NullJdbcType.INSTANCE );
 		typeContributions.contributeJdbcType( ObjectNullAsNullTypeJdbcType.INSTANCE );
-		// Oracle Stores the duration is ISO-8601 format.
-		typeContributions.contributeJdbcType( OracleDurationJdbcType.INSTANCE );
-		typeContributions.contributeJavaType( OracleDurationJavaType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(

@@ -82,6 +82,7 @@ public class NativeQueryLockingTests {
 	}
 
 	@Test
+	@RequiresDialect( value = H2Dialect.class, comment = "This has more to do with Query internals than the DB; so avoid Dialect variances in generated SQL" )
 	void testLockModeHintLowercase(SessionFactoryScope sessions) {
 		final SQLStatementInspector sqlCollector = sessions.getCollectingStatementInspector();
 		sqlCollector.clear();

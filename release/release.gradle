@@ -169,7 +169,7 @@ def gitPostStepsTask = tasks.register( 'gitPostSteps' ) {
 
 void updateVersionFile(String version) {
     logger.lifecycle( "Updating `gradle/version.properties` version to `${version}`" )
-    ormBuildDetails.versionFileAccess.get().text = "ormBuildDetails.hibernateVersion=${version}"
+    ormBuildDetails.versionFileAccess.get().text = "hibernateVersion=${version}"
 }
 
 tasks.register("releasePrepare") {

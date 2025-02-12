@@ -275,7 +275,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			final Object xId = extractIdentifier( x, factory );
 			final Object yId = extractIdentifier( y, factory );
 			return getIdentifierType( factory.getRuntimeMetamodels() )
-					.compare( xId, yId );
+					.compare( xId, yId, factory );
 		}
 	}
 

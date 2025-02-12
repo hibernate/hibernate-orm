@@ -100,39 +100,49 @@ publishing {
 	}
 }
 
+tasks.withType(PublishToMavenLocal).configureEach {
+	doFirst {
+		logger.lifecycle("PublishToMavenLocal ({})", publication.name)
+		logger.lifecycle("    - {} : {} : {} ", publication.groupId, publication.artifactId, publication.pom.packaging)
+		logger.lifecycle("    - artifacts ({})...", publication.artifacts.size())
+		publication.artifacts.forEach {
+			logger.lifecycle("        - artifact ({}) : {} ({})" , it.classifier, it.file, it.file.size())
+		}
+	}
+}
+
+tasks.withType(PublishToMavenRepository).configureEach {
+	doFirst {
+		logger.lifecycle("PublishToMavenRepository ({} : {})", publication.name, repository.name)
+		logger.lifecycle("    - {} : {} : {} ", publication.groupId, publication.artifactId, publication.pom.packaging)
+		logger.lifecycle("    - artifacts ({})...", publication.artifacts.size())
+		publication.artifacts.forEach {
+			logger.lifecycle("        - artifact ({}) : {} ({})" , it.classifier, it.file, it.file.size())
+		}
+	}
+}
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Signing
 
-def signPublicationsTask = tasks.register('signPublications') {
-	description "Grouping task which executes all Sign tasks"
-
-	dependsOn tasks.withType( Sign )
-}
-
-tasks.named( "publishPublishedArtifactsPublicationToSonatypeRepository" ) {
-	// publishing depends on signing
-	dependsOn signPublicationsTask
-}
-
-tasks.register('sign') {
-	description "Pseudonym for :signPublications"
-	dependsOn signPublicationsTask
-}
+def signingKey = resolveSigningKey()
+def signingPassphrase = resolveSigningPassphrase()
 
 var signingExtension = project.getExtensions().getByType(SigningExtension) as SigningExtension
 signingExtension.sign publishing.publications.publishedArtifacts
+signingExtension.useInMemoryPgpKeys(signingKey, signingPassphrase)
+
 
 gradle.taskGraph.whenReady { TaskExecutionGraph graph ->
-	boolean wasSigningRequested = false
+	// are we publishing to OSSRH?
 	boolean wasPublishingRequested = false
 
 	graph.allTasks.each {task ->
-		if ( task instanceof Sign ) {
-			wasSigningRequested = true
-		}
-		else if ( task instanceof PublishToMavenRepository ) {
-			wasPublishingRequested = true
+		if ( task instanceof PublishToMavenRepository ) {
+			if ( "sonatype" == task.repository.name ) {
+				wasPublishingRequested = true
+			}
 		}
 	}
 
@@ -143,20 +153,9 @@ gradle.taskGraph.whenReady { TaskExecutionGraph graph ->
 			throw new RuntimeException( "Cannot perform publishing to OSSRH without credentials." )
 		}
 		logger.lifecycle "Publishing {} : {} : {}", project.group, project.name, project.version
-	}
-
-	if ( wasSigningRequested || wasPublishingRequested ) {
-		// signing was explicitly requested and/or we are publishing to Sonatype OSSRH
-		// 		- we need the signing to happen
 		signingExtension.required = true
-
-		var signingKey = resolveSigningKey()
-		var signingPassword = resolveSigningPassphrase()
-		signingExtension.useInMemoryPgpKeys( signingKey, signingPassword )
 	}
-	else {
-		// signing was not explicitly requested and we are not publishing to OSSRH,
-		// 		- disable all Sign tasks
+	else if ( signingKey == null || signingPassphrase == null ) {
 		tasks.withType( Sign ).each { t-> t.enabled = false }
 	}
 }
@@ -172,15 +171,11 @@ static String resolveSigningKey() {
 		return new File( keyFile ).text
 	}
 
-	throw new RuntimeException( "Cannot perform signing without GPG details." )
+	return null
 }
 
 static String resolveSigningPassphrase() {
-	var passphrase = System.getenv().get( "SIGNING_GPG_PASSPHRASE" )
-	if ( passphrase == null ) {
-		throw new RuntimeException( "Cannot perform signing without GPG details." )
-	}
-	return passphrase
+	return System.getenv().get( "SIGNING_GPG_PASSPHRASE" )
 }
 
 
@@ -201,12 +196,13 @@ tasks.preVerifyRelease.dependsOn generatePomFileForRelocationPomPublication
 tasks.publishToSonatype.mustRunAfter test
 
 
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Ancillary tasks
 
 tasks.register('showPublications') {
 	doFirst {
-		project.publishing.publications.each { publication ->
+		publishing.publications.each { publication ->
 			println "Publication (${publication.name}): ${publication.groupId}:${publication.artifactId}:${publication.version}"
 			publication.artifacts.each { artifact ->
 				println "    > ${artifact}"

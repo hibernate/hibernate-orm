@@ -143,6 +143,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 		return getElementType().getJavaType();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public SqmPath<E> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
 		final NavigablePath navigablePath;
@@ -152,7 +153,9 @@ public abstract class AbstractPluralAttribute<D, C, E>
 		else {
 			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
 		}
-		return new SqmPluralValuedSimplePath<>(
+		// We need an unchecked cast here : PluralPersistentAttribute implements path source with its element type
+		//  but resolving paths from it must produce collection-typed expressions.
+		return (SqmPath<E>) new SqmPluralValuedSimplePath<>(
 				navigablePath,
 				this,
 				lhs,

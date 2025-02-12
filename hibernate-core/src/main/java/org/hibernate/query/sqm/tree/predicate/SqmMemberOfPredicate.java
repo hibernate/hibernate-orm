@@ -35,7 +35,7 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 		this.leftHandExpression = leftHandExpression;
 
 		leftHandExpression.applyInferableType(
-				( (SqmPluralValuedSimplePath<?>) pluralPath ).getReferencedPathSource().getElementType()
+				( (SqmPluralValuedSimplePath<?>) pluralPath ).getPluralAttribute().getElementType()
 		);
 	}
 

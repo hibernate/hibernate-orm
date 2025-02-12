@@ -37,7 +37,7 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 		this.pluralPath = pluralPath;
 		this.leftHandExpression = leftHandExpression;
 
-		final SimpleDomainType<?> simpleDomainType = pluralPath.getReferencedPathSource().getElementType();
+		final SimpleDomainType<?> simpleDomainType = pluralPath.getPluralAttribute().getElementType();
 
 		if ( !areTypesComparable(leftHandExpression.getNodeType(), simpleDomainType, nodeBuilder.getSessionFactory()) ) {
 			throw new SemanticException(

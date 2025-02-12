@@ -409,10 +409,18 @@ tasks.register( 'releasePerform' ) {
     dependsOn uploadDocumentationTask
     dependsOn uploadDocumentationDescriptor
 
+    doFirst {
+        if ( ormBuildDetails.releaseDetails.shouldCreateTag() ) {
+            assert project.gitRemote != null
+            assert project.gitBranch != null
+            assert project.ormBuildDetails.releaseDetails.tagNameToUse != null
+        }
+    }
+
     doLast {
         if ( ormBuildDetails.releaseDetails.shouldCreateTag() ) {
             logger.lifecycle( "Pushing branch and tag to remote `${project.gitRemote}`..." )
-            executeGitCommand( 'push', '--atomic', project.gitRemote, project.gitBranch, project.releaseTag )
+            executeGitCommand( 'push', '--atomic', project.gitRemote, project.gitBranch, project.ormBuildDetails.releaseDetails.tagNameToUse )
         }
         else {
             logger.lifecycle( "Pushing branch to remote `${project.gitRemote}`..." )

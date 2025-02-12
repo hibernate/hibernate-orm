@@ -13,9 +13,6 @@ https://hibernate.atlassian.net/projects/HHH/versions/32416
     * [HHH-18901] - AnnotationFormatError: Duplicate annotation for class: interface org.hibernate.bytecode.enhance.spi.EnhancementInfo
     * [HHH-18069] - NullPointerException when unioning partition results
 
-** Improvement
-    * [HHH-19098] - Disable implicit loading of the default import script
-
 ** Task
     * [HHH-19050] - Allow configuration of EntityManagerFactoryBuilderImpl to override the BytecodeProvider instance
     * [HHH-18928] - Consider the default Access Type as per Spec section 2.3.1 and skip enhancement of properties accessor

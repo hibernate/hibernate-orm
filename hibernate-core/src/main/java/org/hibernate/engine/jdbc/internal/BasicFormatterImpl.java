@@ -377,8 +377,8 @@ public class BasicFormatterImpl implements Formatter {
 			newline();
 			afterBeginBeforeEnd = false;
 			afterByOrSetOrFromOrSelect = "by".equals( lcToken )
-										 || "set".equals( lcToken )
-										 || "from".equals( lcToken );
+										|| "set".equals( lcToken )
+										|| "from".equals( lcToken );
 		}
 
 		private void beginNewClause() {

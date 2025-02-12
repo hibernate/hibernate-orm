@@ -578,7 +578,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		if (symbol.getKind() == ElementKind.CLASS) {
 			final TypeElement type = (TypeElement) symbol;
 			return isEntity(type)
-				&& getJpaEntityName(type).equals(entityName);
+				&& ( getJpaEntityName(type).equals(entityName)
+					|| type.getQualifiedName().contentEquals(entityName) );
 		}
 		else {
 			return false;

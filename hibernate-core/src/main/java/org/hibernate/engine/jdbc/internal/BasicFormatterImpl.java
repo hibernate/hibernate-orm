@@ -70,7 +70,7 @@ public class BasicFormatterImpl implements Formatter {
 			while ( tokens.hasMoreTokens() ) {
 				token = tokens.nextToken();
 
-				if ( "-".equals(token) && result.toString().endsWith("-") ) {
+				if ( "-".equals( token ) && result.toString().endsWith( "-" ) ) {
 					do {
 						result.append( token );
 						token = tokens.nextToken();
@@ -78,31 +78,18 @@ public class BasicFormatterImpl implements Formatter {
 					while ( !"\n".equals( token ) && tokens.hasMoreTokens() );
 				}
 
-				lcToken = token.toLowerCase(Locale.ROOT);
-				switch (lcToken) {
-
+				lcToken = token.toLowerCase( Locale.ROOT );
+				switch ( lcToken ) {
 					case "'":
 					case "`":
 					case "\"":
-						String t;
-						do {
-							t = tokens.nextToken();
-							token += t;
-						}
-						while ( !lcToken.equals( t ) && tokens.hasMoreTokens() );
-						lcToken = token;
+						appendUntilToken(lcToken);
 						misc();
 						break;
 					// SQL Server uses "[" and "]" to escape reserved words
 					// see SQLServerDialect.openQuote and SQLServerDialect.closeQuote
 					case "[":
-						String tt;
-						do {
-							tt = tokens.nextToken();
-							token += tt;
-						}
-						while ( !"]".equals( tt ) && tokens.hasMoreTokens() );
-						lcToken = token;
+						appendUntilToken("]");
 						misc();
 						break;
 
@@ -238,7 +225,7 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void comma() {
-			if ( afterByOrSetOrFromOrSelect && inFunction==0 ) {
+			if ( afterByOrSetOrFromOrSelect && inFunction == 0 ) {
 				commaAfterByOrFromOrSelect();
 			}
 //			else if ( afterOn && inFunction==0 ) {
@@ -313,7 +300,7 @@ public class BasicFormatterImpl implements Formatter {
 
 		private void misc() {
 			out();
-			if ( afterInsert && inFunction==0 ) {
+			if ( afterInsert && inFunction == 0 ) {
 				newline();
 				afterInsert = false;
 			}
@@ -329,7 +316,7 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void updateOrInsertOrDelete() {
-			if ( indent>1  ) {
+			if ( indent > 1 ) {
 				//probably just the insert SQL function
 				out();
 			}
@@ -367,7 +354,7 @@ public class BasicFormatterImpl implements Formatter {
 
 		private void out() {
 			if ( result.charAt( result.length() - 1 ) == ',' ) {
-				result.append(" ");
+				result.append( " " );
 			}
 			result.append( token );
 		}
@@ -390,8 +377,8 @@ public class BasicFormatterImpl implements Formatter {
 			newline();
 			afterBeginBeforeEnd = false;
 			afterByOrSetOrFromOrSelect = "by".equals( lcToken )
-					|| "set".equals( lcToken )
-					|| "from".equals( lcToken );
+										|| "set".equals( lcToken )
+										|| "from".equals( lcToken );
 		}
 
 		private void beginNewClause() {
@@ -507,8 +494,20 @@ public class BasicFormatterImpl implements Formatter {
 
 		private void newline() {
 			result.append( System.lineSeparator() )
-					.append( INDENT_STRING.repeat(indent) );
+					.append( INDENT_STRING.repeat( indent ) );
 			beginLine = true;
+		}
+
+		private void appendUntilToken(String stopToken) {
+			final StringBuilder sb = new StringBuilder( this.token );
+			String t;
+			do {
+				t = tokens.nextToken();
+				sb.append( t );
+			}
+			while ( !stopToken.equals( t ) && tokens.hasMoreTokens() );
+			this.token = sb.toString();
+			lcToken = token;
 		}
 	}
 

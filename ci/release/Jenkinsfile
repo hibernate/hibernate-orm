@@ -271,7 +271,7 @@ pipeline {
                     }
 
 					withCredentials([string(credentialsId: 'Hibernate-CI.github.com', variable: 'GITHUB_API_TOKEN')]) {
-						sh ".release/scripts/github-release.sh ${env.PROJECT} ${env.RELEASE_VERSION} ${env.SCRIPT_OPTIONS} --notes=${notesFiles[0].path}"
+						sh ".release/scripts/github-release.sh ${env.SCRIPT_OPTIONS} --notes=${notesFiles[0].path} ${env.PROJECT} ${env.RELEASE_VERSION}"
 					}
 				}
 			}

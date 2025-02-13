@@ -13,6 +13,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import org.hibernate.AssertionFailure;
@@ -1061,6 +1063,21 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		public <A> A[] toArray(A[] array) {
 			return set.toArray( array );
 		}
+
+		@Override
+		public final boolean equals(Object o) {
+			if ( o == this ) {
+				return true;
+			}
+			return o instanceof Set<?> s
+				&& s.size() == size()
+				&& containsAll( s );
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hashCode( set );
+		}
 	}
 
 	protected final class ListProxy implements List<E> {
@@ -1193,6 +1210,16 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		@Override
 		public <A> A[] toArray(A[] array) {
 			return list.toArray( array );
+		}
+
+		@Override
+		public final boolean equals(Object o) {
+			return o == this || list.equals( o );
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hashCode( list );
 		}
 
 	}

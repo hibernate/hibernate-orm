@@ -277,7 +277,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		final Object xId = extractIdentifier( x, factory );
 		final Object yId = extractIdentifier( y, factory );
 
-		return getIdentifierType( factory ).compare( xId, yId );
+		return getIdentifierType( factory ).compare( xId, yId, factory );
 	}
 
 	private Object extractIdentifier(Object entity, SessionFactoryImplementor factory) {

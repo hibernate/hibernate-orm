@@ -56,6 +56,7 @@ import org.hibernate.Transaction;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.PersistenceContexts;
@@ -1903,6 +1904,11 @@ public class SessionImpl
 		checkOpenOrWaitingForAutoClose();
 //		checkTransactionSynchStatus();
 		return actionQueue;
+	}
+
+	@Override
+	public void registerProcess(AfterTransactionCompletionProcess process) {
+		getActionQueue().registerProcess( process );
 	}
 
 	@Override

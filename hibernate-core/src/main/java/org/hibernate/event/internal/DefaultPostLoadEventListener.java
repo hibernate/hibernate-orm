@@ -14,6 +14,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
+import org.hibernate.internal.OptimisticLockHelper;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
@@ -50,9 +51,7 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 			if ( persister.isVersioned() ) {
 				switch ( lockMode ) {
 					case PESSIMISTIC_FORCE_INCREMENT:
-						final Object nextVersion =
-								persister.forceVersionIncrement( entry.getId(), entry.getVersion(), false, session );
-						entry.forceLocked( entity, nextVersion );
+						OptimisticLockHelper.forceVersionIncrement( entity, entry, session );
 						break;
 					case OPTIMISTIC_FORCE_INCREMENT:
 						session.getActionQueue().registerProcess( new EntityIncrementVersionProcess( entity ) );

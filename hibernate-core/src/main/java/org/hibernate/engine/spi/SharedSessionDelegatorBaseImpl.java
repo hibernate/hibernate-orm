@@ -21,6 +21,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -697,6 +698,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public void lock(String entityName, Object child, LockOptions lockOptions) {
 		delegate.lock( entityName, child, lockOptions );
+	}
+
+	@Override
+	public void registerProcess(AfterTransactionCompletionProcess process) {
+		delegate.registerProcess( process );
 	}
 
 	@Override

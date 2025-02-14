@@ -17,6 +17,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.StatelessSession;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.event.spi.EventSource;
@@ -591,6 +592,15 @@ public interface SharedSessionContractImplementor
 	 * Cascade the lock operation to the given child entity.
 	 */
 	void lock(String entityName, Object child, LockOptions lockOptions);
+
+	/**
+	 * Registers the given process for execution after transaction completion.
+	 *
+	 * @param process The process to register
+	 * @since 7.0
+	 */
+	@Incubating
+	void registerProcess(AfterTransactionCompletionProcess process);
 
 	/**
 	 * Attempts to load the entity from the second-level cache.

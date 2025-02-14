@@ -17,6 +17,7 @@ import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.AccessTypeInformation;
 import org.hibernate.processor.util.Constants;
+import org.hibernate.processor.util.TypeUtils;
 import org.hibernate.processor.validation.ProcessorSessionFactory;
 import org.hibernate.processor.validation.Validation;
 import org.hibernate.query.criteria.JpaEntityJoin;
@@ -469,7 +470,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final List<MetaAttribute> components = new ArrayList<>();
 		for ( Element field : fields ) {
 			if ( hasAnnotation( field, ID ) && isPersistent( field, AccessType.FIELD ) ) {
-				final String propertyName = propertyName( this, field );
+				final String propertyName = propertyName( field );
 				if ( members.containsKey( propertyName ) ) {
 					components.add( members.get( propertyName ) );
 				}
@@ -477,7 +478,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		for ( Element method : methods ) {
 			if ( hasAnnotation( method, ID ) && isPersistent( method, AccessType.PROPERTY ) ) {
-				final String propertyName = propertyName( this, method );
+				final String propertyName = propertyName( method );
 				if ( members.containsKey( propertyName ) ) {
 					components.add( members.get( propertyName ) );
 				}
@@ -1037,7 +1038,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return;
 			}
 			for ( Element member : context.getAllMembers( assocTypeElement ) ) {
-				if ( propertyName( this, member ).contentEquals( mappedBy )
+				if ( propertyName( member ).contentEquals( mappedBy )
 						&& compatibleAccess( assocTypeElement, member ) ) {
 					validateBackRef( memberOfClass, annotation, assocTypeElement, member, annotationVal );
 					return;
@@ -2965,7 +2966,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				// account for special @By("#id") hack in Jakarta Data
 				entity.getEnclosedElements().stream()
 						.filter(member -> hasAnnotation(member, ID))
-						.map(member -> propertyName(this, member))
+						.map(TypeUtils::propertyName)
 						.findFirst()
 						.orElse("id");
 		return method.getParameters().stream()

@@ -16,7 +16,6 @@ import jakarta.persistence.FindOption;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.RefreshOption;
 import org.hibernate.query.Query;
-import org.hibernate.query.spi.QueryOptions;
 
 import static jakarta.persistence.PessimisticLockScope.NORMAL;
 import static java.util.Collections.emptySet;
@@ -452,7 +451,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 *         has not been overridden.
 	 *
 	 * @see org.hibernate.jpa.HibernateHints#HINT_FOLLOW_ON_LOCKING
-	 * @see org.hibernate.dialect.Dialect#useFollowOnLocking(String, QueryOptions)
+	 * @see org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)
 	 */
 	public Boolean getFollowOnLocking() {
 		return followOnLocking;

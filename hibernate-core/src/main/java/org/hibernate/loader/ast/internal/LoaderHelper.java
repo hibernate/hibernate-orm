@@ -21,6 +21,7 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
+import org.hibernate.internal.OptimisticLockHelper;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.loader.LoaderLogging;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -105,9 +106,7 @@ public class LoaderHelper {
 
 				if ( persister.isVersioned() && requestedLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT  ) {
 					// todo : should we check the current isolation mode explicitly?
-					final Object nextVersion =
-							persister.forceVersionIncrement( entry.getId(), entry.getVersion(), false, session );
-					entry.forceLocked( object, nextVersion );
+					OptimisticLockHelper.forceVersionIncrement( object, entry, session );
 				}
 				else if ( entry.isExistsInDatabase() ) {
 					final EventMonitor eventMonitor = session.getEventMonitor();

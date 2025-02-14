@@ -28,6 +28,7 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.*;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.PersistenceContexts;
@@ -1873,6 +1874,11 @@ public class SessionImpl
 		checkOpenOrWaitingForAutoClose();
 //		checkTransactionSynchStatus();
 		return actionQueue;
+	}
+
+	@Override
+	public void registerProcess(AfterTransactionCompletionProcess process) {
+		getActionQueue().registerProcess( process );
 	}
 
 	@Override

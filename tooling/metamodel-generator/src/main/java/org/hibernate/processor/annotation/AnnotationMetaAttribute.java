@@ -84,7 +84,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getPropertyName() {
-		return propertyName(parent, element);
+		return propertyName(element);
 	}
 
 	@Override

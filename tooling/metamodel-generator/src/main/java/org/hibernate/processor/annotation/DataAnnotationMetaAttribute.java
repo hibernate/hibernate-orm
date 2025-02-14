@@ -99,7 +99,7 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getPropertyName() {
-		final String propertyName = propertyName(parent, element);
+		final String propertyName = propertyName(element);
 		return path == null ? propertyName : path + '.' + propertyName;
 	}
 

@@ -7,7 +7,7 @@ package org.hibernate.action.internal;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.internal.OptimisticLockHelper;
 
 /**
  * A {@link BeforeTransactionCompletionProcess} implementation to verify and
@@ -41,8 +41,6 @@ public class EntityIncrementVersionProcess implements BeforeTransactionCompletio
 			return;
 		}
 
-		final EntityPersister persister = entry.getPersister();
-		final Object nextVersion = persister.forceVersionIncrement( entry.getId(), entry.getVersion(), session );
-		entry.forceLocked( object, nextVersion );
+		OptimisticLockHelper.forceVersionIncrement( object, entry, session.asEventSource() );
 	}
 }

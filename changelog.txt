@@ -3,6 +3,19 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.8.Final (February 16, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32516
+
+** Bug
+    * [HHH-19126] - Plural valued paths should be collection-typed instead of element typed
+    * [HHH-18988] - Embeddable inheritance + default_schema results in NPE at startup
+
+** Improvement
+    * [HHH-19098] - Disable implicit loading of the default import script
+
+
 Changes in 6.6.7.Final (February 10, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

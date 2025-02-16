@@ -58,7 +58,7 @@ public class UnresolvableObjectException extends HibernateException {
 
 	@Override
 	public String getMessage() {
-		return super.getMessage() + ": " + infoString( entityName, identifier );
+		return super.getMessage() + " for entity " + infoString( entityName, identifier );
 	}
 
 }

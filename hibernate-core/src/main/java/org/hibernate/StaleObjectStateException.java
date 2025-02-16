@@ -60,7 +60,7 @@ public class StaleObjectStateException extends StaleStateException {
 	}
 
 	public String getMessage() {
-		return super.getMessage() + ": " + infoString( entityName, identifier );
+		return super.getMessage() + " for entity " + infoString( entityName, identifier );
 	}
 
 }

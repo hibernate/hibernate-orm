@@ -45,6 +45,6 @@ public class PropertyValueException extends HibernateException {
 
 	@Override
 	public String getMessage() {
-		return super.getMessage() + ": " + qualify( entityName, propertyName );
+		return super.getMessage() + " for entity " + qualify( entityName, propertyName );
 	}
 }

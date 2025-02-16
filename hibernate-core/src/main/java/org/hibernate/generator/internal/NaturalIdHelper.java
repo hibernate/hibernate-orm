@@ -14,11 +14,11 @@ public class NaturalIdHelper {
 	public static String[] getNaturalIdPropertyNames(EntityPersister persister) {
 		final int[] naturalIdPropertyIndices = persister.getNaturalIdentifierProperties();
 		if ( naturalIdPropertyIndices == null ) {
-			throw new IdentifierGenerationException( "entity '" + persister.getEntityName()
+			throw new IdentifierGenerationException( "Entity '" + persister.getEntityName()
 					+ "' has no '@NaturalId' property" );
 		}
 		if ( persister.getEntityMetamodel().isNaturalIdentifierInsertGenerated() ) {
-			throw new IdentifierGenerationException( "entity '" + persister.getEntityName()
+			throw new IdentifierGenerationException( "Entity '" + persister.getEntityName()
 					+ "' has a '@NaturalId' property which is also defined as insert-generated" );
 		}
 		final String[] allPropertyNames = persister.getPropertyNames();

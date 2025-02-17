@@ -9,6 +9,7 @@ package org.hibernate.orm.test.query;
 import java.util.List;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterAll;
@@ -29,7 +30,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel( annotatedClasses = {
 		LeftJoinNullnessPredicateQueryTest.Author.class,
 		LeftJoinNullnessPredicateQueryTest.Book.class
-} )
+})
+@Jira( "https://hibernate.atlassian.net/browse/HHH-16505" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-17379" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-17397" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-19116" )
 public class LeftJoinNullnessPredicateQueryTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
@@ -81,6 +86,19 @@ public class LeftJoinNullnessPredicateQueryTest {
 	}
 
 	@Test
+	public void testIsNullImplicit(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final List<Book> resultList = session.createQuery(
+					"select book from Book book " +
+					"where book.author is null",
+					Book.class
+			).getResultList();
+			assertThat( resultList ).hasSize( 1 );
+			assertThat( resultList.get( 0 ).getTitle() ).isEqualTo( "Unknown Author" );
+		} );
+	}
+
+	@Test
 	public void testDereferenceIsNull(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List<Book> resultList = session.createQuery(
@@ -105,6 +123,19 @@ public class LeftJoinNullnessPredicateQueryTest {
 			).getResultList();
 			assertThat( resultList ).hasSize( 2 );
 			assertThat( resultList.stream().map( b -> b.title ) ).contains( "The Shining", "The Colour Out of Space" );
+		} );
+	}
+
+	@Test
+	public void testFkImplicitIsNull(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final List<Book> resultList = session.createQuery(
+					"select book from Book book " +
+					"where fk(book.author) is null",
+					Book.class
+			).getResultList();
+			assertThat( resultList ).hasSize( 1 );
+			assertThat( resultList.get( 0 ).getTitle() ).isEqualTo( "Unknown Author" );
 		} );
 	}
 

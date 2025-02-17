@@ -395,8 +395,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 		new ForeignKeys.Nullifier(  entity, true, false, session, persister )
 				.nullifyTransientReferences( entityEntry.getDeletedState() );
-		new Nullability( session )
-				.checkNullability( entityEntry.getDeletedState(), persister, NullabilityCheckType.DELETE );
+		new Nullability( session, NullabilityCheckType.DELETE )
+				.checkNullability( entityEntry.getDeletedState(), persister );
 		persistenceContext.registerNullifiableEntityKey( key );
 
 		if ( isOrphanRemovalBeforeUpdates ) {

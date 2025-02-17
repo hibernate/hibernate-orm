@@ -14,6 +14,7 @@ import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.internal.Nullability;
+import org.hibernate.engine.internal.Nullability.NullabilityCheckType;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
@@ -251,7 +252,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		// check nullability but do not doAfterTransactionCompletion command execute
 		// we'll use scheduled updates for that.
-		new Nullability( session ).checkNullability( values, persister, true );
+		new Nullability( session, NullabilityCheckType.UPDATE ).checkNullability( values, persister );
 
 		// schedule the update
 		// note that we intentionally do _not_ pass in currentPersistentState!

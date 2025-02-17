@@ -133,7 +133,6 @@ public class ElementCollectionSortingTest {
 
 	private void checkSQLOrderBy(Session session, String entityName, String propertyName, SortDirection order) {
 		String roleName = entityName + "." + propertyName;
-		String alias = "alias1";
 		BasicCollectionPersister collectionPersister = (BasicCollectionPersister) session
 				.unwrap( SessionImplementor.class )
 				.getFactory()

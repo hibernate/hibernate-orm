@@ -319,5 +319,6 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	@Override
 	NativeQueryImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
 
+	@SuppressWarnings("unused") // Used by Hibernate Reactive
 	void addResultTypeClass(Class<?> resultClass);
 }

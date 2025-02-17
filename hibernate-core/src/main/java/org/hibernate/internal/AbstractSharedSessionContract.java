@@ -57,7 +57,6 @@ import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.jdbc.WorkExecutorVisitable;
-import org.hibernate.jpa.spi.NativeQueryConstructorTransformer;
 import org.hibernate.jpa.spi.NativeQueryListTransformer;
 import org.hibernate.jpa.spi.NativeQueryMapTransformer;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
@@ -124,7 +123,6 @@ import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.lang.Boolean.TRUE;
-import static org.hibernate.internal.util.ReflectHelper.isClass;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.getFlushModeType;
@@ -989,34 +987,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	/**
-	 * @deprecated Use {@link NativeQueryImpl#NativeQueryImpl(String, Class, SharedSessionContractImplementor)} instead
-	 */
-	@Deprecated(forRemoval = true)
-	protected <T> void addResultType(Class<T> resultClass, NativeQueryImplementor<T> query) {
-		if ( Tuple.class.equals( resultClass ) ) {
-			query.setTupleTransformer( NativeQueryTupleTransformer.INSTANCE );
-		}
-		else if ( Map.class.equals( resultClass ) ) {
-			query.setTupleTransformer( NativeQueryMapTransformer.INSTANCE );
-		}
-		else if ( List.class.equals( resultClass ) ) {
-			query.setTupleTransformer( NativeQueryListTransformer.INSTANCE );
-		}
-		else if ( getMappingMetamodel().isEntityClass( resultClass ) ) {
-			query.addEntity( resultClass, LockMode.READ );
-		}
-		else if ( resultClass != Object.class && resultClass != Object[].class ) {
-			if ( isClass( resultClass ) && !hasJavaTypeDescriptor( resultClass ) ) {
-				// not a basic type
-				query.setTupleTransformer( new NativeQueryConstructorTransformer<>( resultClass ) );
-			}
-			else {
-				query.addResultTypeClass( resultClass );
-			}
-		}
-	}
-
 	final EntityPersister requireEntityPersister(Class<?> entityClass) {
 		return getMappingMetamodel().getEntityDescriptor( entityClass );
 	}
@@ -1055,6 +1025,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public <T> NativeQueryImplementor<T>  createNativeQuery(String sqlString, String resultSetMappingName, Class<T> resultClass) {
 		@SuppressWarnings("unchecked")
 		final NativeQueryImplementor<T> query = createNativeQuery( sqlString, resultSetMappingName );
+		setTupleTransformerForResultType( resultClass, query );
+		return query;
+	}
+
+	private static <T> void setTupleTransformerForResultType(Class<T> resultClass, NativeQueryImplementor<T> query) {
 		if ( Tuple.class.equals( resultClass ) ) {
 			query.setTupleTransformer( NativeQueryTupleTransformer.INSTANCE );
 		}
@@ -1064,7 +1039,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		else if ( List.class.equals( resultClass ) ) {
 			query.setTupleTransformer( NativeQueryListTransformer.INSTANCE );
 		}
-		return query;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

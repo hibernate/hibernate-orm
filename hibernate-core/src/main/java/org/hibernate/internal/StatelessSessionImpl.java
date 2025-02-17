@@ -757,19 +757,45 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				throw new IllegalArgumentException("Null id");
 			}
 		}
+
 		final EntityPersister persister = requireEntityPersister( entityClass.getName() );
+
+		final List<Object> uncachedIds;
+		final List<T> list = new ArrayList<>( ids.size() );
+		if ( persister.canReadFromCache() ) {
+			uncachedIds = new ArrayList<>( ids.size() );
+			for (Object id : ids) {
+				final Object cachedEntity =
+						loadFromSecondLevelCache( this, null, LockMode.NONE, persister,
+								generateEntityKey( id, persister ) );
+				if ( cachedEntity == null ) {
+					uncachedIds.add( id );
+					list.add( null );
+				}
+				else {
+					//noinspection unchecked
+					list.add( (T) cachedEntity );
+				}
+			}
+		}
+		else {
+			uncachedIds = ids;
+			for (int i = 0; i < ids.size(); i++) {
+				list.add( null );
+			}
+		}
+
 		final JpaCriteriaQuery<T> query = getCriteriaBuilder().createQuery(entityClass);
 		final JpaRoot<T> from = query.from(entityClass);
-		query.where( from.get( persister.getIdentifierPropertyName() ).in(ids) );
+		query.where( from.get( persister.getIdentifierPropertyName() ).in(uncachedIds) );
 		final List<T> resultList = createSelectionQuery(query).getResultList();
-		final List<Object> idList = new ArrayList<>( resultList.size() );
-		for (T entity : resultList) {
-			idList.add( persister.getIdentifier(entity, this) );
-		}
-		final List<T> list = new ArrayList<>( ids.size() );
-		for (Object id : ids) {
-			final int pos = idList.indexOf(id);
-			list.add( pos < 0 ? null : resultList.get(pos) );
+		for (int i = 0; i < ids.size(); i++) {
+			if ( list.get(i) == null ) {
+				final Object id = ids.get(i);
+				list.set( i, resultList.stream()
+						.filter( entity -> entity != null && persister.getIdentifier( entity, this ).equals(id) )
+						.findFirst().orElse( null ) );
+			}
 		}
 		return list;
 	}

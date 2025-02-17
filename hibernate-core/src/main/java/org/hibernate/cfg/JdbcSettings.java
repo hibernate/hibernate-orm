@@ -490,6 +490,21 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings, AgroalSetti
 	 */
 	String ALLOW_METADATA_ON_BOOT = "hibernate.boot.allow_jdbc_metadata_access";
 
+	/**
+	 * Whether failures to access the JDBC {@linkplain java.sql.DatabaseMetaData metadata} should be ignored and the
+	 * bootstrapping process should continue. Hibernate then uses a default JDBC
+	 * {@linkplain org.hibernate.engine.jdbc.env.spi.JdbcEnvironment environment}.
+	 * <p/>
+	 * Failures to access the metadata can result in unexpected runtime errors when accessing the database, since the
+	 * default JDBC environment might not correctly represent the capabilities of the underlying database.
+	 * <p/>
+	 * This setting only takes effect when the {@link #ALLOW_METADATA_ON_BOOT} setting is activated.
+	 *
+	 * @settingDefault {@code true}
+	 * @see #ALLOW_METADATA_ON_BOOT
+	 * @since 6.6
+	 */
+	String IGNORE_METADATA_ACCESS_FAILURE_ON_BOOT = "hibernate.boot.ignore_jdbc_metadata_access_failure";
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Deprecated Hibernate settings

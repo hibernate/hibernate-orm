@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.stateless;
 
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -16,9 +17,9 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-@SessionFactory
-@DomainModel(annotatedClasses = GetMultipleTest.Record.class)
-public class GetMultipleTest {
+@SessionFactory(generateStatistics = true)
+@DomainModel(annotatedClasses = GetMultipleFromCacheTest.Record.class)
+public class GetMultipleFromCacheTest {
 	@Test void test(SessionFactoryScope scope) {
 		scope.inStatelessTransaction(s-> {
 			s.insert(new Record(123L,"hello earth"));
@@ -30,14 +31,17 @@ public class GetMultipleTest {
 			assertEquals("hello earth",all.get(1).message);
 			assertNull(all.get(2));
 		});
+		scope.getSessionFactory().getStatistics().clear();
 		scope.inStatelessTransaction(s-> {
 			List<Record> all = s.getMultiple(Record.class, List.of(123L, 2L, 456L));
 			assertEquals("hello earth",all.get(0).message);
 			assertEquals("hello mars",all.get(2).message);
 			assertNull(all.get(1));
 		});
+		assertEquals( 2,
+				scope.getSessionFactory().getStatistics().getSecondLevelCacheHitCount() );
 	}
-	@Entity
+	@Entity @Cacheable
 	static class Record {
 		@Id Long id;
 		String message;

@@ -745,7 +745,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitFkExpression(SqmFkExpression<?> fkExpression) {
-		logWithIndentation( "-> [fk-ref] - `%s`", fkExpression.getToOnePath().getNavigablePath() );
+		logWithIndentation( "-> [fk-ref] - `%s`", fkExpression.getLhs().getNavigablePath() );
 
 		return null;
 	}

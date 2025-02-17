@@ -4567,11 +4567,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitFkExpression(SqmFkExpression<?> fkExpression) {
-		final SqmPath<?> lhs = fkExpression.getToOnePath().getLhs();
+		final SqmPath<?> toOnePath = fkExpression.getLhs();
+		final SqmPath<?> lhs = toOnePath.getLhs();
 		prepareReusablePath( lhs, () -> null );
 		final TableGroup tableGroup = getFromClauseIndex().findTableGroup( lhs.getNavigablePath() );
 		final ModelPart subPart = tableGroup.getModelPart()
-				.findSubPart( fkExpression.getToOnePath().getModel().getPathName(), null );
+				.findSubPart( toOnePath.getReferencedPathSource().getPathName(), null );
 		assert subPart instanceof ToOneAttributeMapping;
 
 		final ToOneAttributeMapping toOneMapping = (ToOneAttributeMapping) subPart;

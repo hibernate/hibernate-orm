@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -45,6 +46,7 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
@@ -98,7 +100,6 @@ import org.hibernate.query.sqm.tree.cte.SqmCteTableColumn;
 import org.hibernate.query.sqm.tree.cte.SqmSearchClauseSpecification;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
-import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
@@ -595,12 +596,22 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public <P, F> SqmExpression<F> fk(Path<P> path) {
-		if ( path.getModel().getBindableType() != Bindable.BindableType.SINGULAR_ATTRIBUTE
-				|| ! ( path instanceof SqmEntityValuedSimplePath ) ) {
-			throw new FunctionArgumentException( "Path '" + path + "' does not refer to a single-valued association" );
+		final SqmPath<P> sqmPath = (SqmPath<P>) path;
+		final SqmPathSource<?> toOneReference = sqmPath.getReferencedPathSource();
+		final boolean validToOneRef =
+				toOneReference.getBindableType() == Bindable.BindableType.SINGULAR_ATTRIBUTE
+				&& toOneReference instanceof EntitySqmPathSource;
+		if ( !validToOneRef ) {
+			throw new FunctionArgumentException(
+					String.format(
+							Locale.ROOT,
+							"Argument '%s' of 'fk()' function is not a single-valued association",
+							sqmPath.getNavigablePath()
+					)
+			);
 		}
 
-		return new SqmFkExpression<>( (SqmEntityValuedSimplePath<?>) path );
+		return new SqmFkExpression<>( sqmPath );
 	}
 
 	@Override

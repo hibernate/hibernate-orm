@@ -122,7 +122,7 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 	@Override
 	public PersistentAttribute<? super O, ?> getAttribute() {
 		//noinspection unchecked
-		return (PersistentAttribute<? super O, ?>) getReferencedPathSource();
+		return (PersistentAttribute<? super O, ?>) getModel();
 	}
 
 	@Override

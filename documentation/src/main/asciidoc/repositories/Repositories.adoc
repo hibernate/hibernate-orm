@@ -495,7 +495,7 @@ The JPQL specification provides the `select new` construct for this.
 
 [source,java]
 ----
-@Query("select new AuthorBookRecord(b.isbn, a.ssn, a.name, b.title " +
+@Query("select new AuthorBookSummary(b.isbn, a.ssn, a.name, b.title " +
        "from Author a join books b " +
        "where title like :pattern")
 List<AuthorBookSummary> summariesForTitle(@Pattern String pattern);

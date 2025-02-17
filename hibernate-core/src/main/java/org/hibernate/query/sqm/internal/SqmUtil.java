@@ -427,7 +427,7 @@ public class SqmUtil {
 			SqmPathSource<A> pathSource,
 			SqmJoinType requestedJoinType) {
 		for ( final SqmJoin<T, ?> join : sqmFrom.getSqmJoins() ) {
-			if ( join.getReferencedPathSource() == pathSource ) {
+			if ( join.getModel() == pathSource ) {
 				final SqmAttributeJoin<T, ?> attributeJoin = (SqmAttributeJoin<T, ?>) join;
 				if ( attributeJoin.isFetched() ) {
 					final SqmJoinType joinType = join.getSqmJoinType();

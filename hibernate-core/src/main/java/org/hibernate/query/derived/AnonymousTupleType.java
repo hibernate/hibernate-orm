@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.metamodel.Bindable;
 import org.hibernate.Incubating;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.UnsupportedMappingException;
@@ -31,6 +32,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
 
@@ -177,20 +179,21 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 		final SqmSelectableNode<?> component = components[index];
 		if ( component instanceof SqmPath<?> ) {
 			final SqmPath<?> sqmPath = (SqmPath<?>) component;
-			if ( sqmPath.getNodeType() instanceof SingularPersistentAttribute<?, ?> ) {
+			final Bindable<?> model = sqmPath.getModel();
+			if ( model instanceof SingularPersistentAttribute<?, ?> ) {
 				//noinspection unchecked,rawtypes
 				return new AnonymousTupleSqmAssociationPathSource(
 						name,
 						sqmPath,
-						( (SingularPersistentAttribute<?, ?>) sqmPath.getNodeType() ).getType()
+						( (SingularPersistentAttribute<?, ?>) model ).getType()
 				);
 			}
-			else if ( sqmPath.getNodeType() instanceof PluralPersistentAttribute<?, ?, ?> ) {
+			else if ( model instanceof PluralPersistentAttribute<?, ?, ?> ) {
 				//noinspection unchecked,rawtypes
 				return new AnonymousTupleSqmAssociationPathSource(
 						name,
 						sqmPath,
-						( (PluralPersistentAttribute<?, ?, ?>) sqmPath.getNodeType() ).getElementType()
+						( (PluralPersistentAttribute<?, ?, ?>) model ).getElementType()
 				);
 			}
 			else if ( sqmPath.getNodeType() instanceof EntityDomainType<?> ) {

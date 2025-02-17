@@ -46,7 +46,7 @@ public class MultiIdEntityLoadTests {
 
 	@Test
 	@JiraKey( "HHH-17201" )
-	public void testSimpleEntityUnOrderedMultiLoad(SessionFactoryScope scope) {
+	public void testSimpleEntityUnorderedMultiLoad(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					List<Integer> idList = List.of( 0, 1 );
@@ -122,7 +122,7 @@ public class MultiIdEntityLoadTests {
 	//		````
 
 	@Test
-	public void testBasicEntityUnOrderedDeleteCheckLoad(SessionFactoryScope scope) {
+	public void testBasicEntityUnorderedDeleteCheckLoad(SessionFactoryScope scope) {
 
 		// using un-ordered results
 		scope.inTransaction(

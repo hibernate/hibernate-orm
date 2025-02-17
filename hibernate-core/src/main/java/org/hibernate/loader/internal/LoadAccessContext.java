@@ -28,7 +28,7 @@ public interface LoadAccessContext {
 	void checkOpenOrWaitingForAutoClose();
 
 	/**
-	 * Callback to pulse the transaction coo
+	 * Callback to pulse the transaction coordinator
 	 */
 	void pulseTransactionCoordinator();
 	void delayedAfterCompletion();

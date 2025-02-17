@@ -197,7 +197,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		if ( allowReuse ) {
 			if ( !isTerminal ) {
 				for ( SqmJoin<?, ?> sqmJoin : lhs.getSqmJoins() ) {
-					if ( sqmJoin.getAlias() == null && sqmJoin.getReferencedPathSource() == subPathSource ) {
+					if ( sqmJoin.getAlias() == null && sqmJoin.getModel() == subPathSource ) {
 						return sqmJoin;
 					}
 				}

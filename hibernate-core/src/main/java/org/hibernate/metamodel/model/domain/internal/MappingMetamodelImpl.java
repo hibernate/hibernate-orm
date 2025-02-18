@@ -340,7 +340,7 @@ public class MappingMetamodelImpl
 	public EntityPersister getEntityDescriptor(String entityName) {
 		final EntityPersister entityPersister = entityPersisterMap.get( entityName );
 		if ( entityPersister == null ) {
-			throw new UnknownEntityTypeException( "Unable to locate persister: " + entityName );
+			throw new UnknownEntityTypeException( entityName );
 		}
 		return entityPersister;
 	}
@@ -385,7 +385,7 @@ public class MappingMetamodelImpl
 		}
 
 		if ( entityPersister == null ) {
-			throw new UnknownEntityTypeException( "Unable to locate entity descriptor: " + entityJavaType.getName() );
+			throw new UnknownEntityTypeException( entityJavaType );
 		}
 
 		return entityPersister;
@@ -402,7 +402,7 @@ public class MappingMetamodelImpl
 		}
 
 		if ( entityPersister == null ) {
-			throw new UnknownEntityTypeException( "Unable to locate persister: " + byClass.getName() );
+			throw new UnknownEntityTypeException( byClass );
 		}
 
 		return entityPersister;

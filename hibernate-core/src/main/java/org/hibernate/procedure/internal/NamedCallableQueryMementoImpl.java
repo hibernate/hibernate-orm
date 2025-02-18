@@ -124,13 +124,6 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento<Obj
 	}
 
 	@Override
-	public ProcedureCall makeProcedureCall(
-			SharedSessionContractImplementor session,
-			Class<?>... resultSetJavaTypes) {
-		return null;
-	}
-
-	@Override
 	public QueryImplementor<Object> toQuery(SharedSessionContractImplementor session) {
 		return new ProcedureCallImpl<>( session, this );
 	}

@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.spi;
 
-import java.io.Serializable;
 import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
@@ -31,12 +30,6 @@ import org.hibernate.transform.ResultTransformer;
 public interface QueryImplementor<R> extends Query<R> {
 	@Override
 	SharedSessionContractImplementor getSession();
-
-	void setOptionalId(Serializable id);
-
-	void setOptionalEntityName(String entityName);
-
-	void setOptionalObject(Object optionalObject);
 
 	QueryParameterBindings getParameterBindings();
 

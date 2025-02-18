@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.spi;
 
-import java.io.Serializable;
 import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
@@ -174,10 +173,10 @@ public abstract class AbstractQuery<R>
 		return this;
 	}
 
-	@Override @SuppressWarnings("unchecked")
+	@Override
 	public <T> QueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer) {
 		getQueryOptions().setTupleTransformer( transformer );
-		// this is bad, we should really return a new instance:
+		//TODO: this is bad, we should really return a new instance
 		return (QueryImplementor<T>) this;
 	}
 
@@ -670,18 +669,4 @@ public abstract class AbstractQuery<R>
 		throw new UnsupportedOperationException("Getting keyed result list is not supported by this query.");
 	}
 
-	@Override
-	public void setOptionalId(Serializable id) {
-		throw new UnsupportedOperationException( "Not sure yet how to handle this in SQM based queries, but for sure it will be different" );
-	}
-
-	@Override
-	public void setOptionalEntityName(String entityName) {
-		throw new UnsupportedOperationException( "Not sure yet how to handle this in SQM based queries, but for sure it will be different" );
-	}
-
-	@Override
-	public void setOptionalObject(Object optionalObject) {
-		throw new UnsupportedOperationException( "Not sure yet how to handle this in SQM based queries, but for sure it will be different" );
-	}
 }

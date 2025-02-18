@@ -1090,7 +1090,7 @@ public class NativeQueryImpl<R>
 	public NativeQueryImplementor<R> addAttributeResult(
 			String columnAlias,
 			@SuppressWarnings("rawtypes") SingularAttribute attribute) {
-		registerBuilder( Builders.attributeResult( columnAlias, attribute ) );
+		registerBuilder( Builders.attributeResult( columnAlias, attribute, getSessionFactory() ) );
 		return this;
 	}
 

@@ -546,13 +546,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createQuery( criteriaQuery );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(CriteriaUpdate updateQuery) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(CriteriaUpdate updateQuery) {
 		return queryDelegate().createQuery( updateQuery );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(CriteriaDelete deleteQuery) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(CriteriaDelete deleteQuery) {
 		return queryDelegate().createQuery( deleteQuery );
 	}
 
@@ -561,18 +561,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createQuery( typedQueryReference );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor getNamedQuery(String name) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor getNamedQuery(String name) {
 		return queryDelegate().getNamedQuery( name );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor getNamedNativeQuery(String name) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor getNamedNativeQuery(String name) {
 		return queryDelegate().getNamedNativeQuery( name );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping) {
 		return queryDelegate().getNamedNativeQuery( name, resultSetMapping );
 	}
 
@@ -601,8 +601,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createQuery( queryString, resultType );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createNamedQuery(String name) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createNamedQuery(String name) {
 		return queryDelegate().createNamedQuery( name );
 	}
 
@@ -623,8 +623,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate().createNamedSelectionQuery( name, resultType );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor createNativeQuery(String sqlString) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor createNativeQuery(String sqlString) {
 		return queryDelegate().createNativeQuery( sqlString );
 	}
 
@@ -640,8 +640,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createNativeQuery( sqlString, resultClass, tableAlias );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
 		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName );
 	}
 

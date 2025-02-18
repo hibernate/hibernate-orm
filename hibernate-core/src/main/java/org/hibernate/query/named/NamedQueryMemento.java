@@ -63,6 +63,6 @@ public interface NamedQueryMemento<E> extends TypedQueryReference<E> {
 	<T> QueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> javaType);
 
 	interface ParameterMemento {
-		QueryParameterImplementor resolve(SharedSessionContractImplementor session);
+		QueryParameterImplementor<?> resolve(SharedSessionContractImplementor session);
 	}
 }

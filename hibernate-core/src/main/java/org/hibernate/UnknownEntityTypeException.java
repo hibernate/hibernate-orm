@@ -18,7 +18,11 @@ public class UnknownEntityTypeException extends MappingException {
 		super( message, cause );
 	}
 
-	public UnknownEntityTypeException(String message) {
-		super( message );
+	public UnknownEntityTypeException(String entityName) {
+		super( "Unknown entity type: " + entityName );
+	}
+
+	public UnknownEntityTypeException(Class<?> entityClass) {
+		this( entityClass.getName() );
 	}
 }

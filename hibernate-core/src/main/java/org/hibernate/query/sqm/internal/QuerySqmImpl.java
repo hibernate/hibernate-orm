@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -1266,22 +1265,4 @@ public class QuerySqmImpl<R>
 		return this;
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// optional object loading
-
-	@Override
-	public void setOptionalId(Serializable id) {
-		throw new UnsupportedOperationException( "Not sure yet how to handle this in SQM based queries, but for sure it will be different" );
-	}
-
-	@Override
-	public void setOptionalEntityName(String entityName) {
-		throw new UnsupportedOperationException( "Not sure yet how to handle this in SQM based queries, but for sure it will be different" );
-	}
-
-	@Override
-	public void setOptionalObject(Object optionalObject) {
-		throw new UnsupportedOperationException( "Not sure yet how to handle this in SQM based queries, but for sure it will be different" );
-	}
 }

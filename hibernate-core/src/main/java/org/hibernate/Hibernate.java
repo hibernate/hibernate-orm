@@ -418,7 +418,7 @@ public final class Hibernate {
 						.getMappingMetamodel()
 						.findEntityDescriptor( entityClass );
 		if ( persister == null ) {
-			throw new UnknownEntityTypeException("unknown entity type");
+			throw new UnknownEntityTypeException( entityClass );
 		}
 		return (E) persister.createProxy( id, null );
 	}

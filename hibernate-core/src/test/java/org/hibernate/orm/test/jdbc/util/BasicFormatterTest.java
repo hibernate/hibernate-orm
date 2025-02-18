@@ -78,6 +78,20 @@ public class BasicFormatterTest extends BaseUnitTestCase {
 		assertNoLoss( "select * from ((select e.id from Entity e union all select e.id from Entity e) union select e.id from Entity e) grp" );
 	}
 
+	@Test
+	public void  testSingleLineComment(){
+		assertNoLoss("CREATE TRIGGER before_employee_delete\n"
+					+ "BEFORE DELETE ON employees\n"
+					+ "FOR EACH ROW\n"
+					+ "BEGIN\n"
+					+ "    -- abcd\n"
+					+ "    IF EXISTS (SELECT 1 FROM orders WHERE employee_id = OLD.id) THEN\n"
+					+ "        SIGNAL SQLSTATE '45000'\n"
+					+ "        SET MESSAGE_TEXT = 'Cannot delete employee because they have related orders';\n"
+					+ "    END IF;\n"
+					+ "END ");
+	}
+
 	private void assertNoLoss(String query) {
 		String formattedQuery = FormatStyle.BASIC.getFormatter().format( query );
 		StringTokenizer formatted = new StringTokenizer( formattedQuery, " \t\n\r\f()" );

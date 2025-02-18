@@ -76,6 +76,7 @@ public class BasicFormatterImpl implements Formatter {
 						token = tokens.nextToken();
 					}
 					while ( !"\n".equals( token ) && tokens.hasMoreTokens() );
+					result.append( "\n" );
 				}
 
 				lcToken = token.toLowerCase( Locale.ROOT );
@@ -83,13 +84,13 @@ public class BasicFormatterImpl implements Formatter {
 					case "'":
 					case "`":
 					case "\"":
-						appendUntilToken(lcToken);
+						appendUntilToken( lcToken );
 						misc();
 						break;
 					// SQL Server uses "[" and "]" to escape reserved words
 					// see SQLServerDialect.openQuote and SQLServerDialect.closeQuote
 					case "[":
-						appendUntilToken("]");
+						appendUntilToken( "]" );
 						misc();
 						break;
 

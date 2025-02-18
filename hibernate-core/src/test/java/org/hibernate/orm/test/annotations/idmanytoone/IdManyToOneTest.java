@@ -14,6 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.cfg.Configuration;
 
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -75,6 +76,41 @@ public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 //        criteria2.createAlias( "cs.student", "s" );
 //        criteria2.add( Restrictions.eq( "s.name", "Foo" ) );
 //        criteria2.list();
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-11026")
+	public void testMerge() {
+		inTransaction( s-> {
+			Student student = new Student();
+			student.setName( "s1" );
+			Course course = new Course();
+			course.setName( "c1" );
+			s.persist( student );
+			s.persist( course );
+
+			CourseStudent courseStudent = new CourseStudent();
+			courseStudent.setStudent( student );
+			courseStudent.setCourse( course );
+			student.getCourses().add( courseStudent );
+			course.getStudents().add( courseStudent );
+			s.merge( student );
+
+			// Merge will cascade Student#courses and replace the CourseStudent instance within,
+			// but the original CourseStudent is still contained in Student#courses that will be cascaded on flush,
+			// which is when the NonUniqueObjectException is thrown, because at that point,
+			// two CourseStudent objects with the same primary key exist.
+			// This can be worked around by replacing the original CourseStudent with the merged on as hinted below,
+			// but I'm not sure if copying the CourseStudent instance on merge really makes sense,
+			// since the load for the merge showed that there is no row for that key in the database.
+			// I tried avoiding the copy in org.hibernate.event.internal.DefaultMergeEventListener#copyEntity
+			// which also required updating the child-parent state in StatefulPersistenceContext to point to
+			// the new parent according to the MergeContext. This mostly worked, but required further investigation
+			// to fix a few failing tests. This copy on merge topic needs to be discussed further before continuing.
+
+//			course.getStudents().remove( courseStudent );
+//			course.getStudents().add( student.getCourses().iterator().next() );
 		} );
 	}
 

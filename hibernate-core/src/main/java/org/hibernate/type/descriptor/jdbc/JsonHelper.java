@@ -72,8 +72,31 @@ public class JsonHelper {
 				if (value == null) {
 					writer.nullValue();
 				}
-				else {
+				else if ( elementMappingType instanceof EmbeddableMappingType ) {
 					JsonHelper.serialize( (EmbeddableMappingType) elementMappingType, value, options, writer );
+				} else if ( elementMappingType instanceof BasicType<?> ) {
+					//noinspection unchecked
+					final BasicType<Object> basicType = (BasicType<Object>) elementMappingType;
+
+					if ( isArrayType(basicType.getJdbcType())) {
+						final int length = Array.getLength( value );
+						if ( length != 0 ) {
+							//noinspection unchecked
+							final JavaType<Object> elementJavaType = ( (BasicPluralJavaType<Object>) basicType.getJdbcJavaType() ).getElementJavaType();
+							final JdbcType elementJdbcType = ( (ArrayJdbcType) basicType.getJdbcType() ).getElementJdbcType();
+							final Object domainArray = basicType.convertToRelationalValue( value );
+							for ( int j = 0; j < length; j++ ) {
+								writer.serializeJsonValue(Array.get(domainArray,j), elementJavaType, elementJdbcType, options);
+							}
+						}
+					}
+					else {
+						writer.serializeJsonValue(basicType.convertToRelationalValue( value),
+								(JavaType<Object>)basicType.getJdbcJavaType(),basicType.getJdbcType(), options);
+					}
+				}
+				else {
+					throw new UnsupportedOperationException( "Support for mapping type not yet implemented: " + elementMappingType.getClass().getName() );
 				}
 			}
 			catch (IOException e) {

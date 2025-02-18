@@ -234,6 +234,10 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * @return the number of affected entity instances
 	 *         (may differ from the number of affected rows)
 	 *
+	 * @apiNote This method is needed because this interface extends
+	 *          {@link jakarta.persistence.Query}, which defines this method.
+	 *          See {@link MutationQuery} and {@link SelectionQuery}.
+	 *
 	 * @see QueryProducer#createMutationQuery
 	 * @see QueryProducer#createMutationQuery(String)
 	 * @see QueryProducer#createNamedMutationQuery(String)
@@ -242,12 +246,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * @see QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)
 	 *
 	 * @see jakarta.persistence.Query#executeUpdate()
-	 *
-	 * @apiNote This method is needed because this interface extends
-	 *          {@link jakarta.persistence.Query}, which defines this method.
-	 *          See {@link MutationQuery} and {@link SelectionQuery}.
-	 *
-	 * @see QueryProducer#createMutationQuery
 	 */
 	@Override
 	int executeUpdate();

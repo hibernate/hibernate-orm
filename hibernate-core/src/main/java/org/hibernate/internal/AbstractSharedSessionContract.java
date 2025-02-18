@@ -1294,7 +1294,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(CriteriaUpdate<?> updateQuery) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery) {
 		checkOpen();
 		try {
 			return createCriteriaQuery( (SqmUpdateStatement<?>) updateQuery, null );
@@ -1305,7 +1305,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(CriteriaDelete<?> deleteQuery) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery) {
 		checkOpen();
 		try {
 			return createCriteriaQuery( (SqmDeleteStatement<?>) deleteQuery, null );
@@ -1316,7 +1316,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(JpaCriteriaInsertSelect<?> insertSelect) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect) {
 		checkOpen();
 		try {
 			return createCriteriaQuery( (SqmInsertSelectStatement<?>) insertSelect, null );
@@ -1327,7 +1327,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(JpaCriteriaInsert<?> insertSelect) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect) {
 		checkOpen();
 		try {
 			return createCriteriaQuery( (SqmInsertStatement<?>) insertSelect, null );
@@ -1477,7 +1477,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override @SuppressWarnings({"unchecked", "rawtypes"})
-	public QueryImplementor createQuery(CriteriaUpdate<?> criteriaUpdate) {
+	public QueryImplementor createQuery(@SuppressWarnings("rawtypes") CriteriaUpdate criteriaUpdate) {
 		checkOpen();
 		try {
 			return createCriteriaQuery( (SqmUpdateStatement<Void>) criteriaUpdate, null );
@@ -1491,7 +1491,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override @SuppressWarnings({"unchecked", "rawtypes"})
-	public QueryImplementor createQuery(CriteriaDelete<?> criteriaDelete) {
+	public QueryImplementor createQuery(@SuppressWarnings("rawtypes") CriteriaDelete criteriaDelete) {
 		checkOpen();
 		try {
 			return createCriteriaQuery( (SqmDeleteStatement<Void>) criteriaDelete, null );

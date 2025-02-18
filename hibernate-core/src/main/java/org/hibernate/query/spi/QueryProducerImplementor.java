@@ -77,17 +77,17 @@ public interface QueryProducerImplementor extends QueryProducer {
 	MutationQuery createNativeMutationQuery(String sqlString);
 
 	@Override
-	MutationQuery createMutationQuery(CriteriaUpdate<?> updateQuery);
+	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery);
 
 	@Override
-	MutationQuery createMutationQuery(CriteriaDelete<?> deleteQuery);
+	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
 
 	@Override
 	<R> QueryImplementor<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
 	@Override @Deprecated @SuppressWarnings("rawtypes")
-	QueryImplementor createQuery(CriteriaUpdate<?> updateQuery);
+	QueryImplementor createQuery(CriteriaUpdate updateQuery);
 
 	@Override @Deprecated @SuppressWarnings("rawtypes")
-	QueryImplementor createQuery(CriteriaDelete<?> deleteQuery);
+	QueryImplementor createQuery(CriteriaDelete deleteQuery);
 }

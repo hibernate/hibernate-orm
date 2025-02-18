@@ -100,9 +100,8 @@ public class OsonDocumentReader implements JsonDocumentReader {
 				currentValue = this.parser.getBytes();
 				return JsonDocumentItemType.VALUE;
 			default :
-				assert false:"Unknown OSON event";
+				throw new IllegalStateException( "Unknown OSON event: " + evt );
 		}
-		return null;
 	}
 
 	@Override

@@ -60,9 +60,6 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 		if ( this == o ) {
 			return true;
 		}
-		else if ( o == null ) {
-			return false;
-		}
 		else if ( !(o instanceof QueryParameterNamedImpl<?> that) ) {
 			return false;
 		}

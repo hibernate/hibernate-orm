@@ -21,6 +21,7 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -67,6 +68,7 @@ import jakarta.persistence.Id;
 		// The tests don't actually fail for the dialects below, skipping them so that the non-occurring expected failure doesn't fail the Test case
 		value = {
 				@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true),
+				@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true),
 				@SkipForDialect(dialectClass = HSQLDialect.class),
 		}
 )

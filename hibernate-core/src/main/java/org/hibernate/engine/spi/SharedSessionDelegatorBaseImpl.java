@@ -86,25 +86,25 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(CriteriaUpdate<?> updateQuery) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery) {
 		//noinspection resource
 		return delegate().createMutationQuery( updateQuery );
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(CriteriaDelete<?> deleteQuery) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery) {
 		//noinspection resource
 		return delegate().createMutationQuery( deleteQuery );
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(JpaCriteriaInsertSelect<?> insertSelect) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect) {
 		//noinspection resource
 		return delegate().createMutationQuery( insertSelect );
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(JpaCriteriaInsert<?> insertSelect) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect) {
 		//noinspection resource
 		return delegate().createMutationQuery( insertSelect );
 	}

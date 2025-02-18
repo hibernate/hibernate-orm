@@ -145,7 +145,7 @@ public interface QueryProducer {
 	 * @deprecated use {@link #createMutationQuery(CriteriaUpdate)}
 	 */
 	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
-	Query createQuery(CriteriaUpdate<?> updateQuery);
+	Query createQuery(CriteriaUpdate updateQuery);
 
 	/**
 	 * Create a {@link MutationQuery} for the given JPA {@link CriteriaDelete}
@@ -153,7 +153,7 @@ public interface QueryProducer {
 	 * @deprecated use {@link #createMutationQuery(CriteriaDelete)}
 	 */
 	@Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
-	Query createQuery(CriteriaDelete<?> deleteQuery);
+	Query createQuery(CriteriaDelete deleteQuery);
 
 	/**
 	 * Create a {@link NativeQuery} instance for the given native SQL query.
@@ -361,22 +361,22 @@ public interface QueryProducer {
 	/**
 	 * Create a {@link MutationQuery} from the given update criteria tree
 	 */
-	MutationQuery createMutationQuery(CriteriaUpdate<?> updateQuery);
+	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaUpdate updateQuery);
 
 	/**
 	 * Create a {@link MutationQuery} from the given delete criteria tree
 	 */
-	MutationQuery createMutationQuery(CriteriaDelete<?> deleteQuery);
+	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
 
 	/**
 	 * Create a {@link MutationQuery} from the given insert-select criteria tree
 	 */
-	MutationQuery createMutationQuery(JpaCriteriaInsertSelect<?> insertSelect);
+	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect);
 
 	/**
 	 * Create a {@link MutationQuery} from the given insert criteria tree
 	 */
-	MutationQuery createMutationQuery(JpaCriteriaInsert<?> insert);
+	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect);
 
 	/**
 	 * Create a {@link NativeQuery} instance for the given native SQL statement.

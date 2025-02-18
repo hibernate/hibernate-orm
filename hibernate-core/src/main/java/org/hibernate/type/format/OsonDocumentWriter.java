@@ -22,9 +22,7 @@ import java.math.BigInteger;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.UUID;
 
 /**
@@ -108,7 +106,14 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 
 	@Override
 	public JsonDocumentWriter numberValue(Number value) {
-		this.generator.write((BigDecimal) value );
+		if (value instanceof BigDecimal) {
+			this.generator.write((BigDecimal) value );
+		} else if (value instanceof BigInteger) {
+			this.generator.write((BigInteger) value );
+		} else {
+			//fallback.
+			this.generator.write( value.longValue() );
+		}
 		return this;
 	}
 
@@ -214,17 +219,8 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 				}
 				break;
 			case SqlTypes.TIMESTAMP_UTC:
-				if( value instanceof OffsetDateTime ) {
-					OffsetDateTime odt = javaType.unwrap( value, OffsetDateTime.class, options );
-					generator.write( odt );
-					break;
-				}
-				else if (value instanceof Instant ) {
-					Instant instant = javaType.unwrap( value, Instant.class, options );
-					generator.write(instant.atOffset( ZoneOffset.UTC )  );
-					break;
-				}
-				generator.write( javaType.unwrap( value,String.class,options ) );
+				OffsetDateTime odt = javaType.unwrap( value, OffsetDateTime.class, options );
+				generator.write( odt );
 				break;
 			case SqlTypes.NUMERIC:
 			case SqlTypes.DECIMAL:
@@ -251,8 +247,7 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 				break;
 			case SqlTypes.ARRAY:
 			case SqlTypes.JSON_ARRAY:
-				assert false:"array case should be treated at upper level";
-				break;
+				throw new IllegalStateException( "array case should be treated at upper level" );
 			default:
 				throw new UnsupportedOperationException( "Unsupported JdbcType nested in JSON: " + jdbcType );
 		}

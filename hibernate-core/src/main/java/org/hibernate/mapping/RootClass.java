@@ -209,7 +209,7 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	/**
 	 * @deprecated No longer supported
 	 */
-	@Deprecated
+	@Deprecated(since = "7", forRemoval = true)
 	public void setExplicitPolymorphism(boolean explicitPolymorphism) {
 	}
 

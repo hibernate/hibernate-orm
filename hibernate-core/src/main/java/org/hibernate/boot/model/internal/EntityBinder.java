@@ -452,7 +452,7 @@ public class EntityBinder {
 			ElementsToProcess elementsToProcess,
 			Map<ClassDetails, InheritanceState> inheritanceStates) {
 		final Set<String> idPropertiesIfIdClass = new HashSet<>();
-		boolean isIdClass = mapAsIdClass(
+		final boolean isIdClass = mapAsIdClass(
 				inheritanceStates,
 				inheritanceState,
 				persistentClass,
@@ -493,9 +493,9 @@ public class EntityBinder {
 			final PropertyData baseInferredData = new PropertyPreloadedData( accessType, "id", classWithIdType );
 			final AccessType propertyAccessor = getPropertyAccessor( compositeClass );
 
-			// In JPA 2, there is a shortcut if the IdClass is the Pk of the associated class pointed to by the id
+			// In JPA 2, there is a shortcut if the IdClass is the PK of the associated class pointed to by the id
 			// it ought to be treated as an embedded and not a real IdClass (at least in Hibernate's internal way)
-			final boolean isFakeIdClass = isIdClassPkOfTheAssociatedEntity(
+			final boolean isFakeIdClass = isIdClassPrimaryKeyOfAssociatedEntity(
 					elementsToProcess,
 					compositeClass,
 					inferredData,
@@ -657,7 +657,7 @@ public class EntityBinder {
 		return baseClassElements.get( 0 );
 	}
 
-	private static boolean isIdClassPkOfTheAssociatedEntity(
+	private static boolean isIdClassPrimaryKeyOfAssociatedEntity(
 			ElementsToProcess elementsToProcess,
 			ClassDetails compositeClass,
 			PropertyData inferredData,
@@ -672,7 +672,8 @@ public class EntityBinder {
 					propertyAccessor,
 					context
 			);
-			final InheritanceState state = inheritanceStates.get( idPropertyOnBaseClass.getClassOrElementType().determineRawClass() );
+			final InheritanceState state =
+					inheritanceStates.get( idPropertyOnBaseClass.getClassOrElementType().determineRawClass() );
 			if ( state == null ) {
 				return false; //while it is likely a user error, let's consider it is something that might happen
 			}

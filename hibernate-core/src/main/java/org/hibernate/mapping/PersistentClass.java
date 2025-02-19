@@ -19,7 +19,6 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -157,10 +156,6 @@ public abstract sealed class PersistentClass
 	public void setProxyInterfaceName(String proxyInterfaceName) {
 		this.proxyInterfaceName = proxyInterfaceName;
 		this.proxyInterface = null;
-	}
-
-	private ClassLoaderAccess getClassLoaderAccess() {
-		return metadataBuildingContext.getBootstrapContext().getClassLoaderAccess();
 	}
 
 	public Class<?> getMappedClass() throws MappingException {

@@ -46,14 +46,17 @@ public class HierarchyPropertyAccessTest {
 			ParentEntity entity = session.get( ParentEntity.class, 1L );
 			assertThat( entity.persistProperty ).isEqualTo( "property" );
 			assertThat( entity.property ).isEqualTo( "transient: property" );
+			assertThat( entity.field ).isEqualTo( "from getter: field" );
 
 			entity.setProperty( "transient: updated" );
+			entity.setField( "fieldUpdated" );
 		} );
 
 		scope.inTransaction( session -> {
 			ParentEntity entity = session.get( ParentEntity.class, 1L );
 			assertThat( entity.persistProperty ).isEqualTo( "updated" );
 			assertThat( entity.property ).isEqualTo( "transient: updated" );
+			assertThat( entity.field ).isEqualTo( "from getter: fieldUpdated" );
 		} );
 	}
 
@@ -67,14 +70,17 @@ public class HierarchyPropertyAccessTest {
 			ChildEntity entity = session.get( ChildEntity.class, 2L );
 			assertThat( entity.persistProperty ).isEqualTo( "property" );
 			assertThat( entity.property ).isEqualTo( "transient: property" );
+			assertThat( entity.field ).isEqualTo( "from getter: field" );
 
 			entity.setProperty( "transient: updated" );
+			entity.setField( "fieldUpdated" );
 		} );
 
 		scope.inTransaction( session -> {
 			ChildEntity entity = session.get( ChildEntity.class, 2L );
 			assertThat( entity.persistProperty ).isEqualTo( "updated" );
 			assertThat( entity.property ).isEqualTo( "transient: updated" );
+			assertThat( entity.field ).isEqualTo( "from getter: fieldUpdated" );
 		} );
 	}
 
@@ -102,6 +108,7 @@ public class HierarchyPropertyAccessTest {
 		Long id;
 
 		@Basic
+		@Access(AccessType.PROPERTY)
 		String field;
 
 		String persistProperty;
@@ -116,6 +123,14 @@ public class HierarchyPropertyAccessTest {
 			this.id = id;
 			this.field = field;
 			this.property = property;
+		}
+
+		public String getField() {
+			return "from getter: " + field;
+		}
+
+		public void setField(String field) {
+			this.field = field;
 		}
 
 		@Basic

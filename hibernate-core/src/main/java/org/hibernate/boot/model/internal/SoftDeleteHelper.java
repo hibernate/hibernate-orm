@@ -16,23 +16,13 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.SoftDeletable;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.SoftDeletableModelPart;
-import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.SoftDeleteMappingImpl;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.update.Assignment;
 
 import java.time.Instant;
 
 import static org.hibernate.internal.util.StringHelper.coalesce;
 import static org.hibernate.internal.util.StringHelper.isBlank;
-import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
 
 /**
  * Helper for dealing with {@link org.hibernate.annotations.SoftDelete}
@@ -95,6 +85,9 @@ public class SoftDeleteHelper {
 			MetadataBuildingContext context) {
 		final Column softDeleteColumn = new Column();
 
+		softDeleteColumn.setValue( softDeleteIndicatorValue );
+		softDeleteIndicatorValue.addColumn( softDeleteColumn );
+
 		applyColumnName( softDeleteColumn, softDeleteConfig, context );
 
 		softDeleteColumn.setLength( 1 );
@@ -108,9 +101,6 @@ public class SoftDeleteHelper {
 			softDeleteColumn.setComment( softDeleteConfig.comment() );
 		}
 
-		softDeleteColumn.setValue( softDeleteIndicatorValue );
-		softDeleteIndicatorValue.addColumn( softDeleteColumn );
-
 		return softDeleteColumn;
 	}
 
@@ -120,6 +110,7 @@ public class SoftDeleteHelper {
 			MetadataBuildingContext context) {
 		final Database database = context.getMetadataCollector().getDatabase();
 		final PhysicalNamingStrategy namingStrategy = context.getBuildingOptions().getPhysicalNamingStrategy();
+		// NOTE : the argument order is strange here - the fallback value comes first
 		final String logicalColumnName = coalesce(
 				softDeleteConfig.strategy().getDefaultColumnName(),
 				softDeleteConfig.columnName()
@@ -142,56 +133,4 @@ public class SoftDeleteHelper {
 		return new SoftDeleteMappingImpl( softDeletableModelPart, bootMapping, tableName, creationProcess );
 	}
 
-	/**
-	 * Create a SQL AST Predicate for restricting matches to non-deleted rows
-	 *
-	 * @param tableReference The table reference for the table containing the soft-delete column
-	 * @param softDeleteMapping The soft-delete mapping
-	 */
-	public static Predicate createNonSoftDeletedRestriction(
-			TableReference tableReference,
-			SoftDeleteMapping softDeleteMapping) {
-		final ColumnReference softDeleteColumn = new ColumnReference( tableReference, softDeleteMapping );
-		final JdbcLiteral<?> notDeletedLiteral = new JdbcLiteral<>(
-				softDeleteMapping.getNonDeletedLiteralValue(),
-				softDeleteMapping.getJdbcMapping()
-		);
-		return new ComparisonPredicate( softDeleteColumn, EQUAL, notDeletedLiteral );
-	}
-
-	/**
-	 * Create a SQL AST Predicate for restricting matches to non-deleted rows
-	 *
-	 * @param tableReference The table reference for the table containing the soft-delete column
-	 * @param softDeleteMapping The soft-delete mapping
-	 */
-	public static Predicate createNonSoftDeletedRestriction(
-			TableReference tableReference,
-			SoftDeleteMapping softDeleteMapping,
-			SqlExpressionResolver expressionResolver) {
-		final Expression softDeleteColumn = expressionResolver.resolveSqlExpression( tableReference, softDeleteMapping );
-		final JdbcLiteral<?> notDeletedLiteral = new JdbcLiteral<>(
-				softDeleteMapping.getNonDeletedLiteralValue(),
-				softDeleteMapping.getJdbcMapping()
-		);
-		return new ComparisonPredicate( softDeleteColumn, EQUAL, notDeletedLiteral );
-	}
-
-	/**
-	 * Create a SQL AST Assignment for setting the soft-delete column to its
-	 * deleted indicate value
-	 *
-	 * @param tableReference The table reference for the table containing the soft-delete column
-	 * @param softDeleteMapping The soft-delete mapping
-	 */
-	public static Assignment createSoftDeleteAssignment(
-			TableReference tableReference,
-			SoftDeleteMapping softDeleteMapping) {
-		final ColumnReference softDeleteColumn = new ColumnReference( tableReference, softDeleteMapping );
-		final JdbcLiteral<?> softDeleteIndicator = new JdbcLiteral<>(
-				softDeleteMapping.getDeletedLiteralValue(),
-				softDeleteMapping.getJdbcMapping()
-		);
-		return new Assignment( softDeleteColumn, softDeleteIndicator );
-	}
 }

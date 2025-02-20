@@ -19,7 +19,6 @@ import org.hibernate.PropertyValueException;
 import org.hibernate.QueryException;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -2837,9 +2836,8 @@ public abstract class AbstractEntityPersister
 
 			if ( softDeleteMapping != null ) {
 				final TableReference tableReference = tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
-				final Predicate softDeletePredicate = SoftDeleteHelper.createNonSoftDeletedRestriction(
+				final Predicate softDeletePredicate = softDeleteMapping.createNonDeletedRestriction(
 						tableReference,
-						softDeleteMapping,
 						creationState.getSqlExpressionResolver()
 				);
 				additionalPredicateCollectorAccess.get().accept( softDeletePredicate );

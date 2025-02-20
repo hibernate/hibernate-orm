@@ -81,16 +81,8 @@ public class DeleteCoordinatorSoft extends AbstractDeleteCoordinator {
 	private void applySoftDelete(
 			SoftDeleteMapping softDeleteMapping,
 			TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {
-		tableUpdateBuilder.addLiteralRestriction(
-				softDeleteMapping.getSelectionExpression(),
-				softDeleteMapping.getNonDeletedLiteralText(),
-				softDeleteMapping.getJdbcMapping()
-		);
-		tableUpdateBuilder.addValueColumn(
-				softDeleteMapping.getSelectionExpression(),
-				softDeleteMapping.getDeletedLiteralText(),
-				softDeleteMapping.getJdbcMapping()
-		);
+		softDeleteMapping.applyDeletedAssignment( tableUpdateBuilder );
+		softDeleteMapping.applyNonDeletedRestriction( tableUpdateBuilder );
 	}
 
 	protected void applyOptimisticLocking(

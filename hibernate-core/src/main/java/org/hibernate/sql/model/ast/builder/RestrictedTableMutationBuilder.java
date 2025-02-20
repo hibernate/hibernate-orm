@@ -82,6 +82,10 @@ public interface RestrictedTableMutationBuilder<O extends MutationOperation, M e
 
 	void addNullOptimisticLockRestriction(SelectableMapping column);
 
+	default void addNullRestriction(SelectableMapping column) {
+		addNullOptimisticLockRestriction( column );
+	}
+
 	/**
 	 * Add restriction based on non-version optimistically-locked column
 	 */

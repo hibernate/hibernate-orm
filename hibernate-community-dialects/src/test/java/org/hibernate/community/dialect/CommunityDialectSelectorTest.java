@@ -25,7 +25,6 @@ public class CommunityDialectSelectorTest {
 
 		testDialectNamingResolution( SybaseAnywhereDialect.class );
 
-		testDialectNamingResolution( TeradataDialect.class );
 		testDialectNamingResolution( TimesTenDialect.class );
 		testDialectNamingResolution( SingleStoreDialect.class );
 		testDialectNamingResolution( DerbyDialect.class );

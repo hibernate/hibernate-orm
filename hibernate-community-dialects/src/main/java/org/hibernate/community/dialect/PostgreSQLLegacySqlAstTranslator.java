@@ -45,7 +45,7 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 	public PostgreSQLLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
-	
+
 	@Override
 	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
 		inArrayPredicate.getTestExpression().accept( this );

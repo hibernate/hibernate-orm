@@ -2074,6 +2074,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	 * Creates an expression for the value with the given "type inference" information
 	 */
 	public <T> SqmExpression<T> value(T value, SqmExpression<? extends T> typeInferenceSource) {
+		if (value == null) {
+			return (SqmExpression<T>)nullLiteral( typeInferenceSource.getNodeType().getExpressibleJavaType().getJavaTypeClass() );
+		}
+
 		if ( value instanceof SqmExpression<?> ) {
 			//noinspection unchecked
 			return (SqmExpression<T>) value;

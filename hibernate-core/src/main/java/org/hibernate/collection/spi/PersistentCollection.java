@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.engine.spi.InstanceIdentity;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -359,7 +360,6 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	 *
 	 * @see #injectLoadedState
 	 */
-	@SuppressWarnings("UnusedReturnValue")
 	boolean endRead();
 
 	/**
@@ -510,6 +510,13 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	Object elementByIndex(Object index);
 
 	void initializeEmptyCollection(CollectionPersister persister);
+
+	/**
+	 * Get the session currently associated with this collection.
+	 * Declared here for use by Hibernate Reactive.
+	 */
+	@Internal
+	SharedSessionContractImplementor getSession();
 
 	/**
 	 * Is the collection newly instantiated?

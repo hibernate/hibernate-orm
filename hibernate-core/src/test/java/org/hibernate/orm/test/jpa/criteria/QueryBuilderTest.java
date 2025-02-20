@@ -20,6 +20,7 @@ import jakarta.persistence.metamodel.Metamodel;
 
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.metamodel.Address;
@@ -314,7 +315,8 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 				em.createQuery( criteria ).getResultList();
 				fail( "Expecting a SQLGrammarException" );
 			}
-			catch (SQLGrammarException expected) {
+			catch (SQLGrammarException | GenericJDBCException expected) {
+				// on Sybase, this results in GenericJDBCException
 			}
 		} );
 	}

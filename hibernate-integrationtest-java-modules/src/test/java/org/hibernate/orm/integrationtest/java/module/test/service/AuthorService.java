@@ -10,8 +10,6 @@ import jakarta.persistence.Persistence;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.envers.AuditReader;
-import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.integrationtest.java.module.test.entity.Author;
 
 public class AuthorService implements AutoCloseable {
@@ -93,8 +91,7 @@ public class AuthorService implements AutoCloseable {
 	public List<Number> getRevisions(String name) {
 		try ( Session session = sessionFactory.openSession() ) {
 			Author entity = session.bySimpleNaturalId( Author.class ).getReference( name );
-			AuditReader auditReader = AuditReaderFactory.get( session );
-			return auditReader.getRevisions( Author.class, entity.getId() );
+			return null;
 		}
 	}
 

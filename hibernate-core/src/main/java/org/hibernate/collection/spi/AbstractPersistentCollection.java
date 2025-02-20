@@ -897,11 +897,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	@Override
 	public abstract Collection<E> getOrphans(Serializable snapshot, String entityName) throws HibernateException;
 
-	/**
-	 * Get the session currently associated with this collection.
-	 *
-	 * @return The session
-	 */
+	@Override
 	public final SharedSessionContractImplementor getSession() {
 		return session;
 	}

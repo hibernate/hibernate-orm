@@ -7,6 +7,7 @@ package org.hibernate.orm.test.softdelete;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.query.Query;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -23,85 +24,88 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 /**
  * @author Jan Schatteman
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( "HHH-17511" )
-@DomainModel(
-		annotatedClasses = {
-				HHH17511Test.AUser.class, HHH17511Test.Organization.class, HHH17511Test.OrganizationMember.class
-		}
-)
-@SessionFactory
-public class HHH17511Test {
+@DomainModel( annotatedClasses = {
+		HqlJoinSoftDeletedEntityTests.AUser.class,
+		HqlJoinSoftDeletedEntityTests.Organization.class,
+		HqlJoinSoftDeletedEntityTests.OrganizationMember.class
+} )
+@SessionFactory(useCollectingStatementInspector = true)
+public class HqlJoinSoftDeletedEntityTests {
 
 	@BeforeEach
-	void setup(SessionFactoryScope scope) {
-		Long toBeDeletedOrganizationId = scope.fromTransaction(
-				session -> {
-					AUser u1 = new AUser();
-					u1.setName( "John" );
-					AUser u2 = new AUser();
-					u2.setName( "Joe" );
-					session.persist( u1 );
-					session.persist( u2 );
+	void createTestData(SessionFactoryScope scope) {
+		final SQLStatementInspector sqlCollector = scope.getCollectingStatementInspector();
 
-					Organization o1 = new Organization();
-					o1.setName( "Acme" );
-					Organization o2 = new Organization();
-					o2.setName( "Emca" );
-					session.persist( o1 );
-					session.persist( o2 );
+		final Long toBeDeletedOrganizationId = scope.fromTransaction( (session) -> {
+			AUser u1 = new AUser();
+			u1.setName( "John" );
+			AUser u2 = new AUser();
+			u2.setName( "Joe" );
+			session.persist( u1 );
+			session.persist( u2 );
 
-					OrganizationMember om1 = new OrganizationMember();
-					om1.setPrimary( Boolean.TRUE );
-					om1.setOrganizationId( o1.getId() );
-					om1.setUserId( u1.getId() );
-					OrganizationMember om2 = new OrganizationMember();
-					om2.setPrimary( Boolean.FALSE );
-					om2.setOrganizationId( o2.getId() );
-					om2.setUserId( u2.getId() );
-					session.persist( om1 );
-					session.persist( om2 );
+			Organization o1 = new Organization();
+			o1.setName( "Acme" );
+			Organization o2 = new Organization();
+			o2.setName( "Emca" );
+			session.persist( o1 );
+			session.persist( o2 );
 
-					return o2.getId();
-				}
-		);
+			OrganizationMember om1 = new OrganizationMember();
+			om1.setPrimary( Boolean.TRUE );
+			om1.setOrganizationId( o1.getId() );
+			om1.setUserId( u1.getId() );
+			OrganizationMember om2 = new OrganizationMember();
+			om2.setPrimary( Boolean.FALSE );
+			om2.setOrganizationId( o2.getId() );
+			om2.setUserId( u2.getId() );
+			session.persist( om1 );
+			session.persist( om2 );
 
-		scope.inTransaction(
-				session -> {
-					Organization o = session.find( Organization.class, toBeDeletedOrganizationId );
-					session.remove( o );
-				}
-		);
+			return o2.getId();
+		} );
+
+		sqlCollector.clear();
+		scope.inTransaction( (session) -> {
+			Organization o = session.find( Organization.class, toBeDeletedOrganizationId );
+			session.remove( o );
+		} );
+		// SELECT + UPDATE
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
+		assertThat( sqlCollector.getSqlQueries().get( 1 ) ).startsWithIgnoringCase( "update organization " );
 	}
 
 	@AfterEach
-	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createNativeQuery( "delete from organization_member", Void.class ).executeUpdate();
-					session.createNativeQuery( "delete from organization", Void.class ).executeUpdate();
-					session.createNativeQuery( "delete from theusers", Void.class).executeUpdate();
-				}
-		);
+	void dropTestData(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test
 	public void testSoftDeleteConditionOnJoinedEntity(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					Query<OrganizationMember> query = session.createQuery( "FROM OrganizationMember om INNER JOIN Organization o ON o.id = om.organizationId WHERE om.userId =:userId", OrganizationMember.class);
-					query.setTupleTransformer( (tuple, aliases) -> (OrganizationMember) tuple[0] );
+		final String qry = """
+				from OrganizationMember om
+					inner join Organization o
+					on o.id = om.organizationId
+				where om.userId =:userId
+				""";
+		scope.inTransaction( (session) -> {
+			Query<OrganizationMember> query = session.createQuery( qry, OrganizationMember.class);
+			query.setTupleTransformer( (tuple, aliases) -> (OrganizationMember) tuple[0] );
 
-					query.setParameter("userId", 1L);
-					Assertions.assertEquals(1, query.getResultList().size() );
+			query.setParameter("userId", 1L);
+			Assertions.assertEquals(1, query.getResultList().size() );
 
-					// Organization 2 has been soft-deleted so this should not give any results
-					query.setParameter("userId", 2L);
-					Assertions.assertEquals(0, query.getResultList().size() );
-				}
-		);
+			// Organization 2 has been soft-deleted so this should not give any results
+			query.setParameter("userId", 2L);
+			Assertions.assertEquals(0, query.getResultList().size() );
+		} );
 	}
 
 	@Entity(name = "Organization")

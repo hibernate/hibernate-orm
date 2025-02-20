@@ -6,7 +6,7 @@
  */
 
 /**
- * Tests for {@link org.hibernate.annotations.SoftDelete} and {@link org.hibernate.annotations.SoftDeleteColumn}
+ * Tests for {@link org.hibernate.annotations.SoftDelete}
  *
  * @author Steve Ebersole
  */

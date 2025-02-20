@@ -27,8 +27,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 /**
+ * Tests for {@linkplain SoftDelete @SoftDelete} with all default values
+ *
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = ImplicitSoftDeleteTests.ImplicitEntity.class)
 @SessionFactory
 public class ImplicitSoftDeleteTests {
@@ -58,11 +61,8 @@ public class ImplicitSoftDeleteTests {
 	}
 
 	@AfterEach
-	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.doWork( (connection) -> {
-			final Statement statement = connection.createStatement();
-			statement.execute( "delete from implicit_entities" );
-		} ) );
+	void dropTestData(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test

@@ -5,12 +5,12 @@
 package org.hibernate.boot.model.internal;
 
 import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.SoftDeletable;
@@ -27,8 +27,8 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+
+import java.time.Instant;
 
 import static org.hibernate.internal.util.StringHelper.coalesce;
 import static org.hibernate.internal.util.StringHelper.isBlank;
@@ -62,22 +62,30 @@ public class SoftDeleteHelper {
 				context
 		);
 		table.addColumn( softDeleteIndicatorColumn );
-		target.enableSoftDelete( softDeleteIndicatorColumn );
+		target.enableSoftDelete( softDeleteIndicatorColumn, softDeleteConfig.strategy() );
 	}
 
 	private static BasicValue createSoftDeleteIndicatorValue(
 			SoftDelete softDeleteConfig,
 			Table table,
 			MetadataBuildingContext context) {
-		final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
-				softDeleteConfig.converter(),
-				context.getBootstrapContext().getClassmateContext()
-		);
-
 		final BasicValue softDeleteIndicatorValue = new BasicValue( context, table );
 		softDeleteIndicatorValue.makeSoftDelete( softDeleteConfig.strategy() );
-		softDeleteIndicatorValue.setJpaAttributeConverterDescriptor( converterDescriptor );
-		softDeleteIndicatorValue.setImplicitJavaTypeAccess( (typeConfiguration) -> converterDescriptor.getRelationalValueResolvedType().getErasedType() );
+
+		if ( softDeleteConfig.strategy() == SoftDeleteType.TIMESTAMP ) {
+			softDeleteIndicatorValue.setImplicitJavaTypeAccess( (typeConfiguration) -> Instant.class );
+		}
+		else {
+			final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
+					softDeleteConfig.converter(),
+					context.getBootstrapContext().getClassmateContext()
+			);
+			softDeleteIndicatorValue.setJpaAttributeConverterDescriptor( converterDescriptor );
+			softDeleteIndicatorValue.setImplicitJavaTypeAccess(
+					(typeConfiguration) -> converterDescriptor.getRelationalValueResolvedType().getErasedType()
+			);
+		}
+
 		return softDeleteIndicatorValue;
 	}
 
@@ -128,53 +136,10 @@ public class SoftDeleteHelper {
 			SoftDeletable bootMapping,
 			String tableName,
 			MappingModelCreationProcess creationProcess) {
-		return resolveSoftDeleteMapping(
-				softDeletableModelPart,
-				bootMapping,
-				tableName,
-				creationProcess.getCreationContext().getDialect()
-		);
-	}
-
-	public static SoftDeleteMappingImpl resolveSoftDeleteMapping(
-			SoftDeletableModelPart softDeletableModelPart,
-			SoftDeletable bootMapping,
-			String tableName,
-			Dialect dialect) {
-		final Column softDeleteColumn = bootMapping.getSoftDeleteColumn();
-		if ( softDeleteColumn == null ) {
+		if ( bootMapping.getSoftDeleteColumn() == null ) {
 			return null;
 		}
-
-		final BasicValue columnValue = (BasicValue) softDeleteColumn.getValue();
-		final BasicValue.Resolution<?> resolution = columnValue.resolve();
-		//noinspection unchecked
-		final BasicValueConverter<Boolean, Object> converter = (BasicValueConverter<Boolean, Object>) resolution.getValueConverter();
-		//noinspection unchecked
-		final JdbcLiteralFormatter<Object> literalFormatter = resolution.getJdbcMapping().getJdbcLiteralFormatter();
-
-		final Object deletedLiteralValue;
-		final Object nonDeletedLiteralValue;
-		if ( converter == null ) {
-			// the database column is BIT or BOOLEAN : pass-thru
-			deletedLiteralValue = true;
-			nonDeletedLiteralValue = false;
-		}
-		else {
-			deletedLiteralValue = converter.toRelationalValue( true );
-			nonDeletedLiteralValue = converter.toRelationalValue( false );
-		}
-
-		return new SoftDeleteMappingImpl(
-				softDeletableModelPart,
-				softDeleteColumn.getName(),
-				tableName,
-				deletedLiteralValue,
-				literalFormatter.toJdbcLiteral( deletedLiteralValue, dialect, null ),
-				nonDeletedLiteralValue,
-				literalFormatter.toJdbcLiteral( nonDeletedLiteralValue, dialect, null ),
-				resolution.getJdbcMapping()
-		);
+		return new SoftDeleteMappingImpl( softDeletableModelPart, bootMapping, tableName, creationProcess );
 	}
 
 	/**

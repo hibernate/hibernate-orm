@@ -117,7 +117,6 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
@@ -282,6 +281,7 @@ import java.util.function.Supplier;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
+import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
@@ -4913,27 +4913,18 @@ public abstract class AbstractEntityPersister
 		}
 
 		discriminatorMapping = generateDiscriminatorMapping( bootEntityDescriptor );
-		softDeleteMapping = resolveSoftDeleteMapping( this, bootEntityDescriptor, getIdentifierTableName(), creationProcess );
+		softDeleteMapping = resolveSoftDeleteMapping(
+				this,
+				bootEntityDescriptor.getRootClass(),
+				getIdentifierTableName(),
+				creationProcess
+		);
 
 		if ( softDeleteMapping != null ) {
 			if ( bootEntityDescriptor.getRootClass().getCustomSQLDelete() != null ) {
 				throw new UnsupportedMappingException( "Entity may not define both @SoftDelete and @SQLDelete" );
 			}
 		}
-	}
-
-	private static SoftDeleteMapping resolveSoftDeleteMapping(
-			AbstractEntityPersister persister,
-			PersistentClass bootEntityDescriptor,
-			String identifierTableName,
-			MappingModelCreationProcess creationProcess) {
-		final RootClass rootClass = bootEntityDescriptor.getRootClass();
-		return SoftDeleteHelper.resolveSoftDeleteMapping(
-				persister,
-				rootClass,
-				identifierTableName,
-				creationProcess.getCreationContext().getJdbcServices().getDialect()
-		);
 	}
 
 	private void postProcessAttributeMappings(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {

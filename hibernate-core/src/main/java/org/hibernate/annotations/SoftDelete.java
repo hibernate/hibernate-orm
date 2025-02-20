@@ -87,7 +87,8 @@ public @interface SoftDelete {
 	/**
 	 * The strategy to use for storing/reading values to/from the database.
 	 * <p/>
-	 * The strategy also affects the default {@linkplain #columnName() column name}.
+	 * The strategy also affects the default {@linkplain #columnName() column name} - see
+	 * {@linkplain SoftDeleteType#getDefaultColumnName}.
 	 */
 	SoftDeleteType strategy() default SoftDeleteType.DELETED;
 
@@ -105,7 +106,11 @@ public @interface SoftDelete {
 	 * the {@linkplain Dialect#getPreferredSqlTypeCodeForBoolean() dialect}
 	 * and {@linkplain org.hibernate.cfg.MappingSettings#PREFERRED_BOOLEAN_JDBC_TYPE settings}
 	 *
-	 * @apiNote The converter should never return {@code null}
+	 * @apiNote Only relevant when {@linkplain #strategy} is {@linkplain SoftDeleteType#DELETED}
+	 * or {@linkplain SoftDeleteType#ACTIVE}.  Ignored when {@linkplain #strategy} is
+	 * {@linkplain SoftDeleteType#TIMESTAMP}.
+	 *
+	 * @implSpec The specified converter should never return {@code null}
 	 */
 	Class<? extends AttributeConverter<Boolean,?>> converter() default UnspecifiedConversion.class;
 

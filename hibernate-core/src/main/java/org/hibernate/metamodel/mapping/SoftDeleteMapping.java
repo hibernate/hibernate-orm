@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.annotations.SoftDeleteType;
+
 /**
  *
  * Metadata about the indicator column for entities and collections enabled
@@ -14,6 +16,13 @@ package org.hibernate.metamodel.mapping;
  * @author Steve Ebersole
  */
 public interface SoftDeleteMapping extends SelectableMapping, VirtualModelPart, SqlExpressible {
+	String ROLE_NAME = "{soft-delete}";
+
+	/**
+	 * The soft-delete strategy - how to interpret indicator values
+	 */
+	SoftDeleteType getSoftDeleteStrategy();
+
 	/**
 	 * The name of the soft-delete indicator column.
 	 */

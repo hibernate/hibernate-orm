@@ -18,7 +18,6 @@ module org.hibernate.orm.integrationtest.java.module.test {
 	// for modules in the current project.
 	// Everything should work fine when building from the command line, though.
 	requires org.hibernate.orm.core;
-	requires org.hibernate.orm.envers;
 
 	// Transitive dependencies that leak through the Hibernate ORM API
 	requires java.sql;

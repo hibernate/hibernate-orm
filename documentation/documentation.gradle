@@ -127,7 +127,6 @@ dependencies {
 	reportAggregation project( ':hibernate-agroal' )
 	reportAggregation project( ':hibernate-c3p0' )
 	reportAggregation project( ':hibernate-core' )
-	reportAggregation project(':hibernate-envers')
 	reportAggregation project(':hibernate-graalvm')
 	reportAggregation project(':hibernate-hikaricp')
 	reportAggregation project(':hibernate-jcache')
@@ -141,9 +140,6 @@ dependencies {
 
 	core project( ':hibernate-core' )
 	javadocSources project( path: ':hibernate-core', configuration: 'javadocSources' )
-
-	envers project( ':hibernate-envers' )
-	javadocSources project( path: ':hibernate-envers', configuration: 'javadocSources' )
 
 	testing project( ':hibernate-testing' )
 

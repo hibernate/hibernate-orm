@@ -8,7 +8,6 @@ package org.hibernate.orm.integrationtest.java.module.test;
 import java.util.Arrays;
 
 import org.hibernate.Session;
-import org.hibernate.envers.boot.internal.EnversIntegrator;
 import org.hibernate.orm.integrationtest.java.module.test.service.AuthorService;
 
 import org.junit.Assert;
@@ -51,7 +50,6 @@ public class JavaModulePathIT {
 		checkIsInModulePath( Object.class );
 		checkIsInModulePath( AuthorService.class );
 		checkIsInModulePath( Session.class );
-		checkIsInModulePath( EnversIntegrator.class );
 
 		AuthorService service = new AuthorService();
 		service.add( "foo", 7 );
@@ -59,10 +57,6 @@ public class JavaModulePathIT {
 		service.add( "foo bar", 777 );
 
 		service.update( "foo", 8 );
-
-		assertEquals( Arrays.asList( 1, 4 ), service.getRevisions( "foo" ) );
-		assertEquals( Arrays.asList( 2 ), service.getRevisions( "bar" ) );
-		assertEquals( Arrays.asList( 3 ), service.getRevisions( "foo bar" ) );
 	}
 
 	private void checkIsInModulePath(Class<?> clazz) {

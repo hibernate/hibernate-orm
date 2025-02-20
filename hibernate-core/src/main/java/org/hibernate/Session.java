@@ -1311,7 +1311,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @apiNote This method returns {@code RootGraph<?>}, requiring an
 	 * unchecked typecast before use. It's cleaner to obtain a graph using
 	 * the static metamodel for the class which defines the graph, or by
-	 * calling {@link SessionFactory#getNamedEntityGraphs(Class)} instead.
+	 * calling either {@link SessionFactory#getNamedEntityGraphs(Class)}
+	 * or {@link org.hibernate.query.SelectionQuery#getNamedEntityGraph(String)} instead.
 	 *
 	 * @see #find(EntityGraph, Object, FindOption...)
 	 * @see org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, org.hibernate.graph.GraphSemantic)

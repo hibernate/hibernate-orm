@@ -157,9 +157,14 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	}
 
 	@Override
-	public SqmSelectionQueryImplementor<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
+	public SqmSelectionQueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
 		getDelegate().setEntityGraph( graph, semantic );
 		return this;
+	}
+
+	@Override
+	public EntityGraph<? super R> getNamedEntityGraph(String graphName) {
+		return getDelegate().getNamedEntityGraph( graphName );
 	}
 
 	@Override

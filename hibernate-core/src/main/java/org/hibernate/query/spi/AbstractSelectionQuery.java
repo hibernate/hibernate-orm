@@ -374,9 +374,21 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
-		applyGraph( (RootGraphImplementor<R>) graph, semantic );
+	public SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
+		applyGraph( (RootGraphImplementor<? super R>) graph, semantic );
 		return this;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public EntityGraph<? super R> getNamedEntityGraph(String graphName) {
+		for ( EntityGraph<? super R> graph : getSession().getSessionFactory()
+				.findEntityGraphsByType( (Class<R>) getResultType() ) ) {
+			if ( graph.getName().equals( graphName ) ) {
+				return graph;
+			}
+		}
+		return null;
 	}
 
 	@Override

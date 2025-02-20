@@ -2,29 +2,31 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.softdelete.pkg2;
+package org.hibernate.orm.test.softdelete.timestamp;
 
-import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.Basic;
+import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SoftDeleteType;
+import org.hibernate.orm.test.softdelete.CustomTrueFalseConverter;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
-@Table(name = "the_table")
-public class AnEntity {
+@SoftDelete(strategy = SoftDeleteType.TIMESTAMP, converter = CustomTrueFalseConverter.class)
+public class BadJuju {
 	@Id
 	private Integer id;
 	@Basic
 	private String name;
 
-	protected AnEntity() {
+	protected BadJuju() {
 		// for Hibernate use
 	}
 
-	public AnEntity(Integer id, String name) {
+	public BadJuju(Integer id, String name) {
 		this.id = id;
 		this.name = name;
 	}

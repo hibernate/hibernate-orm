@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.softdelete.pkg;
+package org.hibernate.orm.test.softdelete.discovery.pkg2;
 
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.orm.test.softdelete.MappingVerifier;
@@ -17,26 +17,15 @@ import org.junit.jupiter.api.Test;
  */
 @DomainModel( annotatedClasses = AnEntity.class )
 @SessionFactory
-public class PackageLevelSoftDeleteTests {
+public class PackageLevelSoftDeleteTests2 {
 	@Test
-	public void verifyEntitySchema(SessionFactoryScope scope) {
+	public void verifySchema(SessionFactoryScope scope) {
 		final MappingMetamodelImplementor metamodel = scope.getSessionFactory().getMappingMetamodel();
 		MappingVerifier.verifyMapping(
 				metamodel.getEntityDescriptor( AnEntity.class ).getSoftDeleteMapping(),
-				"deleted",
+				"gone",
 				"the_table",
-				'Y'
-		);
-	}
-
-	@Test
-	public void verifyCollectionSchema(SessionFactoryScope scope) {
-		final MappingMetamodelImplementor metamodel = scope.getSessionFactory().getMappingMetamodel();
-		MappingVerifier.verifyMapping(
-				metamodel.getCollectionDescriptor( AnEntity.class.getName() + ".elements" ).getAttributeMapping().getSoftDeleteMapping(),
-				"deleted",
-				"elements",
-				'Y'
+				'T'
 		);
 	}
 }

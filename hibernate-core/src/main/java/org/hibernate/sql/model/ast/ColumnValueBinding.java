@@ -9,11 +9,9 @@ import java.util.Objects;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 
 /**
- * Represents the binding of a value to a column.  Can be used to
- * uniformly model value assignments wrt inserts, updates and upserts.
- *
- * @apiNote Practically speaking, the {@linkplain #getValueExpression() value}
- * can only be a JDBC parameter or a literal.
+ * Represents the binding of a value to a column.  Uniformly
+ * models both value assignments and value restrictions in
+ * relation to inserts, updates and upserts.
  *
  * @author Steve Ebersole
  */

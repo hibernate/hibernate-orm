@@ -455,7 +455,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	private ConverterDescriptor getConverterDescriptor(JavaType<?> javaType) {
 		final ConverterDescriptor converterDescriptor = getAttributeConverterDescriptor();
-		if ( isSoftDelete() ) {
+		if ( isSoftDelete() && getSoftDeleteStrategy() != SoftDeleteType.TIMESTAMP ) {
 			assert converterDescriptor != null;
 			final ConverterDescriptor softDeleteConverterDescriptor =
 					getSoftDeleteConverterDescriptor( converterDescriptor, javaType);

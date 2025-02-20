@@ -8954,7 +8954,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				tableUpdate.forEachOptimisticLockBinding( (position, columnValueBinding) -> {
 					sqlBuffer.append( " and " );
 					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
-					if ( columnValueBinding.getValueExpression() == null ) {
+					if ( columnValueBinding.getValueExpression() == null
+							|| columnValueBinding.getValueExpression().getFragment() == null ) {
 						sqlBuffer.append( " is null" );
 					}
 					else {

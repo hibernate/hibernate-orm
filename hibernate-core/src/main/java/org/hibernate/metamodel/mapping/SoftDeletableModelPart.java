@@ -15,5 +15,8 @@ public interface SoftDeletableModelPart extends ModelPartContainer {
 	 */
 	SoftDeleteMapping getSoftDeleteMapping();
 
+	/**
+	 * Details about the table which holds the soft-delete column.
+	 */
 	TableDetails getSoftDeleteTableDetails();
 }

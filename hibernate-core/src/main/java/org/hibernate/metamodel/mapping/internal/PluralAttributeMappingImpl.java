@@ -4,11 +4,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
-import org.hibernate.boot.model.internal.SoftDeleteHelper;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -70,12 +66,12 @@ import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResul
 import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
-
 import org.jboss.logging.Logger;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 
 /**
@@ -197,7 +193,7 @@ public class PluralAttributeMappingImpl
 			}
 		};
 
-		softDeleteMapping = resolveSoftDeleteMapping( this, bootDescriptor, getSeparateCollectionTable(), creationProcess.getCreationContext().getDialect() );
+		softDeleteMapping = resolveSoftDeleteMapping( this, bootDescriptor, getSeparateCollectionTable(), creationProcess );
 
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 	}
@@ -416,10 +412,9 @@ public class PluralAttributeMappingImpl
 			final EntityMappingType associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
 			final SoftDeleteMapping softDeleteMapping = associatedEntityDescriptor.getSoftDeleteMapping();
 			if ( softDeleteMapping != null ) {
-				final Predicate softDeleteRestriction = SoftDeleteHelper.createNonSoftDeletedRestriction(
-						tableGroup.resolveTableReference( associatedEntityDescriptor.getSoftDeleteTableDetails().getTableName() ),
-						softDeleteMapping
-				);
+				final String primaryTableName = associatedEntityDescriptor.getSoftDeleteTableDetails().getTableName();
+				final TableReference primaryTableReference = tableGroup.resolveTableReference( primaryTableName );
+				final Predicate softDeleteRestriction = softDeleteMapping.createNonDeletedRestriction( primaryTableReference );
 				predicateConsumer.applyPredicate( softDeleteRestriction );
 			}
 		}
@@ -427,10 +422,8 @@ public class PluralAttributeMappingImpl
 		// apply the collection's soft-delete mapping, if one
 		final SoftDeleteMapping softDeleteMapping = getSoftDeleteMapping();
 		if ( softDeleteMapping != null ) {
-			final Predicate softDeleteRestriction = SoftDeleteHelper.createNonSoftDeletedRestriction(
-					tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() ),
-					softDeleteMapping
-			);
+			final TableReference primaryTableReference = tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
+			final Predicate softDeleteRestriction = softDeleteMapping.createNonDeletedRestriction( primaryTableReference );
 			predicateConsumer.applyPredicate( softDeleteRestriction );
 		}
 	}
@@ -793,9 +786,8 @@ public class PluralAttributeMappingImpl
 			final SoftDeleteMapping softDeleteMapping = entityMappingType.getSoftDeleteMapping();
 			if ( softDeleteMapping != null ) {
 				final TableDetails softDeleteTable = entityMappingType.getSoftDeleteTableDetails();
-				predicateConsumer.accept( createNonSoftDeletedRestriction(
+				predicateConsumer.accept( softDeleteMapping.createNonDeletedRestriction(
 						tableGroup.resolveTableReference( softDeleteTable.getTableName() ),
-						softDeleteMapping,
 						creationState.getSqlExpressionResolver()
 				) );
 			}
@@ -804,9 +796,8 @@ public class PluralAttributeMappingImpl
 		final SoftDeleteMapping softDeleteMapping = getSoftDeleteMapping();
 		if ( softDeleteMapping != null ) {
 			final TableDetails softDeleteTable = getSoftDeleteTableDetails();
-			predicateConsumer.accept( createNonSoftDeletedRestriction(
+			predicateConsumer.accept( softDeleteMapping.createNonDeletedRestriction(
 					tableGroup.resolveTableReference( softDeleteTable.getTableName() ),
-					softDeleteMapping,
 					creationState.getSqlExpressionResolver()
 			) );
 		}

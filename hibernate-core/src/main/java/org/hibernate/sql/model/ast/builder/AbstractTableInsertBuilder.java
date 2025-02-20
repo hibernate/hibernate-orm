@@ -82,6 +82,11 @@ public abstract class AbstractTableInsertBuilder
 	}
 
 	@Override
+	public void addValueColumn(ColumnValueBinding valueBinding) {
+		valueBindingList.add( valueBinding );
+	}
+
+	@Override
 	public void addKeyColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
 		addColumn( columnName, columnWriteFragment, jdbcMapping, keyBindingList );
 	}

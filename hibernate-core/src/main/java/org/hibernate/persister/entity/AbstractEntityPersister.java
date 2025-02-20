@@ -19,7 +19,6 @@ import org.hibernate.PropertyValueException;
 import org.hibernate.QueryException;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -117,7 +116,6 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
@@ -228,6 +226,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -282,6 +282,7 @@ import java.util.function.Supplier;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
+import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
@@ -2837,9 +2838,8 @@ public abstract class AbstractEntityPersister
 
 			if ( softDeleteMapping != null ) {
 				final TableReference tableReference = tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
-				final Predicate softDeletePredicate = SoftDeleteHelper.createNonSoftDeletedRestriction(
+				final Predicate softDeletePredicate = softDeleteMapping.createNonDeletedRestriction(
 						tableReference,
-						softDeleteMapping,
 						creationState.getSqlExpressionResolver()
 				);
 				additionalPredicateCollectorAccess.get().accept( softDeletePredicate );
@@ -3460,7 +3460,10 @@ public abstract class AbstractEntityPersister
 	public void addSoftDeleteToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 		if ( softDeleteMapping != null ) {
 			final TableInsertBuilder insertBuilder = insertGroupBuilder.getTableDetailsBuilder( getIdentifierTableName() );
-			insertBuilder.addValueColumn( softDeleteMapping );
+			final MutatingTableReference mutatingTable = insertBuilder.getMutatingTable();
+			final ColumnReference columnReference = new ColumnReference( mutatingTable, softDeleteMapping );
+			final ColumnValueBinding nonDeletedValueBinding = softDeleteMapping.createNonDeletedValueBinding( columnReference );
+			insertBuilder.addValueColumn( nonDeletedValueBinding );
 		}
 	}
 
@@ -4913,27 +4916,18 @@ public abstract class AbstractEntityPersister
 		}
 
 		discriminatorMapping = generateDiscriminatorMapping( bootEntityDescriptor );
-		softDeleteMapping = resolveSoftDeleteMapping( this, bootEntityDescriptor, getIdentifierTableName(), creationProcess );
+		softDeleteMapping = resolveSoftDeleteMapping(
+				this,
+				bootEntityDescriptor.getRootClass(),
+				getIdentifierTableName(),
+				creationProcess
+		);
 
 		if ( softDeleteMapping != null ) {
 			if ( bootEntityDescriptor.getRootClass().getCustomSQLDelete() != null ) {
 				throw new UnsupportedMappingException( "Entity may not define both @SoftDelete and @SQLDelete" );
 			}
 		}
-	}
-
-	private static SoftDeleteMapping resolveSoftDeleteMapping(
-			AbstractEntityPersister persister,
-			PersistentClass bootEntityDescriptor,
-			String identifierTableName,
-			MappingModelCreationProcess creationProcess) {
-		final RootClass rootClass = bootEntityDescriptor.getRootClass();
-		return SoftDeleteHelper.resolveSoftDeleteMapping(
-				persister,
-				rootClass,
-				identifierTableName,
-				creationProcess.getCreationContext().getJdbcServices().getDialect()
-		);
 	}
 
 	private void postProcessAttributeMappings(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {

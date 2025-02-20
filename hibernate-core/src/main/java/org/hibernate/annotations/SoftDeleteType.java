@@ -32,12 +32,26 @@ public enum SoftDeleteType {
 	 * 	   <dd>indicates that the row is non-deleted</dd>
 	 * </dl>
 	 */
-	DELETED;
+	DELETED,
+
+	/**
+	 * Tracks rows which are deleted by the timestamp at which they were deleted.  <dl>
+	 *     <dt>{@code null}</dt>
+	 *     <dd>indicates that the row is non-deleted</dd>
+	 *     <dt>non-{@code null}</dt>
+	 *     <dd>indicates that the row is deleted, at the given timestamp</dd>
+	 * </dl>
+	 */
+	TIMESTAMP( "deleted" );
 
 	private final String defaultColumnName;
 
 	SoftDeleteType() {
 		this.defaultColumnName = name().toLowerCase( Locale.ROOT );
+	}
+
+	SoftDeleteType(String defaultColumnName) {
+		this.defaultColumnName = defaultColumnName;
 	}
 
 	public String getDefaultColumnName() {

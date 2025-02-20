@@ -2,23 +2,15 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.softdelete;
+package org.hibernate.orm.test.softdelete.discovery.simple;
 
-import org.hibernate.annotations.SoftDelete;
-import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
-import org.hibernate.type.NumericBooleanConverter;
-import org.hibernate.type.TrueFalseConverter;
-import org.hibernate.type.YesNoConverter;
+import org.hibernate.orm.test.softdelete.MappingVerifier;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 /**
  * Centralizes the checks about column names, values, etc.
@@ -27,11 +19,11 @@ import jakarta.persistence.Table;
  * @author Steve Ebersole
  */
 @DomainModel(annotatedClasses = {
-		MappingTests.BooleanEntity.class,
-		MappingTests.NumericEntity.class,
-		MappingTests.TrueFalseEntity.class,
-		MappingTests.YesNoEntity.class,
-		MappingTests.ReversedYesNoEntity.class
+		BooleanEntity.class,
+		NumericEntity.class,
+		TrueFalseEntity.class,
+		YesNoEntity.class,
+		ReversedYesNoEntity.class
 })
 @SessionFactory(exportSchema = false)
 @SuppressWarnings("unused")
@@ -76,48 +68,4 @@ public class MappingTests {
 		);
 	}
 
-	@Entity(name="BooleanEntity")
-	@Table(name="boolean_entity")
-	@SoftDelete()
-	public static class BooleanEntity {
-		@Id
-		private Integer id;
-		private String name;
-	}
-
-	@Entity(name="NumericEntity")
-	@Table(name="numeric_entity")
-	@SoftDelete(converter = NumericBooleanConverter.class)
-	public static class NumericEntity {
-		@Id
-		private Integer id;
-		private String name;
-	}
-
-	@Entity(name="TrueFalseEntity")
-	@Table(name="true_false_entity")
-	@SoftDelete(converter = TrueFalseConverter.class)
-	public static class TrueFalseEntity {
-		@Id
-		private Integer id;
-		private String name;
-	}
-
-	@Entity(name="YesNoEntity")
-	@Table(name="yes_no_entity")
-	@SoftDelete(converter = YesNoConverter.class)
-	public static class YesNoEntity {
-		@Id
-		private Integer id;
-		private String name;
-	}
-
-	@Entity(name="ReversedYesNoEntity")
-	@Table(name="reversed_yes_no_entity")
-	@SoftDelete(converter = YesNoConverter.class, strategy = SoftDeleteType.ACTIVE)
-	public static class ReversedYesNoEntity {
-		@Id
-		private Integer id;
-		private String name;
-	}
 }

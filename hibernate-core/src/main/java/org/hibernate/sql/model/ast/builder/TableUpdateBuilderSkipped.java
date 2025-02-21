@@ -33,6 +33,11 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	}
 
 	@Override
+	public void addNonKeyRestriction(ColumnValueBinding valueBinding) {
+		// nothing to do
+	}
+
+	@Override
 	public void addKeyRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
 		// nothing to do
 	}

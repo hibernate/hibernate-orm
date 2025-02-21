@@ -13,6 +13,7 @@ import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 
 import jakarta.persistence.AttributeConverter;
+import org.hibernate.metamodel.UnsupportedMappingException;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -106,9 +107,9 @@ public @interface SoftDelete {
 	 * the {@linkplain Dialect#getPreferredSqlTypeCodeForBoolean() dialect}
 	 * and {@linkplain org.hibernate.cfg.MappingSettings#PREFERRED_BOOLEAN_JDBC_TYPE settings}
 	 *
-	 * @apiNote Only relevant when {@linkplain #strategy} is {@linkplain SoftDeleteType#DELETED}
-	 * or {@linkplain SoftDeleteType#ACTIVE}.  Ignored when {@linkplain #strategy} is
-	 * {@linkplain SoftDeleteType#TIMESTAMP}.
+	 * @apiNote Only valid when {@linkplain #strategy} is {@linkplain SoftDeleteType#DELETED}
+	 * or {@linkplain SoftDeleteType#ACTIVE}.  Will lead to a {@linkplain UnsupportedMappingException}
+	 * when combined with {@linkplain SoftDeleteType#TIMESTAMP}.
 	 *
 	 * @implSpec The specified converter should never return {@code null}
 	 */

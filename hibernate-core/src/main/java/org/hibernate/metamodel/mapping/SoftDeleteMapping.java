@@ -11,8 +11,6 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.builder.ColumnValuesTableMutationBuilder;
-import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
 
 /**
  *
@@ -80,10 +78,6 @@ public interface SoftDeleteMapping extends SelectableMapping, VirtualModelPart, 
 	 * @apiNote Generally used as an assignment in a SQL AST
 	 */
 	ColumnValueBinding createDeletedValueBinding(ColumnReference softDeleteColumnReference);
-
-	void applyNonDeletedRestriction(RestrictedTableMutationBuilder<?, ?> tableMutationBuilder);
-	void applyDeletedAssignment(ColumnValuesTableMutationBuilder<?> tableMutationBuilder);
-	void applyNonDeletedAssignment(ColumnValuesTableMutationBuilder<?> tableMutationBuilder);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

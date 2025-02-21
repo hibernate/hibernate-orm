@@ -226,6 +226,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -3458,7 +3460,10 @@ public abstract class AbstractEntityPersister
 	public void addSoftDeleteToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 		if ( softDeleteMapping != null ) {
 			final TableInsertBuilder insertBuilder = insertGroupBuilder.getTableDetailsBuilder( getIdentifierTableName() );
-			softDeleteMapping.applyNonDeletedAssignment( insertBuilder );
+			final MutatingTableReference mutatingTable = insertBuilder.getMutatingTable();
+			final ColumnReference columnReference = new ColumnReference( mutatingTable, softDeleteMapping );
+			final ColumnValueBinding nonDeletedValueBinding = softDeleteMapping.createNonDeletedValueBinding( columnReference );
+			insertBuilder.addValueColumn( nonDeletedValueBinding );
 		}
 	}
 

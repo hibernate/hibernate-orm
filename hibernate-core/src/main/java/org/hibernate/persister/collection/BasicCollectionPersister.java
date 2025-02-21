@@ -327,7 +327,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 		final SoftDeleteMapping softDeleteMapping = getAttributeMapping().getSoftDeleteMapping();
 		if ( softDeleteMapping != null ) {
-			softDeleteMapping.applyNonDeletedAssignment( insertBuilder );
+			final ColumnReference columnReference = new ColumnReference( insertBuilder.getMutatingTable(), softDeleteMapping );
+			insertBuilder.addValueColumn( softDeleteMapping.createNonDeletedValueBinding( columnReference ) );
 		}
 	}
 
@@ -659,8 +660,11 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			}
 		}
 
-		softDeleteMapping.applyDeletedAssignment( updateBuilder );
-		softDeleteMapping.applyNonDeletedRestriction( updateBuilder );
+		final ColumnReference softDeleteColumnReference = new ColumnReference( tableReference, softDeleteMapping );
+		// apply the assignment
+		updateBuilder.addValueColumn( softDeleteMapping.createDeletedValueBinding( softDeleteColumnReference ) );
+		// apply the restriction
+		updateBuilder.addNonKeyRestriction( softDeleteMapping.createNonDeletedValueBinding( softDeleteColumnReference ) );
 
 		return updateBuilder.buildMutation();
 	}

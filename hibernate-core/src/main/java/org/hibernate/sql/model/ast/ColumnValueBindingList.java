@@ -6,6 +6,7 @@ package org.hibernate.sql.model.ast;
 
 import java.util.ArrayList;
 
+import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -43,6 +44,11 @@ public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implem
 				jdbcValueMapping.getJdbcMapping()
 		);
 		add( columnValueBinding );
+	}
+
+	@Internal @Incubating
+	public void addRestriction(ColumnValueBinding valueBinding) {
+		add( valueBinding );
 	}
 
 	public void addNullRestriction(SelectableMapping column) {

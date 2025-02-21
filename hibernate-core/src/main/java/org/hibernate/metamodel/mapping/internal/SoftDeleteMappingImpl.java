@@ -148,20 +148,6 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 		}
 	}
 
-	private static String renderedCurrentTimestampCall(
-			SelfRenderingFunctionSqlAstExpression<?> functionExpression,
-			Dialect dialect,
-			MappingModelCreationProcess modelCreationProcess) {
-		final StringBuilder buffer = new StringBuilder();
-
-		functionExpression.renderToSql(
-				buffer::append,
-				null,
-				modelCreationProcess.getCreationContext().getSessionFactory()
-		);
-		return buffer.toString();
-	}
-
 	@Override
 	public SoftDeleteType getSoftDeleteStrategy() {
 		return strategy;
@@ -353,13 +339,12 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 				indicatorTable.getTableName()
 		);
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
-		final SqlSelection sqlSelection = expressionResolver.resolveSqlSelection(
+		return expressionResolver.resolveSqlSelection(
 				expressionResolver.resolveSqlExpression( tableReference, this ),
 				getJavaType(),
 				null,
 				creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
-		return sqlSelection;
 	}
 
 	@Override

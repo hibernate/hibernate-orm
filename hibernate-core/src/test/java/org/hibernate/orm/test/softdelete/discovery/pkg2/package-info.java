@@ -13,4 +13,4 @@
 package org.hibernate.orm.test.softdelete.discovery.pkg2;
 
 import org.hibernate.annotations.SoftDelete;
-import org.hibernate.orm.test.softdelete.discovery.CustomTrueFalseConverter;
+import org.hibernate.orm.test.softdelete.CustomTrueFalseConverter;

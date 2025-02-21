@@ -223,16 +223,14 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final ColumnReference softDeleteColumn = new ColumnReference( tableReference, softDeleteMapping );
 		final ColumnValueBinding nonDeletedBinding = softDeleteMapping.createNonDeletedValueBinding( softDeleteColumn );
 		final ColumnValueBinding deletedBinding = softDeleteMapping.createDeletedValueBinding( softDeleteColumn );
-		restrictionBindings.add( nonDeletedBinding );
-		final List<ColumnValueBinding> valueBindings = List.of( deletedBinding );
 
 		return new TableUpdateStandard(
 				tableReference,
 				this,
 				"soft-delete removal",
-				valueBindings,
+				List.of( deletedBinding ),
 				restrictionBindings,
-				null
+				List.of( nonDeletedBinding )
 		);
 	}
 
@@ -329,7 +327,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 		final SoftDeleteMapping softDeleteMapping = getAttributeMapping().getSoftDeleteMapping();
 		if ( softDeleteMapping != null ) {
-			insertBuilder.addValueColumn( softDeleteMapping );
+			softDeleteMapping.applyNonDeletedAssignment( insertBuilder );
 		}
 	}
 

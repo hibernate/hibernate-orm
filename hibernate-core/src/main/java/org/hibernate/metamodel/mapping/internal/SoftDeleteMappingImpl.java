@@ -220,8 +220,11 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 	public ColumnValueBinding createNonDeletedValueBinding(ColumnReference softDeleteColumnReference) {
 		final ColumnWriteFragment nonDeletedFragment;
 		if ( strategy == SoftDeleteType.TIMESTAMP ) {
-//			return new ColumnValueBinding( softDeleteColumnReference, null );
-			throw new UnsupportedOperationException( );
+			nonDeletedFragment = new ColumnWriteFragment(
+					null,
+					Collections.emptyList(),
+					jdbcMapping
+			);
 		}
 		else {
 			nonDeletedFragment = new ColumnWriteFragment(
@@ -237,12 +240,11 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 	public ColumnValueBinding createDeletedValueBinding(ColumnReference softDeleteColumnReference) {
 		final ColumnWriteFragment deletedFragment;
 		if ( strategy == SoftDeleteType.TIMESTAMP ) {
-//			deletedFragment = new ColumnWriteFragment(
-//					currentTimestampFunctionName,
-//					Collections.emptyList(),
-//					getJdbcMapping()
-//			);
-			throw new UnsupportedOperationException( );
+			deletedFragment = new ColumnWriteFragment(
+					currentTimestampFunctionName,
+					Collections.emptyList(),
+					getJdbcMapping()
+			);
 		}
 		else {
 			deletedFragment = new ColumnWriteFragment(
@@ -269,12 +271,27 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 	}
 
 	@Override
-	public void applyDeletedAssignment(ColumnValuesTableMutationBuilder tableMutationBuilder) {
+	public void applyDeletedAssignment(ColumnValuesTableMutationBuilder<?> tableMutationBuilder) {
 		if ( strategy == SoftDeleteType.TIMESTAMP ) {
 			tableMutationBuilder.addValueColumn( getColumnName(), currentTimestampFunctionName, getJdbcMapping() );
 		}
 		else {
 			tableMutationBuilder.addValueColumn( getColumnName(), deletedLiteralText, getJdbcMapping() );
+		}
+	}
+
+	@Override
+	public void applyNonDeletedAssignment(ColumnValuesTableMutationBuilder<?> tableMutationBuilder) {
+		if ( strategy == SoftDeleteType.TIMESTAMP ) {
+			final ColumnReference columnReference = new ColumnReference(
+					tableMutationBuilder.getMutatingTable(),
+					this
+			);
+			final ColumnValueBinding nonDeletedValueBinding = createNonDeletedValueBinding( columnReference );
+			tableMutationBuilder.addValueColumn( nonDeletedValueBinding );
+		}
+		else {
+			tableMutationBuilder.addValueColumn( getColumnName(), nonDeletedLiteralText, getJdbcMapping() );
 		}
 	}
 

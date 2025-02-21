@@ -6,6 +6,8 @@ package org.hibernate.sql.model.ast.builder;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.ast.TableMutation;
 
 /**
  * Common operations of {@link TableUpdateBuilder} and {@link TableInsertBuilder}.
@@ -13,7 +15,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public interface ColumnValuesTableMutationBuilder {
+public interface ColumnValuesTableMutationBuilder<M extends TableMutation<?>> extends TableMutationBuilder<M> {
 	/**
 	 * Add a column as part of the values list
 	 */
@@ -36,6 +38,8 @@ public interface ColumnValuesTableMutationBuilder {
 				selectableMapping.isLob()
 		);
 	}
+
+	void addValueColumn(ColumnValueBinding valueBinding);
 
 	/**
 	 * Add a key column

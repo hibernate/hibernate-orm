@@ -3458,7 +3458,7 @@ public abstract class AbstractEntityPersister
 	public void addSoftDeleteToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 		if ( softDeleteMapping != null ) {
 			final TableInsertBuilder insertBuilder = insertGroupBuilder.getTableDetailsBuilder( getIdentifierTableName() );
-			insertBuilder.addValueColumn( softDeleteMapping );
+			softDeleteMapping.applyNonDeletedAssignment( insertBuilder );
 		}
 	}
 

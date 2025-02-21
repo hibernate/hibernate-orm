@@ -82,7 +82,8 @@ public interface SoftDeleteMapping extends SelectableMapping, VirtualModelPart, 
 	ColumnValueBinding createDeletedValueBinding(ColumnReference softDeleteColumnReference);
 
 	void applyNonDeletedRestriction(RestrictedTableMutationBuilder<?, ?> tableMutationBuilder);
-	void applyDeletedAssignment(ColumnValuesTableMutationBuilder tableMutationBuilder);
+	void applyDeletedAssignment(ColumnValuesTableMutationBuilder<?> tableMutationBuilder);
+	void applyNonDeletedAssignment(ColumnValuesTableMutationBuilder<?> tableMutationBuilder);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

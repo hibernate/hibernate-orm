@@ -6,6 +6,7 @@ package org.hibernate.sql.model.ast.builder;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueBindingList;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
@@ -67,6 +68,11 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 
 	@Override
 	public void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping, boolean isLob) {
+		// nothing to do
+	}
+
+	@Override
+	public void addValueColumn(ColumnValueBinding valueBinding) {
 		// nothing to do
 	}
 

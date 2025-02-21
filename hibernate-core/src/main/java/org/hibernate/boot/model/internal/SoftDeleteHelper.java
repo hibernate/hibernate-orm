@@ -15,6 +15,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.SoftDeletable;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.SoftDeletableModelPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.SoftDeleteMappingImpl;
@@ -63,6 +64,11 @@ public class SoftDeleteHelper {
 		softDeleteIndicatorValue.makeSoftDelete( softDeleteConfig.strategy() );
 
 		if ( softDeleteConfig.strategy() == SoftDeleteType.TIMESTAMP ) {
+			if ( softDeleteConfig.converter() != SoftDelete.UnspecifiedConversion.class ) {
+				throw new UnsupportedMappingException(
+						"Specifying SoftDelete#converter in conjunction with SoftDeleteType.TIMESTAMP is not supported"
+				);
+			}
 			softDeleteIndicatorValue.setImplicitJavaTypeAccess( (typeConfiguration) -> Instant.class );
 		}
 		else {
@@ -90,15 +96,22 @@ public class SoftDeleteHelper {
 
 		applyColumnName( softDeleteColumn, softDeleteConfig, context );
 
-		softDeleteColumn.setLength( 1 );
-		softDeleteColumn.setNullable( false );
-		softDeleteColumn.setUnique( false );
 		softDeleteColumn.setOptions( softDeleteConfig.options() );
 		if ( isBlank( softDeleteConfig.comment() ) ) {
 			softDeleteColumn.setComment( "Soft-delete indicator" );
 		}
 		else {
 			softDeleteColumn.setComment( softDeleteConfig.comment() );
+		}
+
+		softDeleteColumn.setUnique( false );
+
+		if ( softDeleteConfig.strategy() == SoftDeleteType.TIMESTAMP ) {
+			softDeleteColumn.setNullable( true );
+		}
+		else {
+			softDeleteColumn.setLength( 1 );
+			softDeleteColumn.setNullable( false );
 		}
 
 		return softDeleteColumn;

@@ -104,6 +104,11 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 	}
 
 	@Override
+	public void addValueColumn(ColumnValueBinding valueBinding) {
+		valueBindings.add( valueBinding );
+	}
+
+	@Override
 	public void addKeyColumn(
 			String columnName,
 			String columnWriteFragment,

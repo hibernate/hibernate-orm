@@ -64,24 +64,6 @@ public class ReflectionUtil {
 	}
 
 	/**
-	 * Get a field value from a given class
-	 *
-	 * @param target Class whose field is being read
-	 * @param name field name
-	 *
-	 * @return field value
-	 */
-	public static <T> T getStaticFieldValue(Class<?> target, String name) {
-		try {
-			Field field = getField( target, name );
-			return (T) field.get( null );
-		}
-		catch (IllegalAccessException e) {
-			throw new IllegalArgumentException( "Cannot set field " + name, e );
-		}
-	}
-
-	/**
 	 * Set target Object field to a certain value
 	 *
 	 * @param target Object whose field is being set

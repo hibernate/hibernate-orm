@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.DiscriminatorFormula;
@@ -57,6 +56,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import java.util.LinkedHashMap;
 
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
@@ -408,7 +408,7 @@ public class EmbeddableBinder {
 			final BasicType<?> discriminatorType = (BasicType<?>) component.getDiscriminator().getType();
 			// Discriminator values are used to construct the embeddable domain
 			// type hierarchy so order of processing is important
-			final Map<Object, String> discriminatorValues = new TreeMap<>();
+			final Map<Object, String> discriminatorValues = new LinkedHashMap<>();
 			collectDiscriminatorValue( returnedClassOrElement, discriminatorType, discriminatorValues );
 			collectSubclassElements(
 					propertyAccessor,

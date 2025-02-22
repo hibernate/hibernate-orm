@@ -206,7 +206,7 @@ ext {
                     //
                     // To avoid hibernate-spatial tests failure, JVM must be enabled as stated in documentation:
                     // https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/autonomous-oracle-java.html
-                    'jdbc.url'   : 'jdbc:oracle:thin:@(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=' + dbHost + '.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=' + dbService + '_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))?oracle.jdbc.enableQueryResultCache=false&oracle.jdbc.thinForceDNSLoadBalancing=true&tcp.nodelay=yes',
+                    'jdbc.url'   : 'jdbc:oracle:thin:@(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=' + dbHost + '.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=' + dbService + '_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))',
                     'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
 //                        'jdbc.datasource' : 'oracle.jdbc.datasource.impl.OracleDataSource',
                     'connection.init_sql' : ''

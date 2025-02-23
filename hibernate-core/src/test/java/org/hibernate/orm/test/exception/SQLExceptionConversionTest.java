@@ -174,7 +174,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 
 		session.doWork(
 				connection -> {
-					// Attempt to insert some bad values into the T_MEMBERSHIP table that should
+					// Attempt to insert some existent values into the T_MEMBERSHIP table that should
 					// result in a constraint violation
 					PreparedStatement ps = null;
 					try {
@@ -239,8 +239,6 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 				public JDBCException convert(SQLException sqlException, String message, String sql) {
 					JDBCException exception = sqlStateDelegate.convert( sqlException, message, sql );
 					if ( exception == null ) {
-						// assume this is either a set-up problem or a problem connecting, which we will
-						// categorize the same here.
 						exception = new ConstraintViolationException( message, sqlException, sql );
 					}
 					return exception;

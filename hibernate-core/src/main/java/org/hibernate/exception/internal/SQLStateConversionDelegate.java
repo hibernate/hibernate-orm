@@ -95,7 +95,7 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 					"22":	// "data exception"
 					return new DataException( message, sqlException, sql );
 				case
-						"28":	// "authentication failure"
+					"28":	// "authentication failure"
 					return new AuthException( message, sqlException, sql );
 			}
 		}

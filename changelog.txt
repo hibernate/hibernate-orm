@@ -3,6 +3,20 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.9.Final (February 23, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32614
+
+** Bug
+    * [HHH-19173] - PostgreSQLLegacySqlAstTranslator does not implement visitInArrayPredicates
+    * [HHH-19169] - Entity hierarchy (and included embeddables) with inconsistent bytecode enhancement is unsupported, but isn't detected
+    * [HHH-19168] - Re-enhancement of entities with different configuration may skip some enhancements
+    * [HHH-19116] - Error when using fk() function on left joined many-to-one association and is null predicate
+    * [HHH-19110] - Flush operation fails with "UnsupportedOperationException: compare() not implemented for EntityType"
+    * [HHH-17151] - NPE when binding null parameter in native query with explicit TemporalType
+
+
 Changes in 6.6.8.Final (February 16, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -66,31 +66,36 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 			}
 			switch ( determineSqlStateClassCode( sqlState ) ) {
 				case
-					"07", 	// "dynamic SQL error"
-					"20",
-					"2A", 	// "direct SQL syntax error or access rule violation"
-					"37",	// "dynamic SQL syntax error or access rule violation"
-					"42",	// "syntax error or access rule violation"
-					"65",	// Oracle specific as far as I can tell
-					"S0":	// MySQL specific as far as I can tell
+						"07", 	// "dynamic SQL error"
+						"20",
+						"2A", 	// "direct SQL syntax error or access rule violation"
+						"37",	// "dynamic SQL syntax error or access rule violation"
+						"42",	// "syntax error or access rule violation"
+						"65",	// Oracle specific as far as I can tell
+						"S0":	// MySQL specific as far as I can tell
 					return new SQLGrammarException( message, sqlException, sql );
 				case
-					"23",	// "integrity constraint violation"
-					"27",	// "triggered data change violation"
-					"44":	// "with check option violation"
+						"23",	// "integrity constraint violation"
+						"27",	// "triggered data change violation"
+						"44":	// "with check option violation"
 					final String constraintName = getConversionContext()
 							.getViolatedConstraintNameExtractor()
 							.extractConstraintName( sqlException );
+
+					if (sqlState.equals("23505")) {
+						return new ConstraintViolationException(message, sqlException, sql, ConstraintViolationException.ConstraintKind.UNIQUE, constraintName);
+					}
+
 					return new ConstraintViolationException( message, sqlException, sql, constraintName );
 				case
-					"08":	// "connection exception"
+						"08":	// "connection exception"
 					return new JDBCConnectionException( message, sqlException, sql );
 				case
-					"21",	// "cardinality violation"
-					"22":	// "data exception"
+						"21",	// "cardinality violation"
+						"22":	// "data exception"
 					return new DataException( message, sqlException, sql );
 				case
-					"28":	// "authentication failure"
+						"28":	// "authentication failure"
 					return new AuthException( message, sqlException, sql );
 			}
 		}

@@ -5,8 +5,10 @@
 package org.hibernate.orm.test.exception;
 
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.TiDBDialect;
@@ -17,6 +19,13 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.SQLGrammarException;
 
+import org.hibernate.exception.internal.SQLStateConversionDelegate;
+import org.hibernate.exception.spi.ConversionContext;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
+import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -156,4 +165,86 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 			}
 		}
 	}
+
+	@Test
+	@JiraKey(value = "HHH-19001")
+	public void testConstraintViolation() {
+		final Session session = openSession();
+		session.beginTransaction();
+
+		session.doWork(
+				connection -> {
+					// Attempt to insert some bad values into the T_MEMBERSHIP table that should
+					// result in a constraint violation
+					PreparedStatement ps = null;
+					try {
+						final String sql = "INSERT INTO T_MEMBERSHIP (user_id, group_id) VALUES (?, ?)";
+						ps = ((SessionImplementor)session).getJdbcCoordinator()
+								.getStatementPreparer()
+								.prepareStatement( sql );
+						ps.setLong(1, 1);    // existent user_id
+						ps.setLong(2, 1);    // existent group_id
+						((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().executeUpdate( ps, sql );
+
+						fail("INSERT should have failed");
+					}
+					catch (ConstraintViolationException cvException) {
+						SQLException sqlException = new SQLException(cvException.getSQLException().getMessage(), "23505");
+						throw convertSqlException(sqlException.getMessage(), sqlException);
+					}
+					finally {
+						releaseStatement( session, ps );
+					}
+				}
+		);
+
+		session.getTransaction().rollback();
+		session.close();
+	}
+
+	private static final ViolatedConstraintNameExtractor EXTRACTOR =
+			new TemplatedViolatedConstraintNameExtractor( sqle -> {
+				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
+				if ( sqlState != null ) {
+					final String message = sqle.getMessage();
+					final int idx = message.indexOf( "violation: " );
+					if ( idx > 0 ) {
+						String constraintName = message.substring( idx + "violation: ".length() );
+						if ( sqle.getSQLState().equals( "23505" ) ) {
+							constraintName = constraintName.substring( 1, constraintName.indexOf( ':' ) );
+						}
+						return constraintName;
+					}
+				}
+				return null;
+			} );
+
+	protected JDBCException convertSqlException(String message, SQLException e) {
+		final String fullMessage = message + " [" + e.getMessage() + "]";
+		return simpleConverterAccess.getValue().convert( e, fullMessage, null );
+	}
+
+	private final ValueHolder<SQLExceptionConversionDelegate> simpleConverterAccess =
+			new ValueHolder<>( () -> new SQLExceptionConversionDelegate() {
+				private final SQLStateConversionDelegate sqlStateDelegate = new SQLStateConversionDelegate(
+						new ConversionContext() {
+							@Override
+							public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
+								return EXTRACTOR;
+							}
+						} );
+
+
+				@Override
+				public JDBCException convert(SQLException sqlException, String message, String sql) {
+					JDBCException exception = sqlStateDelegate.convert( sqlException, message, sql );
+					if ( exception == null ) {
+						// assume this is either a set-up problem or a problem connecting, which we will
+						// categorize the same here.
+						exception = new ConstraintViolationException( message, sqlException, sql );
+					}
+					return exception;
+				}
+			}
+			);
 }

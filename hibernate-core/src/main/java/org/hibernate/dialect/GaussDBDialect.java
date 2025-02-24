@@ -147,7 +147,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * Notes: Original code of this class is based on PostgreSQLDialect.
  */
 public class GaussDBDialect extends Dialect {
-	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 12 );
+	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2 );
 
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 	private final StandardTableExporter gaussDBTableExporter = new StandardTableExporter( this ) {
@@ -163,6 +163,10 @@ public class GaussDBDialect extends Dialect {
 	};
 
 	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
+
+	public GaussDBDialect() {
+		this(MINIMUM_VERSION);
+	}
 
 	public GaussDBDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( MINIMUM_VERSION ));
@@ -1317,7 +1321,7 @@ public class GaussDBDialect extends Dialect {
 
 	@Override
 	public boolean supportsLateral() {
-		return true;
+		return false;
 	}
 
 	@Override
@@ -1327,11 +1331,10 @@ public class GaussDBDialect extends Dialect {
 
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
-		return switch (type) {
-			case ROWS_ONLY -> true;
-			case PERCENT_ONLY, PERCENT_WITH_TIES -> false;
-			case ROWS_WITH_TIES -> getVersion().isSameOrAfter(13);
-		};
+//		if ( type.equals( FetchClauseType.ROWS_ONLY ) ) {
+//			return true;
+//		}
+		return false;
 	}
 
 	@Override

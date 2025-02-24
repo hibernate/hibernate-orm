@@ -200,7 +200,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	@Override
 	public boolean supportsFilterClause() {
-		return true;
+		return false;
 	}
 
 	@Override
@@ -317,9 +317,6 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		if ( likePredicate.getEscapeCharacter() != null ) {
 			appendSql( " escape " );
 			likePredicate.getEscapeCharacter().accept( this );
-		}
-		else {
-			appendSql( " escape ''" );
 		}
 	}
 

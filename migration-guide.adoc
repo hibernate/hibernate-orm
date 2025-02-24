@@ -124,6 +124,14 @@ For example, this property declaration is no longer allowed:
 String isDefault();
 ----
 
+[[soft-delete-timestamp]]
+== @SoftDelete with TIMESTAMP
+
+Soft-delete now supports the strategy of tracking the timestamp at which the soft-delete occurred,
+in addition to the previous truth-based strategies.
+See the link:{user-guide-url}#soft-delete[User Guide] for details.
+
+
 [[envers-rev-types]]
 == Hibernate Envers and custom revision entities
 

@@ -26,14 +26,6 @@
 			<property name="amount" not-null="true"/>
 			<property name="currency" not-null="true"/>
 		</component>
-		<component name="timestamp" class="org.hibernate.orm.test.cut.CompositeDateTimeUserType">
-			<property name="year" column="ts_year"/>
-			<property name="month" column="ts_month"/>
-			<property name="day" column="ts_day"/>
-			<property name="hour" column="ts_hour"/>
-			<property name="minute" column="ts_minute"/>
-			<property name="second" column="ts_second"/>
-		</component>
 	</class>
 	
     <class name="MutualFund" table="MutualFund">

@@ -8,8 +8,6 @@
 plugins {
 	id "local.publishing-java-module"
 	id "local.publishing-group-relocation"
-
-	id "org.hibernate.matrix-test"
 }
 
 description = 'Integrate support for Spatial/GIS data into Hibernate O/RM'

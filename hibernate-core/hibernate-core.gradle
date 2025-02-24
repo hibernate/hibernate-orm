@@ -12,8 +12,6 @@ plugins {
 
     id "org.hibernate.orm.antlr"
     id "local-xjc-plugin"
-
-    id "org.hibernate.matrix-test"
 }
 
 description = 'Hibernate\'s core ORM functionality'

@@ -18,9 +18,8 @@ import org.hibernate.orm.test.jpa.metamodel.Address;
 import org.hibernate.orm.test.jpa.metamodel.Address_;
 import org.hibernate.orm.test.jpa.metamodel.Article;
 import org.hibernate.orm.test.jpa.metamodel.Article_;
-import org.hibernate.orm.test.jpa.metamodel.MapEntity;
-import org.hibernate.orm.test.jpa.metamodel.MapEntityLocal;
-import org.hibernate.orm.test.jpa.metamodel.MapEntity_;
+import org.hibernate.orm.test.jpa.metamodel.EntityWithMapEC;
+import org.hibernate.orm.test.jpa.metamodel.EntityWithMapEC_;
 import org.hibernate.orm.test.jpa.metamodel.Translation;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpression;
@@ -40,8 +39,7 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 	public Class[] getAnnotatedClasses() {
 		List<Class> classes = new ArrayList<>();
 		Collections.addAll( classes, super.getAnnotatedClasses() );
-		classes.add( MapEntity.class );
-		classes.add( MapEntityLocal.class );
+		classes.add( EntityWithMapEC.class );
 		classes.add( Article.class );
 		classes.add( Translation.class );
 
@@ -77,7 +75,7 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 	@Jira("https://hibernate.atlassian.net/browse/HHH-11225")
 	public void testElementMapIsEmptyHql() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.createQuery( "select m from MapEntity m where m.localized is empty" ).getResultList();
+			entityManager.createQuery( "select m from EntityWithMapEC m where m.elements is empty" ).getResultList();
 		});
 	}
 
@@ -87,11 +85,11 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			final HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
 
-			final CriteriaQuery<MapEntity> criteria = cb.createQuery( MapEntity.class );
-			final Root<MapEntity> root = criteria.from( MapEntity.class);
+			final CriteriaQuery<EntityWithMapEC> criteria = cb.createQuery( EntityWithMapEC.class );
+			final Root<EntityWithMapEC> root = criteria.from( EntityWithMapEC.class);
 
 			criteria.select( root )
-					.where( cb.isMapEmpty( (JpaExpression) root.get( MapEntity_.localized ) ) );
+					.where( cb.isMapEmpty( (JpaExpression) root.get( EntityWithMapEC_.elements ) ) );
 
 			entityManager.createQuery( criteria ).getResultList();
 		});
@@ -151,7 +149,7 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 	@Jira("https://hibernate.atlassian.net/browse/HHH-11225")
 	public void testElementMapSizeHql() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.createQuery( "select m from MapEntity m where size( m.localized ) > 1" ).getResultList();
+			entityManager.createQuery( "select m from EntityWithMapEC m where size( m.elements ) > 1" ).getResultList();
 		});
 	}
 
@@ -161,11 +159,11 @@ public class PluralAttributeExpressionsTest extends AbstractMetamodelSpecificTes
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			final HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
 
-			final CriteriaQuery<MapEntity> criteria = cb.createQuery( MapEntity.class );
-			final Root<MapEntity> root = criteria.from( MapEntity.class);
+			final CriteriaQuery<EntityWithMapEC> criteria = cb.createQuery( EntityWithMapEC.class );
+			final Root<EntityWithMapEC> root = criteria.from( EntityWithMapEC.class);
 
 			criteria.select( root )
-					.where( cb.gt( cb.mapSize( (JpaExpression) root.get( MapEntity_.localized ) ), 1 ) );
+					.where( cb.gt( cb.mapSize( (JpaExpression) root.get( EntityWithMapEC_.elements ) ), 1 ) );
 
 			entityManager.createQuery( criteria ).getResultList();
 		});

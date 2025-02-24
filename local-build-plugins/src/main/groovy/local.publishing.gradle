@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 
@@ -34,8 +34,8 @@ publishingExtension.publications.configureEach {
 
         licenses {
             license {
-                name = 'GNU Library General Public License v2.1 or later'
-                url = 'https://www.opensource.org/licenses/LGPL-2.1'
+                name = 'Apache License, Version 2.0'
+                url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
                 comments = 'See discussion at https://hibernate.org/community/license/ for more details.'
                 distribution = 'repo'
             }

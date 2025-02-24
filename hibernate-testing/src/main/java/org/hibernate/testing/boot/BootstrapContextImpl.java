@@ -36,7 +36,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Andrea Boriero
  */
-public class BootstrapContextImpl implements BootstrapContext {
+public class BootstrapContextImpl implements BootstrapContext, AutoCloseable {
 
 	private final BootstrapContext delegate;
 
@@ -181,6 +181,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		delegate.release();
 	}
 
+	@Override
 	public void close() {
 		delegate.release();
 		delegate.getServiceRegistry().close();

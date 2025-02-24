@@ -465,7 +465,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 * @return {@code this} for method chaining
 	 *
 	 * @see org.hibernate.jpa.HibernateHints#HINT_FOLLOW_ON_LOCKING
-	 * @see org.hibernate.dialect.Dialect#useFollowOnLocking(String, QueryOptions)
+	 * @see org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)
 	 */
 	public LockOptions setFollowOnLocking(Boolean followOnLocking) {
 		if ( immutable ) {

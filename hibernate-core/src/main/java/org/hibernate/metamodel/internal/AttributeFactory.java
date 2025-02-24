@@ -737,11 +737,15 @@ public class AttributeFactory {
 
 	private static Member resolveEntityMember(Property property, EntityPersister declaringEntity) {
 		final String propertyName = property.getName();
-		final AttributeMapping attributeMapping = declaringEntity.findAttributeMapping( propertyName );
-		return attributeMapping == null
-				// just like in #determineIdentifierJavaMember , this *should* indicate we have an IdClass mapping
-				? resolveVirtualIdentifierMember( property, declaringEntity )
-				: getter( declaringEntity, property, propertyName, property.getType().getReturnedClass() );
+		if ( propertyName.equals( declaringEntity.getIdentifierPropertyName() ) ) {
+			final EntityIdentifierMapping mapping = declaringEntity.getIdentifierMapping();
+			if ( mapping == null ) {
+				// Member is identifier, but there is no identifier property mapping ...
+				// ... this *should* indicate we have an IdClass mapping
+				return resolveVirtualIdentifierMember( property, declaringEntity );
+			}
+		}
+		return getter( declaringEntity, property, propertyName, property.getType().getReturnedClass() );
 	}
 
 	private static Member resolveMappedSuperclassMember(

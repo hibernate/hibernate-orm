@@ -9,12 +9,10 @@ import jakarta.enterprise.inject.spi.AnnotatedType;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.InjectionTarget;
-
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-
 import org.jboss.logging.Logger;
 
 import java.util.Set;
@@ -48,7 +46,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 		return new BeanImpl<>(
 				beanClass,
 				fallbackProducer,
-				( (CdiBasedBeanContainer) beanContainer ).getUsableBeanManager()
+				((CdiBasedBeanContainer) beanContainer).getUsableBeanManager()
 		);
 	}
 
@@ -62,64 +60,21 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 				beanName,
 				beanClass,
 				fallbackProducer,
-				( (CdiBasedBeanContainer) beanContainer ).getUsableBeanManager()
+				((CdiBasedBeanContainer) beanContainer).getUsableBeanManager()
 		);
 	}
 
 
+	private static class BeanImpl<B> extends AbstractBean<B> {
 
-	private static class BeanImpl<B> implements ContainedBeanImplementor<B> {
-		private final Class<B> beanType;
-
-		private final BeanInstanceProducer fallbackProducer;
-
-		private BeanManager beanManager;
 		private InjectionTarget<B> injectionTarget;
-		private CreationalContext<B> creationalContext;
-
-		private B beanInstance;
 
 		public BeanImpl(Class<B> beanType, BeanInstanceProducer fallbackProducer, BeanManager beanManager) {
-			this.beanType = beanType;
-			this.fallbackProducer = fallbackProducer;
-			this.beanManager = beanManager;
+			super( beanType, fallbackProducer, beanManager );
 		}
 
 		@Override
-		public Class<B> getBeanClass() {
-			return beanType;
-		}
-
-		@Override
-		public B getBeanInstance() {
-			if ( beanInstance == null ) {
-				initialize();
-			}
-
-			return beanInstance;
-		}
-
-		@Override
-		public void initialize() {
-			if ( beanInstance != null ) {
-				return;
-			}
-
-			if ( beanManager == null ) {
-				try {
-					beanInstance = fallbackProducer.produceBeanInstance( beanType );
-					return;
-				}
-				catch (Exception e) {
-					// the CDI BeanManager is not know to be ready for use and the
-					// fallback-producer was unable to create the bean...
-					throw new IllegalStateException(
-							"CDI BeanManager is not known to be ready for use and the fallback-producer was unable to create the bean",
-							new NotYetReadyException( e )
-					);
-				}
-			}
-
+		protected B beanInstance() {
 			final AnnotatedType<B> annotatedType;
 			try {
 				annotatedType = beanManager.createAnnotatedType( beanType );
@@ -128,43 +83,31 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 				throw new IllegalStateException( new NotYetReadyException( e ) );
 			}
 
-			try {
-				injectionTarget = beanManager.getInjectionTargetFactory( annotatedType ).createInjectionTarget( null );
-				creationalContext = beanManager.createCreationalContext( null );
+			injectionTarget = beanManager.getInjectionTargetFactory( annotatedType ).createInjectionTarget( null );
 
-				beanInstance = injectionTarget.produce( creationalContext );
-				injectionTarget.inject( beanInstance, creationalContext );
+			B beanInstance = injectionTarget.produce( creationalContext );
+			injectionTarget.inject( beanInstance, creationalContext );
 
-				injectionTarget.postConstruct( beanInstance );
-			}
-			catch (NotYetReadyException e) {
-				throw e;
-			}
-			catch (Exception e) {
-				log.debugf( "Error resolving CDI bean [%s] - using fallback", beanType.getName() );
-				beanInstance = fallbackProducer.produceBeanInstance( beanType );
-
-				try {
-					if ( creationalContext != null ) {
-						creationalContext.release();
-					}
-				}
-				catch (Exception ignore) {
-				}
-
-				creationalContext = null;
-				injectionTarget = null;
-			}
+			injectionTarget.postConstruct( beanInstance );
 
 			beanManager = null;
+
+			return beanInstance;
 		}
 
 		@Override
-		public void release() {
-			if ( beanInstance == null ) {
-				return;
-			}
+		protected B beanInstanceFallback() {
+			injectionTarget = null;
+			return fallbackProducer.produceBeanInstance( beanType );
+		}
 
+		@Override
+		protected String getBeanName() {
+			return beanType.getName();
+		}
+
+		@Override
+		protected void doRelease() {
 			try {
 				if ( injectionTarget == null ) {
 					// todo : BeanInstanceProducer#release?
@@ -172,13 +115,8 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 				}
 				injectionTarget.preDestroy( beanInstance );
 				injectionTarget.dispose( beanInstance );
-				creationalContext.release();
-			}
-			catch (Exception ignore) {
-
 			}
 			finally {
-				beanInstance = null;
 				creationalContext = null;
 				injectionTarget = null;
 			}
@@ -186,36 +124,81 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 	}
 
 
-	private static class NamedBeanImpl<B> implements ContainedBeanImplementor<B> {
-		private final Class<B> beanType;
+	private static class NamedBeanImpl<B> extends AbstractBean<B> {
 		private final String beanName;
-
-		private final BeanInstanceProducer fallbackProducer;
-
-		private BeanManager beanManager;
 		private Bean<B> bean;
-		private CreationalContext<B> creationalContext;
-
-		private B beanInstance;
 
 		private NamedBeanImpl(
 				String beanName,
 				Class<B> beanType,
 				BeanInstanceProducer fallbackProducer,
 				BeanManager beanManager) {
+			super( beanType, fallbackProducer, beanManager );
 			this.beanName = beanName;
+		}
+
+		@Override
+		protected B beanInstance() {
+			bean = resolveBean();
+			return bean.create( creationalContext );
+		}
+
+		@SuppressWarnings("unchecked")
+		private Bean<B> resolveBean() {
+			final Set<Bean<?>> beans = beanManager.getBeans( beanType, new NamedBeanQualifier( beanName ) );
+			return (Bean<B>) beanManager.resolve( beans );
+		}
+
+		@Override
+		protected B beanInstanceFallback() {
+			bean = null;
+			return fallbackProducer.produceBeanInstance( beanName, beanType );
+		}
+
+		@Override
+		protected String getBeanName() {
+			return beanName;
+		}
+
+		@Override
+		protected void doRelease() {
+			try {
+				if ( bean == null ) {
+					// todo : BeanInstanceProducer#release?
+					return;
+				}
+				bean.destroy( beanInstance, creationalContext );
+			}
+			finally {
+				bean = null;
+			}
+		}
+	}
+
+	private static abstract class AbstractBean<B> implements ContainedBeanImplementor<B> {
+		protected final Class<B> beanType;
+		protected final BeanInstanceProducer fallbackProducer;
+		protected BeanManager beanManager;
+		protected CreationalContext<B> creationalContext;
+
+		protected B beanInstance;
+
+		private AbstractBean(
+				Class<B> beanType,
+				BeanInstanceProducer fallbackProducer,
+				BeanManager beanManager) {
 			this.beanType = beanType;
 			this.fallbackProducer = fallbackProducer;
 			this.beanManager = beanManager;
 		}
 
 		@Override
-		public Class<B> getBeanClass() {
+		public final Class<B> getBeanClass() {
 			return beanType;
 		}
 
 		@Override
-		public B getBeanInstance() {
+		public final B getBeanInstance() {
 			if ( beanInstance == null ) {
 				initialize();
 			}
@@ -223,7 +206,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 		}
 
 		@Override
-		public void initialize() {
+		public final void initialize() {
 			if ( beanInstance != null ) {
 				return;
 			}
@@ -251,12 +234,14 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 			}
 
 			try {
-				bean = resolveBean();
-				beanInstance = bean.create( creationalContext );
+				beanInstance = beanInstance();
+			}
+			catch (IllegalStateException | NotYetReadyException e) {
+				throw e;
 			}
 			catch (Exception e) {
-				log.debugf( "Error resolving CDI bean [%s] - using fallback", beanName );
-				beanInstance = fallbackProducer.produceBeanInstance( beanName, beanType );
+				log.debugf( "Error resolving CDI bean [%s] - using fallback", getBeanName() );
+				beanInstance = beanInstanceFallback();
 
 				try {
 					if ( creationalContext != null ) {
@@ -267,28 +252,24 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 				}
 
 				creationalContext = null;
-				bean = null;
 			}
 		}
 
-		@SuppressWarnings("unchecked")
-		private Bean<B> resolveBean() {
-			final Set<Bean<?>> beans = beanManager.getBeans( beanType, new NamedBeanQualifier( beanName ) );
-			return (Bean<B>) beanManager.resolve( beans );
-		}
+		protected abstract B beanInstance();
+
+		protected abstract B beanInstanceFallback();
+
+		protected abstract String getBeanName();
+
 
 		@Override
-		public void release() {
+		public final void release() {
 			if ( beanInstance == null ) {
 				return;
 			}
 
 			try {
-				if ( bean == null ) {
-					// todo : BeanInstanceProducer#release?
-					return;
-				}
-				bean.destroy( beanInstance, creationalContext );
+				doRelease();
 			}
 			catch (Exception ignore) {
 			}
@@ -303,10 +284,10 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 
 				beanInstance = null;
 				creationalContext = null;
-				bean = null;
 				beanManager = null;
 			}
 		}
 
+		protected abstract void doRelease();
 	}
 }

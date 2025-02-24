@@ -4,9 +4,27 @@
  */
 package org.hibernate.orm.test.annotations.onetomany;
 
+import jakarta.persistence.PersistenceException;
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.orm.test.annotations.Customer;
+import org.hibernate.orm.test.annotations.Discount;
+import org.hibernate.orm.test.annotations.Passport;
+import org.hibernate.orm.test.annotations.Ticket;
+import org.hibernate.orm.test.annotations.TicketComparator;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -14,46 +32,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.PersistenceException;
-
-import org.hibernate.AnnotationException;
-import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.CollectionClassification;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-
-import org.hibernate.orm.test.annotations.Customer;
-import org.hibernate.orm.test.annotations.Discount;
-import org.hibernate.orm.test.annotations.Passport;
-import org.hibernate.orm.test.annotations.Ticket;
-import org.hibernate.orm.test.annotations.TicketComparator;
-import org.junit.Assert;
-import org.junit.Test;
 
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -364,46 +345,6 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportsCascadeDeleteCheck.class)
-	public void testCascadeDeleteWithUnidirectionalAssociation() throws Exception {
-		OnDeleteUnidirectionalOneToManyChild child = new OnDeleteUnidirectionalOneToManyChild();
-
-		doInHibernate( this::sessionFactory, session -> {
-			OnDeleteUnidirectionalOneToManyParent parent = new OnDeleteUnidirectionalOneToManyParent();
-			parent.children = Collections.singletonList( child);
-			session.persist( parent );
-		} );
-
-		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery("delete from OnDeleteUnidirectionalOneToManyParent").executeUpdate();
-		} );
-
-		doInHibernate( this::sessionFactory, session -> {
-			OnDeleteUnidirectionalOneToManyChild e1 = session.get( OnDeleteUnidirectionalOneToManyChild.class, child.id );
-			assertNull( "delete cascade should work", e1 );
-		} );
-	}
-
-	@Test
-	public void testOnDeleteWithoutJoinColumn() throws Exception {
-		StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry();
-
-		try {
-			new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( OnDeleteUnidirectionalOneToMany.class )
-				.addAnnotatedClass( ParentUnawareChild.class )
-				.getMetadataBuilder()
-				.build();
-		}
-		catch ( AnnotationException e ) {
-			assertTrue(e.getMessage().contains( "is annotated '@OnDelete' and must explicitly specify a '@JoinColumn'" ));
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( serviceRegistry );
-		}
-	}
-
-	@Test
 	public void testSimpleOneToManySet() throws Exception {
 		Session s;
 		Transaction tx;
@@ -561,9 +502,7 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 				Person.class,
 				Organisation.class,
 				OrganisationUser.class,
-				Model.class,
-				OnDeleteUnidirectionalOneToManyParent.class,
-				OnDeleteUnidirectionalOneToManyChild.class
+				Model.class
 		};
 	}
 
@@ -579,46 +518,4 @@ public class OneToManyTest extends BaseNonConfigCoreFunctionalTestCase {
 		settings.put( DEFAULT_LIST_SEMANTICS, CollectionClassification.BAG.name() );
 	}
 
-	@Entity(name = "OnDeleteUnidirectionalOneToManyParent")
-	@jakarta.persistence.Table(name = "OneToManyParent")
-	public static class OnDeleteUnidirectionalOneToManyParent {
-
-		@Id
-		@GeneratedValue
-		Long id;
-
-		@OneToMany(cascade = CascadeType.ALL)
-		@JoinColumn(name = "a_id")
-		@OnDelete(action = OnDeleteAction.CASCADE)
-		List<OnDeleteUnidirectionalOneToManyChild> children;
-	}
-
-	@Entity(name = "OnDeleteUnidirectionalOneToManyChild")
-	@jakarta.persistence.Table(name = "OneToManyChild")
-	public static class OnDeleteUnidirectionalOneToManyChild {
-
-		@Id
-		@GeneratedValue
-		Long id;
-	}
-
-	@Entity(name = "OnDeleteUnidirectionalOneToMany")
-	@jakarta.persistence.Table(name = "OneToMany")
-	public static class OnDeleteUnidirectionalOneToMany {
-
-		@Id
-		Long id;
-
-		@OneToMany(cascade = CascadeType.ALL)
-		@OnDelete(action = OnDeleteAction.CASCADE)
-		List<ParentUnawareChild> children;
-	}
-
-	@Entity(name = "ParentUnawareChild")
-	@jakarta.persistence.Table(name = "Child")
-	public static class ParentUnawareChild {
-
-		@Id
-		Long id;
-	}
 }

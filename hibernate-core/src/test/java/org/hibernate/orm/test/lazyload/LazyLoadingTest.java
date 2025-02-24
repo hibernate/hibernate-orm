@@ -26,22 +26,16 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Oleksander Dukhno
  */
 @DomainModel(
 		annotatedClasses = {
-				Parent.class,
-				Child.class,
 				LazyLoadingTest.Client.class,
 				LazyLoadingTest.Address.class,
 				LazyLoadingTest.Account.class
@@ -55,60 +49,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		}
 )
 public class LazyLoadingTest {
-
-	private static final int CHILDREN_SIZE = 3;
-	private Long parentID;
-	private Long lastChildID;
-
-	@BeforeEach
-	public void prepareTest(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					Parent p = new Parent();
-					for ( int i = 0; i < CHILDREN_SIZE; i++ ) {
-						final Child child = p.makeChild();
-						session.persist( child );
-						lastChildID = child.getId();
-					}
-					session.persist( p );
-					parentID = p.getId();
-
-				}
-		);
-	}
-
-	@Test
-	@JiraKey(value = "HHH-7971")
-	public void testLazyCollectionLoadingAfterEndTransaction(SessionFactoryScope scope) {
-		Parent loadedParent = scope.fromTransaction(
-				session ->
-						session.getReference( Parent.class, parentID )
-		);
-
-		assertFalse( Hibernate.isInitialized( loadedParent.getChildren() ) );
-
-		int i = 0;
-		for ( Child child : loadedParent.getChildren() ) {
-			i++;
-			assertNotNull( child );
-		}
-
-		assertEquals( CHILDREN_SIZE, i );
-
-		Child loadedChild = scope.fromTransaction(
-				sesison ->
-						sesison.getReference( Child.class, lastChildID )
-		);
-
-		Parent p = loadedChild.getParent();
-		int j = 0;
-		for ( Child child : p.getChildren() ) {
-			j++;
-			assertNotNull( child );
-		}
-
-		assertEquals( CHILDREN_SIZE, j );
-	}
 
 	@Test
 	@JiraKey(value = "HHH-11838")

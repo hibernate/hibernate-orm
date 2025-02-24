@@ -4156,7 +4156,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *         {@code false} (the default) indicates that locking
 	 *                      should be applied to the main SQL statement.
 	 *
-	 * @since 5.2
+	 * @since 6.0
 	 */
 	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
 		return false;

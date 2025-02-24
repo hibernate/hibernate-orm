@@ -10,6 +10,30 @@
 This guide discusses migration to Hibernate ORM version 7.0. For migration from
 earlier versions, see any other pertinent migration guides as well.
 
+[[relicense]]
+== Apache License
+
+Starting with 7.0, Hibernate ORM will be licensed under the Apache License 2.0.
+
+NOTE: While the Hibernate team still believes that our long published interpretation of LGPL
+to be compatible with ASL and similar licenses, enough FUD has been spread about it to
+be considered a lost cause in terms of inclusion in various projects. At this point,
+it just makes sense to change - it opens up wider acceptance amongst Apache/Jakarta
+projects and others.
+
+Details can be seen at https://hibernate.atlassian.net/browse/HHH-19145.
+
+As part of this effort, the Hibernate team reached out to the authors of
+"non-trivial" contributions to request permission to relicense their
+work under the Apache License.  The response was overwhelming positive, although
+we never heard back from some contributors and another explicitly disagreed.
+This required a few actions on our part:
+
+* Dropping `hibernate-envers` - see https://hibernate.atlassian.net/browse/HHH-19150
+* Dropping `hibernate-ucp` - see https://hibernate.atlassian.net/browse/HHH-19162
+* Dropping `TeradataDialect` - see https://hibernate.atlassian.net/browse/HHH-19057
+
+
 [[jpa-32]]
 == Jakarta Persistence 3.2
 
@@ -71,9 +95,6 @@ to HCANN.  Hibernate Models is essentially an abstraction over reflection (`Type
 annotations.  Check out its project page for complete details.
 
 7.0 uses Hibernate Models in place of HCANN.
-
-NOTE: Currently, the `hibernate-envers` module still uses HCANN.  That will change during continued 7.x development.
-
 
 
 [[model-validation]]
@@ -191,35 +212,6 @@ class Person {
 
 This triggers Hibernate to use the column names `home_street`, `home_city`, `work_street`, ...
 
-
-[[envers-rev-types]]
-== Hibernate Envers and custom revision entities
-
-Users that wanted to customize the `@RevisionEntity` used by Envers could do so by extending one on the four default revision entity types:
-
-[source]
-----
-org.hibernate.envers.DefaultRevisionEntity
-org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity
-org.hibernate.envers.enhanced.SequenceIdRevisionEntity
-org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntity
-----
-
-These types are annotated with `@MappedSuperclass` to enable this custom extension. When no custom revision entity was specified, though,
-the same class was mapped as an entity type by Envers internals. This caused problems when dealing with the domain metamodel and static
-metamodel aspect of these types, so we chose to create *new separate classes* annotated `@MappedSuperclass` from which revision entities,
-meaning the default ones as well as yours, *should extend from*. These types are (in the same order):
-
-[source]
-----
-org.hibernate.envers.RevisionMapping
-org.hibernate.envers.TrackingModifiedEntitiesRevisionMapping
-org.hibernate.envers.enhanced.SequenceIdRevisionMapping
-org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionMapping
-----
-
-Also, you can now write HQL queries using the simple class name of default revision entities to retrieve all revision information.
-Find out more in link:{user-guide-url}#envers-querying-revision-info[this user guide chapter].
 
 [[create-query]]
 == Queries with implicit `select` list and no explicit result type

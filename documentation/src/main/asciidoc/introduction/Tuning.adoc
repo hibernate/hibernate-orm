@@ -45,7 +45,7 @@ Perhaps it's better to set this configuration property:
 |===
 | Configuration property name | Purpose
 
-| link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#CONNECTION_PROVIDER[`hibernate.connection.provider_class`] | Explicitly specify a link:{doc-javadoc-url}/org/hibernate/engine/jdbc/connections/spi/ConnectionProvider.html[connection pool], for example, `agroal`, `hikaricp`, `c3p0`, or `oracleucp`.
+| link:{doc-javadoc-url}/org/hibernate/cfg/JdbcSettings.html#CONNECTION_PROVIDER[`hibernate.connection.provider_class`] | Explicitly specify a link:{doc-javadoc-url}/org/hibernate/engine/jdbc/connections/spi/ConnectionProvider.html[connection pool], for example, `agroal`, `hikaricp` or `c3p0`.
 |===
 
 TIP: You can set `hibernate.connection.provider_class` to `agroal` so that Hibernate fails at startup if Agroal is missing.

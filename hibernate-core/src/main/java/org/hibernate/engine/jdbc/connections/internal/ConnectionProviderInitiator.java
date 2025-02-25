@@ -72,11 +72,6 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	public static final String HIKARI_STRATEGY = "hikari";
 
 	/**
-	 * The strategy for oracle ucp connection pooling
-	 */
-	public static final String UCP_STRATEGY = "ucp";
-
-	/**
 	 * The strategy for agroal connection pooling
 	 */
 	public static final String AGROAL_STRATEGY = "agroal";
@@ -163,9 +158,6 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 		else if ( hasConfiguration( configurationValues, HIKARI_CONFIG_PREFIX ) ) {
 			return instantiateProvider( strategySelector, HIKARI_STRATEGY );
-		}
-		else if (hasConfiguration( configurationValues, "hibernate.oracleucp" ) ) {
-			return instantiateProvider( strategySelector, UCP_STRATEGY );
 		}
 		else if ( hasConfiguration( configurationValues, AGROAL_CONFIG_PREFIX ) ) {
 			return instantiateProvider( strategySelector, AGROAL_STRATEGY );

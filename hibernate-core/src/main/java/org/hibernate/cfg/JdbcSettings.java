@@ -235,7 +235,7 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * either:
 	 * <ul>
 	 *     <li>a short strategy name like {@code agroal}, {@code hikaricp},
-	 *         {@code c3p0}, or {@code ucp},
+	 *         {@code c3p0},
 	 *     <li>an instance of {@code ConnectionProvider},
 	 *     <li>a {@link Class} object representing a class that implements
 	 *         {@code ConnectionProvider}, or

@@ -657,6 +657,14 @@ public final class TypeUtils {
 				}
 			}
 		}
+		TypeMirror superclass = type.getSuperclass();
+		if ( superclass != null && superclass.getKind() == TypeKind.DECLARED  ) {
+			final DeclaredType declaredType = (DeclaredType) superclass;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			if( implementsInterface( typeElement, interfaceName) ) {
+				return true;
+			}
+		}
 		return false;
 	}
 

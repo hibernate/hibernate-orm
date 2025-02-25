@@ -81,6 +81,11 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 					final String constraintName = getConversionContext()
 							.getViolatedConstraintNameExtractor()
 							.extractConstraintName( sqlException );
+
+					if (sqlState.equals("23505")) {
+						return new ConstraintViolationException(message, sqlException, sql, ConstraintViolationException.ConstraintKind.UNIQUE, constraintName);
+					}
+
 					return new ConstraintViolationException( message, sqlException, sql, constraintName );
 				case
 					"08":	// "connection exception"

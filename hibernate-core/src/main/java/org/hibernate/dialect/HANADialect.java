@@ -73,7 +73,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.DataHelper;
 import org.hibernate.type.descriptor.java.DoubleJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
@@ -155,6 +154,8 @@ import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
+import static org.hibernate.type.descriptor.java.DataHelper.extractBytes;
+import static org.hibernate.type.descriptor.java.DataHelper.extractString;
 
 /**
  * An SQL dialect for the SAP HANA Platform and Cloud.
@@ -1503,7 +1504,7 @@ public class HANADialect extends Dialect {
 
 		@Override
 		public long position(Clob searchstr, long start) throws SQLException {
-			return this.data.indexOf( DataHelper.extractString( searchstr ), (int) ( start - 1 ) );
+			return this.data.indexOf( extractString( searchstr ), (int) ( start - 1 ) );
 		}
 
 		@Override
@@ -1539,6 +1540,47 @@ public class HANADialect extends Dialect {
 		@Override
 		public void free() throws SQLException {
 			this.data = null;
+		}
+	}
+
+	private static class BlobExtractor<X> extends BasicExtractor<X> {
+		private final int maxLobPrefetchSize;
+
+		public BlobExtractor(JavaType<X> javaType, JdbcType jdbcType, int maxLobPrefetchSize) {
+			super( javaType, jdbcType );
+			this.maxLobPrefetchSize = maxLobPrefetchSize;
+		}
+
+		private X doExtract(Blob blob, WrapperOptions options) throws SQLException {
+			final X result;
+			if ( blob == null ) {
+				result = getJavaType().wrap( null, options );
+			}
+			else if ( blob.length() < maxLobPrefetchSize ) {
+				result = getJavaType().wrap( blob, options );
+				blob.free();
+			}
+			else {
+				final MaterializedBlob materialized = new MaterializedBlob( extractBytes( blob.getBinaryStream() ) );
+				blob.free();
+				result = getJavaType().wrap( materialized, options );
+			}
+			return result;
+		}
+
+		@Override
+		protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+			return doExtract( rs.getBlob( paramIndex ), options );
+		}
+
+		@Override
+		protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+			return doExtract( statement.getBlob( index ), options );
+		}
+
+		@Override
+		protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+			return doExtract( statement.getBlob( name ), options );
 		}
 	}
 
@@ -1607,38 +1649,8 @@ public class HANADialect extends Dialect {
 
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
-			return new BasicExtractor<>( javaType, this ) {
-				private X extract(Blob blob, WrapperOptions options) throws SQLException {
-					if ( blob == null ) {
-						return null;
-					}
-					if ( blob.length() < HANAStreamBlobType.this.maxLobPrefetchSize ) {
-						X result = javaType.wrap( blob, options );
-						blob.free();
-						return result;
-					}
-					Blob materializedBlob = new MaterializedBlob( DataHelper.extractBytes( blob.getBinaryStream() ) );
-					blob.free();
-					return javaType.wrap( materializedBlob, options );
-				}
-
-				@Override
-				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					return extract( rs.getBlob( paramIndex ), options );
-				}
-
-				@Override
-				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return extract( statement.getBlob( index ), options );
-				}
-
-				@Override
-				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					return extract( statement.getBlob( name ), options );
-				}
-			};
+			return new BlobExtractor<>( javaType, this, maxLobPrefetchSize );
 		}
-
 	}
 
 	// the ClobTypeDescriptor and NClobTypeDescriptor for HANA are slightly
@@ -1710,55 +1722,39 @@ public class HANADialect extends Dialect {
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 			return new BasicExtractor<>( javaType, this ) {
-				private X extract(Clob clob, WrapperOptions options) throws SQLException {
+				private X doExtract(Clob clob, WrapperOptions options) throws SQLException {
+					final X result;
 					if ( clob == null ) {
-						return null;
+						result = getJavaType().wrap( null, options );
 					}
-
-					if ( clob.length() < HANAClobJdbcType.this.maxLobPrefetchSize ) {
-						X retVal = javaType.wrap(clob, options);
+					else if ( clob.length() < maxLobPrefetchSize ) {
+						result = getJavaType().wrap(clob, options);
 						clob.free();
-						return retVal;
 					}
-					NClob materializedNClob = new MaterializedNClob( DataHelper.extractString( clob ) );
-					clob.free();
-					return javaType.wrap( materializedNClob, options );
+					else {
+						final MaterializedNClob materialized = new MaterializedNClob( extractString( clob ) );
+						clob.free();
+						result = getJavaType().wrap( materialized, options );
+					}
+					return result;
 				}
 
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					Clob rsClob;
-					if ( HANAClobJdbcType.this.useUnicodeStringTypes ) {
-						rsClob = rs.getNClob( paramIndex );
-					}
-					else {
-						rsClob = rs.getClob( paramIndex );
-					}
-					return extract( rsClob, options );
+					final Clob clob = useUnicodeStringTypes ? rs.getNClob( paramIndex ) : rs.getClob( paramIndex );
+					return doExtract( clob, options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					Clob rsClob;
-					if ( HANAClobJdbcType.this.useUnicodeStringTypes ) {
-						rsClob = statement.getNClob( index );
-					}
-					else {
-						rsClob = statement.getClob( index );
-					}
-					return extract( rsClob, options );
+					final Clob clob = useUnicodeStringTypes ? statement.getNClob( index ) : statement.getClob( index );
+					return doExtract( clob, options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					Clob rsClob;
-					if ( HANAClobJdbcType.this.useUnicodeStringTypes ) {
-						rsClob = statement.getNClob( name );
-					}
-					else {
-						rsClob = statement.getClob( name );
-					}
-					return extract( rsClob, options );
+					final Clob clob = useUnicodeStringTypes ? statement.getNClob( name ) : statement.getClob( name );
+					return doExtract( clob, options );
 				}
 			};
 		}
@@ -1832,32 +1828,36 @@ public class HANADialect extends Dialect {
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 			return new BasicExtractor<>( javaType, this ) {
-				private X extract(NClob nclob, WrapperOptions options) throws SQLException {
+				private X doExtract(NClob nclob, WrapperOptions options) throws SQLException {
+					final X result;
 					if ( nclob == null ) {
-						return null;
+						result = getJavaType().wrap( null, options );
 					}
-					if ( nclob.length() < maxLobPrefetchSize ) {
-						X retVal = javaType.wrap(nclob, options);
+					else if ( nclob.length() < maxLobPrefetchSize ) {
+						result = javaType.wrap(nclob, options);
 						nclob.free();
-						return retVal;
 					}
-					NClob materializedNClob = new MaterializedNClob( DataHelper.extractString( nclob ) );
-					nclob.free();
-					return javaType.wrap( materializedNClob, options );
+					else {
+						final MaterializedNClob materialized = new MaterializedNClob( extractString( nclob ) );
+						nclob.free();
+						result = getJavaType().wrap( materialized, options );
+					}
+					return result;
 				}
+
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					return extract( rs.getNClob( paramIndex ), options );
+					return doExtract( rs.getNClob( paramIndex ), options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return extract( statement.getNClob( index ), options );
+					return doExtract( statement.getNClob( index ), options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					return extract( statement.getNClob( name ), options );
+					return doExtract( statement.getNClob( name ), options );
 				}
 			};
 		}
@@ -1898,35 +1898,7 @@ public class HANADialect extends Dialect {
 
 		@Override
 		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
-			return new BasicExtractor<>( javaType, this ) {
-				private X extract(Blob blob, WrapperOptions options) throws SQLException {
-					if ( blob == null ) {
-						return null;
-					}
-					if ( blob.length() < maxLobPrefetchSize ) {
-						X retVal = javaType.wrap(blob, options);
-						blob.free();
-						return retVal;
-					}
-					Blob materializedBlob = new MaterializedBlob( DataHelper.extractBytes( blob.getBinaryStream() ) );
-					blob.free();
-					return javaType.wrap( materializedBlob, options );
-				}
-				@Override
-				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					return extract( rs.getBlob( paramIndex ) , options );
-				}
-
-				@Override
-				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return extract( statement.getBlob( index ), options );
-				}
-
-				@Override
-				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					return extract( statement.getBlob( name ), options );
-				}
-			};
+			return new BlobExtractor<>( javaType, this, maxLobPrefetchSize );
 		}
 
 		@Override

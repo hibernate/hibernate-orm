@@ -32,11 +32,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.function.Consumer;
 
 import static java.util.Collections.unmodifiableMap;
-import static java.util.Comparator.comparing;
 
 /**
  * Acts as the {@link EntityDomainType} for a "polymorphic query" grouping.
@@ -56,8 +54,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 			JpaMetamodel jpaMetamodel) {
 		this.polymorphicJavaType = polymorphicJavaType;
 		this.jpaMetamodel = jpaMetamodel;
-		this.implementors = new TreeSet<>( comparing(EntityDomainType::getTypeName) );
-		this.implementors.addAll( implementors );
+		this.implementors = implementors;
 		this.commonAttributes = unmodifiableMap( inferCommonAttributes( implementors ) );
 	}
 
@@ -120,8 +117,8 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 		return true;
 	}
 
-	public Set<EntityDomainType<? extends T>> getImplementors() {
-		return implementors;
+	public Set<EntityDomainType<?>> getImplementors() {
+		return new HashSet<>( implementors );
 	}
 
 	@Override

@@ -40,7 +40,6 @@ import java.util.function.Supplier;
 /**
  * DeleteHandler for the in-line strategy
  *
- * @author Evandro Pires da Silva
  * @author Vlad Mihalcea
  * @author Steve Ebersole
  */

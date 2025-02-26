@@ -302,27 +302,31 @@ public final class Hibernate {
 
 	/**
 	 * Determines if the given attribute of the given entity instance is initialized.
+	 * This operation returns {@code true} if the field or property references an
+	 * unfetched collection or proxy.
 	 *
 	 * @param entity The entity instance or proxy
 	 * @param attribute A persistent attribute of the entity
 	 * @return true if the named property of the object is not listed as uninitialized;
 	 *         false otherwise
 	 */
-	public <E> boolean isPropertyInitialized(E entity, Attribute<? super E, ?> attribute) {
+	public static <E> boolean isPropertyInitialized(E entity, Attribute<? super E, ?> attribute) {
 		return isPropertyInitialized( entity, attribute.getName() );
 	}
 
 	/**
-	 * Determines if the property with the given name of the given entity instance is
-	 * initialized. If the named property does not exist or is not persistent, this
-	 * method always returns {@code true}.
-	 * <p>
-	 * This operation is equivalent to {@link jakarta.persistence.PersistenceUtil#isLoaded(Object, String)}.
+	 * Determines if the field or property with the given name of the given entity
+	 * instance is initialized. If the named property does not exist or is not
+	 * persistent, this method always returns {@code true}. This operation returns
+	 * {@code true} if the field or property references an unfetched collection or
+	 * proxy.
 	 *
 	 * @param proxy The entity instance or proxy
 	 * @param attributeName the name of a persistent attribute of the object
 	 * @return true if the named property of the object is not listed as uninitialized;
 	 *         false otherwise
+	 *
+	 * @see jakarta.persistence.PersistenceUtil#isLoaded(Object, String)
 	 */
 	public static boolean isPropertyInitialized(Object proxy, String attributeName) {
 		final Object entity;
@@ -348,12 +352,25 @@ public final class Hibernate {
 	}
 
 	/**
-	 * Initializes the property with the given name of the given entity instance.
-	 * <p>
-	 * This operation is equivalent to {@link jakarta.persistence.PersistenceUnitUtil#load(Object, String)}.
+	 * Initializes the given attribute of the given entity instance. This operation
+	 * does not fetch a collection or proxy referenced by the field or property.
+	 *
+	 * @param entity The entity instance or proxy
+	 * @param attribute A persistent attribute of the entity
+	 */
+	public static <E> void initializeProperty(E entity, Attribute<? super E, ?> attribute) {
+		initializeProperty( entity, attribute.getName() );
+	}
+
+	/**
+	 * Initializes the field or property with the given name of the given entity
+	 * instance. This operation does not fetch a collection or proxy referenced
+	 * by the field or property.
 	 *
 	 * @param proxy The entity instance or proxy
 	 * @param attributeName the name of a persistent attribute of the object
+	 *
+	 * @see jakarta.persistence.PersistenceUnitUtil#load(Object, String)
 	 */
 	public static void initializeProperty(Object proxy, String attributeName) {
 		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );

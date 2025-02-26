@@ -34,6 +34,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.CoreMessageLogger;
@@ -115,7 +116,7 @@ class TypeSafeActivator {
 	public static void applyCallbackListeners(ValidatorFactory validatorFactory, ActivationContext context) {
 		if ( isValidationEnabled( context ) ) {
 			disableNullabilityChecking( context );
-			setupListener( validatorFactory, context.getServiceRegistry() );
+			setupListener( validatorFactory, context.getServiceRegistry(), context.getSessionFactory() );
 		}
 	}
 
@@ -141,7 +142,7 @@ class TypeSafeActivator {
 				.getSettings().get( CHECK_NULLABILITY ) == null;
 	}
 
-	private static void setupListener(ValidatorFactory validatorFactory, SessionFactoryServiceRegistry serviceRegistry) {
+	private static void setupListener(ValidatorFactory validatorFactory, SessionFactoryServiceRegistry serviceRegistry, SessionFactoryImplementor sessionFactory) {
 		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
 		final BeanValidationEventListener listener =
@@ -153,7 +154,7 @@ class TypeSafeActivator {
 		listenerRegistry.appendListeners( EventType.PRE_DELETE, listener );
 		listenerRegistry.appendListeners( EventType.PRE_UPSERT, listener );
 		listenerRegistry.appendListeners( EventType.PRE_COLLECTION_UPDATE, listener );
-		listener.initialize( cfgService.getSettings(), classLoaderService );
+		sessionFactory.addObserver( listener );
 	}
 
 	private static boolean isConstraintBasedValidationEnabled(ActivationContext context) {

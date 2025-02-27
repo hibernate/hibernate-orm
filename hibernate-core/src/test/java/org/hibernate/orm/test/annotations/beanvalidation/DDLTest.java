@@ -4,18 +4,23 @@
  */
 package org.hibernate.orm.test.annotations.beanvalidation;
 
-import java.util.Map;
-
+import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test verifying that DDL constraints get applied when Bean Validation / Hibernate Validator are enabled.
@@ -23,121 +28,136 @@ import static org.junit.Assert.assertTrue;
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-public class DDLTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Test
-	public void testBasicDDL() {
-		PersistentClass classMapping = metadata().getEntityBinding( Address.class.getName() );
-		Column stateColumn = classMapping.getProperty( "state" ).getColumns().get(0);
-		assertEquals( stateColumn.getLength(), (Long) 3L );
-		Column zipColumn = classMapping.getProperty( "zip" ).getColumns().get(0);
-		assertEquals( zipColumn.getLength(), (Long) 5L );
-		assertFalse( zipColumn.isNullable() );
+@ServiceRegistry(settings = {
+		@Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "DDL"),
+		@Setting(name = PersistentTableStrategy.DROP_ID_TABLES, value = "true"),
+		@Setting(name = GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, value = "true"),
+		@Setting(name = LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, value = "true")
+})
+@DomainModel(annotatedClasses = {
+		Address.class,
+		Tv.class,
+		TvOwner.class,
+		Rock.class
+})
+@SessionFactory
+class DDLTest {
+
+	@BeforeAll
+	static void beforeAll(SessionFactoryScope scope) {
+		// we want to get the SF built before we inspect the boot metamodel,
+		// if we don't -- the integrators won't get applied, and hence DDL validation mode will not be applied either:
+		scope.getSessionFactory();
 	}
 
 	@Test
-	public void testNotNullDDL() {
-		PersistentClass classMapping = metadata().getEntityBinding( Address.class.getName() );
-		Column stateColumn = classMapping.getProperty( "state" ).getColumns().get(0);
-		assertFalse("Validator annotations are applied on state as it is @NotNull", stateColumn.isNullable());
+	void testBasicDDL(SessionFactoryScope scope) {
+		PersistentClass classMapping = scope.getMetadataImplementor().getEntityBinding( Address.class.getName() );
+		Column stateColumn = classMapping.getProperty( "state" ).getColumns().get( 0 );
+		assertThat( stateColumn.getLength() ).isEqualTo( 3L );
+		Column zipColumn = classMapping.getProperty( "zip" ).getColumns().get( 0 );
+		assertThat( zipColumn.getLength() ).isEqualTo( 5L );
+		assertThat( zipColumn.isNullable() ).isFalse();
+	}
 
-		Column line1Column = classMapping.getProperty( "line1" ).getColumns().get(0);
-		assertFalse("Validator annotations are applied on line1 as it is @NotEmpty", line1Column.isNullable());
+	@Test
+	void testNotNullDDL(SessionFactoryScope scope) {
+		PersistentClass classMapping = scope.getMetadataImplementor().getEntityBinding( Address.class.getName() );
+		Column stateColumn = classMapping.getProperty( "state" ).getColumns().get( 0 );
+		assertThat( stateColumn.isNullable() )
+				.as( "Validator annotations are applied on state as it is @NotNull" )
+				.isFalse();
 
-		Column line2Column = classMapping.getProperty( "line2" ).getColumns().get(0);
-		assertFalse("Validator annotations are applied on line2 as it is @NotBlank", line2Column.isNullable());
+		Column line1Column = classMapping.getProperty( "line1" ).getColumns().get( 0 );
+		assertThat( line1Column.isNullable() )
+				.as( "Validator annotations are applied on line1 as it is @NotEmpty" )
+				.isFalse();
 
-		Column line3Column = classMapping.getProperty( "line3" ).getColumns().get(0);
-		assertTrue(
-				"Validator composition of type OR should result in line3 being nullable",
-				line3Column.isNullable());
+		Column line2Column = classMapping.getProperty( "line2" ).getColumns().get( 0 );
+		assertThat( line2Column.isNullable() )
+				.as( "Validator annotations are applied on line2 as it is @NotBlank" )
+				.isFalse();
 
-		Column line4Column = classMapping.getProperty( "line4" ).getColumns().get(0);
-		assertFalse(
-				"Validator composition of type OR should result in line4 being not-null",
-				line4Column.isNullable());
+		Column line3Column = classMapping.getProperty( "line3" ).getColumns().get( 0 );
+		assertThat( line3Column.isNullable() )
+				.as( "Validator composition of type OR should result in line3 being nullable" )
+				.isTrue();
 
-		Column line5Column = classMapping.getProperty( "line5" ).getColumns().get(0);
-		assertFalse(
-				"Validator composition of type AND should result in line5 being not-null",
-				line5Column.isNullable());
+		Column line4Column = classMapping.getProperty( "line4" ).getColumns().get( 0 );
+		assertThat( line4Column.isNullable() )
+				.as( "Validator composition of type OR should result in line4 being not-null" )
+				.isFalse();
 
-		Column line6Column = classMapping.getProperty( "line6" ).getColumns().get(0);
-		assertFalse(
-				"Validator composition of type AND should result in line6 being not-null",
-				line6Column.isNullable());
+		Column line5Column = classMapping.getProperty( "line5" ).getColumns().get( 0 );
+		assertThat( line5Column.isNullable() )
+				.as( "Validator composition of type AND should result in line5 being not-null" )
+				.isFalse();
 
-		Column line7Column = classMapping.getProperty( "line7" ).getColumns().get(0);
-		assertTrue(
-				"Validator composition of type OR should result in line7 being nullable",
-				line7Column.isNullable());
+		Column line6Column = classMapping.getProperty( "line6" ).getColumns().get( 0 );
+		assertThat( line6Column.isNullable() )
+				.as( "Validator composition of type AND should result in line6 being not-null" )
+				.isFalse();
+
+		Column line7Column = classMapping.getProperty( "line7" ).getColumns().get( 0 );
+		assertThat( line7Column.isNullable() )
+				.as( "Validator composition of type OR should result in line7 being nullable" )
+				.isTrue();
 
 		Column line8Column = classMapping.getProperty( "line8" ).getColumns().get( 0 );
-		assertFalse(
-				"Validator should result in line8 being not-null",
-				line8Column.isNullable());
+		assertThat( line8Column.isNullable() )
+				.as( "Validator should result in line8 being not-null" )
+				.isFalse();
 
 		Column line9Column = classMapping.getProperty( "line9" ).getColumns().get( 0 );
-		assertTrue(
-				"Validator should result in line9 being nullable",
-				line9Column.isNullable());
+		assertThat( line9Column.isNullable() ).as( "Validator should result in line9 being nullable" )
+				.isTrue();
 	}
 
 	@Test
-	public void testApplyOnIdColumn() {
-		PersistentClass classMapping = metadata().getEntityBinding( Tv.class.getName() );
-		Column serialColumn = classMapping.getIdentifierProperty().getColumns().get(0);
-		assertEquals( "Validator annotation not applied on ids", (Long) 2L, serialColumn.getLength() );
+	void testApplyOnIdColumn(SessionFactoryScope scope) {
+		PersistentClass classMapping = scope.getMetadataImplementor().getEntityBinding( Tv.class.getName() );
+		Column serialColumn = classMapping.getIdentifierProperty().getColumns().get( 0 );
+		assertThat( serialColumn.getLength() ).as( "Validator annotation not applied on ids" ).isEqualTo( 2L );
 	}
 
 	@Test
-	public void testLengthConstraint() {
-		PersistentClass classMapping = metadata().getEntityBinding( Tv.class.getName() );
-		Column modelColumn = classMapping.getProperty( "model" ).getColumns().get(0);
-		assertEquals( modelColumn.getLength(), (Long) 5L );
+	void testLengthConstraint(SessionFactoryScope scope) {
+		PersistentClass classMapping = scope.getMetadataImplementor().getEntityBinding( Tv.class.getName() );
+		Column modelColumn = classMapping.getProperty( "model" ).getColumns().get( 0 );
+		assertThat( modelColumn.getLength() ).isEqualTo( 5L );
 	}
 
 	@Test
-	public void testApplyOnManyToOne() {
-		PersistentClass classMapping = metadata().getEntityBinding( TvOwner.class.getName() );
-		Column serialColumn = classMapping.getProperty( "tv" ).getColumns().get(0);
-		assertEquals( "Validator annotations not applied on associations", false, serialColumn.isNullable() );
+	void testApplyOnManyToOne(SessionFactoryScope scope) {
+		PersistentClass classMapping = scope.getMetadataImplementor().getEntityBinding( TvOwner.class.getName() );
+		Column serialColumn = classMapping.getProperty( "tv" ).getColumns().get( 0 );
+		assertThat( serialColumn.isNullable() )
+				.as( "Validator annotations not applied on associations" )
+				.isFalse();
 	}
 
 	@Test
-	public void testSingleTableAvoidNotNull() {
-		PersistentClass classMapping = metadata().getEntityBinding( Rock.class.getName() );
-		Column serialColumn = classMapping.getProperty( "bit" ).getColumns().get(0);
-		assertTrue( "Notnull should not be applied on single tables", serialColumn.isNullable() );
+	void testSingleTableAvoidNotNull(SessionFactoryScope scope) {
+		PersistentClass classMapping = scope.getMetadataImplementor().getEntityBinding( Rock.class.getName() );
+		Column serialColumn = classMapping.getProperty( "bit" ).getColumns().get( 0 );
+		assertThat( serialColumn.isNullable() )
+				.as( "Notnull should not be applied on single tables" )
+				.isTrue();
 	}
 
 	@Test
-	public void testNotNullOnlyAppliedIfEmbeddedIsNotNullItself() {
-		PersistentClass classMapping = metadata().getEntityBinding( Tv.class.getName() );
+	void testNotNullOnlyAppliedIfEmbeddedIsNotNullItself(SessionFactoryScope scope) {
+		PersistentClass classMapping = scope.getMetadataImplementor().getEntityBinding( Tv.class.getName() );
 		Property property = classMapping.getProperty( "tuner.frequency" );
-		Column serialColumn = property.getColumns().get(0);
-		assertEquals(
-				"Validator annotations are applied on tuner as it is @NotNull", false, serialColumn.isNullable()
-		);
+		Column serialColumn = property.getColumns().get( 0 );
+		assertThat( serialColumn.isNullable() )
+				.as( "Validator annotations are applied on tuner as it is @NotNull" )
+				.isFalse();
 
 		property = classMapping.getProperty( "recorder.time" );
-		serialColumn = property.getColumns().get(0);
-		assertEquals(
-				"Validator annotations are applied on tuner as it is @NotNull", true, serialColumn.isNullable()
-		);
-	}
-
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		settings.put( "jakarta.persistence.validation.mode", "ddl" );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Address.class,
-				Tv.class,
-				TvOwner.class,
-				Rock.class
-		};
+		serialColumn = property.getColumns().get( 0 );
+		assertThat( serialColumn.isNullable() )
+				.as( "Validator annotations are applied on tuner as it is @NotNull" )
+				.isTrue();
 	}
 }

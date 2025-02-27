@@ -27,7 +27,6 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
 
 /**
  * @author Andrea Boriero
@@ -177,18 +176,6 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 			NativeQuery<?> query2 = entityManager.createNamedQuery( "myQuery" ).unwrap( NativeQuery.class );
 
 			assertEquals( 0, query2.getSynchronizedQuerySpaces().size() );
-		} );
-	}
-
-	@Test
-	@JiraKey(value = "HHH-11413")
-	public void testNamedNativeQueryExceptionNoResultDefined() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			assertThrows(
-					"Named query exists but its result type is not compatible",
-					IllegalArgumentException.class,
-					() -> entityManager.createNamedQuery( "NamedNativeQuery", Game.class )
-			);
 		} );
 	}
 

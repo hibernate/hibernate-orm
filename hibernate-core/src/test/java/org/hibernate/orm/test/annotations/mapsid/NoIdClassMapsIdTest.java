@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToMany;
+import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -82,6 +83,7 @@ public class NoIdClassMapsIdTest {
 
 
 	@Entity(name = "Extension")
+	@Exclude
 	static class Extension {
 		@Id
 		private Long exLoanId;

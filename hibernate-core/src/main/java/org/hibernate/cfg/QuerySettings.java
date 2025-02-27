@@ -254,6 +254,8 @@ public interface QuerySettings {
 	 * <p>
 	 * By default, the query plan cache is enabled. It is also enabled if the configuration
 	 * property {@value #QUERY_PLAN_CACHE_MAX_SIZE} is set.
+	 *
+	 * @settingDefault {@code true} (enabled) - query plan cache is enabled.
 	 */
 	String QUERY_PLAN_CACHE_ENABLED = "hibernate.query.plan_cache_enabled";
 

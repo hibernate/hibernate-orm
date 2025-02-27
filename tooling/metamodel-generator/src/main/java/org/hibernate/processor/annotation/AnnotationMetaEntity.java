@@ -66,6 +66,7 @@ import jakarta.persistence.AccessType;
 import static java.beans.Introspector.decapitalize;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
@@ -487,6 +488,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( components.size() < 2 ) {
 			return;
 		}
+		components.sort( comparing( MetaAttribute::getPropertyName ) );
 		putMember( ID_CLASS_MEMBER_NAME, new IdClassMetaAttribute( this, components ) );
 	}
 

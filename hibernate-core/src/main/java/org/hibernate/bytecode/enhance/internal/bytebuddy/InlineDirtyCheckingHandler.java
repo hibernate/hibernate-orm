@@ -78,8 +78,9 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 			}
 
 			if ( enhancementContext.isCompositeField( persistentField )
-					// Don't do composite owner tracking for records
-					&& !persistentField.getType().isRecord() ) {
+				&& !persistentField.hasAnnotation( EmbeddedId.class )
+				// Don't do composite owner tracking for records
+				&& !persistentField.getType().isRecord() ) {
 
 				// HHH-13759 - Call getter on superclass if field is not visible
 				// An embedded field won't be visible if declared private in a superclass

@@ -651,6 +651,13 @@ In Hibernate 7, these SQL `UPDATE` statements only occur if the `@OrderColumn` i
 
 
 
+[[validator-integration-auto]]
+=== ValidationMode#AUTO
+
+Starting in 7.0, when `ValidationMode#AUTO` is specified and a Bean Validation provider is available but creating the `ValidatorFactory` results in an exception, that exception is now propagated (re-thrown).
+
+
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in DDL

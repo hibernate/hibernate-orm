@@ -8370,6 +8370,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							}
 							else {
 								tableGroup = compatibleTableGroup;
+
+								if ( joinProducer instanceof PluralAttributeMapping attributeMapping ) {
+									if ( attributeMapping.getOrderByFragment() != null ) {
+										applyOrdering( tableGroup, attributeMapping.getOrderByFragment() );
+									}
+									if ( attributeMapping.getManyToManyOrderByFragment() != null ) {
+										applyOrdering( tableGroup, attributeMapping.getManyToManyOrderByFragment() );
+									}
+								}
 							}
 
 							// and return the joined group

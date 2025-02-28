@@ -92,14 +92,14 @@ public class OneToOneLazyOrphanRemovalEmbeddedTest {
 		@OneToOne(orphanRemoval = true, fetch = FetchType.LAZY)
 		private ChildEntity child;
 
-		private Integer count;
+		private Integer countValue;
 
 		public ToOneContainer() {
 		}
 
-		public ToOneContainer(ChildEntity child, Integer count) {
+		public ToOneContainer(ChildEntity child, Integer countValue) {
 			this.child = child;
-			this.count = count;
+			this.countValue = countValue;
 		}
 
 		public ChildEntity getChild() {

@@ -338,7 +338,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	private static final Pattern ESCAPE_CLOSING_COMMENT_PATTERN = Pattern.compile( "\\*/" );
 	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
 	private static final Pattern QUERY_PATTERN = Pattern.compile(
-		"^\\s*(select\\b.+?\\bfrom\\b.+?)(\\b(?:natural )?(?:left |right |full )?(?:inner |outer |cross )?join.+?\\b)?(\\bwhere\\b.+?)$",
+		"^\\s*(select\\s.+?\\sfrom\\s.+?)(\\s(?:(?:natural)?\\s*(?:left|right|full)?\\s*(?:inner|outer|cross)?\\s*join|straight_join)\\s.+?)?(\\swhere\\s.+?)?(\\sorder\\s+by\\s.+?)?$",
 			Pattern.CASE_INSENSITIVE);
 
 	//needed for converting precision from decimal to binary digits
@@ -5242,14 +5242,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public static String addUseIndexQueryHint(String query, String hints) {
 		final Matcher matcher = QUERY_PATTERN.matcher( query );
 		if ( matcher.matches() && matcher.groupCount() > 1 ) {
-			final String startToken = matcher.group(1);
-			// Null if there is no join in the query
-			final String joinToken = matcher.group(2);
-			final String endToken = matcher.group(3);
-			return startToken
-					+ " use index (" + hints + ") "
-					+ ( joinToken == null ? "" : joinToken )
-					+ endToken;
+			final String startToken = matcher.group( 1 );
+			return startToken + " use index (" + hints + ")" + query.substring( startToken.length() );
 		}
 		else {
 			return query;

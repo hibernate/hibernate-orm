@@ -39,6 +39,14 @@ class DialectTest {
 		builder.add(Arguments.of("Left join query with on : hint",
 			"select COUNT(*) from TEST t1_0  use index (MY_INDEX) left join TEST2 t2_0 on t1_0.column2 = t2_0.column2 and t1_0.column3 = t2_0.column3 where field = 'value'",
 			leftJoinQuery, hints));
+		final String straightJoinQueryUsing = "select COUNT(*) from TEST t1_0 straight_join TEST2 t2_0 using(column2) where field = 'value'";
+		builder.add(Arguments.of("Straight join query with using : hint",
+				"select COUNT(*) from TEST t1_0  use index (MY_INDEX) straight_join TEST2 t2_0 using(column2) where field = 'value'",
+				straightJoinQueryUsing, hints));
+		final String straightJoinQueryOn = "select COUNT(*) from TEST t1_0 straight_join TEST2 t2_0 on t1_0.column2 = t2_0.column2 where field = 'value'";
+		builder.add(Arguments.of("Straight join query with on : hint",
+				"select COUNT(*) from TEST t1_0  use index (MY_INDEX) straight_join TEST2 t2_0 on t1_0.column2 = t2_0.column2 where field = 'value'",
+				straightJoinQueryOn, hints));
 
 		return builder.build();
 	}

@@ -998,13 +998,11 @@ public class EmbeddableBinder {
 			final ComponentPropertyHolder componentPropertyHolder = (ComponentPropertyHolder) propertyHolder;
 			component.setParentAggregateColumn( componentPropertyHolder.getAggregateColumn() );
 		}
-		else {
-			applyColumnNamingPattern( component, propertyHolder, inferredData, context );
-		}
+		applyColumnNamingPattern( component, inferredData );
 		return component;
 	}
 
-	private static void applyColumnNamingPattern(Component component, PropertyHolder propertyHolder, PropertyData inferredData, MetadataBuildingContext context) {
+	private static void applyColumnNamingPattern(Component component, PropertyData inferredData) {
 		final Class<?> componentClass = component.getComponentClass();
 		if ( componentClass == null || Map.class.equals( componentClass ) ) {
 			// dynamic models

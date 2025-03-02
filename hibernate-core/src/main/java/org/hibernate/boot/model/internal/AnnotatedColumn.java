@@ -351,14 +351,9 @@ public class AnnotatedColumn {
 				final String inferredColumnName = inferColumnName( propertyName );
 				String realColumnName = inferredColumnName;
 				if ( parent.getPropertyHolder().isComponent() ) {
-					// find the pattern if there is one, e.g. `home_%s`
-					final String columnNamingPattern = findColumnNamingPattern( (ComponentPropertyHolder) parent.getPropertyHolder() );
-					if ( columnNamingPattern != null ) {
-						// apply the pattern - `home_city`
-						realColumnName = String.format( columnNamingPattern, inferredColumnName );
-						// we need to adjust the logical name to be picked up in `#addColumnBinding`
-						logicalColumnName = realColumnName;
-					}
+					realColumnName = applyEmbeddedColumnNaming( realColumnName, (ComponentPropertyHolder) parent.getPropertyHolder() );
+					// we need to adjust the logical name to be picked up in `#addColumnBinding`
+					logicalColumnName = realColumnName;
 				}
 				mappingColumn.setName( realColumnName );
 			}
@@ -366,10 +361,14 @@ public class AnnotatedColumn {
 		}
 	}
 
-	private String findColumnNamingPattern(ComponentPropertyHolder propertyHolder) {
+	private String applyEmbeddedColumnNaming(String inferredColumnName, ComponentPropertyHolder propertyHolder) {
+		// code
+		String result = inferredColumnName;
+
 		final String columnNamingPattern = propertyHolder.getComponent().getColumnNamingPattern();
 		if ( StringHelper.isNotEmpty( columnNamingPattern ) ) {
-			return columnNamingPattern;
+			// zip_code
+			result = String.format( columnNamingPattern, result );
 		}
 
 		ComponentPropertyHolder tester = propertyHolder;
@@ -377,12 +376,13 @@ public class AnnotatedColumn {
 			final ComponentPropertyHolder parentHolder = (ComponentPropertyHolder) tester.parent;
 			final String parentColumnNamingPattern = parentHolder.getComponent().getColumnNamingPattern();
 			if ( StringHelper.isNotEmpty( parentColumnNamingPattern ) ) {
-				return parentColumnNamingPattern;
+				// 	home_zip_code
+				result = String.format( parentColumnNamingPattern, result );
 			}
 			tester = parentHolder;
 		}
 
-		return null;
+		return result;
 	}
 
 	private String processColumnName(String columnName, boolean applyNamingStrategy) {

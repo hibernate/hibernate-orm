@@ -71,7 +71,7 @@ public class EmbeddedColumnNamingTests {
 		verifyColumnNames( persister.findAttributeMapping( "homeAddress" ), "home_" );
 	}
 
-	private void verifyColumnNames(AttributeMapping embeddedMapping, String prefix) {
+	public static void verifyColumnNames(AttributeMapping embeddedMapping, String prefix) {
 		embeddedMapping.forEachSelectable( (selectionIndex, selectableMapping) -> {
 			assertThat( selectableMapping.getSelectionExpression() ).startsWith( prefix );
 		} );

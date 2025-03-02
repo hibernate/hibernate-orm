@@ -22,6 +22,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.DiscriminatorFormula;
+import org.hibernate.annotations.EmbeddedColumnNaming;
 import org.hibernate.annotations.Instantiator;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.binder.TypeBinder;
@@ -31,6 +32,8 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MutableInteger;
+import org.hibernate.internal.util.NullnessHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
@@ -996,7 +999,45 @@ public class EmbeddableBinder {
 			final ComponentPropertyHolder componentPropertyHolder = (ComponentPropertyHolder) propertyHolder;
 			component.setParentAggregateColumn( componentPropertyHolder.getAggregateColumn() );
 		}
+		applyColumnNamingPattern( component, inferredData );
 		return component;
+	}
+
+	private static void applyColumnNamingPattern(Component component, PropertyData inferredData) {
+		final Class<?> componentClass = component.getComponentClass();
+		if ( componentClass == null || Map.class.equals( componentClass ) ) {
+			// dynamic models
+			return;
+		}
+
+		if ( inferredData.getAttributeMember() == null ) {
+			// generally indicates parts of a plural mapping (element, key, bag-id)
+			return;
+		}
+
+		final EmbeddedColumnNaming columnNaming = inferredData.getAttributeMember().getDirectAnnotationUsage( EmbeddedColumnNaming.class );
+		if ( columnNaming == null ) {
+			return;
+		}
+
+		final String columnNamingPattern = NullnessHelper.coalesce(
+				columnNaming.value(),
+				inferredData.getPropertyName() + "_%s"
+		);
+
+		final int markerCount = StringHelper.count( columnNamingPattern, '%' );
+		if ( markerCount != 1 ) {
+			throw new MappingException( String.format(
+					Locale.ROOT,
+					"@EmbeddedColumnNaming expects pattern with exactly 1 format maker, but found %s - `%s` (%s#%s)",
+					markerCount,
+					columnNamingPattern,
+					inferredData.getAttributeMember().getDeclaringType().getName(),
+					inferredData.getAttributeMember().getName()
+			) );
+		}
+
+		component.setColumnNamingPattern( columnNamingPattern );
 	}
 
 	private static Constructor<?> resolveInstantiator(TypeDetails embeddableClass) {

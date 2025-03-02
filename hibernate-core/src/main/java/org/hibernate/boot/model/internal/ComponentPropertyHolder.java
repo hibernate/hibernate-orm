@@ -97,6 +97,13 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	/**
+	 * Access to the underlying component
+	 */
+	public Component getComponent() {
+		return component;
+	}
+
+	/**
 	 * This is called from our constructor and handles (in order):<ol>
 	 *     <li>@Convert annotation at the Embeddable class level</li>
 	 *     <li>@Converts annotation at the Embeddable class level</li>

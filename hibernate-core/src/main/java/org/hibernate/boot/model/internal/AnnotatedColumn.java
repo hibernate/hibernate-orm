@@ -347,10 +347,42 @@ public class AnnotatedColumn {
 		}
 		else {
 			if ( propertyName != null && applyNamingStrategy ) {
-				mappingColumn.setName( inferColumnName( propertyName ) );
+				// the inferred name would be, e.g., `city`
+				final String inferredColumnName = inferColumnName( propertyName );
+				String realColumnName = inferredColumnName;
+				if ( parent.getPropertyHolder().isComponent() ) {
+					// find the pattern if there is one, e.g. `home_%s`
+					final String columnNamingPattern = findColumnNamingPattern( (ComponentPropertyHolder) parent.getPropertyHolder() );
+					if ( columnNamingPattern != null ) {
+						// apply the pattern - `home_city`
+						realColumnName = String.format( columnNamingPattern, inferredColumnName );
+						// we need to adjust the logical name to be picked up in `#addColumnBinding`
+						logicalColumnName = realColumnName;
+					}
+				}
+				mappingColumn.setName( realColumnName );
 			}
 			//Do nothing otherwise
 		}
+	}
+
+	private String findColumnNamingPattern(ComponentPropertyHolder propertyHolder) {
+		final String columnNamingPattern = propertyHolder.getComponent().getColumnNamingPattern();
+		if ( StringHelper.isNotEmpty( columnNamingPattern ) ) {
+			return columnNamingPattern;
+		}
+
+		ComponentPropertyHolder tester = propertyHolder;
+		while ( tester.parent.isComponent() ) {
+			final ComponentPropertyHolder parentHolder = (ComponentPropertyHolder) tester.parent;
+			final String parentColumnNamingPattern = parentHolder.getComponent().getColumnNamingPattern();
+			if ( StringHelper.isNotEmpty( parentColumnNamingPattern ) ) {
+				return parentColumnNamingPattern;
+			}
+			tester = parentHolder;
+		}
+
+		return null;
 	}
 
 	private String processColumnName(String columnName, boolean applyNamingStrategy) {

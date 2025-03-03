@@ -94,7 +94,7 @@ spotless {
     //Don't fail during the check: rather than enforcing guidelines, we use this plugin to fix mistakes automatically.
     enforceCheck false
     java {
-        targetExclude( "**/target/**/*.java" )
+        targetExclude( "target/**/*.java" )
         licenseHeaderFile rootProject.file("shared/config/spotless/license.java")
         removeUnusedImports()
         leadingSpacesToTabs( 4 )

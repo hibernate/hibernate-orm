@@ -21,8 +21,6 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.bytecode.internal.SessionFactoryObserverForBytecodeEnhancer;
-import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.SessionFactoryImpl;
@@ -65,10 +63,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 			}
 		}
 
-		final BytecodeProvider bytecodeProvider =
-				metadata.getMetadataBuildingOptions().getServiceRegistry()
-						.getService( BytecodeProvider.class );
-		addSessionFactoryObservers( new SessionFactoryObserverForBytecodeEnhancer( bytecodeProvider ) );
+		// Don't clear the state anymore, since the cache is not static anymore since HHH-16058 was fixed
+//		final BytecodeProvider bytecodeProvider =
+//				metadata.getMetadataBuildingOptions().getServiceRegistry()
+//						.getService( BytecodeProvider.class );
+//		addSessionFactoryObservers( new SessionFactoryObserverForBytecodeEnhancer( bytecodeProvider ) );
 		addSessionFactoryObservers( new SessionFactoryObserverForNamedQueryValidation( metadata ) );
 		addSessionFactoryObservers( new SessionFactoryObserverForSchemaExport( metadata ) );
 		addSessionFactoryObservers( new SessionFactoryObserverForRegistration() );

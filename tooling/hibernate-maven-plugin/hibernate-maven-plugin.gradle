@@ -6,6 +6,7 @@
 plugins {
     id "local.java-module"
     id "local.publishing"
+    id "local.code-quality"
     id "org.gradlex.maven-plugin-development" version "1.0.3"
 }
 

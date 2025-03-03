@@ -8,6 +8,7 @@ plugins {
 	id 'java-gradle-plugin'
 	id "local.module"
 	id "local.javadoc"
+	id "local.code-quality"
 
 	id 'com.gradle.plugin-publish' version '1.2.1'
 	// for local publishing

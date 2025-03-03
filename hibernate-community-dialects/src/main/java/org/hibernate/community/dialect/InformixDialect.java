@@ -35,6 +35,7 @@ import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
@@ -691,6 +692,11 @@ public class InformixDialect extends Dialect {
 	@Override
 	public String[] getDropSchemaCommand(String schemaName) {
 		return new String[] { "" };
+	}
+
+	@Override
+	public NameQualifierSupport getNameQualifierSupport() {
+		return NameQualifierSupport.BOTH;
 	}
 
 	@Override

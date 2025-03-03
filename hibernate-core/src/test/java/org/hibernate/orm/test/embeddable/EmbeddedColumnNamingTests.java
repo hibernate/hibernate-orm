@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.naming;
+package org.hibernate.orm.test.embeddable;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.EmbeddedColumnNaming;
@@ -264,5 +264,22 @@ public class EmbeddedColumnNamingTests {
 		@Embedded
 		@EmbeddedColumnNaming("work_%s")
 		private Address workAddress;
+	}
+
+	@Embeddable
+	public static class PhoneNumber {
+		private String countryCode;
+		private String areaCode;
+		private String prefix;
+		private String lineNumber;
+	}
+
+	@Entity(name="Company")
+	@Table(name="companies")
+	public static class Company {
+		@Id
+		private Integer id;
+		private String name;
+
 	}
 }

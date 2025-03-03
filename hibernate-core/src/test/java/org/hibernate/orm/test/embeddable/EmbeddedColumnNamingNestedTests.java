@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.naming;
+package org.hibernate.orm.test.embeddable;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -20,13 +20,13 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.orm.test.naming.EmbeddedColumnNamingTests.verifyColumnNames;
+import static org.hibernate.orm.test.embeddable.EmbeddedColumnNamingTests.verifyColumnNames;
 
 /**
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-public class NestedEmbeddableNamingTests {
+public class EmbeddedColumnNamingNestedTests {
 
 	/**
 	 * Test use of {@code @EmbeddedColumnNaming} one 2 separate embedded attributes

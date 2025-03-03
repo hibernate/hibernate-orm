@@ -15,8 +15,6 @@ import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.proxy.ProxyConfiguration;
 
-import net.bytebuddy.NamingStrategy;
-import net.bytebuddy.TypeCache;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 
@@ -40,13 +38,12 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 		}
 
 		final Class<?> superClassOrMainInterface = superClass != null ? superClass : interfaceClass;
-		final TypeCache.SimpleKey cacheKey = new TypeCache.SimpleKey( superClassOrMainInterface );
+		final ByteBuddyState.ProxyDefinitionHelpers helpers = byteBuddyState.getProxyDefinitionHelpers();
+		final String proxyClassName = superClassOrMainInterface.getName() + "$" + PROXY_NAMING_SUFFIX;
 
-		ByteBuddyState.ProxyDefinitionHelpers helpers = byteBuddyState.getProxyDefinitionHelpers();
-
-		this.proxyClass = byteBuddyState.loadBasicProxy( superClassOrMainInterface, cacheKey, byteBuddy ->
+		this.proxyClass = byteBuddyState.loadBasicProxy( superClassOrMainInterface, proxyClassName, (byteBuddy, namingStrategy) ->
 				helpers.appendIgnoreAlsoAtEnd( byteBuddy
-					.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( superClassOrMainInterface.getName() ) ) )
+					.with( namingStrategy )
 					.subclass( superClass == null ? Object.class : superClass, ConstructorStrategy.Default.DEFAULT_CONSTRUCTOR )
 					.implement( interfaceClass == null ? NO_INTERFACES : new Class[]{ interfaceClass } )
 					.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )

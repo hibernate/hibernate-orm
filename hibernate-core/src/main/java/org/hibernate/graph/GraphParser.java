@@ -9,17 +9,21 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Subgraph;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.graph.internal.parse.GraphParsing;
 import org.hibernate.graph.spi.GraphImplementor;
-import org.hibernate.graph.spi.RootGraphImplementor;
 
 /**
- * Parser for string representations of JPA {@link jakarta.persistence.EntityGraph}
- * ({@link RootGraph}) and {@link jakarta.persistence.Subgraph} ({@link SubGraph}),
- * using a simple syntax defined by the {@code graph.g} ANTLR grammar. For example:
- * <pre>employees(username, password, accessLevel, department(employees(username)))</pre>
- * <p>
+ * Parser for string representations of {@linkplain RootGraph entity graphs}.
+ * The syntax is<pre>
+ *     graph:: (rootEntityName COLON)? attributeList
+ *     attributeList:: attributeNode (COMMA attributeNode)*
+ *     attributeNode:: attributePath subGraph?
+ *     subGraph:: LPAREN (subTypeEntityName COLON)? attributeList RPAREN
+ * </pre>
+ * <p/>
  * The {@link #parse} methods all create a root {@link jakarta.persistence.EntityGraph}
  * based on the passed entity class and parse the graph string into that root graph.
  * <p>
@@ -38,11 +42,100 @@ public final class GraphParser {
 	// Parse (creation)
 
 	/**
+	 * Creates a root graph based on the passed {@code rootEntityClass} and parses
+	 * {@code graphText} into the generated root graph.
+	 *
+	 * @param rootEntityClass The entity class to use as the graph root
+	 * @param graphText The textual representation of the graph
+	 * @param sessionFactory The SessionFactory
+	 *
+	 * @throws InvalidGraphException if the textual representation is invalid.
+	 *
+	 * @apiNote The string representation is expected to just be an attribute list, without
+	 * the entity-type prefix.  E.g. {@code "title, isbn, author(name, books)"}
+	 *
+	 * @see org.hibernate.SessionFactory#parseEntityGraph(Class, CharSequence)
+	 *
+	 * @since 7.0
+	 */
+	public static <T> RootGraph<T> parse(
+			final Class<T> rootEntityClass,
+			final CharSequence graphText,
+			final SessionFactory sessionFactory) {
+		if ( graphText == null ) {
+			return null;
+		}
+		return GraphParsing.parse(
+				rootEntityClass,
+				graphText.toString(),
+				sessionFactory.unwrap( SessionFactoryImplementor.class )
+		);
+	}
+
+	/**
+	 * Creates a root graph based on the passed {@code rootEntityName} and parses
+	 * {@code graphText} into the generated root graph.
+	 *
+	 * @param rootEntityName The name of the entity to use as the graph root
+	 * @param graphText The textual representation of the graph
+	 * @param sessionFactory The SessionFactory
+	 *
+	 * @throws InvalidGraphException if the textual representation is invalid.
+	 *
+	 * @apiNote The string representation is expected to just be an attribute list, without
+	 * the entity-type prefix.  E.g. {@code "title, isbn, author(name, books)"}
+	 *
+	 * @see org.hibernate.SessionFactory#parseEntityGraph(Class, CharSequence)
+	 *
+	 * @since 7.0
+	 */
+	public static <T> RootGraph<T> parse(
+			final String rootEntityName,
+			final CharSequence graphText,
+			final SessionFactory sessionFactory) {
+		if ( graphText == null ) {
+			return null;
+		}
+		return GraphParsing.parse(
+				rootEntityName,
+				graphText.toString(),
+				sessionFactory.unwrap( SessionFactoryImplementor.class )
+		);
+	}
+
+	/**
+	 * Creates a root graph based on the passed {@code graphText}.  The format of this
+	 * text is the root name with a colon, followed by an attribute list.
+	 * E.g. {@code "Book: title, isbn, author(name, books)"}.
+	 *
+	 * @param graphText The textual representation of the graph
+	 * @param sessionFactory The SessionFactory
+	 *
+	 * @throws InvalidGraphException if the textual representation is invalid.
+	 *
+	 * @see org.hibernate.SessionFactory#parseEntityGraph(Class, CharSequence)
+	 *
+	 * @since 7.0
+	 */
+		public static <T> RootGraph<T> parse(
+				final CharSequence graphText,
+				final SessionFactory sessionFactory) {
+			if ( graphText == null ) {
+				return null;
+			}
+			return GraphParsing.parse(
+					graphText.toString(),
+					sessionFactory.unwrap( SessionFactoryImplementor.class )
+		);
+	}
+
+	/**
 	 * Creates a root graph based on the passed `rootType` and parses `graphText` into
 	 * the generated root graph
 	 *
 	 * @apiNote The passed EntityManager is expected to be a Hibernate implementation.
-	 * Attempting to pass another provider's EntityManager implementation will fail
+	 * Attempting to pass another provider's EntityManager implementation will fail.
+	 * @implNote Simply delegates to {@linkplain #parse(Class, CharSequence, SessionFactory)}
 	 *
 	 * @param rootType The root entity type
 	 * @param graphText The textual representation of the graph
@@ -54,20 +147,14 @@ public final class GraphParser {
 			final Class<T> rootType,
 			final CharSequence graphText,
 			final EntityManager entityManager) {
-		return parse( rootType, graphText, (SessionImplementor) entityManager );
-	}
-
-	private static <T> RootGraphImplementor<T> parse(
-			final Class<T> rootType,
-			final CharSequence graphText,
-			final SessionImplementor session) {
 		if ( graphText == null ) {
 			return null;
 		}
-
-		final RootGraphImplementor<T> graph = session.createEntityGraph( rootType );
-		parseInto( (GraphImplementor<T>) graph, graphText, session.getSessionFactory() );
-		return graph;
+		return GraphParsing.parse(
+				rootType,
+				graphText.toString(),
+				entityManager.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class )
+		);
 	}
 
 
@@ -216,7 +303,7 @@ public final class GraphParser {
 			final CharSequence graphText,
 			SessionFactoryImplementor sessionFactory) {
 		if ( graphText != null ) {
-			org.hibernate.graph.internal.parse.GraphParser.parseInto( graph, graphText, sessionFactory );
+			GraphParsing.parseInto( graph, graphText, sessionFactory );
 		}
 	}
 

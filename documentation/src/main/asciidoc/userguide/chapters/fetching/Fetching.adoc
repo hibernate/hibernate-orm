@@ -285,7 +285,8 @@ the subtype Class.
 Hibernate allows the creation of Jakarta Persistence fetch/load graphs by parsing a textual representation
 of the graph.  Generally speaking, the textual representation of a graph is a comma-separated
 list of attribute names, optionally including any subgraph specifications.
-`org.hibernate.graph.GraphParser` is the starting point for such parsing operations.
+The starting point for such parsing operations is either `org.hibernate.graph.GraphParser`
+or `SessionFactory#parseEntityGraph`
 
 [NOTE]
 ====
@@ -366,6 +367,28 @@ the previous example can also be built by combining separate aspect graphs into 
 [source, java, indent=0]
 ----
 include::{example-dir-fetching}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-merging-example]
+----
+====
+
+
+[[fetching-strategies-dynamic-fetching-entity-graph-parsing-annotation]]
+==== @NamedEntityGraph with text representation
+
+Hibernate also offers a `@org.hibernate.annotations.NamedEntityGraph` annotation, as a corollary
+to the `@jakarta.persistence.NamedEntityGraph`, supporting the text representation
+<<fetching-strategies-dynamic-fetching-entity-graph-parsing,discussed previously>>.  The annotation
+may be placed on an entity or on a package.
+
+
+.@NamedEntityGraph example
+====
+[source, java, indent=0]
+----
+@Entity
+@NamedEntityGraph( graph="title,isbn,author(name,phoneNumber)" )
+class Book {
+	// ...
+}
 ----
 ====
 

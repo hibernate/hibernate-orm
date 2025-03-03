@@ -34,6 +34,28 @@ earlier versions, see any other pertinent migration guides as well.
 See this https://in.relation.to/2024/04/01/jakarta-persistence-3/[blog post] for a good discussion of the changes in Jakarta Persistence 3.2.
 
 
+[[NamedEntityGraph]]
+== @NamedEntityGraph
+
+A new annotation (`@org.hibernate.annotations.NamedEntityGraph`) has been added to allow
+specifying a named entity-graph using Hibernate's ability to parse a string representation of the graph.
+
+
+[source,java]
+----
+@Entity
+@NamedEntityGraph( graph="title, isbn, author( name, phoneNumber )" )
+class Book {
+	// ...
+}
+----
+
+
+See `org.hibernate.graph.GraphParser` for details on the syntax and the
+link:{user-guide-url}#fetching-strategies-dynamic-fetching-entity-graph-parsing-annotation[user guide] for additional details.
+
+
+
 [[hibernate-models]]
 == Hibernate Models
 

@@ -1,0 +1,75 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.boot.model;
+
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.hibernate.UnknownEntityTypeException;
+import org.hibernate.annotations.NamedEntityGraph;
+import org.hibernate.grammars.graph.GraphLanguageLexer;
+import org.hibernate.grammars.graph.GraphLanguageParser;
+import org.hibernate.graph.InvalidGraphException;
+import org.hibernate.graph.internal.parse.EntityNameResolver;
+import org.hibernate.graph.internal.parse.GraphParsing;
+import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+
+import java.util.function.Function;
+
+/**
+ * @author Steve Ebersole
+ */
+public class NamedGraphCreatorParsed implements NamedGraphCreator {
+	private final Class<?> entityType;
+	private final NamedEntityGraph annotation;
+
+	public NamedGraphCreatorParsed(NamedEntityGraph annotation) {
+		this( null, annotation );
+	}
+
+	public NamedGraphCreatorParsed(Class<?> entityType, NamedEntityGraph annotation) {
+		this.entityType = entityType;
+		this.annotation = annotation;
+	}
+
+	@Override
+	public <T> RootGraphImplementor<T> createEntityGraph(
+			Function<Class<T>, EntityDomainType<?>> entityDomainClassResolver,
+			Function<String, EntityDomainType<?>> entityDomainNameResolver) {
+		final GraphLanguageLexer lexer = new GraphLanguageLexer( CharStreams.fromString( annotation.graph() ) );
+		final GraphLanguageParser parser = new GraphLanguageParser( new CommonTokenStream( lexer ) );
+		final GraphLanguageParser.GraphContext graphContext = parser.graph();
+
+		final EntityNameResolver entityNameResolver = new EntityNameResolver() {
+			@Override
+			public <T> EntityDomainType<T> resolveEntityName(String entityName) {
+				//noinspection unchecked
+				final EntityDomainType<T> entityDomainType = (EntityDomainType<T>) entityDomainNameResolver.apply( entityName );
+				if ( entityDomainType != null ) {
+					return entityDomainType;
+				}
+				throw new UnknownEntityTypeException( entityName );
+			}
+		};
+
+		if ( entityType == null ) {
+			if ( graphContext.typeIndicator() == null ) {
+				throw new InvalidGraphException( "Expecting graph text to include an entity name : " + annotation.graph() );
+			}
+			final String jpaEntityName = graphContext.typeIndicator().TYPE_NAME().toString();
+			//noinspection unchecked
+			final EntityDomainType<T> entityDomainType = (EntityDomainType<T>) entityDomainNameResolver.apply( jpaEntityName );
+			return GraphParsing.parse( entityDomainType, graphContext.attributeList(), entityNameResolver );
+		}
+		else {
+			if ( graphContext.typeIndicator() != null ) {
+				throw new InvalidGraphException( "Expecting graph text to not include an entity name : " + annotation.graph() );
+			}
+			//noinspection unchecked
+			final EntityDomainType<T> entityDomainType = (EntityDomainType<T>) entityDomainClassResolver.apply( (Class<T>) entityType );
+			return GraphParsing.parse( entityDomainType, graphContext.attributeList(), entityNameResolver );
+		}
+	}
+}

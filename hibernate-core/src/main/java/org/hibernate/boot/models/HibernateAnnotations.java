@@ -420,6 +420,15 @@ public interface HibernateAnnotations {
 			Mutability.class,
 			MutabilityAnnotation.class
 	);
+	OrmAnnotationDescriptor<NamedEntityGraphs, NamedEntityGraphsAnnotation> NAMED_ENTITY_GRAPHS = new OrmAnnotationDescriptor<>(
+			NamedEntityGraphs.class,
+			NamedEntityGraphsAnnotation.class
+	);
+	OrmAnnotationDescriptor<NamedEntityGraph, NamedEntityGraphAnnotation> NAMED_ENTITY_GRAPH = new OrmAnnotationDescriptor<>(
+			NamedEntityGraph.class,
+			NamedEntityGraphAnnotation.class,
+			NAMED_ENTITY_GRAPHS
+	);
 	OrmAnnotationDescriptor<NamedNativeQueries, NamedNativeQueriesAnnotation> NAMED_NATIVE_QUERIES = new OrmAnnotationDescriptor<>(
 			NamedNativeQueries.class,
 			NamedNativeQueriesAnnotation.class

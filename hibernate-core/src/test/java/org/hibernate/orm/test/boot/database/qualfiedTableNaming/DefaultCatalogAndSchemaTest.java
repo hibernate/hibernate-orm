@@ -34,6 +34,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -309,12 +310,17 @@ public class DefaultCatalogAndSchemaTest {
 
 	@Test
 	@SkipForDialect(value = SQLServerDialect.class,
-			comment = "SQL Server and Sybase support catalogs but their implementation of DatabaseMetaData"
+			comment = "SQL Server support catalogs but their implementation of DatabaseMetaData"
 					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
 					+ " which results in nasty errors when generating an update script"
 					+ " and some catalogs don't exist.")
 	@SkipForDialect(value = SybaseDialect.class,
-			comment = "SQL Server and Sybase support catalogs but their implementation of DatabaseMetaData"
+			comment = "Sybase support catalogs but their implementation of DatabaseMetaData"
+					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
+					+ " which results in nasty errors when generating an update script"
+					+ " and some catalogs don't exist.")
+	@SkipForDialect(value = InformixDialect.class,
+			comment = "Informix support catalogs but their implementation of DatabaseMetaData"
 					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
 					+ " which results in nasty errors when generating an update script"
 					+ " and some catalogs don't exist.")
@@ -772,8 +778,8 @@ public class DefaultCatalogAndSchemaTest {
 		}
 
 		private String patternStringForQualifier() {
-			return ( catalog != null ? Pattern.quote( catalog + "." ) : "" )
-					+ ( schema != null ? Pattern.quote( schema + "." ) : "" );
+			return ( catalog != null ? Pattern.quote( catalog ) + "." : "" )
+					+ ( schema != null ? Pattern.quote( schema ) + "." : "" );
 		}
 	}
 

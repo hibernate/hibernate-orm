@@ -5,6 +5,7 @@
 package org.hibernate.boot.model;
 
 import jakarta.persistence.NamedEntityGraph;
+import org.hibernate.mapping.PersistentClass;
 
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
@@ -14,34 +15,64 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
  * @author Steve Ebersole
  */
 public class NamedEntityGraphDefinition {
-	private final NamedEntityGraph annotation;
-	private final String jpaEntityName;
-	private final String entityName;
+	public enum Source { JPA, PARSED }
+
 	private final String name;
 
-	public NamedEntityGraphDefinition(NamedEntityGraph annotation, String jpaEntityName, String entityName) {
-		this.annotation = annotation;
-		this.jpaEntityName = jpaEntityName;
-		this.entityName = entityName;
+	private final String entityName;
+
+	private final Source source;
+	private final NamedGraphCreator graphCreator;
+
+	public NamedEntityGraphDefinition(jakarta.persistence.NamedEntityGraph annotation, String jpaEntityName, String entityName) {
 		this.name = isNotEmpty( annotation.name() ) ? annotation.name() : jpaEntityName;
 		if ( name == null ) {
 			throw new IllegalArgumentException( "Named entity graph name cannot be null" );
 		}
+
+		this.entityName = entityName;
+
+		source = Source.JPA;
+		graphCreator = new NamedGraphCreatorJpa( annotation, jpaEntityName );
+	}
+
+	public NamedEntityGraphDefinition(org.hibernate.annotations.NamedEntityGraph annotation, PersistentClass persistentClass) {
+		this.name = isNotEmpty( annotation.name() ) ? annotation.name() : persistentClass.getJpaEntityName();
+		if ( name == null ) {
+			throw new IllegalArgumentException( "Named entity graph name cannot be null" );
+		}
+
+		this.entityName = persistentClass.getEntityName();
+
+		source = Source.PARSED;
+		graphCreator = new NamedGraphCreatorParsed( persistentClass.getMappedClass(), annotation );
+	}
+
+	public NamedEntityGraphDefinition(org.hibernate.annotations.NamedEntityGraph annotation) {
+		this.name = annotation.name();
+		if ( name == null ) {
+			throw new IllegalArgumentException( "Named entity graph name cannot be null" );
+		}
+
+		this.entityName = null;
+
+		source = Source.PARSED;
+		graphCreator = new NamedGraphCreatorParsed( annotation );
 	}
 
 	public String getRegisteredName() {
 		return name;
 	}
 
-	public String getJpaEntityName() {
-		return jpaEntityName;
-	}
-
 	public String getEntityName() {
 		return entityName;
 	}
 
-	public NamedEntityGraph getAnnotation() {
-		return annotation;
+	public Source getSource() {
+		return source;
+	}
+
+	public NamedGraphCreator getGraphCreator() {
+		return graphCreator;
 	}
 }

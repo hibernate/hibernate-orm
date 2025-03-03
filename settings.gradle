@@ -321,8 +321,6 @@ include 'hibernate-integrationtest-java-modules'
 include 'documentation'
 include 'release'
 
-include 'annotation-descriptor-generator'
-
 // Not all JDK implementations support JFR
 if ( "OpenJDK Runtime Environment".equals( System.getProperty( "java.runtime.name" ) ) ) {
     include 'hibernate-jfr'

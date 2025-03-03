@@ -43,8 +43,6 @@ dependencies {
     compileOnly libs.jacksonXml
     compileOnly jdbcLibs.postgresql
 
-    compileOnly project( ":annotation-descriptor-generator" )
-
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')
     testImplementation project(':hibernate-scan-jandex')

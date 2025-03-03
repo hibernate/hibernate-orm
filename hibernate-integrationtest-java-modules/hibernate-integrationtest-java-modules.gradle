@@ -5,6 +5,7 @@
 
 plugins {
 	id "local.java-module"
+	id "local.code-quality"
 }
 
 description = 'Integration tests for running Hibernate ORM in the Java module path'

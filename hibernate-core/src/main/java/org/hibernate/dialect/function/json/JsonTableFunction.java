@@ -248,6 +248,12 @@ public class JsonTableFunction extends AbstractSqmSelfRenderingSetReturningFunct
 			sqlAppender.appendSql( " path " );
 			sqlAppender.appendSingleQuoteEscapedString( jsonPath );
 		}
+		else {
+			// Always append implicit path to avoid identifier case sensitivity issues
+			sqlAppender.appendSql( " path '$." );
+			sqlAppender.appendSql( name );
+			sqlAppender.appendSql( '\'' );
+		}
 	}
 
 	protected void renderJsonQueryColumnDefinition(SqlAppender sqlAppender, JsonTableQueryColumnDefinition definition, int clauseLevel, SqlAstTranslator<?> walker) {

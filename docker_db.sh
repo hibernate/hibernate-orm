@@ -16,7 +16,7 @@ else
 fi
 
 mysql() {
-  mysql_8_2
+  mysql_9_2
 }
 
 mysql_8_0() {
@@ -70,6 +70,30 @@ mysql_8_1() {
 mysql_8_2() {
     $CONTAINER_CLI rm -f mysql || true
     $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MYSQL_8_2:-docker.io/mysql:8.2.0} --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1 --lower_case_table_names=2
+    # Give the container some time to start
+    OUTPUT=
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
+        { OUTPUT="$( { $CONTAINER_CLI logs mysql; } 2>&1 1>&3 3>&- )"; } 3>&1;
+        if [[ $OUTPUT == *"ready for connections"* ]]; then
+          break;
+        fi
+        n=$((n+1))
+        echo "Waiting for MySQL to start..."
+        sleep 3
+    done
+    if [ "$n" -ge 5 ]; then
+      echo "MySQL failed to start and configure after 15 seconds"
+    else
+      echo "MySQL successfully started"
+    fi
+}
+
+mysql_9_2() {
+    $CONTAINER_CLI rm -f mysql || true
+    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MYSQL_9_2:-docker.io/mysql:9.2.0} --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --init-connect="SET character_set_client= 'utf8mb4';SET character_set_results = 'utf8mb4'; SET character_set_connection= 'utf8mb4'; SET collation_connection = 'utf8mb4_0900_as_cs';" --log-bin-trust-function-creators=1 --lower_case_table_names=2
     # Give the container some time to start
     OUTPUT=
     n=0
@@ -1049,6 +1073,7 @@ if [ -z ${1} ]; then
     echo -e "\tmssql_2022"
     echo -e "\tmssql_2017"
     echo -e "\tmysql"
+    echo -e "\tmysql_9_2"
     echo -e "\tmysql_8_2"
     echo -e "\tmysql_8_1"
     echo -e "\tmysql_8_0"

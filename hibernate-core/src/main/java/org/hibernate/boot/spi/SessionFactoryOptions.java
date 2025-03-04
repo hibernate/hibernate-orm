@@ -24,6 +24,7 @@ import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.xsd.XmlValidationMode;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -641,4 +642,12 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * Default session properties
 	 */
 	Map<String, Object> getDefaultSessionProperties();
+
+	/**
+	 * @see org.hibernate.cfg.MappingSettings#XML_VALIDATION_MODE
+	 */
+	default XmlValidationMode getXmlValidationMode() {
+		return XmlValidationMode.DISABLED;
+	}
+
 }

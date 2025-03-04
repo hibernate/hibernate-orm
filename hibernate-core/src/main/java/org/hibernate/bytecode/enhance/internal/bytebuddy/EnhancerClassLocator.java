@@ -33,4 +33,6 @@ public interface EnhancerClassLocator extends TypePool {
 	 * @return the underlying {@link ClassFileLocator}
 	 */
 	ClassFileLocator asClassFileLocator();
+
+	void reset();
 }

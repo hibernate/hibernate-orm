@@ -164,6 +164,11 @@ public class EnhancerImpl implements Enhancer {
 		}
 	}
 
+	@Override
+	public void clear() {
+		typePool.reset();
+	}
+
 	private DynamicType.Builder<?> doEnhance(Supplier<DynamicType.Builder<?>> builderSupplier, TypeDescription managedCtClass) {
 		// skip if the class was already enhanced. This is very common in WildFly as classloading is highly concurrent.
 		// We need to ensure that no class is instrumented multiple times as that might result in incorrect bytecode.

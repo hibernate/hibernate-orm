@@ -538,6 +538,17 @@ Also, a key subgraph now always refers to a `Map` key, and never to an entity id
 
 We encourage migration to the use of the new JPA-standard operations.
 
+[[validator-integration-validation-mode]]
+== Behaviour change for `ValidationMode.AUTO`
+
+Hibernate ORM will not silently ignore issues with the `ValidatorFactory` configuration anymore when an auto validation mode is chosen.
+In the past, with `ValidationMode.AUTO` enabled, Hibernate ORM would translate the validation mode to `ValidationMode.NONE`,
+either when there were no providers available or when a provider was available,
+but creating an instance of the validator factory resulted in an exception.
+From now on, `ValidationMode.AUTO` will only be translated to `ValidationMode.NONE` when there are no validation providers available,
+and in the case when the validation provider is available and an exception is encountered while creating an instance of the `ValidatorFactory`
+this exception will be propagated to the user.
+
 == Deprecations
 
 * `@Comment` is deprecated in favor of the JPA 3.2 `comment` members

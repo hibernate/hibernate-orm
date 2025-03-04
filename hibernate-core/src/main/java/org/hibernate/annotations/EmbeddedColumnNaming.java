@@ -4,6 +4,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.Incubating;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -18,10 +20,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@code @Embedded @EmbeddedColumnNaming("home_%s)}, we will get columns named
  * {@code home_street}, {@code home_city}, etc.
  *
+ * @since 7.0
  * @author Steve Ebersole
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
+@Incubating
 public @interface EmbeddedColumnNaming {
 	/**
 	 * The naming pattern.  It is expected to contain a single pattern marker ({@code %})

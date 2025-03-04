@@ -3320,13 +3320,6 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * json_value() function
-	 */
-	public void jsonValue() {
-		functionRegistry.register( "json_value", new JsonValueFunction( typeConfiguration, true, true ) );
-	}
-
-	/**
 	 * HANA json_value() function
 	 */
 	public void jsonValue_no_passing() {
@@ -3350,8 +3343,8 @@ public class CommonFunctionFactory {
 	/**
 	 * PostgreSQL json_value() function
 	 */
-	public void jsonValue_postgresql() {
-		functionRegistry.register( "json_value", new PostgreSQLJsonValueFunction( typeConfiguration ) );
+	public void jsonValue_postgresql(boolean supportsStandard) {
+		functionRegistry.register( "json_value", new PostgreSQLJsonValueFunction( supportsStandard, typeConfiguration ) );
 	}
 
 	/**
@@ -4232,8 +4225,8 @@ public class CommonFunctionFactory {
 	/**
 	 * PostgreSQL unnest() function
 	 */
-	public void unnest_postgresql() {
-		functionRegistry.register( "unnest", new PostgreSQLUnnestFunction() );
+	public void unnest_postgresql(boolean supportsJsonTable) {
+		functionRegistry.register( "unnest", new PostgreSQLUnnestFunction( supportsJsonTable ) );
 	}
 
 	/**

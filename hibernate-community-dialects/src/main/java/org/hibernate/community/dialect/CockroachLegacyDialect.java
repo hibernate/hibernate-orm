@@ -519,7 +519,7 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.jsonArrayAppend_postgresql( false );
 		functionFactory.jsonArrayInsert_postgresql();
 
-		functionFactory.unnest_postgresql();
+		functionFactory.unnest_postgresql( false );
 		functionFactory.generateSeries( null, "ordinality", true );
 		functionFactory.jsonTable_cockroachdb();
 

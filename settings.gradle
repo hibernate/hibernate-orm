@@ -82,7 +82,7 @@ dependencyResolutionManagement {
             def jandexVersion = version "jandex", "3.2.3"
             def jacksonVersion = version "jackson", "2.18.2"
             def jbossLoggingVersion = version "jbossLogging", "3.6.1.Final"
-            def jbossLoggingToolVersion = version "jbossLoggingTool", "3.0.3.Final"
+            def jbossLoggingToolVersion = version "jbossLoggingTool", "3.0.4.Final"
 
             def agroalVersion = version "agroal", "2.5"
             def c3poVersion = version "c3p0", "0.10.1"

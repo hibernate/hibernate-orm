@@ -13,6 +13,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
@@ -31,7 +32,10 @@ import org.hibernate.service.ServiceRegistry;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 
-@Mojo(name = "hbm2orm", defaultPhase = GENERATE_RESOURCES)
+@Mojo(
+	name = "hbm2orm", 
+	defaultPhase = GENERATE_RESOURCES,
+	requiresDependencyResolution = ResolutionScope.RUNTIME)
 public class TransformHbmMojo extends AbstractMojo {
 	
     @Parameter(defaultValue = "${project.basedir}/src/main/resources")

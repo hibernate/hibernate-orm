@@ -21,6 +21,7 @@ package org.hibernate.tool.maven;
 
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.export.ExporterFactory;
@@ -36,7 +37,10 @@ import static org.apache.maven.plugins.annotations.LifecyclePhase.GENERATE_SOURC
  * <p>
  * See: https://docs.jboss.org/tools/latest/en/hibernatetools/html_single/#d0e4821
  */
-@Mojo(name = "hbm2dao", defaultPhase = GENERATE_SOURCES)
+@Mojo(
+	name = "hbm2dao", 
+	defaultPhase = GENERATE_SOURCES,
+	requiresDependencyResolution = ResolutionScope.RUNTIME)
 public class GenerateDaoMojo extends AbstractGenerationMojo {
 
     /** The directory into which the DAOs will be generated. */

@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -117,6 +118,8 @@ public final class Cascade {
 						hasUninitializedLazyProperties
 								&& !persister.getBytecodeEnhancementMetadata()
 										.isAttributeLoaded( parent, propertyName );
+				final boolean isCascadeDeleteEnabled =
+						persister.getEntityMetamodel().getPropertyOnDeleteActions()[i] == OnDeleteAction.CASCADE;
 
 				if ( style.doCascade( action ) ) {
 					final Object child;
@@ -178,7 +181,7 @@ public final class Cascade {
 							style,
 							propertyName,
 							anything,
-							false
+							isCascadeDeleteEnabled
 					);
 				}
 				else {
@@ -193,7 +196,7 @@ public final class Cascade {
 								type,
 								style,
 								propertyName,
-								false
+								isCascadeDeleteEnabled
 						);
 					}
 				}

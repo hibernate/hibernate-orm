@@ -340,7 +340,7 @@ public class CascadingActions {
 				Void context,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			if ( child != null && isChildTransient( session, child, entityName ) ) {
+			if ( child != null && isChildTransient( session, child, entityName, isCascadeDeleteEnabled ) ) {
 				throw new TransientObjectException( "Persistent instance references an unsaved transient instance of '"
 						+ entityName + "' (save the transient instance before flushing)" );
 				//TODO: should be TransientPropertyValueException
@@ -387,7 +387,7 @@ public class CascadingActions {
 		}
 	};
 
-	private static boolean isChildTransient(EventSource session, Object child, String entityName) {
+	private static boolean isChildTransient(EventSource session, Object child, String entityName, boolean isCascadeDeleteEnabled) {
 		if ( isHibernateProxy( child ) ) {
 			// a proxy is always non-transient
 			// and ForeignKeys.isTransient()
@@ -402,7 +402,11 @@ public class CascadingActions {
 				// we are good, even if it's not yet
 				// inserted, since ordering problems
 				// are detected and handled elsewhere
-				return entry.getStatus().isDeletedOrGone();
+				return entry.getStatus().isDeletedOrGone()
+					// if the foreign key is 'on delete cascade'
+					// we don't have to throw because the database
+					// will delete the parent for us
+					&& !isCascadeDeleteEnabled;
 			}
 			else {
 				// TODO: check if it is a merged entity which has not yet been flushed

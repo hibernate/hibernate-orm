@@ -143,7 +143,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A {@linkplain Dialect SQL dialect} for PostgreSQL 12 and above.
+ * A {@linkplain Dialect SQL dialect} for PostgreSQL 13 and above.
  * <p>
  * Please refer to the
  * <a href="https://www.postgresql.org/docs/current/index.html">PostgreSQL documentation</a>.
@@ -151,7 +151,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * @author Gavin King
  */
 public class PostgreSQLDialect extends Dialect {
-	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 12 );
+	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 13 );
 
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 	private final StandardTableExporter postgresqlTableExporter = new StandardTableExporter( this ) {
@@ -645,11 +645,9 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.jsonRemove_postgresql();
 		functionFactory.jsonReplace_postgresql();
 		functionFactory.jsonInsert_postgresql();
-		if ( getVersion().isSameOrAfter( 13 ) ) {
-			// Requires support for WITH clause in subquery which only 13+ provides
-			functionFactory.jsonMergepatch_postgresql();
-		}
-		functionFactory.jsonArrayAppend_postgresql( getVersion().isSameOrAfter( 13 ) );
+		// Requires support for WITH clause in subquery which only 13+ provides
+		functionFactory.jsonMergepatch_postgresql();
+		functionFactory.jsonArrayAppend_postgresql( true );
 		functionFactory.jsonArrayInsert_postgresql();
 
 		functionFactory.xmlelement();
@@ -1404,7 +1402,7 @@ public class PostgreSQLDialect extends Dialect {
 		return switch (type) {
 			case ROWS_ONLY -> true;
 			case PERCENT_ONLY, PERCENT_WITH_TIES -> false;
-			case ROWS_WITH_TIES -> getVersion().isSameOrAfter(13);
+			case ROWS_WITH_TIES -> true;
 		};
 	}
 

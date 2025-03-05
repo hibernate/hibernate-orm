@@ -265,6 +265,15 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	 * factory-level} JDBC batch size controlled by the configuration property
 	 * {@value org.hibernate.cfg.AvailableSettings#STATEMENT_BATCH_SIZE}.
 	 *
+	 * @apiNote Setting a session-level JDBC batch size for a
+	 * {@link StatelessSession} triggers a sort of write-behind behaviour
+	 * where operations are batched and executed asynchronously, undermining
+	 * the semantics of the stateless programming model. We recommend the use
+	 * of explicitly-batching operations like
+	 * {@link StatelessSession#insertMultiple insertMultiple()},
+	 * {@link StatelessSession#updateMultiple updateMultiple()}, and
+	 * {@link StatelessSession#deleteMultiple deleteMultiple()} instead.
+	 *
 	 * @param jdbcBatchSize the new session-level JDBC batch size
 	 *
 	 * @since 5.2

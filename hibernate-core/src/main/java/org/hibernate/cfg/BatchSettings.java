@@ -21,9 +21,11 @@ public interface BatchSettings {
 
 	/**
 	 * Specifies the maximum number of {@linkplain java.sql.PreparedStatement statements}
-	 * to {@linkplain PreparedStatement#addBatch batch} together.
-	 * <p/>
-	 * A nonzero value enables batching
+	 * to {@linkplain PreparedStatement#addBatch batch} together in a stateful session.
+	 * <p>
+	 * Any positive value enables batching.
+	 * <p>
+	 * This setting has no effect on {@linkplain org.hibernate.StatelessSession stateless sessions}.
 	 *
 	 * @see java.sql.PreparedStatement#executeBatch
 	 * @see java.sql.PreparedStatement#addBatch

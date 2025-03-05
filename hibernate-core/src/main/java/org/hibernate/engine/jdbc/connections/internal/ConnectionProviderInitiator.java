@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.internal;
@@ -70,11 +70,6 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	 * The strategy for hikari connection pooling
 	 */
 	public static final String HIKARI_STRATEGY = "hikari";
-
-	/**
-	 * The strategy for oracle ucp connection pooling
-	 */
-	public static final String UCP_STRATEGY = "ucp";
 
 	/**
 	 * The strategy for agroal connection pooling
@@ -163,9 +158,6 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 		else if ( hasConfiguration( configurationValues, HIKARI_CONFIG_PREFIX ) ) {
 			return instantiateProvider( strategySelector, HIKARI_STRATEGY );
-		}
-		else if (hasConfiguration( configurationValues, "hibernate.oracleucp" ) ) {
-			return instantiateProvider( strategySelector, UCP_STRATEGY );
 		}
 		else if ( hasConfiguration( configurationValues, AGROAL_CONFIG_PREFIX ) ) {
 			return instantiateProvider( strategySelector, AGROAL_STRATEGY );

@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.build.maven.embedder;
 
 import org.apache.maven.cli.MavenCli;

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 
@@ -94,10 +94,10 @@ spotless {
     //Don't fail during the check: rather than enforcing guidelines, we use this plugin to fix mistakes automatically.
     enforceCheck false
     java {
-        targetExclude( "**/target/**/*.java" )
-        licenseHeaderFile rootProject.file( 'spotless.license.java' )
+        targetExclude( "target/**/*.java" )
+        licenseHeaderFile rootProject.file("shared/config/spotless/license.java")
         removeUnusedImports()
-        indentWithTabs( 4 )
+        leadingSpacesToTabs( 4 )
         trimTrailingWhitespace()
         endWithNewline()
     }

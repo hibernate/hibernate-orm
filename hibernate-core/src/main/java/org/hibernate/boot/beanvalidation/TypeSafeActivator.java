@@ -126,6 +126,7 @@ class TypeSafeActivator {
 		listenerRegistry.appendListeners( EventType.PRE_UPDATE, listener );
 		listenerRegistry.appendListeners( EventType.PRE_DELETE, listener );
 		listenerRegistry.appendListeners( EventType.PRE_UPSERT, listener );
+		listenerRegistry.appendListeners( EventType.PRE_COLLECTION_UPDATE, listener );
 
 		listener.initialize( cfgService.getSettings(), classLoaderService );
 	}

@@ -55,7 +55,16 @@ public final class BasicCacheKeyImplementation implements Serializable {
 	}
 
 	private static int calculateHashCode(Object disassembledKey, Type type) {
-		return type.getHashCode( disassembledKey );
+		return hash( type.getHashCode( disassembledKey ) );
+	}
+
+	@Internal
+	public static int hash(int h) {
+		// Mix the result with the Murmur3 finalising function
+		h = (h ^ (h >>> 16)) * 0x85ebca6b;
+		h = (h ^ (h >>> 13)) * 0xc2b2ae35;
+		h = h ^ (h >>> 16);
+		return h;
 	}
 
 	public Object getId() {

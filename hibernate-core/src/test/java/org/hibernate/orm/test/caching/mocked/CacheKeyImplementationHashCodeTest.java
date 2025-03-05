@@ -13,7 +13,6 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.cache.internal.CacheKeyImplementation;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -24,6 +23,7 @@ import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gail Badner
@@ -32,37 +32,74 @@ public class CacheKeyImplementationHashCodeTest {
 
 	@Test
 	@JiraKey( value = "HHH-12746")
-	public void test() {
+	public void testHashCodeChanges() {
 		try (ServiceRegistryImplementor serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
 			MetadataSources ms = new MetadataSources( serviceRegistry );
 			ms.addAnnotatedClass( AnEntity.class ).addAnnotatedClass( AnotherEntity.class );
 			Metadata metadata = ms.buildMetadata();
 			final SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();
 			try ( SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) sfb.build()) {
-				CacheKeyImplementation anEntityCacheKey = createCacheKeyImplementation(
+				Object anEntityCacheKey = createCacheKeyImplementation(
 						1,
 						sessionFactory.getRuntimeMetamodels()
 								.getMappingMetamodel()
 								.getEntityDescriptor( AnEntity.class ),
-						sessionFactory
+						sessionFactory,
+						"tenant"
 				);
-				CacheKeyImplementation anotherEntityCacheKey = createCacheKeyImplementation(
+				Object anotherEntityCacheKey = createCacheKeyImplementation(
 						1,
 						sessionFactory.getRuntimeMetamodels()
 								.getMappingMetamodel()
 								.getEntityDescriptor( AnotherEntity.class ),
-						sessionFactory
+						sessionFactory,
+						"tenant"
 				);
 				assertFalse( anEntityCacheKey.equals( anotherEntityCacheKey ) );
 			}
 		}
 	}
 
-	private CacheKeyImplementation createCacheKeyImplementation(
+	@Test
+	@JiraKey( value = "HHH-19218")
+	public void testMixedHashCode() {
+		try (ServiceRegistryImplementor serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
+			MetadataSources ms = new MetadataSources( serviceRegistry );
+			ms.addAnnotatedClass( AnEntity.class ).addAnnotatedClass( AnotherEntity.class );
+			Metadata metadata = ms.buildMetadata();
+			final SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();
+			try ( SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) sfb.build()) {
+				Object anEntityCacheKey = createCacheKeyImplementation(
+						1,
+						sessionFactory.getRuntimeMetamodels()
+								.getMappingMetamodel()
+								.getEntityDescriptor( AnEntity.class ),
+						sessionFactory,
+			null
+				);
+				assertTrue( (anEntityCacheKey.hashCode() >>> 16) != 0 );
+				assertTrue( (anEntityCacheKey.hashCode() << 16) != 0 );
+
+				Object anotherEntityCacheKey = createCacheKeyImplementation(
+						1,
+						sessionFactory.getRuntimeMetamodels()
+								.getMappingMetamodel()
+								.getEntityDescriptor( AnotherEntity.class ),
+						sessionFactory,
+						"0"
+				);
+				assertTrue( (anotherEntityCacheKey.hashCode() >>> 16) != 0 );
+				assertTrue( (anotherEntityCacheKey.hashCode() << 16) != 0 );
+			}
+		}
+	}
+
+	private Object createCacheKeyImplementation(
 			int id,
 			EntityPersister persister,
-			SessionFactoryImplementor sfi) {
-		return (CacheKeyImplementation) DefaultCacheKeysFactory.staticCreateEntityKey( id, persister, sfi, "tenant" );
+			SessionFactoryImplementor sfi,
+			String tenantIdentifier) {
+		return DefaultCacheKeysFactory.staticCreateEntityKey( id, persister, sfi, tenantIdentifier);
 	}
 
 	@Entity(name = "AnEntity")

@@ -43,4 +43,6 @@ public interface Enhancer {
 	 * @since 6.3
 	 */
 	void discoverTypes(String className, byte[] originalBytes) throws EnhancementException;
+
+	void clear();
 }

@@ -114,4 +114,10 @@ public class ModelTypePool extends TypePool.Default implements EnhancerClassLoca
 		return locator;
 	}
 
+	@Override
+	public void reset() {
+		locator.close();
+		poolCache.clear();
+	}
+
 }

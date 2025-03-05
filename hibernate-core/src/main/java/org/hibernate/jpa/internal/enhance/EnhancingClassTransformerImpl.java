@@ -55,15 +55,16 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 			//see https://hibernate.atlassian.net/browse/HHH-18108
 			return null;
 		}
-
+		final Enhancer enhancer = getEnhancer( loader );
 		try {
-			return getEnhancer( loader ).enhance( className, classfileBuffer );
+			return enhancer.enhance( className, classfileBuffer );
 		}
 		catch (final Exception e) {
 			throw new TransformerException( "Error performing enhancement of " + className, e );
 		}
 		finally {
 			bytecodeProvider.resetCaches();
+			enhancer.clear();
 		}
 	}
 

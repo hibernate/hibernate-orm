@@ -132,6 +132,44 @@ in addition to the previous truth-based strategies.
 See the link:{user-guide-url}#soft-delete[User Guide] for details.
 
 
+[[embedded-column-naming]]
+== @EmbeddedColumnNaming
+
+A long requested feature for both Hibernate and Jakarta Persistence has been the ability to
+define a prefix for the names of columns associated with an embedded value.
+
+7.0 adds support for this using the new `@EmbeddedColumnNaming` annotation.  The annotation
+accepts a format pattern, so is a little more flexible than just a prefix.
+
+Consider a typical Person / Address composition:
+
+[source,java]
+----
+@Embeddable
+class Address {
+    String street;
+	String city;
+	...
+}
+
+@Entity
+class Person {
+	...
+
+    @Embedded
+    @EmbeddedColumnNaming("home_%")
+    Address homeAddress;
+
+    @Embedded
+    @EmbeddedColumnNaming("work_%")
+    Address workAddress;
+
+}
+----
+
+This triggers Hibernate to use the column names `home_street`, `home_city`, `work_street`, ...
+
+
 [[envers-rev-types]]
 == Hibernate Envers and custom revision entities
 

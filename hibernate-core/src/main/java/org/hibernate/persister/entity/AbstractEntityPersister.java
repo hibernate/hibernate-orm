@@ -29,6 +29,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
@@ -291,6 +292,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -1463,6 +1466,7 @@ public abstract class AbstractEntityPersister
 				// see if there is already a collection instance associated with the session
 				// 		NOTE : can this ever happen?
 				final Object key = getCollectionKey( persister, entity, entry, session );
+				assert key != null;
 				PersistentCollection<?> collection = persistenceContext.getCollection( new CollectionKey( persister, key ) );
 				if ( collection == null ) {
 					collection = collectionType.instantiate( session, persister, key );
@@ -1531,7 +1535,7 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	public Object getCollectionKey(
+	public @Nullable Object getCollectionKey(
 			CollectionPersister persister,
 			Object owner,
 			EntityEntry ownerEntry,

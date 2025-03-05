@@ -13,6 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.spi.PreCollectionUpdateEvent;
+import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreDeleteEvent;
 import org.hibernate.event.spi.PreDeleteEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
@@ -34,6 +36,7 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 
 import static jakarta.validation.Validation.buildDefaultValidatorFactory;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 
 /**
@@ -44,7 +47,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize
  */
 //FIXME review exception model
 public class BeanValidationEventListener
-		implements PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener, PreUpsertEventListener {
+		implements PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener, PreUpsertEventListener, PreCollectionUpdateEventListener {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			MethodHandles.lookup(),
@@ -119,6 +122,17 @@ public class BeanValidationEventListener
 				GroupsPerOperation.Operation.UPSERT
 		);
 		return false;
+	}
+
+	@Override
+	public void onPreUpdateCollection(PreCollectionUpdateEvent event) {
+		final Object entity = castNonNull( event.getCollection().getOwner() );
+		validate(
+				entity,
+				event.getSession().getEntityPersister( event.getAffectedOwnerEntityName(), entity ),
+				event.getFactory(),
+				GroupsPerOperation.Operation.UPDATE
+		);
 	}
 
 	private <T> void validate(

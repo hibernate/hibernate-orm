@@ -19,6 +19,9 @@ import java.util.List;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 
+/**
+ * Gaussdb array_set function.
+ */
 public class GaussDBArraySetFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	public GaussDBArraySetFunction() {

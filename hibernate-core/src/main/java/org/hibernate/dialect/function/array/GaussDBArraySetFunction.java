@@ -1,10 +1,8 @@
 /*
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
-
-import java.util.List;
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -16,30 +14,27 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
+import java.util.List;
+
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 
-/**
- * Implement the array remove index function by using {@code unnest}.
- */
-public class ArrayRemoveIndexUnnestFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+public class GaussDBArraySetFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	protected final boolean castEmptyArrayLiteral;
-
-	public ArrayRemoveIndexUnnestFunction(boolean castEmptyArrayLiteral) {
+	public GaussDBArraySetFunction() {
 		super(
-				"array_remove_index",
+				"array_set",
 				StandardArgumentsValidators.composite(
-						new ArgumentTypesValidator( null, ANY, INTEGER ),
-						ArrayArgumentValidator.DEFAULT_INSTANCE
+						new ArrayAndElementArgumentValidator( 0, 2 ),
+						new ArgumentTypesValidator( null, ANY, INTEGER, ANY )
 				),
 				ArrayViaArgumentReturnTypeResolver.DEFAULT_INSTANCE,
 				StandardFunctionArgumentTypeResolvers.composite(
-						StandardFunctionArgumentTypeResolvers.invariant( ANY, INTEGER ),
-						StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE
+						StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE,
+						StandardFunctionArgumentTypeResolvers.invariant( ANY, INTEGER, ANY ),
+						new ArrayAndElementArgumentTypeResolver( 0, 2 )
 				)
 		);
-		this.castEmptyArrayLiteral = castEmptyArrayLiteral;
 	}
 
 	@Override
@@ -50,24 +45,18 @@ public class ArrayRemoveIndexUnnestFunction extends AbstractSqmSelfRenderingFunc
 			SqlAstTranslator<?> walker) {
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression indexExpression = (Expression) sqlAstArguments.get( 1 );
-		sqlAppender.append( "case when ");
-		arrayExpression.accept( walker );
-		sqlAppender.append( " is not null then coalesce((select array_agg(t.val) from unnest(" );
-		arrayExpression.accept( walker );
-		sqlAppender.append( ") with ordinality t(val,idx) where t.idx is distinct from " );
+		final Expression elementExpression = (Expression) sqlAstArguments.get( 2 );
+
+		sqlAppender.append( "( SELECT array_agg( CASE WHEN idx_gen = ");
 		indexExpression.accept( walker );
-		sqlAppender.append( "),");
-		if ( castEmptyArrayLiteral ) {
-			sqlAppender.append( "cast(array[] as " );
-			sqlAppender.append( DdlTypeHelper.getCastTypeName(
-					returnType,
-					walker.getSessionFactory().getTypeConfiguration()
-			) );
-			sqlAppender.append( ')' );
-		}
-		else {
-			sqlAppender.append( "array[]" );
-		}
-		sqlAppender.append(") end" );
+		sqlAppender.append( " THEN ");
+		elementExpression.accept( walker );
+		sqlAppender.append( " ELSE CASE  WHEN idx_gen <= array_length(ewa1_0.the_array, 1) ");
+		sqlAppender.append( " THEN ewa1_0.the_array[idx_gen] ELSE NULL END END ORDER BY idx_gen ) ");
+		sqlAppender.append( " FROM generate_series(1, GREATEST(COALESCE(array_length( ");
+		arrayExpression.accept( walker );
+		sqlAppender.append( " , 1), 0),  ");
+		indexExpression.accept( walker );
+		sqlAppender.append( " )) AS idx_gen ) AS result_array ");
 	}
 }

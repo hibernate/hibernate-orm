@@ -6,6 +6,7 @@ package org.hibernate.orm.test.function.array;
 
 import java.util.List;
 
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaFunctionJoin;
@@ -59,6 +60,7 @@ public class ArrayUnnestTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testUnnest(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-array-unnest-example[]
@@ -84,6 +86,7 @@ public class ArrayUnnestTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "xmltable can't be used with a left join")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testNodeBuilderUnnest(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -112,6 +115,7 @@ public class ArrayUnnestTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testUnnestOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<Tuple> results = em.createQuery(
@@ -141,6 +145,7 @@ public class ArrayUnnestTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "xmltable can't be used with a left join")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testNodeBuilderUnnestOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();

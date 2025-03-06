@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.QuerySettings;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -115,6 +116,7 @@ public class XmlTableTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testSimple(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-xml-table-example[]
@@ -156,6 +158,7 @@ public class XmlTableTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE needs a special emulation for query columns that is impossible with parameters")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testNodeBuilderXmlTableObject(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -194,6 +197,7 @@ public class XmlTableTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase doesn't support such xpath expressions directly in xmltable. We could emulate that through generating xmlextract calls though")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testCorrelateXmlTable(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final String query = """

@@ -17,6 +17,7 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
@@ -162,6 +163,7 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 	@SkipForDialect( dialectClass = PostgreSQLDialect.class, majorVersion = 10, reason = "Procedures were only introduced in version 11" )
 	@SkipForDialect( dialectClass = PostgresPlusDialect.class, majorVersion = 10, reason = "Procedures were only introduced in version 11" )
 	@SkipForDialect( dialectClass = DB2Dialect.class, reason = "DB2 does not support struct types in procedures" )
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testProcedure(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Dialect dialect = session.getJdbcServices().getDialect();

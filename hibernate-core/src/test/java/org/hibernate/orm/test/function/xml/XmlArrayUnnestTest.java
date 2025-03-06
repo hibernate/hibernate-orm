@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.Nulls;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaFunctionJoin;
@@ -69,6 +70,7 @@ public class XmlArrayUnnestTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testUnnest(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-xml-array-unnest-aggregate-example[]
@@ -98,6 +100,7 @@ public class XmlArrayUnnestTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testNodeBuilderUnnest(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -137,6 +140,7 @@ public class XmlArrayUnnestTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testUnnestOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-xml-array-unnest-aggregate-with-ordinality-example[]
@@ -161,6 +165,7 @@ public class XmlArrayUnnestTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "xmltable can't be used with a left join")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testNodeBuilderUnnestOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();

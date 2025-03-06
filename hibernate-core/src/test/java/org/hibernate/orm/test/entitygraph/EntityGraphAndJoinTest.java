@@ -6,16 +6,18 @@ package org.hibernate.orm.test.entitygraph;
 
 import java.util.List;
 
+import jakarta.persistence.EntityGraph;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -57,31 +59,43 @@ public class EntityGraphAndJoinTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class,
+			reason = "The query results are in reverse order, which is inconsistent with Postgresql performance")
 	public void testHqlJoin(SessionFactoryScope scope) {
 		executeQuery( scope, false, false, false );
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class,
+			reason = "The query results are in reverse order, which is inconsistent with Postgresql performance")
 	public void testHqlLeftJoin(SessionFactoryScope scope) {
 		executeQuery( scope, false, true, false );
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class,
+			reason = "The query results are in reverse order, which is inconsistent with Postgresql performance")
 	public void testCriteriaJoin(SessionFactoryScope scope) {
 		executeQuery( scope, true, false, false );
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class,
+			reason = "The query results are in reverse order, which is inconsistent with Postgresql performance")
 	public void testCriteriaLeftJoin(SessionFactoryScope scope) {
 		executeQuery( scope, true, true, false );
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class,
+			reason = "The query results are in reverse order, which is inconsistent with Postgresql performance")
 	public void testHqlJoinWhere(SessionFactoryScope scope) {
 		executeQuery( scope, false, false, true );
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class,
+			reason = "The query results are in reverse order, which is inconsistent with Postgresql performance")
 	public void testCriteriaLeftJoinWhere(SessionFactoryScope scope) {
 		executeQuery( scope, true, true, true );
 	}

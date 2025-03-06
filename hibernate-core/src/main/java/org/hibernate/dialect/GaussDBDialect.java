@@ -561,8 +561,9 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.listagg_stringAgg( "varchar" );
 		functionFactory.array_gaussDB();
 		functionFactory.arrayAggregate();
-		functionFactory.arrayPosition_gaussdb();
-		functionFactory.arrayPositions_gaussdb();
+//		functionFactory.arrayPosition_gaussdb();
+//		functionFactory.arrayPositions_gaussdb();
+		functionFactory.arrayRemoveIndex_gaussdb();
 		functionFactory.arrayLength_cardinality();
 		functionFactory.arrayConcat_gaussdb();
 		functionFactory.arrayPrepend_gaussdb();
@@ -570,12 +571,11 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.arrayContains_gaussdb();
 		functionFactory.arrayIntersects_gaussdb();
 		functionFactory.arrayGet_bracket();
-		functionFactory.arraySet_unnest();
-		functionFactory.arrayRemove();
-		functionFactory.arrayRemoveIndex_unnest( true );
+		functionFactory.arrayRemove_gaussdb();
 		functionFactory.arraySlice_operator();
-		functionFactory.arrayReplace();
-		functionFactory.arrayTrim_trim_array();
+		functionFactory.arrayReplace_gaussdb();
+		functionFactory.arraySet_gaussdb();
+		functionFactory.arrayTrim_gaussdb();
 		functionFactory.arrayFill_gaussdb();
 
 		functionFactory.jsonValue();
@@ -592,7 +592,7 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.jsonReplace_gaussdb();
 		functionFactory.jsonInsert_gaussdb();
 		functionFactory.jsonMergepatch_gaussdb();
-		functionFactory.jsonArrayAppend_gaussdb(true);
+//		functionFactory.jsonArrayAppend_gaussdb(true);
 		functionFactory.jsonArrayInsert_gaussdb();
 
 		functionFactory.xmlelement();

@@ -2852,10 +2852,11 @@ public class CommonFunctionFactory {
 
 	/**
 	 * GaussDB array_position() function
+	 * don't support
 	 */
-	public void arrayPosition_gaussdb() {
-		functionRegistry.register( "array_position", new GaussDBArrayPositionFunction( typeConfiguration ) );
-	}
+//	public void arrayPosition_gaussdb() {
+//		functionRegistry.register( "array_position", new GaussDBArrayPositionFunction( typeConfiguration ) );
+//	}
 
 	/**
 	 * H2 array_position() function
@@ -2894,17 +2895,18 @@ public class CommonFunctionFactory {
 
 	/**
 	 * GaussDB array_positions() function
+	 * don't support
 	 */
-	public void arrayPositions_gaussdb() {
-		functionRegistry.register(
-				"array_positions",
-				new GaussDBArrayPositionsFunction( false, typeConfiguration )
-		);
-		functionRegistry.register(
-				"array_positions_list",
-				new GaussDBArrayPositionsFunction( true, typeConfiguration )
-		);
-	}
+//	public void arrayPositions_gaussdb() {
+//		functionRegistry.register(
+//				"array_positions",
+//				new GaussDBArrayPositionsFunction( false, typeConfiguration )
+//		);
+//		functionRegistry.register(
+//				"array_positions_list",
+//				new GaussDBArrayPositionsFunction( true, typeConfiguration )
+//		);
+//	}
 
 	/**
 	 * H2 array_positions() function
@@ -3125,6 +3127,10 @@ public class CommonFunctionFactory {
 		functionRegistry.register( "array_set", new ArraySetUnnestFunction() );
 	}
 
+	public void arraySet_gaussdb() {
+		functionRegistry.register( "array_set", new GaussDBArraySetFunction() );
+	}
+
 	/**
 	 * Oracle array_set() function
 	 */
@@ -3156,6 +3162,13 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * H2 array_remove() function
+	 */
+	public void arrayRemove_gaussdb() {
+		functionRegistry.register( "array_remove",  new GaussDBArrayRemoveFunction());
+	}
+
+	/**
 	 * HSQL array_remove() function
 	 */
 	public void arrayRemove_hsql() {
@@ -3167,6 +3180,10 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayRemove_oracle() {
 		functionRegistry.register( "array_remove", new OracleArrayRemoveFunction() );
+	}
+
+	public void arrayRemoveIndex_gaussdb() {
+		functionRegistry.register( "array_remove_index", new GaussDBArrayRemoveIndexFunction(false) );
 	}
 
 	/**
@@ -3286,6 +3303,10 @@ public class CommonFunctionFactory {
 		functionRegistry.register( "array_replace", new OracleArrayReplaceFunction() );
 	}
 
+	public void arrayReplace_gaussdb() {
+		functionRegistry.register( "array_replace", new GaussDBArrayReplaceFunction() );
+	}
+
 	/**
 	 * H2, HSQLDB, CockroachDB and PostgreSQL array_trim() function
 	 */
@@ -3320,6 +3341,10 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayTrim_oracle() {
 		functionRegistry.register( "array_trim", new OracleArrayTrimFunction() );
+	}
+
+	public void arrayTrim_gaussdb() {
+		functionRegistry.register( "array_trim", new GaussDBArrayTrimFunction() );
 	}
 
 	/**

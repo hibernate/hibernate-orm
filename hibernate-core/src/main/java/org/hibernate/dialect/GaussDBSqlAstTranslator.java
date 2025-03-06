@@ -205,7 +205,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	@Override
 	protected String getForUpdate() {
-		return " for no key update";
+		return " for update";
 	}
 
 	@Override

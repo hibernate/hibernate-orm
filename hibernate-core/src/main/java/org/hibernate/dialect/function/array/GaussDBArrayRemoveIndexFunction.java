@@ -14,7 +14,7 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import java.util.List;
 
 /**
- * HSQLDB array_remove function.
+ * Gaussdb array_remove function.
  */
 public class GaussDBArrayRemoveIndexFunction extends ArrayRemoveIndexUnnestFunction {
 

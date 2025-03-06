@@ -559,7 +559,7 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.locate_positionSubstring();
 		functionFactory.windowFunctions();
 		functionFactory.listagg_stringAgg( "varchar" );
-		functionFactory.array_gaussDB();
+		functionFactory.array_gaussdb();
 		functionFactory.arrayAggregate();
 		functionFactory.arrayRemoveIndex_gaussdb();
 		functionFactory.arrayLength_cardinality();
@@ -576,7 +576,7 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.arrayTrim_gaussdb();
 		functionFactory.arrayFill_gaussdb();
 
-//		functionFactory.jsonValue();
+		functionFactory.jsonValue_gaussdb(true);
 		functionFactory.jsonQuery();
 		functionFactory.jsonExists();
 		functionFactory.jsonObject();

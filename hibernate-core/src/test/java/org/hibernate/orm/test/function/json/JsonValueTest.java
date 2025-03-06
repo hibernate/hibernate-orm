@@ -64,6 +64,7 @@ public class JsonValueTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testSimple(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-value-example[]
@@ -78,6 +79,7 @@ public class JsonValueTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testPassing(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-value-passing-example[]
@@ -92,6 +94,7 @@ public class JsonValueTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testReturning(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-value-returning-example[]

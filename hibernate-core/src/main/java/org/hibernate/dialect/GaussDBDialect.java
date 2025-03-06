@@ -561,8 +561,6 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.listagg_stringAgg( "varchar" );
 		functionFactory.array_gaussDB();
 		functionFactory.arrayAggregate();
-//		functionFactory.arrayPosition_gaussdb();
-//		functionFactory.arrayPositions_gaussdb();
 		functionFactory.arrayRemoveIndex_gaussdb();
 		functionFactory.arrayLength_cardinality();
 		functionFactory.arrayConcat_gaussdb();
@@ -592,7 +590,6 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.jsonReplace_gaussdb();
 		functionFactory.jsonInsert_gaussdb();
 		functionFactory.jsonMergepatch_gaussdb();
-//		functionFactory.jsonArrayAppend_gaussdb(true);
 		functionFactory.jsonArrayInsert_gaussdb();
 
 		functionFactory.xmlelement();
@@ -1331,9 +1328,6 @@ public class GaussDBDialect extends Dialect {
 
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
-//		if ( type.equals( FetchClauseType.ROWS_ONLY ) ) {
-//			return true;
-//		}
 		return false;
 	}
 

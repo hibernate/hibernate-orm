@@ -2851,14 +2851,6 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * GaussDB array_position() function
-	 * don't support
-	 */
-//	public void arrayPosition_gaussdb() {
-//		functionRegistry.register( "array_position", new GaussDBArrayPositionFunction( typeConfiguration ) );
-//	}
-
-	/**
 	 * H2 array_position() function
 	 */
 	public void arrayPosition_h2(int maximumArraySize) {
@@ -2892,21 +2884,6 @@ public class CommonFunctionFactory {
 				new PostgreSQLArrayPositionsFunction( true, typeConfiguration )
 		);
 	}
-
-	/**
-	 * GaussDB array_positions() function
-	 * don't support
-	 */
-//	public void arrayPositions_gaussdb() {
-//		functionRegistry.register(
-//				"array_positions",
-//				new GaussDBArrayPositionsFunction( false, typeConfiguration )
-//		);
-//		functionRegistry.register(
-//				"array_positions_list",
-//				new GaussDBArrayPositionsFunction( true, typeConfiguration )
-//		);
-//	}
 
 	/**
 	 * H2 array_positions() function

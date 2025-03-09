@@ -3,6 +3,18 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.35.Final (March 09, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32713
+
+** Bug
+    * [HHH-19206] - Bytecode-enhanced dirty checking ineffective if entity's embedded ID set manually (to same value)
+    * [HHH-18229] - "UnsupportedOperationException: Re-work support for semi-resolve " with null value in column referenced by @JoinColumn
+    * [HHH-17420] - JoinColumn throws an `occurs out of order` AnnotationException
+    * [HHH-17151] - NPE when binding null parameter in native query with explicit TemporalType
+
+
 Changes in 6.2.34.Final (February 26, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

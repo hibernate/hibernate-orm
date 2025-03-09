@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SuppressWarnings("rawtypes")
 @RequiresDialectFeature(feature = IsSupportedBySpatial.class)
 @SessionFactory
-@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 11, reason = "See https://hibernate.atlassian.net/browse/HHH-15669")
+@SkipForDialect(dialectClass = OracleDialect.class, reason = "See https://hibernate.atlassian.net/browse/HHH-15669")
 public class CommonFunctionTests extends SpatialTestBase {
 
 	public final static TestSupport.TestDataPurpose PURPOSE = TestSupport.TestDataPurpose.SpatialFunctionsData;

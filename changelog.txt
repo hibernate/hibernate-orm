@@ -3,6 +3,20 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.10.Final (March 09, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32647
+
+** Bug
+    * [HHH-19232] - BeanValidationEventListener not called if only associated collection is updated via getter
+    * [HHH-19206] - Bytecode-enhanced dirty checking ineffective if entity's embedded ID set manually (to same value)
+    * [HHH-19195] - Embeddable inheritance: discriminator values are not hierarchically ordered
+
+** Improvement
+    * [HHH-19219] - Informix Catalog and schema support
+
+
 Changes in 6.6.9.Final (February 23, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

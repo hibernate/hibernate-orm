@@ -661,6 +661,22 @@ public interface Session extends SharedSessionContract, EntityManager {
 	<T> T merge(String entityName, T object);
 
 	/**
+	 * Copy the state of the given object onto the persistent object with the same
+	 * identifier. If there is no persistent instance currently associated with
+	 * the session, it will be loaded. Return the persistent instance. If the
+	 * given instance is unsaved, save a copy and return it as a newly persistent
+	 * instance. The given instance does not become associated with the session.
+	 * This operation cascades to associated instances if the association is mapped
+	 * with {@link jakarta.persistence.CascadeType#MERGE}.
+	 *
+	 * @param object a detached instance with state to be copied
+	 * @param loadGraph entity graph interpreted as a load graph
+	 *
+	 * @return an updated persistent instance
+	 */
+	<T> T merge( T object, EntityGraph<?> loadGraph);
+
+	/**
 	 * Make a transient instance persistent and mark it for later insertion in the
 	 * database. This operation cascades to associated instances if the association
 	 * is mapped with {@link jakarta.persistence.CascadeType#PERSIST}.

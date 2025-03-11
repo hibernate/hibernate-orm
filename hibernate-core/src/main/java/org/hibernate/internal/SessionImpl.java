@@ -803,6 +803,19 @@ public class SessionImpl
 		return (T) fireMerge( new MergeEvent( entityName, object, this ) );
 	}
 
+	@Override
+	public <T> T merge(T object, EntityGraph<?> loadGraph) {
+		EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
+		try {
+			effectiveEntityGraph
+					.applyGraph( (RootGraphImplementor<?>) loadGraph, GraphSemantic.LOAD );
+			return merge( object );
+		}
+		finally {
+			effectiveEntityGraph.clear();
+		}
+	}
+
 	@Override @SuppressWarnings("unchecked")
 	public <T> T merge(T object) {
 		checkOpen();

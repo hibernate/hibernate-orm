@@ -211,6 +211,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public <T> T merge(T object, EntityGraph<?> loadGraph) {
+		return this.lazySession.get().merge( object, loadGraph );
+	}
+
+	@Override
 	public void persist(Object object) {
 		this.lazySession.get().persist( object );
 	}

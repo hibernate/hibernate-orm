@@ -62,9 +62,6 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 		catch (final Exception e) {
 			throw new TransformerException( "Error performing enhancement of " + className, e );
 		}
-		finally {
-			bytecodeProvider.resetCaches();
-		}
 	}
 
 	@Override

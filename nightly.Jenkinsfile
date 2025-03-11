@@ -110,29 +110,18 @@ stage('Build') {
 										" -Pgradle.libs.versions.hsqldb=2.6.1"
 									break;
 								case "mysql_8_0":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mysql:8.0.31').pull()
-									}
 									sh "./docker_db.sh mysql_8_0"
 									state[buildEnv.tag]['containerName'] = "mysql"
 									break;
 								case "mariadb_10_5":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mariadb:10.5.25').pull()
-									}
 									sh "./docker_db.sh mariadb_10_5"
 									state[buildEnv.tag]['containerName'] = "mariadb"
 									break;
 								case "postgresql_13":
-									// use the postgis image to enable the PGSQL GIS (spatial) extension
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('postgis/postgis:13-3.1').pull()
-									}
 									sh "./docker_db.sh postgresql_13"
 									state[buildEnv.tag]['containerName'] = "postgres"
 									break;
 								case "edb_13":
-									docker.image('quay.io/enterprisedb/edb-postgres-advanced:13.20-3.5-postgis').pull()
 									sh "./docker_db.sh edb_13"
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;
@@ -144,21 +133,14 @@ stage('Build') {
 									state[buildEnv.tag]['containerName'] = "db2"
 									break;
 								case "mssql_2017":
-									docker.image('mcr.microsoft.com/mssql/server@sha256:7d194c54e34cb63bca083542369485c8f4141596805611e84d8c8bab2339eede').pull()
 									sh "./docker_db.sh mssql_2017"
 									state[buildEnv.tag]['containerName'] = "mssql"
 									break;
 								case "sybase_jconn":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('nguoianphu/docker-sybase').pull()
-									}
 									sh "./docker_db.sh sybase"
 									state[buildEnv.tag]['containerName'] = "sybase"
 									break;
 								case "cockroachdb":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('cockroachdb/cockroach:v23.1.12').pull()
-									}
 									sh "./docker_db.sh cockroachdb"
 									state[buildEnv.tag]['containerName'] = "cockroach"
 									break;

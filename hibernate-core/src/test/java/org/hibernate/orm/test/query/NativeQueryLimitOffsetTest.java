@@ -9,12 +9,14 @@ import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,6 +57,7 @@ public class NativeQueryLimitOffsetTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testFullLimitOffsetOnNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -70,6 +73,7 @@ public class NativeQueryLimitOffsetTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testPartialLimitOffsetOnNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

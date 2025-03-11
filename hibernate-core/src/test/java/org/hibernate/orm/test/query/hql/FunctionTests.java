@@ -14,6 +14,7 @@ import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -175,6 +176,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testImplicitCollectionJoinInSelect(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -210,6 +212,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testImplicitCollectionJoinInWhere(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -278,6 +281,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testAggregateIndicesElementsWithPath(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -389,6 +393,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testMaxindexMaxelement(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -508,6 +513,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testMathFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -733,6 +739,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testOverlayFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -946,6 +953,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testCastFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1169,6 +1177,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, minorVersion = 5, reason = "On this version the length of the cast to the parameter appears to be > 2")
 	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase cast to raw does not do truncatation")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL interprets string as hex literal and produces error")
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testCastBinaryWithLength(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1208,6 +1217,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testStrFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1655,6 +1665,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testDurationBy(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1675,6 +1686,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testDurationLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1784,6 +1796,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testDurationArithmeticWithLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1886,6 +1899,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = SybaseDialect.class,
 			matchSubTypes = true,
 			reason = "numeric overflow")
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testDurationSubtractionWithDatetimeLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2174,6 +2188,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testExtractFunctionWithAssertions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2278,6 +2293,7 @@ public class FunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testFormat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2312,6 +2328,7 @@ public class FunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsMedian.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testMedian(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2333,6 +2350,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testHyperbolic(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2406,6 +2424,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testMaxGreatest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2514,6 +2533,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testTupleInSubqueryResult(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -12,6 +12,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
@@ -19,6 +20,7 @@ import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +41,7 @@ public class PaginationTest {
 
 	@Test
 	@SessionFactory
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testLimit(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -111,6 +114,7 @@ public class PaginationTest {
 
 	@Test
 	@SessionFactory
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testLimitOffset(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

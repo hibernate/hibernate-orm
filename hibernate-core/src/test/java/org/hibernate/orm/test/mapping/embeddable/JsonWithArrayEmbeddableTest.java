@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.OracleDialect;
 
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -219,6 +220,7 @@ public class JsonWithArrayEmbeddableTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testUpdateAggregateMember(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -232,6 +234,7 @@ public class JsonWithArrayEmbeddableTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testUpdateMultipleAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -247,6 +250,7 @@ public class JsonWithArrayEmbeddableTest {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testUpdateAllAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

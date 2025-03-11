@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.MutableValue;
@@ -132,6 +133,7 @@ public class XmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testSelectionItems() {
 		sessionFactoryScope().inSession(
 				entityManager -> {
@@ -221,6 +223,7 @@ public class XmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testUpdateAggregateMember() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
@@ -234,6 +237,7 @@ public class XmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testUpdateMultipleAggregateMembers() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {

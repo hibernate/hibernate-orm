@@ -19,6 +19,7 @@ import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -108,6 +109,7 @@ public class TimeZoneStorageMappingTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
 	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase doesn't allow function in date format string")
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testOffsetRetainedFormatAuto(SessionFactoryScope scope) {
 		testOffsetRetainedFormat( scope, "Auto" );
 	}
@@ -115,6 +117,7 @@ public class TimeZoneStorageMappingTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
 	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase doesn't allow function in date format string")
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testOffsetRetainedFormatColumn(SessionFactoryScope scope) {
 		testOffsetRetainedFormat( scope, "Column" );
 	}

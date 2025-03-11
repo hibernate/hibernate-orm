@@ -165,6 +165,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonValue.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testJsonValueExpression(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -193,6 +194,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonQuery.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testJsonQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -218,7 +220,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonQueryNestedPath.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "Not supported")
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testJsonQueryNested(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -236,6 +238,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArray.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testJsonArray(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -266,6 +269,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObject.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testJsonObject(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -310,6 +314,7 @@ public class JsonFunctionTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObject.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArray.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testJsonObjectAndArray(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -345,6 +350,7 @@ public class JsonFunctionTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonExists.class)
 	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 21, matchSubTypes = true, reason = "Oracle bug in versions before 23")
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testJsonExists(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

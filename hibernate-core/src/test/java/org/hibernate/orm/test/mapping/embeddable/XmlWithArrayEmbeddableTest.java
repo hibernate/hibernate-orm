@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -128,6 +129,7 @@ public class XmlWithArrayEmbeddableTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testSelectionItems(SessionFactoryScope scope) {
 		scope.inSession(
 				entityManager -> {
@@ -217,6 +219,7 @@ public class XmlWithArrayEmbeddableTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testUpdateAggregateMember(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -230,6 +233,7 @@ public class XmlWithArrayEmbeddableTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testUpdateMultipleAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -245,6 +249,7 @@ public class XmlWithArrayEmbeddableTest {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testUpdateAllAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

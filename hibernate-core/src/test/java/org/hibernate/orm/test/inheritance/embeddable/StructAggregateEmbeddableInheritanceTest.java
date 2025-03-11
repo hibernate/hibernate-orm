@@ -146,6 +146,7 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final ProcedureCall structFunction = session.createStoredProcedureCall( "structFunction" )

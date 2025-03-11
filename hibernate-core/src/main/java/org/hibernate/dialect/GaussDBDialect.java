@@ -576,7 +576,7 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.arrayTrim_gaussdb();
 		functionFactory.arrayFill_gaussdb();
 
-		functionFactory.jsonValue();
+//		functionFactory.jsonValue();
 		functionFactory.jsonQuery();
 		functionFactory.jsonExists();
 		functionFactory.jsonObject();

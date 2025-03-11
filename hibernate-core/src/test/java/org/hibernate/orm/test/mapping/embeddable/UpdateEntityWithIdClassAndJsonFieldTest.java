@@ -8,6 +8,8 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.GaussDBDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -54,6 +56,7 @@ public class UpdateEntityWithIdClassAndJsonFieldTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void updateTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

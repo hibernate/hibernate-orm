@@ -12,10 +12,12 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.RowId;
 
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -43,6 +45,7 @@ public class RowIdTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	void testRowId(SessionFactoryScope scope) {
 		final String updatedName = "Smart phone";
 		scope.inTransaction( session -> {

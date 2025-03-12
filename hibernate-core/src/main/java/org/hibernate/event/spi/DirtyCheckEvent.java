@@ -4,12 +4,15 @@
  */
 package org.hibernate.event.spi;
 
+
 /**
- * Defines an event class for the dirty-checking of a session.
+ * Event class for {@link org.hibernate.Session#isDirty}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.Session#isDirty
  */
-public class DirtyCheckEvent extends FlushEvent {
+public class DirtyCheckEvent extends AbstractEvent {
 	private boolean dirty;
 
 	public DirtyCheckEvent(EventSource source) {

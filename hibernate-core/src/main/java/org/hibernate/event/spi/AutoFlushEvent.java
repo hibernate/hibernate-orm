@@ -6,7 +6,9 @@ package org.hibernate.event.spi;
 
 import java.util.Set;
 
-/** Defines an event class for the auto-flushing of a session.
+/**
+ * Event class for {@link org.hibernate.FlushMode#AUTO automatic}
+ * stateful session flush.
  *
  * @author Steve Ebersole
  */

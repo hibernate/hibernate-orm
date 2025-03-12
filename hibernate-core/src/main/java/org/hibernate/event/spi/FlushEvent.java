@@ -5,9 +5,11 @@
 package org.hibernate.event.spi;
 
 /**
- * Defines an event class for the flushing of a session.
+ * Event class for stateful session flush.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.Session#flush
  */
 public class FlushEvent extends AbstractEvent {
 	private int numberOfEntitiesProcessed;

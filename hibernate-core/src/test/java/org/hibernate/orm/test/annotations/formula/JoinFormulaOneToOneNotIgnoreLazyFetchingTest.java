@@ -12,6 +12,7 @@ import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.boot.model.internal.ToOneBinder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 @JiraKey(value = "HHH-12770")
+@Exclude
 public class JoinFormulaOneToOneNotIgnoreLazyFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Rule

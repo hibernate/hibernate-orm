@@ -18,6 +18,7 @@ import jakarta.persistence.ManyToOne;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
+import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -29,6 +30,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 @JiraKey(value = "HHH-12770")
+@Exclude
 public class JoinFormulaManyToOneLazyFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

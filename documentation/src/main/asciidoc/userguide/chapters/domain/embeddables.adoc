@@ -607,28 +607,50 @@ The following table outlines the current support for the different aggregate typ
 |PostgreSQL
 |Yes
 |Yes
-|No (not yet)
+|Yes
 
 |Oracle
 |Yes
 |Yes
-|No (not yet)
+|Yes
+
+|MySQL/MariaDB
+|No
+|Yes
+|No
 
 |DB2
 |Yes
-|No (not yet)
-|No (not yet)
+|Yes
+|Yes
 
 |SQL Server
-|No (not yet)
-|No (not yet)
-|No (not yet)
+|No https://hibernate.atlassian.net/browse/HHH-16158[(not yet)]
+|Yes
+|Yes
+
+|Sybase ASE
+|No
+|No
+|Yes
+
+|H2
+|No
+|Yes
+|No
+
+|CockroachDB
+|No
+|Yes
+|No
+
+|SAP HANA
+|No
+|Yes
+|Yes
 |===
 
-Also note that embeddable types that are used in aggregate mappings do not yet support all kinds of attribute mappings, most notably:
-
-* Association mappings (`@ManyToOne`, `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@ElementCollection`)
-* Basic array mappings
+Also note that embeddable types that are used in array aggregate mappings do not support association mappings.
 
 ===== `@Struct` aggregate embeddable mapping
 

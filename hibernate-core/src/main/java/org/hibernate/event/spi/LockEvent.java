@@ -9,9 +9,11 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 
 /**
- *  Defines an event class for the locking of an entity.
+ * Event class for {@link org.hibernate.Session#lock}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.Session#lock
  */
 public class LockEvent extends AbstractEvent {
 

@@ -9,9 +9,11 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 
 /**
- *  Defines an event class for the refreshing of an object.
+ * Event class for {@link org.hibernate.Session#refresh}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.Session#refresh
  */
 public class RefreshEvent extends AbstractEvent {
 

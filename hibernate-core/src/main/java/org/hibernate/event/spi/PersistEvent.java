@@ -5,9 +5,11 @@
 package org.hibernate.event.spi;
 
 /**
- * An event class for persist()
+ * Event class for {@link org.hibernate.Session#persist}.
  *
  * @author Gavin King
+ *
+ * @see org.hibernate.Session#persist
  */
 public class PersistEvent extends AbstractEvent {
 

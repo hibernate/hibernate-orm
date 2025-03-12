@@ -5,9 +5,11 @@
 package org.hibernate.event.spi;
 
 /**
- * An event class for merge() and saveOrUpdateCopy()
+ * Event class for {@link org.hibernate.Session#merge}.
  *
  * @author Gavin King
+ *
+ * @see org.hibernate.Session#merge
  */
 public class MergeEvent extends AbstractEvent {
 

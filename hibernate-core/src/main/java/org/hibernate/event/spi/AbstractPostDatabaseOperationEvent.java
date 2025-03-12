@@ -8,11 +8,13 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Represents an operation that is about to be executed by the database.
+ * Represents an operation successfully executed by the database.
  *
- * @author Steve Ebersole
+ * @author Gavin King
+ *
+ * @since 7
  */
-public abstract class AbstractPreDatabaseOperationEvent extends AbstractEvent {
+public abstract class AbstractPostDatabaseOperationEvent extends AbstractEvent {
 
 	private final Object entity;
 	private final Object id;
@@ -26,7 +28,7 @@ public abstract class AbstractPreDatabaseOperationEvent extends AbstractEvent {
 	 * @param id The entity id to be involved in the database operation.
 	 * @param persister The entity's persister.
 	 */
-	public AbstractPreDatabaseOperationEvent(
+	public AbstractPostDatabaseOperationEvent(
 			EventSource source,
 			Object entity,
 			Object id,

@@ -7,9 +7,11 @@ package org.hibernate.event.spi;
 import org.hibernate.ReplicationMode;
 
 /**
- *  Defines an event class for the replication of an entity.
+ * Event class for {@link org.hibernate.Session#replicate}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.Session#replicate
  */
 public class ReplicateEvent extends AbstractEvent {
 	private Object object;

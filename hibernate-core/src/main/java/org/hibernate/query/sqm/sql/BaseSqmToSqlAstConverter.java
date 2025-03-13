@@ -8352,6 +8352,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			joined = true;
 			alias = fetchedJoin.getExplicitAlias();
 			explicitFetch = true;
+
+			if ( entityGraphTraversalState != null ) {
+				// Still do traverse the entity graph even if we encounter a fetch join
+				traversalResult = entityGraphTraversalState.traverse(
+						fetchParent,
+						fetchable,
+						isKeyFetchable
+				);
+			}
 		}
 		else {
 			fetchablePath = resolvedNavigablePath;

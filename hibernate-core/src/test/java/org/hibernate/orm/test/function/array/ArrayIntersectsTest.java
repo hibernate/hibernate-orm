@@ -107,6 +107,15 @@ public class ArrayIntersectsTest {
 	}
 
 	@Test
+	public void testArrayParameter(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_intersects(e.theArray, :array)", EntityWithArrays.class ).setParameter("array", new String[] {"abc", "xyz"}).getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
+	@Test
 	public void testNodeBuilderArray(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();

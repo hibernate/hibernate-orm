@@ -14,7 +14,6 @@ import oracle.sql.json.OracleJsonTimestamp;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.UUIDJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.math.BigDecimal;
@@ -23,7 +22,6 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 /**
  * Implementation of <code>JsonDocumentWriter</code> for OSON document.
@@ -233,7 +231,7 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 				generator.write( duration );
 				break;
 			case SqlTypes.UUID:
-				generator.write( UUIDJavaType.INSTANCE.unwrap( (UUID)value, byte[].class, options ) );
+				generator.write( javaType.unwrap( value, String.class, options ) );
 				break;
 			case SqlTypes.BINARY:
 			case SqlTypes.VARBINARY:

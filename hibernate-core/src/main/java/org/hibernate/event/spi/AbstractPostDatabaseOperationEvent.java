@@ -4,7 +4,6 @@
  */
 package org.hibernate.event.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -14,11 +13,7 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @since 7
  */
-public abstract class AbstractPostDatabaseOperationEvent extends AbstractEvent {
-
-	private final Object entity;
-	private final Object id;
-	private final EntityPersister persister;
+public abstract class AbstractPostDatabaseOperationEvent extends AbstractDatabaseOperationEvent {
 
 	/**
 	 * Constructs an event containing the pertinent information.
@@ -33,46 +28,7 @@ public abstract class AbstractPostDatabaseOperationEvent extends AbstractEvent {
 			Object entity,
 			Object id,
 			EntityPersister persister) {
-		super( source );
-		this.entity = entity;
-		this.id = id;
-		this.persister = persister;
+		super( source, entity, id, persister );
 	}
 
-	/**
-	 * Retrieves the entity involved in the database operation.
-	 *
-	 * @return The entity.
-	 */
-	public Object getEntity() {
-		return entity;
-	}
-
-	/**
-	 * The id to be used in the database operation.
-	 *
-	 * @return The id.
-	 */
-	public Object getId() {
-		return id;
-	}
-
-	/**
-	 * The persister for the entity.
-	 *
-	 * @return The entity persister.
-	 */
-	public EntityPersister getPersister() {
-		return persister;
-	}
-
-	/**
-	 * The factory which owns the persister for the entity.
-	 *
-	 * @return The factory
-	 */
-	@Override
-	public SessionFactoryImplementor getFactory() {
-		return persister.getFactory();
-	}
 }

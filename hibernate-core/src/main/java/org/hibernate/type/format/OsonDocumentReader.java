@@ -27,7 +27,7 @@ public class OsonDocumentReader implements JsonDocumentReader {
 	final private OracleJsonParser parser;
 	private String currentKeyName;
 	private Object currentValue;
-	private boolean currentValueIsAString; // avoid later introspection
+
 	/**
 	 * Creates a new <code>OsonDocumentReader</code>  on top of a <code>OracleJsonParser</code>
 	 * @param parser the parser
@@ -48,7 +48,6 @@ public class OsonDocumentReader implements JsonDocumentReader {
 		OracleJsonParser.Event evt = this.parser.next();
 		currentKeyName = null;
 		currentValue = null;
-		currentValueIsAString = false;
 		switch (evt) {
 			case OracleJsonParser.Event.START_OBJECT:
 				return JsonDocumentItemType.OBJECT_START;
@@ -76,7 +75,6 @@ public class OsonDocumentReader implements JsonDocumentReader {
 				return JsonDocumentItemType.VALUE;
 			case OracleJsonParser.Event.VALUE_STRING:
 				currentValue = this.parser.getString();
-				currentValueIsAString = true;
 				return JsonDocumentItemType.VALUE;
 			case OracleJsonParser.Event.VALUE_TRUE:
 				currentValue = Boolean.TRUE;
@@ -128,43 +126,44 @@ public class OsonDocumentReader implements JsonDocumentReader {
 
 	@Override
 	public double getDoubleValue() {
-		if (currentValueIsAString) return Double.parseDouble( (String)currentValue );
+		if (currentValue instanceof String)
+			return Double.parseDouble( (String)currentValue );
 		return ((Double)currentValue).doubleValue();
 	}
 
 	@Override
 	public float getFloatValue() {
-		if (currentValueIsAString) return Float.parseFloat( (String)currentValue );
+		if (currentValue instanceof String) return Float.parseFloat( (String)currentValue );
 		return ((Float)currentValue).floatValue();
 	}
 
 	@Override
 	public long getLongValue() {
-		if (currentValueIsAString) return Long.parseLong( (String)currentValue );
+		if (currentValue instanceof String) return Long.parseLong( (String)currentValue );
 		return ((BigDecimal)currentValue).longValue();
 	}
 
 	@Override
 	public int getIntegerValue() {
-		if (currentValueIsAString) return Integer.parseInt( (String)currentValue );
+		if (currentValue instanceof String) return Integer.parseInt( (String)currentValue );
 		return ((BigDecimal)currentValue).intValue();
 	}
 
 	@Override
 	public short getShortValue() {
-		if (currentValueIsAString) return Short.parseShort( (String)currentValue );
+		if (currentValue instanceof String) return Short.parseShort( (String)currentValue );
 		return  ((BigDecimal)currentValue).shortValue();
 	}
 
 	@Override
 	public byte getByteValue() {
-		if (currentValueIsAString) return Byte.parseByte( (String)currentValue );
+		if (currentValue instanceof String) return Byte.parseByte( (String)currentValue );
 		return ((Byte)currentValue).byteValue();
 	}
 
 	@Override
 	public boolean getBooleanValue() {
-		if (currentValueIsAString) return BooleanJavaType.INSTANCE.fromEncodedString((String)currentValue);
+		if (currentValue instanceof String) return BooleanJavaType.INSTANCE.fromEncodedString((String)currentValue);
 		return ((Boolean)currentValue).booleanValue();
 	}
 
@@ -172,7 +171,7 @@ public class OsonDocumentReader implements JsonDocumentReader {
 
 	@Override
 	public <T> T getValue(JavaType<T> javaType, WrapperOptions options) {
-		if ( currentValueIsAString ) {
+		if ( currentValue instanceof String ) {
 			if (javaType.equals(PrimitiveByteArrayJavaType.INSTANCE)) {
 				// be sure that we have only allowed characters.
 				// that may happen for string representation of UUID (i.e 53886a8a-7082-4879-b430-25cb94415be8) for instance
@@ -183,7 +182,7 @@ public class OsonDocumentReader implements JsonDocumentReader {
 
 		Object theOneToBeUsed =  currentValue;
 		// handle special cases for Date things
-		if ( currentValue.getClass() == LocalDateTime.class ) {
+		if ( currentValue instanceof LocalDateTime ) {
 			if ( java.sql.Date.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
 				theOneToBeUsed = Date.valueOf( ((LocalDateTime)currentValue).toLocalDate() );
 			}

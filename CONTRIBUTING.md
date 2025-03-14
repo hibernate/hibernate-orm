@@ -10,6 +10,11 @@ All original contributions to Hibernate are licensed under the
 or, if another license is specified as governing the file or directory being modified, such other license.
 The Apache-2.0 license text is included verbatim in the [`LICENSE.txt`](LICENSE.txt) file
 
+Note that Hibernate ORM 7.0.0.Beta4 and earlier are distributed under 
+[a different license](https://github.com/hibernate/hibernate-orm/blob/6.6/CONTRIBUTING.md#legal). 
+To allow for potential backporting, the Hibernate team asks contributors to dual-license their contribution.
+A Pull Request template already applies the proper wording to make it easy.
+
 All contributions are subject to the [Developer Certificate of Origin (DCO)](https://developercertificate.org/).  
 
 The DCO text is available verbatim in the [dco.txt](dco.txt) file in the root directory of the ORM repository.

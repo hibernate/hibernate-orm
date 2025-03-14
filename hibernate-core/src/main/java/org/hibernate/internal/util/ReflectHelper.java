@@ -576,8 +576,8 @@ public final class ReflectHelper {
 		for ( Method declaredMethod : containerClass.getDeclaredMethods() ) {
 			if ( declaredMethod.getParameterCount() == 0
 				&& !Modifier.isStatic( declaredMethod.getModifiers() )
-				&& declaredMethod.getName().startsWith("is")
-				&& declaredMethod.getName().regionMatches(0, stemName, 0, stemName.length() )
+				&& declaredMethod.getName().startsWith( "is" )
+				&& declaredMethod.getName().regionMatches( 2, stemName, 0, stemName.length() )
 				&& declaredMethod.getAnnotation( Transient.class ) == null ) {
 				checkGetAndIsVariants( containerClass, propertyName, getMethod, declaredMethod );
 			}
@@ -615,8 +615,8 @@ public final class ReflectHelper {
 		for ( Method declaredMethod : containerClass.getDeclaredMethods() ) {
 			if ( declaredMethod.getParameterCount() == 0
 				&& !Modifier.isStatic( declaredMethod.getModifiers() )
-				&& declaredMethod.getName().startsWith("is")
-				&& declaredMethod.getName().regionMatches(0, stemName, 0, stemName.length() )
+				&& declaredMethod.getName().startsWith( "get" )
+				&& declaredMethod.getName().regionMatches( 3, stemName, 0, stemName.length() )
 				&& declaredMethod.getAnnotation( Transient.class ) == null ) {
 				checkGetAndIsVariants( containerClass, propertyName, declaredMethod, isMethod );
 			}

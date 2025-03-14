@@ -93,7 +93,7 @@ mysql_8_2() {
 
 mysql_9_2() {
     $CONTAINER_CLI rm -f mysql || true
-    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MYSQL_9_2:-docker.io/mysql:9.2.0} --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --init-connect="SET collation_connection = 'utf8mb4_0900_as_cs'" --log-bin-trust-function-creators=1 --lower_case_table_names=2
+    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MYSQL_9_2:-docker.io/mysql:9.2.0} --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --init-connect="SET NAMES 'utf8mb4';" --log-bin-trust-function-creators=1 --lower_case_table_names=2
     # Give the container some time to start
     OUTPUT=
     n=0

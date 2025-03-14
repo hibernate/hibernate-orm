@@ -1309,7 +1309,7 @@ class BookQueries {}
 We have to make sure that the class with the `@NamedQuery` annotation will be scanned by Hibernate, either:
 
 - by adding `<class>org.hibernate.example.BookQueries</class>` to `persistence.xml`, or
-- by calling `configuration.addClass(BookQueries.class)`.
+- by calling `persistenceConfiguration.managedClass(BookQueries.class)`.
 
 [TIP]
 ====

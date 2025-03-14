@@ -826,6 +826,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <T> T merge(T object, EntityGraph<?> loadGraph) {
+		return delegate.merge( object, loadGraph );
+	}
+
+	@Override
 	public void persist(Object object) {
 		delegate.persist( object );
 	}

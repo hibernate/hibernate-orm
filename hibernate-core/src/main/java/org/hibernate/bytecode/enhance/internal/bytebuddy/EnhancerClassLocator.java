@@ -25,9 +25,8 @@ public interface EnhancerClassLocator extends TypePool {
 	 * This can optionally be used to remove an explicit mapping when it's no longer
 	 * essential to retain it.
 	 * The underlying implementation might ignore the operation.
-	 * @param className
 	 */
-	void deregisterClassNameAndBytes(String className);
+	void deregisterClassNameAndBytes();
 
 	/**
 	 * @return the underlying {@link ClassFileLocator}

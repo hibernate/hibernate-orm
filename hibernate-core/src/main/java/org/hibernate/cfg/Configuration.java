@@ -265,8 +265,7 @@ public class Configuration {
 	 * @return The value currently associated with that property name; may be null.
 	 */
 	public String getProperty(String propertyName) {
-		Object o = properties.get( propertyName );
-		return o instanceof String ? (String) o : null;
+		return properties.get( propertyName ) instanceof String property ? property : null;
 	}
 
 	/**

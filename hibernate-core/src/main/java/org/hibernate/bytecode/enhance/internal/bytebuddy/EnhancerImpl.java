@@ -140,7 +140,7 @@ public class EnhancerImpl implements Enhancer {
 			throw new EnhancementException( "Failed to enhance class " + className, e );
 		}
 		finally {
-			typePool.deregisterClassNameAndBytes( safeClassName );
+			typePool.deregisterClassNameAndBytes();
 		}
 	}
 
@@ -158,7 +158,7 @@ public class EnhancerImpl implements Enhancer {
 			throw new EnhancementException( "Failed to discover types for class " + className, e );
 		}
 		finally {
-			typePool.deregisterClassNameAndBytes( className );
+			typePool.deregisterClassNameAndBytes();
 		}
 	}
 

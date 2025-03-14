@@ -7,6 +7,7 @@ package org.hibernate.orm.test.function.array;
 import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -19,6 +20,7 @@ import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -67,6 +69,7 @@ public class ArrayPositionTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class )
 	public void testPositionZero(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_position(e.theArray, 'xyz') = 0", EntityWithArrays.class )

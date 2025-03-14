@@ -35,16 +35,23 @@ public class GaussDBArrayPositionFunction extends AbstractArrayPositionFunction 
 			SqlAstTranslator<?> walker) {
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression elementExpression = (Expression) sqlAstArguments.get( 1 );
-		sqlAppender.append( "case when " );
+
+		sqlAppender.append( "(array_positions(" );
 		arrayExpression.accept( walker );
-		sqlAppender.append( " is not null then coalesce(array_position(" );
-		walker.render( arrayExpression, SqlAstNodeRenderingMode.DEFAULT );
-		sqlAppender.append( ',' );
+		sqlAppender.append( ", " );
 		walker.render( elementExpression, SqlAstNodeRenderingMode.DEFAULT );
-		if ( sqlAstArguments.size() > 2 ) {
-			sqlAppender.append( ',' );
-			sqlAstArguments.get( 2 ).accept( walker );
-		}
-		sqlAppender.append( "),0) end" );
+		sqlAppender.append( "))[1]" );
+
+//		sqlAppender.append( "case when " );
+//		arrayExpression.accept( walker );
+//		sqlAppender.append( " is not null then coalesce(array_position(" );
+//		walker.render( arrayExpression, SqlAstNodeRenderingMode.DEFAULT );
+//		sqlAppender.append( ',' );
+//		walker.render( elementExpression, SqlAstNodeRenderingMode.DEFAULT );
+//		if ( sqlAstArguments.size() > 2 ) {
+//			sqlAppender.append( ',' );
+//			sqlAstArguments.get( 2 ).accept( walker );
+//		}
+//		sqlAppender.append( "),0) end" );
 	}
 }

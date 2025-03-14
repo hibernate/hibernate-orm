@@ -4,10 +4,6 @@
  */
 package org.hibernate.dialect.function.json;
 
-import java.util.Iterator;
-import java.util.Map;
-
-import org.hibernate.dialect.JsonHelper;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -15,34 +11,33 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.util.Iterator;
+import java.util.Map;
+
+
 /**
- * GaussDB json_value function.
- *
- * @author liubao
- *
- * Notes: Original code of this class is based on PostgreSQLJsonValueFunction.
+ * PostgreSQL json_query function.
  */
-public class GaussDBJsonValueFunction extends JsonValueFunction {
+public class GaussdbJsonExistsFunction extends JsonExistsFunction {
 
-
-	public GaussDBJsonValueFunction(TypeConfiguration typeConfiguration) {
-		super( typeConfiguration, true, true );
+	public GaussdbJsonExistsFunction(TypeConfiguration typeConfiguration,
+									boolean supportsJsonPathExpression,
+									boolean supportsJsonPathPassingClause) {
+		super(typeConfiguration, supportsJsonPathExpression, supportsJsonPathPassingClause);
 	}
 
 	@Override
 	protected void render(
 			SqlAppender sqlAppender,
-			JsonValueArguments arguments,
+			JsonExistsArguments arguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 
-		if (arguments.returningType() != null) {
-			sqlAppender.appendSql( "(" );
-		}
+		sqlAppender.appendSql( "json_contains_path(" );
 		arguments.jsonDocument().accept( walker );
-		sqlAppender.appendSql( "::json #>> '{" );
-		String literalValue = walker.getLiteralValue( arguments.jsonPath() );
+		sqlAppender.appendSql( ",'one', '" );
 
+		String literalValue = walker.getLiteralValue( arguments.jsonPath() );
 		final JsonPathPassingClause passingClause = arguments.passingClause();
 		if ( passingClause != null ) {
 			final Map<String, Expression> passingExpressions = passingClause.getPassingExpressions();
@@ -56,15 +51,9 @@ public class GaussDBJsonValueFunction extends JsonValueFunction {
 			}
 		}
 
-		sqlAppender.append( JsonHelper.parseJsonPath( literalValue ) );
-		sqlAppender.appendSql( "}'" );
-		if (arguments.returningType() != null) {
-			sqlAppender.appendSql( ")::" );
-			arguments.returningType().accept( walker );
-		}
+		sqlAppender.appendSql( literalValue );
+//		sqlAppender.appendSql( "}'" );
+		sqlAppender.appendSql( "') = 1" );
 	}
 
-	@Override
-	protected void renderReturningClause(SqlAppender sqlAppender, JsonValueArguments arguments, SqlAstTranslator<?> walker) {
-	}
 }

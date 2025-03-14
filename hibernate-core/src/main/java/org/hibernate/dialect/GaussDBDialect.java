@@ -575,12 +575,13 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.arraySet_gaussdb();
 		functionFactory.arrayTrim_gaussdb();
 		functionFactory.arrayFill_gaussdb();
+		functionFactory.arrayPosition_gaussdb();
 
 		functionFactory.jsonValue_gaussdb(true);
-		functionFactory.jsonQuery();
-		functionFactory.jsonExists();
-		functionFactory.jsonObject();
+		functionFactory.jsonQuery_gaussdb();
+		functionFactory.jsonExists_gaussdb();
 		functionFactory.jsonArray();
+		functionFactory.jsonObject_gaussdb();
 		functionFactory.jsonArrayAgg_gaussdb( true );
 		functionFactory.jsonObjectAgg_gaussdb( true );
 		functionFactory.jsonTable();
@@ -589,8 +590,8 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.jsonRemove_gaussdb();
 		functionFactory.jsonReplace_gaussdb();
 		functionFactory.jsonInsert_gaussdb();
+		functionFactory.jsonArray_gaussdb();
 		functionFactory.jsonMergepatch_gaussdb();
-		functionFactory.jsonArrayInsert_gaussdb();
 
 		functionFactory.xmlelement();
 		functionFactory.xmlcomment();

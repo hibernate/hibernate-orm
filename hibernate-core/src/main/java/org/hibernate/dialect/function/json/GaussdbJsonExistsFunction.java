@@ -52,7 +52,6 @@ public class GaussdbJsonExistsFunction extends JsonExistsFunction {
 		}
 
 		sqlAppender.appendSql( literalValue );
-//		sqlAppender.appendSql( "}'" );
 		sqlAppender.appendSql( "') = 1" );
 	}
 

@@ -761,11 +761,6 @@ public class Configuration {
 		if ( entityClass == null ) {
 			throw new IllegalArgumentException( "The specified class cannot be null" );
 		}
-
-		if ( log.isDebugEnabled() ) {
-			log.debugf( "adding resource mappings from class convention : %s", entityClass.getName() );
-		}
-
 		return addResource( entityClass.getName().replace( '.', '/' ) + ".hbm.xml" );
 	}
 

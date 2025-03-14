@@ -4,43 +4,39 @@
  */
 package org.hibernate.dialect.function.json;
 
-import java.util.Iterator;
-import java.util.Map;
-
 import org.hibernate.dialect.JsonHelper;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
+import org.hibernate.sql.ast.tree.expression.JsonQueryWrapMode;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.util.Iterator;
+import java.util.Map;
+
 /**
- * GaussDB json_value function.
- *
- * @author liubao
- *
- * Notes: Original code of this class is based on PostgreSQLJsonValueFunction.
+ * PostgreSQL json_query function.
  */
-public class GaussDBJsonValueFunction extends JsonValueFunction {
+public class GaussdbJsonQueryFunction extends JsonQueryFunction {
 
-
-	public GaussDBJsonValueFunction(TypeConfiguration typeConfiguration) {
+	public GaussdbJsonQueryFunction(TypeConfiguration typeConfiguration) {
 		super( typeConfiguration, true, true );
 	}
 
 	@Override
 	protected void render(
 			SqlAppender sqlAppender,
-			JsonValueArguments arguments,
+			JsonQueryArguments arguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 
-		if (arguments.returningType() != null) {
-			sqlAppender.appendSql( "(" );
+		if ( arguments.wrapMode() == JsonQueryWrapMode.WITH_WRAPPER ) {
+			sqlAppender.appendSql( "json_build_array(" );
 		}
 		arguments.jsonDocument().accept( walker );
-		sqlAppender.appendSql( "::json #>> '{" );
+		sqlAppender.appendSql( "::json #> '{" );
 		String literalValue = walker.getLiteralValue( arguments.jsonPath() );
 
 		final JsonPathPassingClause passingClause = arguments.passingClause();
@@ -58,13 +54,9 @@ public class GaussDBJsonValueFunction extends JsonValueFunction {
 
 		sqlAppender.append( JsonHelper.parseJsonPath( literalValue ) );
 		sqlAppender.appendSql( "}'" );
-		if (arguments.returningType() != null) {
-			sqlAppender.appendSql( ")::" );
-			arguments.returningType().accept( walker );
+		if ( arguments.wrapMode() == JsonQueryWrapMode.WITH_WRAPPER ) {
+			sqlAppender.appendSql( ")" );
 		}
 	}
 
-	@Override
-	protected void renderReturningClause(SqlAppender sqlAppender, JsonValueArguments arguments, SqlAstTranslator<?> walker) {
-	}
 }

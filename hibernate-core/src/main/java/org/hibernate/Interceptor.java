@@ -39,11 +39,14 @@ import org.hibernate.type.Type;
  * Whichever approach is used, the interceptor must be serializable for the
  * {@code Session} to be serializable. This means that {@code SessionFactory}-scoped
  * interceptors should implement {@code readResolve()}.
- * <p>
- * This venerable callback interface, dating to the very earliest days of Hibernate,
- * competes with JPA entity listener callbacks: {@link jakarta.persistence.PostLoad},
- * {@link jakarta.persistence.PrePersist} {@link jakarta.persistence.PreUpdate}, and
- * {@link jakarta.persistence.PreRemove}.
+ *
+ * @apiNote This venerable callback interface, dating from the very earliest days of
+ *          Hibernate, competes with standard JPA entity listener callbacks:
+ *          {@link jakarta.persistence.PostLoad}, {@link jakarta.persistence.PrePersist},
+ *          {@link jakarta.persistence.PreUpdate}, and {@link jakarta.persistence.PreRemove}.
+ *          However, JPA callbacks do not provide the ability to access the previous
+ *          value of an updated property in a {@code @PreUpdate} callback, and do not
+ *          provide a well-defined way to intercept changes to collections.
  *
  * @see SessionBuilder#interceptor(Interceptor)
  * @see SharedSessionBuilder#interceptor()

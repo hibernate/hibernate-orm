@@ -77,8 +77,11 @@ import jakarta.persistence.SharedCacheMode;
  *     annotated classes}, or {@linkplain #addFile XML mapping documents}.
  * </ul>
  * <p>
- * Note that XML mappings may be expressed using the JPA {@code orm.xml}
- * format, or in Hibernate's legacy {@code .hbm.xml} format.
+ * Note that XML mappings may be expressed using either:
+ * <ul>
+ * <li>the JPA-standard {@code orm.xml} format, or
+ * <li>the legacy {@code .hbm.xml} format, which is considered deprecated.
+ * </ul>
  * <p>
  * Configuration properties are enumerated by {@link AvailableSettings}.
  * <p>

@@ -250,7 +250,7 @@ public class GeneratorAnnotationHelper {
 			MetadataBuildingContext buildingContext) {
 		final IdGeneratorType markerAnnotation =
 				generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
-		idValue.setCustomIdGeneratorCreator( (creationContext) -> {
+		idValue.setCustomIdGeneratorCreator( creationContext -> {
 			final Generator identifierGenerator =
 					instantiateGenerator( beanContainer( buildingContext ), markerAnnotation.value() );
 			prepareForUse(

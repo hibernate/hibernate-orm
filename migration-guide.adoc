@@ -548,6 +548,7 @@ We encourage migration to the use of the new JPA-standard operations.
 * `Session.get()` is deprecated in favor of `find()`
 * `@Cascade` and `org.hibernate.annotations.CascadeType` are deprecated in favor of JPA `cascade` and `CascadeType`
 * `org.hibernate.annotations.FlushModeType` is deprecated in favor of `QueryFlushMode`
+* declaration of JPA lifecycle callback methods by `@Embeddable` classes was previously an undocumented misfeature, and is now deprecated
 
 [[cleanup]]
 == Cleanup

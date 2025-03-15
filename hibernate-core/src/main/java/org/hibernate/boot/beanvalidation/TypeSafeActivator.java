@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import jakarta.validation.NoProviderFoundException;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -97,14 +98,24 @@ class TypeSafeActivator {
 		catch (IntegrationException e) {
 			final Set<ValidationMode> validationModes = context.getValidationModes();
 			if ( validationModes.contains( ValidationMode.CALLBACK ) ) {
-				throw new IntegrationException( "Bean Validation provider was not available, but 'callback' validation was requested", e );
+				throw new IntegrationException( "Jakarta Validation provider was not available, but 'callback' validation mode was requested", e );
 			}
 			else if ( validationModes.contains( ValidationMode.DDL ) ) {
-				throw new IntegrationException( "Bean Validation provider was not available, but 'ddl' validation was requested", e );
+				throw new IntegrationException( "Jakarta Validation provider was not available, but 'ddl' validation mode was requested", e );
 			}
 			else {
-				LOG.debug( "Unable to acquire Bean Validation ValidatorFactory, skipping activation" );
-				return;
+				if ( e.getCause() != null && e.getCause() instanceof NoProviderFoundException ) {
+					// all good, we are looking at the ValidationMode.AUTO, and there are no providers available.
+					// Hence, we just don't enable the Jakarta Validation integration:
+					LOG.debug( "Unable to acquire Jakarta Validation ValidatorFactory, skipping activation" );
+					return;
+				}
+				else {
+					// There is a Jakarta Validation provider, but it failed to bootstrap the factory for some reason,
+					// we should fail and let the user deal with it:
+					throw e;
+
+				}
 			}
 		}
 

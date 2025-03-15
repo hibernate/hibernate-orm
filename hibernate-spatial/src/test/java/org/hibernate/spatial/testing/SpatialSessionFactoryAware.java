@@ -40,7 +40,8 @@ public abstract class SpatialSessionFactoryAware extends SpatialTestDataProvider
 	}
 
 	public boolean isSupported(CommonSpatialFunction function) {
-		return supportedFunctions.contains( function.name() );
+		return supportedFunctions.contains( function.getKey().getName() ) ||
+			( function.getKey().getAltName().isPresent() && supportedFunctions.contains( function.getKey().getAltName().get() ) );
 	}
 
 	protected void initH2GISExtensionsForInMemDb() {

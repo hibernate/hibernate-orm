@@ -27,7 +27,39 @@ import jakarta.persistence.UniqueConstraint;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.*;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.CacheLayout;
+import org.hibernate.annotations.Check;
+import org.hibernate.annotations.Checks;
+import org.hibernate.annotations.ConcreteProxy;
+import org.hibernate.annotations.DiscriminatorFormula;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.HQLSelect;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Mutability;
+import org.hibernate.annotations.NaturalIdCache;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.annotations.OptimisticLocking;
+import org.hibernate.annotations.QueryCacheLayout;
+import org.hibernate.annotations.RowId;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLDeleteAll;
+import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SQLSelect;
+import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.annotations.SecondaryRow;
+import org.hibernate.annotations.SecondaryRows;
+import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.Subselect;
+import org.hibernate.annotations.Synchronize;
+import org.hibernate.annotations.TypeBinderType;
+import org.hibernate.annotations.View;
 import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.internal.InheritanceState.ElementsToProcess;
@@ -41,11 +73,10 @@ import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
 import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
 import org.hibernate.boot.models.annotations.spi.DialectOverrider;
-import org.hibernate.boot.models.spi.JpaEventListener;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
@@ -55,8 +86,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.jpa.event.internal.CallbackDefinitionResolver;
-import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Component;
@@ -127,6 +156,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
+import static org.hibernate.jpa.event.internal.CallbackDefinitionResolver.resolveLifecycleCallbacks;
 
 
 /**
@@ -228,7 +258,7 @@ public class EntityBinder {
 		collector.addSecondPass( new SecondaryTableSecondPass( entityBinder, holder ) );
 		// comment, checkConstraint, and indexes are processed here
 		entityBinder.processComplementaryTableDefinitions();
-		bindCallbacks( clazzToProcess, persistentClass, context );
+		resolveLifecycleCallbacks( clazzToProcess, persistentClass, context.getMetadataCollector() );
 		entityBinder.callTypeBinders( persistentClass );
 	}
 
@@ -442,73 +472,83 @@ public class EntityBinder {
 			ElementsToProcess elementsToProcess,
 			Set<String> idPropertiesIfIdClass,
 			MetadataBuildingContext context) {
-
 		// We are looking for @IdClass
 		// In general we map the id class as identifier using the mapping metadata of the main entity's
 		// properties and create an identifier mapper containing the id properties of the main entity
 		final ClassDetails classWithIdClass = inheritanceState.getClassWithIdClass( false );
 		if ( classWithIdClass != null ) {
 			final ClassDetails compositeClass = idClassDetails( inheritanceState, classWithIdClass );
-			if ( compositeClass == null ) {
-				return false;
-			}
-			final TypeDetails compositeType = new ClassTypeDetailsImpl( compositeClass, TypeDetails.Kind.CLASS );
-			final TypeDetails classWithIdType = new ClassTypeDetailsImpl( classWithIdClass, TypeDetails.Kind.CLASS );
-
-			final AccessType accessType = getPropertyAccessType();
-			final PropertyData inferredData = new PropertyPreloadedData( accessType, "id", compositeType );
-			final PropertyData baseInferredData = new PropertyPreloadedData( accessType, "id", classWithIdType );
-			final AccessType propertyAccessor = getPropertyAccessor( compositeClass );
-
-			// In JPA 2, there is a shortcut if the IdClass is the PK of the associated class pointed to by the id
-			// it ought to be treated as an embedded and not a real IdClass (at least in Hibernate's internal way)
-			final boolean isFakeIdClass = isIdClassPrimaryKeyOfAssociatedEntity(
-					elementsToProcess,
-					compositeClass,
-					inferredData,
-					baseInferredData,
-					propertyAccessor,
-					inheritanceStates,
-					context
-			);
-
-			if ( isFakeIdClass ) {
-				return false;
-			}
-			else {
-				final boolean ignoreIdAnnotations = isIgnoreIdAnnotations();
-				this.ignoreIdAnnotations = true;
-				final Component idClassComponent = bindIdClass(
-						inferredData,
-						baseInferredData,
-						propertyHolder,
-						propertyAccessor,
-						context,
-						inheritanceStates
-				);
-				final Component mapper = createMapperProperty(
-						inheritanceStates,
-						persistentClass,
-						propertyHolder,
-						context,
-						classWithIdClass,
-						compositeType,
-						baseInferredData,
-						propertyAccessor,
-						true
-				);
-				if ( idClassComponent.isSimpleRecord() ) {
-					mapper.setSimpleRecord( true );
-				}
-				this.ignoreIdAnnotations = ignoreIdAnnotations;
-				for ( Property property : mapper.getProperties() ) {
-					idPropertiesIfIdClass.add( property.getName() );
-				}
-				return true;
-			}
+			return compositeClass != null
+				&& mapAsIdClass( inheritanceStates, persistentClass, propertyHolder, elementsToProcess,
+					idPropertiesIfIdClass, context, compositeClass, classWithIdClass );
 		}
 		else {
 			return false;
+		}
+	}
+
+	private boolean mapAsIdClass(
+			Map<ClassDetails, InheritanceState> inheritanceStates,
+			PersistentClass persistentClass,
+			PropertyHolder propertyHolder,
+			ElementsToProcess elementsToProcess,
+			Set<String> idPropertiesIfIdClass,
+			MetadataBuildingContext context,
+			ClassDetails compositeClass,
+			ClassDetails classWithIdClass) {
+		final TypeDetails compositeType = new ClassTypeDetailsImpl( compositeClass, TypeDetails.Kind.CLASS );
+		final TypeDetails classWithIdType = new ClassTypeDetailsImpl( classWithIdClass, TypeDetails.Kind.CLASS );
+
+		final AccessType accessType = getPropertyAccessType();
+		final PropertyData inferredData = new PropertyPreloadedData( accessType, "id", compositeType );
+		final PropertyData baseInferredData = new PropertyPreloadedData( accessType, "id", classWithIdType );
+		final AccessType propertyAccessor = getPropertyAccessor( compositeClass );
+
+		// In JPA 2, there is a shortcut if the IdClass is the PK of the associated class pointed to by the id
+		// it ought to be treated as an embedded and not a real IdClass (at least in our internal language)
+		final boolean isFakeIdClass = isIdClassPrimaryKeyOfAssociatedEntity(
+				elementsToProcess,
+				compositeClass,
+				inferredData,
+				baseInferredData,
+				propertyAccessor,
+				inheritanceStates,
+				context
+		);
+
+		if ( isFakeIdClass ) {
+			return false;
+		}
+		else {
+			final boolean ignoreIdAnnotations = isIgnoreIdAnnotations();
+			this.ignoreIdAnnotations = true;
+			final Component idClassComponent = bindIdClass(
+					inferredData,
+					baseInferredData,
+					propertyHolder,
+					propertyAccessor,
+					context,
+					inheritanceStates
+			);
+			final Component mapper = createMapperProperty(
+					inheritanceStates,
+					persistentClass,
+					propertyHolder,
+					context,
+					classWithIdClass,
+					compositeType,
+					baseInferredData,
+					propertyAccessor,
+					true
+			);
+			if ( idClassComponent.isSimpleRecord() ) {
+				mapper.setSimpleRecord( true );
+			}
+			this.ignoreIdAnnotations = ignoreIdAnnotations;
+			for ( Property property : mapper.getProperties() ) {
+				idPropertiesIfIdClass.add( property.getName() );
+			}
+			return true;
 		}
 	}
 
@@ -613,18 +653,16 @@ public class EntityBinder {
 			AccessType propertyAccessor,
 			MetadataBuildingContext context) {
 		final List<PropertyData> baseClassElements = new ArrayList<>();
-		final PropertyContainer propContainer = new PropertyContainer(
-				baseInferredData.getClassOrElementType().determineRawClass(),
-				inferredData.getPropertyType(),
-				propertyAccessor
-		);
+		final PropertyContainer propContainer =
+				new PropertyContainer( baseInferredData.getClassOrElementType().determineRawClass(),
+						inferredData.getPropertyType(), propertyAccessor );
 		final int idPropertyCount = addElementsOfClass( baseClassElements, propContainer, context, 0 );
 		assert idPropertyCount == 1;
 		//Id properties are on top and there is only one
 		return baseClassElements.get( 0 );
 	}
 
-	private static boolean isIdClassPrimaryKeyOfAssociatedEntity(
+	private boolean isIdClassPrimaryKeyOfAssociatedEntity(
 			ElementsToProcess elementsToProcess,
 			ClassDetails compositeClass,
 			PropertyData inferredData,
@@ -633,12 +671,8 @@ public class EntityBinder {
 			Map<ClassDetails, InheritanceState> inheritanceStates,
 			MetadataBuildingContext context) {
 		if ( elementsToProcess.getIdPropertyCount() == 1 ) {
-			final PropertyData idPropertyOnBaseClass = getUniqueIdPropertyFromBaseClass(
-					inferredData,
-					baseInferredData,
-					propertyAccessor,
-					context
-			);
+			final PropertyData idPropertyOnBaseClass =
+					getUniqueIdPropertyFromBaseClass( inferredData, baseInferredData, propertyAccessor, context );
 			final InheritanceState state =
 					inheritanceStates.get( idPropertyOnBaseClass.getClassOrElementType().determineRawClass() );
 			if ( state == null ) {
@@ -652,9 +686,8 @@ public class EntityBinder {
 
 			}
 			else {
-				final SourceModelBuildingContext sourceModelContext =
-						context.getMetadataCollector().getSourceModelBuildingContext();
-				final IdClass idClass = associatedClassWithIdClass.getAnnotationUsage( IdClass.class, sourceModelContext );
+				final IdClass idClass =
+						associatedClassWithIdClass.getAnnotationUsage( IdClass.class, getSourceModelContext() );
 				return compositeClass.getName().equals( idClass.value().getName() );
 			}
 		}
@@ -708,11 +741,8 @@ public class EntityBinder {
 		}
 
 		rootClass.setIdentifier( id );
-
 		rootClass.setEmbeddedIdentifier( inferredData.getPropertyType() == null );
-
 		propertyHolder.setInIdClass( null );
-
 		return id;
 	}
 
@@ -947,13 +977,8 @@ public class EntityBinder {
 
 		if ( !inheritanceState.hasParents()
 				|| annotatedClass.hasAnnotationUsage( Inheritance.class, getSourceModelContext() ) ) {
-			return buildDiscriminatorColumn(
-					discriminatorColumn,
-					discriminatorFormula,
-					null,
-					DEFAULT_DISCRIMINATOR_COLUMN_NAME,
-					context
-			);
+			return buildDiscriminatorColumn( discriminatorColumn, discriminatorFormula,
+					null, DEFAULT_DISCRIMINATOR_COLUMN_NAME, context );
 		}
 		else {
 			// not a root entity
@@ -1008,8 +1033,9 @@ public class EntityBinder {
 	 * </ol>
 	 */
 	private boolean useDiscriminatorColumnForJoined(DiscriminatorColumn discriminatorColumn) {
+		final MetadataBuildingOptions buildingOptions = context.getBuildingOptions();
 		if ( discriminatorColumn != null ) {
-			final boolean ignore = context.getBuildingOptions().ignoreExplicitDiscriminatorsForJoinedInheritance();
+			final boolean ignore = buildingOptions.ignoreExplicitDiscriminatorsForJoinedInheritance();
 			if ( ignore ) {
 				if ( LOG.isDebugEnabled() ) {
 					LOG.debug( "Ignoring explicit @DiscriminatorColumn annotation on: "
@@ -1019,7 +1045,7 @@ public class EntityBinder {
 			return !ignore;
 		}
 		else {
-			final boolean createImplicit = context.getBuildingOptions().createImplicitDiscriminatorsForJoinedInheritance();
+			final boolean createImplicit = buildingOptions.createImplicitDiscriminatorsForJoinedInheritance();
 			if ( createImplicit ) {
 				if ( LOG.isDebugEnabled() ) {
 					LOG.debug( "Inferring implicit @DiscriminatorColumn using defaults for: "
@@ -1044,12 +1070,12 @@ public class EntityBinder {
 			final String propertyName = propertyAnnotatedElement.getPropertyName();
 			if ( !idPropertiesIfIdClass.contains( propertyName ) ) {
 				final MemberDetails property = propertyAnnotatedElement.getAttributeMember();
-				boolean hasIdAnnotation = hasIdAnnotation( property );
+				final boolean hasIdAnnotation = hasIdAnnotation( property );
 				if ( !idPropertiesIfIdClass.isEmpty() && !isIgnoreIdAnnotations() && hasIdAnnotation ) {
 					missingEntityProperties.add( propertyName );
 				}
 				else {
-					boolean subclassAndSingleTableStrategy =
+					final boolean subclassAndSingleTableStrategy =
 							inheritanceState.getType() == SINGLE_TABLE
 									&& inheritanceState.hasParents();
 					if ( !hasIdAnnotation && property.hasAnnotationUsage( GeneratedValue.class, getSourceModelContext() ) ) {
@@ -1089,14 +1115,14 @@ public class EntityBinder {
 	}
 
 	private static String getMissingPropertiesString(Set<String> propertyNames) {
-		final StringBuilder sb = new StringBuilder();
-		for ( String property : propertyNames ) {
-			if ( !sb.isEmpty() ) {
-				sb.append( ", " );
+		final StringBuilder missingProperties = new StringBuilder();
+		for ( String propertyName : propertyNames ) {
+			if ( !missingProperties.isEmpty() ) {
+				missingProperties.append( ", " );
 			}
-			sb.append( "'" ).append( property ).append( "'" );
+			missingProperties.append( "'" ).append( propertyName ).append( "'" );
 		}
-		return sb.toString();
+		return missingProperties.toString();
 	}
 
 	private static PersistentClass makePersistentClass(
@@ -1186,41 +1212,6 @@ public class EntityBinder {
 			}
 			return superEntity;
 		}
-	}
-
-	/**
-	 * See {@link JpaEventListener} for a better (?) alternative
-	 */
-	private static void bindCallbacks(
-			ClassDetails entityClass, PersistentClass persistentClass, MetadataBuildingContext context) {
-		for ( CallbackType callbackType : CallbackType.values() ) {
-			persistentClass.addCallbackDefinitions( CallbackDefinitionResolver.resolveEntityCallbacks(
-					context,
-					entityClass,
-					callbackType
-			) );
-		}
-
-		context.getMetadataCollector().addSecondPass( persistentClasses -> {
-			for ( Property property : persistentClass.getDeclaredProperties() ) {
-				if ( property.isComposite() ) {
-					try {
-						final Class<?> mappedClass = persistentClass.getMappedClass();
-						for ( CallbackType type : CallbackType.values() ) {
-							property.addCallbackDefinitions( CallbackDefinitionResolver.resolveEmbeddableCallbacks(
-									context,
-									mappedClass,
-									property,
-									type
-							) );
-						}
-					}
-					catch (ClassLoadingException ignore) {
-						// a dynamic embeddable... cannot define listener methods
-					}
-				}
-			}
-		} );
 	}
 
 	public boolean wrapIdsInEmbeddedComponents() {

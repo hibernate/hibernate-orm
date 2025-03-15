@@ -7,6 +7,7 @@ package org.hibernate.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Set;
 
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.model.FunctionContributions;
@@ -59,6 +60,16 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
 public class MariaDBDialect extends MySQLDialect {
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 5 );
 	private static final DatabaseVersion MYSQL57 = DatabaseVersion.make( 5, 7 );
+	private static final Set<String> GEOMETRY_TYPE_NAMES = Set.of(
+			"POINT",
+			"LINESTRING",
+			"POLYGON",
+			"MULTIPOINT",
+			"MULTILINESTRING",
+			"MULTIPOLYGON",
+			"GEOMETRYCOLLECTION",
+			"GEOMETRY"
+	);
 
 	public MariaDBDialect() {
 		this( MINIMUM_VERSION );
@@ -158,7 +169,7 @@ public class MariaDBDialect extends MySQLDialect {
 				}
 				break;
 			case VARBINARY:
-				if ( "GEOMETRY".equals( columnTypeName ) ) {
+				if( GEOMETRY_TYPE_NAMES.contains( columnTypeName ) ) {
 					jdbcTypeCode = GEOMETRY;
 				}
 				break;

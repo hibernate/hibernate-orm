@@ -10,6 +10,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.MapKey;
 import jakarta.persistence.MapKeyClass;
 import jakarta.persistence.MapKeyColumn;
@@ -25,6 +26,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.CompositeType;
+import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.ManyToAny;
@@ -596,20 +598,22 @@ public class PropertyBinder {
 			List<PropertyData> inFlightPropertyDataList,
 			MetadataBuildingContext context,
 			int idPropertyCounter) {
+		final InFlightMetadataCollector collector = context.getMetadataCollector();
+
 		// see if inFlightPropertyDataList already contains a PropertyData for this name,
 		// and if so, skip it...
 		for ( PropertyData propertyData : inFlightPropertyDataList ) {
 			if ( propertyData.getPropertyName().equals( property.resolveAttributeName() ) ) {
-				checkIdProperty( property, propertyData );
+				checkIdProperty( property, propertyData, collector.getSourceModelBuildingContext() );
 				// EARLY EXIT!!!
 				return idPropertyCounter;
 			}
 		}
 
-		final ClassDetails declaringClass = propertyContainer.getDeclaringClass();
 		final TypeVariableScope ownerType = propertyContainer.getTypeAtStake();
+
 		final PropertyData propertyAnnotatedElement = new PropertyInferredData(
-				declaringClass,
+				propertyContainer.getDeclaringClass(),
 				ownerType,
 				property,
 				propertyContainer.getClassLevelAccessType().getType(),
@@ -622,8 +626,7 @@ public class PropertyBinder {
 		if ( hasIdAnnotation( element ) ) {
 			inFlightPropertyDataList.add( idPropertyCounter, propertyAnnotatedElement );
 			if ( hasToOneAnnotation( element ) ) {
-				context.getMetadataCollector()
-						.addToOneAndIdProperty( ownerType.determineRawClass(), propertyAnnotatedElement );
+				collector.addToOneAndIdProperty( ownerType.determineRawClass(), propertyAnnotatedElement );
 			}
 			idPropertyCounter++;
 		}
@@ -631,22 +634,43 @@ public class PropertyBinder {
 			inFlightPropertyDataList.add( propertyAnnotatedElement );
 		}
 		if ( element.hasDirectAnnotationUsage( MapsId.class ) ) {
-			context.getMetadataCollector()
-					.addPropertyAnnotatedWithMapsId( ownerType.determineRawClass(), propertyAnnotatedElement );
+			collector.addPropertyAnnotatedWithMapsId( ownerType.determineRawClass(), propertyAnnotatedElement );
 		}
 
 		return idPropertyCounter;
 	}
 
-	private static void checkIdProperty(MemberDetails property, PropertyData propertyData) {
-		final Id incomingIdProperty = property.getDirectAnnotationUsage( Id.class );
+	private static void checkIdProperty(MemberDetails property, PropertyData propertyData, SourceModelBuildingContext context) {
+		final boolean incomingIdProperty = hasIdAnnotation( property );
 		final MemberDetails attributeMember = propertyData.getAttributeMember();
-		final Id existingIdProperty = attributeMember.getDirectAnnotationUsage( Id.class );
-		if ( incomingIdProperty != null && existingIdProperty == null ) {
-			throw new MappingException(
-					"Attribute '" + attributeMember.getName()
-					+ "' is declared by '" + attributeMember.getDeclaringType().getName()
-					+ "' and may not be redeclared as an '@Id' by '" + property.getDeclaringType().getName() + "'" );
+		final boolean existingIdProperty = hasIdAnnotation( attributeMember );
+		if ( incomingIdProperty ) {
+			if ( existingIdProperty ) {
+				if ( property.hasDirectAnnotationUsage( GeneratedValue.class )
+						|| !property.getMetaAnnotated( IdGeneratorType.class, context ).isEmpty() ) {
+					//TODO: it would be nice to allow a root @Entity to override an
+					//      @Id field declared by a @MappedSuperclass and change the
+					//      generator, but for now we don't seem to be able to detect
+					//      that case here
+					throw new AnnotationException(
+							"Attribute '" + attributeMember.getName()
+							+ "' is declared as an '@Id' or '@EmbeddedId' property by '"
+							+ attributeMember.getDeclaringType().getName()
+							+ "' and so '" + property.getDeclaringType().getName()
+							+ "' may not respecify the generation strategy" );
+				}
+			}
+			else {
+				//TODO: it would be nice to allow a root @Entity to override a
+				//      field declared by a @MappedSuperclass, redeclaring it
+				//      as an @Id field, but for now we don't seem to be able
+				//      to detect that case here
+				throw new AnnotationException(
+						"Attribute '" + attributeMember.getName()
+						+ "' is declared by '" + attributeMember.getDeclaringType().getName()
+						+ "' and may not be redeclared as an '@Id' or '@EmbeddedId' by '"
+						+ property.getDeclaringType().getName() + "'" );
+			}
 		}
 	}
 
@@ -721,14 +745,17 @@ public class PropertyBinder {
 			MetadataBuildingContext context,
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
 			MemberDetails property) {
+
+		if ( isPropertyOfRegularEmbeddable( propertyHolder, isComponentEmbedded )
+				&& property.hasDirectAnnotationUsage(Id.class)) {
+			throw new AnnotationException("Member '" + property.getName()
+					+ "' of embeddable class " + propertyHolder.getClassName() + " is annotated '@Id'");
+		}
+
 		final TypeDetails attributeTypeDetails =
 				inferredData.getAttributeMember().isPlural()
 						? inferredData.getAttributeMember().getType()
 						: inferredData.getClassOrElementType();
-		final ClassDetails attributeClassDetails = attributeTypeDetails.determineRawClass();
-		final ColumnsBuilder columnsBuilder =
-				new ColumnsBuilder( propertyHolder, nullability, property, inferredData, entityBinder, context )
-						.extractMetadata();
 
 		final PropertyBinder propertyBinder = propertyBinder(
 				propertyHolder,
@@ -741,17 +768,14 @@ public class PropertyBinder {
 				attributeTypeDetails
 		);
 
-		if ( isPropertyOfRegularEmbeddable( propertyHolder, isComponentEmbedded )
-				&& property.hasDirectAnnotationUsage(Id.class)) {
-			throw new AnnotationException("Member '" + property.getName()
-					+ "' of embeddable class " + propertyHolder.getClassName() + " is annotated '@Id'");
-		}
-
 		final LazyGroup lazyGroupAnnotation = property.getDirectAnnotationUsage( LazyGroup.class );
 		if ( lazyGroupAnnotation != null ) {
 			propertyBinder.setLazyGroup( lazyGroupAnnotation.value() );
 		}
 
+		final ColumnsBuilder columnsBuilder =
+				new ColumnsBuilder( propertyHolder, nullability, property, inferredData, entityBinder, context )
+						.extractMetadata();
 		final AnnotatedJoinColumns joinColumns = columnsBuilder.getJoinColumns();
 		final AnnotatedColumns columns = propertyBinder.bindProperty(
 				propertyHolder,
@@ -762,7 +786,7 @@ public class PropertyBinder {
 				isComponentEmbedded,
 				inSecondPass,
 				property,
-				attributeClassDetails,
+				attributeTypeDetails.determineRawClass(),
 				columnsBuilder
 		);
 		addNaturalIds( inSecondPass, property, columns, joinColumns, context );

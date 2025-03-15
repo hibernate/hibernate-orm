@@ -582,7 +582,8 @@ public class PropertyBinder {
 	static int addElementsOfClass(
 			List<PropertyData> elements,
 			PropertyContainer propertyContainer,
-			MetadataBuildingContext context, int idPropertyCounter) {
+			MetadataBuildingContext context,
+			int idPropertyCounter) {
 		for ( MemberDetails property : propertyContainer.propertyIterator() ) {
 			idPropertyCounter = addProperty( propertyContainer, property, elements, context, idPropertyCounter );
 		}

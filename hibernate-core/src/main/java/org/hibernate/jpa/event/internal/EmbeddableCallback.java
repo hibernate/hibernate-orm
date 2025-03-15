@@ -17,13 +17,23 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 /**
  * Represents a JPA callback method declared by an embeddable type.
  *
- * @apiNote The JPA specification does not require that we allow
- * entity lifecycle callbacks on embeddable classes, and this is
- * at least arguably a misfeature. It would by OK to simply remove
- * or deprecate this.
+ * @deprecated The JPA specification does not require that we allow
+ * entity lifecycle callbacks on embeddable classes, and this is a
+ * misfeature since:
+ * <ul>
+ * <li>an embeddable objects doesn't have a well-defined lifecycle,
+ * <li>it's difficult to understand what this means for composite
+ *     collection elements, and
+ * <li>currently, the {@code PreUpdate}/{@code PostUpdate} callbacks
+ *     get called when the embeddable object is not itself being
+ *     updated.
+ * </ul>
+ * It would be OK to simply remove this capability, since fortunately
+ * we never documented it.
  *
  * @author Vlad Mihalcea
  */
+@Deprecated(since = "7")
 public class EmbeddableCallback extends AbstractCallback {
 
 	public static class Definition implements CallbackDefinition {

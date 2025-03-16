@@ -3,6 +3,25 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.11.Final (March 16, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32879
+
+** Bug
+    * [HHH-19246] - Fetch join makes partially covered EntityGraph ineffective
+    * [HHH-19220] - ClassCastException: class org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer$1 cannot be cast to class java.lang.String
+    * [HHH-19140] - Enhanced entities with AccessType.PROPERTY does not work well with inheritance
+    * [HHH-19107] - Entities with @EmbeddedId not supported with CrudRepository
+    * [HHH-19106] - @Transaction(TxType) not working with Hibernate Data Repositories
+    * [HHH-19052] - Hibernate 6.6.X regression with join formula
+    * [HHH-18894] - Hibernate 6.6 enum literal is considered field literal instead
+    * [HHH-18881] - In MySQL, array of dates are not converted correctly
+    * [HHH-18858] - array fields and static metamodel
+    * [HHH-18787] - Custom UserType not recognised for array properties
+    * [HHH-18570] - Invalid SQL when filter contains identifier named date
+
+
 Changes in 6.6.10.Final (March 09, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

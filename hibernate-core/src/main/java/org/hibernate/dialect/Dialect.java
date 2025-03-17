@@ -5914,4 +5914,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return true;
 	}
 
+	/**
+	 * If the dialect supports using joins in mutation statement subquery
+	 * that could also use columns from the mutation target table
+	 */
+	public boolean supportsJoinInMutationStatementSubquery() {
+		return true;
+	}
+
 }

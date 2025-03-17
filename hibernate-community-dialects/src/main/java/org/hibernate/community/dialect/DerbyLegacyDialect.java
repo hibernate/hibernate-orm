@@ -1077,4 +1077,10 @@ public class DerbyLegacyDialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual() + " dual";
 	}
+
+	@Override
+	public boolean supportsJoinInMutationStatementSubquery() {
+		return false;
+	}
+
 }

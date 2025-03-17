@@ -5937,4 +5937,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return false;
 	}
 
+	/**
+	 * Whether the SQL cycle clause supports the using sub-clause.
+	 */
+	public boolean supportsRecursiveCycleUsingClause() {
+		return false;
+	}
+
 }

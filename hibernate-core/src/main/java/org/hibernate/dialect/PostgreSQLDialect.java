@@ -1634,4 +1634,9 @@ public class PostgreSQLDialect extends Dialect {
 		return getVersion().isSameOrAfter( 14 );
 	}
 
+	@Override
+	public boolean supportsRecursiveCycleUsingClause() {
+		return getVersion().isSameOrAfter( 14 );
+	}
+
 }

@@ -2337,7 +2337,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 			}
 			if ( cte.getCycleMarkColumn() != null && !dialect.supportsRecursiveCycleClause()
-					|| cte.getCyclePathColumn() != null && !supportsRecursiveCycleUsingClause() ) {
+					|| cte.getCyclePathColumn() != null && !dialect.supportsRecursiveCycleUsingClause() ) {
 				appendSql( COMMA_SEPARATOR );
 				appendSql( determineCyclePathColumnName( cte ) );
 			}
@@ -2475,13 +2475,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	/**
-	 * Whether the SQL cycle clause supports the using sub-clause.
-	 */
-	protected boolean supportsRecursiveCycleUsingClause() {
-		return false;
-	}
-
-	/**
 	 * Whether the recursive search and cycle clause emulations based on the array and row constructor is supported.
 	 */
 	protected boolean supportsRecursiveClauseArrayAndRowEmulation() {
@@ -2567,7 +2560,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			cte.getCycleValue().accept( this );
 			appendSql( " default " );
 			cte.getNoCycleValue().accept( this );
-			if ( cte.getCyclePathColumn() != null && supportsRecursiveCycleUsingClause() ) {
+			if ( cte.getCyclePathColumn() != null && dialect.supportsRecursiveCycleUsingClause() ) {
 				appendSql( " using " );
 				appendSql( cte.getCyclePathColumn().getColumnExpression() );
 			}
@@ -2585,7 +2578,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					emulateSearchClauseOrderWithString( selectClause );
 				}
 			}
-			if ( !dialect.supportsRecursiveCycleClause() || currentCteStatement.getCyclePathColumn() != null && !supportsRecursiveCycleUsingClause() ) {
+			if ( !dialect.supportsRecursiveCycleClause() || currentCteStatement.getCyclePathColumn() != null && !dialect.supportsRecursiveCycleUsingClause() ) {
 				if ( currentCteStatement.getCycleMarkColumn() != null ) {
 					appendSql( COMMA_SEPARATOR );
 					if ( supportsRecursiveClauseArrayAndRowEmulation() ) {

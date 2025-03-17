@@ -87,6 +87,7 @@ import org.jboss.logging.Logger;
 
 import jakarta.persistence.AttributeConverter;
 
+import static java.util.Comparator.comparingInt;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForDuration;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForInstant;
@@ -95,18 +96,18 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferre
 /**
  * Represents the process of transforming a {@link MetadataSources}
  * reference into a {@link org.hibernate.boot.Metadata} reference.  Allows for 2 different process paradigms:<ul>
- *     <li>
- *         Single step : as defined by the {@link #build} method; internally leverages the 2-step paradigm
- *     </li>
- *     <li>
- *         Two step : a first step coordinates resource scanning and some other preparation work; a second step
- *         builds the {@link org.hibernate.boot.Metadata}.  A hugely important distinction in the need for the
- *         steps is that the first phase should strive to not load user entity/component classes so that we can still
- *         perform enhancement on them later.  This approach caters to the 2-phase bootstrap we use in regards
- *         to WildFly Hibernate-JPA integration.  The first step is defined by {@link #prepare} which returns
- *         a {@link ManagedResources} instance.  The second step is defined by calling
- *         {@link #complete}
- *     </li>
+ * <li>
+ * Single step : as defined by the {@link #build} method; internally leverages the 2-step paradigm
+ * </li>
+ * <li>
+ * Two step : a first step coordinates resource scanning and some other preparation work; a second step
+ * builds the {@link org.hibernate.boot.Metadata}.  A hugely important distinction in the need for the
+ * steps is that the first phase should strive to not load user entity/component classes so that we can still
+ * perform enhancement on them later.  This approach caters to the 2-phase bootstrap we use in regards
+ * to WildFly Hibernate-JPA integration.  The first step is defined by {@link #prepare} which returns
+ * a {@link ManagedResources} instance.  The second step is defined by calling
+ * {@link #complete}
+ * </li>
  * </ul>
  *
  * @author Steve Ebersole
@@ -199,7 +200,7 @@ public class MetadataBuildingProcess {
 
 		final MetadataSourceProcessor processor = new MetadataSourceProcessor() {
 			private final MetadataSourceProcessor hbmProcessor =
-						options.isXmlMappingEnabled()
+					options.isXmlMappingEnabled()
 							? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
 							: new NoOpMetadataSourceProcessorImpl();
 
@@ -338,8 +339,19 @@ public class MetadataBuildingProcess {
 
 		processor.finishUp();
 
-		processAdditionalMappingContributions( metadataCollector, options, classLoaderService, rootMetadataBuildingContext );
-		processAdditionalJaxbMappingProducer( metadataCollector, options, jandexView, classLoaderService, rootMetadataBuildingContext );
+		processAdditionalMappingContributions(
+				metadataCollector,
+				options,
+				classLoaderService,
+				rootMetadataBuildingContext
+		);
+		processAdditionalJaxbMappingProducer(
+				metadataCollector,
+				options,
+				jandexView,
+				classLoaderService,
+				rootMetadataBuildingContext
+		);
 
 		applyExtraQueryImports( managedResources, metadataCollector );
 
@@ -379,7 +391,8 @@ public class MetadataBuildingProcess {
 				rootMetadataBuildingContext
 		);
 
-		final Collection<AdditionalMappingContributor> additionalMappingContributors = classLoaderService.loadJavaServices( AdditionalMappingContributor.class );
+		final Collection<AdditionalMappingContributor> additionalMappingContributors = classLoaderService.loadJavaServices(
+				AdditionalMappingContributor.class );
 		additionalMappingContributors.forEach( (contributor) -> {
 			contributions.setCurrentContributor( contributor.getContributorName() );
 			try {
@@ -450,7 +463,7 @@ public class MetadataBuildingProcess {
 
 		@Override
 		public void contributeBinding(JaxbEntityMappings mappingJaxbBinding) {
-			if ( ! options.isXmlMappingEnabled() ) {
+			if ( !options.isXmlMappingEnabled() ) {
 				return;
 			}
 
@@ -462,7 +475,7 @@ public class MetadataBuildingProcess {
 
 		@Override
 		public void contributeBinding(JaxbHbmHibernateMapping hbmJaxbBinding) {
-			if ( ! options.isXmlMappingEnabled() ) {
+			if ( !options.isXmlMappingEnabled() ) {
 				return;
 			}
 
@@ -527,7 +540,8 @@ public class MetadataBuildingProcess {
 			ClassLoaderService classLoaderService,
 			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
 		if ( options.isXmlMappingEnabled() ) {
-			final Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
+			final Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices(
+					AdditionalJaxbMappingProducer.class );
 			if ( producers != null ) {
 				final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
 				final MappingBinder mappingBinder = new MappingBinder(
@@ -597,7 +611,7 @@ public class MetadataBuildingProcess {
 			MetadataBuildingOptions options,
 			InFlightMetadataCollector metadataCollector) {
 		final ClassLoaderService classLoaderService =
-				options.getServiceRegistry().requireService(ClassLoaderService.class);
+				options.getServiceRegistry().requireService( ClassLoaderService.class );
 
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
 		final StandardServiceRegistry serviceRegistry = bootstrapContext.getServiceRegistry();
@@ -631,7 +645,7 @@ public class MetadataBuildingProcess {
 			basicTypeRegistry.addTypeReferenceRegistrationKey(
 					StandardBasicTypes.BINARY_WRAPPER.getName(),
 					Byte[].class.getName(), "Byte[]"
-					);
+			);
 		}
 
 		// add Dialect contributed types
@@ -642,7 +656,7 @@ public class MetadataBuildingProcess {
 		final JdbcType dialectArrayDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.ARRAY );
 
 		// add TypeContributor contributed types.
-		for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
+		for ( TypeContributor contributor : sortedTypeContributors( classLoaderService ) ) {
 			contributor.contribute( typeContributions, options.getServiceRegistry() );
 		}
 
@@ -749,6 +763,17 @@ public class MetadataBuildingProcess {
 		}
 	}
 
+	private static List<TypeContributor> sortedTypeContributors(
+			ClassLoaderService classLoaderService) {
+		Collection<TypeContributor> typeContributors = classLoaderService.loadJavaServices( TypeContributor.class );
+		List<TypeContributor> contributors = new ArrayList<>( typeContributors );
+		contributors.sort(
+				comparingInt( TypeContributor::ordinal )
+						.thenComparing( a -> a.getClass().getCanonicalName() )
+		);
+		return contributors;
+	}
+
 	private static void adaptToPreferredSqlTypeCode(
 			JdbcTypeRegistry jdbcTypeRegistry,
 			JdbcType dialectUuidDescriptor,
@@ -830,7 +855,9 @@ public class MetadataBuildingProcess {
 		);
 	}
 
-	private static JdbcType getTimeWithTimeZoneOverride(MetadataBuildingOptions options, JdbcTypeRegistry jdbcTypeRegistry) {
+	private static JdbcType getTimeWithTimeZoneOverride(
+			MetadataBuildingOptions options,
+			JdbcTypeRegistry jdbcTypeRegistry) {
 		switch ( options.getDefaultTimeZoneStorage() ) {
 			case NORMALIZE:
 				// For NORMALIZE, we replace the standard types that use TIME_WITH_TIMEZONE to use TIME
@@ -843,7 +870,9 @@ public class MetadataBuildingProcess {
 		}
 	}
 
-	private static JdbcType getTimestampWithTimeZoneOverride(MetadataBuildingOptions options, JdbcTypeRegistry jdbcTypeRegistry) {
+	private static JdbcType getTimestampWithTimeZoneOverride(
+			MetadataBuildingOptions options,
+			JdbcTypeRegistry jdbcTypeRegistry) {
 		switch ( options.getDefaultTimeZoneStorage() ) {
 			case NORMALIZE:
 				// For NORMALIZE, we replace the standard types that use TIMESTAMP_WITH_TIMEZONE to use TIMESTAMP

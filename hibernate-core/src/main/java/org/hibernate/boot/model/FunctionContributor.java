@@ -31,12 +31,11 @@ import org.hibernate.service.JavaServiceLoadable;
  *     or even {@link org.hibernate.boot.MetadataBuilder#applyFunctions(FunctionContributor)}.
  * </ul>
  *
- * @see org.hibernate.query.sqm.function.SqmFunctionRegistry
- *
  * @author Karel Maesen
+ * @see org.hibernate.query.sqm.function.SqmFunctionRegistry
  */
 @JavaServiceLoadable
-public interface FunctionContributor {
+public interface FunctionContributor extends Ordinated {
 
 	/**
 	 * Contribute functions
@@ -44,21 +43,4 @@ public interface FunctionContributor {
 	 * @param functionContributions The target for the contributions
 	 */
 	void contributeFunctions(FunctionContributions functionContributions);
-
-	/**
-	 * Determines order in which the contributions will be applied
-	 * (lowest ordinal first).
-	 * <p>
-	 * The range 0-500 is reserved for Hibernate, range 500-1000 for libraries and
-	 * 1000-Integer.MAX_VALUE for user-defined FunctionContributors.
-	 * <p>
-	 * Contributions from higher precedence contributors (higher numbers) effectively override 
-	 * contributions from lower precedence.  E.g. if a contributor with precedence 1000 contributes a 
-	 * function named {@code "max"}, that will override Hibernate's standard function of that name.
-	 *
-	 * @return the ordinal for this FunctionContributor
-	 */
-	default int ordinal(){
-		return 1000;
-	}
 }

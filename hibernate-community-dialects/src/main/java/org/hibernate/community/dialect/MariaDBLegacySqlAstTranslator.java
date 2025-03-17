@@ -244,12 +244,6 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	}
 
 	@Override
-	protected boolean supportsNestedSubqueryCorrelation() {
-		// It seems it doesn't support it
-		return false;
-	}
-
-	@Override
 	public void visitQueryGroup(QueryGroup queryGroup) {
 		if ( shouldEmulateFetchClause( queryGroup ) ) {
 			emulateFetchOffsetWithWindowFunctions( queryGroup, true );

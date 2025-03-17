@@ -212,12 +212,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 		return !queryPart.hasOffsetOrFetchClause();
 	}
 
-	@Override
-	protected boolean supportsNestedSubqueryCorrelation() {
-		// It seems it doesn't support it, at least on version 11
-		return false;
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		if ( getQueryPartForRowNumbering() == queryPart ) {

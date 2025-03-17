@@ -1613,4 +1613,9 @@ public class MySQLDialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsNestedSubqueryCorrelation() {
+		return false;
+	}
+
 }

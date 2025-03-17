@@ -1664,4 +1664,10 @@ public class OracleLegacyDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsNestedSubqueryCorrelation() {
+		// It seems it doesn't support it, at least on version 11
+		return false;
+	}
+
 }

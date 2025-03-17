@@ -445,11 +445,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected boolean supportsNestedSubqueryCorrelation() {
-		return false;
-	}
-
-	@Override
 	protected boolean supportsWithClause() {
 		return true;
 	}

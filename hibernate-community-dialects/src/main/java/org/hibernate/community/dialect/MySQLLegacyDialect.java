@@ -1519,4 +1519,9 @@ public class MySQLLegacyDialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsNestedSubqueryCorrelation() {
+		return false;
+	}
+
 }

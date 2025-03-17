@@ -249,11 +249,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsNestedSubqueryCorrelation() {
-		return false;
-	}
-
-	@Override
 	public void visitQueryGroup(QueryGroup queryGroup) {
 		if ( shouldEmulateFetchClause( queryGroup ) ) {
 			emulateFetchOffsetWithWindowFunctions( queryGroup, true );

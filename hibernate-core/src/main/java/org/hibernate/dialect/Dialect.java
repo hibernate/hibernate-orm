@@ -5926,4 +5926,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return false;
 	}
 
+	public boolean supportsNestedSubqueryCorrelation() {
+		return true;
+	}
+
 }

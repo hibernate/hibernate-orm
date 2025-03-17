@@ -1621,4 +1621,9 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		return getVersion().isSameOrAfter( 9, 4 );
 	}
 
+	@Override
+	public boolean supportsRowConstructor() {
+		return true;
+	}
+
 }

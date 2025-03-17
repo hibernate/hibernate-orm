@@ -1062,4 +1062,10 @@ public class H2LegacyDialect extends Dialect {
 	public boolean supportsFilterClause() {
 		return getVersion().isSameOrAfter( 1, 4, 197 );
 	}
+
+	@Override
+	public boolean supportsRowConstructor() {
+		return getVersion().isSameOrAfter( 2 );
+	}
+
 }

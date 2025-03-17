@@ -185,11 +185,6 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 	}
 
 	@Override
-	protected boolean supportsRowConstructor() {
-		return true;
-	}
-
-	@Override
 	protected boolean supportsArrayConstructor() {
 		return true;
 	}

@@ -130,11 +130,6 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	protected boolean supportsRowConstructor() {
-		return true;
-	}
-
-	@Override
 	protected boolean supportsArrayConstructor() {
 		return true;
 	}

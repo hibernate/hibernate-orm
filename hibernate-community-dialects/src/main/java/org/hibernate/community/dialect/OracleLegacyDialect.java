@@ -1670,4 +1670,9 @@ public class OracleLegacyDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsRecursiveCycleClause() {
+		return true;
+	}
+
 }

@@ -2330,13 +2330,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( cte.getSearchColumn().getColumnExpression() );
 				}
 			}
-			if ( !supportsRecursiveCycleClause() ) {
+			if ( !dialect.supportsRecursiveCycleClause() ) {
 				if ( cte.getCycleMarkColumn() != null ) {
 					appendSql( COMMA_SEPARATOR );
 					appendSql( cte.getCycleMarkColumn().getColumnExpression() );
 				}
 			}
-			if ( cte.getCycleMarkColumn() != null && !supportsRecursiveCycleClause()
+			if ( cte.getCycleMarkColumn() != null && !dialect.supportsRecursiveCycleClause()
 					|| cte.getCyclePathColumn() != null && !supportsRecursiveCycleUsingClause() ) {
 				appendSql( COMMA_SEPARATOR );
 				appendSql( determineCyclePathColumnName( cte ) );
@@ -2475,13 +2475,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	/**
-	 * Whether the SQL cycle clause is supported, which can be used for recursive CTEs.
-	 */
-	protected boolean supportsRecursiveCycleClause() {
-		return false;
-	}
-
-	/**
 	 * Whether the SQL cycle clause supports the using sub-clause.
 	 */
 	protected boolean supportsRecursiveCycleUsingClause() {
@@ -2553,7 +2546,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderCycleClause(CteStatement cte) {
-		if ( supportsRecursiveCycleClause() ) {
+		if ( dialect.supportsRecursiveCycleClause() ) {
 			renderStandardCycleClause( cte );
 		}
 	}
@@ -2592,7 +2585,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					emulateSearchClauseOrderWithString( selectClause );
 				}
 			}
-			if ( !supportsRecursiveCycleClause() || currentCteStatement.getCyclePathColumn() != null && !supportsRecursiveCycleUsingClause() ) {
+			if ( !dialect.supportsRecursiveCycleClause() || currentCteStatement.getCyclePathColumn() != null && !supportsRecursiveCycleUsingClause() ) {
 				if ( currentCteStatement.getCycleMarkColumn() != null ) {
 					appendSql( COMMA_SEPARATOR );
 					if ( supportsRecursiveClauseArrayAndRowEmulation() ) {
@@ -2601,7 +2594,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					else {
 						emulateCycleClauseWithString( selectClause );
 					}
-					if ( !supportsRecursiveCycleClause() && isInRecursiveQueryPart() ) {
+					if ( !dialect.supportsRecursiveCycleClause() && isInRecursiveQueryPart() ) {
 						final ColumnReference cycleColumnReference = new ColumnReference(
 								findTableReferenceByTableId( currentCteStatement.getCteTable().getTableExpression() ),
 								currentCteStatement.getCycleMarkColumn().getColumnExpression(),
@@ -2981,7 +2974,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					stringType
 			);
 
-			if ( !supportsRecursiveCycleClause() ) {
+			if ( !dialect.supportsRecursiveCycleClause() ) {
 				// Cycle mark
 				appendSql( "case when " );
 				final String arrayContainsFunction = getArrayContainsFunction();
@@ -3048,7 +3041,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( ']' );
 		}
 		else {
-			if ( !supportsRecursiveCycleClause() ) {
+			if ( !dialect.supportsRecursiveCycleClause() ) {
 				// Cycle mark
 				currentCteStatement.getNoCycleValue().accept( this );
 				appendSql( COMMA_SEPARATOR );
@@ -3149,7 +3142,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			arguments.add( nullSeparator );
 
-			if ( !supportsRecursiveCycleClause() ) {
+			if ( !dialect.supportsRecursiveCycleClause() ) {
 				// Cycle mark
 				appendSql( "case when " );
 				renderStringContainsExactlyPredicate(
@@ -3176,7 +3169,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			concat.render( this, arguments, stringType, this );
 		}
 		else {
-			if ( !supportsRecursiveCycleClause() ) {
+			if ( !dialect.supportsRecursiveCycleClause() ) {
 				// Cycle mark
 				currentCteStatement.getNoCycleValue().accept( this );
 				appendSql( COMMA_SEPARATOR );

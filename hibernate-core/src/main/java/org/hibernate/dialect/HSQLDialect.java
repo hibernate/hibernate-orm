@@ -740,4 +740,10 @@ public class HSQLDialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual();
 	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		return true;
+	}
+
 }

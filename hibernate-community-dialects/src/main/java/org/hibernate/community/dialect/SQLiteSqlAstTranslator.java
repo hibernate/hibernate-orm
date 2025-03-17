@@ -55,11 +55,6 @@ public class SQLiteSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
-	public boolean supportsFilterClause() {
-		return getDialect().getVersion().isSameOrAfter( 3, 3 );
-	}
-
-	@Override
 	protected boolean supportsQuantifiedPredicates() {
 		return false;
 	}

@@ -1057,4 +1057,9 @@ public class H2LegacyDialect extends Dialect {
 	public String getDual() {
 		return "dual";
 	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		return getVersion().isSameOrAfter( 1, 4, 197 );
+	}
 }

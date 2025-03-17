@@ -246,11 +246,6 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	public boolean supportsFilterClause() {
-		return true;
-	}
-
-	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
 			ForUpdateClause forUpdateClause,

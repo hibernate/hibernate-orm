@@ -181,7 +181,7 @@ public class PatternRenderer {
 			Boolean fromFirst,
 			SqlAstTranslator<?> translator) {
 		final int numberOfArguments = args.size();
-		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
+		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
 		if ( numberOfArguments < maxParamIndex ) {
 			LOG.missingArguments( maxParamIndex, numberOfArguments );
 		}

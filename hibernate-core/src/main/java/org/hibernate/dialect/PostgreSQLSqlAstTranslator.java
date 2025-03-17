@@ -197,11 +197,6 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 	}
 
 	@Override
-	public boolean supportsFilterClause() {
-		return true;
-	}
-
-	@Override
 	protected String getForUpdate() {
 		return " for no key update";
 	}

@@ -45,11 +45,6 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	void render(SqlAstNode sqlAstNode, SqlAstNodeRenderingMode renderingMode);
 
 	/**
-	 * Whether the FILTER clause for aggregate functions is supported.
-	 */
-	boolean supportsFilterClause();
-
-	/**
 	 * Returns the current query part that is translated.
 	 */
 	QueryPart getCurrentQueryPart();

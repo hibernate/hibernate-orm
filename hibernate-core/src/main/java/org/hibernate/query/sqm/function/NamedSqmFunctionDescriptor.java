@@ -164,7 +164,7 @@ public class NamedSqmFunctionDescriptor
 			Boolean fromFirst,
 			SqlAstTranslator<?> translator) {
 		final boolean useParens = useParenthesesWhenNoArgs || !sqlAstArguments.isEmpty();
-		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
+		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().	supportsFilterClause();
 
 		sqlAppender.appendSql( functionName );
 		if ( useParens ) {

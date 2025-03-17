@@ -74,7 +74,7 @@ public class XmlAggFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			List<SortSpecification> withinGroup,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
+		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
 		sqlAppender.appendSql( "xmlagg(" );
 		final SqlAstNode firstArg = sqlAstArguments.get( 0 );
 		final Expression arg;

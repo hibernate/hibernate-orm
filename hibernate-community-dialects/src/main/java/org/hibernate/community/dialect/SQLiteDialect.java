@@ -745,4 +745,9 @@ public class SQLiteDialect extends Dialect {
 		}
 	}
 
+	@Override
+	public boolean supportsFilterClause() {
+		return getVersion().isSameOrAfter( 3, 3 );
+	}
+
 }

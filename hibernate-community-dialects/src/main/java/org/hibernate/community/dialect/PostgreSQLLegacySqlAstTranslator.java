@@ -195,11 +195,6 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 	}
 
 	@Override
-	public boolean supportsFilterClause() {
-		return getDialect().getVersion().isSameOrAfter( 9, 4 );
-	}
-
-	@Override
 	protected String getForUpdate() {
 		return getDialect().getVersion().isSameOrAfter( 9, 3 ) ? " for no key update" : " for update";
 	}

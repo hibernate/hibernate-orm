@@ -945,4 +945,10 @@ public class HSQLLegacyDialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual();
 	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		return true;
+	}
+
 }

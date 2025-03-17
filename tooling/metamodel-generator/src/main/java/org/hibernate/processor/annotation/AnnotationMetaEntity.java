@@ -1645,6 +1645,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				checkFinderParameter(entity, parameter);
 			}
 		}
+		warnAboutMissingOrder( method );
 		putMember( methodKey,
 				new CriteriaFinderMethod(
 						this, method,
@@ -1911,6 +1912,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				multivalued.add( false );
 			}
 		}
+		warnAboutMissingOrder( method );
 		if ( !usingStatelessSession( sessionType[0] ) // no byNaturalId() lookup API for SS
 				&& matchesNaturalKey( entity, fieldTypes ) ) {
 			putMember( methodKey,
@@ -1956,6 +1958,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							hasAnnotation(method, NULLABLE)
 					)
 			);
+		}
+	}
+
+	private void warnAboutMissingOrder(ExecutableElement method) {
+		if ( !hasAnnotation(  method, JD_ORDER_BY, JD_ORDER_BY_LIST ) ) {
+			boolean hasPageRequest = false;
+			boolean hasSortOrOrder = false;
+			for ( VariableElement parameter : method.getParameters() ) {
+				final String parameterType = parameter.asType().toString();
+				if ( isOrderParam( parameterType ) ) {
+					hasSortOrOrder = true;
+				}
+				if ( isPageParam( parameterType ) ) {
+					hasPageRequest = true;
+				}
+			}
+			if ( hasPageRequest && !hasSortOrOrder ) {
+				context.message( method, "'PageRequest' with no 'Sort' or 'Order' and no '@OrderBy'", Diagnostic.Kind.MANDATORY_WARNING );
+			}
 		}
 	}
 

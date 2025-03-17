@@ -234,11 +234,6 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected boolean supportsSimpleQueryGrouping() {
 		return false;
 	}

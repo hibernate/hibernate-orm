@@ -718,4 +718,9 @@ public class AltibaseDialect extends Dialect {
 		return " from " + getDual();
 	}
 
+	@Override
+	public boolean supportsJoinsInDelete() {
+		return true;
+	}
+
 }

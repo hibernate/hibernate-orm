@@ -95,11 +95,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
 		if ( statement.getFromClause().getRoots().isEmpty() ) {
 			appendSql( " from " );

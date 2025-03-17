@@ -1025,17 +1025,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void visitDeleteStatementOnly(DeleteStatement statement) {
 		renderDeleteClause( statement );
-		if ( supportsJoinsInDelete() || !hasNonTrivialFromClause( statement.getFromClause() ) ) {
+		if ( dialect.supportsJoinsInDelete() || !hasNonTrivialFromClause( statement.getFromClause() ) ) {
 			visitWhereClause( statement.getRestriction() );
 		}
 		else {
 			visitWhereClause( determineWhereClauseRestrictionWithJoinEmulation( statement ) );
 		}
 		visitReturningColumns( statement.getReturningColumns() );
-	}
-
-	protected boolean supportsJoinsInDelete() {
-		return false;
 	}
 
 	protected void renderDeleteClause(DeleteStatement statement) {

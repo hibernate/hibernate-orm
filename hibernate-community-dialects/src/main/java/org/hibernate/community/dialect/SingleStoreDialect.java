@@ -1414,4 +1414,10 @@ public class SingleStoreDialect extends Dialect {
 	public String getDual() {
 		return "dual";
 	}
+
+	@Override
+	public boolean supportsJoinsInDelete() {
+		return true;
+	}
+
 }

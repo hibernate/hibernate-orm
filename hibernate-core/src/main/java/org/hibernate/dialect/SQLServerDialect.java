@@ -1223,4 +1223,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public boolean supportsBindingNullForSetObject() {
 		return true;
 	}
+
+	@Override
+	public boolean supportsJoinsInDelete() {
+		return true;
+	}
+
 }

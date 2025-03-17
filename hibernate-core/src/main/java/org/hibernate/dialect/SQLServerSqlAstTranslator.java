@@ -116,11 +116,6 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
 		if ( statement.getFromClause().getRoots().isEmpty() ) {
 			appendSql( " from " );

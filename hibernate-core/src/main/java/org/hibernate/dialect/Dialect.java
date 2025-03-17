@@ -5922,4 +5922,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return true;
 	}
 
+	public boolean supportsJoinsInDelete() {
+		return false;
+	}
+
 }

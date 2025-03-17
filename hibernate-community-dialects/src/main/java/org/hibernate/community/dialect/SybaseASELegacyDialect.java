@@ -736,4 +736,9 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsJoinsInDelete() {
+		return true;
+	}
+
 }

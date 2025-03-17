@@ -229,11 +229,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected JdbcOperationQueryInsert translateInsert(InsertSelectStatement sqlAst) {
 		visitInsertStatement( sqlAst );
 

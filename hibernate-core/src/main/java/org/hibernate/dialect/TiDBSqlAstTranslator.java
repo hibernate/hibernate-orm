@@ -153,11 +153,6 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected JdbcOperationQueryInsert translateInsert(InsertSelectStatement sqlAst) {
 		visitInsertStatement( sqlAst );
 

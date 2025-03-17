@@ -1608,4 +1608,9 @@ public class MySQLDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsJoinsInDelete() {
+		return true;
+	}
+
 }

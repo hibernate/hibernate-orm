@@ -173,11 +173,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected void visitConflictClause(ConflictClause conflictClause) {
 		visitOnDuplicateKeyConflictClause( conflictClause );
 	}

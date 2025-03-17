@@ -1256,4 +1256,10 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		}
 		return "";
 	}
+
+	@Override
+	public boolean supportsJoinsInDelete() {
+		return true;
+	}
+
 }

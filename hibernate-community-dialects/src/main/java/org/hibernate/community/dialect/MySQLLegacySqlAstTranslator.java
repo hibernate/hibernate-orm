@@ -385,11 +385,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsNestedSubqueryCorrelation() {
-		return false;
-	}
-
-	@Override
 	protected boolean supportsWithClause() {
 		return getDialect().getVersion().isSameOrAfter( 8 );
 	}

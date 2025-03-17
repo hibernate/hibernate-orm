@@ -4070,10 +4070,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected boolean supportsNestedSubqueryCorrelation() {
-		return true;
-	}
-
 	protected void renderExpressionsAsSubquery(final List<? extends Expression> expressions) {
 		clauseStack.push( Clause.SELECT );
 
@@ -6522,7 +6518,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				);
 			}
 
-			if ( supportsNestedSubqueryCorrelation() ) {
+			if ( dialect.supportsNestedSubqueryCorrelation() ) {
 				// Double nested sub-query rendering might not work on all DBs
 				// We try to avoid this as much as possible as it is not very efficient and some DBs don't like it
 				// when a correlation happens in a sub-query that is not a direct child
@@ -6853,7 +6849,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				&& dialect.supportsDistinctFromPredicate()
 				&& isFetchFirstRowOnly( querySpec ) )
 				&& !shouldEmulateLateralWithIntersect( querySpec )
-				&& !supportsNestedSubqueryCorrelation()
+				&& !dialect.supportsNestedSubqueryCorrelation()
 				&& querySpec.hasOffsetOrFetchClause();
 	}
 

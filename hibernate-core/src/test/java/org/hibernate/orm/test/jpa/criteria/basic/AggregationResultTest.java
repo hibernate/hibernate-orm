@@ -7,6 +7,7 @@ package org.hibernate.orm.test.jpa.criteria.basic;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
@@ -87,6 +88,19 @@ public class AggregationResultTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@Test
+	public void testTuplesWithSumOfIntegers() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Tuple> criteria = builder.createTupleQuery();
+		Root<Product> productRoot = criteria.from( Product.class );
+		criteria.select(builder.tuple( builder.sum( productRoot.get( Product_.quantity ) ) ));
+		Tuple sumResult = em.createQuery( criteria ).getSingleResult();
+		assertReturnType( Long.class, sumResult );
+		em.getTransaction().commit();
+		em.close();
+	}
+
 	/**
 	 * Sum of Doubles should return a Double
 	 */
@@ -156,6 +170,15 @@ public class AggregationResultTest extends AbstractMetamodelSpecificTest {
 			fail(
 					"Result value was not of expected type: expected [" + expectedType.getName()
 							+ "] but found [" + value.getClass().getName() + "]"
+			);
+		}
+	}
+
+	private void assertReturnType(Class expectedType, Tuple value) {
+		if ( value != null && ! expectedType.isInstance( value.get( 0 ) ) ) {
+			fail(
+					"Result value was not of expected type: expected [" + expectedType.getName()
+							+ "] but found [" + value.get( 0 ).getClass().getName() + "]"
 			);
 		}
 	}

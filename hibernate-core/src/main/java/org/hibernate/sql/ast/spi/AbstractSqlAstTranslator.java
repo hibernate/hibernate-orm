@@ -2496,16 +2496,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * Whether the recursive search and cycle clause emulations based on the array and row constructor is supported.
 	 */
 	protected boolean supportsRecursiveClauseArrayAndRowEmulation() {
-		return ( supportsRowConstructor() || currentCteStatement.getSearchClauseKind() == CteSearchClauseKind.DEPTH_FIRST
+		return ( dialect.supportsRowConstructor() || currentCteStatement.getSearchClauseKind() == CteSearchClauseKind.DEPTH_FIRST
 				&& currentCteStatement.getSearchBySpecifications().size() == 1 )
 				&& supportsArrayConstructor();
-	}
-
-	/**
-	 * Whether the SQL row constructor is supported.
-	 */
-	protected boolean supportsRowConstructor() {
-		return false;
 	}
 
 	/**

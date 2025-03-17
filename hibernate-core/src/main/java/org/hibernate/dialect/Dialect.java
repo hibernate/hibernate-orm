@@ -5892,4 +5892,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return false;
 	}
 
+	/**
+	 * Whether the SQL row constructor is supported.
+	 */
+	public boolean supportsRowConstructor() {
+		return false;
+	}
+
 }

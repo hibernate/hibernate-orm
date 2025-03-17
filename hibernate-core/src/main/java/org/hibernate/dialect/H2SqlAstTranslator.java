@@ -203,11 +203,6 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	}
 
 	@Override
-	protected boolean supportsRowConstructor() {
-		return true;
-	}
-
-	@Override
 	protected boolean supportsArrayConstructor() {
 		return true;
 	}

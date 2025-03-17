@@ -187,11 +187,6 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 	}
 
 	@Override
-	protected boolean supportsRowConstructor() {
-		return true;
-	}
-
-	@Override
 	protected boolean supportsArrayConstructor() {
 		return true;
 	}

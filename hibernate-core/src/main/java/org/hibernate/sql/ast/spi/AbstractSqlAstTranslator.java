@@ -3976,7 +3976,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			case DISTINCT_FROM:
 				appendSql( "not " );
 			case NOT_DISTINCT_FROM: {
-				if ( supportsIntersect() ) {
+				if ( dialect.supportsIntersect() ) {
 					appendSql( "exists (select " );
 					renderCommaSeparatedSelectExpression( lhsExpressions );
 					appendSql( getFromDualForSelectOnly() );
@@ -4072,10 +4072,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( isCurrentWhereClause ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
-	}
-
-	protected boolean supportsIntersect() {
-		return true;
 	}
 
 	protected boolean supportsNestedSubqueryCorrelation() {
@@ -6763,7 +6759,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected boolean shouldEmulateLateralWithIntersect(QueryPart queryPart) {
-		return supportsIntersect();
+		return dialect.supportsIntersect();
 	}
 
 	private boolean isNullsFirst(SortSpecification sortSpecification) {

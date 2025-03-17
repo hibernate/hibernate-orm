@@ -1509,4 +1509,9 @@ public class MySQLLegacyDialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsIntersect() {
+		return false;
+	}
+
 }

@@ -378,4 +378,10 @@ public class MariaDBDialect extends MySQLDialect {
 			|| typeCode1 == SqlTypes.JSON && typeCode2 == Types.LONGVARCHAR
 			|| super.equivalentTypes( typeCode1, typeCode2 );
 	}
+
+	@Override
+	public boolean supportsIntersect() {
+		return true;
+	}
+
 }

@@ -408,11 +408,6 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	}
 
 	@Override
-	protected boolean supportsIntersect() {
-		return dialect.getVersion().isSameOrAfter( 10, 3 );
-	}
-
-	@Override
 	public MariaDBLegacyDialect getDialect() {
 		return this.dialect;
 	}

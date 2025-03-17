@@ -1603,4 +1603,9 @@ public class MySQLDialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsIntersect() {
+		return false;
+	}
+
 }

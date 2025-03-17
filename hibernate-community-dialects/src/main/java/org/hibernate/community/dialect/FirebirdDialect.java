@@ -1112,4 +1112,10 @@ public class FirebirdDialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual();
 	}
+
+	@Override
+	public boolean supportsIntersect() {
+		return false;
+	}
+
 }

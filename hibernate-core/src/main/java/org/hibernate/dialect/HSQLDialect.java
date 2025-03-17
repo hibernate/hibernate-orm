@@ -746,4 +746,9 @@ public class HSQLDialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsArrayConstructor() {
+		return true;
+	}
+
 }

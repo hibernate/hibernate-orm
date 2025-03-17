@@ -5899,4 +5899,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return false;
 	}
 
+	/**
+	 * Whether the SQL array constructor is supported.
+	 */
+	public boolean supportsArrayConstructor() {
+		return false;
+	}
+
 }

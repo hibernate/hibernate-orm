@@ -122,11 +122,6 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
-	protected boolean supportsArrayConstructor() {
-		return true;
-	}
-
-	@Override
 	protected boolean supportsWithClauseInSubquery() {
 		// Doesn't support correlations in the WITH clause
 		return false;

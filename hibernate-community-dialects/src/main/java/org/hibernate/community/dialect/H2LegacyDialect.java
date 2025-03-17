@@ -1068,4 +1068,9 @@ public class H2LegacyDialect extends Dialect {
 		return getVersion().isSameOrAfter( 2 );
 	}
 
+	@Override
+	public boolean supportsArrayConstructor() {
+		return getVersion().isSameOrAfter( 2 );
+	}
+
 }

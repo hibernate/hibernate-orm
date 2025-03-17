@@ -1094,4 +1094,9 @@ public class H2Dialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsArrayConstructor() {
+		return true;
+	}
+
 }

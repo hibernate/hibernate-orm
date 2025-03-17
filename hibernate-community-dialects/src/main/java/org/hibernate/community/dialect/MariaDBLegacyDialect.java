@@ -302,4 +302,10 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	public String getFromDualForSelectOnly() {
 		return getVersion().isBefore( 10, 4 ) ? ( " from " + getDual() ) : "";
 	}
+
+	@Override
+	public boolean supportsIntersect() {
+		return getVersion().isSameOrAfter( 10, 3 );
+	}
+
 }

@@ -759,4 +759,11 @@ public class SybaseASEDialect extends SybaseDialect {
 	public String getDual() {
 		return "(select 1 c1)";
 	}
+
+	@Override
+	public boolean supportsIntersect() {
+		// At least the version that
+		return false;
+	}
+
 }

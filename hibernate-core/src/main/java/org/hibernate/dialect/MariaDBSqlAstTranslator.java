@@ -410,11 +410,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected boolean supportsIntersect() {
-		return true;
-	}
-
-	@Override
 	public MariaDBDialect getDialect() {
 		return this.dialect;
 	}

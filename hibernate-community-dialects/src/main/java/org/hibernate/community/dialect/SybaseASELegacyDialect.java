@@ -729,4 +729,11 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 	public String getDual() {
 		return "(select 1 c1)";
 	}
+
+	@Override
+	public boolean supportsIntersect() {
+		// At least the version that
+		return false;
+	}
+
 }

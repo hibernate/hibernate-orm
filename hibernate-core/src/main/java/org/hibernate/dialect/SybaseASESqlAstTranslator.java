@@ -495,12 +495,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected boolean supportsIntersect() {
-		// At least the version that
-		return false;
-	}
-
-	@Override
 	protected void renderSelectTupleComparison(
 			List<SqlSelection> lhsExpressions,
 			SqlTuple tuple,

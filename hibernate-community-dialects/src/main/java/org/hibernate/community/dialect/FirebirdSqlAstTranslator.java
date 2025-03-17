@@ -265,11 +265,6 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected boolean supportsIntersect() {
-		return false;
-	}
-
-	@Override
 	protected boolean supportsNestedWithClause() {
 		return false;
 	}

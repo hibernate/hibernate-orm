@@ -385,11 +385,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsIntersect() {
-		return false;
-	}
-
-	@Override
 	protected boolean supportsSimpleQueryGrouping() {
 		return getDialect().getVersion().isSameOrAfter( 8 );
 	}

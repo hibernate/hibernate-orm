@@ -1740,4 +1740,9 @@ public class OracleDialect extends Dialect {
 		return getVersion().isSameOrAfter( 23 ) ? "" : ( " from " + getDual() );
 	}
 
+	@Override
+	public boolean supportsDuplicateSelectItemsInQueryGroup() {
+		return false;
+	}
+
 }

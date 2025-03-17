@@ -3645,7 +3645,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						// We need to assign aliases when we render a query spec as subquery to avoid clashing aliases
 						this.needsSelectAliases = this.needsSelectAliases || hasDuplicateSelectItems( querySpec );
 					}
-					else if ( !supportsDuplicateSelectItemsInQueryGroup() ) {
+					else if ( !dialect.supportsDuplicateSelectItemsInQueryGroup() ) {
 						this.needsSelectAliases = this.needsSelectAliases || hasDuplicateSelectItems( querySpec );
 					}
 				}
@@ -3695,10 +3695,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected boolean supportsSimpleQueryGrouping() {
-		return true;
-	}
-
-	protected boolean supportsDuplicateSelectItemsInQueryGroup() {
 		return true;
 	}
 

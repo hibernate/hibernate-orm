@@ -1659,4 +1659,9 @@ public class OracleLegacyDialect extends Dialect {
 		return " from " + getDual();
 	}
 
+	@Override
+	public boolean supportsDuplicateSelectItemsInQueryGroup() {
+		return false;
+	}
+
 }

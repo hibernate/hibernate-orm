@@ -5906,4 +5906,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return false;
 	}
 
+	public boolean supportsDuplicateSelectItemsInQueryGroup() {
+		return true;
+	}
+
 }

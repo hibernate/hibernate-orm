@@ -687,11 +687,6 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	protected boolean supportsDuplicateSelectItemsInQueryGroup() {
-		return false;
-	}
-
-	@Override
 	protected boolean supportsRowValueConstructorSyntax() {
 		return false;
 	}

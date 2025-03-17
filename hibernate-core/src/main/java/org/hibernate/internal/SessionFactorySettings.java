@@ -95,17 +95,18 @@ class SessionFactorySettings {
 		if ( isNotEmpty( explicitJndiName ) ) {
 			return explicitJndiName;
 		}
+		// do not use name for JNDI if explicitly asked not to
+		else if ( options.isSessionFactoryNameAlsoJndiName() == Boolean.FALSE ) {
+			return null;
+		}
 		else {
 			final String expliciSessionFactoryname = configService.getSetting( SESSION_FACTORY_NAME, STRING );
 			if ( isNotEmpty( expliciSessionFactoryname ) ) {
 				return expliciSessionFactoryname;
 			}
 			final String unitName = configService.getSetting( PERSISTENCE_UNIT_NAME, STRING );
-			// do not use name for JNDI if explicitly asked not to or if name comes from JPA persistence-unit name
-			final boolean nameIsNotJndiName =
-					options.isSessionFactoryNameAlsoJndiName() == Boolean.FALSE
-							|| isNotEmpty( unitName );
-			return !nameIsNotJndiName ? name : null;
+			// if name comes from JPA persistence-unit name
+			return ! isNotEmpty( unitName ) ? name : null;
 		}
 	}
 

@@ -4324,7 +4324,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		final boolean renderNullPrecedence = nullPrecedence != null
 				&& !NullPrecedenceHelper.isDefaultOrdering( nullPrecedence, sortOrder, dialect.getNullOrdering() );
-		final boolean supportsNullPrecedence = renderNullPrecedence && supportsNullPrecedence();
+		final boolean supportsNullPrecedence = renderNullPrecedence && dialect.supportsNullPrecedence();
 		if ( renderNullPrecedence && !supportsNullPrecedence ) {
 			emulateSortSpecificationNullPrecedence( sortExpression, nullPrecedence );
 		}
@@ -4360,10 +4360,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( ignoreCase ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
-	}
-
-	protected boolean supportsNullPrecedence() {
-		return dialect.supportsNullPrecedence();
 	}
 
 	protected void emulateSortSpecificationNullPrecedence(Expression sortExpression, Nulls nullPrecedence) {

@@ -141,7 +141,7 @@ public class OrderedSetAggregateTest {
 	public void testListaggWithNullsClause(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					TypedQuery<String> q = session.createQuery( "select listagg(eob.theString, ',') within group (order by eob.id desc nulls first) from EntityOfBasics eob", String.class );
+					TypedQuery<String> q = session.createQuery( "select listagg(eob.theString, ',') within group (order by eob.id desc) from EntityOfBasics eob", String.class );
 					assertEquals( "5,13,7,6,5", q.getSingleResult() );
 				}
 		);

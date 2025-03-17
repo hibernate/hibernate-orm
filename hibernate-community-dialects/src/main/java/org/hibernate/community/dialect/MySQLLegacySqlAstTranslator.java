@@ -390,12 +390,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsDistinctFromPredicate() {
-		// It supports a proprietary operator
-		return true;
-	}
-
-	@Override
 	protected boolean supportsSimpleQueryGrouping() {
 		return getDialect().getVersion().isSameOrAfter( 8 );
 	}

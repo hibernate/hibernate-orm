@@ -431,11 +431,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsDistinctFromPredicate() {
-		return false;
-	}
-
-	@Override
 	public SingleStoreDialect getDialect() {
 		return this.dialect;
 	}

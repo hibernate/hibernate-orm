@@ -432,7 +432,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		}
 		// I think intersect is only supported in 16.0 SP3
 		if ( ansiNullOn ) {
-			if ( supportsDistinctFromPredicate() ) {
+			if ( getDialect().supportsDistinctFromPredicate() ) {
 				renderComparisonEmulateIntersect( lhs, operator, rhs );
 			}
 			else {
@@ -469,7 +469,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 				}
 			}
 			else {
-				if ( supportsDistinctFromPredicate() ) {
+				if ( getDialect().supportsDistinctFromPredicate() ) {
 					renderComparisonEmulateIntersect( lhs, operator, rhs );
 				}
 				else {

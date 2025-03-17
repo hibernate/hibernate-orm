@@ -6860,7 +6860,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private boolean needsLateralSortExpressionVirtualSelections(QuerySpec querySpec) {
-		return !( ( querySpec.getSelectClause().getSqlSelections().size() == 1 || supportsRowValueConstructorSyntax() ) && supportsDistinctFromPredicate() && isFetchFirstRowOnly( querySpec ) )
+		return !( ( querySpec.getSelectClause().getSqlSelections().size() == 1
+				|| supportsRowValueConstructorSyntax() )
+				&& dialect.supportsDistinctFromPredicate()
+				&& isFetchFirstRowOnly( querySpec ) )
 				&& !shouldEmulateLateralWithIntersect( querySpec )
 				&& !supportsNestedSubqueryCorrelation()
 				&& querySpec.hasOffsetOrFetchClause();
@@ -8475,18 +8478,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	/**
-	 * Is this SQL dialect known to support some kind of distinct from predicate.
-	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... where FIRST_NAME IS DISTINCT FROM LAST_NAME}
-	 *
-	 * @return True if this SQL dialect is known to support some kind of distinct from predicate; false otherwise
-	 */
-	protected boolean supportsDistinctFromPredicate() {
-		return dialect.supportsDistinctFromPredicate();
-	}
-
-	/**
 	 * Is this dialect known to support what ANSI-SQL terms "row value
 	 * constructor" syntax; sometimes called tuple syntax.
 	 * <p>
@@ -8527,7 +8518,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * constructor" syntax with distinct from comparison operators; false otherwise.
 	 */
 	protected boolean supportsRowValueConstructorDistinctFromSyntax() {
-		return supportsRowValueConstructorSyntax() && supportsDistinctFromPredicate();
+		return supportsRowValueConstructorSyntax() && dialect.supportsDistinctFromPredicate();
 	}
 
 	/**

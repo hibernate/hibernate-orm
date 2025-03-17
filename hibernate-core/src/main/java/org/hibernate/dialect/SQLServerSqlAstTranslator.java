@@ -464,11 +464,11 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 			// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
 			switch ( operator ) {
 				case DISTINCT_FROM:
-					if ( !supportsDistinctFromPredicate() ) {
+					if ( !getDialect().supportsDistinctFromPredicate() ) {
 						appendSql( "not " );
 					}
 				case NOT_DISTINCT_FROM: {
-					if ( !supportsDistinctFromPredicate() ) {
+					if ( !getDialect().supportsDistinctFromPredicate() ) {
 						appendSql( "exists (select cast(" );
 						getClauseStack().push( Clause.SELECT );
 						visitSqlSelectExpression( lhs );
@@ -498,17 +498,12 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 					break;
 			}
 		}
-		if ( supportsDistinctFromPredicate() ) {
+		if ( getDialect().supportsDistinctFromPredicate() ) {
 			renderComparisonStandard( lhs, operator, rhs );
 		}
 		else {
 			renderComparisonEmulateIntersect( lhs, operator, rhs );
 		}
-	}
-
-	@Override
-	protected boolean supportsDistinctFromPredicate() {
-		return getDialect().getVersion().isSameOrAfter( 16 );
 	}
 
 	@Override

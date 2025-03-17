@@ -1596,4 +1596,11 @@ public class MySQLDialect extends Dialect {
 	public String getDual() {
 		return "dual";
 	}
+
+	@Override
+	public boolean supportsDistinctFromPredicate() {
+		// It supports a proprietary operator
+		return true;
+	}
+
 }

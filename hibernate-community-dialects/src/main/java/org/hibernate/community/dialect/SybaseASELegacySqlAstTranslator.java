@@ -423,7 +423,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 						break;
 				}
 			}
-			if ( supportsDistinctFromPredicate() ) {
+			if ( getDialect().supportsDistinctFromPredicate() ) {
 				renderComparisonEmulateIntersect( lhs, operator, rhs );
 			}
 			else {
@@ -482,7 +482,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				}
 			}
 			else {
-				if ( supportsDistinctFromPredicate() ) {
+				if ( getDialect().supportsDistinctFromPredicate() ) {
 					renderComparisonEmulateIntersect( lhs, operator, rhs );
 				}
 				else {

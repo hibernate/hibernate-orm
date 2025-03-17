@@ -413,12 +413,6 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	}
 
 	@Override
-	protected boolean supportsDistinctFromPredicate() {
-		// It supports a proprietary operator
-		return true;
-	}
-
-	@Override
 	public MariaDBLegacyDialect getDialect() {
 		return this.dialect;
 	}

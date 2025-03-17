@@ -415,12 +415,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected boolean supportsDistinctFromPredicate() {
-		// It supports a proprietary operator
-		return true;
-	}
-
-	@Override
 	public MariaDBDialect getDialect() {
 		return this.dialect;
 	}

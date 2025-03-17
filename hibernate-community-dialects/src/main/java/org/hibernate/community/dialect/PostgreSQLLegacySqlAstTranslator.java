@@ -185,11 +185,6 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 	}
 
 	@Override
-	protected boolean supportsArrayConstructor() {
-		return true;
-	}
-
-	@Override
 	protected String getForUpdate() {
 		return getDialect().getVersion().isSameOrAfter( 9, 3 ) ? " for no key update" : " for update";
 	}

@@ -1254,4 +1254,9 @@ public class CockroachLegacyDialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsArrayConstructor() {
+		return true;
+	}
+
 }

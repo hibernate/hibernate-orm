@@ -1626,4 +1626,9 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsArrayConstructor() {
+		return true;
+	}
+
 }

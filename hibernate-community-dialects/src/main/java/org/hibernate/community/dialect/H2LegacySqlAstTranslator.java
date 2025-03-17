@@ -208,11 +208,6 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected boolean supportsArrayConstructor() {
-		return getDialect().getVersion().isSameOrAfter( 2 );
-	}
-
-	@Override
 	protected String getArrayContainsFunction() {
 		return "array_contains";
 	}

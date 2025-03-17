@@ -130,11 +130,6 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	protected boolean supportsArrayConstructor() {
-		return true;
-	}
-
-	@Override
 	protected String getForShare(int timeoutMillis) {
 		return " for share";
 	}

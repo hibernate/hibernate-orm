@@ -187,11 +187,6 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 	}
 
 	@Override
-	protected boolean supportsArrayConstructor() {
-		return true;
-	}
-
-	@Override
 	protected String getForUpdate() {
 		return " for no key update";
 	}

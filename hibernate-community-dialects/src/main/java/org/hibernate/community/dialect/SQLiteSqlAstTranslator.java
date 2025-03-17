@@ -54,11 +54,6 @@ public class SQLiteSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		}
 	}
 
-	@Override
-	protected boolean supportsQuantifiedPredicates() {
-		return false;
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		// We also have to emulate this if a fetch clause type other than rows only is used

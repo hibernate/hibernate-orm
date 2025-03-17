@@ -8446,18 +8446,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	/**
-	 * Is this dialect known to support quantified predicates.
-	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... where FIRST_NAME > ALL (select ...) ...}
-	 *
-	 * @return True if this SQL dialect is known to support quantified predicates; false otherwise.
-	 */
-	protected boolean supportsQuantifiedPredicates() {
-		return true;
-	}
-
-	/**
 	 * Is this dialect known to support what ANSI-SQL terms "row value
 	 * constructor" syntax; sometimes called tuple syntax.
 	 * <p>

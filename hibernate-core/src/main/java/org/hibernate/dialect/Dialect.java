@@ -5944,4 +5944,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return false;
 	}
 
+	/**
+	 * Whether the SQL search clause is supported, which can be used for recursive CTEs.
+	 */
+	public boolean supportsRecursiveSearchClause() {
+		return false;
+	}
+
 }

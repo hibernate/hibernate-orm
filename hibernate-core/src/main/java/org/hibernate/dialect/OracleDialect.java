@@ -1756,4 +1756,9 @@ public class OracleDialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsRecursiveSearchClause() {
+		return true;
+	}
+
 }

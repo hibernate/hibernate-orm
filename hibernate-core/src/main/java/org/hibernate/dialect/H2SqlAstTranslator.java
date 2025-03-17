@@ -342,12 +342,6 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 		return true;
 	}
 
-	@Override
-	protected boolean supportsNullPrecedence() {
-		// Support for nulls clause in listagg was added in 2.0
-		return true;
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return true;
 	}

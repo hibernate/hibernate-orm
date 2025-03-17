@@ -370,10 +370,8 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		return getDialect().getVersion().isSameOrAfter( 1, 4, 200 );
 	}
 
-	@Override
-	protected boolean supportsNullPrecedence() {
-		// Support for nulls clause in listagg was added in 2.0
-		return getClauseStack().getCurrent() != Clause.WITHIN_GROUP || getDialect().getVersion().isSameOrAfter( 2 );
+	protected boolean allowsNullPrecedence() {
+		return getClauseStack().getCurrent() != Clause.WITHIN_GROUP || getDialect().supportsNullPrecedence();
 	}
 
 	private boolean supportsOffsetFetchClause() {

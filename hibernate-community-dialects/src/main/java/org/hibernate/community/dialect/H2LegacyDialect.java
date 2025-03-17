@@ -1078,4 +1078,10 @@ public class H2LegacyDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsNullPrecedence() {
+		// Support for nulls clause in listagg was added in 2.0
+		return getVersion().isSameOrAfter( 2 );
+	}
+
 }

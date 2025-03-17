@@ -413,7 +413,8 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 *     scrolling must be used.
 	 * </ul>
 	 *
-	 * @settingDefault {@code true} if the underlying driver supports scrollable results
+	 * @settingDefault {@code true} if the underlying driver supports scrollable results,
+	 *                 {@code false} otherwise
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyScrollableResultsSupport(boolean)
 	 * @see Query#scroll
@@ -490,6 +491,9 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * <p>
 	 * Usually, performance will be improved if this behavior is enabled, assuming
 	 * the JDBC driver supports {@code getGeneratedKeys()}.
+	 *
+	 * @settingDefault {@code true} if the underlying driver supports
+	 *                 {@code getGeneratedKeys()}, {@code false} otherwise
 	 *
 	 * @see java.sql.PreparedStatement#getGeneratedKeys
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyGetGeneratedKeysSupport(boolean)

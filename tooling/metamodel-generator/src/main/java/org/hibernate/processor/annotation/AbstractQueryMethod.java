@@ -439,8 +439,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			"\t\t\t\t\t\t.stream()\n" +
 			"\t\t\t\t\t\t.map(_key -> Cursor.forKey(_key.toArray()))\n" +
 			"\t\t\t\t\t\t.collect(toList());\n" +
-			//SHOULD BE new CursoredPageRecord<>
-			"\t\treturn new CursoredPageRecord(_results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
+			"\t\treturn new CursoredPageRecord<>(_results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
 			"\t\t\t\t_results.isLastPage() ? null : afterCursor(_cursors.get(_cursors.size()-1), pageRequest.page()+1, pageRequest.size(), pageRequest.requestTotal()),\n" +
 			"\t\t\t\t_results.isFirstPage() ? null : beforeCursor(_cursors.get(0), pageRequest.page()-1, pageRequest.size(), pageRequest.requestTotal()))";
 
@@ -720,6 +719,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					declaration
 							.append("new ")
 							.append(annotationMetaEntity.importType("jakarta.data.page.impl.PageRecord"))
+							.append("<>")
 							.append('(')
 							.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
 							.append(", _results, _totalResults)");

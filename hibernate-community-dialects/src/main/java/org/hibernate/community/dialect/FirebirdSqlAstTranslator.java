@@ -188,13 +188,6 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected boolean supportsSimpleQueryGrouping() {
-		// Firebird 4 and earlier are quite strict i.e. it requires `select .. union all select * from (select ...)`
-		// rather than `select .. union all (select ...)`
-		return getDialect().getVersion().isSameOrAfter( 5 );
-	}
-
-	@Override
 	protected void renderSelectExpression(Expression expression) {
 		renderSelectExpressionWithCastedOrInlinedPlainParameters( expression );
 	}

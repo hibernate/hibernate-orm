@@ -1524,4 +1524,9 @@ public class MySQLLegacyDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsSimpleQueryGrouping() {
+		return getVersion().isSameOrAfter( 8 );
+	}
+
 }

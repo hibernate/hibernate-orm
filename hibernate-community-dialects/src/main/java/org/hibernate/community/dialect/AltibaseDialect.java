@@ -723,4 +723,9 @@ public class AltibaseDialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsSimpleQueryGrouping() {
+		return false;
+	}
+
 }

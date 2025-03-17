@@ -229,7 +229,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	@Override
 	protected boolean shouldEmulateLateralWithIntersect(QueryPart queryPart) {
-		return supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
+		return getDialect().supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
 	}
 
 	//SingleStore doesn't support 'FOR UPDATE' clause with distributed joins

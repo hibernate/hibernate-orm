@@ -440,11 +440,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected boolean supportsSimpleQueryGrouping() {
-		return true;
-	}
-
-	@Override
 	protected boolean supportsWithClause() {
 		return true;
 	}

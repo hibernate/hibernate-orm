@@ -243,7 +243,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		// Intersect emulation requires nested correlation when no simple query grouping is possible
 		// and the query has an offset/fetch clause, so we have to disable the emulation in this case,
 		// because nested correlation is not supported though
-		return supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
+		return getDialect().supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
 	}
 
 	@Override

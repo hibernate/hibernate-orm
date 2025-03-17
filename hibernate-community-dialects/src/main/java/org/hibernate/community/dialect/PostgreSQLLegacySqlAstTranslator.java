@@ -241,14 +241,9 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 	}
 
 	@Override
-	protected boolean supportsRecursiveCycleUsingClause() {
-		return getDialect().getVersion().isSameOrAfter( 14 );
-	}
-
-	@Override
 	protected void renderStandardCycleClause(CteStatement cte) {
 		super.renderStandardCycleClause( cte );
-		if ( cte.getCycleMarkColumn() != null && cte.getCyclePathColumn() == null && supportsRecursiveCycleUsingClause() ) {
+		if ( cte.getCycleMarkColumn() != null && cte.getCyclePathColumn() == null && getDialect().supportsRecursiveCycleUsingClause() ) {
 			appendSql( " using " );
 			appendSql( determineCyclePathColumnName( cte ) );
 		}

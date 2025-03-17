@@ -87,6 +87,7 @@ import org.jboss.logging.Logger;
 
 import jakarta.persistence.AttributeConverter;
 
+import static java.util.Comparator.comparingInt;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForDuration;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForInstant;
@@ -642,7 +643,7 @@ public class MetadataBuildingProcess {
 		final JdbcType dialectArrayDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.ARRAY );
 
 		// add TypeContributor contributed types.
-		for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
+		for ( TypeContributor contributor : sortedTypeContributors( classLoaderService ) ) {
 			contributor.contribute( typeContributions, options.getServiceRegistry() );
 		}
 
@@ -747,6 +748,17 @@ public class MetadataBuildingProcess {
 					"instant"
 			);
 		}
+	}
+
+	private static List<TypeContributor> sortedTypeContributors(
+			ClassLoaderService classLoaderService) {
+		Collection<TypeContributor> typeContributors = classLoaderService.loadJavaServices( TypeContributor.class );
+		List<TypeContributor> contributors = new ArrayList<>( typeContributors );
+		contributors.sort(
+				comparingInt( TypeContributor::ordinal )
+						.thenComparing( a -> a.getClass().getCanonicalName() )
+		);
+		return contributors;
 	}
 
 	private static void adaptToPreferredSqlTypeCode(

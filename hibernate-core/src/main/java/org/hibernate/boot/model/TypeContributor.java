@@ -41,4 +41,21 @@ public interface TypeContributor {
 	 * @param serviceRegistry The service registry
 	 */
 	void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry);
+
+	/**
+	 * Determines order in which the contributions will be applied
+	 * (lowest ordinal first).
+	 * <p>
+	 * The range 0-500 is reserved for Hibernate, range 500-1000 for libraries and
+	 * 1000-Integer.MAX_VALUE for user-defined TypeContributors.
+	 * <p>
+	 * Contributions from higher precedence contributors (higher numbers) effectively override
+	 * contributions from lower precedence.  E.g. if a contributor with precedence 2000 contributes
+	 * some type, that will override Hibernate's standard type of that name.
+	 *
+	 * @return the ordinal for this TypeContributor
+	 */
+	default int ordinal(){
+		return 1000;
+	}
 }

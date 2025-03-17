@@ -236,11 +236,6 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends A
 	}
 
 	@Override
-	protected boolean supportsRecursiveSearchClause() {
-		return getDialect().getVersion().isSameOrAfter( 14 );
-	}
-
-	@Override
 	protected void renderStandardCycleClause(CteStatement cte) {
 		super.renderStandardCycleClause( cte );
 		if ( cte.getCycleMarkColumn() != null && cte.getCyclePathColumn() == null && getDialect().supportsRecursiveCycleUsingClause() ) {

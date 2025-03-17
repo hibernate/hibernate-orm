@@ -2320,7 +2320,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		if ( cte.isRecursive() ) {
-			if ( !supportsRecursiveSearchClause() ) {
+			if ( !dialect.supportsRecursiveSearchClause() ) {
 				if ( cte.getSearchColumn() != null ) {
 					appendSql( COMMA_SEPARATOR );
 					if ( cte.getSearchClauseKind() == CteSearchClauseKind.BREADTH_FIRST ) {
@@ -2468,13 +2468,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	/**
-	 * Whether the SQL search clause is supported, which can be used for recursive CTEs.
-	 */
-	protected boolean supportsRecursiveSearchClause() {
-		return false;
-	}
-
-	/**
 	 * Whether the recursive search and cycle clause emulations based on the array and row constructor is supported.
 	 */
 	protected boolean supportsRecursiveClauseArrayAndRowEmulation() {
@@ -2488,7 +2481,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderSearchClause(CteStatement cte) {
-		if ( supportsRecursiveSearchClause() ) {
+		if ( dialect.supportsRecursiveSearchClause() ) {
 			renderStandardSearchClause( cte );
 		}
 	}
@@ -2569,7 +2562,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void renderRecursiveCteVirtualSelections(SelectClause selectClause) {
 		if ( currentCteStatement != null && currentCteStatement.isRecursive() ) {
-			if ( currentCteStatement.getSearchColumn() != null && !supportsRecursiveSearchClause() ) {
+			if ( currentCteStatement.getSearchColumn() != null && !dialect.supportsRecursiveSearchClause() ) {
 				appendSql( COMMA_SEPARATOR );
 				if ( supportsRecursiveClauseArrayAndRowEmulation() ) {
 					emulateSearchClauseOrderWithRowAndArray( selectClause );

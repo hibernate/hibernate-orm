@@ -318,11 +318,6 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsJoinInMutationStatementSubquery() {
-		return false;
-	}
-
-	@Override
 	protected void visitArithmeticOperand(Expression expression) {
 		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 	}

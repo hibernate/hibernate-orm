@@ -1072,4 +1072,9 @@ public class DerbyDialect extends Dialect {
 		return " from " + getDual() + " dual";
 	}
 
+	@Override
+	public boolean supportsJoinInMutationStatementSubquery() {
+		return false;
+	}
+
 }

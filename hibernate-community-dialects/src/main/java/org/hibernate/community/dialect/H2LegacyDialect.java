@@ -1073,4 +1073,9 @@ public class H2LegacyDialect extends Dialect {
 		return getVersion().isSameOrAfter( 2 );
 	}
 
+	@Override
+	public boolean supportsJoinInMutationStatementSubquery() {
+		return false;
+	}
+
 }

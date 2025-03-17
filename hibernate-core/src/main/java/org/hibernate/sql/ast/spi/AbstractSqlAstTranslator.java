@@ -1098,7 +1098,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		);
 		querySpec.applyPredicate( statement.getRestriction() );
 
-		if ( supportsJoinInMutationStatementSubquery() ) {
+		if ( dialect.supportsJoinInMutationStatementSubquery() ) {
 			for ( TableGroup root : statement.getFromClause().getRoots() ) {
 				if ( root.getPrimaryTableReference() == statement.getTargetTable() ) {
 					final TableGroup dmlTargetTableGroup = new StandardTableGroup(
@@ -8564,14 +8564,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 */
 	protected boolean supportsRowValueConstructorSyntaxInInSubQuery() {
 		return supportsRowValueConstructorSyntaxInInList();
-	}
-
-	/**
-	 * If the dialect supports using joins in mutation statement subquery
-	 * that could also use columns from the mutation target table
-	 */
-	protected boolean supportsJoinInMutationStatementSubquery() {
-		return true;
 	}
 
 	/**

@@ -5930,4 +5930,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return true;
 	}
 
+	/**
+	 * Whether the SQL cycle clause is supported, which can be used for recursive CTEs.
+	 */
+	public boolean supportsRecursiveCycleClause() {
+		return false;
+	}
+
 }

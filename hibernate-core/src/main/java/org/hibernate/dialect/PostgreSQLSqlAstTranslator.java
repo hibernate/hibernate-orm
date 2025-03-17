@@ -243,11 +243,6 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 	}
 
 	@Override
-	protected boolean supportsRecursiveCycleClause() {
-		return getDialect().getVersion().isSameOrAfter( 14 );
-	}
-
-	@Override
 	protected boolean supportsRecursiveCycleUsingClause() {
 		return getDialect().getVersion().isSameOrAfter( 14 );
 	}

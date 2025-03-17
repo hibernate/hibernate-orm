@@ -1118,4 +1118,11 @@ public class FirebirdDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsSimpleQueryGrouping() {
+		// Firebird 4 and earlier are quite strict i.e. it requires `select ... union all select * from (select ...)`
+		// rather than `select ... union all (select ...)`
+		return getVersion().isSameOrAfter( 5 );
+	}
+
 }

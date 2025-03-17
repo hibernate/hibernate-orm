@@ -380,11 +380,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsSimpleQueryGrouping() {
-		return getDialect().getVersion().isSameOrAfter( 8 );
-	}
-
-	@Override
 	protected boolean supportsWithClause() {
 		return getDialect().getVersion().isSameOrAfter( 8 );
 	}

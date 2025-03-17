@@ -3495,7 +3495,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			// order by and offset fetch clause, so we must do row counting on the query group level
 			final boolean needsRowNumberingWrapper = queryPartForRowNumbering == queryGroup
 					|| additionalWherePredicate != null && !additionalWherePredicate.isEmpty();
-			final boolean needsQueryGroupWrapper = currentQueryPart instanceof QueryGroup && !supportsSimpleQueryGrouping();
+			final boolean needsQueryGroupWrapper = currentQueryPart instanceof QueryGroup && !dialect.supportsSimpleQueryGrouping();
 			final boolean needsParenthesis;
 			if ( currentQueryPart instanceof QueryGroup ) {
 				// When this is query group within a query group, we can only do simple grouping if that is supported,
@@ -3608,7 +3608,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					queryGroupAlias = "";
 					// If the parent is a query group with a fetch clause we must use a select wrapper,
 					// or if the database does not support simple query grouping, we must use a select wrapper
-					if ( ( !supportsSimpleQueryGrouping() || currentQueryPart.hasOffsetOrFetchClause() )
+					if ( ( !dialect.supportsSimpleQueryGrouping() || currentQueryPart.hasOffsetOrFetchClause() )
 							// We can skip it though if this query spec is being row numbered,
 							// because then we already have a wrapper
 							&& queryPartForRowNumbering != querySpec ) {
@@ -3667,10 +3667,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		return false;
-	}
-
-	protected boolean supportsSimpleQueryGrouping() {
-		return true;
 	}
 
 	protected final void visitWhereClause(Predicate whereClauseRestrictions) {

@@ -231,16 +231,11 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	}
 
 	@Override
-	protected boolean supportsSimpleQueryGrouping() {
-		return dialect.getVersion().isSameOrAfter( 10, 4 );
-	}
-
-	@Override
 	protected boolean shouldEmulateLateralWithIntersect(QueryPart queryPart) {
 		// Intersect emulation requires nested correlation when no simple query grouping is possible
 		// and the query has an offset/fetch clause, so we have to disable the emulation in this case,
 		// because nested correlation is not supported though
-		return supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
+		return getDialect().supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
 	}
 
 	@Override

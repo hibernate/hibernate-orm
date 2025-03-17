@@ -308,4 +308,9 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 		return getVersion().isSameOrAfter( 10, 3 );
 	}
 
+	@Override
+	public boolean supportsSimpleQueryGrouping() {
+		return getVersion().isSameOrAfter( 10, 4 );
+	}
+
 }

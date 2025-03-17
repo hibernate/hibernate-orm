@@ -5951,4 +5951,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return false;
 	}
 
+	public boolean supportsSimpleQueryGrouping() {
+		return true;
+	}
+
 }

@@ -1761,4 +1761,9 @@ public class OracleDialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsSimpleQueryGrouping() {
+		return supportsFetchClause( FetchClauseType.ROWS_ONLY );
+	}
+
 }

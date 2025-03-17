@@ -1229,4 +1229,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsSimpleQueryGrouping() {
+		// SQL Server is quite strict i.e. it requires `select ... union all select * from (select ...)`
+		// rather than `select ... union all (select ...)` because parenthesis followed by select
+		// is always treated as a subquery, which is not supported in a set operation
+		return false;
+	}
+
 }

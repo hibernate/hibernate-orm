@@ -1615,4 +1615,10 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	public boolean supportsFromClauseInUpdate() {
 		return true;
 	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		return getVersion().isSameOrAfter( 9, 4 );
+	}
+
 }

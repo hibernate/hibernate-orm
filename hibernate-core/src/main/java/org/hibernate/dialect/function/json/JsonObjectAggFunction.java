@@ -72,7 +72,7 @@ public class JsonObjectAggFunction extends AbstractSqmSelfRenderingFunctionDescr
 			Predicate filter,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
+		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
 		sqlAppender.appendSql( "json_objectagg(" );
 		arguments.key().accept( translator );
 		sqlAppender.appendSql( valueSeparator );

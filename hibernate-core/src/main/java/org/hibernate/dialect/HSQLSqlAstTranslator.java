@@ -256,11 +256,6 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
-	public boolean supportsFilterClause() {
-		return true;
-	}
-
-	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( supportsOffsetFetchClause() ) {
 			assertRowsOnlyFetchClauseType( queryPart );

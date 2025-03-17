@@ -461,12 +461,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
-	public boolean supportsFilterClause() {
-		// By default, we report false because not many dialects support this
-		return false;
-	}
-
-	@Override
 	public void appendSql(String fragment) {
 		sqlBuffer.append( fragment );
 	}

@@ -5884,4 +5884,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return false;
 	}
 
+	/**
+	 * Whether the FILTER clause for aggregate functions is supported.
+	 */
+	public boolean supportsFilterClause() {
+		// By default, we report false because not many dialects support this
+		return false;
+	}
+
 }

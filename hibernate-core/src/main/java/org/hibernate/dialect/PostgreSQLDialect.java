@@ -1613,4 +1613,10 @@ public class PostgreSQLDialect extends Dialect {
 	public boolean supportsBindingNullSqlTypeForSetNull() {
 		return true;
 	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		return true;
+	}
+
 }

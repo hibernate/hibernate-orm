@@ -405,13 +405,12 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	String STATEMENT_FETCH_SIZE = "hibernate.jdbc.fetch_size";
 
 	/**
-	 * Controls how Hibernate should handle scrollable results - <ul>
-	 * 	 <li>
-	 * 	     {@code true} indicates that {@linkplain java.sql.ResultSet#TYPE_SCROLL_INSENSITIVE insensitive} scrolling can be used
-	 * 	 </li>
-	 * 	 <li>
-	 * 	     {@code false} indicates that {@linkplain java.sql.ResultSet#TYPE_SCROLL_SENSITIVE sensitive} scrolling must be used
-	 * 	 </li>
+	 * Controls how Hibernate should handle scrollable results:
+	 * <ul>
+	 * <li>{@code true} indicates that {@linkplain java.sql.ResultSet#TYPE_SCROLL_INSENSITIVE insensitive}
+	 *     scrolling can be used;
+	 * <li>{@code false} indicates that {@linkplain java.sql.ResultSet#TYPE_FORWARD_ONLY forward-only}
+	 *     scrolling must be used.
 	 * </ul>
 	 *
 	 * @settingDefault {@code true} if the underlying driver supports scrollable results
@@ -419,7 +418,10 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyScrollableResultsSupport(boolean)
 	 * @see Query#scroll
 	 * @see ExtractedDatabaseMetaData#supportsScrollableResults()
+	 *
+	 * @deprecated It's not necessary to set this explicitly
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	String USE_SCROLLABLE_RESULTSET = "hibernate.jdbc.use_scrollable_resultset";
 
 	/**

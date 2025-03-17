@@ -132,8 +132,8 @@ class StatementPreparerImpl implements StatementPreparer {
 			boolean isCallable,
 			@Nullable ScrollMode scrollMode) {
 		final int resultSetType;
-		if ( scrollMode != null && !scrollMode.equals( ScrollMode.FORWARD_ONLY ) ) {
-			if ( ! settings().isScrollableResultSetsEnabled() ) {
+		if ( scrollMode != null && scrollMode != ScrollMode.FORWARD_ONLY ) {
+			if ( !settings().isScrollableResultSetsEnabled() ) {
 				throw new AssertionFailure("scrollable result sets are not enabled");
 			}
 			resultSetType = scrollMode.toResultSetType();

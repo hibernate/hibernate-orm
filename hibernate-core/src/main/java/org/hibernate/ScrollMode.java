@@ -11,6 +11,8 @@ import java.sql.ResultSet;
  * to use underneath a {@link ScrollableResults}.
  *
  * @author Gavin King
+ *
+ * @see org.hibernate.query.SelectionQuery#scroll(ScrollMode)
  */
 public enum ScrollMode {
 	/**

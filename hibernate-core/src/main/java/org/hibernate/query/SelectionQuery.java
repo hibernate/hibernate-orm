@@ -153,21 +153,18 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	}
 
 	/**
-	 * Returns scrollable access to the query results.
-	 * <p>
-	 * This form calls {@link #scroll(ScrollMode)} using {@link Dialect#defaultScrollMode()}
+	 * Returns scrollable access to the query results, using the
+	 * {@linkplain Dialect#defaultScrollMode() default scroll mode
+	 * of the SQL dialect.}
 	 *
-	 * @apiNote The exact behavior of this method depends somewhat
-	 * on the JDBC driver's {@link java.sql.ResultSet} scrolling support
+	 * @see #scroll(ScrollMode)
 	 */
 	ScrollableResults<R> scroll();
 
 	/**
-	 * Returns scrollable access to the query results.  The capabilities of the
-	 * returned ScrollableResults depend on the specified ScrollMode.
-	 *
-	 * @apiNote The exact behavior of this method depends somewhat
-	 * on the JDBC driver's {@link java.sql.ResultSet} scrolling support
+	 * Returns scrollable access to the query results. The capabilities
+	 * of the returned {@link ScrollableResults} depend on the specified
+	 * {@link ScrollMode}.
 	 */
 	ScrollableResults<R> scroll(ScrollMode scrollMode);
 

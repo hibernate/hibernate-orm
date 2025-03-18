@@ -8,15 +8,15 @@ import org.hibernate.query.Query;
 
 /**
  * A result iterator that allows moving around within the results by
- * arbitrary increments. The {@link Query} / {@link ScrollableResults}
- * pattern is very similar to the JDBC {@link java.sql.PreparedStatement}/
+ * arbitrary increments.
+ *
+ * @apiNote The {@link Query} / {@link ScrollableResults} pattern is
+ * very similar to the JDBC {@link java.sql.PreparedStatement} /
  * {@link java.sql.ResultSet} pattern and so the semantics of methods
  * of this interface are similar to the similarly-named methods of
  * {@code ResultSet}.
- * <p>
- * Contrary to JDBC, columns of results are numbered from zero.
  *
- * @see Query#scroll()
+ * @see org.hibernate.query.SelectionQuery#scroll()
  *
  * @author Gavin King
  */
@@ -115,15 +115,17 @@ public interface ScrollableResults<R> extends AutoCloseable {
 	/**
 	 * Get the current position in the results.
 	 * <p>
-	 * The first position is number 0 (unlike JDBC).
+	 * The first position is row number 1.
 	 *
-	 * @return The current position number, numbered from 0;
+	 * @return The current position number, numbered from 1;
 	 *         -1 indicates that there is no current row
 	 */
 	int getRowNumber();
 
 	/**
 	 * Set the current position in the result set.
+	 * <p>
+	 * The first position is row number 1.
 	 * <p>
 	 * Can be numbered from the first result (positive number)
 	 * or backward from the last result (negative number).

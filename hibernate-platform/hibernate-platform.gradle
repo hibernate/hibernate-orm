@@ -11,6 +11,7 @@ dependencies {
         api project( ":hibernate-core" )
         api project( ":hibernate-testing" )
 
+        api project( ":hibernate-envers" )
         api project( ":hibernate-spatial" )
         api project( ":hibernate-community-dialects" )
         api project( ":hibernate-scan-jandex" )

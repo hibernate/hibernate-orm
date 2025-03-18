@@ -33,7 +33,6 @@ work under the Apache License.  The response was overwhelming positive, although
 we never heard back from some contributors and another explicitly disagreed.
 This required a few actions on our part:
 
-* Dropping `hibernate-envers` - see https://hibernate.atlassian.net/browse/HHH-19150
 * Dropping `hibernate-ucp` - see https://hibernate.atlassian.net/browse/HHH-19162
 * Dropping `TeradataDialect` - see https://hibernate.atlassian.net/browse/HHH-19057
 

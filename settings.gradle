@@ -301,9 +301,11 @@ buildCache {
 
 include 'hibernate-core'
 include 'hibernate-testing'
-include 'hibernate-platform'
 
+include 'hibernate-envers'
 include 'hibernate-spatial'
+
+include 'hibernate-platform'
 
 include 'hibernate-community-dialects'
 include 'hibernate-vector'

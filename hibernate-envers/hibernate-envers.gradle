@@ -1,0 +1,84 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
+plugins {
+    id "local.publishing-java-module"
+    id "local.publishing-group-relocation"
+
+    id "org.hibernate.matrix-test"
+}
+
+description = "Hibernate's entity version (audit/history) support"
+
+dependencies {
+    api project( ':hibernate-core' )
+
+    implementation libs.hibernateModels
+    implementation jakartaLibs.jaxbApi
+    implementation jakartaLibs.jaxb
+    implementation libs.jandex
+    implementation libs.hibernateModels
+
+    compileOnly libs.ant
+
+    annotationProcessor project( ':hibernate-processor' )
+    compileOnly jakartaLibs.annotation
+
+    testImplementation project( ':hibernate-testing' )
+}
+
+test {
+    include '**/**'
+}
+
+sourceSets {
+    test {
+        ext {
+            enversDemoJavaDir = file( "src/demo/java" )
+            enversDemoResourcesDir = file( "src/demo/resources" )
+        }
+        java {
+            srcDir enversDemoJavaDir
+        }
+        resources {
+            srcDir enversDemoResourcesDir
+        }
+    }
+}
+
+configurations {
+    tests {
+        description = 'Configuration for the produced test jar'
+    }
+}
+
+tasks.withType( Test.class ).each { test ->
+    if ( project.db == "h2" || project.db == "hsqldb" ) {
+        // Parallel test runs when running with in-memory databases
+        test.maxParallelForks = Runtime.runtime.availableProcessors().intdiv( 2 ) ?: 1
+    }
+}
+
+sourcesJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+task testJar(type: Jar, dependsOn: testClasses) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set( 'test' )
+    from sourceSets.test.output
+}
+
+artifacts {
+    tests testJar
+}
+
+tasks."matrix_mariadb" {
+    beforeTest { descriptor ->
+        println "Starting test: " + descriptor
+    }
+}

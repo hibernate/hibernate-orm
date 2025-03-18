@@ -9,6 +9,7 @@ import jakarta.persistence.AccessType;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Transient;
@@ -101,6 +102,14 @@ public class UnsupportedEnhancementStrategyTest {
 		// non-null means check passed and enhancement _was_ performed
 		assertThat( doEnhance( ExplicitAccessTypeFieldEntity.class, context ) ).isNotNull();
 		assertThat( doEnhance( ImplicitAccessTypeFieldEntity.class, context ) ).isNotNull();
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-19059" )
+	public void testAccessTypePropertyInherited() throws IOException {
+		var context = new UnsupportedEnhancerContext();
+		// non-null means check passed and enhancement _was_ performed
+		assertThat( doEnhance( PropertyAccessInheritedEntity.class, context ) ).isNotNull();
 	}
 
 	private static byte[] doEnhance(Class<?> entityClass, EnhancementContext context) throws IOException {
@@ -197,7 +206,7 @@ public class UnsupportedEnhancementStrategyTest {
 		}
 
 		@PostLoad
-		public void setState() {
+		public void setState(String state) {
 			status = "loaded";
 		}
 
@@ -249,6 +258,33 @@ public class UnsupportedEnhancementStrategyTest {
 
 		public String getAnother() {
 			return "another";
+		}
+	}
+
+	@MappedSuperclass
+	static abstract class AbstractSuperclass {
+		protected String property;
+	}
+
+	@Entity(name="PropertyAccessInheritedEntity")
+	static class PropertyAccessInheritedEntity extends AbstractSuperclass {
+		private Long id;
+
+		@Id
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public String getProperty() {
+			return property;
+		}
+
+		public void setProperty(String property) {
+			this.property = property;
 		}
 	}
 }

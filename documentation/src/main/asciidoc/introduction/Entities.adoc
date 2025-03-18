@@ -1287,7 +1287,7 @@ class Person {
     @Id @GeneratedValue
     Long id;
 
-    @OneToOne(mappedBy = Author_.PERSON)
+    @OneToOne(mappedBy = Author_.AUTHOR)
     Author author;
 
     ...
@@ -1310,7 +1310,7 @@ On the other hand, if _every_ `Person` was an `Author`, that is, if the associat
 
 [source,java]
 ----
-@OneToOne(optional=false, mappedBy = Author_.PERSON, fetch=LAZY)
+@OneToOne(optional=false, mappedBy = Author_.AUTHOR, fetch=LAZY)
 Author author;
 ----
 ****
@@ -1350,7 +1350,7 @@ Here, there's no extra foreign key column in the `Author` table, since the `id` 
 That is, the primary key of the `Author` table does double duty as the foreign key referring to the `Person` table.
 
 The `Person` class doesn't change.
-If the association is bidirectional, we annotate the unowned side `@OneToOne(mappedBy = Author_.PERSON)` just as before.
+If the association is bidirectional, we annotate the unowned side `@OneToOne(mappedBy = Author_.AUTHOR)` just as before.
 
 [[many-to-many]]
 === Many-to-many

@@ -75,7 +75,7 @@ public abstract class AbstractSelectionQuery<R>
 	 */
 	public static final String CRITERIA_HQL_STRING = "<criteria>";
 
-	private Callback callback;
+	private transient Callback callback;
 
 	public AbstractSelectionQuery(SharedSessionContractImplementor session) {
 		super( session );
@@ -270,9 +270,7 @@ public abstract class AbstractSelectionQuery<R>
 		try {
 			final List<R> list = list();
 			if ( list.isEmpty() ) {
-				throw new NoResultException(
-						String.format( "No result found for query [%s]", getQueryString() )
-				);
+				throw new NoResultException( "No result found for query [" + getQueryString() + "]" );
 			}
 			return uniqueElement( list );
 		}

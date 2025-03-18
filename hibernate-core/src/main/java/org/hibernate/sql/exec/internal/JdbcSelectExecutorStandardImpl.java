@@ -89,8 +89,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			StatementCreator statementCreator,
 			ResultsConsumer<T, R> resultsConsumer) {
 		final PersistenceContext persistenceContext = executionContext.getSession().getPersistenceContext();
-		boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
-		Boolean readOnly = executionContext.getQueryOptions().isReadOnly();
+		final boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
+		final Boolean readOnly = executionContext.getQueryOptions().isReadOnly();
 		if ( readOnly != null ) {
 			// The read-only/modifiable mode for the query was explicitly set.
 			// Temporarily set the default read-only/modifiable setting to the query's setting.

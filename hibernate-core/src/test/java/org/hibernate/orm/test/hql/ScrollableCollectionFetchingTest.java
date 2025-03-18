@@ -354,17 +354,17 @@ public class ScrollableCollectionFetchingTest {
 							.setParameter( "desc", "root%" )
 							.scroll()) {
 
-						assertEquals( 0, results.getRowNumber() );
+						assertEquals( 0, results.getPosition() );
 
 						assertTrue( results.next() );
 						Animal animal = (Animal) results.get();
 						assertEquals( data.root1Id, animal.getId(), "next() did not return expected row" );
-						assertEquals( 1, results.getRowNumber() );
+						assertEquals( 1, results.getPosition() );
 
 						assertTrue( results.next() );
 						animal = (Animal) results.get();
 						assertEquals( data.root2Id, animal.getId(), "next() did not return expected row" );
-						assertEquals( 2, results.getRowNumber() );
+						assertEquals( 2, results.getPosition() );
 
 						assertFalse( results.next() );
 					}
@@ -386,17 +386,17 @@ public class ScrollableCollectionFetchingTest {
 							.setParameter( "desc", "root%" )
 							.scroll()) {
 
-						assertEquals( 0, results.getRowNumber() );
+						assertEquals( 0, results.getPosition() );
 
 						assertTrue( results.next() );
 						Animal animal = (Animal) results.get();
 						assertEquals( data.root1Id, animal.getId(), "next() did not return expected row" );
-						assertEquals( 1, results.getRowNumber() );
+						assertEquals( 1, results.getPosition() );
 
 						assertTrue( results.next() );
 						animal = (Animal) results.get();
 						assertEquals( data.root2Id, animal.getId(), "next() did not return expected row" );
-						assertEquals( 2, results.getRowNumber() );
+						assertEquals( 2, results.getPosition() );
 
 						assertFalse( results.next() );
 					}
@@ -421,52 +421,52 @@ public class ScrollableCollectionFetchingTest {
 						results.first();
 						Animal animal = (Animal) results.get();
 						assertEquals( data.root1Id, animal.getId(), "first() did not return expected row" );
-						assertEquals( 1, results.getRowNumber() );
+						assertEquals( 1, results.getPosition() );
 
 						results.scroll( 1 );
 						animal = (Animal) results.get();
 						assertEquals( data.root2Id, animal.getId(), "scroll(1) did not return expected row" );
-						assertEquals( 2, results.getRowNumber() );
+						assertEquals( 2, results.getPosition() );
 
 						results.scroll( -1 );
 						animal = (Animal) results.get();
 						assertEquals( data.root1Id, animal.getId(), "scroll(-1) did not return expected row" );
-						assertEquals( 1, results.getRowNumber() );
+						assertEquals( 1, results.getPosition() );
 
 						results.next();
 						animal = (Animal) results.get();
 						assertEquals( data.root2Id, animal.getId(), "next() did not return expected row" );
-						assertEquals( 2, results.getRowNumber() );
+						assertEquals( 2, results.getPosition() );
 
 						results.setRowNumber( 1 );
 						animal = (Animal) results.get();
 						assertEquals( data.root1Id, animal.getId(), "setRowNumber(1) did not return expected row" );
-						assertEquals( 1, results.getRowNumber() );
+						assertEquals( 1, results.getPosition() );
 
 						results.setRowNumber( 2 );
 						animal = (Animal) results.get();
 						assertEquals( data.root2Id, animal.getId(), "setRowNumber(2) did not return expected row" );
-						assertEquals( 2, results.getRowNumber() );
+						assertEquals( 2, results.getPosition() );
 
 						results.setRowNumber( -2 );
 						animal = (Animal) results.get();
 						assertEquals( data.root1Id, animal.getId(), "setRowNumber(-2) did not return expected row" );
-						assertEquals( 1, results.getRowNumber() );
+						assertEquals( 1, results.getPosition() );
 
 						results.setRowNumber( -1 );
 						animal = (Animal) results.get();
 						assertEquals( data.root2Id, animal.getId(), "setRowNumber(-1) did not return expected row" );
-						assertEquals( 2, results.getRowNumber() );
+						assertEquals( 2, results.getPosition() );
 
 						results.position( 1 );
 						animal = (Animal) results.get();
 						assertEquals( data.root1Id, animal.getId(), "position(1) did not return expected row" );
-						assertEquals( 1, results.getRowNumber() );
+						assertEquals( 1, results.getPosition() );
 
 						results.position( 2 );
 						animal = (Animal) results.get();
 						assertEquals( data.root2Id, animal.getId(), "position(2) did not return expected row" );
-						assertEquals( 2, results.getRowNumber() );
+						assertEquals( 2, results.getPosition() );
 					}
 				}
 		);
@@ -489,52 +489,52 @@ public class ScrollableCollectionFetchingTest {
 						results.first();
 						Animal animal = (Animal) results.get();
 						assertEquals( data.root1Id, animal.getId(), "first() did not return expected row" );
-						assertEquals( 1, results.getRowNumber() );
+						assertEquals( 1, results.getPosition() );
 
 						results.scroll( 1 );
 						animal = (Animal) results.get();
 						assertEquals( data.root2Id, animal.getId(), "scroll(1) did not return expected row" );
-						assertEquals( 2, results.getRowNumber() );
+						assertEquals( 2, results.getPosition() );
 
 						results.scroll( -1 );
 						animal = (Animal) results.get();
 						assertEquals( data.root1Id, animal.getId(), "scroll(-1) did not return expected row" );
-						assertEquals( 1, results.getRowNumber() );
+						assertEquals( 1, results.getPosition() );
 
 						results.next();
 						animal = (Animal) results.get();
 						assertEquals( data.root2Id, animal.getId(), "next() did not return expected row" );
-						assertEquals( 2, results.getRowNumber() );
+						assertEquals( 2, results.getPosition() );
 
 						results.setRowNumber( 1 );
 						animal = (Animal) results.get();
 						assertEquals( data.root1Id, animal.getId(), "setRowNumber(1) did not return expected row" );
-						assertEquals( 1, results.getRowNumber() );
+						assertEquals( 1, results.getPosition() );
 
 						results.setRowNumber( 2 );
 						animal = (Animal) results.get();
 						assertEquals( data.root2Id, animal.getId(), "setRowNumber(2) did not return expected row" );
-						assertEquals( 2, results.getRowNumber() );
+						assertEquals( 2, results.getPosition() );
 
 						results.setRowNumber( -2 );
 						animal = (Animal) results.get();
 						assertEquals( data.root1Id, animal.getId(), "setRowNumber(-2) did not return expected row" );
-						assertEquals( 1, results.getRowNumber() );
+						assertEquals( 1, results.getPosition() );
 
 						results.setRowNumber( -1 );
 						animal = (Animal) results.get();
 						assertEquals( data.root2Id, animal.getId(), "setRowNumber(-1) did not return expected row" );
-						assertEquals( 2, results.getRowNumber() );
+						assertEquals( 2, results.getPosition() );
 
 						results.position( 1 );
 						animal = (Animal) results.get();
 						assertEquals( data.root1Id, animal.getId(), "position(1) did not return expected row" );
-						assertEquals( 1, results.getRowNumber() );
+						assertEquals( 1, results.getPosition() );
 
 						results.position( 2 );
 						animal = (Animal) results.get();
 						assertEquals( data.root2Id, animal.getId(), "position(2) did not return expected row" );
-						assertEquals( 2, results.getRowNumber() );
+						assertEquals( 2, results.getPosition() );
 					}
 				}
 		);

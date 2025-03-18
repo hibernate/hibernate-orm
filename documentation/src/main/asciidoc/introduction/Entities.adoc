@@ -1262,7 +1262,7 @@ class Author {
     Long id;
 
     @OneToOne(optional=false, fetch=LAZY)
-    Person author;
+    Person person;
 
     ...
 }
@@ -1333,7 +1333,7 @@ class Author {
 
     @OneToOne(optional=false, fetch=LAZY)
     @MapsId
-    Person author;
+    Person person;
 
     ...
 }

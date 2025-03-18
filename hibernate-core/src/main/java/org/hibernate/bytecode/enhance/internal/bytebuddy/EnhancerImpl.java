@@ -13,6 +13,7 @@ import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Transient;
 import jakarta.persistence.metamodel.Type;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.annotation.AnnotationDescription;
@@ -74,6 +75,9 @@ import java.util.function.Supplier;
 import static net.bytebuddy.matcher.ElementMatchers.isDefaultFinalizer;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isSetter;
+import static net.bytebuddy.matcher.ElementMatchers.isStatic;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 public class EnhancerImpl implements Enhancer {
 
@@ -476,21 +480,13 @@ public class EnhancerImpl implements Enhancer {
 				|| annotations.isAnnotationPresent( Embeddable.class );
 	}
 
-	private static boolean hasPersistenceAnnotation(AnnotationList annotations) {
-		boolean found = false;
-		for ( AnnotationDescription annotation : annotations ) {
-			final String annotationName = annotation.getAnnotationType().getName();
-			if ( annotationName.startsWith( "jakarta.persistence" ) ) {
-				if ( annotationName.equals( "jakarta.persistence.Transient" ) ) {
-					// transient property so ignore it
-					return false;
-				}
-				else if ( !found && !IGNORED_PERSISTENCE_ANNOTATIONS.contains( annotationName ) ) {
-					found = true;
-				}
-			}
+	private static boolean isPersistentMethod(MethodDescription method) {
+		final AnnotationList annotations = method.getDeclaredAnnotations();
+		if ( annotations.isAnnotationPresent( Transient.class ) ) {
+			return false;
 		}
-		return found;
+
+		return annotations.stream().noneMatch( a -> IGNORED_PERSISTENCE_ANNOTATIONS.contains( a.getAnnotationType().getName() ) );
 	}
 
 	private static final Set<String> IGNORED_PERSISTENCE_ANNOTATIONS = Set.of(
@@ -502,6 +498,17 @@ public class EnhancerImpl implements Enhancer {
 			"jakarta.persistence.PreRemove",
 			"jakarta.persistence.PreUpdate"
 	);
+
+	private static boolean containsField(Generic type, String fieldName) {
+		do {
+			if ( !type.getDeclaredFields().filter( not( isStatic() ).and( named( fieldName ) ) ).isEmpty() ) {
+				return true;
+			}
+			type = type.getSuperClass();
+		}
+		while ( type != null && !type.represents( Object.class ) );
+		return false;
+	}
 
 	/**
 	 * Check whether an entity class ({@code managedCtClass}) has mismatched names between a persistent field and its
@@ -545,61 +552,46 @@ public class EnhancerImpl implements Enhancer {
 				.asMethodList()
 				.filter( isGetter().or( isSetter() ) );
 		for ( final MethodDescription methodDescription : methods ) {
-			if ( determineAccessType( methodDescription, defaultAccessType ) != AccessType.PROPERTY ) {
+			if ( methodDescription.getDeclaringType().represents( Object.class )
+				|| determineAccessType( methodDescription, defaultAccessType ) != AccessType.PROPERTY ) {
 				// We only need to check this for AccessType.PROPERTY
 				continue;
 			}
 
 			final String methodName = methodDescription.getActualName();
-			String methodFieldName;
+			String fieldName;
 			if ( methodName.startsWith( "get" ) || methodName.startsWith( "set" ) ) {
-				methodFieldName = methodName.substring( 3 );
+				fieldName = methodName.substring( 3 );
 			}
 			else {
 				assert methodName.startsWith( "is" );
-				methodFieldName = methodName.substring( 2 );
+				fieldName = methodName.substring( 2 );
 			}
 			// convert first field letter to lower case
-			methodFieldName = getJavaBeansFieldName( methodFieldName );
-			if ( methodFieldName != null && hasPersistenceAnnotation( methodDescription.getDeclaredAnnotations() ) ) {
-				boolean propertyNameMatchesFieldName = false;
-				for ( final FieldDescription field : methodDescription.getDeclaringType().getDeclaredFields() ) {
-					if ( !Modifier.isStatic( field.getModifiers() ) ) {
-						final AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription(
-								enhancementContext,
-								field
+			fieldName = getJavaBeansFieldName( fieldName );
+			if ( fieldName != null && isPersistentMethod( methodDescription )
+				&& !containsField( managedCtClass.asGenericType(), fieldName ) ) {
+				// We shouldn't even be in this method if using LEGACY, see top of this method.
+				switch ( strategy ) {
+					case SKIP:
+						log.debugf(
+								"Skipping enhancement of [%s] because no field named [%s] could be found for property accessor method [%s]."
+										+ " To fix this, make sure all property accessor methods have a matching field.",
+								managedCtClass.getName(),
+								fieldName,
+								methodDescription.getName()
 						);
-						if ( enhancementContext.isPersistentField( annotatedField ) ) {
-							if ( methodFieldName.equals( field.getActualName() ) ) {
-								propertyNameMatchesFieldName = true;
-								break;
-							}
-						}
-					}
-				}
-				if ( !propertyNameMatchesFieldName ) {
-					// We shouldn't even be in this method if using LEGACY, see top of this method.
-					switch ( strategy ) {
-						case SKIP:
-							log.debugf(
-									"Skipping enhancement of [%s] because no field named [%s] could be found for property accessor method [%s]."
-											+ " To fix this, make sure all property accessor methods have a matching field.",
-									managedCtClass.getName(),
-									methodFieldName,
-									methodDescription.getName()
-							);
-							return true;
-						case FAIL:
-							throw new EnhancementException( String.format(
-									"Enhancement of [%s] failed because no field named [%s] could be found for property accessor method [%s]."
-											+ " To fix this, make sure all property accessor methods have a matching field.",
-									managedCtClass.getName(),
-									methodFieldName,
-									methodDescription.getName()
-							) );
-						default:
-							throw new AssertionFailure( "Unexpected strategy at this point: " + strategy );
-					}
+						return true;
+					case FAIL:
+						throw new EnhancementException( String.format(
+								"Enhancement of [%s] failed because no field named [%s] could be found for property accessor method [%s]."
+										+ " To fix this, make sure all property accessor methods have a matching field.",
+								managedCtClass.getName(),
+								fieldName,
+								methodDescription.getName()
+						) );
+					default:
+						throw new AssertionFailure( "Unexpected strategy at this point: " + strategy );
 				}
 			}
 		}

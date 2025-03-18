@@ -135,12 +135,12 @@ public interface ScrollableResults<R> extends AutoCloseable {
 	boolean isLast();
 
 	/**
-	 * Get the current position in the results.
-	 * <p>
-	 * The first position is row number 1.
+	 * Get the current position in the results, with the first
+	 * position labelled as row number {@code 0}. That is, this
+	 * operation returns {@link #getPosition() position-1}.
 	 *
-	 * @return The current position number, numbered from 1;
-	 *         -1 indicates that there is no current row
+	 * @return The current position number, numbered from {@code 0};
+	 *         {@code -1} indicates that there is no current row
 	 *
 	 * @deprecated Use {@link #getPosition()}
 	 */
@@ -148,12 +148,11 @@ public interface ScrollableResults<R> extends AutoCloseable {
 	int getRowNumber();
 
 	/**
-	 * Set the current position in the result set.
-	 * <p>
-	 * The first position is row number 1.
-	 * <p>
-	 * Can be numbered from the first result (positive number)
-	 * or backward from the last result (negative number).
+	 * Set the current position in the result set, with the first
+	 * position labelled as row number {@code 1}, and the last
+	 * position labelled as row number {@code -1}. Results may be
+	 * numbered from the first result (using a positive position)
+	 * or backward from the last result (using a negative position).
 	 *
 	 * @param rowNumber the row number. A positive number indicates
 	 *                  a value numbered from the first row; a

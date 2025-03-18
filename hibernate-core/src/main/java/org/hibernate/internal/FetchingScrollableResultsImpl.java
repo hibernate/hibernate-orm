@@ -267,7 +267,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 	@Override
 	public int getRowNumber() {
-		return currentPosition;
+		return currentPosition - 1;
 	}
 
 	@Override

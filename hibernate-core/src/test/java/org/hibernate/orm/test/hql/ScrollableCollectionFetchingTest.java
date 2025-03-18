@@ -354,6 +354,8 @@ public class ScrollableCollectionFetchingTest {
 							.setParameter( "desc", "root%" )
 							.scroll()) {
 
+						assertEquals( 0, results.getRowNumber() );
+
 						assertTrue( results.next() );
 						Animal animal = (Animal) results.get();
 						assertEquals( data.root1Id, animal.getId(), "next() did not return expected row" );
@@ -383,6 +385,8 @@ public class ScrollableCollectionFetchingTest {
 							.createQuery("from Animal a where a.description like :desc order by a.id" )
 							.setParameter( "desc", "root%" )
 							.scroll()) {
+
+						assertEquals( 0, results.getRowNumber() );
 
 						assertTrue( results.next() );
 						Animal animal = (Animal) results.get();

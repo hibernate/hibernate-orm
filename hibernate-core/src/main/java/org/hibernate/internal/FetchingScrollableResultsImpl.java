@@ -271,6 +271,11 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 	}
 
 	@Override
+	public int getPosition() {
+		return currentPosition;
+	}
+
+	@Override
 	public boolean setRowNumber(int rowNumber) {
 		if ( rowNumber == 1 ) {
 			return first();

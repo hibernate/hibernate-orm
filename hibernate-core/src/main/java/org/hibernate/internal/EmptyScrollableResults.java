@@ -82,6 +82,11 @@ public class EmptyScrollableResults<R> implements ScrollableResultsImplementor<R
 	}
 
 	@Override
+	public int getPosition() {
+		return 0;
+	}
+
+	@Override
 	public boolean setRowNumber(int rowNumber) {
 		return false;
 	}

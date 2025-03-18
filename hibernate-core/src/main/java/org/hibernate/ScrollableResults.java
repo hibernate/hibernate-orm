@@ -57,18 +57,40 @@ public interface ScrollableResults<R> extends AutoCloseable {
 	 * position.
 	 *
 	 * @param positions a positive (forward) or negative (backward)
-	 *                  number of rows
+	 *                  number of positions
 	 *
 	 * @return {@code true} if there is a result at the new location
 	 */
 	boolean scroll(int positions);
 
 	/**
-	 * Moves the result cursor to the specified position.
+	 * Moves the result cursor to the specified position. The index
+	 * may be a positive value, and the position may be reached by
+	 * counting forward from the first result at position {@code 1},
+	 * or it may be a negative value, so that the position may be
+	 * reached by counting backward from the last result at position
+	 * {@code -1}.
+	 *
+	 * @param position an absolute positive (from the start) or
+	 *                 negative (from the end) position within the
+	 *                 query results
 	 *
 	 * @return {@code true} if there is a result at the new location
 	 */
 	boolean position(int position);
+
+	/**
+	 * The current position within the query results. The first
+	 * query result, if any, is at position {@code 1}. An empty
+	 * or newly-created instance has position {@code 0}.
+	 *
+	 * @return the current position, a positive integer index
+	 *         starting at {@code 1}, or {@code 0} if this
+	 *         instance is empty or newly-created
+	 *
+	 * @since 7.0
+	 */
+	int getPosition();
 
 	/**
 	 * Go to the last result.
@@ -119,7 +141,10 @@ public interface ScrollableResults<R> extends AutoCloseable {
 	 *
 	 * @return The current position number, numbered from 1;
 	 *         -1 indicates that there is no current row
+	 *
+	 * @deprecated Use {@link #getPosition()}
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	int getRowNumber();
 
 	/**
@@ -136,7 +161,10 @@ public interface ScrollableResults<R> extends AutoCloseable {
 	 *                  from the last row.
 	 *
 	 * @return true if there is a row at that row number
+	 *
+	 * @deprecated Use {@link #position(int)}
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	boolean setRowNumber(int rowNumber);
 
 	/**

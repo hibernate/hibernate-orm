@@ -8,8 +8,6 @@
 plugins {
     id "local.publishing-java-module"
     id "local.publishing-group-relocation"
-
-    id "org.hibernate.matrix-test"
 }
 
 description = "Hibernate's entity version (audit/history) support"
@@ -75,10 +73,4 @@ task testJar(type: Jar, dependsOn: testClasses) {
 
 artifacts {
     tests testJar
-}
-
-tasks."matrix_mariadb" {
-    beforeTest { descriptor ->
-        println "Starting test: " + descriptor
-    }
 }

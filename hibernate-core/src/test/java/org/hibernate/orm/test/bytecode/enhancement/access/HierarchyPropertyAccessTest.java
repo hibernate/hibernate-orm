@@ -4,110 +4,99 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.access;
 
-import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
-import jakarta.persistence.Basic;
 import jakarta.persistence.DiscriminatorColumn;
-import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.Table;
+import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Transient;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DomainModel(
-		annotatedClasses = {
-				HierarchyPropertyAccessTest.ChildEntity.class,
-		}
-)
+@DomainModel(annotatedClasses = {
+		HierarchyPropertyAccessTest.AbstractSuperclass.class,
+		HierarchyPropertyAccessTest.ParentEntity.class,
+		HierarchyPropertyAccessTest.ChildEntity.class,
+})
 @SessionFactory
-@JiraKey("HHH-19140")
+@Jira( "https://hibernate.atlassian.net/browse/HHH-19140" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-19059" )
 @BytecodeEnhanced
 public class HierarchyPropertyAccessTest {
-
-
 	@Test
 	public void testParent(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.persist( new ParentEntity( 1L, "field", "transient: property" ) );
-		} );
+		assertThat( scope.getSessionFactory().getMappingMetamodel().findEntityDescriptor( ParentEntity.class )
+				.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ).isTrue();
+		scope.inTransaction( session -> session.persist( new ParentEntity( 1L, "field", "transient: property" ) ) );
 
 		scope.inTransaction( session -> {
-			ParentEntity entity = session.get( ParentEntity.class, 1L );
-			assertThat( entity.persistProperty ).isEqualTo( "property" );
-			assertThat( entity.property ).isEqualTo( "transient: property" );
+			final ParentEntity entity = session.find( ParentEntity.class, 1L );
+			assertThat( entity.getPersistProperty() ).isEqualTo( "property" );
+			assertThat( entity.getProperty() ).isEqualTo( "transient: property" );
+			assertThat( entity.getSuperProperty() ).isEqualTo( 8 );
 
 			entity.setProperty( "transient: updated" );
 		} );
 
 		scope.inTransaction( session -> {
-			ParentEntity entity = session.get( ParentEntity.class, 1L );
-			assertThat( entity.persistProperty ).isEqualTo( "updated" );
-			assertThat( entity.property ).isEqualTo( "transient: updated" );
+			final ParentEntity entity = session.find( ParentEntity.class, 1L );
+			assertThat( entity.getPersistProperty() ).isEqualTo( "updated" );
+			assertThat( entity.getProperty() ).isEqualTo( "transient: updated" );
 		} );
 	}
 
 	@Test
 	public void testChild(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.persist( new ChildEntity( 2L, "field", "transient: property" ) );
-		} );
+		assertThat( scope.getSessionFactory().getMappingMetamodel().findEntityDescriptor( ChildEntity.class )
+				.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ).isTrue();
+		scope.inTransaction( session -> session.persist( new ChildEntity( 2L, "field", "transient: property" ) ) );
 
 		scope.inTransaction( session -> {
-			ChildEntity entity = session.get( ChildEntity.class, 2L );
-			assertThat( entity.persistProperty ).isEqualTo( "property" );
-			assertThat( entity.property ).isEqualTo( "transient: property" );
+			ChildEntity entity = session.find( ChildEntity.class, 2L );
+			assertThat( entity.getPersistProperty() ).isEqualTo( "property" );
+			assertThat( entity.getProperty() ).isEqualTo( "transient: property" );
+			assertThat( entity.getSuperProperty() ).isEqualTo( 8 );
 
 			entity.setProperty( "transient: updated" );
 		} );
 
 		scope.inTransaction( session -> {
-			ChildEntity entity = session.get( ChildEntity.class, 2L );
-			assertThat( entity.persistProperty ).isEqualTo( "updated" );
-			assertThat( entity.property ).isEqualTo( "transient: updated" );
+			ChildEntity entity = session.find( ChildEntity.class, 2L );
+			assertThat( entity.getPersistProperty() ).isEqualTo( "updated" );
+			assertThat( entity.getProperty() ).isEqualTo( "transient: updated" );
 		} );
 	}
 
-	@AfterEach
+	@AfterAll
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			ParentEntity parentEntity = session.get( ParentEntity.class, 1L );
-			if (parentEntity != null) {
-				session.remove( parentEntity );
-			}
-			ChildEntity childEntity = session.get( ChildEntity.class, 2L );
-			if (childEntity != null) {
-				session.remove( childEntity );
-			}
-		} );
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
-	@Entity
-	@Table(name = "PARENT_ENTITY")
-	@Inheritance
-	@DiscriminatorColumn(name = "type")
-	@DiscriminatorValue("Parent")
-	static class ParentEntity {
+	@MappedSuperclass
+	static abstract class AbstractSuperclass {
+		protected Integer superProperty;
+	}
+
+	@Entity(name = "ParentEntity")
+	@DiscriminatorColumn(name = "entity_type")
+	static class ParentEntity extends AbstractSuperclass {
 		@Id
-		Long id;
+		private Long id;
 
-		@Basic
-		String field;
+		private String field;
 
-		String persistProperty;
+		private String persistProperty;
 
 		@Transient
-		String property;
+		private String property;
 
 		public ParentEntity() {
 		}
@@ -118,7 +107,6 @@ public class HierarchyPropertyAccessTest {
 			this.property = property;
 		}
 
-		@Basic
 		@Access(AccessType.PROPERTY)
 		public String getPersistProperty() {
 			this.persistProperty = this.property.substring( 11 );
@@ -137,17 +125,24 @@ public class HierarchyPropertyAccessTest {
 		public void setProperty(String property) {
 			this.property = property;
 		}
+
+		@Access(AccessType.PROPERTY)
+		public Integer getSuperProperty() {
+			return getPersistProperty().length();
+		}
+
+		public void setSuperProperty(Integer superProperty) {
+			this.superProperty = superProperty;
+		}
 	}
 
-	@Entity
-	@DiscriminatorValue("Child")
+	@Entity(name = "ChildEntity")
 	static class ChildEntity extends ParentEntity {
-
 		public ChildEntity() {
 		}
 
 		public ChildEntity(Long id, String field, String property) {
-			super(id, field, property);
+			super( id, field, property );
 		}
 	}
 }

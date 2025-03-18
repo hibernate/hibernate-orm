@@ -71,7 +71,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 		position += numberOfRows;
 
-		if ( position > this.numberOfRows ) {
+		if ( position >= this.numberOfRows ) {
 			position = this.numberOfRows;
 			return false;
 		}
@@ -81,7 +81,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 	@Override
 	public int getPosition() {
-		return position;
+		return position + 1;
 	}
 
 	@Override
@@ -93,8 +93,12 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 			// we need to subtract it from `numberOfRows`
 			position = numberOfRows + position;
 		}
+		else {
+			// internally, positions are indexed from zero
+			position--;
+		}
 
-		if ( position > numberOfRows ) {
+		if ( position >= numberOfRows ) {
 			this.position = numberOfRows;
 			return false;
 		}

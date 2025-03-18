@@ -170,7 +170,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	@Override
 	public int getPosition() {
 		try {
-			return resultSet.getRow() - 1;
+			return resultSet.getRow();
 		}
 		catch (SQLException e) {
 			throw makeExecutionException( "Error calling ResultSet#getRow", e );

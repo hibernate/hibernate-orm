@@ -144,6 +144,11 @@ public class TiDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return getVersion().isSameOrAfter( 5, 7 );
+	}
+
+	@Override
 	public String getReadLockString(int timeout) {
 		if ( timeout == LockOptions.NO_WAIT ) {
 			return getForUpdateNowaitString();

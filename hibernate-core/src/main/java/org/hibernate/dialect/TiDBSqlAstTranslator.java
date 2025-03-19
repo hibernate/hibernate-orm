@@ -316,11 +316,6 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return dialect.getVersion().isSameOrAfter( 5, 7 );
-	}
-
-	@Override
 	protected String getForShare(int timeoutMillis) {
 		if ( timeoutMillis == LockOptions.NO_WAIT ) {
 			return getForUpdate();

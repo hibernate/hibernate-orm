@@ -6034,4 +6034,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return true;
 	}
 
+	/**
+	 * If the dialect supports {@link org.hibernate.dialect.Dialect#supportsRowValueConstructorSyntax() row values},
+	 * does it offer such support in IN lists as well?
+	 * <p>
+	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( (?, ?), (?, ?) ) ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax in the IN list; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return true;
+	}
+
 }

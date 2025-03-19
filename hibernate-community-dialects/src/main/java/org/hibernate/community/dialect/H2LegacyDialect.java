@@ -1107,4 +1107,10 @@ public class H2LegacyDialect extends Dialect {
 		return getVersion().isSameOrAfter( 1, 4, 197 );
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		// Just a guess
+		return getVersion().isSameOrAfter( 1, 4, 197 );
+	}
+
 }

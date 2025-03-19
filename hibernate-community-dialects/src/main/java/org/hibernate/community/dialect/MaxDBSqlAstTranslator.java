@@ -75,9 +75,4 @@ public class MaxDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 		}
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
 }

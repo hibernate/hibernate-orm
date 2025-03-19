@@ -137,11 +137,6 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
 	protected void renderNull(Literal literal) {
 		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.NO_UNTYPED ) {
 			renderCasted( literal );

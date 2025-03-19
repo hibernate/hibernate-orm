@@ -7642,7 +7642,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
 				itemAccessor = listExpression -> SqlTupleContainer.getSqlTuple( listExpression ).getExpressions().get( 0 );
 			}
-			else if ( !supportsRowValueConstructorSyntaxInInList() ) {
+			else if ( !dialect.supportsRowValueConstructorSyntaxInInList() ) {
 				final ComparisonOperator comparisonOperator = inListPredicate.isNegated() ?
 						ComparisonOperator.NOT_EQUAL :
 						ComparisonOperator.EQUAL;
@@ -8317,7 +8317,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				assert rhsTuple != null;
 				// If the DB supports tuples in the IN list predicate, use that syntax as it's more concise
 				if ( ( operator == ComparisonOperator.EQUAL || operator == ComparisonOperator.NOT_EQUAL )
-						&& supportsRowValueConstructorSyntaxInInList() ) {
+						&& dialect.supportsRowValueConstructorSyntaxInInList() ) {
 					comparisonPredicate.getLeftHandExpression().accept( this );
 					if ( operator == ComparisonOperator.NOT_EQUAL ) {
 						appendSql( " not" );
@@ -8401,19 +8401,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	/**
 	 * If the dialect supports {@link org.hibernate.dialect.Dialect#supportsRowValueConstructorSyntax() row values},
-	 * does it offer such support in IN lists as well?
-	 * <p>
-	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( (?, ?), (?, ?) ) ...}
-	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax in the IN list; false otherwise.
-	 */
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return true;
-	}
-
-	/**
-	 * If the dialect supports {@link org.hibernate.dialect.Dialect#supportsRowValueConstructorSyntax() row values},
 	 * does it offer such support in IN subqueries as well?
 	 * <p>
 	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( select ... ) ...}
@@ -8422,7 +8409,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * constructor" syntax in the IN subqueries; false otherwise.
 	 */
 	protected boolean supportsRowValueConstructorSyntaxInInSubQuery() {
-		return supportsRowValueConstructorSyntaxInInList();
+		return dialect.supportsRowValueConstructorSyntaxInInList();
 	}
 
 	/**

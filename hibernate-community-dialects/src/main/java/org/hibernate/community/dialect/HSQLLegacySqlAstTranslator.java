@@ -321,11 +321,6 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		}
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return getDialect().getVersion().isSameOrAfter( 2, 5 );
 	}

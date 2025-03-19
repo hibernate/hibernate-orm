@@ -62,9 +62,4 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			expression.accept( this );
 		}
 	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
 }

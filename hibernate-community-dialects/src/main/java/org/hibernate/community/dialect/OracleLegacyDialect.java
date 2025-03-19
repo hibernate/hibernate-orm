@@ -1696,4 +1696,9 @@ public class OracleLegacyDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return getVersion().isSameOrAfter( 8, 2 );
+	}
+
 }

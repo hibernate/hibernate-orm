@@ -6,7 +6,6 @@ package org.hibernate.orm.test.function.json;
 
 import org.hibernate.cfg.QuerySettings;
 
-import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -15,7 +14,6 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -28,7 +26,6 @@ import org.junit.jupiter.api.Test;
 public class JsonSetTest {
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testSimple(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-set-example[]

@@ -6,7 +6,6 @@ package org.hibernate.orm.test.rowid;
 
 import org.hibernate.annotations.RowId;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationType;
@@ -16,7 +15,6 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -60,7 +58,6 @@ public class RowIdUpdateAndDeleteTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testSimpleUpdateSameTransaction(SessionFactoryScope scope) {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();
@@ -79,7 +76,6 @@ public class RowIdUpdateAndDeleteTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testSimpleDeleteSameTransaction(SessionFactoryScope scope) {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();
@@ -96,7 +92,6 @@ public class RowIdUpdateAndDeleteTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testRelatedUpdateSameTransaction(SessionFactoryScope scope) {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();
@@ -121,7 +116,6 @@ public class RowIdUpdateAndDeleteTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testSimpleUpdateDifferentTransaction(SessionFactoryScope scope) {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {
@@ -136,7 +130,6 @@ public class RowIdUpdateAndDeleteTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testSimpleDeleteDifferentTransaction(SessionFactoryScope scope) {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {
@@ -149,7 +142,6 @@ public class RowIdUpdateAndDeleteTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testRelatedUpdateRelatedDifferentTransaction(SessionFactoryScope scope) {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {

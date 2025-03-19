@@ -69,7 +69,7 @@ public class ArrayPositionTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class )
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.gaussdb has different behavior")
 	public void testPositionZero(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_position(e.theArray, 'xyz') = 0", EntityWithArrays.class )

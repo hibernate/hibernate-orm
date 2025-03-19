@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @SkipForDialect(dialectClass = OracleDialect.class, reason = "HHH-6834")
 @SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "HHH-6834")
-@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "Gaussdb Oracle/Mysql model has different behavior, Oralce model will map date to TIMESTAMP")
+@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.Gaussdb Oracle/Mysql model has different behavior, Oralce model will map date to TIMESTAMP")
 @SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "jConnect reports the type code 11 for bigdatetime columns, which is an unknown type code..")
 @SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase reports the type code 93 for date columns")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class, jiraKey = "HHH-6834")

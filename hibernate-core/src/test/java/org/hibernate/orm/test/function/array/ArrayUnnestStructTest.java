@@ -75,7 +75,7 @@ public class ArrayUnnestStructTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "do not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.do not support")
 	public void testUnnest(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-array-unnest-aggregate-example[]
@@ -106,7 +106,7 @@ public class ArrayUnnestStructTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "xmltable can't be used with a left join")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "do not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.do not support")
 	public void testNodeBuilderUnnest(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -146,7 +146,7 @@ public class ArrayUnnestStructTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "do not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.do not support")
 	public void testUnnestOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-array-unnest-aggregate-with-ordinality-example[]
@@ -170,7 +170,7 @@ public class ArrayUnnestStructTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "do not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.do not support")
 	public void testNodeBuilderUnnestOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();

@@ -29,19 +29,11 @@ public class GaussDBArrayTrimFunction extends AbstractArrayTrimFunction {
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression lengthExpression = (Expression) sqlAstArguments.get( 1 );
 
-		sqlAppender.append( "CASE WHEN ");
+		sqlAppender.append( "array_trim(");
 		arrayExpression.accept( walker );
-		sqlAppender.append( " IS NULL THEN NULL");
-		sqlAppender.append( " WHEN array_length(");
-		arrayExpression.accept( walker );
-		sqlAppender.append( " , 1) <=");
+		sqlAppender.append( ",");
 		lengthExpression.accept( walker );
-		sqlAppender.append( " THEN '{}'::text[] ELSE ");
-		arrayExpression.accept( walker );
-		sqlAppender.append( "[1:(array_length(");
-		arrayExpression.accept( walker );
-		sqlAppender.append( ", 1) - ");
-		lengthExpression.accept( walker );
-		sqlAppender.append( ")] END AS trimmed_array ");
+		sqlAppender.append( ")");
+
 	}
 }

@@ -562,7 +562,7 @@ public class QueryAndSQLTest {
 
 	@Test
 	@SkipForDialect( dialectClass = GaussDBDialect.class,
-			reason = "If you operate a table with the same name as the system view under the schema, "
+			reason = "type:resolved.If you operate a table with the same name as the system view under the schema, "
 					+ "you will be redirected to the system view and an error will be reported.")
 	public void testDiscriminator(SessionFactoryScope scope) {
 		scope.inSession(

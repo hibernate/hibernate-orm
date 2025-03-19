@@ -7,7 +7,6 @@ package org.hibernate.orm.test.function.json;
 import org.hibernate.cfg.QuerySettings;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -34,7 +33,6 @@ import org.junit.jupiter.api.Test;
 public class JsonObjectAggregateTest {
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testSimple(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-objectagg-example[]
@@ -44,7 +42,6 @@ public class JsonObjectAggregateTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testNull(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-objectagg-null-example[]
@@ -60,7 +57,6 @@ public class JsonObjectAggregateTest {
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 has no way to throw an error on duplicate json object keys.")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 15, matchSubTypes = true, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testUniqueKeys(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-objectagg-unique-keys-example[]

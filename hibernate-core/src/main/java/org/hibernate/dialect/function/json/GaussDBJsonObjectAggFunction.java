@@ -4,15 +4,10 @@
  */
 package org.hibernate.dialect.function.json;
 
-import org.hibernate.QueryException;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonObjectAggUniqueKeysBehavior;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -24,11 +19,9 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class GaussDBJsonObjectAggFunction extends JsonObjectAggFunction {
 
-	private final boolean supportsStandard;
 
 	public GaussDBJsonObjectAggFunction(boolean supportsStandard, TypeConfiguration typeConfiguration) {
 		super( ":", true, typeConfiguration );
-		this.supportsStandard = supportsStandard;
 	}
 
 	@Override
@@ -38,41 +31,17 @@ public class GaussDBJsonObjectAggFunction extends JsonObjectAggFunction {
 			Predicate filter,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		if ( supportsStandard ) {
-			super.render( sqlAppender, arguments, filter, returnType, translator );
-		}
-		else {
-			if ( arguments.uniqueKeysBehavior() == JsonObjectAggUniqueKeysBehavior.WITH ) {
-				throw new QueryException( "Can't emulate json_objectagg 'with unique keys' clause." );
-			}
-			final String jsonTypeName = translator.getSessionFactory().getTypeConfiguration().getDdlTypeRegistry()
-					.getTypeName( SqlTypes.JSON, translator.getSessionFactory().getJdbcServices().getDialect() );
-			sqlAppender.appendSql( jsonTypeName );
-			sqlAppender.appendSql( "_object_agg" );
-			sqlAppender.appendSql( '(' );
-			arguments.key().accept( translator );
-			sqlAppender.appendSql( ',' );
-			arguments.value().accept( translator );
-			sqlAppender.appendSql( ')' );
 
-			if ( filter != null ) {
-				translator.getCurrentClauseStack().push( Clause.WHERE );
-				sqlAppender.appendSql( " filter (where " );
-				filter.accept( translator );
-				if ( arguments.nullBehavior() != JsonNullBehavior.NULL ) {
-					sqlAppender.appendSql( " and " );
-					arguments.value().accept( translator );
-					sqlAppender.appendSql( " is not null" );
-				}
-				sqlAppender.appendSql( ')' );
-				translator.getCurrentClauseStack().pop();
-			}
-			else if ( arguments.nullBehavior() != JsonNullBehavior.NULL ) {
-				sqlAppender.appendSql( " filter (where " );
-				arguments.value().accept( translator );
-				sqlAppender.appendSql( " is not null)" );
-			}
-		}
+
+		sqlAppender.appendSql( "json_object_agg(" );
+		sqlAppender.appendSql( "CASE WHEN " );
+		arguments.key().accept( translator );
+		sqlAppender.appendSql( " IS NOT NULL  " );
+		sqlAppender.appendSql( " THEN " );
+		arguments.key().accept( translator );
+		sqlAppender.appendSql( " END," );
+		arguments.value().accept( translator );
+		sqlAppender.appendSql( ")" );
 	}
 
 	@Override

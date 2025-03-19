@@ -7,14 +7,12 @@ package org.hibernate.orm.test.lob;
 import java.sql.Clob;
 import java.util.List;
 
-import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,7 +67,6 @@ public class LobStringFunctionsTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testLengthFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Query<Tuple> query = session.createQuery(
@@ -89,7 +86,6 @@ public class LobStringFunctionsTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testOctetLengthFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Query<Tuple> query = session.createQuery(
@@ -110,7 +106,6 @@ public class LobStringFunctionsTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testBitLengthFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Query<Tuple> query = session.createQuery(
@@ -131,7 +126,6 @@ public class LobStringFunctionsTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testConcatFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			// Use trim('') instead of '' since Sybase interprets that as single space string...

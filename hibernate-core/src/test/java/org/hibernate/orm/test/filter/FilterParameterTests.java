@@ -147,7 +147,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@ParameterizedTest
 	@MethodSource("transactionKind")
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "gaussdb silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.gaussdb silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby silently converts a boolean to integral types")

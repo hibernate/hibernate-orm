@@ -411,11 +411,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntaxInSet() {
-		return false;
-	}
-
-	@Override
 	public SingleStoreDialect getDialect() {
 		return this.dialect;
 	}

@@ -5999,4 +5999,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return supportsRowValueConstructorSyntax() && supportsDistinctFromPredicate();
 	}
 
+	/**
+	 * Whether the SQL with clause is supported.
+	 */
+	public boolean supportsWithClause() {
+		return true;
+	}
+
 }

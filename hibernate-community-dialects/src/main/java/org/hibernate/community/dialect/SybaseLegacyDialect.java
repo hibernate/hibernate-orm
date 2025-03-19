@@ -535,4 +535,9 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsWithClause() {
+		return false;
+	}
+
 }

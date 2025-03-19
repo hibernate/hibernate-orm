@@ -2126,11 +2126,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( cteStatements.isEmpty() && cteObjects.isEmpty() ) {
 			return;
 		}
-		if ( !supportsWithClause() ) {
+		if ( !dialect.supportsWithClause() ) {
 			if ( isRecursive( cteStatements ) && cteObjects.isEmpty() ) {
 				throw new UnsupportedOperationException( "Can't emulate recursive CTEs!" );
 			}
-			// This should be unreachable, because #needsCteInlining() must return true if #supportsWithClause() returns false,
+			// This should be unreachable, because #needsCteInlining() must return true if org.hibernate.dialect.Dialect#supportsWithClause() returns false,
 			// and hence the cteStatements should either contain a recursive CTE or be empty
 			throw new IllegalStateException( "Non-recursive CTEs found that need inlining, but were collected: " + cteStatements );
 		}
@@ -2415,13 +2415,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	/**
-	 * Whether the SQL with clause is supported.
-	 */
-	protected boolean supportsWithClause() {
-		return true;
-	}
-
-	/**
 	 * Whether the SQL with clause is supported within a CTE.
 	 */
 	protected boolean supportsNestedWithClause() {
@@ -2432,14 +2425,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * Whether the SQL with clause is supported within a subquery.
 	 */
 	protected boolean supportsWithClauseInSubquery() {
-		return supportsWithClause();
+		return dialect.supportsWithClause();
 	}
 
 	/**
 	 * Whether CTEs should be inlined rather than rendered as CTEs.
 	 */
 	protected boolean needsCteInlining() {
-		return !supportsWithClause() || !supportsWithClauseInSubquery() && isInSubquery();
+		return !dialect.supportsWithClause() || !supportsWithClauseInSubquery() && isInSubquery();
 	}
 
 	/**
@@ -2447,7 +2440,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 */
 	protected boolean shouldInlineCte(TableGroup tableGroup) {
 		if ( tableGroup instanceof CteTableGroup ) {
-			if (!supportsWithClause()) {
+			if (!dialect.supportsWithClause()) {
 				return true;
 			}
 			if ( !supportsWithClauseInSubquery() && isInSubquery() ) {

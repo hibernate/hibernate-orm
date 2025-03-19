@@ -129,11 +129,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		}
 	}
 
-	@Override
-	protected boolean supportsWithClause() {
-		return false;
-	}
-
 	// Sybase ASE does not allow CASE expressions where all result arms contain plain parameters.
 	// At least one result arm must provide some type context for inference,
 	// so we cast the first result arm if we encounter this condition

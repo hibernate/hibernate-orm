@@ -178,11 +178,6 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	}
 
 	@Override
-	protected boolean supportsWithClause() {
-		return dialect.getVersion().isSameOrAfter( 10, 2 );
-	}
-
-	@Override
 	protected boolean supportsWithClauseInSubquery() {
 		return false;
 	}

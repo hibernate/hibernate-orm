@@ -1529,4 +1529,9 @@ public class MySQLLegacyDialect extends Dialect {
 		return getVersion().isSameOrAfter( 8 );
 	}
 
+	@Override
+	public boolean supportsWithClause() {
+		return getVersion().isSameOrAfter( 8 );
+	}
+
 }

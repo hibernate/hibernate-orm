@@ -8451,19 +8451,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	/**
-	 * Is this dialect known to support  what ANSI-SQL terms "row value constructor" syntax,
-	 * sometimes called tuple syntax, in the SET clause;
-	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... SET (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...}
-	 *
-	 * @return True if this SQL dialect is known to support "row value constructor" syntax in the SET clause; false otherwise.
-	 */
-	protected boolean supportsRowValueConstructorSyntaxInSet() {
-		return dialect.supportsRowValueConstructorSyntax();
-	}
-
-	/**
 	 * Is this dialect known to support what ANSI-SQL terms "row value
 	 * constructor" syntax; sometimes called tuple syntax with quantified predicates.
 	 * <p>

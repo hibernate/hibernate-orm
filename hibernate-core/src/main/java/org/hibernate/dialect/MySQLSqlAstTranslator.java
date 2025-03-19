@@ -425,11 +425,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntaxInSet() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return true;
 	}

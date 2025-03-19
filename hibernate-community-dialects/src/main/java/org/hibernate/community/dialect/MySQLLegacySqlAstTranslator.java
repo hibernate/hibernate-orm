@@ -365,11 +365,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntaxInSet() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return getDialect().getVersion().isSameOrAfter( 5, 7 );
 	}

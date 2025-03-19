@@ -222,17 +222,26 @@ public interface CommonQueryContract {
 	/**
 	 * Bind an {@link Instant} to the named query parameter using just the
 	 * portion indicated by the given {@link TemporalType}.
+	 *
+	 * @deprecated since {@link TemporalType} is deprecated
 	 */
+	@Deprecated(since = "7")
 	CommonQueryContract setParameter(String parameter, Instant value, TemporalType temporalType);
 
 	/**
 	 * @see jakarta.persistence.Query#setParameter(String, Calendar, TemporalType)
+	 *
+	 * @deprecated since {@link TemporalType} is deprecated
 	 */
+	@Deprecated(since = "7")
 	CommonQueryContract setParameter(String parameter, Calendar value, TemporalType temporalType);
 
 	/**
 	 * @see jakarta.persistence.Query#setParameter(String, Date, TemporalType)
+	 *
+	 * @deprecated since {@link TemporalType} is deprecated
 	 */
+	@Deprecated(since = "7")
 	CommonQueryContract setParameter(String parameter, Date value, TemporalType temporalType);
 
 	/**
@@ -265,17 +274,26 @@ public interface CommonQueryContract {
 	/**
 	 * Bind an {@link Instant} to an ordinal query parameter using just the
 	 * portion indicated by the given {@link TemporalType}.
+	 *
+	 * @deprecated since {@link TemporalType} is deprecated
 	 */
+	@Deprecated(since = "7")
 	CommonQueryContract setParameter(int parameter, Instant value, TemporalType temporalType);
 
 	/**
 	 * @see jakarta.persistence.Query#setParameter(int, Date, TemporalType)
+	 *
+	 * @deprecated since {@link TemporalType} is deprecated
 	 */
+	@Deprecated(since = "7")
 	CommonQueryContract setParameter(int parameter, Date value, TemporalType temporalType);
 
 	/**
 	 * @see jakarta.persistence.Query#setParameter(int, Calendar, TemporalType)
+	 *
+	 * @deprecated since {@link TemporalType} is deprecated
 	 */
+	@Deprecated(since = "7")
 	CommonQueryContract setParameter(int parameter, Calendar value, TemporalType temporalType);
 
 	/**
@@ -329,12 +347,18 @@ public interface CommonQueryContract {
 
 	/**
 	 * @see jakarta.persistence.Query#setParameter(Parameter, Calendar, TemporalType)
+	 *
+	 * @deprecated since {@link TemporalType} is deprecated
 	 */
+	@Deprecated(since = "7")
 	CommonQueryContract setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
 	/**
 	 * @see jakarta.persistence.Query#setParameter(Parameter, Date, TemporalType)
+	 *
+	 * @deprecated since {@link TemporalType} is deprecated
 	 */
+	@Deprecated(since = "7")
 	CommonQueryContract setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	/**

@@ -107,13 +107,13 @@ public interface MutationQuery extends CommonQueryContract {
 	@Override
 	<P> MutationQuery setParameter(String name, P value, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	MutationQuery setParameter(String name, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	MutationQuery setParameter(String name, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	MutationQuery setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
@@ -125,13 +125,13 @@ public interface MutationQuery extends CommonQueryContract {
 	@Override
 	<P> MutationQuery setParameter(int position, P value, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	MutationQuery setParameter(int position, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	MutationQuery setParameter(int position, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	MutationQuery setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
@@ -146,10 +146,10 @@ public interface MutationQuery extends CommonQueryContract {
 	@Override
 	<T> MutationQuery setParameter(Parameter<T> param, T value);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	MutationQuery setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	MutationQuery setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override

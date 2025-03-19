@@ -255,28 +255,28 @@ public interface ProcedureCall
 	@Override
 	<T> ProcedureCall setParameter( Parameter<T> param, T value);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCall setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCall setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
 	ProcedureCall setParameter(String name, Object value);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCall setParameter(String name, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCall setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
 	ProcedureCall setParameter(int position, Object value);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCall setParameter(int position, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCall setParameter(int position, Date value, TemporalType temporalType);
 
 	@Override @Deprecated(since = "7")

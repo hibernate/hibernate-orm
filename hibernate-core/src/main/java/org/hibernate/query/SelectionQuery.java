@@ -282,6 +282,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Incubating
 	KeyedResultList<R> getKeyedResultList(KeyedPage<R> page);
 
+	@Override
 	SelectionQuery<R> setHint(String hintName, Object value);
 
 	/**
@@ -655,13 +656,13 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Override
 	<P> SelectionQuery<R> setParameter(String name, P value, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated
 	SelectionQuery<R> setParameter(String name, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQuery<R> setParameter(String name, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQuery<R> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
@@ -673,13 +674,13 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Override
 	<P> SelectionQuery<R> setParameter(int position, P value, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated
 	SelectionQuery<R> setParameter(int position, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQuery<R> setParameter(int position, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQuery<R> setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
@@ -694,10 +695,10 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Override
 	<T> SelectionQuery<R> setParameter(Parameter<T> param, T value);
 
-	@Override
+	@Override @Deprecated
 	SelectionQuery<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override

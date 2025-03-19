@@ -60,4 +60,7 @@ public interface MetadataImplementor extends Metadata {
 	Component getGenericComponent(Class<?> componentClass);
 
 	DiscriminatorType<?> resolveEmbeddableDiscriminatorType(Class<?> embeddableClass, Supplier<DiscriminatorType<?>> supplier);
+
+	@Override
+	SessionFactoryImplementor buildSessionFactory();
 }

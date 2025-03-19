@@ -15,7 +15,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
-import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
@@ -1642,7 +1641,7 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public SessionFactory buildSessionFactory() {
+		public SessionFactoryImplementor buildSessionFactory() {
 			return null;
 		}
 

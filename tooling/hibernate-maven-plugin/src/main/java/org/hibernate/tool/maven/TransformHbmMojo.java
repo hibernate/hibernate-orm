@@ -70,7 +70,6 @@ public class TransformHbmMojo extends AbstractMojo {
 		List<Binding<JaxbEntityMappingsImpl>> transformedBindings = HbmXmlTransformer.transform(
 				hbmBindings,
 				(MetadataImplementor) metadataSources.buildMetadata(),
-				serviceRegistry,
 				UnsupportedFeatureHandling.ERROR
 		);
 		for (int i = 0; i < hbmBindings.size(); i++) {

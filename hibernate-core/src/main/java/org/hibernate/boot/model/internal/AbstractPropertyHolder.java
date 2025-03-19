@@ -175,7 +175,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	protected SourceModelBuildingContext getSourceModelContext() {
-		return getContext().getMetadataCollector().getSourceModelBuildingContext();
+		return getContext().getBootstrapContext().getModelsContext();
 	}
 
 	/**
@@ -438,7 +438,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		}
 
 		final SourceModelBuildingContext sourceModelContext =
-				context.getMetadataCollector().getSourceModelBuildingContext();
+				context.getBootstrapContext().getModelsContext();
 		final Map<String, List<Column>> columnOverrideMap = new HashMap<>();
 
 		final AttributeOverride[] overrides =
@@ -492,7 +492,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			Column column,
 			MetadataBuildingContext context) {
 		final TimeZoneColumn timeZoneColumn = element.getDirectAnnotationUsage( TimeZoneColumn.class );
-		final ColumnJpaAnnotation created = JpaAnnotations.COLUMN.createUsage( context.getMetadataCollector().getSourceModelBuildingContext() );
+		final ColumnJpaAnnotation created = JpaAnnotations.COLUMN.createUsage( context.getBootstrapContext().getModelsContext() );
 		final String columnName = timeZoneColumn != null
 				? timeZoneColumn.name()
 				: column.name() + "_tz";
@@ -563,7 +563,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		);
 
 		final ColumnJpaAnnotation created =
-				JpaAnnotations.COLUMN.createUsage( context.getMetadataCollector().getSourceModelBuildingContext() );
+				JpaAnnotations.COLUMN.createUsage( context.getBootstrapContext().getModelsContext() );
 		if ( StringHelper.isNotEmpty( implicitName.getText() ) ) {
 			created.name( implicitName.getText() );
 		}
@@ -573,7 +573,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	private static Map<String, ColumnTransformer> buildColumnTransformerOverride(AnnotationTarget element, MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final SourceModelBuildingContext sourceModelContext = context.getBootstrapContext().getModelsContext();
 		final Map<String, ColumnTransformer> columnOverride = new HashMap<>();
 		if ( element != null ) {
 			element.forEachAnnotationUsage( ColumnTransformer.class, sourceModelContext, (usage) -> {
@@ -604,7 +604,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	private static AssociationOverride[] buildAssociationOverrides(AnnotationTarget element, String path, MetadataBuildingContext context) {
-		return element.getRepeatedAnnotationUsages( AssociationOverride.class, context.getMetadataCollector().getSourceModelBuildingContext() );
+		return element.getRepeatedAnnotationUsages( AssociationOverride.class, context.getBootstrapContext().getModelsContext() );
 	}
 
 	private static Map<String, JoinTable> buildJoinTableOverride(AnnotationTarget element, String path, MetadataBuildingContext context) {

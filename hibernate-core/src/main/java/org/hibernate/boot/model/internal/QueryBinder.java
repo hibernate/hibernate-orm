@@ -4,17 +4,18 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.function.Supplier;
-
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.QueryHint;
+import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.StoredProcedureParameter;
 import org.hibernate.AnnotationException;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.query.QueryFlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.HQLSelect;
@@ -34,21 +35,19 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
+import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 import org.hibernate.type.BasicType;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.NamedNativeQuery;
-import jakarta.persistence.NamedQuery;
-import jakarta.persistence.NamedStoredProcedureQuery;
-import jakarta.persistence.ParameterMode;
-import jakarta.persistence.QueryHint;
-import jakarta.persistence.SqlResultSetMapping;
-import jakarta.persistence.StoredProcedureParameter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.function.Supplier;
 
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -297,10 +296,9 @@ public abstract class QueryBinder {
 		}
 		final JdbcCall jdbcCall = parseJdbcCall( sqlString, exceptionProducer );
 
-		final SourceModelBuildingContext sourceModelBuildingContext = context.getMetadataCollector()
-				.getSourceModelBuildingContext();
+		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
 		final NamedStoredProcedureQueryJpaAnnotation nameStoredProcedureQueryAnn =
-				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY.createUsage( sourceModelBuildingContext );
+				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY.createUsage( modelsContext );
 		nameStoredProcedureQueryAnn.name( builder.getName() );
 		nameStoredProcedureQueryAnn.procedureName( jdbcCall.callableName );
 
@@ -309,7 +307,7 @@ public abstract class QueryBinder {
 
 		for ( int i = 0; i < jdbcCall.parameters.size(); i++ ) {
 			final StoredProcedureParameterJpaAnnotation param =
-					JpaAnnotations.STORED_PROCEDURE_PARAMETER.createUsage( sourceModelBuildingContext );
+					JpaAnnotations.STORED_PROCEDURE_PARAMETER.createUsage( modelsContext );
 			parameters[i] = param;
 
 			final String paramName = jdbcCall.parameters.get( i );
@@ -345,7 +343,7 @@ public abstract class QueryBinder {
 
 		if ( builder.getQuerySpaces() != null ) {
 			final QueryHintJpaAnnotation hint =
-					JpaAnnotations.QUERY_HINT.createUsage( sourceModelBuildingContext );
+					JpaAnnotations.QUERY_HINT.createUsage( modelsContext );
 			hint.name( HibernateHints.HINT_NATIVE_SPACES );
 			hint.value( String.join( " ", builder.getQuerySpaces() ) );
 			hints.add( hint );
@@ -354,7 +352,7 @@ public abstract class QueryBinder {
 		if ( jdbcCall.resultParameter ) {
 			// Mark native queries that have a result parameter as callable functions
 			final QueryHintJpaAnnotation hint =
-					JpaAnnotations.QUERY_HINT.createUsage( sourceModelBuildingContext );
+					JpaAnnotations.QUERY_HINT.createUsage( modelsContext );
 			hint.name( HibernateHints.HINT_CALLABLE_FUNCTION );
 			hint.value( "true" );
 			hints.add( hint );

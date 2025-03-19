@@ -41,8 +41,8 @@ public class FilterDefBinder {
 	private static final CoreMessageLogger LOG = messageLogger( FilterDefBinder.class );
 
 	public static void bindFilterDefs(AnnotationTarget annotatedElement, MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
-		annotatedElement.forEachAnnotationUsage( FilterDef.class, sourceModelContext, (usage) -> {
+		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		annotatedElement.forEachAnnotationUsage( FilterDef.class, modelsContext, (usage) -> {
 			bindFilterDef( usage, context );
 		} );
 	}

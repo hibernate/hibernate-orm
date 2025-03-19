@@ -299,13 +299,11 @@ public class AdditionalMappingContributorTests {
 				InFlightMetadataCollector metadata,
 				ResourceStreamLocator resourceStreamLocator,
 				MetadataBuildingContext buildingContext) {
-			SourceModelBuildingContext sourceModelBuildingContext = buildingContext.getMetadataCollector()
-					.getSourceModelBuildingContext();
-			final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext
-					.getClassDetailsRegistry();
+			final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+			final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
 
-			contributeEntity4Details( contributions, sourceModelBuildingContext, classDetailsRegistry );
-			contributeEntity5Details( contributions, sourceModelBuildingContext, classDetailsRegistry );
+			contributeEntity4Details( contributions, modelsContext, classDetailsRegistry );
+			contributeEntity5Details( contributions, modelsContext, classDetailsRegistry );
 		}
 
 		private static void contributeEntity4Details(
@@ -358,10 +356,9 @@ public class AdditionalMappingContributorTests {
 				InFlightMetadataCollector metadata,
 				ResourceStreamLocator resourceStreamLocator,
 				MetadataBuildingContext buildingContext) {
-			final SourceModelBuildingContext sourceModelBuildingContext = buildingContext.getMetadataCollector()
-					.getSourceModelBuildingContext();
-			final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
-			contributeEntity6Details( contributions, sourceModelBuildingContext, classDetailsRegistry );
+			final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+			final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
+			contributeEntity6Details( contributions, modelsContext, classDetailsRegistry );
 		}
 
 		private void contributeEntity6Details(

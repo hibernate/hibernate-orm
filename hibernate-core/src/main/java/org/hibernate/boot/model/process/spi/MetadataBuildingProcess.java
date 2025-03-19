@@ -373,7 +373,7 @@ public class MetadataBuildingProcess {
 		//		- allKnownClassNames (technically could be included in xmlPreProcessingResult)
 		//		- sourceModelBuildingContext
 
-		final SourceModelBuildingContext sourceModelBuildingContext = metadataCollector.getSourceModelBuildingContext();
+		final SourceModelBuildingContext modelsContext = bootstrapContext.getModelsContext();
 		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources(
 				managedResources,
 				metadataCollector.getPersistenceUnitMetadata()
@@ -388,7 +388,7 @@ public class MetadataBuildingProcess {
 		);
 		managedResources.getAnnotatedPackageNames().forEach( (packageName) -> {
 			try {
-				final Class<?> packageInfoClass = sourceModelBuildingContext.getClassLoading().classForName( packageName + ".package-info" );
+				final Class<?> packageInfoClass = modelsContext.getClassLoading().classForName( packageName + ".package-info" );
 				allKnownClassNames.add( packageInfoClass.getName() );
 			}
 			catch (ClassLoadingException classLoadingException) {
@@ -415,11 +415,11 @@ public class MetadataBuildingProcess {
 
 		// JPA id generator global-ity thing
 		final boolean areIdGeneratorsGlobal = true;
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
 				areIdGeneratorsGlobal,
 				metadataCollector.getGlobalRegistrations(),
-				sourceModelBuildingContext
+				modelsContext
 		);
 
 		final RootMappingDefaults rootMappingDefaults = new RootMappingDefaults(
@@ -429,7 +429,7 @@ public class MetadataBuildingProcess {
 		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
 				xmlPreProcessingResult,
 				modelCategorizationCollector,
-				sourceModelBuildingContext,
+				modelsContext,
 				bootstrapContext,
 				rootMappingDefaults
 		);
@@ -559,7 +559,8 @@ public class MetadataBuildingProcess {
 				additionalClassDetails = new ArrayList<>();
 			}
 			additionalClassDetails.add( classDetails );
-			metadataCollector.getSourceModelBuildingContext()
+			rootMetadataBuildingContext.getBootstrapContext()
+					.getModelsContext()
 					.getClassDetailsRegistry()
 					.as( MutableClassDetailsRegistry.class )
 					.addClassDetails( classDetails.getName(), classDetails );

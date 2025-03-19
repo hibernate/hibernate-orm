@@ -795,7 +795,7 @@ public class AnnotatedColumn {
 					fractionalSeconds,
 					sqlType,
 					tableName,
-					context.getMetadataCollector().getSourceModelBuildingContext()
+					context.getBootstrapContext().getModelsContext()
 			);
 		}
 		return parent;
@@ -1050,7 +1050,7 @@ public class AnnotatedColumn {
 		column.applyColumnDefault( inferredData, 1 );
 		column.applyGeneratedAs( inferredData, 1 );
 		column.applyCheckConstraint( inferredData, 1 );
-		column.extractDataFromPropertyData( propertyHolder, inferredData, context.getMetadataCollector().getSourceModelBuildingContext() );
+		column.extractDataFromPropertyData( propertyHolder, inferredData, context.getBootstrapContext().getModelsContext() );
 		column.handleArrayLength( inferredData );
 		if ( fractionalSeconds != null ) {
 			column.setTemporalPrecision( fractionalSeconds.value() );

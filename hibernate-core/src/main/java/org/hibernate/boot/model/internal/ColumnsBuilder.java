@@ -239,10 +239,10 @@ class ColumnsBuilder {
 	}
 
 	private JoinColumnOrFormula[] joinColumnOrFormulaAnnotations(MemberDetails property, PropertyData inferredData) {
-		final SourceModelBuildingContext sourceModelContext = buildingContext.getMetadataCollector().getSourceModelBuildingContext();
+		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		final JoinColumnOrFormula[] annotations = property.getRepeatedAnnotationUsages(
 				HibernateAnnotations.JOIN_COLUMN_OR_FORMULA,
-				sourceModelContext
+				modelsContext
 		);
 		if ( isNotEmpty( annotations ) ) {
 			return annotations;
@@ -252,11 +252,11 @@ class ColumnsBuilder {
 	}
 
 	private JoinColumn[] getJoinColumnAnnotations(MemberDetails property, PropertyData inferredData) {
-		final SourceModelBuildingContext sourceModelContext = buildingContext.getMetadataCollector().getSourceModelBuildingContext();
+		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 
 		final JoinColumn[] joinColumns = property.getRepeatedAnnotationUsages(
 				JpaAnnotations.JOIN_COLUMN,
-				sourceModelContext
+				modelsContext
 		);
 		if ( isNotEmpty( joinColumns ) ) {
 			return joinColumns;
@@ -269,13 +269,13 @@ class ColumnsBuilder {
 			// spec-compliant to map the association with @PrimaryKeyJoinColumn)
 			final PrimaryKeyJoinColumn[] primaryKeyJoinColumns = property.getRepeatedAnnotationUsages(
 					JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
-					sourceModelContext
+					modelsContext
 			);
 			if ( isNotEmpty( primaryKeyJoinColumns ) ) {
 				final JoinColumn[] adapters = new JoinColumn[primaryKeyJoinColumns.length];
 				for ( int i = 0; i < primaryKeyJoinColumns.length; i++ ) {
 					final PrimaryKeyJoinColumn primaryKeyJoinColumn = primaryKeyJoinColumns[i];
-					adapters[i] = JoinColumnJpaAnnotation.toJoinColumn( primaryKeyJoinColumn, sourceModelContext );
+					adapters[i] = JoinColumnJpaAnnotation.toJoinColumn( primaryKeyJoinColumn, modelsContext );
 				}
 				return adapters;
 			}

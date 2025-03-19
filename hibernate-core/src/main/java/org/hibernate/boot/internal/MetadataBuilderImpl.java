@@ -212,7 +212,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applyIndexView(Object jandexView) {
-		bootstrapContext.injectJandexView( jandexView );
 		return this;
 	}
 

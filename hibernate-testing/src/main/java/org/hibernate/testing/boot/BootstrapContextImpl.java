@@ -25,6 +25,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
@@ -60,6 +61,11 @@ public class BootstrapContextImpl implements BootstrapContext, AutoCloseable {
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return delegate.getTypeConfiguration();
+	}
+
+	@Override
+	public SourceModelBuildingContext getModelsContext() {
+		return delegate.getModelsContext();
 	}
 
 	@Override

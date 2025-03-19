@@ -435,11 +435,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected boolean supportsWithClause() {
-		return true;
-	}
-
-	@Override
 	public MySQLDialect getDialect() {
 		return (MySQLDialect) DialectDelegateWrapper.extractRealDialect( super.getDialect() );
 	}

@@ -1082,4 +1082,9 @@ public class DerbyDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsWithClause() {
+		return false;
+	}
+
 }

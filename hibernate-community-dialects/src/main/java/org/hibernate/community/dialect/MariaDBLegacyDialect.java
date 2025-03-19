@@ -313,4 +313,9 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 		return getVersion().isSameOrAfter( 10, 4 );
 	}
 
+	@Override
+	public boolean supportsWithClause() {
+		return getVersion().isSameOrAfter( 10, 2 );
+	}
+
 }

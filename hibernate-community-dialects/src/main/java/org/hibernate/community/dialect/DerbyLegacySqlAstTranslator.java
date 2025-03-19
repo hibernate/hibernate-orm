@@ -106,11 +106,6 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsWithClause() {
-		return false;
-	}
-
-	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
 		expression.accept( this );
 	}

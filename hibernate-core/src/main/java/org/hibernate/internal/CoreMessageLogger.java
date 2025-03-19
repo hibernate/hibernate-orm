@@ -33,9 +33,12 @@ import org.jboss.logging.annotations.ValidIdRange;
 import jakarta.transaction.Synchronization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT;
+import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
@@ -562,7 +565,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void explicitSkipLockedLockCombo();
 
 	@LogMessage(level = INFO)
-	@Message(value = "'jakarta.persistence.validation.mode' named multiple values: %s", id = 448)
+	@Message(value = "'" + JAKARTA_VALIDATION_MODE + "' named multiple values: %s", id = 448)
 	void multipleValidationModes(String modes);
 
 	@LogMessage(level = WARN)
@@ -722,7 +725,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void flushAndEvictOnRemove(String entityName);
 
 	@LogMessage(level = ERROR)
-	@Message(value = "Illegal argument on static metamodel field injection : %s#%s; expected type :  %s; encountered type : %s", id = 15007)
+	@Message(value = "Illegal argument on static metamodel field injection: %s#%s; expected type: %s; encountered type: %s", id = 15007)
 	void illegalArgumentOnStaticMetamodelFieldInjection(
 			String name,
 			String name2,
@@ -730,14 +733,14 @@ public interface CoreMessageLogger extends BasicLogger {
 			String name4);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unable to locate static metamodel field : %s#%s; this may or may not indicate a problem with the static metamodel", id = 15011)
+	@Message(value = "Unable to locate static metamodel field: %s#%s; this may or may not indicate a problem with the static metamodel", id = 15011)
 	void unableToLocateStaticMetamodelField(
 			String name,
 			String name2);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Returning null (as required by JPA spec) rather than throwing EntityNotFoundException, " +
-			"as the entity (type=%s, id=%s) does not exist", id = 15013)
+	@Message(value = "Returning null (as required by JPA spec) rather than throwing EntityNotFoundException " +
+			"since the entity of type '%s' with id [%s] does not exist", id = 15013)
 	void ignoringEntityNotFound(String entityName, String identifier);
 
 	@LogMessage(level = DEBUG)
@@ -753,6 +756,27 @@ public interface CoreMessageLogger extends BasicLogger {
 			value = "Encountered multiple persistence-unit stanzas defining same name [%s]; persistence-unit names must be unique"
 	)
 	void duplicatedPersistenceUnitName(String name);
+
+	@LogMessage(level = DEBUG)
+	@Message(
+			id = 455,
+			value =
+					"'" + CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT + "' " +
+					"""
+					was enabled. This setting should only be enabled when JDBC Connections obtained by Hibernate \
+					from the ConnectionProvider have auto-commit disabled. Enabling this setting when connections \
+					have auto-commit enabled leads to execution of SQL operations outside of any JDBC transaction.\
+					"""
+	)
+	void connectionProviderDisablesAutoCommitEnabled();
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Closing logical connection", id = 456)
+	void closingLogicalConnection();
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Logical connection closed", id = 457)
+	void logicalConnectionClosed();
 
 	@LogMessage(level = DEBUG)
 	@Message(

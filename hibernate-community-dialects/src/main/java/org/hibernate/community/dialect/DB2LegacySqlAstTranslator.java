@@ -619,11 +619,6 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
 	protected void visitReturningColumns(List<ColumnReference> returningColumns) {
 		// For DB2 we use #renderReturningClause to render a wrapper around the DML statement
 	}

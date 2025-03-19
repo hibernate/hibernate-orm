@@ -520,11 +520,6 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 		appendSql( CLOSE_PARENTHESIS );
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
 	enum OffsetFetchClauseMode {
 		STANDARD,
 		TOP_ONLY,

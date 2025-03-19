@@ -127,9 +127,4 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		}
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
 }

@@ -332,11 +332,6 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		}
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return true;
 	}

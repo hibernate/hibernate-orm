@@ -117,9 +117,4 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		}
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
 }

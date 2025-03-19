@@ -238,11 +238,6 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		}
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return getDialect().getVersion().isSameOrAfter( 3 );
 	}

@@ -1252,4 +1252,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
 }

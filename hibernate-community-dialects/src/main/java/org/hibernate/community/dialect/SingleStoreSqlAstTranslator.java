@@ -72,11 +72,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
 	protected void renderSelectTupleComparison(
 			List<SqlSelection> lhsExpressions, SqlTuple tuple, ComparisonOperator operator) {
 		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );

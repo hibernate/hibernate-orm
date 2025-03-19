@@ -222,9 +222,4 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 		appendSql( CLOSE_PARENTHESIS );
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
 }

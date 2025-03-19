@@ -121,11 +121,6 @@ public class IngresSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
 	protected boolean needsRowsToSkip() {
 		return !supportsOffsetFetchClause();
 	}

@@ -250,11 +250,6 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
 	protected boolean needsRowsToSkip() {
 		return true;
 	}

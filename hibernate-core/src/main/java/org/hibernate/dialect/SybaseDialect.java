@@ -551,4 +551,9 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
 }

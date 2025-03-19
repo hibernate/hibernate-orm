@@ -1539,4 +1539,9 @@ public class MySQLLegacyDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return getVersion().isSameOrAfter( 5, 7 );
+	}
+
 }

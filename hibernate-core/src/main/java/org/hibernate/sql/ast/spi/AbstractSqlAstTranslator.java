@@ -6455,7 +6455,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 
 			// The following optimization only makes sense if the necessary features are supported natively
-			if ( ( columnReferences.size() == 1 || supportsRowValueConstructorSyntax() )
+			if ( ( columnReferences.size() == 1 || dialect.supportsRowValueConstructorSyntax() )
 					&& supportsRowValueConstructorDistinctFromSyntax() ) {
 				// Special case for limit 1 sub-queries to avoid double nested sub-query
 				// ... x(c) on x.c is not distinct from (... fetch first 1 rows only)
@@ -6816,7 +6816,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private boolean needsLateralSortExpressionVirtualSelections(QuerySpec querySpec) {
 		return !( ( querySpec.getSelectClause().getSqlSelections().size() == 1
-				|| supportsRowValueConstructorSyntax() )
+				|| dialect.supportsRowValueConstructorSyntax() )
 				&& dialect.supportsDistinctFromPredicate()
 				&& isFetchFirstRowOnly( querySpec ) )
 				&& !shouldEmulateLateralWithIntersect( querySpec )
@@ -8408,7 +8408,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private boolean needsTupleComparisonEmulation(ComparisonOperator operator) {
-		if ( !supportsRowValueConstructorSyntax() ) {
+		if ( !dialect.supportsRowValueConstructorSyntax() ) {
 			return true;
 		}
 		return switch (operator) {
@@ -8418,20 +8418,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					!supportsRowValueConstructorDistinctFromSyntax();
 			default -> false;
 		};
-	}
-
-	/**
-	 * Is this dialect known to support what ANSI-SQL terms "row value
-	 * constructor" syntax; sometimes called tuple syntax.
-	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... where (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...}
-	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax; false otherwise.
-	 */
-	protected boolean supportsRowValueConstructorSyntax() {
-		return true;
 	}
 
 	/**
@@ -8446,7 +8432,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * constructor" syntax with relational comparison operators; false otherwise.
 	 */
 	protected boolean supportsRowValueConstructorGtLtSyntax() {
-		return supportsRowValueConstructorSyntax();
+		return dialect.supportsRowValueConstructorSyntax();
 	}
 
 	/**
@@ -8461,7 +8447,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * constructor" syntax with distinct from comparison operators; false otherwise.
 	 */
 	protected boolean supportsRowValueConstructorDistinctFromSyntax() {
-		return supportsRowValueConstructorSyntax() && dialect.supportsDistinctFromPredicate();
+		return dialect.supportsRowValueConstructorSyntax() && dialect.supportsDistinctFromPredicate();
 	}
 
 	/**
@@ -8474,7 +8460,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * @return True if this SQL dialect is known to support "row value constructor" syntax in the SET clause; false otherwise.
 	 */
 	protected boolean supportsRowValueConstructorSyntaxInSet() {
-		return supportsRowValueConstructorSyntax();
+		return dialect.supportsRowValueConstructorSyntax();
 	}
 
 	/**
@@ -8492,7 +8478,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	/**
-	 * If the dialect supports {@link #supportsRowValueConstructorSyntax() row values},
+	 * If the dialect supports {@link org.hibernate.dialect.Dialect#supportsRowValueConstructorSyntax() row values},
 	 * does it offer such support in IN lists as well?
 	 * <p>
 	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( (?, ?), (?, ?) ) ...}
@@ -8505,7 +8491,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	/**
-	 * If the dialect supports {@link #supportsRowValueConstructorSyntax() row values},
+	 * If the dialect supports {@link org.hibernate.dialect.Dialect#supportsRowValueConstructorSyntax() row values},
 	 * does it offer such support in IN subqueries as well?
 	 * <p>
 	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( select ... ) ...}

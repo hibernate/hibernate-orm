@@ -1766,4 +1766,9 @@ public class OracleDialect extends Dialect {
 		return supportsFetchClause( FetchClauseType.ROWS_ONLY );
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
 }

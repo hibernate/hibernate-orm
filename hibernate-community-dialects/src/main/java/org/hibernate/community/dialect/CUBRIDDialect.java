@@ -527,4 +527,9 @@ public class CUBRIDDialect extends Dialect {
 		return " from " + getDual();
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
 }

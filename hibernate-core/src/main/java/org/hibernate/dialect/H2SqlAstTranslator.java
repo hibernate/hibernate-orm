@@ -320,12 +320,6 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		// Just a guess
-		return true;
-	}
-
-	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInList() {
 		// Just a guess
 		return true;

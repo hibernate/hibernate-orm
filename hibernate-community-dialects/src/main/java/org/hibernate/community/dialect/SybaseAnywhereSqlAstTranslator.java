@@ -223,11 +223,6 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInList() {
 		return false;
 	}

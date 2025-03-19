@@ -109,11 +109,6 @@ public class RDMSOS2200SqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInList() {
 		return false;
 	}

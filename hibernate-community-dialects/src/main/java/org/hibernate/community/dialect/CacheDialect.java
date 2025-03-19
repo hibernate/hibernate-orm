@@ -435,4 +435,9 @@ public class CacheDialect extends Dialect {
 		appender.appendSql( OracleDialect.datetimeFormat( format, false, false ).result() );
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
 }

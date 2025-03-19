@@ -846,6 +846,11 @@ public class SpannerDialect extends Dialect {
 		return LimitOffsetLimitHandler.INSTANCE;
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
 	/* Type conversion and casting */
 
 	/**

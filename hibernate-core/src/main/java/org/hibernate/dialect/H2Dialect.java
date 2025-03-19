@@ -1104,4 +1104,10 @@ public class H2Dialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		// Just a guess
+		return true;
+	}
+
 }

@@ -956,4 +956,9 @@ public class HSQLLegacyDialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
 }

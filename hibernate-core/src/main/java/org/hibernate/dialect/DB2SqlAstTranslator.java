@@ -605,11 +605,6 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInList() {
 		return false;
 	}

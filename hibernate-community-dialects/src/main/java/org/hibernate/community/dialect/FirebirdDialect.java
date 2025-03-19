@@ -1125,4 +1125,9 @@ public class FirebirdDialect extends Dialect {
 		return getVersion().isSameOrAfter( 5 );
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
 }

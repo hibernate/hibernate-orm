@@ -442,4 +442,10 @@ public class RDMSOS2200Dialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual() + " where key_col=1";
 	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
 }

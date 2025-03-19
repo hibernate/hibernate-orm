@@ -556,11 +556,6 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInList() {
 		return false;
 	}

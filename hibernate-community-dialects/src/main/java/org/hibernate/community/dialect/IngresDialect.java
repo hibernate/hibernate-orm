@@ -568,4 +568,10 @@ public class IngresDialect extends Dialect {
 		//this is only necessary if the query has a where clause
 		return " from " + getDual() + " dual";
 	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
 }

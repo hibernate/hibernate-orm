@@ -1083,4 +1083,9 @@ public class DerbyLegacyDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
 }

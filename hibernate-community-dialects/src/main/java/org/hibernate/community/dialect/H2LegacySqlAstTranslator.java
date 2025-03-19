@@ -347,12 +347,6 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		// Just a guess
-		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
-	}
-
-	@Override
 	protected boolean supportsRowValueConstructorSyntaxInInList() {
 		// Just a guess
 		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );

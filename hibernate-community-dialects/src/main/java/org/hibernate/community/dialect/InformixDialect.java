@@ -910,4 +910,10 @@ public class InformixDialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual() + " dual";
 	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
 }

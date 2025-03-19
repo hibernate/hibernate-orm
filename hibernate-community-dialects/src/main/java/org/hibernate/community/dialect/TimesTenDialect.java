@@ -424,4 +424,9 @@ public class TimesTenDialect extends Dialect {
 		}
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
 }

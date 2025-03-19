@@ -10,7 +10,6 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.QuerySettings;
-import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.sql.exec.ExecutionException;
 
@@ -64,7 +63,6 @@ public class JsonValueTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testSimple(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-value-example[]
@@ -79,7 +77,6 @@ public class JsonValueTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testPassing(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-value-passing-example[]
@@ -94,7 +91,6 @@ public class JsonValueTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testReturning(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-value-returning-example[]

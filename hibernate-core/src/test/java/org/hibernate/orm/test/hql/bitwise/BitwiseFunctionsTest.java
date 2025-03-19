@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.hql.bitwise;
 
 import org.hibernate.community.dialect.DerbyDialect;
-import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -22,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 public class BitwiseFunctionsTest {
 
 	@Test @SkipForDialect(dialectClass = DerbyDialect.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void test(SessionFactoryScope scope) {
 		IntEntity five = new IntEntity();
 		five.setIntValue(5);

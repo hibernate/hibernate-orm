@@ -253,11 +253,6 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected boolean supportsNestedWithClause() {
-		return false;
-	}
-
-	@Override
 	public void visitSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate) {
 		// see comments in visitParameter
 		boolean inFunction = this.inFunction;

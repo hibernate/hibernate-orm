@@ -384,4 +384,9 @@ public class MariaDBDialect extends MySQLDialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
 }

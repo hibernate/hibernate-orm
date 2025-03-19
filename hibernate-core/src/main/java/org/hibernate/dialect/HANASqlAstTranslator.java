@@ -157,12 +157,6 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		// HANA doesn't seem to support correlation, so we just report false here for simplicity
-		return false;
-	}
-
-	@Override
 	protected boolean isCorrelated(CteStatement cteStatement) {
 		// Report false here, because apparently HANA does not need the "lateral" keyword to correlate a from clause subquery in a subquery
 		return false;

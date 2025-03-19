@@ -2024,4 +2024,10 @@ public class HANALegacyDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		// HANA doesn't seem to support correlation, so we just report false here for simplicity
+		return false;
+	}
+
 }

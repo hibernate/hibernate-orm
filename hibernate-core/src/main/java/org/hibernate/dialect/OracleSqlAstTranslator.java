@@ -138,12 +138,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		// Oracle has some limitations, see ORA-32034, so we just report false here for simplicity
-		return false;
-	}
-
-	@Override
 	public void visitSqlSelection(SqlSelection sqlSelection) {
 		if ( getCurrentCteStatement() != null ) {
 			if ( getCurrentCteStatement().getMaterialization() == CteMaterialization.MATERIALIZED ) {

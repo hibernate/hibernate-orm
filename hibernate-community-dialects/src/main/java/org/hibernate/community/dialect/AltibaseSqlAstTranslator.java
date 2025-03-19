@@ -228,9 +228,4 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		return false;
 	}
 
-	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
 }

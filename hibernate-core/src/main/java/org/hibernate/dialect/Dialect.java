@@ -6006,4 +6006,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return true;
 	}
 
+	/**
+	 * Whether the SQL with clause is supported within a subquery.
+	 */
+	public boolean supportsWithClauseInSubquery() {
+		return supportsWithClause();
+	}
+
 }

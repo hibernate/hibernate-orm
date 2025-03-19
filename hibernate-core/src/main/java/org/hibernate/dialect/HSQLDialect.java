@@ -756,4 +756,10 @@ public class HSQLDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		// Doesn't support correlations in the WITH clause
+		return false;
+	}
+
 }

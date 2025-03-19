@@ -340,6 +340,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				case HINT_SPEC_LOAD_GRAPH:
 					applyEntityGraphHint( hintName, value );
 					return true;
+				case HINT_FETCH_PROFILE:
+					queryOptions.enableFetchProfile( (String) value );
 				default:
 					// unrecognized hint
 					return false;

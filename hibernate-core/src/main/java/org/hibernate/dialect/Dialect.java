@@ -6047,4 +6047,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return true;
 	}
 
+	/**
+	 * If the dialect supports {@link org.hibernate.dialect.Dialect#supportsRowValueConstructorSyntax() row values},
+	 * does it offer such support in IN subqueries as well?
+	 * <p>
+	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( select ... ) ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax in the IN subqueries; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorSyntaxInInSubQuery() {
+		return supportsRowValueConstructorSyntaxInInList();
+	}
+
 }

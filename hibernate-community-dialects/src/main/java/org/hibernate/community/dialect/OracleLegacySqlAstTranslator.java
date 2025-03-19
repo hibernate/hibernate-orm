@@ -664,11 +664,6 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		}
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInSubQuery() {
-		return getDialect().getVersion().isSameOrAfter( 9 );
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return getDialect().supportsFetchClause( FetchClauseType.ROWS_ONLY );
 	}

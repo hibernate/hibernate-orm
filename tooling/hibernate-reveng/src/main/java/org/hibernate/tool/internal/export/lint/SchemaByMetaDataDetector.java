@@ -15,7 +15,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
@@ -36,6 +35,7 @@ import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.hibernate.tool.internal.reveng.strategy.TableSelectorStrategy;
 import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
 import org.hibernate.tool.internal.util.TableNameQualifier;
+import org.hibernate.type.MappingContext;
 
 @SuppressWarnings("deprecation")
 public class SchemaByMetaDataDetector extends RelationalModelDetector {
@@ -54,7 +54,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 	private Dialect dialect;
 
-	private Mapping mapping;
+	private MappingContext mapping;
 	
 	private Properties properties;
 	

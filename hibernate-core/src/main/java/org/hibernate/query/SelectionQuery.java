@@ -147,6 +147,8 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * {@code Object[]}.
 	 *
 	 * @return the results as a list
+	 *
+	 * @apiNote Synonym for {@link #list()}
 	 */
 	default List<R> getResultList() {
 		return list();
@@ -179,9 +181,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 *
 	 * @return The results as a {@link Stream}
 	 *
-	 * @implNote The default implementation defined here simply returns
-	 *           {@link #list()}{@code .stream()}. Concrete implementations
-	 *           may be more efficient.
+	 * @apiNote Synonym for {@link #stream()}
 	 */
 	default Stream<R> getResultStream() {
 		return stream();
@@ -197,6 +197,10 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * stream so that resources are freed as soon as possible.
 	 *
 	 * @return The results as a {@link Stream}
+	 *
+	 * @implNote The default implementation defined here simply returns
+	 *           {@link #list()}{@link List#stream() .stream()}.
+	 *           Overriding implementations are typically more efficient.
 	 *
 	 * @since 5.2
 	 */
@@ -291,9 +295,9 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic);
 
 	/**
-	 * Enable the {@link org.hibernate.annotations.FetchProfile fetch profile}
-	 * for this query. If the requested fetch profile is already enabled,
-	 * the call has no effect.
+	 * Enable the {@linkplain org.hibernate.annotations.FetchProfile fetch
+	 * profile} with the given name during execution of this query. If the
+	 * requested fetch profile is already enabled, the call has no effect.
 	 * <p>
 	 * This is an alternative way to specify the associations which
 	 * should be fetched as part of the initial query.
@@ -308,9 +312,9 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> enableFetchProfile(String profileName);
 
 	/**
-	 * Disable the {@link org.hibernate.annotations.FetchProfile fetch profile}
-	 * with the given name in this session. If the requested fetch profile
-	 * is not currently enabled, the call has no effect.
+	 * Disable the {@linkplain org.hibernate.annotations.FetchProfile fetch
+	 * profile} with the given name in this session. If the fetch profile is
+	 * not currently enabled, the call has no effect.
 	 *
 	 * @param profileName the name of the fetch profile to be disabled
 	 *

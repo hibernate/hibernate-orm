@@ -18,7 +18,19 @@ import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 public class ServiceRegistryUtil {
 
 	public static StandardServiceRegistryBuilder serviceRegistryBuilder() {
-		return applySettings( new StandardServiceRegistryBuilder() );
+		return serviceRegistryBuilder( false );
+	}
+
+	public static StandardServiceRegistryBuilder serviceRegistryBuilder(boolean applyEnvSettings) {
+		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
+		if ( applyEnvSettings ) {
+			applyEnvSettings( ssrb );
+		}
+		return applySettings( ssrb );
+	}
+
+	private static void applyEnvSettings(StandardServiceRegistryBuilder ssrb) {
+		ssrb.applySettings( Environment.getProperties() );
 	}
 
 	public static StandardServiceRegistryBuilder serviceRegistryBuilder(BootstrapServiceRegistry bsr) {

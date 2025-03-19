@@ -13,7 +13,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.Parameter;
@@ -345,7 +344,7 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
-	public SessionFactory buildSessionFactory() {
+	public SessionFactoryImplementor buildSessionFactory() {
 		throw new UnsupportedOperationException(
 				"You should not be building a SessionFactory from an in-flight metadata collector; and of course " +
 						"we should better segment this in the API :)"

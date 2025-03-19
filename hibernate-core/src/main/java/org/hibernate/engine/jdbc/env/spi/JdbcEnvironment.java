@@ -35,17 +35,20 @@ public interface JdbcEnvironment extends Service {
 	ExtractedDatabaseMetaData getExtractedDatabaseMetaData();
 
 	/**
-	 * Get the current database catalog.  Typically will come from either {@link java.sql.Connection#getCatalog()}
-	 * or {@value org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}.
+	 * Get the current database catalog.  Typically, will come from either
+	 * {@link java.sql.Connection#getCatalog()} or
+	 * {@value org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}.
 	 *
 	 * @return The current catalog.
 	 */
 	Identifier getCurrentCatalog();
 
 	/**
-	 * Get the current database catalog.  Typically will come from either
-	 * {@link SchemaNameResolver#resolveSchemaName(java.sql.Connection, Dialect)} or
-	 * {@value org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}.
+	 * Get the current database catalog.  Typically, will come from either
+	 * {@link java.sql.Connection#getSchema()} or
+	 * {@value org.hibernate.cfg.AvailableSettings#DEFAULT_SCHEMA}.
+	 *
+	 * @see org.hibernate.engine.jdbc.env.spi.SchemaNameResolver
 	 *
 	 * @return The current schema
 	 */

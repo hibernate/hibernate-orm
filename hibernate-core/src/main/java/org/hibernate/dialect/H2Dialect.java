@@ -1110,4 +1110,9 @@ public class H2Dialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorDistinctFromSyntax() {
+		return true;
+	}
+
 }

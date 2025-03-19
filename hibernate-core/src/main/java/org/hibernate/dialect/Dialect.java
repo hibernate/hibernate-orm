@@ -5984,4 +5984,19 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return supportsRowValueConstructorSyntax();
 	}
 
+	/**
+	 * Is this dialect known to support what ANSI-SQL terms "row value
+	 * constructor" syntax; sometimes called tuple syntax with <code>is distinct from</code>
+	 * and <code>is not distinct from</code> operators.
+	 * <p>
+	 * Basically, does it support syntax like
+	 * {@code ... where (FIRST_NAME, LAST_NAME) is distinct from ('Steve', 'Ebersole') ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax with distinct from comparison operators; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorDistinctFromSyntax() {
+		return supportsRowValueConstructorSyntax() && supportsDistinctFromPredicate();
+	}
+
 }

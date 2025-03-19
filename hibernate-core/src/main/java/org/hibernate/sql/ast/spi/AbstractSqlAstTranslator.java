@@ -6456,7 +6456,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 			// The following optimization only makes sense if the necessary features are supported natively
 			if ( ( columnReferences.size() == 1 || dialect.supportsRowValueConstructorSyntax() )
-					&& supportsRowValueConstructorDistinctFromSyntax() ) {
+					&& dialect.supportsRowValueConstructorDistinctFromSyntax() ) {
 				// Special case for limit 1 sub-queries to avoid double nested sub-query
 				// ... x(c) on x.c is not distinct from (... fetch first 1 rows only)
 				if ( isFetchFirstRowOnly( statement.getQueryPart() ) ) {
@@ -8415,24 +8415,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			case LESS_THAN, LESS_THAN_OR_EQUAL, GREATER_THAN, GREATER_THAN_OR_EQUAL ->
 					!dialect.supportsRowValueConstructorGtLtSyntax();
 			case DISTINCT_FROM, NOT_DISTINCT_FROM ->
-					!supportsRowValueConstructorDistinctFromSyntax();
+					!dialect.supportsRowValueConstructorDistinctFromSyntax();
 			default -> false;
 		};
-	}
-
-	/**
-	 * Is this dialect known to support what ANSI-SQL terms "row value
-	 * constructor" syntax; sometimes called tuple syntax with <code>is distinct from</code>
-	 * and <code>is not distinct from</code> operators.
-	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... where (FIRST_NAME, LAST_NAME) is distinct from ('Steve', 'Ebersole') ...}
-	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax with distinct from comparison operators; false otherwise.
-	 */
-	protected boolean supportsRowValueConstructorDistinctFromSyntax() {
-		return dialect.supportsRowValueConstructorSyntax() && dialect.supportsDistinctFromPredicate();
 	}
 
 	/**

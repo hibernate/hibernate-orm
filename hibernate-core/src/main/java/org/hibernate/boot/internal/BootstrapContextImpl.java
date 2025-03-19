@@ -92,7 +92,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 		classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		classLoaderAccess = new ClassLoaderAccessImpl( classLoaderService );
 
-
 		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
 		final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
 
@@ -118,7 +117,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		managedBeanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
 		configurationService = serviceRegistry.requireService( ConfigurationService.class );
 
-		modelsContext = createModelBuildingContext( classLoaderService );
+		modelsContext = createModelBuildingContext( classLoaderService, configService );
 	}
 
 	@Override
@@ -355,12 +354,19 @@ public class BootstrapContextImpl implements BootstrapContext {
 		cacheRegionDefinitions.add( cacheRegionDefinition );
 	}
 
-	public static SourceModelBuildingContext createModelBuildingContext(ClassLoaderService classLoaderService) {
+	public static SourceModelBuildingContext createModelBuildingContext(
+			ClassLoaderService classLoaderService,
+			ConfigurationService configService) {
 		final ClassLoaderServiceLoading classLoading = new ClassLoaderServiceLoading( classLoaderService );
 
 		final ModelsConfiguration modelsConfiguration = new ModelsConfiguration();
 		modelsConfiguration.setClassLoading( classLoading );
 		modelsConfiguration.setRegistryPrimer( ModelsHelper::preFillRegistries );
+		configService.getSettings().forEach( (key, value) -> {
+			if ( key.startsWith( "hibernate.models." ) ) {
+				modelsConfiguration.configValue( key, value );
+			}
+		} );
 		return modelsConfiguration.bootstrap();
 	}
 }

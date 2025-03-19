@@ -191,11 +191,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
 		expression.accept( this );
 	}

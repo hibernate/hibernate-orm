@@ -1685,4 +1685,10 @@ public class OracleLegacyDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		// Oracle has some limitations, see ORA-32034, so we just report false here for simplicity
+		return false;
+	}
+
 }

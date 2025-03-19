@@ -1372,4 +1372,9 @@ public class DB2Dialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
 }

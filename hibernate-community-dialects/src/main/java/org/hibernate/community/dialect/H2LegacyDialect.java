@@ -1096,4 +1096,9 @@ public class H2LegacyDialect extends Dialect {
 		return getVersion().isSameOrAfter( 1, 4, 200 );
 	}
 
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
 }

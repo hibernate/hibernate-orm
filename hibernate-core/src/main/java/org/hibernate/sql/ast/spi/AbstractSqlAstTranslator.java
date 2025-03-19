@@ -2146,7 +2146,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else {
 			pushToTopLevel = !supportsNestedWithClause()
-					|| !supportsWithClauseInSubquery() && isInSubquery();
+					|| !dialect.supportsWithClauseInSubquery() && isInSubquery();
 		}
 		final boolean inNestedWithClause = clauseStack.findCurrentFirst( AbstractSqlAstTranslator::matchWithClause ) != null;
 		clauseStack.push( Clause.WITH );
@@ -2418,21 +2418,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * Whether the SQL with clause is supported within a CTE.
 	 */
 	protected boolean supportsNestedWithClause() {
-		return supportsWithClauseInSubquery();
-	}
-
-	/**
-	 * Whether the SQL with clause is supported within a subquery.
-	 */
-	protected boolean supportsWithClauseInSubquery() {
-		return dialect.supportsWithClause();
+		return dialect.supportsWithClauseInSubquery();
 	}
 
 	/**
 	 * Whether CTEs should be inlined rather than rendered as CTEs.
 	 */
 	protected boolean needsCteInlining() {
-		return !dialect.supportsWithClause() || !supportsWithClauseInSubquery() && isInSubquery();
+		return !dialect.supportsWithClause() || !dialect.supportsWithClauseInSubquery() && isInSubquery();
 	}
 
 	/**
@@ -2443,7 +2436,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if (!dialect.supportsWithClause()) {
 				return true;
 			}
-			if ( !supportsWithClauseInSubquery() && isInSubquery() ) {
+			if ( !dialect.supportsWithClauseInSubquery() && isInSubquery() ) {
 				final String cteName = tableGroup.getPrimaryTableReference().getTableId();
 				final CteContainer cteOwner = statementStack.findCurrentFirstWithParameter( cteName, AbstractSqlAstTranslator::matchCteContainerByStatement );
 				// If the CTE is owned by the root statement, it will be rendered as CTE, so we can refer to it

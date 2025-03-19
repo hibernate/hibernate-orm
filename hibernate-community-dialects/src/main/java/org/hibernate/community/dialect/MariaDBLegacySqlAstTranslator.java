@@ -178,11 +178,6 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	}
 
 	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
 		expression.accept( this );
 	}

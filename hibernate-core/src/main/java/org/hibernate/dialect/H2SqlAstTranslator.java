@@ -198,11 +198,6 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	}
 
 	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	@Override
 	protected String getArrayContainsFunction() {
 		return "array_contains";
 	}

@@ -1275,4 +1275,9 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
 }

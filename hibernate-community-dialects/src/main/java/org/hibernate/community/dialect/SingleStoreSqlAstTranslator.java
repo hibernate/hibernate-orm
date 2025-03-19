@@ -194,11 +194,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
 		expression.accept( this );
 	}

@@ -112,12 +112,6 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		// Doesn't support correlations in the WITH clause
-		return false;
-	}
-
-	@Override
 	protected boolean supportsRecursiveClauseArrayAndRowEmulation() {
 		// Even though HSQL supports the array constructor, it's illegal to use arrays in CTEs
 		return false;

@@ -851,6 +851,11 @@ public class SpannerDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
 	/* Type conversion and casting */
 
 	/**

@@ -110,9 +110,4 @@ public class CacheSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	protected boolean supportsRowValueConstructorSyntaxInInList() {
 		return false;
 	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
 }

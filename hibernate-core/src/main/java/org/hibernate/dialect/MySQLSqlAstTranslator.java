@@ -430,11 +430,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
 	public MySQLDialect getDialect() {
 		return (MySQLDialect) DialectDelegateWrapper.extractRealDialect( super.getDialect() );
 	}

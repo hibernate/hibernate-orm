@@ -1259,4 +1259,9 @@ public class CockroachLegacyDialect extends Dialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
 }

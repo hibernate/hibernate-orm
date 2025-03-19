@@ -561,11 +561,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		return false;
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
 	private boolean supportsTopClause() {
 		return getDialect().getVersion().isSameOrAfter( 12, 5 );
 	}

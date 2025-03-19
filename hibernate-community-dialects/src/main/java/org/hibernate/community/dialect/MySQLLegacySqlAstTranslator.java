@@ -370,11 +370,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
 	public MySQLLegacyDialect getDialect() {
 		return (MySQLLegacyDialect) DialectDelegateWrapper.extractRealDialect( super.getDialect() );
 	}

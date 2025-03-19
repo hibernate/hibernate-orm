@@ -307,11 +307,6 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
 	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
 		throw new MappingException(
 				String.format(

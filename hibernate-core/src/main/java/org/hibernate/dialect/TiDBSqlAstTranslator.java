@@ -321,11 +321,6 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
 	protected String getForShare(int timeoutMillis) {
 		if ( timeoutMillis == LockOptions.NO_WAIT ) {
 			return getForUpdate();

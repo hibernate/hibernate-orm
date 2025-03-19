@@ -318,11 +318,6 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorGtLtSyntax() {
-		return false;
-	}
-
-	@Override
 	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
 		throw new MappingException(
 				String.format(

@@ -5969,4 +5969,19 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return true;
 	}
 
+	/**
+	 * Is this dialect known to support what ANSI-SQL terms "row value
+	 * constructor" syntax; sometimes called tuple syntax with <code>&lt;</code>, <code>&gt;</code>, <code>&le;</code>
+	 * and <code>&ge;</code> operators.
+	 * <p>
+	 * Basically, does it support syntax like
+	 * {@code ... where (FIRST_NAME, LAST_NAME) &lt; ('Steve', 'Ebersole') ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax with relational comparison operators; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorGtLtSyntax() {
+		return supportsRowValueConstructorSyntax();
+	}
+
 }

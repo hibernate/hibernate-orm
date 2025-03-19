@@ -146,7 +146,10 @@ public interface MetadataBuilder {
 	 * @param jandexView The Jandex index to use.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Set the {@code hibernate-models} setting {@code hibernate.models.jandex.index} instead.  This method has no effect.
 	 */
+	@Deprecated
 	MetadataBuilder applyIndexView(Object jandexView);
 
 	/**

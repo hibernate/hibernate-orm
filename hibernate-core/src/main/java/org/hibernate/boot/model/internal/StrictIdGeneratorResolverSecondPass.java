@@ -19,6 +19,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.GeneratedValue;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handleGenericGenerator;
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handleSequenceGenerator;
@@ -50,6 +51,10 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 		super( entityMapping, idValue, idMember, generatedValue, buildingContext );
 	}
 
+	private SourceModelBuildingContext modelsContext() {
+		return buildingContext.getBootstrapContext().getModelsContext();
+	}
+
 	@Override
 	protected void handleUnnamedSequenceGenerator() {
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
@@ -71,7 +76,7 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 
 		handleSequenceGenerator(
 				entityMapping.getJpaEntityName(),
-				new SequenceGeneratorJpaAnnotation( metadataCollector.getSourceModelBuildingContext() ),
+				new SequenceGeneratorJpaAnnotation( modelsContext() ),
 				idValue,
 				idMember,
 				buildingContext
@@ -98,7 +103,7 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 
 		handleSequenceGenerator(
 				generatedValue.generator(),
-				new SequenceGeneratorJpaAnnotation( generatedValue.generator(), metadataCollector.getSourceModelBuildingContext() ),
+				new SequenceGeneratorJpaAnnotation( generatedValue.generator(), modelsContext() ),
 				idValue,
 				idMember,
 				buildingContext
@@ -125,7 +130,7 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 
 		handleTableGenerator(
 				entityMapping.getJpaEntityName(),
-				new TableGeneratorJpaAnnotation( metadataCollector.getSourceModelBuildingContext() ),
+				new TableGeneratorJpaAnnotation( modelsContext() ),
 				idValue,
 				idMember,
 				buildingContext
@@ -153,7 +158,7 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 
 		handleTableGenerator(
 				generatedValue.generator(),
-				new TableGeneratorJpaAnnotation( generatedValue.generator(), metadataCollector.getSourceModelBuildingContext() ),
+				new TableGeneratorJpaAnnotation( generatedValue.generator(), modelsContext() ),
 				idValue,
 				idMember,
 				buildingContext
@@ -236,7 +241,7 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 
 		handleSequenceGenerator(
 				globalRegistrationName,
-				new SequenceGeneratorJpaAnnotation( generatedValue.generator(), metadataCollector.getSourceModelBuildingContext() ),
+				new SequenceGeneratorJpaAnnotation( generatedValue.generator(), modelsContext() ),
 				idValue,
 				idMember,
 				buildingContext

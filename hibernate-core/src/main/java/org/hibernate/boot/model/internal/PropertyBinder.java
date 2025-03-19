@@ -4,13 +4,14 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-
+import jakarta.persistence.Basic;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKey;
 import jakarta.persistence.MapKeyClass;
 import jakarta.persistence.MapKeyColumn;
@@ -18,8 +19,12 @@ import jakarta.persistence.MapKeyEnumerated;
 import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.MapKeyJoinColumns;
 import jakarta.persistence.MapKeyTemporal;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -66,18 +71,11 @@ import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeVariableScope;
 import org.hibernate.usertype.CompositeUserType;
 
-
-import jakarta.persistence.Basic;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Version;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.boot.model.internal.AnyBinder.bindAny;
@@ -132,7 +130,7 @@ public class PropertyBinder {
 	private String referencedEntityName; // only used for @MapsId or @IdClass
 
 	protected SourceModelBuildingContext getSourceModelContext() {
-		return buildingContext.getMetadataCollector().getSourceModelBuildingContext();
+		return buildingContext.getBootstrapContext().getModelsContext();
 	}
 
 	private void setReferencedEntityName(String referencedEntityName) {
@@ -604,7 +602,7 @@ public class PropertyBinder {
 		// and if so, skip it...
 		for ( PropertyData propertyData : inFlightPropertyDataList ) {
 			if ( propertyData.getPropertyName().equals( property.resolveAttributeName() ) ) {
-				checkIdProperty( property, propertyData, collector.getSourceModelBuildingContext() );
+				checkIdProperty( property, propertyData, context.getBootstrapContext().getModelsContext() );
 				// EARLY EXIT!!!
 				return idPropertyCounter;
 			}
@@ -1308,21 +1306,21 @@ public class PropertyBinder {
 
 	private static Class<? extends CompositeUserType<?>> resolveCompositeUserType(
 			PropertyData inferredData,
-			MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext =
-				context.getMetadataCollector().getSourceModelBuildingContext();
+			MetadataBuildingContext buildingContext) {
+		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+
 		final MemberDetails attributeMember = inferredData.getAttributeMember();
 		final TypeDetails classOrElementType = inferredData.getClassOrElementType();
 		final ClassDetails returnedClass = classOrElementType.determineRawClass();
 
 		if ( attributeMember != null ) {
 			final CompositeType compositeType =
-					attributeMember.locateAnnotationUsage( CompositeType.class, sourceModelContext );
+					attributeMember.locateAnnotationUsage( CompositeType.class, modelsContext );
 			if ( compositeType != null ) {
 				return compositeType.value();
 			}
 			final Class<? extends CompositeUserType<?>> compositeUserType =
-					resolveTimeZoneStorageCompositeUserType( attributeMember, returnedClass, context );
+					resolveTimeZoneStorageCompositeUserType( attributeMember, returnedClass, buildingContext );
 			if ( compositeUserType != null ) {
 				return compositeUserType;
 			}
@@ -1331,7 +1329,7 @@ public class PropertyBinder {
 		if ( returnedClass != null ) {
 			final Class<?> embeddableClass = returnedClass.toJavaClass();
 			if ( embeddableClass != null ) {
-				return context.getMetadataCollector().findRegisteredCompositeUserType( embeddableClass );
+				return buildingContext.getMetadataCollector().findRegisteredCompositeUserType( embeddableClass );
 			}
 		}
 
@@ -1344,8 +1342,7 @@ public class PropertyBinder {
 			String propertyName,
 			MetadataBuildingContext buildingContext) {
 		final ClassDetailsRegistry classDetailsRegistry =
-				buildingContext.getMetadataCollector().getSourceModelBuildingContext()
-						.getClassDetailsRegistry();
+				buildingContext.getBootstrapContext().getModelsContext().getClassDetailsRegistry();
 		final PersistentClass persistentClass = propertyHolder.getPersistentClass();
 		final String name =
 				StringHelper.isEmpty( persistentClass.getClassName() )

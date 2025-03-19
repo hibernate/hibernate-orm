@@ -149,7 +149,7 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 	private Annotation findGeneratorAnnotation(AnnotationTarget annotationTarget) {
 		final List<? extends Annotation> metaAnnotated =
 				annotationTarget.getMetaAnnotated( IdGeneratorType.class,
-						buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
+						buildingContext.getBootstrapContext().getModelsContext() );
 		if ( CollectionHelper.size( metaAnnotated ) > 0 ) {
 			return metaAnnotated.get( 0 );
 		}

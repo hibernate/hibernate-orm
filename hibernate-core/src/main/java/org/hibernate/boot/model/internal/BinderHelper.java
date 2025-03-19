@@ -4,17 +4,11 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.function.Consumer;
-
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -54,11 +48,16 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import jakarta.persistence.ConstraintMode;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.function.Consumer;
 
 import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
 import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
@@ -790,7 +789,7 @@ public class BinderHelper {
 						discriminatorJavaType.wrap( valueMapping.discriminator(), null ),
 						valueMapping.entity()
 				),
-				context.getMetadataCollector().getSourceModelBuildingContext()
+				context.getBootstrapContext().getModelsContext()
 		);
 		value.setDiscriminatorValueMappings( discriminatorValueMappings );
 
@@ -1070,12 +1069,12 @@ public class BinderHelper {
 			return null;
 		}
 		else {
-			final SourceModelBuildingContext sourceModelContext =
-					context.getMetadataCollector().getSourceModelBuildingContext();
+			final SourceModelBuildingContext modelsContext =
+					context.getBootstrapContext().getModelsContext();
 			try {
-				return sourceModelContext.getClassDetailsRegistry()
+				return modelsContext.getClassDetailsRegistry()
 						.resolveClassDetails( packageName + ".package-info" )
-						.getAnnotationUsage( annotationType, sourceModelContext );
+						.getAnnotationUsage( annotationType, modelsContext );
 			}
 			catch (ClassLoadingException ignore) {
 				return null;

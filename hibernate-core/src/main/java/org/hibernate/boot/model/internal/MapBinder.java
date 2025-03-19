@@ -243,9 +243,12 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private ClassDetails mapKeyClass(String mapKeyType) {
-		return isPrimitive( mapKeyType ) ? null
-				: buildingContext.getMetadataCollector().getSourceModelBuildingContext()
-						.getClassDetailsRegistry().resolveClassDetails( mapKeyType );
+		return isPrimitive( mapKeyType )
+				? null
+				: buildingContext.getBootstrapContext()
+						.getModelsContext()
+						.getClassDetailsRegistry()
+						.resolveClassDetails( mapKeyType );
 	}
 
 	private static String getKeyType(MemberDetails property) {

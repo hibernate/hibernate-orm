@@ -47,6 +47,7 @@ public final class CallbackDefinitionResolver {
 			InFlightMetadataCollector metadataCollector,
 			ClassDetails entityClass,
 			CallbackType callbackType) {
+		final SourceModelBuildingContext modelsContext = metadataCollector.getBootstrapContext().getModelsContext();
 
 		final List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
 		final List<String> callbacksMethodNames = new ArrayList<>();
@@ -89,7 +90,7 @@ public final class CallbackDefinitionResolver {
 
 			}
 			if ( !stopListeners ) {
-				applyListeners( currentClazz, orderedListeners, metadataCollector.getSourceModelBuildingContext() );
+				applyListeners( currentClazz, orderedListeners, modelsContext );
 				stopListeners = currentClazz.hasDirectAnnotationUsage( ExcludeSuperclassListeners.class );
 				stopDefaultListeners = currentClazz.hasDirectAnnotationUsage( ExcludeDefaultListeners.class );
 			}
@@ -162,10 +163,9 @@ public final class CallbackDefinitionResolver {
 			Property embeddableProperty,
 			CallbackType callbackType) {
 
+		final SourceModelBuildingContext modelsContext = metadataCollector.getBootstrapContext().getModelsContext();
 		final Class<?> embeddableClass = embeddableProperty.getType().getReturnedClass();
-		final ClassDetails embeddableClassDetails =
-				metadataCollector.getSourceModelBuildingContext().getClassDetailsRegistry()
-						.getClassDetails( embeddableClass.getName() );
+		final ClassDetails embeddableClassDetails = modelsContext.getClassDetailsRegistry().getClassDetails( embeddableClass.getName() );
 
 		final Getter embeddableGetter = embeddableProperty.getGetter( entityClass );
 		final List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
@@ -269,7 +269,9 @@ public final class CallbackDefinitionResolver {
 	 * See {@link JpaEventListener} for a better (?) alternative
 	 */
 	public static void resolveLifecycleCallbacks(
-			ClassDetails entityClass, PersistentClass persistentClass, InFlightMetadataCollector collector) {
+			ClassDetails entityClass,
+			PersistentClass persistentClass,
+			InFlightMetadataCollector collector) {
 		for ( CallbackType callbackType : CallbackType.values() ) {
 			persistentClass.addCallbackDefinitions( resolveEntityCallbacks( collector, entityClass, callbackType ) );
 		}

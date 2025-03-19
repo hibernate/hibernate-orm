@@ -67,14 +67,20 @@ import jakarta.persistence.AttributeConverter;
 public interface InFlightMetadataCollector extends MetadataImplementor {
 	BootstrapContext getBootstrapContext();
 
-	SourceModelBuildingContext getSourceModelBuildingContext();
+	/**
+	 * @deprecated Use {@linkplain BootstrapContext#getModelsContext()} instead.
+	 */
+	@Deprecated
+	default SourceModelBuildingContext getSourceModelBuildingContext() {
+		return getBootstrapContext().getModelsContext();
+	}
 
 	default ClassDetailsRegistry getClassDetailsRegistry() {
-		return getSourceModelBuildingContext().getClassDetailsRegistry();
+		return getBootstrapContext().getModelsContext().getClassDetailsRegistry();
 	}
 
 	default AnnotationDescriptorRegistry getAnnotationDescriptorRegistry() {
-		return getSourceModelBuildingContext().getAnnotationDescriptorRegistry();
+		return getBootstrapContext().getModelsContext().getAnnotationDescriptorRegistry();
 	}
 
 	GlobalRegistrations getGlobalRegistrations();

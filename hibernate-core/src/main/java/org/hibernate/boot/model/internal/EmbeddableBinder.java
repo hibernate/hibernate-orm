@@ -317,9 +317,9 @@ public class EmbeddableBinder {
 	}
 
 	private static void callTypeBinders(Component component, MetadataBuildingContext context, TypeDetails annotatedClass ) {
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
 
-		final List<? extends Annotation> metaAnnotatedAnnotations = annotatedClass.determineRawClass().getMetaAnnotated( TypeBinderType.class, sourceModelContext );
+		final List<? extends Annotation> metaAnnotatedAnnotations = annotatedClass.determineRawClass().getMetaAnnotated( TypeBinderType.class, modelsContext );
 		if ( isEmpty( metaAnnotatedAnnotations ) ) {
 			return;
 		}
@@ -477,7 +477,7 @@ public class EmbeddableBinder {
 		else {
 			compositeUserType = compositeUserType( compositeUserTypeClass, context );
 			component.setTypeName( compositeUserTypeClass.getName() );
-			returnedClassOrElement = context.getMetadataCollector().getSourceModelBuildingContext().getClassDetailsRegistry().resolveClassDetails( compositeUserType.embeddable().getName() );
+			returnedClassOrElement = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry().resolveClassDetails( compositeUserType.embeddable().getName() );
 		}
 		AggregateComponentBinder.processAggregate(
 				component,

@@ -264,36 +264,36 @@ public abstract class CollectionBinder {
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
 			MemberDetails property,
 			AnnotatedJoinColumns joinColumns) {
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
 
-		final OneToMany oneToManyAnn = property.getAnnotationUsage( OneToMany.class, sourceModelContext );
-		final ManyToMany manyToManyAnn = property.getAnnotationUsage( ManyToMany.class, sourceModelContext );
-		final ElementCollection elementCollectionAnn = property.getAnnotationUsage( ElementCollection.class, sourceModelContext );
+		final OneToMany oneToManyAnn = property.getAnnotationUsage( OneToMany.class, modelsContext );
+		final ManyToMany manyToManyAnn = property.getAnnotationUsage( ManyToMany.class, modelsContext );
+		final ElementCollection elementCollectionAnn = property.getAnnotationUsage( ElementCollection.class, modelsContext );
 		checkAnnotations( propertyHolder, inferredData, property, oneToManyAnn, manyToManyAnn, elementCollectionAnn );
 
 		final CollectionBinder collectionBinder = getCollectionBinder( property, hasMapKeyAnnotation( property ), context );
 		collectionBinder.setIndexColumn( getIndexColumn( propertyHolder, inferredData, entityBinder, context, property ) );
-		collectionBinder.setMapKey( property.getAnnotationUsage( MapKey.class, sourceModelContext ) );
+		collectionBinder.setMapKey( property.getAnnotationUsage( MapKey.class, modelsContext ) );
 		collectionBinder.setPropertyName( inferredData.getPropertyName() );
-		collectionBinder.setJpaOrderBy( property.getAnnotationUsage( OrderBy.class, sourceModelContext ) );
+		collectionBinder.setJpaOrderBy( property.getAnnotationUsage( OrderBy.class, modelsContext ) );
 		collectionBinder.setSqlOrder( getOverridableAnnotation( property, SQLOrder.class, context ) );
-		collectionBinder.setNaturalSort( property.getAnnotationUsage( SortNatural.class, sourceModelContext ) );
-		collectionBinder.setComparatorSort( property.getAnnotationUsage( SortComparator.class, sourceModelContext ) );
-		collectionBinder.setCache( property.getAnnotationUsage( Cache.class, sourceModelContext ) );
-		collectionBinder.setQueryCacheLayout( property.getAnnotationUsage( QueryCacheLayout.class, sourceModelContext ) );
+		collectionBinder.setNaturalSort( property.getAnnotationUsage( SortNatural.class, modelsContext ) );
+		collectionBinder.setComparatorSort( property.getAnnotationUsage( SortComparator.class, modelsContext ) );
+		collectionBinder.setCache( property.getAnnotationUsage( Cache.class, modelsContext ) );
+		collectionBinder.setQueryCacheLayout( property.getAnnotationUsage( QueryCacheLayout.class, modelsContext ) );
 		collectionBinder.setPropertyHolder(propertyHolder);
 
-		collectionBinder.setNotFoundAction( notFoundAction( propertyHolder, inferredData, property, manyToManyAnn, sourceModelContext ) );
+		collectionBinder.setNotFoundAction( notFoundAction( propertyHolder, inferredData, property, manyToManyAnn, modelsContext ) );
 		collectionBinder.setElementType( inferredData.getClassOrElementType() );
 		collectionBinder.setAccessType( inferredData.getDefaultAccess() );
-		collectionBinder.setEmbedded( property.hasAnnotationUsage( Embedded.class, sourceModelContext ) );
+		collectionBinder.setEmbedded( property.hasAnnotationUsage( Embedded.class, modelsContext ) );
 		collectionBinder.setProperty( property );
 		collectionBinder.setOnDeleteActionAction( onDeleteAction( property ) );
 		collectionBinder.setInheritanceStatePerClass( inheritanceStatePerClass );
 		collectionBinder.setDeclaringClass( inferredData.getDeclaringClass() );
 
 //		final Comment comment = property.getAnnotation( Comment.class );
-		final Cascade hibernateCascade = property.getAnnotationUsage( Cascade.class, sourceModelContext );
+		final Cascade hibernateCascade = property.getAnnotationUsage( Cascade.class, modelsContext );
 
 		collectionBinder.setElementColumns( elementColumns(
 				propertyHolder,
@@ -349,7 +349,7 @@ public abstract class CollectionBinder {
 			collectionBinder.setUpdatable( false );
 		}
 
-		if ( property.hasAnnotationUsage( CollectionId.class, sourceModelContext ) ) {
+		if ( property.hasAnnotationUsage( CollectionId.class, modelsContext ) ) {
 			//do not compute the generators unless necessary
 			final HashMap<String, IdentifierGeneratorDefinition> availableGenerators = new HashMap<>();
 			visitIdGeneratorDefinitions(
@@ -634,9 +634,11 @@ public abstract class CollectionBinder {
 	private static JoinColumn[] mapKeyJoinColumnAnnotations(
 			MemberDetails property,
 			MetadataBuildingContext context) {
+		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+
 		final MapKeyJoinColumn[] mapKeyJoinColumns = property.getRepeatedAnnotationUsages(
 				JpaAnnotations.MAP_KEY_JOIN_COLUMN,
-				context.getMetadataCollector().getSourceModelBuildingContext()
+				modelsContext
 		);
 
 		if ( isEmpty( mapKeyJoinColumns ) ) {
@@ -647,7 +649,7 @@ public abstract class CollectionBinder {
 		for ( int i = 0; i < mapKeyJoinColumns.length; i++ ) {
 			final JoinColumn joinColumn = JoinColumnJpaAnnotation.toJoinColumn(
 					mapKeyJoinColumns[i],
-					context.getMetadataCollector().getSourceModelBuildingContext()
+					modelsContext
 			);
 			joinColumns[i] = joinColumn;
 		}
@@ -665,7 +667,7 @@ public abstract class CollectionBinder {
 		if ( property.hasDirectAnnotationUsage( MapKeyColumn.class ) ) {
 			column = MapKeyColumnJpaAnnotation.toColumnAnnotation(
 					property.getDirectAnnotationUsage( MapKeyColumn.class ),
-					context.getMetadataCollector().getSourceModelBuildingContext()
+					context.getBootstrapContext().getModelsContext()
 			);
 		}
 		else {
@@ -849,7 +851,7 @@ public abstract class CollectionBinder {
 		final CollectionBinder binder;
 		final CollectionType typeAnnotation =
 				property.getAnnotationUsage( CollectionType.class,
-						buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
+						buildingContext.getBootstrapContext().getModelsContext() );
 		binder = typeAnnotation != null
 				? createBinderFromCustomTypeAnnotation( property, typeAnnotation, buildingContext )
 				: createBinderAutomatically( property, buildingContext );
@@ -955,20 +957,18 @@ public abstract class CollectionBinder {
 			return CollectionClassification.ARRAY;
 		}
 
-		final SourceModelBuildingContext sourceModelContext =
-				buildingContext.getMetadataCollector().getSourceModelBuildingContext();
-
-		if ( !property.hasAnnotationUsage( Bag.class, sourceModelContext ) ) {
+		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		if ( !property.hasAnnotationUsage( Bag.class, modelsContext ) ) {
 			return determineCollectionClassification( determineSemanticJavaType( property ), property, buildingContext );
 		}
 
-		if ( property.hasAnnotationUsage( OrderColumn.class, sourceModelContext ) ) {
+		if ( property.hasAnnotationUsage( OrderColumn.class, modelsContext ) ) {
 			throw new AnnotationException( "Attribute '"
 					+ qualify( property.getDeclaringType().getName(), property.getName() )
 					+ "' is annotated '@Bag' and may not also be annotated '@OrderColumn'" );
 		}
 
-		if ( property.hasAnnotationUsage( ListIndexBase.class, sourceModelContext ) ) {
+		if ( property.hasAnnotationUsage( ListIndexBase.class, modelsContext ) ) {
 			throw new AnnotationException( "Attribute '"
 					+ qualify( property.getDeclaringType().getName(), property.getName() )
 					+ "' is annotated '@Bag' and may not also be annotated '@ListIndexBase'" );
@@ -1026,15 +1026,15 @@ public abstract class CollectionBinder {
 				return CollectionClassification.BAG;
 			}
 
-			final SourceModelBuildingContext sourceModelContext =
-					buildingContext.getMetadataCollector().getSourceModelBuildingContext();
-			final ManyToMany manyToMany = property.getAnnotationUsage( ManyToMany.class, sourceModelContext );
+			final SourceModelBuildingContext modelsContext =
+					buildingContext.getBootstrapContext().getModelsContext();
+			final ManyToMany manyToMany = property.getAnnotationUsage( ManyToMany.class, modelsContext );
 			if ( manyToMany != null && !manyToMany.mappedBy().isBlank() ) {
 				// We don't support @OrderColumn on the non-owning side of a many-to-many association.
 				return CollectionClassification.BAG;
 			}
 
-			final OneToMany oneToMany = property.getAnnotationUsage( OneToMany.class, sourceModelContext );
+			final OneToMany oneToMany = property.getAnnotationUsage( OneToMany.class, modelsContext );
 			if ( oneToMany != null && !oneToMany.mappedBy().isBlank() ) {
 				// Unowned to-many mappings are always considered BAG by default
 				return CollectionClassification.BAG;
@@ -1112,7 +1112,7 @@ public abstract class CollectionBinder {
 	}
 
 	private void setTargetEntity(Class<?> targetEntity) {
-		setTargetEntity( sourceModelContext().getClassDetailsRegistry()
+		setTargetEntity( modelsContext().getClassDetailsRegistry()
 				.resolveClassDetails( targetEntity.getName() ) );
 	}
 
@@ -1460,12 +1460,12 @@ public abstract class CollectionBinder {
 		handleFetchProfileOverrides();
 	}
 
-	private SourceModelBuildingContext sourceModelContext() {
-		return getMetadataCollector().getSourceModelBuildingContext();
+	private SourceModelBuildingContext modelsContext() {
+		return buildingContext.getBootstrapContext().getModelsContext();
 	}
 
 	private void handleFetchProfileOverrides() {
-		property.forEachAnnotationUsage( FetchProfileOverride.class, sourceModelContext(), (usage) -> {
+		property.forEachAnnotationUsage( FetchProfileOverride.class, modelsContext(), (usage) -> {
 			getMetadataCollector().addSecondPass( new FetchSecondPass(
 					usage,
 					propertyHolder,
@@ -1723,10 +1723,10 @@ public abstract class CollectionBinder {
 	}
 
 	private void bindFilters(boolean hasAssociationTable) {
-		property.forEachAnnotationUsage( Filter.class, sourceModelContext(),
+		property.forEachAnnotationUsage( Filter.class, modelsContext(),
 				usage -> addFilter( hasAssociationTable, usage ) );
 
-		property.forEachAnnotationUsage( FilterJoinTable.class, sourceModelContext(),
+		property.forEachAnnotationUsage( FilterJoinTable.class, modelsContext(),
 				usage -> addFilterJoinTable( hasAssociationTable, usage ) );
 	}
 
@@ -2480,9 +2480,9 @@ public abstract class CollectionBinder {
 	}
 
 	private void handleCheckConstraints(Table collectionTable) {
-		property.forEachAnnotationUsage( Check.class, sourceModelContext(),
+		property.forEachAnnotationUsage( Check.class, modelsContext(),
 				usage -> addCheckToCollection( collectionTable, usage ) );
-		property.forEachAnnotationUsage( jakarta.persistence.JoinTable.class, sourceModelContext(), (usage) -> {
+		property.forEachAnnotationUsage( jakarta.persistence.JoinTable.class, modelsContext(), (usage) -> {
 			TableBinder.addTableCheck( collectionTable, usage.check() );
 			TableBinder.addTableComment( collectionTable, usage.comment() );
 			TableBinder.addTableOptions( collectionTable, usage.options() );

@@ -20,6 +20,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
@@ -52,6 +53,12 @@ public interface BootstrapContext {
 	 * @see TypeConfiguration
 	 */
 	TypeConfiguration getTypeConfiguration();
+
+	/**
+	 * Access to the {@code hibernate-models} {@linkplain SourceModelBuildingContext}
+	 */
+	@Incubating
+	SourceModelBuildingContext getModelsContext();
 
 	/**
 	 * The {@link SqmFunctionRegistry} belonging to this {@code BootstrapContext}.
@@ -167,11 +174,11 @@ public interface BootstrapContext {
 	 * Access to the Jandex index passed by call to
 	 * {@link org.hibernate.boot.MetadataBuilder#applyIndexView(Object)}, if any.
 	 *
-	 * @apiNote Jandex is currently not used, see
-	 *          <a href="https://github.com/hibernate/hibernate-orm/wiki/Roadmap7.0">the roadmap</a>
-	 *
 	 * @return The Jandex index
+	 *
+	 * @deprecated Set via the {@code hibernate-models} setting {@code hibernate.models.jandex.index} instead
 	 */
+	@Deprecated
 	Object getJandexView();
 
 	/**

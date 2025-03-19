@@ -9,7 +9,6 @@ import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.internal.TypeBeanInstanceProducer;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -42,6 +41,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.hibernate.boot.internal.BootstrapContextImpl.createModelBuildingContext;
 
 /**
  * BootstrapContext impl to be able to inject a Jandex index
@@ -117,7 +118,7 @@ public class BootstrapContextTesting implements BootstrapContext {
 		this.managedBeanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
 		this.configurationService = serviceRegistry.requireService( ConfigurationService.class );
 
-		this.modelsContext = BootstrapContextImpl.createModelBuildingContext( classLoaderService );
+		this.modelsContext = createModelBuildingContext( classLoaderService, configService );
 	}
 
 	@Override

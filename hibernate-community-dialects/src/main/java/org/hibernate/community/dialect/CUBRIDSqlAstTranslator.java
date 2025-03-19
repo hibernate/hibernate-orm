@@ -67,9 +67,4 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	protected boolean supportsRowValueConstructorSyntaxInInList() {
 		return false;
 	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
 }

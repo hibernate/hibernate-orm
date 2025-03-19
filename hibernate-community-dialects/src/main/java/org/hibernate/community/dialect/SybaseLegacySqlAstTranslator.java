@@ -255,11 +255,6 @@ public class SybaseLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
 	protected boolean needsRowsToSkip() {
 		return true;
 	}

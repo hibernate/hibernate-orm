@@ -227,8 +227,4 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 		return false;
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
 }

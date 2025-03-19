@@ -384,11 +384,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
 	public MariaDBDialect getDialect() {
 		return this.dialect;
 	}

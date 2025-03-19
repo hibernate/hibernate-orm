@@ -6020,4 +6020,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return supportsWithClauseInSubquery();
 	}
 
+	/**
+	 * Is this dialect known to support what ANSI-SQL terms "row value
+	 * constructor" syntax; sometimes called tuple syntax with quantified predicates.
+	 * <p>
+	 * Basically, does it support syntax like
+	 * {@code ... where (FIRST_NAME, LAST_NAME) = ALL (select ...) ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax with quantified predicates; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return true;
+	}
+
 }

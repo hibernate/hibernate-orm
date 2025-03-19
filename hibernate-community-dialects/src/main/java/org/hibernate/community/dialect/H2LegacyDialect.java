@@ -1101,4 +1101,10 @@ public class H2LegacyDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		// Just a guess
+		return getVersion().isSameOrAfter( 1, 4, 197 );
+	}
+
 }

@@ -555,11 +555,6 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		return false;
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
 	enum OffsetFetchClauseMode {
 		STANDARD,
 		TOP_ONLY,

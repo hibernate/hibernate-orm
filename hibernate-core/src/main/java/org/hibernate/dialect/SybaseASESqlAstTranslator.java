@@ -558,11 +558,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		return false;
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
 	private boolean supportsParameterOffsetFetchExpression() {
 		return false;
 	}

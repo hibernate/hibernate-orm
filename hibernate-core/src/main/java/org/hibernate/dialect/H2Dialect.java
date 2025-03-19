@@ -1120,4 +1120,10 @@ public class H2Dialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		// Just a guess
+		return true;
+	}
+
 }

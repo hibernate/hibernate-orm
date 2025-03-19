@@ -621,11 +621,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 		super.visitBinaryArithmeticExpression(arithmeticExpression);
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return getDialect().supportsFetchClause( FetchClauseType.ROWS_ONLY );
 	}

@@ -320,12 +320,6 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 		return true;
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		// Just a guess
-		return true;
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return true;
 	}

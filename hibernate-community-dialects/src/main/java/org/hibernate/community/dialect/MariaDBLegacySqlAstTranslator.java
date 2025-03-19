@@ -372,11 +372,6 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
 	public MariaDBLegacyDialect getDialect() {
 		return this.dialect;
 	}

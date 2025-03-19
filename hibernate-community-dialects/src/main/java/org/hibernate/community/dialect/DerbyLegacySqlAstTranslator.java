@@ -284,11 +284,6 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
 	protected boolean needsRowsToSkip() {
 		return !supportsOffsetFetchClause();
 	}

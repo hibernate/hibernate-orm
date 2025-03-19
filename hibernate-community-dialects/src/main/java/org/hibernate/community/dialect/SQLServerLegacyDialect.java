@@ -1280,4 +1280,9 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
 }

@@ -207,11 +207,6 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
 	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
 		inArrayPredicate.getTestExpression().accept( this );
 		appendSql( " = any(" );

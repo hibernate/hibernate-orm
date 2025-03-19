@@ -8274,7 +8274,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					renderComparison( lhsTuple.getExpressions().get( 0 ), operator, rhsExpression );
 				}
 			}
-			else if ( subquery != null && !supportsRowValueConstructorSyntaxInQuantifiedPredicates() ) {
+			else if ( subquery != null && !dialect.supportsRowValueConstructorSyntaxInQuantifiedPredicates() ) {
 				// For quantified relational comparisons, we can do an optimized emulation
 				if ( !needsTupleComparisonEmulation( operator ) && all ) {
 					switch ( operator ) {
@@ -8397,20 +8397,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					!dialect.supportsRowValueConstructorDistinctFromSyntax();
 			default -> false;
 		};
-	}
-
-	/**
-	 * Is this dialect known to support what ANSI-SQL terms "row value
-	 * constructor" syntax; sometimes called tuple syntax with quantified predicates.
-	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... where (FIRST_NAME, LAST_NAME) = ALL (select ...) ...}
-	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax with quantified predicates; false otherwise.
-	 */
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return true;
 	}
 
 	/**

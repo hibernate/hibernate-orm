@@ -8413,26 +8413,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		return switch (operator) {
 			case LESS_THAN, LESS_THAN_OR_EQUAL, GREATER_THAN, GREATER_THAN_OR_EQUAL ->
-					!supportsRowValueConstructorGtLtSyntax();
+					!dialect.supportsRowValueConstructorGtLtSyntax();
 			case DISTINCT_FROM, NOT_DISTINCT_FROM ->
 					!supportsRowValueConstructorDistinctFromSyntax();
 			default -> false;
 		};
-	}
-
-	/**
-	 * Is this dialect known to support what ANSI-SQL terms "row value
-	 * constructor" syntax; sometimes called tuple syntax with <code>&lt;</code>, <code>&gt;</code>, <code>&le;</code>
-	 * and <code>&ge;</code> operators.
-	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... where (FIRST_NAME, LAST_NAME) &lt; ('Steve', 'Ebersole') ...}
-	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax with relational comparison operators; false otherwise.
-	 */
-	protected boolean supportsRowValueConstructorGtLtSyntax() {
-		return dialect.supportsRowValueConstructorSyntax();
 	}
 
 	/**

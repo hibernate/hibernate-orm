@@ -2024,4 +2024,10 @@ public class HANADialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual();
 	}
+
+	@Override
+	public boolean supportsRowValueConstructorGtLtSyntax() {
+		return false;
+	}
+
 }

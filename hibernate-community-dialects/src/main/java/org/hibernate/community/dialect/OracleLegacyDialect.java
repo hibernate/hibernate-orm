@@ -1701,4 +1701,9 @@ public class OracleLegacyDialect extends Dialect {
 		return getVersion().isSameOrAfter( 8, 2 );
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInSubQuery() {
+		return getVersion().isSameOrAfter( 9 );
+	}
+
 }

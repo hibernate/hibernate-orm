@@ -7647,7 +7647,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						ComparisonOperator.NOT_EQUAL :
 						ComparisonOperator.EQUAL;
 				// Some DBs like Oracle support tuples only for the IN subquery predicate
-				if ( supportsRowValueConstructorSyntaxInInSubQuery() && dialect.supportsUnionAll() ) {
+				if ( dialect.supportsRowValueConstructorSyntaxInInSubQuery() && dialect.supportsUnionAll() ) {
 					inListPredicate.getTestExpression().accept( this );
 					if ( inListPredicate.isNegated() ) {
 						appendSql( " not" );
@@ -7784,7 +7784,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( " in " );
 				inSubQueryPredicate.getSubQuery().accept( this );
 			}
-			else if ( !supportsRowValueConstructorSyntaxInInSubQuery() ) {
+			else if ( !dialect.supportsRowValueConstructorSyntaxInInSubQuery() ) {
 				emulateSubQueryRelationalRestrictionPredicate(
 						inSubQueryPredicate,
 						inSubQueryPredicate.isNegated(),
@@ -8397,19 +8397,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					!dialect.supportsRowValueConstructorDistinctFromSyntax();
 			default -> false;
 		};
-	}
-
-	/**
-	 * If the dialect supports {@link org.hibernate.dialect.Dialect#supportsRowValueConstructorSyntax() row values},
-	 * does it offer such support in IN subqueries as well?
-	 * <p>
-	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( select ... ) ...}
-	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax in the IN subqueries; false otherwise.
-	 */
-	protected boolean supportsRowValueConstructorSyntaxInInSubQuery() {
-		return dialect.supportsRowValueConstructorSyntaxInInList();
 	}
 
 	/**

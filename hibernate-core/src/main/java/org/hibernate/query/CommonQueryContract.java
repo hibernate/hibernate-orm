@@ -180,6 +180,15 @@ public interface CommonQueryContract {
 	 *
 	 * @see org.hibernate.jpa.HibernateHints
 	 * @see org.hibernate.jpa.SpecHints
+	 *
+	 * @apiNote Hints are a
+	 * {@linkplain jakarta.persistence.Query#setHint(String, Object)
+	 * JPA-standard way} to control provider-specific behavior
+	 * affecting execution of the query. Clients of the native API
+	 * defined by Hibernate should make use of type-safe operations
+	 * of this interface and of its subtypes. For example,
+	 * {@link SelectionQuery#setCacheRegion} is preferred over
+	 * {@link org.hibernate.jpa.HibernateHints#HINT_CACHE_REGION}.
 	 */
 	CommonQueryContract setHint(String hintName, Object value);
 

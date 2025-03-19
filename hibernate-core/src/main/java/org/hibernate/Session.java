@@ -1267,6 +1267,25 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void addEventListeners(SessionEventListener... listeners);
 
 	/**
+	 * Set a hint. The hints understood by Hibernate are enumerated by
+	 * {@link org.hibernate.jpa.AvailableHints}.
+	 *
+	 * @see org.hibernate.jpa.HibernateHints
+	 * @see org.hibernate.jpa.SpecHints
+	 *
+	 * @apiNote Hints are a
+	 * {@linkplain jakarta.persistence.EntityManager#setProperty
+	 * JPA-standard way} to control provider-specific behavior of the
+	 * {@code EntityManager}. Clients of the native API defined by
+	 * Hibernate should make use of type-safe operations of this
+	 * interface. For example, {@link #enableFetchProfile(String)}
+	 * should be used in preference to the hint
+	 * {@link org.hibernate.jpa.HibernateHints#HINT_FETCH_PROFILE}.
+	 */
+	@Override
+	void setProperty(String propertyName, Object value);
+
+	/**
 	 * Create a new mutable instance of {@link EntityGraph}, with only
 	 * a root node, allowing programmatic definition of the graph from
 	 * scratch.

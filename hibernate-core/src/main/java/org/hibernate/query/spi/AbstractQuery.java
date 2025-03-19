@@ -417,7 +417,7 @@ public abstract class AbstractQuery<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
@@ -441,13 +441,11 @@ public abstract class AbstractQuery<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
-
-
 
 	@Override
 	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value) {
@@ -585,37 +583,37 @@ public abstract class AbstractQuery<R>
 	}
 
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;

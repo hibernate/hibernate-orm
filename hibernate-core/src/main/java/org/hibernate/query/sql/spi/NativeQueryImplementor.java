@@ -213,13 +213,13 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	@Override
 	<P> NativeQueryImplementor<R> setParameter(String name, P val, Class<P> type);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType);
 
 	@Override
@@ -231,13 +231,13 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	@Override
 	<P> NativeQueryImplementor<R> setParameter(int position, P val, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
@@ -252,10 +252,10 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	@Override
 	<P> NativeQueryImplementor<R> setParameter(Parameter<P> param, P value);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
 	@Override

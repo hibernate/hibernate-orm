@@ -708,13 +708,13 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	<P> NativeQuery<T> setParameter(String name, P val, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(String name, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(String name, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
@@ -726,13 +726,13 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	<P> NativeQuery<T> setParameter(int position, P val, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(int position, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(int position, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(int position, Date value, TemporalType temporalType);
 
 	@Override
@@ -747,10 +747,10 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	<P> NativeQuery<T> setParameter(Parameter<P> param, P value);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override

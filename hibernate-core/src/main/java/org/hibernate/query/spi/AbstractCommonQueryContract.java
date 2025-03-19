@@ -64,6 +64,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
 import static org.hibernate.jpa.HibernateHints.HINT_COMMENT;
+import static org.hibernate.jpa.HibernateHints.HINT_FETCH_PROFILE;
 import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
@@ -817,7 +818,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated(since = "7")
 	public CommonQueryContract setParameter(String name, Instant value, TemporalType temporalType) {
 		this.locateBinding( name ).setBindValue( value, temporalType );
 		return this;
@@ -900,7 +901,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated(since = "7")
 	public CommonQueryContract setParameter(int position, Instant value, TemporalType temporalType) {
 		this.locateBinding( position ).setBindValue( value, temporalType );
 		return this;
@@ -993,37 +994,37 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContract setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
 		locateBinding( param ).setBindValue( value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContract setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
 		locateBinding( param ).setBindValue( value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContract setParameter(String name, Calendar value, TemporalType temporalType) {
 		locateBinding( name ).setBindValue( value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContract setParameter(String name, Date value, TemporalType temporalType) {
 		locateBinding( name ).setBindValue( value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContract setParameter(int position, Calendar value, TemporalType temporalType) {
 		locateBinding( position ).setBindValue( value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContract setParameter(int position, Date value, TemporalType temporalType) {
 		locateBinding( position ).setBindValue( value, temporalType );
 		return this;

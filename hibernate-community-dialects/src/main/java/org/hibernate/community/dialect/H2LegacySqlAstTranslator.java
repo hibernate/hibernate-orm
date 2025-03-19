@@ -358,12 +358,6 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorDistinctFromSyntax() {
-		// Seems that before, this was buggy
-		return getDialect().getVersion().isSameOrAfter( 1, 4, 200 );
-	}
-
 	protected boolean allowsNullPrecedence() {
 		return getClauseStack().getCurrent() != Clause.WITHIN_GROUP || getDialect().supportsNullPrecedence();
 	}

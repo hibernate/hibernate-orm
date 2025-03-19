@@ -1130,4 +1130,9 @@ public class FirebirdDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsNestedWithClause() {
+		return false;
+	}
+
 }

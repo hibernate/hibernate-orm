@@ -2145,7 +2145,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			pushToTopLevel = false;
 		}
 		else {
-			pushToTopLevel = !supportsNestedWithClause()
+			pushToTopLevel = !dialect.supportsNestedWithClause()
 					|| !dialect.supportsWithClauseInSubquery() && isInSubquery();
 		}
 		final boolean inNestedWithClause = clauseStack.findCurrentFirst( AbstractSqlAstTranslator::matchWithClause ) != null;
@@ -2412,13 +2412,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		cte.getCteDefinition().accept( this );
 		currentCteStatement = oldCteStatement;
 		limit = oldLimit;
-	}
-
-	/**
-	 * Whether the SQL with clause is supported within a CTE.
-	 */
-	protected boolean supportsNestedWithClause() {
-		return dialect.supportsWithClauseInSubquery();
 	}
 
 	/**

@@ -6013,4 +6013,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return supportsWithClause();
 	}
 
+	/**
+	 * Whether the SQL with clause is supported within a CTE.
+	 */
+	public boolean supportsNestedWithClause() {
+		return supportsWithClauseInSubquery();
+	}
+
 }

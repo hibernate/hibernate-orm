@@ -48,17 +48,23 @@ public class GaussDBJsonObjectFunction extends JsonObjectFunction {
 				nullBehavior = JsonNullBehavior.NULL;
 				argumentsCount = sqlAstArguments.size();
 			}
+			sqlAppender.appendSql('(');
+			separator = ' ';
 			for ( int i = 0; i < argumentsCount; i += 2 ) {
 				final SqlAstNode key = sqlAstArguments.get( i );
 				Expression valueNode = (Expression) sqlAstArguments.get( i+1 );
 				if ( nullBehavior == JsonNullBehavior.ABSENT && walker.getLiteralValue( valueNode ) == null) {
 					continue;
 				}
-				sqlAppender.appendSql( separator );
+				if (separator != ' ') {
+					sqlAppender.appendSql(separator);
+				}
+				else {
+					separator = ',';
+				}
 				key.accept( walker );
 				sqlAppender.appendSql( ',' );
 				valueNode.accept( walker );
-				separator = ',';
 			}
 		}
 		sqlAppender.appendSql( ')' );

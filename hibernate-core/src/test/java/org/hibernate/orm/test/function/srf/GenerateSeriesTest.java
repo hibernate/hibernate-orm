@@ -81,7 +81,6 @@ public class GenerateSeriesTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testGenerateSeriesOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-set-returning-function-generate-series-ordinality-example[]

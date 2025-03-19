@@ -13,7 +13,6 @@ import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.generator.EventType;
@@ -28,7 +27,6 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -98,7 +96,6 @@ public class MutationDelegateTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testGeneratedValuesAndRowId(SessionFactoryScope scope) {
 		final GeneratedValuesMutationDelegate delegate = getDelegate(
 				scope,

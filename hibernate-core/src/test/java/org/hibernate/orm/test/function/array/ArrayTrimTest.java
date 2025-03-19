@@ -89,7 +89,7 @@ public class ArrayTrimTest {
 	@Test
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 13, matchSubTypes = true, reason = "The PostgreSQL emulation for version < 14 doesn't throw an error")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "The Cockroach emulation doesn't throw an error")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.gaussdb has different behavior")
 	public void testTrimOutOfRange(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			try {

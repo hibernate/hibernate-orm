@@ -4,8 +4,6 @@
  */
 package org.hibernate.envers.enhanced;
 
-import jakarta.persistence.Entity;
-
 /**
  * Extension of standard {@link SequenceIdRevisionEntity} that allows tracking entity names changed in each revision.
  * This revision entity is implicitly used when {@code org.hibernate.envers.track_entities_changed_in_revision}
@@ -13,6 +11,5 @@ import jakarta.persistence.Entity;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@Entity
 public final class SequenceIdTrackingModifiedEntitiesRevisionEntity extends SequenceIdTrackingModifiedEntitiesRevisionMapping {
 }

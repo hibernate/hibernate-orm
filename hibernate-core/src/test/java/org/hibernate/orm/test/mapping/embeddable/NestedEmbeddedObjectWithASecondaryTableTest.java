@@ -13,11 +13,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
-import org.hibernate.cfg.JdbcSettings;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.boot.MetadataSources;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -26,25 +26,17 @@ import org.junit.jupiter.api.Test;
  *
  * @author Vincent Bouthinon
  */
-@Jpa(
-		annotatedClasses = {
-				NestedEmbeddedObjectWithASecondaryTableTest.Author.class,
-				NestedEmbeddedObjectWithASecondaryTableTest.Book.class,
-				NestedEmbeddedObjectWithASecondaryTableTest.House.class
-		},
-		integrationSettings = @Setting(name = JdbcSettings.SHOW_SQL, value = "true")
-)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry()
 @JiraKey("HHH-19272")
 class NestedEmbeddedObjectWithASecondaryTableTest {
 
 	@Test
-	void testExceptionEmbeddedHasPropertiesMappedToTwoDifferentTables(EntityManagerFactoryScope scope) {
-
-		scope.inTransaction(
-				entityManager -> {
-					// Nothing
-				}
-		);
+	@NotImplementedYet
+	void testNestedEmbeddedAndSecondaryTables(ServiceRegistryScope registryScope) {
+		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
+				.addAnnotatedClasses( Book.class, Author.class, House.class );
+		metadataSources.buildMetadata();
 	}
 
 	@Entity(name = "book")

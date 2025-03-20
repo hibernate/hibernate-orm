@@ -219,7 +219,114 @@ However, the preferred approach is to explicitly batch operations via `insertMul
 [[api-changes]]
 == Changes to API
 
-7.0 contains no changes to API, aside from some <<removals, removals>>.
+A general theme in 7.0 has been to remove Hibernate-specific features that have a direct replacement in JPA.
+
+[[session-load]]
+=== Session#load
+
+`Session#load` methods have been removed in favor of `Session#getReference` which has the same semantic.
+
+[[session-refresh]]
+=== Session#refresh
+
+The forms of `Session#refresh` accepting an entity-name have been removed; the passed entity already indicates the entity-name (even with dynamic models).
+
+`Session#refresh(String entityName, Object object)`::
+        Removed in favor of `Session#refresh(Object object)`
+`Session#refresh(String entityName, Object object, LockOptions lockOptions)`::
+        Removed in favor of `Session#refresh(Object object, LockOptions lockOptions)`
+
+[[session-save-update]]
+=== Session#save, Session#update, Session#saveOrUpdate
+
+All forms of `Session#save`, `Session#update`, `Session#saveOrUpdate` have been removed.  See the discussion at <<flush-persist>>.
+
+`Session#save`::
+        Removed in favor of `Session#persist`.
+`Session#update`::
+        Removed in favor of `Session#merge`
+`Session#saveOrUpdate`::
+        Removed in favor `#persist` if the entity is transient or `#merge` if the entity is detached
+
+Relatedly, `org.hibernate.annotations.CascadeType#SAVE_UPDATE` has been removed in favor of `org.hibernate.annotations.CascadeType#PERSIST` and/or `org.hibernate.annotations.CascadeType#MERGE`
+
+
+[[session-delete]]
+=== Session#delete
+
+`Session#delete` methods has been removed in favor of `Session#remove` (via `EntityManager`).  Relatedly, `org.hibernate.annotations.CascadeType#DELETE` was removed in favor of `org.hibernate.annotations.CascadeType#REMOVE`
+
+[[load-fetch-graphs]]
+=== org.hibernate.graph Package
+
+The `EntityGraph` API was enhanced in JPA 3.2, and made much more useful.
+The incubating package `org.hibernate.graph` contains extensions to that API, which have been significantly impacted by the migration to JPA 3.2, and by the addition of new functionality.
+Furthermore, some legacy operations were declared with incorrect generic type signatures (by both JPA, and by Hibernate).
+
+This package has been significantly re-engineered, and the impact of this effort includes:
+
+- some breaking changes to type signatures, and
+- a number of deprecations of legacy operations which are now covered by JPA.
+
+Also, a key subgraph now always refers to a `Map` key, and never to an entity id.
+
+We encourage migration to the use of the new JPA-standard operations.
+
+Or, alternatively, when building graphs, consider Hibernate's support for
+textual link:{user-guide-url}#fetching-strategies-dynamic-fetching-entity-graph-parsing[graph parsing].  See also <<NamedEntityGraph>>.
+
+
+[[removal-annotations]]
+=== Annotations
+
+* Removed `@Persister`
+* Removed `@Proxy` - see <<proxy-annotation>>
+* Removed `@SelectBeforeUpdate` - see <<flush-persist>>
+* Removed `@DynamicInsert#value` and `@DynamicUpdate#value` - usage indicates true
+* Removed `@Loader`
+* Removed `@Table` -> use JPA `@Table`
+* Removed `@Where` and `@WhereJoinTable` -> use `@SQLRestriction` or `@SQLJoinTableRestriction`
+* Removed `@OrderBy` -> use `@SQLOrder` or JPA `@OrderBy`
+* Removed `@ForeignKey` -> use JPA `@ForeignKey`
+* Removed `@Index` -> use JPA `@Index`
+* Removed `@IndexColumn` -> use JPA `@OrderColumn`
+* Removed `@GeneratorType` (and `GenerationTime`, etc)
+* Removed `@LazyToOne`
+* Removed `@LazyCollection`
+* Replaced uses of `CacheModeType` with `CacheMode`
+* Removed `@Cache#include` -> use `@Cache#includeLazy`
+* Removed `@TestForIssue` (for testing purposes) -> use `org.hibernate.testing.orm.junit.JiraKey` or `org.hibernate.testing.orm.junit.JiraKeyGroup`
+
+
+[[proxy-annotation]]
+=== Replace @Proxy
+
+Applications will need to replace usages of the removed `@Proxy` annotation.
+
+`@Proxy#proxyClass` has no direct replacement, but was also never needed/useful.
+
+Here we focus on `@Proxy#lazy` attribute which, again, was hardly ever useful.
+By default (true), Hibernate would proxy an entity when possible and when asked for.
+"Asked for" includes calls to `Session#getReference` and lazy associations.
+All such cases though are already controllable by the application.
+
+* Instead of `Session#getReference`, use `Session#find`
+* Use eager association fetching, for example,
+** `FetchType.EAGER` (the default for to-one associations anyway), possibly combined with `@Fetch`,
+** `EntityGraph`, or a
+** `@FetchProfile`.
+
+The effect can also often be mitigated using Hibernate's bytecode-based laziness (possibly combined with `@ConcreteProxy`).
+
+
+[[misc-api]]
+=== Miscellaneous
+
+* Removed `org.hibernate.Metamodel` in favor of `org.hibernate.metamodel.model.domain.JpaMetamodel`
+* Removed `SqmQualifiedJoin` - all joins are qualified.
+* Both `NaturalIdLoadAccess#using(Map)` and `NaturalIdMultiLoadAccess#compoundValue()` have been removed in favor of `Map#of()`
+* Removed `Session.LockRequest` - use `LockOptions` instead
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // SPI changes
@@ -232,6 +339,37 @@ However, the preferred approach is to explicitly batch operations via `insertMul
 === Configurable generators
 
 The signature of the `Configurable#configure` method changed from accepting just a `ServiceRegistry` instance to the new `GeneratorCreationContext` interface, which exposes a lot more useful information when configuring the generator itself. The old signature has been deprecated for removal, so you should migrate any custom `Configurable` generator implementation to the new one.  Or better yet, consider migrating to `@IdGeneratorType`.
+
+[[integrator]]
+=== Integrator
+
+The previously deprecated method `org.hibernate.integrator.spi.Integrator#integrate(Metadata,SessionFactoryImplementor,SessionFactoryServiceRegistry)` have been removed in favor of its replacement `org.hibernate.integrator.spi.Integrator#integrate(Metadata,BootstrapContext,SessionFactoryImplementor)`
+
+[[interceptor]]
+=== Interceptor
+
+Quite a few (again, previously deprecated) methods on `Interceptor` have been removed in favor of their replacement.  This mainly deals with the change in expected Java type of identifiers (done in 6.0) from `Serializable` to `Object`.
+
+* `Interceptor#onLoad`
+* `Interceptor#onFlushDirty`
+* `Interceptor#onSave`
+* `Interceptor#onDelete`
+* `Interceptor#onCollectionRecreate`
+* `Interceptor#onCollectionRemove`
+* `Interceptor#onCollectionUpdate`
+* `Interceptor#findDirty`
+* `Interceptor#getEntity`
+
+Additionally, `EmptyInterceptor` was removed.  As `org.hibernate.Interceptor` now uses default methods, one can simply implement `Interceptor` to the same end.
+
+
+[[misc-spi]]
+=== Miscellaneous
+
+* `org.hibernate.metamodel.spi.MetamodelImplementor`
+was removed in favor of `org.hibernate.metamodel.MappingMetmodel` or `org.hibernate.metamodel.model.domain.JpaMetamodel`
+* Removed `AdditionalJaxbMappingProducer` in favor of `AdditionalMappingContributor`.
+* Removed `MetadataContributor` in favor of `AdditionalMappingContributor`
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -323,21 +461,8 @@ This includes auto-applied converters.
 To suppress the error for an auto-applied converter, use `@Convert(disableConversion=true)`.
 
 
-[[load-fetch-graphs]]
-=== org.hibernate.graph Package
 
-The `EntityGraph` API was enhanced in JPA 3.2, and made much more useful.
-The incubating package `org.hibernate.graph` contains extensions to that API, which have been significantly impacted by the migration to JPA 3.2, and by the addition of new functionality.
-Furthermore, some legacy operations were declared with incorrect generic type signatures (by both JPA, and by Hibernate).
 
-This package has been significantly re-engineered, and the impact of this effort includes:
-
-- some breaking changes to type signatures, and
-- a number of deprecations of legacy operations which are now covered by JPA.
-
-Also, a key subgraph now always refers to a `Map` key, and never to an entity id.
-
-We encourage migration to the use of the new JPA-standard operations.
 
 [[create-query]]
 === Query with Implicit SELECT and No Explicit Result Type
@@ -571,109 +696,20 @@ However, MySQL treats a `char(1)` containing a single space as an empty string, 
 Now, `varchar(1)` is used by default.
 
 
-
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Removals
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-[[removals]]
-== Removals
-
-As this is a major release, a few things have been removed.
-
-[[removal-annotations]]
-=== Annotations
-
-* Removed `@Persister`
-* Removed `@Proxy` - see <<proxy-annotation>>
-* Removed `@SelectBeforeUpdate` - see <<flush-persist>>
-* Removed `@DynamicInsert#value` and `@DynamicUpdate#value`
-* Removed `@Loader`
-* Removed `@Table` -> use JPA `@Table`
-* Removed `@Where` and `@WhereJoinTable` -> use `@SQLRestriction` or `@SQLJoinTableRestriction`
-* Removed `@OrderBy` -> use `@SQLOrder` or JPA `@OrderBy`
-* Removed `@ForeignKey` -> use JPA `@ForeignKey`
-* Removed `@Index` -> use JPA `@Index`
-* Removed `@IndexColumn` -> use JPA `@OrderColumn`
-* Removed `@GeneratorType` (and `GenerationTime`, etc)
-* Removed `@LazyToOne`
-* Removed `@LazyCollection`
-* Replaced uses of `CacheModeType` with `CacheMode`
-* Removed `@Cache.include` -> use `@Cache.includeLazy`
-* Removed `@TestForIssue` (for testing purposes) -> use `org.hibernate.testing.orm.junit.JiraKey` and `org.hibernate.testing.orm.junit.JiraKeyGroup`
-
-[[removal-classes]]
-=== Classes/interfaces
-
-* Removed `SqmQualifiedJoin` (all joins are qualified)
-* Removed `AdditionalJaxbMappingProducer` -> `AdditionalMappingContributor`
-* Removed `MetadataContributor` -> `AdditionalMappingContributor`
-* Removed `EmptyInterceptor` -> implement `org.hibernate.Interceptor` directly
-* Removed `Session.LockRequest` -> use `LockOptions`
-* See also,
-
-[[removal-methods]]
-=== Methods
-
-* Removed code related to save, update and saveOrUpdate - see <<flush-persist>>:
-** Removed `Session.save` in favor of `Session.persist`
-** Removed `Session.saveOrUpdate` in favor `persist` if the entity is transient or `merge` if the entity is detached
-** Removed `Session.update` in favor of `Session.merge`
-** Removed `org.hibernate.annotations.CascadeType.SAVE_UPDATE` in favor of `org.hibernate.annotations.CascadeType.PERSIST` + `org.hibernate.annotations.CascadeType.MERGE`
-
-* Removed `Session.delete` in favor of `Session.remove`
-* Removed `org.hibernate.annotations.CascadeType.DELETE` in favor of `org.hibernate.annotations.CascadeType.REMOVE`
-* Removed `Session.load` in favor of `Session.find`
-* Removed `Session.refresh(String entityName, Object object)` in favor of `Session.refresh(Object object)`
-* Removed `Session.refresh(String entityName, Object object, LockOptions lockOptions)` in favor of `Session.refresh(Object object, LockOptions lockOptions)`
-* Removed `org.hibernate.integrator.spi.Integrator.integrate(Metadata,SessionFactoryImplementor,SessionFactoryServiceRegistry)` in favor of `org.hibernate.integrator.spi.Integrator.integrate(Metadata,BootstrapContext,SessionFactoryImplementor)`
-* Removed quite a few deprecated `Interceptor` in favor of their replacements:
-** Removed `Interceptor.onLoad(Object, Serializable, Object[] , String[] , Type[] )` in favour of `Interceptor.onLoad(Object, Object, Object[], String[], Type[] )`
-** Removed `Interceptor.onFlushDirty(Object, Serializable, Object[] , Object[], String[] , Type[] )` in favour of `Interceptor.onLoad(Object, Object, Object[], Object[], String[] , Type[] )`
-** Removed `Interceptor.onSave(Object, Serializable, Object[], String[], Type[])` in favour of `Interceptor.onSave(Object, Object, Object[], String[], Type[])`
-** Removed `Interceptor.onDelete(Object, Serializable, Object[], String[], Type[])` in favour of `Interceptor.onDelete(Object, Serializable, Object[], String[], Type[])`
-** Removed `Interceptor.onCollectionRecreate(Object, Serializable)` in favour of `Interceptor.onCollectionRecreate(Object, Object)`
-** Removed `Interceptor.onCollectionRemove(Object, Serializable)` in favour of `Interceptor.onCollectionRemove(Object, Object)`
-** Removed `Interceptor.onCollectionUpdate(Object, Serializable)` in favour of `Interceptor.onCollectionUpdate(Object, Object)`
-** Removed `Interceptor.findDirty(Object, Serializable, Object[], Object[], String[], Type[])` in favour of `Interceptor.findDirty(Object, Object, Object[], Object[], String[], Type[])`
-** Removed `Interceptor.getEntity(String, Serializable)` in favour of `Interceptor.getEntity(String, Serializable)`
-* Removed `org.hibernate.metamodel.spi.MetamodelImplementor` in favor of `org.hibernate.metamodela.MappingMetmodel` or `org.hibernate.metamodel.model.domain.JpaMetamodel`
-* Removed `org.hibernate.Metamodel` in favor of `org.hibernate.metamodel.model.domain.JpaMetamodel`
-* Removed `NaturalIdLoadAccess.using(Map)` and `NaturalIdMultiLoadAccess.compoundValue()` in favor of `Map.of()`
-
-=== Settings
+[[settings]]
+=== Changes Related to Settings
 
 * Removed `hibernate.mapping.precedence` and friends
 * Removed `hibernate.allow_refresh_detached_entity`
 
 
-[[proxy-annotation]]
-=== Replace @Proxy
-
-Applications will need to replace usages of the removed `@Proxy` annotation.
-
-`@Proxy#proxyClass` has no direct replacement, but was also never needed/useful.
-
-Here we focus on `@Proxy#lazy` attribute which, again, was hardly ever useful.
-By default (true), Hibernate would proxy an entity when possible and when asked for.
-"Asked for" includes calls to `Session#getReference` and lazy associations.
-All such cases though are already controllable by the application.
-
-* Instead of `Session#getReference`, use `Session#find`
-* Use eager association fetching, for example,
-** `FetchType.EAGER` (the default for to-one associations anyway), possibly combined with `@Fetch`,
-** `EntityGraph`, or a
-** `@FetchProfile`.
-
-The effect can also often be mitigated using Hibernate's bytecode-based laziness (possibly combined with `@ConcreteProxy`).
 
 [[pools]]
-=== Connection Pools
+== Connection Pools
 
 Since Vibur and Proxool are no longer actively developed, support for these connection pools was removed.
 
 As part of the effort to relicense, it also became necessary to drop support for UCP connection pool.
 
-Use Agroal or HikariCP instead.
+We recommend using Agroal or HikariCP instead; or implement the `ConnectionProvider` yourself to integrate with the Connection Pool of your choice (in fact other Connection Pools are known to ship implementations of the Hibernate `ConnectionProvider` already).
 

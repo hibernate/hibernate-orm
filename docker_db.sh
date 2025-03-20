@@ -34,7 +34,7 @@ mysql_8_0() {
         fi
         n=$((n+1))
         echo "Waiting for MySQL to start..."
-        sleep 3
+        sleep 5
     done
     if [ "$n" -ge 5 ]; then
       echo "MySQL failed to start and configure after 15 seconds"
@@ -58,7 +58,7 @@ mysql_8_1() {
         fi
         n=$((n+1))
         echo "Waiting for MySQL to start..."
-        sleep 3
+        sleep 5
     done
     if [ "$n" -ge 5 ]; then
       echo "MySQL failed to start and configure after 15 seconds"
@@ -82,7 +82,7 @@ mysql_8_2() {
         fi
         n=$((n+1))
         echo "Waiting for MySQL to start..."
-        sleep 3
+        sleep 5
     done
     if [ "$n" -ge 5 ]; then
       echo "MySQL failed to start and configure after 15 seconds"

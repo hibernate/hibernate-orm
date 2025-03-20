@@ -291,7 +291,7 @@ public class OneToManyCompositeKeyTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Entity(name = "Design")
 	@Audited
-	private static class Design {
+	public static class Design {
 		@Id
 		private Integer id;
 

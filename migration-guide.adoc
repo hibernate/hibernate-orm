@@ -5,7 +5,7 @@
 :versionDocBase: {docsBase}/7.0
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
 :javadocsBase: {versionDocBase}/javadocs
-
+:fn-cascase-type: footnote:cascade-type[`org.hibernate.annotations.Cascade` and `org.hibernate.annotations.CascadeType` are both fully deprecated as of 7.0]
 
 This guide discusses migration to Hibernate ORM version 7.0. For migration from
 earlier versions, see any other pertinent migration guides as well.
@@ -36,6 +36,7 @@ This required a few actions on our part:
 * Dropping `hibernate-ucp` - see https://hibernate.atlassian.net/browse/HHH-19162
 * Dropping `TeradataDialect` - see https://hibernate.atlassian.net/browse/HHH-19057
 
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Requirements
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -55,9 +56,7 @@ This required a few actions on our part:
 
 * Type parameters:
   ** Affects much of the Criteria API - especially roots, joins, paths
-  ** Affects much of the Graph API -
-    *** `org.hibernate.graph.Graph.addAttributeNode(java.lang.String)` defines a return while
-                `jakarta.persistence.Graph.addAttributeNode(java.lang.String)` does not.
+  ** Affects much of the Graph API - see <<load-fetch-graphs>> for details.
 * New JPA features colliding with previous Hibernate extension features:
   ** `Nulls` (JPA) v. `NullPrecedence` (Hibernate), including JPA's new `Order#getNullPrecedence()` returning `Nulls`
         colliding with Hibernate's `SqmSortSpecification#getNullPrecedence` returning `NullPrecedence`.  Hibernate's form
@@ -142,6 +141,7 @@ class Person {
 
 This triggers Hibernate to use the column names `home_street`, `home_city`, `work_street`, ...
 
+See the link:{user-guide-url}#embeddable-column-naming[User Guide] for details.
 
 [[NamedEntityGraph]]
 === @NamedEntityGraph
@@ -161,7 +161,7 @@ class Book {
 
 
 See `org.hibernate.graph.GraphParser` for details on the syntax and the
-link:{user-guide-url}#fetching-strategies-dynamic-fetching-entity-graph-parsing-annotation[user guide] for additional details.
+link:{user-guide-url}#fetching-strategies-dynamic-fetching-entity-graph-parsing-annotation[User Guide] for additional details.
 
 
 [[enum-checks]]
@@ -212,6 +212,8 @@ In Hibernate 7, the configuration property `hibernate.jdbc.batch_size` now has n
 Automatic batching may be enabled by explicitly calling `setJdbcBatchSize()`.
 However, the preferred approach is to explicitly batch operations via `insertMultiple()`, `updateMultiple()`, or `deleteMultiple()`.
 
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // API changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -224,7 +226,9 @@ A general theme in 7.0 has been to remove Hibernate-specific features that have 
 [[session-load]]
 === Session#load
 
-`Session#load` methods have been removed in favor of `Session#getReference` which has the same semantic.
+`Session#load` methods have been removed in favor of `Session#getReference` which have the same semantic.
+
+NOTE: `Session#get` was not previously deprecated as `Session#load` was, so it was not appropriate to remove.  Starting in 7.0, `Session#get` is considered deprecated, to be removed in 8.0.  Per the deprecation notes, use `Session#find` instead.
 
 [[session-refresh]]
 === Session#refresh
@@ -248,13 +252,13 @@ All forms of `Session#save`, `Session#update`, `Session#saveOrUpdate` have been 
 `Session#saveOrUpdate`::
         Removed in favor `#persist` if the entity is transient or `#merge` if the entity is detached
 
-Relatedly, `org.hibernate.annotations.CascadeType#SAVE_UPDATE` has been removed in favor of `org.hibernate.annotations.CascadeType#PERSIST` and/or `org.hibernate.annotations.CascadeType#MERGE`
+Relatedly, `org.hibernate.annotations.CascadeType#SAVE_UPDATE` has been removed in favor of `org.hibernate.annotations.CascadeType#PERSIST` and/or `org.hibernate.annotations.CascadeType#MERGE`{fn-cascase-type}
 
 
 [[session-delete]]
 === Session#delete
 
-`Session#delete` methods has been removed in favor of `Session#remove` (via `EntityManager`).  Relatedly, `org.hibernate.annotations.CascadeType#DELETE` was removed in favor of `org.hibernate.annotations.CascadeType#REMOVE`
+`Session#delete` methods has been removed in favor of `Session#remove`.  Relatedly, `org.hibernate.annotations.CascadeType#DELETE` was removed in favor of `org.hibernate.annotations.CascadeType#REMOVE`{fn-cascase-type}
 
 [[load-fetch-graphs]]
 === org.hibernate.graph Package
@@ -328,6 +332,7 @@ The effect can also often be mitigated using Hibernate's bytecode-based laziness
 * Removed `Session.LockRequest` - use `LockOptions` instead
 
 
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // SPI changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -370,6 +375,7 @@ Additionally, `EmptyInterceptor` was removed.  As `org.hibernate.Interceptor` no
 was removed in favor of `org.hibernate.metamodel.MappingMetmodel` or `org.hibernate.metamodel.model.domain.JpaMetamodel`
 * Removed `AdditionalJaxbMappingProducer` in favor of `AdditionalMappingContributor`.
 * Removed `MetadataContributor` in favor of `AdditionalMappingContributor`
+
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -459,8 +465,6 @@ Hibernate now reports an error in this situation.
 
 This includes auto-applied converters.
 To suppress the error for an auto-applied converter, use `@Convert(disableConversion=true)`.
-
-
 
 
 

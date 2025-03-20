@@ -324,7 +324,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		);
 	}
 
-	private JdbcEnvironmentImpl getJdbcEnvironmentUsingJdbcMetadata(
+	// Used by Hibernate Reactive
+	protected JdbcEnvironmentImpl getJdbcEnvironmentUsingJdbcMetadata(
 			Map<String, Object> configurationValues,
 			ServiceRegistryImplementor registry,
 			DialectFactory dialectFactory, String explicitDatabaseName,

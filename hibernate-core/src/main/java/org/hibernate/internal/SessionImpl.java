@@ -1524,7 +1524,7 @@ public class SessionImpl
 		doFlush();
 	}
 
-	@Override
+	@Override @Deprecated
 	public Object instantiate(String entityName, Object id) {
 		return instantiate( requireEntityPersister( entityName ), id );
 	}

@@ -9,13 +9,13 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.function.Consumer;
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -130,8 +130,8 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	}
 
 	@Override
-	Predicate notEqualTo(Expression<?> value);
+	JpaPredicate notEqualTo(Expression<?> value);
 
 	@Override
-	Predicate notEqualTo(Object value);
+	JpaPredicate notEqualTo(Object value);
 }

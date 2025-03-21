@@ -95,7 +95,7 @@ import org.hibernate.loader.ast.internal.EntityConcreteTypeLoader;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.internal.MultiIdEntityLoaderArrayParam;
-import org.hibernate.loader.ast.internal.MultiIdEntityLoaderStandard;
+import org.hibernate.loader.ast.internal.MultiIdEntityLoaderInPredicate;
 import org.hibernate.loader.ast.internal.SingleIdArrayLoadPlan;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderProvidedQueryImpl;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderStandardImpl;
@@ -849,7 +849,7 @@ public abstract class AbstractEntityPersister
 		final Dialect dialect = factory.getJdbcServices().getDialect();
 		return getIdentifierType() instanceof BasicType && supportsSqlArrayType( dialect )
 				? new MultiIdEntityLoaderArrayParam<>( this, factory )
-				: new MultiIdEntityLoaderStandard<>( this, identifierColumnSpan, factory );
+				: new MultiIdEntityLoaderInPredicate<>( this, identifierColumnSpan, factory );
 	}
 
 	private String getIdentitySelectString(Dialect dialect) {

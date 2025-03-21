@@ -353,7 +353,10 @@ public interface SharedSessionContractImplementor
 
 	/**
 	 * Instantiate the entity class, initializing with the given identifier.
+	 *
+	 * @deprecated No longer used, replaced by {@link #instantiate(EntityPersister, Object)}
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	Object instantiate(String entityName, Object id) throws HibernateException;
 
 	/**

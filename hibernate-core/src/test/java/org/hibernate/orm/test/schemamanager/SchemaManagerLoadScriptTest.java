@@ -63,6 +63,27 @@ public class SchemaManagerLoadScriptTest {
 		factory.getSchemaManager().dropMappedObjects(true);
 	}
 
+	@Test
+	public void testExportPopulateValidateDrop(SessionFactoryScope scope) {
+		SessionFactoryImplementor factory = scope.getSessionFactory();
+		factory.getSchemaManager().exportMappedObjects(true);
+		scope.inTransaction( s -> s.createMutationQuery( "delete Author" ).executeUpdate() );
+		scope.inTransaction( s -> s.createMutationQuery( "delete Book" ).executeUpdate() );
+		scope.inTransaction( s -> assertEquals( 0, countBooks(s) ) );
+		scope.inTransaction( s -> assertEquals( 0, countAuthors(s) ) );
+		factory.getSchemaManager().populate();
+		scope.inTransaction( s -> assertEquals( 1, countBooks(s) ) );
+		scope.inTransaction( s -> assertEquals( 2, countAuthors(s) ) );
+		factory.getSchemaManager().validateMappedObjects();
+		Author author = new Author(); author.name = "Steve Ebersole";
+		scope.inTransaction( s -> s.persist(author) );
+		scope.inTransaction( s -> assertEquals( 1, countBooks(s) ) );
+		scope.inTransaction( s -> assertEquals( 3, countAuthors(s) ) );
+		factory.getSchemaManager().truncateMappedObjects();
+		scope.inTransaction( s -> assertEquals( 2, countAuthors(s) ) );
+		factory.getSchemaManager().dropMappedObjects(true);
+	}
+
 	@Entity(name="Book") @Table(name="Books")
 	static class Book {
 		@Id

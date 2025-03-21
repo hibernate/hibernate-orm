@@ -225,7 +225,7 @@ The new operation `Session.getManagedEntities()` allows the application program 
 [[schema-manager-populate]]
 === Data population
 
-`SchemaManager.populate()` populates an existing schema with initial data in `/import.sql` or other SQL scripts specified via `jakarta.persistence.sql-load-script-source`.
+Setting `jakarta.persistence.schema-generation.database.action=populate` or calling `SchemaManager.populate()` populates an existing schema with initial data in `/import.sql` or other SQL scripts specified via `jakarta.persistence.sql-load-script-source`.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

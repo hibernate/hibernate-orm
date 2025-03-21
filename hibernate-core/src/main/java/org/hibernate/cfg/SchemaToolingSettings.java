@@ -384,16 +384,19 @@ public interface SchemaToolingSettings {
 	 * <p>
 	 * The default value is {@code /import.sql}.
 	 *
-	 * @deprecated The JPA-standard setting {@link #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE} is now preferred.
+	 * @deprecated The JPA-standard setting {@link #JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE} is now preferred.
 	 */
 	@Deprecated
 	String HBM2DDL_IMPORT_FILES = "hibernate.hbm2ddl.import_files";
 
 	/**
-	 * Specifies if the default {@code /import.sql} script file should not be executed
-	 * when {@link #HBM2DDL_IMPORT_FILES} is not specified and {@value #HBM2DDL_AUTO} is set to {@code create} or {@code create-drop}.
+	 * Specifies that the default {@code /import.sql} script file should not be executed
+	 * when {@link #HBM2DDL_IMPORT_FILES} is not specified and {@value #HBM2DDL_AUTO}
+	 * is set to {@code create} or {@code create-drop}.
 	 *
-	 * The default value is {@code false}.
+	 * @settingDefault {@code false}.
+	 *
+	 * @since 6.6
 	 */
 	String HBM2DDL_SKIP_DEFAULT_IMPORT_FILE = "hibernate.hbm2ddl.skip_default_import_file";
 

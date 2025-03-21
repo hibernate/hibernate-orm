@@ -21,6 +21,9 @@ public interface SchemaManagementTool extends Service {
 	SchemaDropper getSchemaDropper(Map<String,Object> options);
 	SchemaMigrator getSchemaMigrator(Map<String,Object> options);
 	SchemaValidator getSchemaValidator(Map<String,Object> options);
+	default SchemaPopulator getSchemaPopulator(Map<String,Object> options) {
+		throw new UnsupportedOperationException("Schema populator is not supported by this schema management tool.");
+	}
 	default SchemaTruncator getSchemaTruncator(Map<String,Object> options) {
 		throw new UnsupportedOperationException("Schema truncator is not supported by this schema management tool.");
 	}

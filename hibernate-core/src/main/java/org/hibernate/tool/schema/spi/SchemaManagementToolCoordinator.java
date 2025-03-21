@@ -196,7 +196,7 @@ public class SchemaManagementToolCoordinator {
 			final ExecutionOptions executionOptions,
 			ContributableMatcher contributableInclusionFilter) {
 
-		// IMPL NOTE : JPA binds source and target info..
+		// IMPL NOTE : JPA binds source and target info
 
 		switch ( action ) {
 			case CREATE_ONLY: {
@@ -285,6 +285,16 @@ public class SchemaManagementToolCoordinator {
 						metadata,
 						executionOptions,
 						contributableInclusionFilter,
+						buildDatabaseTargetDescriptor(
+								executionOptions.getConfigurationValues(),
+								CreateSettingSelector.INSTANCE,
+								serviceRegistry
+						)
+				);
+			}
+			case POPULATE: {
+				tool.getSchemaPopulator( executionOptions.getConfigurationValues() ).doPopulation(
+						executionOptions,
 						buildDatabaseTargetDescriptor(
 								executionOptions.getConfigurationValues(),
 								CreateSettingSelector.INSTANCE,

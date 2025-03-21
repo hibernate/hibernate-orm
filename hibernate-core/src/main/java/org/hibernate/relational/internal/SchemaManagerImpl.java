@@ -90,6 +90,19 @@ public class SchemaManagerImpl implements SchemaManager {
 	}
 
 	@Override
+	public void populate() {
+		Map<String, Object> properties = new HashMap<>( sessionFactory.getProperties() );
+		properties.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.POPULATE );
+		properties.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
+		SchemaManagementToolCoordinator.process(
+				metadata,
+				sessionFactory.getServiceRegistry(),
+				properties,
+				action -> {}
+		);
+	}
+
+	@Override
 	public void create(boolean createSchemas) {
 		exportMappedObjects( createSchemas );
 	}

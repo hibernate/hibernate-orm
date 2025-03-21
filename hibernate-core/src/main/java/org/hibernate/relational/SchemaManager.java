@@ -62,8 +62,8 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	void validateMappedObjects();
 
 	/**
-	 * Truncate the database tables mapped by Hibernate entities, and
-	 * then re-import initial data from any configured
+	 * Truncate the database tables mapped by Hibernate entities, and then
+	 * reimport initial data from {@code /import.sql} and any other configured
 	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
 	 * load script}.
 	 * <p>
@@ -72,4 +72,16 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 * @apiNote This operation is a synonym for {@link #truncate}.
 	 */
 	void truncateMappedObjects();
+
+	/**
+	 * Populate the database by executing {@code /import.sql} and any other configured
+	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
+	 * load script}.
+	 * <p>
+	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaPopulator}.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	void populate();
 }

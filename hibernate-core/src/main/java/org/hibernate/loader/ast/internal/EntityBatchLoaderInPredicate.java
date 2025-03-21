@@ -57,10 +57,9 @@ public class EntityBatchLoaderInPredicate<T>
 		int idColumnCount =
 				entityDescriptor.getEntityPersister().getIdentifierType()
 						.getColumnSpan( sessionFactory .getRuntimeMetamodels());
-		this.sqlBatchSize = sessionFactory.getJdbcServices()
-				.getDialect()
-				.getBatchLoadSizingStrategy()
-				.determineOptimalBatchLoadSize( idColumnCount, domainBatchSize, false );
+		this.sqlBatchSize =
+				sessionFactory.getJdbcServices().getDialect().getBatchLoadSizingStrategy()
+						.determineOptimalBatchLoadSize( idColumnCount, domainBatchSize, false );
 
 		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.debugf(
@@ -128,10 +127,11 @@ public class EntityBatchLoaderInPredicate<T>
 			MULTI_KEY_LOAD_LOGGER.debugf( "Ids to batch-fetch initialize (`%s#%s`) %s",
 					getLoadable().getEntityName(), pkValue, Arrays.toString(idsToInitialize) );
 		}
+		final EntityIdentifierMapping identifierMapping = getLoadable().getIdentifierMapping();
 		final MultiKeyLoadChunker<Object> chunker = new MultiKeyLoadChunker<>(
 				sqlBatchSize,
-				getLoadable().getIdentifierMapping().getJdbcTypeCount(),
-				getLoadable().getIdentifierMapping(),
+				identifierMapping.getJdbcTypeCount(),
+				identifierMapping,
 				jdbcParameters,
 				sqlAst,
 				jdbcSelectOperation
@@ -145,19 +145,18 @@ public class EntityBatchLoaderInPredicate<T>
 				sqlBatchSize,
 				(jdbcParameterBindings, session1) -> {
 					// Create a RegistrationHandler for handling any subselect fetches we encounter handling this chunk
-					final SubselectFetch.RegistrationHandler registrationHandler = SubselectFetch.createRegistrationHandler(
-							batchFetchQueue,
-							sqlAst,
-							jdbcParameters,
-							jdbcParameterBindings
-					);
 					return new SingleIdExecutionContext(
 							pkValue,
 							entityInstance,
 							getLoadable().getRootEntityDescriptor(),
 							readOnly,
 							lockOptions,
-							registrationHandler,
+							SubselectFetch.createRegistrationHandler(
+									batchFetchQueue,
+									sqlAst,
+									jdbcParameters,
+									jdbcParameterBindings
+							),
 							session
 					);
 				},

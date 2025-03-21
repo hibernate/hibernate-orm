@@ -212,6 +212,20 @@ In Hibernate 7, the configuration property `hibernate.jdbc.batch_size` now has n
 Automatic batching may be enabled by explicitly calling `setJdbcBatchSize()`.
 However, the preferred approach is to explicitly batch operations via `insertMultiple()`, `updateMultiple()`, or `deleteMultiple()`.
 
+[[session-find-multiple]]
+=== findMultiple()
+
+The new operation `Session.findMultiple()`, along with the `BatchSize` option provides a convenient way to fetch a batch of entities by id.
+
+[[session-managed-entities]]
+=== Direct access to first-level cache
+
+The new operation `Session.getManagedEntities()` allows the application program to iterate over all entities in the first-level cache, or over all entities of a given type.
+
+[[schema-manager-populate]]
+=== Data population
+
+`SchemaManager.populate()` populates an existing schema with initial data in `/import.sql` or other SQL scripts specified via `jakarta.persistence.sql-load-script-source`.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

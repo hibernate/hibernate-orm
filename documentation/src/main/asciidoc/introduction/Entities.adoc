@@ -1082,7 +1082,8 @@ That said, it's possible to take this idea way to far.
 ****
 It's come to our attention that a vocal group of people advocate that Java entity classes should be broken up into tiny disconnected islands they call "aggregates". An aggregate--at least as a first approximation--corresponds roughly to what we would usually call a parent/child relationship.
 Simple examples of aggregates might be `Order`/`Item`, or `Product`/`Part`.
-According to this way of thinking, there should be no associations _between_ aggregates, that is, that the `Item.product` association should be replaced with `productId`, that `Part.manufacturer` should be replaced with `manufacturerId`, and so on.
+According to this way of thinking, there should be no associations _between_ aggregates.
+So the `Item.product` association should be replaced with `productId`, `Part.manufacturer` should be replaced with `manufacturerId`, and so on.
 (Of course, the word "aggregate" may also be employed in other senses, but this is the sense we're discussing right now.)
 
 In the example we've been using, `Book` would not be permitted to have a collection of entity type `Author`, and should instead hold only the ids of the authors, or perhaps instances of some `BookAuthor` type which duplicates some state of `Author` and is disconnected from the rest of the model.

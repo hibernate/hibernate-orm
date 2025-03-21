@@ -37,11 +37,11 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
  *
  * @author Steve Ebersole
  */
-public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<T> {
+public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoader<T> {
 
 	private final int idJdbcTypeCount;
 
-	public MultiIdEntityLoaderStandard(
+	public MultiIdEntityLoaderInPredicate(
 			EntityPersister entityDescriptor,
 			int idColumnSpan,
 			SessionFactoryImplementor sessionFactory) {

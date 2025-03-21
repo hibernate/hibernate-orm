@@ -8,9 +8,6 @@ import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.BatchFetchQueue;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
@@ -58,33 +55,6 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 
 	private MultiKeyLoadSizingStrategy getBatchLoadSizingStrategy() {
 		return getJdbcServices().getJdbcEnvironment().getDialect().getBatchLoadSizingStrategy();
-	}
-
-	@Override
-	protected void handleResults(
-			MultiIdLoadOptions loadOptions,
-			EventSource session,
-			List<Integer> elementPositionsLoadedByBatch,
-			List<Object> result) {
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		for ( Integer position : elementPositionsLoadedByBatch ) {
-			// the element value at this position in the result List should be
-			// the EntityKey for that entity; reuse it!
-			final EntityKey entityKey = (EntityKey) result.get( position );
-			Object entity = persistenceContext.getEntity( entityKey );
-			if ( entity != null && !loadOptions.isReturnOfDeletedEntitiesEnabled() ) {
-				// make sure it is not DELETED
-				final EntityEntry entry = persistenceContext.getEntry( entity );
-				if ( entry.getStatus().isDeletedOrGone() ) {
-					// the entity is locally deleted, and the options ask that we not return such entities...
-					entity = null;
-				}
-				else {
-					entity = persistenceContext.proxyFor( entity );
-				}
-			}
-			result.set( position, entity );
-		}
 	}
 
 	@Override
@@ -223,6 +193,6 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 	@Override
 	protected Object[] toIdArray(List<Object> ids) {
 		// This loader implementation doesn't need arrays to have a specific type, Object[] will do.
-		return ids.toArray( new Object[0] );
+		return ids.toArray();
 	}
 }

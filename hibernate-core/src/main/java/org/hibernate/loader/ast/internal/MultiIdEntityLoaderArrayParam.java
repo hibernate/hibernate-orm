@@ -9,9 +9,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.build.AllowReflection;
@@ -34,7 +31,6 @@ import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ManagedResultConsumer;
 
 import static java.lang.Boolean.TRUE;
-import static org.hibernate.engine.internal.BatchFetchQueueHelper.removeBatchLoadableEntityKey;
 import static org.hibernate.engine.spi.SubselectFetch.createRegistrationHandler;
 import static org.hibernate.loader.ast.internal.LoaderHelper.loadByArrayParameter;
 import static org.hibernate.loader.ast.internal.LoaderSelectBuilder.createSelectBySingleArrayParameter;
@@ -56,45 +52,14 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 		super( entityDescriptor, sessionFactory );
 		final Class<?> idClass = identifierMapping.getJavaType().getJavaTypeClass();
 		idArray = (Object[]) Array.newInstance( idClass, 0 );
-		arrayJdbcMapping = resolveArrayJdbcMapping(
-				getIdentifierMapping().getJdbcMapping(),
-				idClass,
-				getSessionFactory()
-		);
+		arrayJdbcMapping =
+				resolveArrayJdbcMapping( getIdentifierMapping().getJdbcMapping(), idClass, getSessionFactory() );
 		jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
 	}
 
 	@Override
 	public BasicEntityIdentifierMapping getIdentifierMapping() {
 		return (BasicEntityIdentifierMapping) super.getIdentifierMapping();
-	}
-
-	@Override
-	protected void handleResults(
-			MultiIdLoadOptions loadOptions,
-			EventSource session,
-			List<Integer> elementPositionsLoadedByBatch,
-			List<Object> result) {
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		for ( Integer position : elementPositionsLoadedByBatch ) {
-			// the element value at this position in the result List should be
-			// the EntityKey for that entity - reuse it
-			final EntityKey entityKey = (EntityKey) result.get( position );
-			removeBatchLoadableEntityKey( entityKey, session );
-			Object entity = persistenceContext.getEntity( entityKey );
-			if ( entity != null && !loadOptions.isReturnOfDeletedEntitiesEnabled() ) {
-				// make sure it is not DELETED
-				final EntityEntry entry = persistenceContext.getEntry( entity );
-				if ( entry.getStatus().isDeletedOrGone() ) {
-					// the entity is locally deleted, and the options ask that we not return such entities...
-					entity = null;
-				}
-				else {
-					entity = persistenceContext.proxyFor( entity );
-				}
-			}
-			result.set( position, entity );
-		}
 	}
 
 	@Override
@@ -186,15 +151,6 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				session
 		);
 		result.addAll( databaseResults );
-
-		for ( Object id : unresolvableIds ) {
-			// skip any of the null padded ids
-			// (actually we could probably even break on the first null)
-			if ( id != null ) {
-				// found or not, remove the key from the batch-fetch queue
-				removeBatchLoadableEntityKey( id, getLoadable(), session );
-			}
-		}
 	}
 
 	@Override
@@ -207,7 +163,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 			return ids;
 		}
 		else {
-			Object[] typedIdArray = Arrays.copyOf( idArray, ids.length );
+			final Object[] typedIdArray = Arrays.copyOf( idArray, ids.length );
 			System.arraycopy( ids, 0, typedIdArray, 0, ids.length );
 			return typedIdArray;
 		}

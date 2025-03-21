@@ -9,7 +9,6 @@ import java.util.Locale;
 
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.BatchFetchQueue;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
@@ -17,6 +16,7 @@ import org.hibernate.loader.ast.spi.EntityBatchLoader;
 import org.hibernate.loader.ast.spi.SqlInPredicateMultiKeyLoader;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
@@ -41,7 +41,6 @@ public class EntityBatchLoaderInPredicate<T>
 	private final int domainBatchSize;
 	private final int sqlBatchSize;
 
-	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final JdbcParametersList jdbcParameters;
 	private final SelectStatement sqlAst;
 	private final JdbcOperationQuerySelect jdbcSelectOperation;
@@ -54,7 +53,6 @@ public class EntityBatchLoaderInPredicate<T>
 			EntityMappingType entityDescriptor,
 			LoadQueryInfluencers loadQueryInfluencers) {
 		super( entityDescriptor, loadQueryInfluencers );
-		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.domainBatchSize = domainBatchSize;
 		int idColumnCount =
 				entityDescriptor.getEntityPersister().getIdentifierType()
@@ -140,6 +138,7 @@ public class EntityBatchLoaderInPredicate<T>
 		);
 
 		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
+		final EntityPersister persister = getLoadable().getEntityPersister();
 
 		chunker.processChunks(
 				idsToInitialize,
@@ -164,11 +163,7 @@ public class EntityBatchLoaderInPredicate<T>
 				},
 				(key, relativePosition, absolutePosition) -> {
 					if ( key != null ) {
-						final EntityKey entityKey = session.generateEntityKey(
-								key,
-								getLoadable().getEntityPersister()
-						);
-						batchFetchQueue.removeBatchLoadableEntityKey( entityKey );
+						batchFetchQueue.removeBatchLoadableEntityKey( session.generateEntityKey( key, persister ) );
 					}
 				},
 				(startIndex) -> {

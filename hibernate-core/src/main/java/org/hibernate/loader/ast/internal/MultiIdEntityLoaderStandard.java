@@ -32,7 +32,8 @@ import static org.hibernate.loader.ast.internal.LoaderSelectBuilder.createSelect
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
 /**
- * Standard MultiIdEntityLoader
+ * Standard implementation of {@link org.hibernate.loader.ast.spi.MultiIdEntityLoader}
+ * which uses a SQL {@code in} condition containing multiple JDBC parameters.
  *
  * @author Steve Ebersole
  */

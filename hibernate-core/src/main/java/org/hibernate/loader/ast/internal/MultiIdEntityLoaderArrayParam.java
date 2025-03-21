@@ -38,9 +38,13 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.resolveArrayJ
 import static org.hibernate.sql.exec.spi.JdbcParameterBindings.NO_BINDINGS;
 
 /**
+ * Implementation of {@link org.hibernate.loader.ast.spi.MultiIdEntityLoader}
+ * which uses a single JDBC parameter of SQL array type.
+ *
  * @author Steve Ebersole
  */
-public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoader<E> implements SqlArrayMultiKeyLoader {
+public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoader<E>
+		implements SqlArrayMultiKeyLoader {
 	private final JdbcMapping arrayJdbcMapping;
 	private final JdbcParameter jdbcParameter;
 	protected final Object[] idArray;

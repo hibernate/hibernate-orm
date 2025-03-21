@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
@@ -80,7 +81,7 @@ public class BatchFetchingTest extends BaseEntityManagerFunctionalTestCase {
 		private Long id;
 
 		@OneToMany(mappedBy = "department")
-		//@BatchSize(size = 5)
+		@BatchSize(size = 5)
 		private List<Employee> employees = new ArrayList<>();
 
 		//Getters and setters omitted for brevity

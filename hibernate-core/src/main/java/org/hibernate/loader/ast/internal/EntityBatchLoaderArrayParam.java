@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Locale;
 
 import org.hibernate.LockOptions;
+import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.build.AllowReflection;
@@ -17,6 +18,7 @@ import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -24,7 +26,6 @@ import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
-import static org.hibernate.engine.internal.BatchFetchQueueHelper.removeBatchLoadableEntityKey;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
@@ -40,7 +41,6 @@ public class EntityBatchLoaderArrayParam<T>
 		implements SqlArrayMultiKeyLoader {
 	private final int domainBatchSize;
 
-	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final BasicEntityIdentifierMapping identifierMapping;
 	private final JdbcMapping arrayJdbcMapping;
 	private final JdbcParameter jdbcParameter;
@@ -64,7 +64,6 @@ public class EntityBatchLoaderArrayParam<T>
 			EntityMappingType entityDescriptor,
 			LoadQueryInfluencers loadQueryInfluencers) {
 		super( entityDescriptor, loadQueryInfluencers );
-		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.domainBatchSize = domainBatchSize;
 
 		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
@@ -133,10 +132,12 @@ public class EntityBatchLoaderArrayParam<T>
 					getLoadable().getEntityName(), id, Arrays.toString(idsToInitialize) );
 		}
 
+		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
+		final EntityPersister persister = getLoadable().getEntityPersister();
 		for ( Object initializedId : idsToInitialize ) {
 			if ( initializedId != null ) {
 				// found or not, remove the key from the batch-fetch queue
-				removeBatchLoadableEntityKey( initializedId, getLoadable(), session );
+				batchFetchQueue.removeBatchLoadableEntityKey( session.generateEntityKey( initializedId, persister ) );
 			}
 		}
 

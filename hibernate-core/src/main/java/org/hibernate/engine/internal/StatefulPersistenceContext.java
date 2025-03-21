@@ -931,8 +931,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Object proxyFor(Object impl) throws HibernateException {
-		final EntityEntry e = getEntry( impl );
-		return e == null ? impl : proxyFor( e.getPersister(), e.getEntityKey(), impl );
+		final EntityEntry entry = getEntry( impl );
+		return entry == null ? impl : proxyFor( entry.getPersister(), entry.getEntityKey(), impl );
 	}
 
 	@Override
@@ -1026,15 +1026,12 @@ class StatefulPersistenceContext implements PersistenceContext {
 		if ( ce == null || ce.getLoadedPersister() == null ) {
 			return null;
 		}
-
-		Object loadedOwner = null;
-		// TODO: an alternative is to check if the owner has changed; if it hasn't then
-		// return collection.getOwner()
-		final Object entityId = getLoadedCollectionOwnerIdOrNull( ce );
-		if ( entityId != null ) {
-			loadedOwner = getCollectionOwner( entityId, ce.getLoadedPersister() );
+		else {
+			// TODO: an alternative is to check if the owner has changed; if it hasn't then
+			// return collection.getOwner()
+			final Object entityId = getLoadedCollectionOwnerIdOrNull( ce );
+			return entityId != null ? getCollectionOwner( entityId, ce.getLoadedPersister() ) : null;
 		}
-		return loadedOwner;
 	}
 
 	@Override
@@ -1052,9 +1049,12 @@ class StatefulPersistenceContext implements PersistenceContext {
 		if ( ce == null || ce.getLoadedKey() == null || ce.getLoadedPersister() == null ) {
 			return null;
 		}
-		// TODO: an alternative is to check if the owner has changed; if it hasn't then
-		// get the ID from collection.getOwner()
-		return ce.getLoadedPersister().getCollectionType().getIdOfOwnerOrNull( ce.getLoadedKey(), session );
+		else {
+			// TODO: an alternative is to check if the owner has changed; if it hasn't then
+			// get the ID from collection.getOwner()
+			return ce.getLoadedPersister().getCollectionType()
+					.getIdOfOwnerOrNull( ce.getLoadedKey(), session );
+		}
 	}
 
 	@Override

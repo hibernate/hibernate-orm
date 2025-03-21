@@ -72,10 +72,12 @@ import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static java.util.Collections.emptyMap;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -183,7 +185,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 	private Map<EntityKey, EntityHolderImpl> getOrInitializeEntitiesByKey() {
 		if ( entitiesByKey == null ) {
-			entitiesByKey = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
+			entitiesByKey = mapOfSize( INIT_COLL_SIZE );
 		}
 		return entitiesByKey;
 	}
@@ -484,17 +486,10 @@ class StatefulPersistenceContext implements PersistenceContext {
 				postLoadEvent.setEntity( holder.getEntity() )
 						.setId( holder.getEntityKey().getIdentifier() )
 						.setPersister( holder.getDescriptor() );
-				listenerGroup.fireEventOnEachListener(
-						postLoadEvent,
-						PostLoadEventListener::onPostLoad
-				);
+				listenerGroup.fireEventOnEachListener( postLoadEvent, PostLoadEventListener::onPostLoad );
 			}
 			if ( callback != null ) {
-				callback.invokeAfterLoadActions(
-						holder.getEntity(),
-						holder.getDescriptor(),
-						getSession()
-				);
+				callback.invokeAfterLoadActions( holder.getEntity(), holder.getDescriptor(), getSession() );
 			}
 			holder.resetEntityInitialier();
 		}
@@ -599,7 +594,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void addEntity(EntityUniqueKey euk, Object entity) {
 		if ( entitiesByUniqueKey == null ) {
-			entitiesByUniqueKey = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
+			entitiesByUniqueKey = mapOfSize( INIT_COLL_SIZE );
 		}
 		entitiesByUniqueKey.put( euk, entity );
 	}
@@ -733,7 +728,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public boolean containsCollection(PersistentCollection<?> collection) {
-		return collectionEntries != null && collectionEntries.containsKey( collection.$$_hibernate_getInstanceId(), collection );
+		return collectionEntries != null
+			&& collectionEntries.containsKey( collection.$$_hibernate_getInstanceId(), collection );
 	}
 
 	@Override
@@ -818,9 +814,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 		final LazyInitializer lazyInitializer = extractLazyInitializer( maybeProxy );
 		if ( lazyInitializer != null ) {
 			if ( lazyInitializer.isUninitialized() ) {
-				throw new PersistentObjectException(
-						"object was an uninitialized proxy for " + lazyInitializer.getEntityName()
-				);
+				throw new PersistentObjectException( "object was an uninitialized proxy for "
+														+ lazyInitializer.getEntityName() );
 			}
 			//unwrap the object and return
 			return lazyInitializer.getImplementation();
@@ -839,10 +834,11 @@ class StatefulPersistenceContext implements PersistenceContext {
 			return lazyInitializer.getImplementation();
 		}
 		else if ( isPersistentAttributeInterceptable( maybeProxy ) ) {
-			final PersistentAttributeInterceptable interceptable = asPersistentAttributeInterceptable( maybeProxy );
-			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( maybeProxy, null );
+			final PersistentAttributeInterceptor interceptor =
+					asPersistentAttributeInterceptable( maybeProxy )
+							.$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
+				lazinessInterceptor.forceInitialize( maybeProxy, null );
 			}
 			return maybeProxy;
 		}
@@ -893,7 +889,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 
 			// Otherwise, create the narrowed proxy
-			final HibernateProxy narrowedProxy = asHibernateProxy( persister.createProxy( key.getIdentifier(), session ) );
+			final HibernateProxy narrowedProxy =
+					asHibernateProxy( persister.createProxy( key.getIdentifier(), session ) );
 			// set the read-only/modifiable mode in the new proxy to what it was in the original proxy
 			narrowedProxy.getHibernateLazyInitializer().setReadOnly( lazyInitializer.isReadOnly() );
 			return narrowedProxy;
@@ -1309,9 +1306,9 @@ class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Map<EntityKey,Object> getEntitiesByKey() {
 		if ( entitiesByKey == null ) {
-			return Collections.emptyMap();
+			return emptyMap();
 		}
-		final HashMap<EntityKey, Object> result = CollectionHelper.mapOfSize( entitiesByKey.size() );
+		final HashMap<EntityKey, Object> result = mapOfSize( entitiesByKey.size() );
 		for ( Entry<EntityKey, EntityHolderImpl> entry : entitiesByKey.entrySet() ) {
 			if ( entry.getValue().entity != null ) {
 				result.put( entry.getKey(), entry.getValue().entity );
@@ -1330,7 +1327,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Map<EntityKey, Object> getOrInitializeEntitySnapshotsByKey() {
 		if ( entitySnapshotsByKey == null ) {
-			entitySnapshotsByKey = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
+			entitySnapshotsByKey = mapOfSize( INIT_COLL_SIZE );
 		}
 		return entitySnapshotsByKey;
 	}
@@ -1384,11 +1381,6 @@ class StatefulPersistenceContext implements PersistenceContext {
 		return entityEntryContext.getNumberOfManagedEntities();
 	}
 
-//	@Override
-//	public Map getEntityEntries() {
-//		return null;
-//	}
-
 	/**
 	 * @deprecated We should not expose this directly: the other accessors that have been created as a replacement
 	 * have better chances of skipping initializing this map, which is a good performance improvement.
@@ -1420,7 +1412,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Map<CollectionKey,PersistentCollection<?>> getCollectionsByKey() {
-		return collectionsByKey == null ? Collections.emptyMap() : collectionsByKey;
+		return collectionsByKey == null ? emptyMap() : collectionsByKey;
 	}
 
 	@Override
@@ -1997,7 +1989,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 				LOG.trace( "Starting deserialization of [" + count + "] entitiesByUniqueKey entries" );
 			}
 			if ( count != 0 ) {
-				rtn.entitiesByUniqueKey = CollectionHelper.mapOfSize(Math.max(count, INIT_COLL_SIZE));
+				rtn.entitiesByUniqueKey = mapOfSize(Math.max(count, INIT_COLL_SIZE));
 				for ( int i = 0; i < count; i++ ) {
 					rtn.entitiesByUniqueKey.put( EntityUniqueKey.deserialize( ois, session ), ois.readObject() );
 				}
@@ -2007,7 +1999,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 			if ( traceEnabled ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitySnapshotsByKey entries" );
 			}
-			rtn.entitySnapshotsByKey = CollectionHelper.mapOfSize(Math.max(count, INIT_COLL_SIZE));
+			rtn.entitySnapshotsByKey = mapOfSize(Math.max(count, INIT_COLL_SIZE));
 			for ( int i = 0; i < count; i++ ) {
 				rtn.entitySnapshotsByKey.put( EntityKey.deserialize( ois, sfi ), ois.readObject() );
 			}
@@ -2018,7 +2010,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 			if ( traceEnabled ) {
 				LOG.trace( "Starting deserialization of [" + count + "] entitiesByKey entries" );
 			}
-			rtn.entitiesByKey = CollectionHelper.mapOfSize(Math.max(count, INIT_COLL_SIZE));
+			rtn.entitiesByKey = mapOfSize(Math.max(count, INIT_COLL_SIZE));
 			for ( int i = 0; i < count; i++ ) {
 				final EntityKey ek = EntityKey.deserialize( ois, sfi );
 				final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( (String) ois.readObject() );
@@ -2048,7 +2040,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 			if ( traceEnabled ) {
 				LOG.trace( "Starting deserialization of [" + count + "] collectionsByKey entries" );
 			}
-			rtn.collectionsByKey = CollectionHelper.mapOfSize(Math.max(count, INIT_COLL_SIZE));
+			rtn.collectionsByKey = mapOfSize(Math.max(count, INIT_COLL_SIZE));
 			for ( int i = 0; i < count; i++ ) {
 				rtn.collectionsByKey.put(
 						CollectionKey.deserialize( ois, session ),
@@ -2230,7 +2222,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public PersistentCollection<?> addCollectionByKey(CollectionKey collectionKey, PersistentCollection<?> persistentCollection) {
 		if ( collectionsByKey == null ) {
-			collectionsByKey = CollectionHelper.mapOfSize( INIT_COLL_SIZE );
+			collectionsByKey = mapOfSize( INIT_COLL_SIZE );
 		}
 		return collectionsByKey.put( collectionKey, persistentCollection );
 	}

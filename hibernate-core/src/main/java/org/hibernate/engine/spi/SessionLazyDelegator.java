@@ -4,12 +4,14 @@
  */
 package org.hibernate.engine.spi;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
@@ -418,6 +420,26 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public LobHelper getLobHelper() {
 		return this.lazySession.get().getLobHelper();
+	}
+
+	@Override
+	public Collection<?> getManagedEntities() {
+		return this.lazySession.get().getManagedEntities();
+	}
+
+	@Override
+	public Collection<?> getManagedEntities(String entityName) {
+		return this.lazySession.get().getManagedEntities( entityName );
+	}
+
+	@Override
+	public <E> Collection<E> getManagedEntities(Class<E> entityType) {
+		return this.lazySession.get().getManagedEntities( entityType );
+	}
+
+	@Override
+	public <E> Collection<E> getManagedEntities(EntityType<E> entityType) {
+		return this.lazySession.get().getManagedEntities( entityType );
 	}
 
 	@Override

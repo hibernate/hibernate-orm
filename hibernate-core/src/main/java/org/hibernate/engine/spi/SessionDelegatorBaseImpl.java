@@ -4,12 +4,14 @@
  */
 package org.hibernate.engine.spi;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
+import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
@@ -1113,6 +1115,26 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public LobHelper getLobHelper() {
 		return delegate.getLobHelper();
+	}
+
+	@Override
+	public Collection<?> getManagedEntities() {
+		return delegate.getManagedEntities();
+	}
+
+	@Override
+	public Collection<?> getManagedEntities(String entityName) {
+		return delegate.getManagedEntities( entityName );
+	}
+
+	@Override
+	public <E> Collection<E> getManagedEntities(Class<E> entityType) {
+		return delegate.getManagedEntities( entityType );
+	}
+
+	@Override
+	public <E> Collection<E> getManagedEntities(EntityType<E> entityType) {
+		return delegate.getManagedEntities( entityType );
 	}
 
 	@Override

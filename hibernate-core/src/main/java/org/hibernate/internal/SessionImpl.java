@@ -16,6 +16,7 @@ import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ import java.util.TimeZone;
 
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
+import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
@@ -64,6 +66,7 @@ import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.ActionQueue.TransactionCompletionProcesses;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -106,6 +109,7 @@ import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEvent;
 import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.loader.internal.CacheLoadHelper;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.event.monitor.spi.EventMonitor;
@@ -2981,6 +2985,38 @@ public class SessionImpl
 	public Metamodel getMetamodel() {
 		checkOpen();
 		return getFactory().getJpaMetamodel();
+	}
+
+	@Override
+	public Collection<?> getManagedEntities() {
+		return persistenceContext.getEntityHoldersByKey()
+				.values().stream().map( EntityHolder::getManagedObject )
+				.toList();
+	}
+
+	@Override
+	public Collection<?> getManagedEntities(String entityName) {
+		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
+				.filter( entry -> entry.getKey().getEntityName().equals( entityName ) )
+				.map( entry -> entry.getValue().getManagedObject() )
+				.toList();
+	}
+
+	@Override
+	public <E> Collection<E> getManagedEntities(Class<E> entityType) {
+		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
+				.filter( entry -> entry.getKey().getPersister().getMappedClass().equals( entityType ) )
+				.map( entry -> (E) entry.getValue().getManagedObject() )
+				.toList();
+	}
+
+	@Override
+	public <E> Collection<E> getManagedEntities(EntityType<E> entityType) {
+		final String entityName = ( (EntityDomainType<E>) entityType ).getHibernateEntityName();
+		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
+				.filter( entry -> entry.getKey().getEntityName().equals( entityName ) )
+				.map( entry -> (E) entry.getValue().getManagedObject() )
+				.toList();
 	}
 
 	/**

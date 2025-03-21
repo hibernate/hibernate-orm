@@ -87,17 +87,15 @@ public final class MessageHelper {
 			info.append( " with null id" );
 		}
 		else {
-			info.append( " with id '" ).append( id ).append( "'" );
+			info.append( " with id '" );
 			if ( idType == null ) {
 				info.append( id );
 			}
+			else if ( factory != null ) {
+				info.append( idType.toLoggableString( id, factory ) );
+			}
 			else {
-				if ( factory != null ) {
-					info.append( idType.toLoggableString( id, factory ) );
-				}
-				else {
-					info.append( "<not loggable>" );
-				}
+				info.append( "<not loggable>" );
 			}
 			info.append( "'" );
 		}

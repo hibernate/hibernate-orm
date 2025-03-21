@@ -225,8 +225,8 @@ public enum Action {
 			return NONE;
 		}
 
-		if ( value instanceof Action ) {
-			return (Action) value;
+		if ( value instanceof Action action ) {
+			return action;
 		}
 
 		final String name = value.toString().trim();
@@ -277,8 +277,8 @@ public enum Action {
 			return NONE;
 		}
 
-		if ( value instanceof Action ) {
-			return (Action) value;
+		if ( value instanceof Action action ) {
+			return action;
 		}
 
 		final String name = value.toString().trim();

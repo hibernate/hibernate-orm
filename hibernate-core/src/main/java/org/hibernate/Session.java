@@ -1275,6 +1275,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @since 7.0
 	 */
+	@Incubating
 	Collection<?> getManagedEntities();
 
 	/**
@@ -1283,6 +1284,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @since 7.0
 	 */
+	@Incubating
 	Collection<?> getManagedEntities(String entityName);
 
 	/**
@@ -1292,6 +1294,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @since 7.0
 	 */
+	@Incubating
 	<E> Collection<E> getManagedEntities(Class<E> entityType);
 
 	/**
@@ -1301,6 +1304,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @since 7.0
 	 */
+	@Incubating
 	<E> Collection<E> getManagedEntities(EntityType<E> entityType);
 
 	/**

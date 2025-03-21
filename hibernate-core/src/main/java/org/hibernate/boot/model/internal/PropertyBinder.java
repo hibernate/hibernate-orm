@@ -1264,26 +1264,25 @@ public class PropertyBinder {
 	 * Should this property be considered optional, without considering
 	 * whether it is primitive?
 	 *
-	 * @apiNote Poorly named to a degree.  The intention is really whether non-optional is explicit
+	 * @apiNote Poorly named to a degree.
+	 *          The intention is really whether non-optional is explicit
 	 */
 	private static boolean isExplicitlyOptional(MemberDetails attributeMember) {
-		final Basic basicAnn = attributeMember.getDirectAnnotationUsage( Basic.class );
-		if ( basicAnn == null ) {
-			// things are optional (nullable) by default.  If there is no annotation, that cannot be altered
-			return true;
-		}
-
-		return basicAnn.optional();
+		final Basic basic = attributeMember.getDirectAnnotationUsage( Basic.class );
+		// things are optional (nullable) by default.
+		// If there is no annotation, that cannot be altered
+		return basic == null || basic.optional();
 	}
 
 	/**
-	 * Should this property be considered optional, taking into
-	 * account whether it is primitive?
+	 * Should this property be considered optional, taking into account
+	 * whether it is primitive?
 	 */
 	public static boolean isOptional(MemberDetails attributeMember, PropertyHolder propertyHolder) {
-		final Basic basicAnn = attributeMember.getDirectAnnotationUsage( Basic.class );
-		if ( basicAnn != null ) {
-			return basicAnn.optional();
+		final Basic basic = attributeMember.getDirectAnnotationUsage( Basic.class );
+		if ( basic != null ) {
+			return basic.optional()
+				&& attributeMember.getType().getTypeKind() != TypeDetails.Kind.PRIMITIVE;
 		}
 		else if ( attributeMember.isArray() ) {
 			return true;

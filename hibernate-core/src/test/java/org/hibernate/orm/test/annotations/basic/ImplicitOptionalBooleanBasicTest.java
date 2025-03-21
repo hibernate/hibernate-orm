@@ -12,12 +12,11 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * <pre>
@@ -37,17 +36,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @ServiceRegistry()
 @JiraKey("HHH-19279")
-class ImpliciteOptionalBooleanBasicTest {
+class ImplicitOptionalBooleanBasicTest {
 
-	@NotImplementedYet
 	@Test
-	void testImpliciteOptionalBooleanBasic(ServiceRegistryScope registryScope) {
+	void testImplicitOptionalBooleanBasic(ServiceRegistryScope registryScope) {
 		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
 				.addAnnotatedClasses( BooleanBasicTest.class );
 		Metadata metadata = metadataSources.buildMetadata();
 		PersistentClass entityBinding = metadata.getEntityBinding( BooleanBasicTest.class.getName() );
-		assertTrue( entityBinding.getProperty( "booleanWithBasic" ).isOptional(), "booleanWithBasic property is not optional" );
-		assertTrue( entityBinding.getProperty( "booleanWithoutBasic" ).isOptional(), "booleanWithoutBasic property is not optional" );
+		assertFalse( entityBinding.getProperty( "booleanWithBasic" ).isOptional(), "primitive property is optional" );
+		assertFalse( entityBinding.getProperty( "booleanWithoutBasic" ).isOptional(), "primitive property is optional" );
 	}
 
 	@Entity

@@ -4,10 +4,12 @@
  */
 package org.hibernate;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
 import jakarta.persistence.FindOption;
+import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.Work;
 import org.hibernate.query.Query;
@@ -1266,6 +1268,40 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return an instance of {@link LobHelper}
 	 */
 	LobHelper getLobHelper();
+
+	/**
+	 * Obtain the collection of all managed entities which belong to this
+	 * persistence context.
+	 *
+	 * @since 7.0
+	 */
+	Collection<?> getManagedEntities();
+
+	/**
+	 * Obtain a collection of all managed instances of the entity type with the
+	 * given entity name which belong to this persistence context.
+	 *
+	 * @since 7.0
+	 */
+	Collection<?> getManagedEntities(String entityName);
+
+	/**
+	 * Obtain a collection of all managed entities of the given type which belong
+	 * to this persistence context. This operation is not polymorphic, and does
+	 * not return instances of subtypes of the given entity type.
+	 *
+	 * @since 7.0
+	 */
+	<E> Collection<E> getManagedEntities(Class<E> entityType);
+
+	/**
+	 * Obtain a collection of all managed entities of the given type which belong
+	 * to this persistence context. This operation is not polymorphic, and does
+	 * not return instances of subtypes of the given entity type.
+	 *
+	 * @since 7.0
+	 */
+	<E> Collection<E> getManagedEntities(EntityType<E> entityType);
 
 	/**
 	 * Obtain a {@link Session} builder with the ability to copy certain

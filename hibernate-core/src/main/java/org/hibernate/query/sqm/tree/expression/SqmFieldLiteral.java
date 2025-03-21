@@ -27,7 +27,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -163,12 +162,12 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 	}
 
 	@Override
-	public Predicate notEqualTo(Expression<?> that) {
+	public SqmPredicate notEqualTo(Expression<?> that) {
 		return nodeBuilder().notEqual( this, that );
 	}
 
 	@Override
-	public Predicate notEqualTo(Object that) {
+	public SqmPredicate notEqualTo(Object that) {
 		return nodeBuilder().notEqual( this, that );
 	}
 

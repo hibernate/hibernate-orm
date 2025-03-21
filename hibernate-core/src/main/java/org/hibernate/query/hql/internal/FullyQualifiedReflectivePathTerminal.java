@@ -30,7 +30,6 @@ import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
@@ -219,12 +218,12 @@ public class FullyQualifiedReflectivePathTerminal<E>
 	}
 
 	@Override
-	public Predicate notEqualTo(Expression value) {
+	public SqmPredicate notEqualTo(Expression value) {
 		return null;
 	}
 
 	@Override
-	public Predicate notEqualTo(Object value) {
+	public SqmPredicate notEqualTo(Object value) {
 		return null;
 	}
 

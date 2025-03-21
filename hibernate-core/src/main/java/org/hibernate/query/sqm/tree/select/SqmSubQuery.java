@@ -21,6 +21,7 @@ import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
+import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.common.FetchClauseType;
@@ -746,12 +747,12 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	public Predicate notEqualTo(Expression<?> value) {
+	public JpaPredicate notEqualTo(Expression<?> value) {
 		return nodeBuilder().notEqual( this, value );
 	}
 
 	@Override
-	public Predicate notEqualTo(Object value) {
+	public JpaPredicate notEqualTo(Object value) {
 		return nodeBuilder().notEqual( this, value );
 	}
 

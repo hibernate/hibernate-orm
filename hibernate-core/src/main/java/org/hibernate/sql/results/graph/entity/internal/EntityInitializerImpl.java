@@ -932,10 +932,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			// Entity is most probably initialized
 			data.entityInstanceForNotify = instance;
 			data.concreteDescriptor = session.getEntityPersister( null, instance );
-			resolveEntityKey(
-					data,
-					data.concreteDescriptor.getIdentifier( instance, session )
-			);
+			resolveEntityKey( data, data.concreteDescriptor.getIdentifier( instance, session ) );
 			data.entityHolder = persistenceContext.getEntityHolder( data.entityKey );
 			if ( data.entityHolder == null ) {
 				// Entity was most probably removed in the same session without setting this association to null.
@@ -950,7 +947,8 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			}
 			if ( data.concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
 					&& isPersistentAttributeInterceptable( data.entityInstanceForNotify )
-					&& getAttributeInterceptor( data.entityInstanceForNotify ) instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor
+					&& getAttributeInterceptor( data.entityInstanceForNotify )
+						instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor
 					&& !enhancementInterceptor.isInitialized() ) {
 				data.setState( State.RESOLVED );
 			}
@@ -1033,14 +1031,14 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			}
 			resolveEntityKey( data, id );
 		}
-		final PersistenceContext persistenceContext = rowProcessingState.getSession()
-				.getPersistenceContextInternal();
-		data.entityHolder = persistenceContext.claimEntityHolderIfPossible(
-				data.entityKey,
-				null,
-				rowProcessingState.getJdbcValuesSourceProcessingState(),
-				this
-		);
+		data.entityHolder =
+				rowProcessingState.getSession().getPersistenceContextInternal()
+						.claimEntityHolderIfPossible(
+								data.entityKey,
+								null,
+								rowProcessingState.getJdbcValuesSourceProcessingState(),
+								this
+						);
 
 		if ( useEmbeddedIdentifierInstanceAsEntity( data ) ) {
 			data.setInstance( data.entityInstanceForNotify = rowProcessingState.getEntityId() );
@@ -1078,8 +1076,9 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 
 	protected void resolveEntityInstance1(EntityInitializerData data) {
 		final Object proxy = data.entityHolder.getProxy();
-		final boolean unwrapProxy = proxy != null && referencedModelPart instanceof ToOneAttributeMapping
-				&& ( (ToOneAttributeMapping) referencedModelPart ).isUnwrapProxy()
+		final boolean unwrapProxy = proxy != null
+				&& referencedModelPart instanceof ToOneAttributeMapping toOneAttributeMapping
+				&& toOneAttributeMapping.isUnwrapProxy()
 				&& getConcreteDescriptor( data ).getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 		final Object entityFromExecutionContext;
 		if ( !unwrapProxy && isProxyInstance( proxy ) ) {
@@ -1265,10 +1264,8 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	}
 
 	protected Object instantiateEntity(EntityInitializerData data) {
-		return data.getRowProcessingState().getSession().instantiate(
-				data.concreteDescriptor,
-				data.entityKey.getIdentifier()
-		);
+		return data.getRowProcessingState().getSession()
+				.instantiate( data.concreteDescriptor, data.entityKey.getIdentifier() );
 	}
 
 	private Object resolveToOptionalInstance(EntityInitializerData data) {
@@ -1276,7 +1273,9 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			// this isEntityReturn bit is just for entity loaders, not hql/criteria
 			final JdbcValuesSourceProcessingOptions processingOptions =
 					data.getRowProcessingState().getJdbcValuesSourceProcessingState().getProcessingOptions();
-			return matchesOptionalInstance( data, processingOptions ) ? processingOptions.getEffectiveOptionalObject() : null;
+			return matchesOptionalInstance( data, processingOptions )
+					? processingOptions.getEffectiveOptionalObject()
+					: null;
 		}
 		else {
 			return null;
@@ -1289,8 +1288,8 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		final Object optionalEntityInstance = processingOptions.getEffectiveOptionalObject();
 		final Object requestedEntityId = processingOptions.getEffectiveOptionalId();
 		return requestedEntityId != null
-				&& optionalEntityInstance != null
-				&& areKeysEqual( requestedEntityId, data.entityKey.getIdentifier() );
+			&& optionalEntityInstance != null
+			&& areKeysEqual( requestedEntityId, data.entityKey.getIdentifier() );
 	}
 
 	private Object resolveInstanceFromCache(EntityInitializerData data) {

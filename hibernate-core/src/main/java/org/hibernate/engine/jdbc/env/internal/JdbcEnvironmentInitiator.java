@@ -153,10 +153,14 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			databaseConnectionInfo = buildDbInfo( configurationValues, jdbcEnvironment.getDialect() );
 		}
 
+		logConnectionInfo( databaseConnectionInfo );
+		return jdbcEnvironment;
+	}
+
+	// For Hibernate Reactive: it needs to disable or customize the log
+	protected void logConnectionInfo(DatabaseConnectionInfo databaseConnectionInfo) {
 		// Standardized DB info logging
 		ConnectionInfoLogger.INSTANCE.logConnectionInfoDetails( databaseConnectionInfo.toInfoString() );
-
-		return jdbcEnvironment;
 	}
 
 	private DatabaseConnectionInfo buildDbInfo(ServiceRegistryImplementor registry, Dialect dialect) {

@@ -918,6 +918,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	@Override
 	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>... selections);
 
+	@Override
 	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends Selection<?>> arguments);
 
 	@Override

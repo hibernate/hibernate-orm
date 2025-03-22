@@ -111,17 +111,17 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 
 	default <X> SqmExpression<X> castAs(DomainType<X> type) {
 		if ( getNodeType() == type ) {
-			return (SqmExpression<X>) this;
+			// safe cast, because we just checked
+			@SuppressWarnings("unchecked")
+			final SqmExpression<X> castExpression = (SqmExpression<X>) this;
+			return castExpression;
 		}
-		final QueryEngine queryEngine = nodeBuilder().getQueryEngine();
-		final SqmCastTarget<T> target = new SqmCastTarget<>( (ReturnableType<T>) type, nodeBuilder() );
-		return queryEngine.getSqmFunctionRegistry()
-				.findFunctionDescriptor("cast")
-					.generateSqmExpression(
-							asList( this, target ),
-							(ReturnableType<X>) type,
-							queryEngine
-					);
+		else {
+			final QueryEngine queryEngine = nodeBuilder().getQueryEngine();
+			final SqmCastTarget<?> target = new SqmCastTarget<>( (ReturnableType<?>) type, nodeBuilder() );
+			return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "cast" )
+					.generateSqmExpression( asList( this, target ), (ReturnableType<X>) type, queryEngine );
+		}
 	}
 
 	@Override

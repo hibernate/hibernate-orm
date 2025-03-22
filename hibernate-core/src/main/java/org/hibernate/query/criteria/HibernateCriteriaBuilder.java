@@ -382,7 +382,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>... selections);
-	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends JpaSelection<?>> arguments);
+	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends Selection<?>> arguments);
 
 	@Override
 	JpaCompoundSelection<Tuple> tuple(Selection<?>... selections);
@@ -393,7 +393,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaCompoundSelection<Object[]> array(List<Selection<?>> selections);
 
 	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>... selections);
-	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends JpaSelection<?>> selections);
+	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends Selection<?>> selections);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1072,7 +1072,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @deprecated Use {@linkplain #sort(JpaExpression, SortDirection, Nulls)} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "7")
 	default JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		return sort( sortExpression, sortOrder, nullPrecedence.getJpaValue() );
 	}
@@ -1080,7 +1080,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @deprecated Use {@linkplain #sort(JpaExpression, SortDirection, Nulls, boolean)} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "7")
 	default JpaOrder sort(
 			JpaExpression<?> sortExpression,
 			SortDirection sortOrder,

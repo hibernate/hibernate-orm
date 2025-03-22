@@ -146,6 +146,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 	public NodeBuilder nodeBuilder() {
 		return nodeBuilder;
 	}
+
 	@Override
 	public SqmPredicate isNull() {
 		return nodeBuilder().isNull( this );
@@ -278,7 +279,6 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 				)
 		);
 	}
-
 
 	@Override
 	public boolean isCompoundSelection() {

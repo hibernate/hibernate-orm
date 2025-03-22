@@ -19,7 +19,7 @@ import org.hibernate.Incubating;
  * {@link jakarta.persistence.SchemaManager}, which it now inherits,
  * with a minor change to the naming of its operations. It is retained
  * for backward compatibility and as a place to define additional
- * functionality in the future.
+ * functionality such as {@link #populate()}.
  *
  * @since 6.2
  * @author Gavin King
@@ -27,7 +27,10 @@ import org.hibernate.Incubating;
 @Incubating
 public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	/**
-	 * Export database objects mapped by Hibernate entities.
+	 * Export database objects mapped by Hibernate entities, and then
+	 * import initial data from {@code /import.sql} and any other configured
+	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
+	 * load script}.
 	 * <p>
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaCreator}.
 	 *
@@ -81,6 +84,8 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaPopulator}.
 	 *
 	 * @since 7.0
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
 	 */
 	@Incubating
 	void populate();

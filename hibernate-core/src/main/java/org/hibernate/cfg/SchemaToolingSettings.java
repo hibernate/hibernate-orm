@@ -91,17 +91,19 @@ public interface SchemaToolingSettings {
 	 * Specifies the CREATE script file as either a {@link java.io.Reader} configured for reading
 	 * the DDL script file or a string designating a file {@link java.net.URL} for the DDL script.
 	 * <p>
-	 * Hibernate historically also accepted {@link #HBM2DDL_IMPORT_FILES} for a similar purpose.
-	 * This setting is now preferred.
+	 * The script should contain mostly DDL {@code CREATE} statements. For importing data using DML,
+	 * use {@link #JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE}.
 	 *
 	 * @see #JAKARTA_HBM2DDL_CREATE_SOURCE
-	 * @see #HBM2DDL_IMPORT_FILES
+	 * @see #JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
 	 */
 	String JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE = "jakarta.persistence.schema-generation.create-script-source";
 
 	/**
 	 * Specifies the DROP script file as either a {@link java.io.Reader} configured for reading
 	 * the DDL script file or a string designating a file {@link java.net.URL} for the DDL script.
+	 * <p>
+	 * The script should contain mostly DDL {@code DROP} statements.
 	 *
 	 * @see #JAKARTA_HBM2DDL_DROP_SOURCE
 	 */
@@ -129,10 +131,23 @@ public interface SchemaToolingSettings {
 
 	/**
 	 * JPA-standard variant of {@link #HBM2DDL_IMPORT_FILES} for specifying a database
-	 * initialization script to be run as part of schema-export
+	 * initialization script to be run after {@linkplain org.hibernate.relational.SchemaManager
+	 * exporting or truncating the database schema}.
 	 * <p>
 	 * Specifies a {@link java.io.Reader} configured for reading of the SQL load script
 	 * or a string designating the {@link java.net.URL} for the SQL load script.
+	 * <p>
+	 * The script should contain mostly DML {@code INSERT} statements. For DDL schema creation,
+	 * use {@link #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE}
+	 * <p>
+	 * Hibernate historically also accepted {@link #HBM2DDL_IMPORT_FILES} for a similar purpose.
+	 * This setting is now preferred.
+	 *
+	 * @see #JAKARTA_HBM2DDL_DATABASE_ACTION
+	 * @see #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE
+	 * @see org.hibernate.relational.SchemaManager#populate
+	 * @see org.hibernate.relational.SchemaManager#exportMappedObjects
+	 * @see org.hibernate.relational.SchemaManager#truncateMappedObjects
 	 */
 	String JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE = "jakarta.persistence.sql-load-script-source";
 

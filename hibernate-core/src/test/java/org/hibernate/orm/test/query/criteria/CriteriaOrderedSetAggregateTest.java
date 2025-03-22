@@ -207,7 +207,7 @@ public class CriteriaOrderedSetAggregateTest {
 			Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
 
 			JpaExpression<String> function = cb.listagg(
-					cb.desc( root.get( "id" ), true ),
+					cb.desc( root.get( "id" )),
 					root.get( "theString" ),
 					cb.literal( "," )
 			);

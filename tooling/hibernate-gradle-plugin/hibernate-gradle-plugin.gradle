@@ -62,6 +62,8 @@ test {
 	if ( project.hasProperty( 'excludeTests' ) ) {
 		exclude project.property( 'excludeTests' ) as String
 	}
+	jvmArgs("--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
+			"--add-opens", "java.base/java.util=ALL-UNNAMED")
 }
 
 def releasePrepareTask = tasks.register("releasePrepare") {

@@ -14,7 +14,9 @@ import java.util.function.Supplier;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.xsd.XmlValidationMode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -607,6 +609,21 @@ public final class ConfigurationHelper {
 	public static void setIfNotNull(Object value, String settingName, Map<String, Object> configuration) {
 		if ( value != null ) {
 			configuration.put( settingName, value );
+		}
+	}
+
+	@Internal
+	public static XmlValidationMode resolveXmlValidationMode(Map<String, Object> configurationSettings) {
+		// For backwards compatibility: whenever XML_VALIDATION_MODE is set it prevails over VALIDATE_XML, if not then
+		// VALIDATE_XML 'true' corresponds to XML_VALIDATION_MODE 'extended', whereas 'false' corresponds to 'disabled'
+		// If neither are set, the default is XmlValidationMode.DISABLED
+		final var validateXmlSetting = ConfigurationHelper.getBoolean( AvailableSettings.VALIDATE_XML, configurationSettings, false );
+		final var xmlValidationModeSetting = configurationSettings.get( AvailableSettings.XML_VALIDATION_MODE );
+		if (xmlValidationModeSetting == null) {
+			return validateXmlSetting ? XmlValidationMode.EXTENDED : XmlValidationMode.DISABLED;
+		}
+		else {
+			return XmlValidationMode.interpret( xmlValidationModeSetting );
 		}
 	}
 

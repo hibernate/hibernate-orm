@@ -274,9 +274,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	@SuppressWarnings("unchecked")
 	public SqmSubQuery<T> multiselect(Selection<?>... selections) {
 		validateComplianceMultiselect();
-
 		final Selection<? extends T> resultSelection = getResultSelection( selections );
-
 		final SqmQuerySpec<T> querySpec = getQuerySpec();
 		if ( querySpec.getSelectClause() == null ) {
 			querySpec.setSelectClause( new SqmSelectClause( false, 1, nodeBuilder() ) );
@@ -286,36 +284,38 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public SqmSubQuery<T> multiselect(List<Selection<?>> selectionList) {
 		validateComplianceMultiselect();
-
-		final Selection<? extends T> resultSelection;
-		final Class<T> resultType = getResultType();
-		final List<? extends Selection<?>> selections = (List<? extends JpaSelection<?>>) (List<?>) selectionList;
-		if ( resultType == null || resultType == Object.class ) {
-			resultSelection = switch ( selections.size() ) {
-				case 0 -> throw new IllegalArgumentException( "empty selections passed to criteria query typed as Object" );
-				case 1 -> (Selection<? extends T>) selections.get( 0 );
-				default -> (Selection<? extends T>) nodeBuilder().array( selectionList );
-			};
-		}
-		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
-			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( selectionList );
-		}
-		else if ( resultType.isArray() ) {
-			resultSelection = nodeBuilder().array( resultType, selections );
-		}
-		else {
-			resultSelection = nodeBuilder().construct( resultType, selections );
-		}
 		final SqmQuerySpec<T> querySpec = getQuerySpec();
 		if ( querySpec.getSelectClause() == null ) {
 			querySpec.setSelectClause( new SqmSelectClause( false, 1, nodeBuilder() ) );
 		}
-		querySpec.setSelection( (JpaSelection<T>) resultSelection );
-
+		querySpec.setSelection( getResultSelection( selectionList ) );
 		return this;
+	}
+
+	private JpaSelection<T> getResultSelection(List<Selection<?>> selections) {
+		final Class<T> resultType = getResultType();
+		if ( resultType == null || resultType == Object.class ) {
+			final JpaSelection<?> selection = switch ( selections.size() ) {
+				case 0 -> throw new IllegalArgumentException(
+						"empty selections passed to criteria query typed as Object" );
+				case 1 -> (JpaSelection<?>) selections.get( 0 );
+				default -> nodeBuilder().array( selections );
+			};
+			//noinspection unchecked
+			return (JpaSelection<T>) selection;
+		}
+		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
+			//noinspection unchecked
+			return (JpaSelection<T>) nodeBuilder().tuple( selections );
+		}
+		else if ( resultType.isArray() ) {
+			return nodeBuilder().array( resultType, selections );
+		}
+		else {
+			return nodeBuilder().construct( resultType, selections );
+		}
 	}
 
 	@Override

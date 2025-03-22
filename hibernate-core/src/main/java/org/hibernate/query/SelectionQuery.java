@@ -293,7 +293,20 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 *
 	 * @since 6.3
 	 */
-	SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic);
+	SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
+
+	/**
+	 * Obtain an immutable reference to a predefined
+	 * {@linkplain jakarta.persistence.NamedEntityGraph named entity graph}
+	 * or return {@code null} if there is no predefined graph with the given
+	 * name.
+	 *
+	 * @param graphName The name of the predefined named entity graph
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	EntityGraph<? super R> getNamedEntityGraph(String graphName);
 
 	/**
 	 * Enable the {@linkplain org.hibernate.annotations.FetchProfile fetch

@@ -12,8 +12,8 @@ repositories {
     mavenCentral()
 
     maven {
-        name 'jboss-snapshots-repository'
-        url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
+        name 'ossrh-snapshots-repository'
+        url 'https://oss.sonatype.org/content/repositories/snapshots'
     }
 }
 
@@ -36,9 +36,9 @@ hibernate {
     sourceSet = 'mySpecialSourceSet'
     enhancement {
         enableLazyInitialization.set(true)
-        lazyInitialization = true
+        enableLazyInitialization = true
 
         enableDirtyTracking.set(true)
-        dirtyTracking = true
+        enableDirtyTracking = true
     }
 }

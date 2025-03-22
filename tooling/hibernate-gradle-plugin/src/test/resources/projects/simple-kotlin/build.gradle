@@ -4,7 +4,8 @@
  */
 
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.6.21'
+    //NOTE : kotlin version updated for configuration cache support
+    id 'org.jetbrains.kotlin.jvm' version '1.8.20'
     id 'org.hibernate.orm'
 }
 
@@ -12,8 +13,8 @@ repositories {
     mavenCentral()
 
     maven {
-        name 'jboss-snapshots-repository'
-        url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
+        name 'ossrh-snapshots-repository'
+        url 'https://oss.sonatype.org/content/repositories/snapshots'
     }
 }
 
@@ -27,9 +28,9 @@ hibernate {
     useSameVersion = false
     enhancement {
         enableLazyInitialization.set(true)
-        lazyInitialization = true
+        enableLazyInitialization = true
 
         enableDirtyTracking.set(true)
-        dirtyTracking = true
+        enableDirtyTracking = true
     }
 }

@@ -9,10 +9,10 @@ We've actually already seen its handiwork in the code examples <<main-hibernate,
 .Hibernate Processor
 ****
 
-:generator: https://hibernate.org/orm/tooling/
+:generator: https://hibernate.org/orm/processor/
 :generator-guide: {doc-user-guide-url}#tooling-modelgen
 
-{generator}[Hibernate Processor], the annotation processor formerly known as the Metamodel Generator, began its life as a code generator for what JPA calls a _static metamodel_.
+{generator}[Hibernate Processor], the annotation processor formerly known as the Metamodel Generator, began its life as a code generator for what JPA calls a https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2#a6072[_static metamodel_].
 That is, it produces a typed model of the persistent classes in our program, giving us a type safe way to refer to their attributes in Java code.
 In particular, it lets us specify <<entity-graph,entity graphs>> and <<criteria-queries,criteria queries>> in a completely type-safe way.
 

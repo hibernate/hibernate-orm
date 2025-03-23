@@ -1,6 +1,10 @@
 [[introduction]]
 == Introduction
 
+:persistence: https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+:data: https://jakarta.ee/specifications/data/1.0/jakarta-data-1.0
+
+
 Hibernate is usually described as a library that makes it easy to map Java classes to relational database tables.
 But this formulation does no justice to the central role played by the relational data itself.
 So a better description might be:
@@ -35,7 +39,7 @@ Developers often ask about the relationship between Hibernate and JPA, so let's 
 [[hibernate-and-jpa]]
 === Hibernate and JPA
 
-Hibernate was the inspiration behind the _Java_ (now _Jakarta_) _Persistence API_, or JPA, and includes a complete implementation of the latest revision of this specification.
+Hibernate was the inspiration behind the _Java_ (now _Jakarta_) _Persistence API_, or JPA, and includes a complete implementation of the latest revision of link:{persistence}[this specification].
 
 .The early history of Hibernate and JPA
 ****
@@ -669,7 +673,7 @@ Alternatively, if CDI isn't available, we may directly instantiate the generated
 
 [TIP]
 ====
-The Jakarta Data specification now formalizes this approach using standard annotations, and our implementation of this specification, Hibernate Data Repositories, is built into <<generator,Hibernate Processor>>.
+The link:{data}[Jakarta Data specification] now formalizes this approach using standard annotations, and our implementation of this specification, Hibernate Data Repositories, is built into <<generator,Hibernate Processor>>.
 You probably already have it available in your program.
 
 Unlike other repository frameworks, Hibernate Data Repositories offers something that plain JPA simply doesn’t have: full compile-time type safety for your queries. To learn more, please refer to link:{doc-data-repositories-url}[Introducing Hibernate Data Repositories].

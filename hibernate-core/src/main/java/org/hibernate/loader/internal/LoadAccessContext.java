@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.internal;
@@ -28,7 +28,7 @@ public interface LoadAccessContext {
 	void checkOpenOrWaitingForAutoClose();
 
 	/**
-	 * Callback to pulse the transaction coo
+	 * Callback to pulse the transaction coordinator
 	 */
 	void pulseTransactionCoordinator();
 	void delayedAfterCompletion();

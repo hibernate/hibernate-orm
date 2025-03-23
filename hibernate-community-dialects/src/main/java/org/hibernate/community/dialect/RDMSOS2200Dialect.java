@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -442,4 +442,20 @@ public class RDMSOS2200Dialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual() + " where key_col=1";
 	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
 }

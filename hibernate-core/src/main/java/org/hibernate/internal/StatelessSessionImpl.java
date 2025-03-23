@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
@@ -24,7 +24,6 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityHolder;
@@ -85,6 +84,7 @@ import jakarta.transaction.SystemException;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.PersistenceContexts.createPersistenceContext;
 import static org.hibernate.engine.internal.Versioning.incrementVersion;
 import static org.hibernate.engine.internal.Versioning.seedVersion;
 import static org.hibernate.engine.internal.Versioning.setVersion;
@@ -115,7 +115,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * cannot, unfortunately, reuse the various {@link org.hibernate.action.internal.EntityAction} subtypes. This is
  * a pity, since it results in some code duplication. On the other hand, a {@code StatelessSession} is easier to
  * debug and understand. A {@code StatelessSession} does hold state in a long-lived {@link PersistenceContext},
- * but it does temporarily keep state within an instance of {@link StatefulPersistenceContext} while processing
+ * but it does temporarily keep state within an instance of {@code StatefulPersistenceContext} while processing
  * the results of a given query.
  *
  * @author Gavin King
@@ -134,10 +134,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public StatelessSessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 		connectionProvided = options.getConnection() != null;
-		temporaryPersistenceContext = new StatefulPersistenceContext( this );
+		temporaryPersistenceContext = createPersistenceContext( this );
 		influencers = new LoadQueryInfluencers( getFactory() );
 		eventListenerGroups = factory.getEventListenerGroups();
 		setUpMultitenancy( factory, influencers );
+		// a nonzero batch size forces use of write-behind
+		// therefore ignore the value of hibernate.jdbc.batch_size
 		setJdbcBatchSize( 0 );
 	}
 
@@ -709,7 +711,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public Object get(String entityName, Object id, LockMode lockMode) {
 		checkOpen();
 
-		final EntityPersister persister = getEntityPersister( entityName );
+		final EntityPersister persister = requireEntityPersister( entityName );
 		if ( persister.canReadFromCache() ) {
 			final Object cachedEntity =
 					loadFromSecondLevelCache( this, null, lockMode, persister,
@@ -757,25 +759,47 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				throw new IllegalArgumentException("Null id");
 			}
 		}
-		final EntityPersister persister = getEntityPersister( entityClass.getName() );
+
+		final EntityPersister persister = requireEntityPersister( entityClass.getName() );
+
+		final List<Object> uncachedIds;
+		final List<T> list = new ArrayList<>( ids.size() );
+		if ( persister.canReadFromCache() ) {
+			uncachedIds = new ArrayList<>( ids.size() );
+			for (Object id : ids) {
+				final Object cachedEntity =
+						loadFromSecondLevelCache( this, null, LockMode.NONE, persister,
+								generateEntityKey( id, persister ) );
+				if ( cachedEntity == null ) {
+					uncachedIds.add( id );
+					list.add( null );
+				}
+				else {
+					//noinspection unchecked
+					list.add( (T) cachedEntity );
+				}
+			}
+		}
+		else {
+			uncachedIds = ids;
+			for (int i = 0; i < ids.size(); i++) {
+				list.add( null );
+			}
+		}
+
 		final JpaCriteriaQuery<T> query = getCriteriaBuilder().createQuery(entityClass);
 		final JpaRoot<T> from = query.from(entityClass);
-		query.where( from.get( persister.getIdentifierPropertyName() ).in(ids) );
+		query.where( from.get( persister.getIdentifierPropertyName() ).in(uncachedIds) );
 		final List<T> resultList = createSelectionQuery(query).getResultList();
-		final List<Object> idList = new ArrayList<>( resultList.size() );
-		for (T entity : resultList) {
-			idList.add( persister.getIdentifier(entity, this) );
-		}
-		final List<T> list = new ArrayList<>( ids.size() );
-		for (Object id : ids) {
-			final int pos = idList.indexOf(id);
-			list.add( pos < 0 ? null : resultList.get(pos) );
+		for (int i = 0; i < ids.size(); i++) {
+			if ( list.get(i) == null ) {
+				final Object id = ids.get(i);
+				list.set( i, resultList.stream()
+						.filter( entity -> entity != null && persister.getIdentifier( entity, this ).equals(id) )
+						.findFirst().orElse( null ) );
+			}
 		}
 		return list;
-	}
-
-	private EntityPersister getEntityPersister(String entityName) {
-		return getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
 	@Override
@@ -866,9 +890,9 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 	}
 
-	@Override
+	@Override @Deprecated
 	public Object instantiate(String entityName, Object id) {
-		return instantiate( getEntityPersister( entityName ), id );
+		return instantiate( requireEntityPersister( entityName ), id );
 	}
 
 	@Override
@@ -885,7 +909,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			boolean nullable) {
 		checkOpen();
 
-		final EntityPersister persister = getEntityPersister( entityName );
+		final EntityPersister persister = requireEntityPersister( entityName );
 		final EntityKey entityKey = generateEntityKey( id, persister );
 
 		// first, try to load it from the temp PC associated to this SS
@@ -1015,8 +1039,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		else if ( association instanceof PersistentCollection<?> collection ) {
 			if ( !collection.wasInitialized() ) {
-				final CollectionPersister collectionDescriptor = getFactory().getMappingMetamodel()
-						.getCollectionDescriptor( collection.getRole() );
+				final CollectionPersister collectionDescriptor = requireCollectionPersister( collection.getRole() );
 				final Object key = collection.getKey();
 				persistenceContext.addUninitializedCollection( collectionDescriptor, collection, key );
 				collection.setCurrentSession( this );
@@ -1038,6 +1061,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					}
 				}
 				finally {
+					collection.$$_hibernate_setInstanceId( 0 );
 					collection.unsetSession( this );
 					if ( persistenceContext.isLoadFinished() ) {
 						persistenceContext.clear();
@@ -1109,8 +1133,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public EntityPersister getEntityPersister(String entityName, Object object) {
 		checkOpen();
 		return entityName == null
-				? getEntityPersister( guessEntityName( object ) )
-				: getEntityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
+				? requireEntityPersister( guessEntityName( object ) )
+				: requireEntityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
 	}
 
 	@Override

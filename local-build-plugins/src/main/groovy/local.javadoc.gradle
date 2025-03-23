@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 plugins {
@@ -29,7 +29,7 @@ tasks.withType(Javadoc).configureEach {
         linksOffline 'https://docs.oracle.com/en/java/javase/17/docs/api/', "${project.rootDir}/javadoc/javase17"
         linksOffline 'https://jakarta.ee/specifications/bean-validation/3.0/apidocs/', "${project.rootDir}/javadoc/jakarta-validation-3.0"
         linksOffline 'https://jakarta.ee/specifications/cdi/4.0/apidocs/', "${project.rootDir}/javadoc/jakarta-cdi-4.0"
-        linksOffline 'https://jakarta.ee/specifications/platform/9/apidocs/', "${project.rootDir}/javadoc/jakarta-platform-9"
+        linksOffline 'https://jakarta.ee/specifications/platform/11/apidocs/', "${project.rootDir}/javadoc/jakarta-platform-11"
         linksOffline 'https://www.javadoc.io/doc/javax.cache/cache-api/1.0.0/', "${project.rootDir}/javadoc/javax-cache-1.0"
 
         tags(

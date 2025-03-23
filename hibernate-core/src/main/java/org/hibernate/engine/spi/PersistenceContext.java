@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
@@ -445,6 +445,18 @@ public interface PersistenceContext {
 	void initializeNonLazyCollections() throws HibernateException;
 
 	/**
+	 * Force initialization of all non-lazy collections encountered during
+	 * the current two-phase load (actually, this is a no-op, unless this
+	 * is the "outermost" load) allowing to customize how the initialization
+	 *  should occur
+	 *
+	 * @see #initializeNonLazyCollections()
+	 * @param initializeAction the function that initialize the collection
+	 */
+	// Used by Hibernate Reactive
+	void initializeNonLazyCollections(Consumer<PersistentCollection<?>> initializeAction);
+
+	/**
 	 * Get the {@code PersistentCollection} object for an array
 	 */
 	PersistentCollection<?> getCollectionHolder(Object array);
@@ -532,6 +544,14 @@ public interface PersistenceContext {
 	 */
 	@Internal
 	Map<EntityKey,Object> getEntitiesByKey();
+
+	// Used by Hibernate Reactive
+	@Internal
+	Map<EntityKey,Object> getEntitySnapshotsByKey();
+
+	// Used by Hibernate Reactive
+	@Internal
+	Map<EntityKey,Object> getOrInitializeEntitySnapshotsByKey();
 
 	/**
 	 * Doubly internal
@@ -745,6 +765,12 @@ public interface PersistenceContext {
 	 */
 	void setReadOnly(Object entityOrProxy, boolean readOnly);
 
+	boolean isRemovingOrphanBeforeUpdates();
+
+	void beginRemoveOrphanBeforeUpdates();
+
+	void endRemoveOrphanBeforeUpdates();
+
 	void replaceDelayedEntityIdentityInsertKeys(EntityKey oldKey, Object generatedId);
 
 	@Internal
@@ -856,10 +882,9 @@ public interface PersistenceContext {
 	NaturalIdResolutions getNaturalIdResolutions();
 
 	/**
-		Remove the {@link EntityHolder} and set its state to DETACHED
+		Remove the {@link EntityHolder} and set its state to {@code DETACHED}.
 	 */
 	default @Nullable EntityHolder detachEntity(EntityKey key) {
-		EntityHolder entityHolder = removeEntityHolder( key );
-		return entityHolder;
+		return removeEntityHolder( key );
 	}
 }

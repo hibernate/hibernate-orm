@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -128,16 +128,6 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected boolean supportsRowConstructor() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsArrayConstructor() {
-		return true;
-	}
-
-	@Override
 	protected String getForShare(int timeoutMillis) {
 		return " for share";
 	}
@@ -214,11 +204,6 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 		else {
 			appendSql( " escape ''" );
 		}
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	@Override

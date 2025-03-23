@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
@@ -11,6 +11,7 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -78,6 +79,16 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 		);
 		copyTo( path, context );
 		return path;
+	}
+
+	@Override
+	public SqmPathSource<T> getNodeType() {
+		return getReferencedPathSource();
+	}
+
+	@Override
+	public SqmPathSource<T> getReferencedPathSource() {
+		return getModel().getPathSource();
 	}
 
 	@Override

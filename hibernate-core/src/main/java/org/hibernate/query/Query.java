@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
@@ -228,24 +228,24 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * {@link QueryProducer#createMutationQuery(String)},
 	 * {@link QueryProducer#createNamedMutationQuery(String)},
 	 * {@link QueryProducer#createNativeMutationQuery(String)},
-	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
-	 * {@link QueryProducer#createQuery(jakarta.persistence.criteria.CriteriaDelete)}.
+	 * {@link QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)}, or
+	 * {@link QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)}.
 	 *
 	 * @return the number of affected entity instances
 	 *         (may differ from the number of affected rows)
-	 *
-	 * @see QueryProducer#createMutationQuery
-	 * @see QueryProducer#createMutationQuery(String)
-	 * @see QueryProducer#createNamedMutationQuery(String)
-	 * @see QueryProducer#createNativeMutationQuery(String)
-	 *
-	 * @see jakarta.persistence.Query#executeUpdate()
 	 *
 	 * @apiNote This method is needed because this interface extends
 	 *          {@link jakarta.persistence.Query}, which defines this method.
 	 *          See {@link MutationQuery} and {@link SelectionQuery}.
 	 *
 	 * @see QueryProducer#createMutationQuery
+	 * @see QueryProducer#createMutationQuery(String)
+	 * @see QueryProducer#createNamedMutationQuery(String)
+	 * @see QueryProducer#createNativeMutationQuery(String)
+	 * @see QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)
+	 * @see QueryProducer#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)
+	 *
+	 * @see jakarta.persistence.Query#executeUpdate()
 	 */
 	@Override
 	int executeUpdate();
@@ -461,18 +461,19 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * Bind an {@link Instant} value to the named query parameter using
 	 * just the portion indicated by the given {@link TemporalType}.
 	 */
+	@Deprecated(since = "7")
 	Query<R> setParameter(String parameter, Instant argument, TemporalType temporalType);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
-	@Override
+	@Override @Deprecated(since = "7")
 	Query<R> setParameter(String parameter, Calendar argument, TemporalType temporalType);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
-	@Override
+	@Override @Deprecated(since = "7")
 	Query<R> setParameter(String parameter, Date argument, TemporalType temporalType);
 
 
@@ -509,18 +510,19 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * Bind an {@link Instant} value to the ordinal query parameter using
 	 * just the portion indicated by the given {@link TemporalType}.
 	 */
+	@Override @Deprecated(since = "7")
 	Query<R> setParameter(int parameter, Instant argument, TemporalType temporalType);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
-	@Override
+	@Override @Deprecated(since = "7")
 	Query<R> setParameter(int parameter, Date argument, TemporalType temporalType);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
-	@Override
+	@Override @Deprecated(since = "7")
 	Query<R> setParameter(int parameter, Calendar argument, TemporalType temporalType);
 
 	/**
@@ -576,13 +578,13 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
-	@Override
+	@Override @Deprecated(since = "7")
 	Query<R> setParameter(Parameter<Calendar> parameter, Calendar argument, TemporalType temporalType);
 
 	/**
 	 * {@link jakarta.persistence.Query} override
 	 */
-	@Override
+	@Override @Deprecated(since = "7")
 	Query<R> setParameter(Parameter<Date> parameter, Date argument, TemporalType temporalType);
 
 

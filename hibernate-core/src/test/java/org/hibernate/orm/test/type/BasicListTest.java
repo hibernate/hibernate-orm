@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
@@ -12,7 +12,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -127,7 +127,7 @@ public class BasicListTest {
 	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server requires a special function to compare XML")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE requires a special function to compare XML")
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
-	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB requires a special function to compare LOBs")
+	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL supports distinct from through a special operator")
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -8,6 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import java.util.List;
 import java.util.Set;
 
@@ -36,6 +37,7 @@ import static org.hibernate.processor.util.Constants.QUERY;
 import static org.hibernate.processor.util.Constants.SESSION_TYPES;
 import static org.hibernate.processor.util.Constants.STREAM;
 import static org.hibernate.processor.util.Constants.TYPED_QUERY;
+import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 
 /**
@@ -310,12 +312,15 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 							.append( ")\n" );
 				}
 			}
-			else if ( isRangeParam(paramType) ) {
+			else if ( isRangeParam(paramType) && returnTypeName!= null ) {
+				final TypeElement entityElement = annotationMetaEntity.getContext().getElementUtils()
+						.getTypeElement( returnTypeName );
 				declaration
 						.append("\t\t\t.addRestriction(")
 						.append(annotationMetaEntity.importType(HIB_RESTRICTION))
 						.append(".restrict(")
-						.append(annotationMetaEntity.importType(returnTypeName + '_'))
+						.append(annotationMetaEntity.importType(
+										getGeneratedClassFullyQualifiedName( entityElement, false ) ))
 						.append('.')
 						.append(paramName)
 						.append(", ")
@@ -434,8 +439,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			"\t\t\t\t\t\t.stream()\n" +
 			"\t\t\t\t\t\t.map(_key -> Cursor.forKey(_key.toArray()))\n" +
 			"\t\t\t\t\t\t.collect(toList());\n" +
-			//SHOULD BE new CursoredPageRecord<>
-			"\t\treturn new CursoredPageRecord(_results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
+			"\t\treturn new CursoredPageRecord<>(_results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
 			"\t\t\t\t_results.isLastPage() ? null : afterCursor(_cursors.get(_cursors.size()-1), pageRequest.page()+1, pageRequest.size(), pageRequest.requestTotal()),\n" +
 			"\t\t\t\t_results.isFirstPage() ? null : beforeCursor(_cursors.get(0), pageRequest.page()-1, pageRequest.size(), pageRequest.requestTotal()))";
 
@@ -715,6 +719,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					declaration
 							.append("new ")
 							.append(annotationMetaEntity.importType("jakarta.data.page.impl.PageRecord"))
+							.append("<>")
 							.append('(')
 							.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
 							.append(", _results, _totalResults)");

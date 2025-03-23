@@ -1,11 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
 import org.hibernate.query.criteria.JpaCriteriaInsert;
-import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
@@ -369,14 +368,9 @@ public interface QueryProducer {
 	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
 
 	/**
-	 * Create a {@link MutationQuery} from the given insert-select criteria tree
-	 */
-	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect);
-
-	/**
 	 * Create a {@link MutationQuery} from the given insert criteria tree
 	 */
-	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect);
+	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insert);
 
 	/**
 	 * Create a {@link NativeQuery} instance for the given native SQL statement.

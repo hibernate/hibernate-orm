@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Incubating;
@@ -21,6 +22,7 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -290,6 +292,14 @@ public interface SessionFactoryImplementor extends SessionFactory {
 
 	@Override
 	RootGraphImplementor<?> findEntityGraphByName(String name);
+
+	@Override
+	default <T> RootGraphImplementor<T> createEntityGraph(Class<T> entityType) {
+		return (RootGraphImplementor<T>) SessionFactory.super.createEntityGraph( entityType );
+	}
+
+	@Override
+	RootGraph<Map<String, ?>> createGraphForDynamicEntity(String entityName);
 
 	/**
 	 * The best guess entity name for an entity not in an association

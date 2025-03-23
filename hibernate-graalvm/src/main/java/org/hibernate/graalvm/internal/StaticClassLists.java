@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graalvm.internal;
@@ -76,4 +76,14 @@ final class StaticClassLists {
 		};
 	}
 
+	/**
+	 * The classes listed below use a SecureRandom. We need to avoid static initialization at build time of these,
+	 * for it will trigger an error in GraalVM native images.
+	 */
+	public static Class<?>[] typesNeedingRuntimeInitialization() {
+		return new Class[] {
+				org.hibernate.id.uuid.UuidVersion6Strategy.Holder.class,
+				org.hibernate.id.uuid.UuidVersion7Strategy.Holder.class,
+		};
+	}
 }

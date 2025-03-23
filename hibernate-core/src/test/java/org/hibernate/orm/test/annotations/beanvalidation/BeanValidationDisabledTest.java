@@ -1,62 +1,56 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.beanvalidation;
 
-import java.math.BigDecimal;
-import java.util.Map;
 import jakarta.validation.ConstraintViolationException;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import java.math.BigDecimal;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Emmanuel Bernard
  */
-public class BeanValidationDisabledTest extends BaseNonConfigCoreFunctionalTestCase {
+@ServiceRegistry(
+		settings = @Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "none")
+)
+@DomainModel(annotatedClasses = {
+		Address.class,
+		CupHolder.class
+})
+@SessionFactory
+class BeanValidationDisabledTest {
 	@Test
-	public void testListeners() {
-		CupHolder ch = new CupHolder();
-		ch.setRadius( new BigDecimal( "12" ) );
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		try {
-			s.persist( ch );
-			s.flush();
-		}
-		catch ( ConstraintViolationException e ) {
-			fail( "invalid object should not be validated" );
-		}
-		tx.rollback();
-		s.close();
+	void testListeners(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			CupHolder ch = new CupHolder();
+			ch.setRadius( new BigDecimal( "12" ) );
+			try {
+				s.persist( ch );
+				s.flush();
+			}
+			catch (ConstraintViolationException e) {
+				fail( "invalid object should not be validated" );
+			}
+		} );
 	}
 
 	@Test
-	public void testDDLDisabled() {
-		PersistentClass classMapping = metadata().getEntityBinding( Address.class.getName() );
+	void testDDLDisabled(SessionFactoryScope scope) {
+		PersistentClass classMapping = scope.getMetadataImplementor().getEntityBinding( Address.class.getName() );
 		Column countryColumn = (Column) classMapping.getProperty( "country" ).getSelectables().get( 0 );
-		assertTrue( "DDL constraints are applied", countryColumn.isNullable() );
-	}
-
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		settings.put( "jakarta.persistence.validation.mode", "none" );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Address.class,
-				CupHolder.class
-		};
+		assertTrue( countryColumn.isNullable(), "DDL constraints are applied" );
 	}
 }

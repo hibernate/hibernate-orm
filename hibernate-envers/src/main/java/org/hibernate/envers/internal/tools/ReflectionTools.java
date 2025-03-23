@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.tools;
@@ -151,5 +151,10 @@ public abstract class ReflectionTools {
 		catch (Exception e) {
 			throw new ClassLoadingException( "Unable to load class [" + name + "]", e );
 		}
+	}
+
+	public static void reset() {
+		SETTER_CACHE.clear();
+		GETTER_CACHE.clear();
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -275,7 +275,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			final Object xId = extractIdentifier( x, factory );
 			final Object yId = extractIdentifier( y, factory );
 			return getIdentifierType( factory.getRuntimeMetamodels() )
-					.compare( xId, yId );
+					.compare( xId, yId, factory );
 		}
 	}
 

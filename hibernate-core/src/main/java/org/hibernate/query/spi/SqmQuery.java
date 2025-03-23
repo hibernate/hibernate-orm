@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
@@ -45,13 +45,13 @@ public interface SqmQuery extends CommonQueryContract {
 	@Override
 	<P> SqmQuery setParameter(String name, P value, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmQuery setParameter(String name, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmQuery setParameter(String name, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmQuery setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
@@ -63,13 +63,13 @@ public interface SqmQuery extends CommonQueryContract {
 	@Override
 	<P> SqmQuery setParameter(int position, P value, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmQuery setParameter(int position, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmQuery setParameter(int position, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmQuery setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
@@ -84,10 +84,10 @@ public interface SqmQuery extends CommonQueryContract {
 	@Override
 	<T> SqmQuery setParameter(Parameter<T> param, T value);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmQuery setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmQuery setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override

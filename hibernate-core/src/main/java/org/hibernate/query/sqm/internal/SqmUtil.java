@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
@@ -208,20 +208,20 @@ public class SqmUtil {
 		final NavigablePath np = sqmPath.getNavigablePath();
 		final Boolean found = queryPartStack.findCurrentFirst( queryPart -> {
 			final SqmQuerySpec<?> spec = queryPart.getFirstQuerySpec();
-			return spec.groupByClauseContains( np, converter ) || spec.orderByClauseContains( np, converter ) ?
-					true :
-					null;
+			return spec.groupByClauseContains( np, converter )
+				|| spec.orderByClauseContains( np, converter )
+					? true : null;
 		} );
 		return Boolean.TRUE.equals( found );
 	}
 
 	private static CollectionPart getCollectionPart(PluralAttributeMapping attribute, NavigablePath path) {
 		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( path.getLocalName() );
-		return nature != null ? switch ( nature ) {
+		return nature == null ? null : switch ( nature ) {
 			case ELEMENT -> attribute.getElementDescriptor();
 			case INDEX -> attribute.getIndexDescriptor();
 			case ID -> attribute.getIdentifierDescriptor();
-		} : null;
+		};
 	}
 
 	/**
@@ -299,12 +299,10 @@ public class SqmUtil {
 	}
 
 	private static @Nullable EntityAssociationMapping resolveAssociationMapping(SqmJoin<?, ?> sqmJoin) {
-		if ( sqmJoin instanceof SqmSingularJoin<?, ?> singularJoin ) {
-			if ( singularJoin.getAttribute().getSqmPathType() instanceof EntityDomainType<?> ) {
-				return resolveAssociationMapping( singularJoin );
-			}
-		}
-		return null;
+		return sqmJoin instanceof SqmSingularJoin<?, ?> singularJoin
+			&& singularJoin.getAttribute().getSqmPathType() instanceof EntityDomainType<?>
+				? resolveAssociationMapping( singularJoin )
+				: null;
 	}
 
 	private static @Nullable EntityAssociationMapping resolveAssociationMapping(SqmSingularJoin<?, ?> sqmJoin) {
@@ -390,7 +388,7 @@ public class SqmUtil {
 			SqmPathSource<A> pathSource,
 			SqmJoinType requestedJoinType) {
 		for ( final SqmJoin<T, ?> join : sqmFrom.getSqmJoins() ) {
-			if ( join.getReferencedPathSource() == pathSource ) {
+			if ( join.getModel() == pathSource ) {
 				final SqmAttributeJoin<T, ?> attributeJoin = (SqmAttributeJoin<T, ?>) join;
 				if ( attributeJoin.isFetched() ) {
 					final SqmJoinType joinType = join.getSqmJoinType();

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -229,11 +229,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected JdbcOperationQueryInsert translateInsert(InsertSelectStatement sqlAst) {
 		visitInsertStatement( sqlAst );
 
@@ -427,47 +422,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 				likePredicate.getEscapeCharacter().accept( this );
 			}
 		}
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInSet() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsIntersect() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsDistinctFromPredicate() {
-		// It supports a proprietary operator
-		return true;
-	}
-
-	@Override
-	protected boolean supportsSimpleQueryGrouping() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsNestedSubqueryCorrelation() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsWithClause() {
-		return true;
 	}
 
 	@Override

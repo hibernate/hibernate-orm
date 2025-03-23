@@ -1,76 +1,77 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.beanvalidation;
 
-import java.math.BigDecimal;
-import java.util.Locale;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.MessageInterpolator;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
-
-import org.hibernate.boot.beanvalidation.ValidationMode;
-import org.junit.Test;
-
-import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.cfg.ValidationSettings;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_FACTORY;
-import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import java.math.BigDecimal;
+import java.util.Locale;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Emmanuel Bernard
  */
-public class BeanValidationProvidedFactoryTest extends BaseCoreFunctionalTestCase {
+@ServiceRegistry(
+		settings = @Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "auto"),
+		settingProviders = @SettingProvider(settingName = ValidationSettings.JAKARTA_VALIDATION_FACTORY,
+				provider = BeanValidationProvidedFactoryTest.ValidatorFactoryProvider.class)
+)
+@DomainModel(annotatedClasses = {
+		CupHolder.class
+})
+@SessionFactory
+class BeanValidationProvidedFactoryTest {
 	@Test
-	public void testListeners() {
-		CupHolder ch = new CupHolder();
-		ch.setRadius( new BigDecimal( "12" ) );
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		try {
-			s.persist( ch );
-			s.flush();
-			fail( "invalid object should not be persisted" );
-		}
-		catch ( ConstraintViolationException e ) {
-			assertEquals( 1, e.getConstraintViolations().size() );
-			assertEquals( "Oops", e.getConstraintViolations().iterator().next().getMessage() );
-		}
-		tx.rollback();
-		s.close();
+	void testListeners(SessionFactoryScope scope) {
+		scope.inSession( s -> {
+			CupHolder ch = new CupHolder();
+			ch.setRadius( new BigDecimal( "12" ) );
+			Transaction tx = s.beginTransaction();
+			try {
+				s.persist( ch );
+				s.flush();
+				fail( "invalid object should not be persisted" );
+			}
+			catch (ConstraintViolationException e) {
+				assertThat( e.getConstraintViolations() ).hasSize( 1 );
+				assertThat( e.getConstraintViolations().iterator().next().getMessage() ).isEqualTo( "Oops" );
+			}
+			tx.rollback();
+		} );
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				CupHolder.class
-		};
-	}
+	public static class ValidatorFactoryProvider implements SettingProvider.Provider<ValidatorFactory> {
+		@Override
+		public ValidatorFactory getSetting() {
+			final MessageInterpolator messageInterpolator = new MessageInterpolator() {
 
-	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		final MessageInterpolator messageInterpolator = new MessageInterpolator() {
+				public String interpolate(String s, Context context) {
+					return "Oops";
+				}
 
-			public String interpolate(String s, Context context) {
-				return "Oops";
-			}
-
-			public String interpolate(String s, Context context, Locale locale) {
-				return interpolate( s, context );
-			}
-		};
-		final jakarta.validation.Configuration<?> configuration = Validation.byDefaultProvider().configure();
-		configuration.messageInterpolator( messageInterpolator );
-		ValidatorFactory vf = configuration.buildValidatorFactory();
-		cfg.getProperties().put( JAKARTA_VALIDATION_FACTORY, vf );
-		cfg.setProperty( JAKARTA_VALIDATION_MODE, ValidationMode.AUTO );
+				public String interpolate(String s, Context context, Locale locale) {
+					return interpolate( s, context );
+				}
+			};
+			final jakarta.validation.Configuration<?> configuration = Validation.byDefaultProvider().configure();
+			configuration.messageInterpolator( messageInterpolator );
+			return configuration.buildValidatorFactory();
+		}
 	}
 }

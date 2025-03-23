@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
@@ -8,7 +8,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
@@ -164,11 +166,32 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 
 	protected abstract int maxBatchSize(Object[] ids, MultiIdLoadOptions loadOptions);
 
-	protected abstract void handleResults(
+	protected void handleResults(
 			MultiIdLoadOptions loadOptions,
 			EventSource session,
 			List<Integer> elementPositionsLoadedByBatch,
-			List<Object> result);
+			List<Object> results) {
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		for ( Integer position : elementPositionsLoadedByBatch ) {
+			// the element value at this position in the results List should be
+			// the EntityKey for that entity - reuse it
+			final EntityKey entityKey = (EntityKey) results.get( position );
+			session.getPersistenceContextInternal().getBatchFetchQueue().removeBatchLoadableEntityKey( entityKey );
+			final Object entity = persistenceContext.getEntity( entityKey );
+			final Object result;
+			if ( entity == null
+				// the entity is locally deleted, and the options ask that we not return such entities
+				|| !loadOptions.isReturnOfDeletedEntitiesEnabled()
+					&& persistenceContext.getEntry( entity ).getStatus().isDeletedOrGone() ) {
+				result = null;
+			}
+			else {
+				result = persistenceContext.proxyFor( entity );
+			}
+			results.set( position, result );
+		}
+	}
+
 
 	protected abstract void loadEntitiesById(
 			List<Object> idsInBatch,
@@ -184,51 +207,44 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			EntityKey entityKey,
 			List<Object> result,
 			int i) {
-		if ( loadOptions.isSessionCheckingEnabled() || loadOptions.isSecondLevelCacheCheckingEnabled() ) {
-			return isLoadFromCaches( loadOptions, entityKey, lockOptions, result, i, session );
-		}
-		else {
-			return false;
-		}
+		return ( loadOptions.isSessionCheckingEnabled() || loadOptions.isSecondLevelCacheCheckingEnabled() )
+			&& isLoadFromCaches( loadOptions, entityKey, lockOptions, result, i, session );
 	}
 
 	private boolean isLoadFromCaches(
 			MultiIdLoadOptions loadOptions,
 			EntityKey entityKey,
 			LockOptions lockOptions,
-			List<Object> result, int i,
+			List<Object> results, int i,
 			EventSource session) {
-		Object managedEntity = null;
 
 		if ( loadOptions.isSessionCheckingEnabled() ) {
 			// look for it in the Session first
-			final PersistenceContextEntry persistenceContextEntry =
+			final PersistenceContextEntry entry =
 					loadFromSessionCache( entityKey, lockOptions, GET, session );
-			managedEntity = persistenceContextEntry.entity();
-
-			if ( managedEntity != null
-					&& !loadOptions.isReturnOfDeletedEntitiesEnabled()
-					&& !persistenceContextEntry.isManaged() ) {
-				// put a null in the result
-				result.add( i, null );
+			final Object entity = entry.entity();
+			if ( entity != null ) {
+				// put a null in the results
+				final Object result =
+						loadOptions.isReturnOfDeletedEntitiesEnabled()
+							|| entry.isManaged()
+								? entity : null;
+				results.add( i, result );
 				return true;
 			}
 		}
 
-		if ( managedEntity == null
-				&& loadOptions.isSecondLevelCacheCheckingEnabled() ) {
-			// look for it in the SessionFactory
-			final EntityPersister persister = getLoadable().getEntityPersister();
-			managedEntity = session.loadFromSecondLevelCache( persister, entityKey, null, lockOptions.getLockMode() );
+		if ( loadOptions.isSecondLevelCacheCheckingEnabled() ) {
+			// look for it in the second-level cache
+			final Object entity =
+					loadFromSecondLevelCache( entityKey, lockOptions, session );
+			if ( entity != null ) {
+				results.add( i, entity );
+				return true;
+			}
 		}
 
-		if ( managedEntity != null ) {
-			result.add( i, managedEntity );
-			return true;
-		}
-		else {
-			return false;
-		}
+		return false;
 	}
 
 	protected List<T> unorderedMultiLoad(
@@ -242,6 +258,16 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 						(position, entityKey, resolvedRef) -> result.add( (T) resolvedRef ) );
 		if ( !isEmpty( unresolvableIds ) ) {
 			loadEntitiesWithUnresolvedIds( loadOptions, lockOptions, session, unresolvableIds, result );
+			final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
+			final EntityPersister persister = getLoadable().getEntityPersister();
+			for ( Object id : unresolvableIds ) {
+				// skip any of the null padded ids
+				// (actually we could probably even break on the first null)
+				if ( id != null ) {
+					// found or not, remove the key from the batch-fetch queue
+					batchFetchQueue.removeBatchLoadableEntityKey( session.generateEntityKey( id, persister ) );
+				}
+			}
 		}
 		return result;
 	}
@@ -251,7 +277,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			LockOptions lockOptions,
 			EventSource session,
 			Object[] unresolvableIds,
-			List<T> result);
+			List<T> results);
 
 	protected final <R> Object[] resolveInCachesIfEnabled(
 			Object[] ids,
@@ -263,7 +289,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 				// the user requested that we exclude ids corresponding to already managed
 				// entities from the generated load SQL. So here we will iterate all
 				// incoming id values and see whether it corresponds to an existing
-				// entity associated with the PC. If it does, we add it to the result
+				// entity associated with the PC. If it does, we add it to the results
 				// list immediately and remove its id from the group of ids to load.
 				// we'll load all of them from the database
 				? resolveInCaches( ids, loadOptions, lockOptions, session, resolutionConsumer )
@@ -321,25 +347,28 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			EntityKey entityKey,
 			List<Object> unresolvedIds, int i,
 			EventSource session) {
-		Object cachedEntity = null;
 
 		// look for it in the Session first
-		final PersistenceContextEntry persistenceContextEntry =
+		final PersistenceContextEntry entry =
 				loadFromSessionCache( entityKey, lockOptions, GET, session );
+		final Object sessionEntity;
 		if ( loadOptions.isSessionCheckingEnabled() ) {
-			cachedEntity = persistenceContextEntry.entity();
-			if ( cachedEntity != null
+			sessionEntity = entry.entity();
+			if ( sessionEntity != null
 					&& !loadOptions.isReturnOfDeletedEntitiesEnabled()
-					&& !persistenceContextEntry.isManaged() ) {
+					&& !entry.isManaged() ) {
 				resolutionConsumer.consume( i, entityKey, null );
 				return unresolvedIds;
 			}
 		}
-
-		if ( cachedEntity == null && loadOptions.isSecondLevelCacheCheckingEnabled() ) {
-			final EntityPersister persister = getLoadable().getEntityPersister();
-			cachedEntity = session.loadFromSecondLevelCache( persister, entityKey, null, lockOptions.getLockMode() );
+		else {
+			sessionEntity = null;
 		}
+
+		final Object cachedEntity =
+				sessionEntity == null && loadOptions.isSecondLevelCacheCheckingEnabled()
+						? loadFromSecondLevelCache( entityKey, lockOptions, session )
+						: sessionEntity;
 
 		if ( cachedEntity != null ) {
 			//noinspection unchecked
@@ -354,4 +383,8 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		return unresolvedIds;
 	}
 
+	private Object loadFromSecondLevelCache(EntityKey entityKey, LockOptions lockOptions, EventSource session) {
+		final EntityPersister persister = getLoadable().getEntityPersister();
+		return session.loadFromSecondLevelCache( persister, entityKey, null, lockOptions.getLockMode() );
+	}
 }

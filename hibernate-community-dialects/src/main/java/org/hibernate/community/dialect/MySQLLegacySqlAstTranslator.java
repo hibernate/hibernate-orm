@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -145,11 +145,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
-	}
-
-	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
 	}
 
 	@Override
@@ -367,47 +362,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 				likePredicate.getEscapeCharacter().accept( this );
 			}
 		}
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInSet() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return getDialect().getVersion().isSameOrAfter( 5, 7 );
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsIntersect() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsDistinctFromPredicate() {
-		// It supports a proprietary operator
-		return true;
-	}
-
-	@Override
-	protected boolean supportsSimpleQueryGrouping() {
-		return getDialect().getVersion().isSameOrAfter( 8 );
-	}
-
-	@Override
-	protected boolean supportsNestedSubqueryCorrelation() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsWithClause() {
-		return getDialect().getVersion().isSameOrAfter( 8 );
 	}
 
 	@Override

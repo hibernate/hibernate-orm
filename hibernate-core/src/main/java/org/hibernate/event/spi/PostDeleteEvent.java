@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -12,10 +11,7 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Gavin King
  */
-public class PostDeleteEvent extends AbstractEvent {
-	private final Object entity;
-	private final EntityPersister persister;
-	private final Object id;
+public class PostDeleteEvent extends AbstractPostDatabaseOperationEvent {
 	private final Object[] deletedState;
 
 	public PostDeleteEvent(
@@ -24,28 +20,8 @@ public class PostDeleteEvent extends AbstractEvent {
 			Object[] deletedState,
 			EntityPersister persister,
 			EventSource source) {
-		super(source);
-		this.entity = entity;
-		this.id = id;
-		this.persister = persister;
+		super( source, entity, id, persister );
 		this.deletedState = deletedState;
-	}
-
-	public Object getId() {
-		return id;
-	}
-
-	public EntityPersister getPersister() {
-		return persister;
-	}
-
-	@Override
-	public SessionFactoryImplementor getFactory() {
-		return persister.getFactory();
-	}
-
-	public Object getEntity() {
-		return entity;
 	}
 
 	public Object[] getDeletedState() {

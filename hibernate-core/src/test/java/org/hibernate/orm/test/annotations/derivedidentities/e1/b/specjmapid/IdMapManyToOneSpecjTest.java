@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.derivedidentities.e1.b.specjmapid;
@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.boot.MetadataBuilder;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -21,12 +20,6 @@ import static org.junit.Assert.assertEquals;
  * @author Stale W. Pedersen
  */
 public class IdMapManyToOneSpecjTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
-		super.configureMetadataBuilder( metadataBuilder );
-		metadataBuilder.enableMapsIdInference( true );
-	}
 
 	@Test
 	public void testComplexIdClass() {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
@@ -163,6 +163,18 @@ public class EnhancerImpl implements Enhancer {
 	}
 
 	private DynamicType.Builder<?> doEnhance(Supplier<DynamicType.Builder<?>> builderSupplier, TypeDescription managedCtClass) {
+		// skip if the class was already enhanced. This is very common in WildFly as classloading is highly concurrent.
+		// We need to ensure that no class is instrumented multiple times as that might result in incorrect bytecode.
+		// N.B. there is a second check below using a different approach: checking for the marker interfaces,
+		// which does not address the case of extended bytecode enhancement
+		// (because it enhances classes that do not end up with these marker interfaces).
+		// I'm currently inclined to keep both checks, as one is safer and the other has better backwards compatibility.
+		if ( managedCtClass.getDeclaredAnnotations().isAnnotationPresent( EnhancementInfo.class ) ) {
+			verifyVersions( managedCtClass, enhancementContext );
+			log.debugf( "Skipping enhancement of [%s]: it's already annotated with @EnhancementInfo", managedCtClass.getName() );
+			return null;
+		}
+
 		// can't effectively enhance interfaces
 		if ( managedCtClass.isInterface() ) {
 			log.debugf( "Skipping enhancement of [%s]: it's an interface", managedCtClass.getName() );
@@ -179,7 +191,7 @@ public class EnhancerImpl implements Enhancer {
 		if ( alreadyEnhanced( managedCtClass ) ) {
 			verifyVersions( managedCtClass, enhancementContext );
 
-			log.debugf( "Skipping enhancement of [%s]: already enhanced", managedCtClass.getName() );
+			log.debugf( "Skipping enhancement of [%s]: it's already implementing 'Managed'", managedCtClass.getName() );
 			return null;
 		}
 
@@ -223,6 +235,21 @@ public class EnhancerImpl implements Enhancer {
 					EnhancerConstants.USE_TRACKER_FIELD_NAME,
 					EnhancerConstants.USE_TRACKER_GETTER_NAME,
 					EnhancerConstants.USE_TRACKER_SETTER_NAME
+			);
+
+			builder = addFieldWithGetterAndSetter(
+					builder,
+					constants.TypeIntegerPrimitive,
+					EnhancerConstants.INSTANCE_ID_FIELD_NAME,
+					EnhancerConstants.INSTANCE_ID_GETTER_NAME,
+					EnhancerConstants.INSTANCE_ID_SETTER_NAME
+			);
+
+			builder = addSetPersistenceInfoMethod(
+					builder,
+					constants.TypeEntityEntry,
+					constants.TypeManagedEntity,
+					constants.TypeIntegerPrimitive
 			);
 
 			builder = addInterceptorHandling( builder, managedCtClass );
@@ -682,6 +709,19 @@ public class EnhancerImpl implements Enhancer {
 				.defineMethod( setterName, constants.TypeVoid, constants.methodModifierPUBLIC )
 						.withParameters( type )
 						.intercept( FieldAccessor.ofField( fieldName ) );
+	}
+
+	private DynamicType.Builder<?> addSetPersistenceInfoMethod(
+			DynamicType.Builder<?> builder,
+			TypeDefinition entityEntryType,
+			TypeDefinition managedEntityType,
+			TypeDefinition intType) {
+		return builder
+				// returns previous entity entry
+				.defineMethod( EnhancerConstants.PERSISTENCE_INFO_SETTER_NAME, entityEntryType, constants.methodModifierPUBLIC )
+				// previous, next, instance-id
+				.withParameters( entityEntryType, managedEntityType, managedEntityType, intType )
+				.intercept( constants.implementationSetPersistenceInfo );
 	}
 
 	private List<AnnotatedFieldDescription> collectCollectionFields(TypeDescription managedCtClass) {

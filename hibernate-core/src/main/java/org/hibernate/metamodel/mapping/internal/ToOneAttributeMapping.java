@@ -1,19 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -112,9 +103,15 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
-import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * @author Steve Ebersole
@@ -2145,9 +2142,8 @@ public class ToOneAttributeMapping
 								navigablePath,
 								getAssociatedEntityMappingType().getSoftDeleteTableDetails().getTableName()
 						);
-						join.applyPredicate( createNonSoftDeletedRestriction(
+						join.applyPredicate( softDeleteMapping.createNonDeletedRestriction(
 								tableReference,
-								softDeleteMapping,
 								creationState.getSqlExpressionResolver()
 						) );
 					}
@@ -2271,9 +2267,8 @@ public class ToOneAttributeMapping
 						navigablePath,
 						getAssociatedEntityMappingType().getSoftDeleteTableDetails().getTableName()
 				);
-				predicateConsumer.accept( createNonSoftDeletedRestriction(
+				predicateConsumer.accept( softDeleteMapping.createNonDeletedRestriction(
 						tableReference,
-						softDeleteMapping,
 						creationState.getSqlExpressionResolver()
 				) );
 			}

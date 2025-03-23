@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
@@ -21,18 +21,13 @@ import java.util.stream.Collectors;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.query.NamedQueryDefinition;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.graph.internal.RootGraphImpl;
-import org.hibernate.graph.spi.AttributeNodeImplementor;
-import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -60,17 +55,12 @@ import org.hibernate.type.descriptor.java.spi.EntityJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.EntityGraph;
-import jakarta.persistence.NamedAttributeNode;
-import jakarta.persistence.NamedEntityGraph;
-import jakarta.persistence.NamedSubgraph;
-import jakarta.persistence.metamodel.Attribute;
 import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.Type;
 
 import static java.util.Collections.emptySet;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.metamodel.internal.InjectionHelper.injectEntityGraph;
 import static org.hibernate.metamodel.internal.InjectionHelper.injectTypedQueryReference;
 
@@ -157,18 +147,38 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		if ( entityName == null ) {
 			return null;
 		}
+
 		final ManagedDomainType<?> managedType = managedTypeByName.get( entityName );
-		return managedType instanceof EntityDomainType<?> entityDomainType ? entityDomainType : null;
+		if ( managedType instanceof EntityDomainType<?> entityDomainType ){
+			return entityDomainType;
+		}
+
+		// NOTE: `managedTypeByName` is keyed by Hibernate entity name.
+		// If there is a direct match based on key, we want that one - see above.
+		// However, the JPA contract for `#entity` is to match `@Entity(name)`; if there
+		// was no direct match, we need to iterate over all of the and look based on
+		// JPA entity-name.
+
+		for ( Map.Entry<String, ManagedDomainType<?>> entry : managedTypeByName.entrySet() ) {
+			if ( entry.getValue() instanceof EntityDomainType<?> possibility ) {
+				if ( entityName.equals( possibility.getName() ) ) {
+					return possibility;
+				}
+			}
+		}
+
+		return null;
 	}
 
 	@Override
 	public EntityDomainType<?> entity(String entityName) {
 		final EntityDomainType<?> entityType = findEntityType( entityName );
 		if ( entityType == null ) {
-			// per JPA
+			// per JPA, this is an exception
 			throw new IllegalArgumentException( "Not an entity: " + entityName );
 		}
 		return entityType;
+
 	}
 
 	@Override
@@ -484,149 +494,34 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	private void applyNamedEntityGraphs(Collection<NamedEntityGraphDefinition> namedEntityGraphs) {
 		for ( NamedEntityGraphDefinition definition : namedEntityGraphs ) {
 			log.debugf(
-					"Applying named entity graph [name=%s, entity-name=%s, jpa-entity-name=%s]",
+					"Applying named entity graph [name=%s, source=%s]",
 					definition.getRegisteredName(),
-					definition.getEntityName(),
-					definition.getJpaEntityName()
+					definition.getSource()
 			);
-			final EntityDomainType<?> entityType = findEntityType( definition.getEntityName() );
-			if ( entityType == null ) {
-				throw new IllegalArgumentException(
-						"Attempted to register named entity graph [" + definition.getRegisteredName()
-								+ "] for unknown entity [" + definition.getEntityName() + "]"
 
-				);
-			}
-
-			final NamedEntityGraph namedEntityGraph = definition.getAnnotation();
-			final RootGraphImplementor<?> entityGraph =
-					createEntityGraph(
-							namedEntityGraph,
-							definition.getRegisteredName(),
-							entityType,
-							namedEntityGraph.includeAllAttributes()
-					);
-
-			entityGraphMap.put( definition.getRegisteredName(), entityGraph );
+			final RootGraphImplementor<?> graph = definition.getGraphCreator().createEntityGraph(
+					(entityClass) -> {
+						final ManagedDomainType<?> managedDomainType = managedTypeByClass.get( entityClass );
+						if ( managedDomainType instanceof EntityDomainType<?> match ) {
+							return match;
+						}
+						throw new IllegalArgumentException( "Cannot resolve entity class : " + entityClass.getName() );
+					},
+					(jpaEntityName) -> {
+						for ( Map.Entry<String, ManagedDomainType<?>> entry : managedTypeByName.entrySet() ) {
+							if ( entry.getValue() instanceof EntityDomainType<?> possibility ) {
+								if ( jpaEntityName.equals( possibility.getName() ) ) {
+									return possibility;
+								}
+							}
+						}
+						throw new IllegalArgumentException( "Cannot resolve entity name : " + jpaEntityName );
+					}
+			);
+			entityGraphMap.put( definition.getRegisteredName(), graph );
 		}
 	}
 
-	private <T> RootGraphImplementor<T> createEntityGraph(
-			NamedEntityGraph namedEntityGraph,
-			String registeredName,
-			EntityDomainType<T> entityType,
-			boolean includeAllAttributes) {
-		final RootGraphImplementor<T> entityGraph =
-				createRootGraph( registeredName, entityType, includeAllAttributes );
-
-		if ( namedEntityGraph.subclassSubgraphs() != null ) {
-			for ( NamedSubgraph subclassSubgraph : namedEntityGraph.subclassSubgraphs() ) {
-				final Class<?> subgraphType = subclassSubgraph.type();
-				final Class<T> graphJavaType = entityGraph.getGraphedType().getJavaType();
-				if ( !graphJavaType.isAssignableFrom( subgraphType ) ) {
-					throw new AnnotationException( "Named subgraph type '" + subgraphType.getName()
-							+ "' is not a subtype of the graph type '" + graphJavaType.getName() + "'" );
-				}
-				@SuppressWarnings("unchecked") // Safe, because we just checked
-				final Class<? extends T> subtype = (Class<? extends T>) subgraphType;
-				final GraphImplementor<? extends T> subgraph = entityGraph.addTreatedSubgraph( subtype );
-				applyNamedAttributeNodes( subclassSubgraph.attributeNodes(), namedEntityGraph, subgraph );
-			}
-		}
-
-		if ( namedEntityGraph.attributeNodes() != null ) {
-			applyNamedAttributeNodes( namedEntityGraph.attributeNodes(), namedEntityGraph, entityGraph );
-		}
-
-		return entityGraph;
-	}
-
-	private static <T> RootGraphImplementor<T> createRootGraph(
-			String name, EntityDomainType<T> entityType, boolean includeAllAttributes) {
-		final RootGraphImpl<T> entityGraph = new RootGraphImpl<>( name, entityType );
-		if ( includeAllAttributes ) {
-			for ( Attribute<? super T, ?> attribute : entityType.getAttributes() ) {
-				entityGraph.addAttributeNodes( attribute );
-			}
-		}
-		return entityGraph;
-	}
-
-	private void applyNamedAttributeNodes(
-			NamedAttributeNode[] namedAttributeNodes,
-			NamedEntityGraph namedEntityGraph,
-			GraphImplementor<?> graphNode) {
-		for ( NamedAttributeNode namedAttributeNode : namedAttributeNodes ) {
-			final String value = namedAttributeNode.value();
-			final AttributeNodeImplementor<?,?,?> attributeNode =
-					(AttributeNodeImplementor<?,?,?>) graphNode.addAttributeNode( value );
-
-			if ( isNotEmpty( namedAttributeNode.subgraph() ) ) {
-				applyNamedSubgraphs(
-						namedEntityGraph,
-						namedAttributeNode.subgraph(),
-						attributeNode,
-						false
-				);
-			}
-			if ( isNotEmpty( namedAttributeNode.keySubgraph() ) ) {
-				applyNamedSubgraphs(
-						namedEntityGraph,
-						namedAttributeNode.keySubgraph(),
-						attributeNode,
-						true
-				);
-			}
-		}
-	}
-
-	private <T,E,K> void applyNamedSubgraphs(
-			NamedEntityGraph namedEntityGraph,
-			String subgraphName,
-			AttributeNodeImplementor<T,E,K> attributeNode,
-			boolean isKeySubGraph) {
-		for ( NamedSubgraph namedSubgraph : namedEntityGraph.subgraphs() ) {
-			if ( subgraphName.equals( namedSubgraph.name() ) ) {
-				final Class<?> subgraphType = namedSubgraph.type();
-				final SubGraphImplementor<?> subgraph;
-				if ( subgraphType.equals( void.class ) ) { // unspecified
-					subgraph = attributeNode.addValueSubgraph();
-				}
-				else {
-					subgraph = isKeySubGraph
-							? makeAttributeNodeKeySubgraph( attributeNode, subgraphType )
-							: makeAttributeNodeValueSubgraph( attributeNode, subgraphType );
-				}
-				applyNamedAttributeNodes( namedSubgraph.attributeNodes(), namedEntityGraph, subgraph );
-			}
-		}
-	}
-
-	private static <T, E, K> SubGraphImplementor<?> makeAttributeNodeValueSubgraph(
-			AttributeNodeImplementor<T, E, K> attributeNode, Class<?> subgraphType) {
-		final Class<?> attributeValueType =
-				attributeNode.getAttributeDescriptor().getValueGraphType().getBindableJavaType();
-		if ( !attributeValueType.isAssignableFrom( subgraphType ) ) {
-			throw new AnnotationException( "Named subgraph type '" + subgraphType.getName()
-					+ "' is not a subtype of the value type '" + attributeValueType.getName() + "'" );
-		}
-		@SuppressWarnings("unchecked") // Safe, because we just checked
-		final Class<? extends E> castType = (Class<? extends E>) subgraphType;
-		return attributeNode.addValueSubgraph().addTreatedSubgraph( castType );
-	}
-
-	private static <T, E, K> SubGraphImplementor<?> makeAttributeNodeKeySubgraph(
-			AttributeNodeImplementor<T, E, K> attributeNode, Class<?> subgraphType) {
-		final Class<?> attributeKeyType =
-				attributeNode.getAttributeDescriptor().getKeyGraphType().getBindableJavaType();
-		if ( !attributeKeyType.isAssignableFrom( subgraphType ) ) {
-			throw new AnnotationException( "Named subgraph type '" + subgraphType.getName()
-					+ "' is not a subtype of the key type '" + attributeKeyType.getName() + "'" );
-		}
-		@SuppressWarnings("unchecked") // Safe, because we just checked
-		final Class<? extends K> castType = (Class<? extends K>) subgraphType;
-		return attributeNode.addKeySubgraph().addTreatedSubgraph( castType );
-	}
 
 	private <X> Class<X> resolveRequestedClass(String entityName) {
 		try {
@@ -795,7 +690,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				-> injectTypedQueryReference( definition, namedQueryMetamodelClass( definition, context ) ) );
 		bootMetamodel.visitNamedNativeQueryDefinitions( definition
 				-> injectTypedQueryReference( definition, namedQueryMetamodelClass( definition, context ) ) );
-		bootMetamodel.getNamedEntityGraphs().values().forEach( definition
+		bootMetamodel.getNamedEntityGraphs().values().stream().filter( (definition) -> definition.getEntityName() != null ).forEach( definition
 				-> injectEntityGraph( definition, graphMetamodelClass( definition, context ), this ) );
 	}
 

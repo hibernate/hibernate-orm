@@ -1,13 +1,8 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.CacheRegionDefinition;
@@ -18,6 +13,8 @@ import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
+import org.hibernate.boot.models.internal.ClassLoaderServiceLoading;
+import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
@@ -31,14 +28,20 @@ import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
+import org.hibernate.models.spi.ModelsConfiguration;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
-
 import org.jboss.logging.Logger;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -70,14 +73,14 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private Object scannerSetting;
 	private ArchiveDescriptorFactory archiveDescriptorFactory;
 
-	private Object jandexView;
-
 	private HashMap<String,SqmFunctionDescriptor> sqlFunctionMap;
 	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
 	private HashMap<Class<?>, ConverterDescriptor> attributeConverterDescriptorMap;
 	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
 	private final ManagedTypeRepresentationResolver representationStrategySelector;
 	private final ConfigurationService configurationService;
+
+	private final SourceModelBuildingContext modelsContext;
 
 	public BootstrapContextImpl(
 			StandardServiceRegistry serviceRegistry,
@@ -113,6 +116,8 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 		managedBeanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
 		configurationService = serviceRegistry.requireService( ConfigurationService.class );
+
+		modelsContext = createModelBuildingContext( classLoaderService, configService );
 	}
 
 	@Override
@@ -128,6 +133,11 @@ public class BootstrapContextImpl implements BootstrapContext {
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
+	}
+
+	@Override
+	public SourceModelBuildingContext getModelsContext() {
+		return modelsContext;
 	}
 
 	@Override
@@ -207,7 +217,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	@Override
 	public Object getJandexView() {
-		return jandexView;
+		return null;
 	}
 
 	@Override
@@ -254,7 +264,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 		scanEnvironment = null;
 		scannerSetting = null;
 		archiveDescriptorFactory = null;
-		jandexView = null;
 
 		if ( sqlFunctionMap != null ) {
 			sqlFunctionMap.clear();
@@ -323,11 +332,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.archiveDescriptorFactory = factory;
 	}
 
-	void injectJandexView(Object jandexView) {
-		log.debugf( "Injecting Jandex IndexView [%s] into BootstrapContext; was [%s]", jandexView, this.jandexView );
-		this.jandexView = jandexView;
-	}
-
 	public void addSqlFunction(String functionName, SqmFunctionDescriptor function) {
 		if ( sqlFunctionMap == null ) {
 			sqlFunctionMap = new HashMap<>();
@@ -348,5 +352,21 @@ public class BootstrapContextImpl implements BootstrapContext {
 			cacheRegionDefinitions = new ArrayList<>();
 		}
 		cacheRegionDefinitions.add( cacheRegionDefinition );
+	}
+
+	public static SourceModelBuildingContext createModelBuildingContext(
+			ClassLoaderService classLoaderService,
+			ConfigurationService configService) {
+		final ClassLoaderServiceLoading classLoading = new ClassLoaderServiceLoading( classLoaderService );
+
+		final ModelsConfiguration modelsConfiguration = new ModelsConfiguration();
+		modelsConfiguration.setClassLoading( classLoading );
+		modelsConfiguration.setRegistryPrimer( ModelsHelper::preFillRegistries );
+		configService.getSettings().forEach( (key, value) -> {
+			if ( key.startsWith( "hibernate.models." ) ) {
+				modelsConfiguration.configValue( key, value );
+			}
+		} );
+		return modelsConfiguration.bootstrap();
 	}
 }

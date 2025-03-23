@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
@@ -77,8 +77,11 @@ import jakarta.persistence.SharedCacheMode;
  *     annotated classes}, or {@linkplain #addFile XML mapping documents}.
  * </ul>
  * <p>
- * Note that XML mappings may be expressed using the JPA {@code orm.xml}
- * format, or in Hibernate's legacy {@code .hbm.xml} format.
+ * Note that XML mappings may be expressed using either:
+ * <ul>
+ * <li>the JPA-standard {@code orm.xml} format, or
+ * <li>the legacy {@code .hbm.xml} format, which is considered deprecated.
+ * </ul>
  * <p>
  * Configuration properties are enumerated by {@link AvailableSettings}.
  * <p>
@@ -262,8 +265,7 @@ public class Configuration {
 	 * @return The value currently associated with that property name; may be null.
 	 */
 	public String getProperty(String propertyName) {
-		Object o = properties.get( propertyName );
-		return o instanceof String ? (String) o : null;
+		return properties.get( propertyName ) instanceof String property ? property : null;
 	}
 
 	/**
@@ -758,11 +760,6 @@ public class Configuration {
 		if ( entityClass == null ) {
 			throw new IllegalArgumentException( "The specified class cannot be null" );
 		}
-
-		if ( log.isDebugEnabled() ) {
-			log.debugf( "adding resource mappings from class convention : %s", entityClass.getName() );
-		}
-
 		return addResource( entityClass.getName().replace( '.', '/' ) + ".hbm.xml" );
 	}
 

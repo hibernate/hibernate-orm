@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
@@ -60,7 +60,7 @@ public class PostgreSQLMinMaxFunction extends AbstractSqmSelfRenderingFunctionDe
 			Predicate filter,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
+		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
 		sqlAppender.appendSql( getName() );
 		sqlAppender.appendSql( '(' );
 		final Expression arg = (Expression) sqlAstArguments.get( 0 );

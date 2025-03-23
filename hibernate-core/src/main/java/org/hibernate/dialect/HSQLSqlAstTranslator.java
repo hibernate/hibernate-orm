@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -119,17 +119,6 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		appendSql( " in (unnest(" );
 		inArrayPredicate.getArrayParameter().accept( this );
 		appendSql( "))" );
-	}
-
-	@Override
-	protected boolean supportsArrayConstructor() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		// Doesn't support correlations in the WITH clause
-		return false;
 	}
 
 	@Override
@@ -256,11 +245,6 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
-	public boolean supportsFilterClause() {
-		return true;
-	}
-
-	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( supportsOffsetFetchClause() ) {
 			assertRowsOnlyFetchClauseType( queryPart );
@@ -346,21 +330,6 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		else {
 			expression.accept( this );
 		}
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	private boolean supportsOffsetFetchClause() {

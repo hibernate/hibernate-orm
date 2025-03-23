@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
@@ -51,6 +51,8 @@ public class MultiNaturalIdLoadingBatcher {
 
 	private final JdbcOperationQuerySelect jdbcSelect;
 
+	private final LockOptions lockOptions;
+
 	public MultiNaturalIdLoadingBatcher(
 			EntityMappingType entityDescriptor,
 			ModelPart restrictedPart,
@@ -88,6 +90,7 @@ public class MultiNaturalIdLoadingBatcher {
 						return lockOptions;
 					}
 				} );
+		this.lockOptions = lockOptions;
 	}
 
 	public <E> List<E> multiLoad(Object[] naturalIdValues, SharedSessionContractImplementor session) {
@@ -163,7 +166,7 @@ public class MultiNaturalIdLoadingBatcher {
 		return session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParamBindings,
-				new ExecutionContextWithSubselectFetchHandler( session, subSelectFetchableKeysHandler ),
+				new ExecutionContextWithSubselectFetchHandler( session, subSelectFetchableKeysHandler, false, lockOptions ),
 				RowTransformerStandardImpl.instance(),
 				null,
 				ListResultsConsumer.UniqueSemantic.FILTER,

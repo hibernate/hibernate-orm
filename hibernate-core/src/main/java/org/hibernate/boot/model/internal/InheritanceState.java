@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.spi.AccessType;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.Component;
@@ -185,19 +186,16 @@ public class InheritanceState {
 			return classDetails;
 		}
 		else {
-			final long count = Stream.concat(
-					classDetails.getFields().stream(),
-					classDetails.getMethods().stream()
-			).filter( t -> t.hasDirectAnnotationUsage( Id.class ) ).count();
+			final long count =
+					Stream.concat( classDetails.getFields().stream(), classDetails.getMethods().stream() )
+							.filter( member -> member.hasDirectAnnotationUsage( Id.class ) )
+							.count();
 			if ( count > 1 ) {
 				return classDetails;
 			}
-			final InheritanceState state = getSuperclassInheritanceState( classDetails, inheritanceStatePerClass );
-			if ( state != null ) {
-				return state.getClassWithIdClass( true );
-			}
 			else {
-				return null;
+				final InheritanceState state = getSuperclassInheritanceState( classDetails, inheritanceStatePerClass );
+				return state == null ? null : state.getClassWithIdClass( true );
 			}
 		}
 	}
@@ -209,8 +207,7 @@ public class InheritanceState {
 				hasIdClassOrEmbeddedId = true;
 			}
 			else {
-				final ElementsToProcess process = getElementsToProcess();
-				for ( PropertyData property : process.getElements() ) {
+				for ( PropertyData property : getElementsToProcess().getElements() ) {
 					if ( property.getAttributeMember().hasDirectAnnotationUsage( EmbeddedId.class ) ) {
 						hasIdClassOrEmbeddedId = true;
 						break;
@@ -228,7 +225,7 @@ public class InheritanceState {
 	 */
 	private ElementsToProcess getElementsToProcess() {
 		if ( elementsToProcess == null ) {
-			InheritanceState inheritanceState = inheritanceStatePerClass.get( classDetails );
+			final InheritanceState inheritanceState = inheritanceStatePerClass.get( classDetails );
 			assert !inheritanceState.isEmbeddableSuperclass();
 
 			getMappedSuperclassesTillNextEntityOrdered();
@@ -237,20 +234,11 @@ public class InheritanceState {
 
 			final ArrayList<PropertyData> elements = new ArrayList<>();
 			int idPropertyCount = 0;
-
 			for ( ClassDetails classToProcessForMappedSuperclass : classesToProcessForMappedSuperclass ) {
-				PropertyContainer propertyContainer = new PropertyContainer(
-						classToProcessForMappedSuperclass,
-						classDetails,
-						accessType
-				);
-				idPropertyCount = addElementsOfClass(
-						elements,
-						propertyContainer,
-						buildingContext,
-						idPropertyCount );
+				final PropertyContainer container =
+						new PropertyContainer( classToProcessForMappedSuperclass, classDetails, accessType );
+				idPropertyCount = addElementsOfClass( elements, container, buildingContext, idPropertyCount );
 			}
-
 			if ( idPropertyCount == 0 && !inheritanceState.hasParents() ) {
 				throw new AnnotationException( "Entity '" + classDetails.getName() + "' has no identifier"
 						+ " (every '@Entity' class must declare or inherit at least one '@Id' or '@EmbeddedId' property)" );
@@ -278,15 +266,11 @@ public class InheritanceState {
 			if ( candidate.hasDirectAnnotationUsage( Entity.class )
 				|| candidate.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
 				for ( MethodDetails method : candidate.getMethods() ) {
-					if ( method.getMethodKind() != MethodDetails.MethodKind.GETTER ) {
-						continue;
-					}
-
-					if ( hasIdAnnotation( method ) ) {
+					if ( method.getMethodKind() == MethodDetails.MethodKind.GETTER
+							&& hasIdAnnotation( method ) ) {
 						return AccessType.PROPERTY;
 					}
 				}
-
 				for ( FieldDetails field : candidate.getFields() ) {
 					if ( hasIdAnnotation( field ) ) {
 						return AccessType.FIELD;
@@ -314,7 +298,6 @@ public class InheritanceState {
 			while ( superClass != null
 					&& !Object.class.getName().equals( superClass.getClassName() )
 					&& superclassState == null );
-
 			currentClassInHierarchy = superClass;
 		}
 		while ( superclassState != null && superclassState.isEmbeddableSuperclass() );
@@ -337,11 +320,12 @@ public class InheritanceState {
 	private org.hibernate.mapping.MappedSuperclass processMappedSuperclass(Table implicitTable) {
 		//add @MappedSuperclass in the metadata
 		// classes from 0 to n-1 are @MappedSuperclass and should be linked
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 		final InheritanceState superEntityState = getInheritanceStateOfSuperEntity( classDetails, inheritanceStatePerClass );
 		final PersistentClass superEntity =
-				superEntityState != null ?
-						buildingContext.getMetadataCollector().getEntityBinding( superEntityState.getClassDetails().getName() ) :
-						null;
+				superEntityState != null
+						? metadataCollector.getEntityBinding( superEntityState.getClassDetails().getName() )
+						: null;
 		final int lastMappedSuperclass = classesToProcessForMappedSuperclass.size() - 1;
 		org.hibernate.mapping.MappedSuperclass mappedSuperclass = null;
 		for ( int index = 0; index < lastMappedSuperclass; index++ ) {
@@ -351,11 +335,11 @@ public class InheritanceState {
 			final ClassDetails mappedSuperclassDetails = classesToProcessForMappedSuperclass.get( index );
 			final Class<?> mappedSuperclassJavaType = mappedSuperclassDetails.toJavaClass();
 			//add MappedSuperclass if not already there
-			mappedSuperclass = buildingContext.getMetadataCollector().getMappedSuperclass( mappedSuperclassJavaType );
+			mappedSuperclass = metadataCollector.getMappedSuperclass( mappedSuperclassJavaType );
 			if ( mappedSuperclass == null ) {
 				mappedSuperclass = new org.hibernate.mapping.MappedSuperclass( parentSuperclass, superEntity, implicitTable );
 				mappedSuperclass.setMappedClass( mappedSuperclassJavaType );
-				buildingContext.getMetadataCollector().addMappedSuperclass( mappedSuperclassJavaType, mappedSuperclass );
+				metadataCollector.addMappedSuperclass( mappedSuperclassJavaType, mappedSuperclass );
 			}
 		}
 		return mappedSuperclass;

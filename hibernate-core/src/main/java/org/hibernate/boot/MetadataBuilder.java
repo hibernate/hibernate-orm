@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot;
 
-import org.hibernate.Incubating;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
@@ -147,7 +146,10 @@ public interface MetadataBuilder {
 	 * @param jandexView The Jandex index to use.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Set the {@code hibernate-models} setting {@code hibernate.models.jandex.index} instead.  This method has no effect.
 	 */
+	@Deprecated
 	MetadataBuilder applyIndexView(Object jandexView);
 
 	/**
@@ -275,19 +277,6 @@ public interface MetadataBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA
 	 */
 	MetadataBuilder enableGlobalNationalizedCharacterDataSupport(boolean enabled);
-
-	/**
-	 * Specify whether missing {@link jakarta.persistence.MapsId} annotations
-	 * should be inferred.
-	 *
-	 * @param enabled {@code true} if missing {@code MapsId} should be inferred
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @since 7.0
-	 */
-	@Incubating
-	MetadataBuilder enableMapsIdInference(boolean enabled);
 
 	/**
 	 * Specify an additional or overridden basic type mapping.

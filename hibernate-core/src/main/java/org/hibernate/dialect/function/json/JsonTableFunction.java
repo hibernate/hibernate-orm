@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
@@ -247,6 +247,12 @@ public class JsonTableFunction extends AbstractSqmSelfRenderingSetReturningFunct
 		if ( jsonPath != null ) {
 			sqlAppender.appendSql( " path " );
 			sqlAppender.appendSingleQuoteEscapedString( jsonPath );
+		}
+		else {
+			// Always append implicit path to avoid identifier case sensitivity issues
+			sqlAppender.appendSql( " path '$." );
+			sqlAppender.appendSql( name );
+			sqlAppender.appendSql( '\'' );
 		}
 	}
 

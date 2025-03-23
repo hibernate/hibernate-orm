@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.internal;
@@ -89,8 +89,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			StatementCreator statementCreator,
 			ResultsConsumer<T, R> resultsConsumer) {
 		final PersistenceContext persistenceContext = executionContext.getSession().getPersistenceContext();
-		boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
-		Boolean readOnly = executionContext.getQueryOptions().isReadOnly();
+		final boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
+		final Boolean readOnly = executionContext.getQueryOptions().isReadOnly();
 		if ( readOnly != null ) {
 			// The read-only/modifiable mode for the query was explicitly set.
 			// Temporarily set the default read-only/modifiable setting to the query's setting.

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
@@ -78,6 +78,11 @@ public class EmptyScrollableResults<R> implements ScrollableResultsImplementor<R
 
 	@Override
 	public int getRowNumber() {
+		return -1;
+	}
+
+	@Override
+	public int getPosition() {
 		return 0;
 	}
 

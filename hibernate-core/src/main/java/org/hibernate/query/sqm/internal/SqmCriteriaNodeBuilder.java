@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -45,6 +46,7 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
@@ -66,7 +68,6 @@ import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSearchOrder;
-import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.ValueHandlingMode;
@@ -98,7 +99,6 @@ import org.hibernate.query.sqm.tree.cte.SqmCteTableColumn;
 import org.hibernate.query.sqm.tree.cte.SqmSearchClauseSpecification;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
-import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
@@ -595,12 +595,22 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public <P, F> SqmExpression<F> fk(Path<P> path) {
-		if ( path.getModel().getBindableType() != Bindable.BindableType.SINGULAR_ATTRIBUTE
-				|| ! ( path instanceof SqmEntityValuedSimplePath ) ) {
-			throw new FunctionArgumentException( "Path '" + path + "' does not refer to a single-valued association" );
+		final SqmPath<P> sqmPath = (SqmPath<P>) path;
+		final SqmPathSource<?> toOneReference = sqmPath.getReferencedPathSource();
+		final boolean validToOneRef =
+				toOneReference.getBindableType() == Bindable.BindableType.SINGULAR_ATTRIBUTE
+				&& toOneReference instanceof EntitySqmPathSource;
+		if ( !validToOneRef ) {
+			throw new FunctionArgumentException(
+					String.format(
+							Locale.ROOT,
+							"Argument '%s' of 'fk()' function is not a single-valued association",
+							sqmPath.getNavigablePath()
+					)
+			);
 		}
 
-		return new SqmFkExpression<>( (SqmEntityValuedSimplePath<?>) path );
+		return new SqmFkExpression<>( sqmPath );
 	}
 
 	@Override
@@ -892,17 +902,17 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
-	@Override
+	@Override @Deprecated(since = "7", forRemoval = true)
 	public <R> SqmTuple<R> tuple(Class<R> tupleType, SqmExpression<?>... expressions) {
 		return tuple( tupleType, asList( expressions ) );
 	}
 
-	@Override
+	@Override @Deprecated(since = "7", forRemoval = true)
 	public <R> SqmTuple<R> tuple(SqmExpressible<R> tupleType, SqmExpression<?>... expressions) {
 		return tuple( tupleType, asList( expressions ) );
 	}
 
-	@Override @SuppressWarnings("unchecked")
+	@Override @Deprecated(since = "7", forRemoval = true) @SuppressWarnings("unchecked")
 	public <R> SqmTuple<R> tuple(Class<R> tupleType, List<? extends SqmExpression<?>> expressions) {
 		final SqmExpressible<R> expressibleType =
 				tupleType == null || tupleType == Object[].class
@@ -911,7 +921,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return tuple( expressibleType, expressions );
 	}
 
-	@Override
+	@Override @Deprecated(since = "7", forRemoval = true)
 	public <R> SqmTuple<R> tuple(SqmExpressible<R> tupleType, List<? extends SqmExpression<?>> sqmExpressions) {
 		if ( tupleType == null ) {
 			//noinspection unchecked
@@ -939,7 +949,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public <Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends JpaSelection<?>> selections) {
+	public <Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends Selection<?>> selections) {
 		return arrayInternal( resultClass,
 				selections.stream().map( selection -> (SqmSelectableNode<?>) selection ).toList() );
 	}
@@ -957,7 +967,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends JpaSelection<?>> arguments) {
+	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends Selection<?>> arguments) {
 		return constructInternal( resultClass,
 				arguments.stream().map( arg -> (SqmSelectableNode<?>) arg ).toList() );
 	}
@@ -3006,7 +3016,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public <T> SqmFunction<T> sql(String pattern, Class<T> type, Expression<?>... arguments) {
-		List<SqmExpression<?>> sqmArguments = new ArrayList<>( expressionList( arguments ) );
+		final List<SqmExpression<?>> sqmArguments = new ArrayList<>( expressionList( arguments ) );
 		sqmArguments.add( 0, literal( pattern ) );
 		return getFunctionDescriptor( "sql" ).generateSqmExpression(
 				sqmArguments,
@@ -3017,7 +3027,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public SqmFunction<String> format(Expression<? extends TemporalAccessor> datetime, String pattern) {
-		SqmFormat sqmFormat = new SqmFormat( pattern, null, this );
+		final SqmFormat sqmFormat = new SqmFormat( pattern, null, this );
 		return getFunctionDescriptor( "format" ).generateSqmExpression(
 				asList( (SqmExpression<?>) datetime, sqmFormat ),
 				null,

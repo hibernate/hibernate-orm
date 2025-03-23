@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.internal;
@@ -192,7 +192,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		return new DatabaseConnectionInfoImpl( configurationValues, environment.getDialect() );
 	}
 
-	private static JdbcEnvironmentImpl getJdbcEnvironmentWithDefaults(
+	// Used by Hibernate Reactive
+	protected JdbcEnvironmentImpl getJdbcEnvironmentWithDefaults(
 			Map<String, Object> configurationValues,
 			ServiceRegistryImplementor registry,
 			DialectFactory dialectFactory) {
@@ -200,7 +201,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		return new JdbcEnvironmentImpl( registry, dialect );
 	}
 
-	private static JdbcEnvironmentImpl getJdbcEnvironmentWithExplicitConfiguration(
+	// Used by Hibernate Reactive
+	protected JdbcEnvironmentImpl getJdbcEnvironmentWithExplicitConfiguration(
 			Map<String, Object> configurationValues,
 			ServiceRegistryImplementor registry,
 			DialectFactory dialectFactory,
@@ -221,6 +223,15 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				null,
 				configurationValues
 		);
+		return getJdbcEnvironmentWithExplicitConfiguration( configurationValues, registry, dialectFactory, dialectResolutionInfo );
+	}
+
+	// Used by Hibernate Reactive
+	protected JdbcEnvironmentImpl getJdbcEnvironmentWithExplicitConfiguration(
+			Map<String, Object> configurationValues,
+			ServiceRegistryImplementor registry,
+			DialectFactory dialectFactory,
+			DialectResolutionInfo dialectResolutionInfo) {
 		final Dialect dialect = dialectFactory.buildDialect( configurationValues, () -> dialectResolutionInfo );
 		return new JdbcEnvironmentImpl( registry, dialect );
 	}

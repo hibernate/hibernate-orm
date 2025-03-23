@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
@@ -252,9 +252,9 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	public boolean needsUpdating(Object entry, int i, Type elemType) throws HibernateException {
 		final Serializable sn = getSnapshot();
 		return i < Array.getLength( sn )
-				&& Array.get( sn, i ) != null
-				&& Array.get( array, i ) != null
-				&& elemType.isDirty( Array.get( array, i ), Array.get( sn, i ), getSession() );
+			&& Array.get( sn, i ) != null
+			&& Array.get( array, i ) != null
+			&& elemType.isDirty( Array.get( array, i ), Array.get( sn, i ), getSession() );
 	}
 
 	@Override

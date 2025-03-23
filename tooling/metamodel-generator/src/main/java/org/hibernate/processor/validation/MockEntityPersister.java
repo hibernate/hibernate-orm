@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.validation;
@@ -100,6 +100,10 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable, 
 		if (result == null) {
 			//check subclasses, needed for treat()
 			result = getSubclassPropertyType(propertyPath);
+		}
+
+		if ("id".equals( propertyPath )) {
+			result = identifierType();
 		}
 
 		if (result!=null) {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -18,6 +18,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
+import org.hibernate.jpa.event.internal.EmbeddableCallback;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -441,6 +442,10 @@ public class Property implements Serializable, MetaAttributable {
 		this.lob = lob;
 	}
 
+	/**
+	 * @deprecated See discussion in {@link EmbeddableCallback}.
+	 */
+	@Deprecated(since = "7")
 	public void addCallbackDefinitions(java.util.List<CallbackDefinition> callbackDefinitions) {
 		if ( callbackDefinitions != null && !callbackDefinitions.isEmpty() ) {
 			if ( this.callbackDefinitions == null ) {
@@ -450,6 +455,10 @@ public class Property implements Serializable, MetaAttributable {
 		}
 	}
 
+	/**
+	 * @deprecated See discussion in {@link EmbeddableCallback}.
+	 */
+	@Deprecated(since = "7")
 	public java.util.List<CallbackDefinition> getCallbackDefinitions() {
 		return callbackDefinitions == null ? emptyList() : unmodifiableList( callbackDefinitions );
 	}

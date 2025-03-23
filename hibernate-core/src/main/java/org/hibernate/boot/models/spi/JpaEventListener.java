@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.spi;
@@ -59,7 +59,7 @@ public class JpaEventListener {
 
 	private final MethodDetails postLoadMethod;
 
-	public JpaEventListener(
+	private JpaEventListener(
 			JpaEventListenerStyle consumerType,
 			ClassDetails listenerClass,
 			MethodDetails prePersistMethod,
@@ -205,12 +205,12 @@ public class JpaEventListener {
 
 	private static boolean isImplicitMethodMappings(JaxbEntityListenerImpl jaxbMapping) {
 		return jaxbMapping.getPrePersist() == null
-				&& jaxbMapping.getPreUpdate() == null
-				&& jaxbMapping.getPreRemove() == null
-				&& jaxbMapping.getPostLoad() == null
-				&& jaxbMapping.getPostPersist() == null
-				&& jaxbMapping.getPostUpdate() == null
-				&& jaxbMapping.getPostRemove() == null;
+			&& jaxbMapping.getPreUpdate() == null
+			&& jaxbMapping.getPreRemove() == null
+			&& jaxbMapping.getPostLoad() == null
+			&& jaxbMapping.getPostPersist() == null
+			&& jaxbMapping.getPostUpdate() == null
+			&& jaxbMapping.getPostRemove() == null;
 	}
 
 	private static void errorIfEmpty(JpaEventListener jpaEventListener) {
@@ -286,27 +286,17 @@ public class JpaEventListener {
 		return jpaEventListener;
 	}
 
-	public static JpaEventListener tryAsCallback(ClassDetails classDetails) {
-		try {
-			return from( JpaEventListenerStyle.CALLBACK, classDetails );
-		}
-		catch ( ModelsException e ) {
-			return null;
-		}
-	}
-
 	public static boolean matchesSignature(JpaEventListenerStyle callbackType, MethodDetails methodDetails) {
-		if ( callbackType == JpaEventListenerStyle.CALLBACK ) {
-			// should have no arguments.  and technically (spec) have a void return
-			return methodDetails.getArgumentTypes().isEmpty()
-					&& methodDetails.getReturnType() == ClassDetails.VOID_CLASS_DETAILS;
-		}
-		else {
-			assert callbackType == JpaEventListenerStyle.LISTENER;
-			// should have 1 argument.  and technically (spec) have a void return
-			return methodDetails.getArgumentTypes().size() == 1
-					&& methodDetails.getReturnType() == ClassDetails.VOID_CLASS_DETAILS;
-		}
+		return switch ( callbackType ) {
+			case CALLBACK ->
+				// should have no arguments, and technically (spec) have a void return
+					methodDetails.getArgumentTypes().isEmpty()
+						&& methodDetails.getReturnType() == ClassDetails.VOID_CLASS_DETAILS;
+			case LISTENER ->
+				// should have 1 argument, and technically (spec) have a void return
+					methodDetails.getArgumentTypes().size() == 1
+						&& methodDetails.getReturnType() == ClassDetails.VOID_CLASS_DETAILS;
+		};
 	}
 
 }

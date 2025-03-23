@@ -43,11 +43,15 @@
 # assume any information here is accurate.
 
 Adam Warski <adam@warski.org> adamw <adam@warski.org>
+Adar Lieber-Dembo <adar@cloudera.com>
 Alex Snaps <alex.snaps@gmail.com> <alex.snaps@shopify.com>
+Alexander Kotlyarov <akotlyarov@gmail.com>
+Alexey Nesterov <email@alexnesterov.com> <alexey.nesterov@live.com>
 Andrea Boriero <andrea@hibernate.org> <dreborier@gmail.com>
 Andrej Golovnin <andrej.golovnin@googlemail.com> Andrej Golovnin <andrej.golovnin@gmail.com>
 Andrig Miller <andy.miller@jboss.com> andrigtmiller <andy.miller@jboss.com>
 Andrig Miller <andy.miller@jboss.com> andy.miller <andy.miller@jboss.com>
+Arcadiy Ivanov <arcadiy@ivanov.biz> <arcadiy.ivanov@servicemesh.com>
 Barry LaFond <blafond@redhat.com> blafond <blafond@redhat.com>
 Boris Korogvich <b.korogvich@gmail.com> VEINHORN <b.korogvich@gmail.com>
 Brett Meyer <brmeyer@redhat.com> <brett@3riverdev.com>
@@ -61,6 +65,7 @@ Chris Cranford <chris@hibernate.org> <chris@hibernate.org> Naros
 Chris Cranford <chris@hibernate.org> <crancran@gmail.com>
 Chris Cranford <chris@hibernate.org> cranforc <chris.cranford@setech.com>
 Christoph Dreis <christoph.dreis@freenet.de> ChristophDreis <christoph.dreis@freenet.de>
+Daniel Heinrich <dannynullzwo@gmail.com>
 Dave Repshas <David.Repshas@Teradata.com> drepshas <David.Repshas@Teradata.com>
 David M. Carr <david@carrclan.us> davidmc24 <david@carrclan.us>
 David M. Carr <dcarr@commercehub.com> dcarr <dcarr@commercehub.com>
@@ -82,7 +87,10 @@ Hardy Ferentschik <hardy@hibernate.org> <hardy@ferentschik.de>
 Hardy Ferentschik <hardy@hibernate.org> <hibernate@ferentschik.de>
 Harsh Panchal <panchal.harsh18@gmail.com> BOOTMGR <panchal.harsh18@gmail.com>
 Hernán Chanfreau <hchanfreau@gmail.com> hernan <hchanfreau@gmail.com>
+Ivan Munic <ivan.munic+github@gmail.com>
 Jaikiran Pai <jaikiran.pai@gmail.com> Jaikiran <jaikiran@users.noreply.github.com>
+Janario Oliveira <janario.oliveira@gmail.com> <janarioliver@gmail.com>
+Janario Oliveira <janario.oliveira@gmail.com> <janario.oliveira@tecsinapse.com.br>
 Jeremy Whiting <jwhiting@redhat.com> Jeremy Whiting <whitingjr@hotmail.com>
 John O'Hara <johara@redhat.com> johara <johnaohara80@gmail.com>
 John O'Hara <johara@redhat.com> <johara@localhost.localdomain>
@@ -90,18 +98,26 @@ John O'Hara <johara@redhat.com> JohnOhara <johara@redhat.com>
 John O'Hara <johara@redhat.com> John OHara <johara@redhat.com>
 John Verhaeg <jverhaeg@redhat.com> John Verhaeg <john.verhaeg@gmail.com>
 John Verhaeg <jverhaeg@redhat.com> JPAV <jverhaeg@redhat.com>
+Laurent Almeras <lalmeras@gmail.com> <laurent.almeras@kobalt.fr>
+Laurent Almeras <lalmeras@gmail.com> <laurent.almeras@kobalt-si.fr>
+Leonard Siu <leonard.siu@gmail.com>
 Loïc LEFEVRE <loic.lefevre@gmail.com> LLEFEVRE <loic.lefevre@gmail.com>
 Luis Barreiro <lbarreiro@redhat.com> barreiro <lbbbarreiro@gmail.com>
 Lukasz Antoniak <lukasz.antoniak@gmail.com> lukasz-antoniak <lukasz.antoniak@gmail.com>
+Matthew Vance <yinzara@gmail.com>
 Marco Belladelli <marco@hibernate.org> marco <marco.belladelli@semenda.it>
 Marco Belladelli <marco@hibernate.org> <mbellade@redhat.com>
+Michael Nachmias <michael.nachmias@fungible.com> <michael.nachmias@gmail.com>
 Misty Stanley-Jones <misty@redhat.com> misty <misty@redhat.com>
 Misty Stanley-Jones <misty@redhat.com> <mstanley@cheezel.(none)>
 Misty Stanley-Jones <misty@redhat.com> mstanleyjones <misty@redhat.com>
 Nathan Xu <nathan.qingyang.xu@gmail.com> <nathan.xu@procor.com>
 Nathan Xu <nathan.qingyang.xu@gmail.com> <nathan_xu@ultimatesoftware.com>
+Nelson Rodrigues <nelson@nelsonjrodrigues.com>
+Nikolay Mukhanov <mukhanov@gmail.com>
 Oliver Breidenbach <obr@xima.de> obr <obr@xima.de>
-Radim Vansa <rvansa@redhat.com> rvansa <rvansa@redhat.com> 
+Radim Vansa <rvansa@redhat.com> rvansa <rvansa@redhat.com>
+Rob Worsnop <rworsnop@gmail.com> <robert.worsnop@altisource.com>
 Sanne Grinovero <sanne@hibernate.org> <sanne.grinovero@gmail.com>
 Scott Marlow <smarlow@redhat.com> Scott Marlow <scott.marlow@gmail.com>
 Scott Marlow <smarlow@redhat.com> smarlow <smarlow@redhat.com>
@@ -110,6 +126,7 @@ Ståle W. Pedersen <stale.pedersen@jboss.org> <stalep@gmail.com>
 Steve Ebersole <steve@hibernate.org> <steve@apollo.(none)>
 Steve Ebersole <steve@hibernate.org> <steve@t510.(none)>
 Strong Liu <stliu@hibernate.org> <stliu@redhat.com>
+Viacheslav Rarata <cayneir@gmail.com>
 Vlad Mihalcea <mihalcea.vlad@gmail.com> <mihalcea.vlad@gmail.com>
 Vlad Mihalcea <mihalcea.vlad@gmail.com> <mih_vlad@yahoo.com>
 Vlad Mihalcea <mihalcea.vlad@gmail.com> <Vlad Mihalcea>

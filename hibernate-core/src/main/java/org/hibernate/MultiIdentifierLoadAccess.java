@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -170,7 +170,7 @@ public interface MultiIdentifierLoadAccess<T> {
 	/**
 	 * Should {@link #multiLoad} return entity instances that have been
 	 * {@linkplain Session#remove(Object) marked for removal} in the
-	 * current session, but not yet {@code delete}d in the database?
+	 * current session, but not yet deleted in the database?
 	 * <p>
 	 * By default, instances marked for removal are replaced by null in
 	 * the returned list of entities when {@link #enableOrderedReturn}

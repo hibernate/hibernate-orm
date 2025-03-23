@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
@@ -16,6 +16,7 @@ import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ import java.util.TimeZone;
 
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
+import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.BatchSize;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionAcquisitionMode;
@@ -50,12 +52,13 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
+import org.hibernate.Transaction;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.internal.StatefulPersistenceContext;
+import org.hibernate.engine.internal.PersistenceContexts;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -63,6 +66,7 @@ import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.ActionQueue.TransactionCompletionProcesses;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -70,7 +74,6 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
@@ -106,6 +109,7 @@ import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEvent;
 import org.hibernate.event.spi.ReplicateEventListener;
 import org.hibernate.loader.internal.CacheLoadHelper;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.event.monitor.spi.EventMonitor;
@@ -217,7 +221,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * session, and such actions are executed asynchronously when the session is {@linkplain #flush flushed}. The
  * motivation behind this architecture is two-fold: first, it enables customization by sophisticated extensions to
  * Hibernate ORM, and, second, it enables the transactional write-behind semantics of a stateful session. The stateful
- * session holds its state in an instance of {@link StatefulPersistenceContext}, which we may view as the first-level
+ * session holds its state in an instance of {@code StatefulPersistenceContext}, which we may view as the first-level
  * cache associated with the session.
  *
  * @author Gavin King
@@ -238,7 +242,7 @@ public class SessionImpl
 
 	private transient ActionQueue actionQueue;
 	private transient EventListenerGroups eventListenerGroups;
-	private transient StatefulPersistenceContext persistenceContext;
+	private transient PersistenceContext persistenceContext;
 
 	private transient LoadQueryInfluencers loadQueryInfluencers;
 
@@ -313,8 +317,8 @@ public class SessionImpl
 				: ConfigurationHelper.getFlushMode( getSessionProperty( HINT_FLUSH_MODE ), FlushMode.AUTO );
 	}
 
-	protected StatefulPersistenceContext createPersistenceContext() {
-		return new StatefulPersistenceContext( this );
+	protected PersistenceContext createPersistenceContext() {
+		return PersistenceContexts.createPersistenceContext( this );
 	}
 
 	protected ActionQueue createActionQueue() {
@@ -803,6 +807,19 @@ public class SessionImpl
 		return (T) fireMerge( new MergeEvent( entityName, object, this ) );
 	}
 
+	@Override
+	public <T> T merge(T object, EntityGraph<?> loadGraph) {
+		EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
+		try {
+			effectiveEntityGraph
+					.applyGraph( (RootGraphImplementor<?>) loadGraph, GraphSemantic.LOAD );
+			return merge( object );
+		}
+		finally {
+			effectiveEntityGraph.clear();
+		}
+	}
+
 	@Override @SuppressWarnings("unchecked")
 	public <T> T merge(T object) {
 		checkOpen();
@@ -864,7 +881,7 @@ public class SessionImpl
 	@Override
 	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, DeleteContext transientEntities) {
 		checkOpenOrWaitingForAutoClose();
-		final boolean removingOrphanBeforeUpdates = persistenceContext.isRemovingOrphanBeforeUpates();
+		final boolean removingOrphanBeforeUpdates = persistenceContext.isRemovingOrphanBeforeUpdates();
 		final boolean traceEnabled = log.isTraceEnabled();
 		if ( traceEnabled && removingOrphanBeforeUpdates ) {
 			logRemoveOrphanBeforeUpdates( "before continuing", entityName, object );
@@ -1507,7 +1524,7 @@ public class SessionImpl
 		doFlush();
 	}
 
-	@Override
+	@Override @Deprecated
 	public Object instantiate(String entityName, Object id) {
 		return instantiate( requireEntityPersister( entityName ), id );
 	}
@@ -2271,15 +2288,15 @@ public class SessionImpl
 		}
 
 		@Override
-		public TransactionImplementor getTransaction() {
+		public Transaction getTransaction() {
 			return shareTransactionContext ? session.getCurrentTransaction() : null;
 		}
 
 		@Override
 		public TransactionCompletionProcesses getTransactionCompletionProcesses() {
-			return shareTransactionContext ?
-					session.getActionQueue().getTransactionCompletionProcesses() :
-					null;
+			return shareTransactionContext
+					? session.getActionQueue().getTransactionCompletionProcesses()
+					: null;
 		}
 	}
 
@@ -2314,14 +2331,6 @@ public class SessionImpl
 	protected void removeSharedSessionTransactionObserver(TransactionCoordinator transactionCoordinator) {
 		super.removeSharedSessionTransactionObserver( transactionCoordinator );
 		transactionCoordinator.removeObserver( transactionObserver );
-	}
-
-	private EntityPersister requireEntityPersister(Class<?> entityClass) {
-		return getFactory().getMappingMetamodel().getEntityDescriptor( entityClass );
-	}
-
-	private EntityPersister requireEntityPersister(String entityName) {
-		return getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
 	@Override
@@ -2360,7 +2369,8 @@ public class SessionImpl
 		}
 		else {
 			final TransactionStatus status = getCurrentTransaction().getStatus();
-			return status == TransactionStatus.ACTIVE || status == TransactionStatus.COMMITTING;
+			return status == TransactionStatus.ACTIVE
+				|| status == TransactionStatus.COMMITTING;
 		}
 	}
 
@@ -2977,6 +2987,38 @@ public class SessionImpl
 		return getFactory().getJpaMetamodel();
 	}
 
+	@Override
+	public Collection<?> getManagedEntities() {
+		return persistenceContext.getEntityHoldersByKey()
+				.values().stream().map( EntityHolder::getManagedObject )
+				.toList();
+	}
+
+	@Override
+	public Collection<?> getManagedEntities(String entityName) {
+		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
+				.filter( entry -> entry.getKey().getEntityName().equals( entityName ) )
+				.map( entry -> entry.getValue().getManagedObject() )
+				.toList();
+	}
+
+	@Override
+	public <E> Collection<E> getManagedEntities(Class<E> entityType) {
+		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
+				.filter( entry -> entry.getKey().getPersister().getMappedClass().equals( entityType ) )
+				.map( entry -> (E) entry.getValue().getManagedObject() )
+				.toList();
+	}
+
+	@Override
+	public <E> Collection<E> getManagedEntities(EntityType<E> entityType) {
+		final String entityName = ( (EntityDomainType<E>) entityType ).getHibernateEntityName();
+		return persistenceContext.getEntityHoldersByKey().entrySet().stream()
+				.filter( entry -> entry.getKey().getEntityName().equals( entityName ) )
+				.map( entry -> (E) entry.getValue().getManagedObject() )
+				.toList();
+	}
+
 	/**
 	 * Used by JDK serialization...
 	 *
@@ -2992,7 +3034,7 @@ public class SessionImpl
 
 		oos.defaultWriteObject();
 
-		persistenceContext.serialize( oos );
+		PersistenceContexts.serialize( persistenceContext, oos );
 		actionQueue.serialize( oos );
 
 		oos.writeObject( loadQueryInfluencers );
@@ -3014,7 +3056,7 @@ public class SessionImpl
 
 		ois.defaultReadObject();
 
-		persistenceContext = StatefulPersistenceContext.deserialize( ois, this );
+		persistenceContext = PersistenceContexts.deserialize( ois, this );
 		actionQueue = ActionQueue.deserialize( ois, this );
 
 		loadQueryInfluencers = (LoadQueryInfluencers) ois.readObject();

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa;
@@ -166,10 +166,13 @@ public interface HibernateHints {
 
 	/**
 	 * Hint to enable a fetch profile for a given
-	 * {@link jakarta.persistence.EntityManager#setProperty(String, Object) EntityManager}.
+	 * {@link jakarta.persistence.EntityManager#setProperty(String, Object) EntityManager}
+	 * or {@link jakarta.persistence.Query#setHint(String, Object) Query}.
 	 *
 	 * @see org.hibernate.Session#enableFetchProfile(String)
+	 * @see org.hibernate.query.SelectionQuery#enableFetchProfile(String)
 	 * @see jakarta.persistence.EntityManager#setProperty(String, Object)
+	 * @see jakarta.persistence.Query#setHint(String, Object)
 	 */
 	String HINT_FETCH_PROFILE = "org.hibernate.fetchProfile";
 

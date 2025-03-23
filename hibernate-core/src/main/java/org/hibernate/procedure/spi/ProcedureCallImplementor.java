@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.spi;
@@ -51,28 +51,28 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 	@Override
 	<T> ProcedureCallImplementor<R> setParameter(Parameter<T> param, T value);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCallImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCallImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
 	ProcedureCallImplementor<R> setParameter(String name, Object value);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCallImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCallImplementor<R> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
 	ProcedureCallImplementor<R> setParameter(int position, Object value);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCallImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	ProcedureCallImplementor<R> setParameter(int position, Date value, TemporalType temporalType);
 
 	@Override

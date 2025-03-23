@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -150,11 +150,6 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
-	}
-
-	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
 	}
 
 	@Override
@@ -318,21 +313,6 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 			appendSql( " escape " );
 			likePredicate.getEscapeCharacter().accept( this );
 		}
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInSet() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return dialect.getVersion().isSameOrAfter( 5, 7 );
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	@Override

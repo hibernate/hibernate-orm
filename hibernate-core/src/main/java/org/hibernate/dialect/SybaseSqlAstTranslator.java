@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -87,11 +87,6 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
 			}
 		}
-	}
-
-	@Override
-	protected boolean supportsWithClause() {
-		return false;
 	}
 
 	// Sybase does not allow CASE expressions where all result arms contain plain parameters.
@@ -252,21 +247,6 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
 		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	@Override

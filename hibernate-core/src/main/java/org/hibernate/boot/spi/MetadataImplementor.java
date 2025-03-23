@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
@@ -60,4 +60,7 @@ public interface MetadataImplementor extends Metadata {
 	Component getGenericComponent(Class<?> componentClass);
 
 	DiscriminatorType<?> resolveEmbeddableDiscriminatorType(Class<?> embeddableClass, Supplier<DiscriminatorType<?>> supplier);
+
+	@Override
+	SessionFactoryImplementor buildSessionFactory();
 }

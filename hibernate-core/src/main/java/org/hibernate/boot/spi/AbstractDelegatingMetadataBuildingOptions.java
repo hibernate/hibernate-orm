@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
@@ -128,11 +128,6 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public boolean useNationalizedCharacterData() {
 		return delegate.useNationalizedCharacterData();
-	}
-
-	@Override
-	public boolean isMapsIdInferenceEnabled() {
-		return delegate.isMapsIdInferenceEnabled();
 	}
 
 	@Override

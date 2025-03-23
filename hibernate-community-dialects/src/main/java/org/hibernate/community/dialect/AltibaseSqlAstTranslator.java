@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -220,26 +220,6 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	@Override
 	protected boolean needsRecursiveKeywordInWithClause() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsSimpleQueryGrouping() {
 		return false;
 	}
 

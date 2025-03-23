@@ -34,7 +34,7 @@ mysql_8_0() {
         fi
         n=$((n+1))
         echo "Waiting for MySQL to start..."
-        sleep 3
+        sleep 5
     done
     if [ "$n" -ge 5 ]; then
       echo "MySQL failed to start and configure after 15 seconds"
@@ -58,7 +58,7 @@ mysql_8_1() {
         fi
         n=$((n+1))
         echo "Waiting for MySQL to start..."
-        sleep 3
+        sleep 5
     done
     if [ "$n" -ge 5 ]; then
       echo "MySQL failed to start and configure after 15 seconds"
@@ -82,7 +82,7 @@ mysql_8_2() {
         fi
         n=$((n+1))
         echo "Waiting for MySQL to start..."
-        sleep 3
+        sleep 5
     done
     if [ "$n" -ge 5 ]; then
       echo "MySQL failed to start and configure after 15 seconds"
@@ -151,13 +151,7 @@ mariadb_verylatest() {
 }
 
 postgresql() {
-  postgresql_16
-}
-
-postgresql_12() {
-    $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d ${DB_IMAGE_POSTGRESQL_12:-docker.io/postgis/postgis:12-3.4}
-    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-12-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
+  postgresql_17
 }
 
 postgresql_13() {
@@ -186,15 +180,22 @@ postgresql_16() {
     $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-16-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
 }
 
-edb() {
-    edb_16
+postgresql_17() {
+    $CONTAINER_CLI rm -f postgres || true
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /pgtmpfs:size=131072k -d ${DB_IMAGE_POSTGRESQL_17:-docker.io/postgis/postgis:17-3.5} \
+      -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
+    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-17-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
 }
 
-edb_12() {
+edb() {
+    edb_17
+}
+
+edb_13() {
     $CONTAINER_CLI rm -f edb || true
     # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
-    (cd edb; $CONTAINER_CLI build -t edb-test:12 -f edb12.Dockerfile .)
-    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:12
+    (cd edb; $CONTAINER_CLI build -t edb-test:13 -f edb13.Dockerfile .)
+    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:13
 }
 
 edb_14() {
@@ -216,6 +217,13 @@ edb_16() {
     # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
     (cd edb; $CONTAINER_CLI build -t edb-test:16 -f edb16.Dockerfile .)
     $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:16
+}
+
+edb_17() {
+    $CONTAINER_CLI rm -f edb || true
+    # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
+    (cd edb; $CONTAINER_CLI build -t edb-test:17 -f edb17.Dockerfile .)
+    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:17
 }
 
 db2() {
@@ -441,6 +449,8 @@ go
 create login $SYBASE_USER with password $SYBASE_PASSWORD
 go
 exec sp_configure 'enable xml', 1
+go
+exec sp_configure 'heap memory per user', 0, '16K'
 go
 exec sp_dboption $SYBASE_DB, 'abort tran on log full', true
 go
@@ -681,7 +691,7 @@ oracle_atps() {
   export SERVICE=$(echo $INFO | jq -r '.database' | jq -r '.service')
   export PASSWORD=$(echo $INFO | jq -r '.database' | jq -r '.password')
 
-  curl -k -s -X POST "https://${HOST}.oraclevcn.com:8443/ords/admin/_/sql" -H 'content-type: application/sql' -H 'accept: application/json' -basic -u admin:${PASSWORD} --data-ascii "create user hibernate_orm_test_$RUNID identified by \"Oracle_19_Password\" DEFAULT TABLESPACE DATA TEMPORARY TABLESPACE TEMP;alter user hibernate_orm_test_$RUNID quota unlimited on data;grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to hibernate_orm_test_$RUNID;"
+  curl -k -s -X POST "https://${HOST}.oraclecloudapps.com/ords/admin/_/sql" -H 'content-type: application/sql' -H 'accept: application/json' -basic -u admin:${PASSWORD} --data-ascii "create user hibernate_orm_test_$RUNID identified by \"Oracle_19_Password\" DEFAULT TABLESPACE DATA TEMPORARY TABLESPACE TEMP;alter user hibernate_orm_test_$RUNID quota unlimited on data;grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to hibernate_orm_test_$RUNID;"
 }
 
 oracle_atps_tls() {
@@ -691,7 +701,7 @@ oracle_atps_tls() {
   export SERVICE=$(echo $INFO | jq -r '.database' | jq -r '.service')
   export PASSWORD=$(echo $INFO | jq -r '.database' | jq -r '.password')
 
-  curl -s -X POST "https://${HOST}.oraclecloudapps.com/ords/admin/_/sql" -H 'content-type: application/sql' -H 'accept: application/json' -basic -u admin:${PASSWORD} --data-ascii "create user hibernate_orm_test_$RUNID identified by \"Oracle_19_Password\" DEFAULT TABLESPACE DATA TEMPORARY TABLESPACE TEMP;alter user hibernate_orm_test_$RUNID quota unlimited on data;grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to hibernate_orm_test_$RUNID;"
+  curl -s -X POST "https://${HOST}.oraclecloudapps.com/ords/admin/_/sql" -H 'content-type: application/sql' -H 'accept: application/json' -basic -u admin:${PASSWORD} --data-ascii "create user hibernate_orm_test_$RUNID identified by \"Oracle_19_Password\" DEFAULT TABLESPACE DATA TEMPORARY TABLESPACE TEMP;alter user hibernate_orm_test_$RUNID quota unlimited on data;grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to hibernate_orm_test_$RUNID;"
 }
 
 oracle_db19c() {
@@ -1031,10 +1041,11 @@ if [ -z ${1} ]; then
     echo -e "\tdb2_10_5"
     echo -e "\tdb2_spatial"
     echo -e "\tedb"
+    echo -e "\tedb_17"
     echo -e "\tedb_16"
     echo -e "\tedb_15"
     echo -e "\tedb_14"
-    echo -e "\tedb_12"
+    echo -e "\tedb_13"
     echo -e "\thana"
     echo -e "\tmariadb"
     echo -e "\tmariadb_verylatest"
@@ -1054,11 +1065,11 @@ if [ -z ${1} ]; then
     echo -e "\toracle_23"
     echo -e "\toracle_21"
     echo -e "\tpostgresql"
+    echo -e "\tpostgresql_17"
     echo -e "\tpostgresql_16"
     echo -e "\tpostgresql_15"
     echo -e "\tpostgresql_14"
     echo -e "\tpostgresql_13"
-    echo -e "\tpostgresql_12"
     echo -e "\tsybase"
     echo -e "\ttidb"
     echo -e "\ttidb_5_4"

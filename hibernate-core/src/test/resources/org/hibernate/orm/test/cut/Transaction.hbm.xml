@@ -1,9 +1,7 @@
 <?xml version="1.0"?>
 <!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
-  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
   -->
 <!DOCTYPE hibernate-mapping PUBLIC
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
@@ -25,14 +23,6 @@
 		<component name="value"  class="org.hibernate.orm.test.cut.MonetoryAmountUserType">
 			<property name="amount" not-null="true"/>
 			<property name="currency" not-null="true"/>
-		</component>
-		<component name="timestamp" class="org.hibernate.orm.test.cut.CompositeDateTimeUserType">
-			<property name="year" column="ts_year"/>
-			<property name="month" column="ts_month"/>
-			<property name="day" column="ts_day"/>
-			<property name="hour" column="ts_hour"/>
-			<property name="minute" column="ts_minute"/>
-			<property name="second" column="ts_second"/>
 		</component>
 	</class>
 	

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
@@ -21,7 +21,7 @@ package org.hibernate.engine.spi;
  *
  * @author Steve Ebersole
  */
-public interface ManagedEntity extends Managed {
+public interface ManagedEntity extends Managed, InstanceIdentity {
 	/**
 	 * Obtain a reference to the entity instance.
 	 *
@@ -128,4 +128,26 @@ public interface ManagedEntity extends Managed {
 		return this;
 	}
 
+	/**
+	 * Utility method that allows injecting all persistence-related information on the managed entity at once.
+	 *
+	 * @param entityEntry the {@link EntityEntry} associated with this entity instance
+	 * @param previous the previous entry
+	 * @param next the next entry
+	 * @param instanceId unique identifier for this instance
+	 * @return the previous {@link EntityEntry} contained in this managed entity, or {@code null}
+	 * @see #$$_hibernate_setEntityEntry(EntityEntry)
+	 * @see #$$_hibernate_setPreviousManagedEntity(ManagedEntity)
+	 * @see #$$_hibernate_setNextManagedEntity(ManagedEntity)
+	 * @see #$$_hibernate_setInstanceId(int)
+	 * @since 7.0
+	 */
+	default EntityEntry $$_hibernate_setPersistenceInfo(EntityEntry entityEntry, ManagedEntity previous, ManagedEntity next, int instanceId) {
+		final EntityEntry oldEntry = $$_hibernate_getEntityEntry();
+		$$_hibernate_setEntityEntry( entityEntry );
+		$$_hibernate_setPreviousManagedEntity( previous );
+		$$_hibernate_setNextManagedEntity( next );
+		$$_hibernate_setInstanceId( instanceId );
+		return oldEntry;
+	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -138,22 +138,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		// Oracle has some limitations, see ORA-32034, so we just report false here for simplicity
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRecursiveSearchClause() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsRecursiveCycleClause() {
-		return true;
-	}
-
-	@Override
 	public void visitSqlSelection(SqlSelection sqlSelection) {
 		if ( getCurrentCteStatement() != null ) {
 			if ( getCurrentCteStatement().getMaterialization() == CteMaterialization.MATERIALIZED ) {
@@ -210,12 +194,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 		// On Oracle 11 where there is no lateral support,
 		// make sure we don't use intersect if the query has an offset/fetch clause
 		return !queryPart.hasOffsetOrFetchClause();
-	}
-
-	@Override
-	protected boolean supportsNestedSubqueryCorrelation() {
-		// It seems it doesn't support it, at least on version 11
-		return false;
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
@@ -450,11 +428,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	@Override
-	protected boolean supportsSimpleQueryGrouping() {
-		return supportsOffsetFetchClause();
-	}
-
-	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
 			if ( supportsOffsetFetchClause() ) {
@@ -646,21 +619,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			appendSql( "floor" );
 		}
 		super.visitBinaryArithmeticExpression(arithmeticExpression);
-	}
-
-	@Override
-	protected boolean supportsDuplicateSelectItemsInQueryGroup() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	private boolean supportsOffsetFetchClause() {

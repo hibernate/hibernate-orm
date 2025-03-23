@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
@@ -75,7 +75,7 @@ public abstract class AbstractSelectionQuery<R>
 	 */
 	public static final String CRITERIA_HQL_STRING = "<criteria>";
 
-	private Callback callback;
+	private transient Callback callback;
 
 	public AbstractSelectionQuery(SharedSessionContractImplementor session) {
 		super( session );
@@ -270,9 +270,7 @@ public abstract class AbstractSelectionQuery<R>
 		try {
 			final List<R> list = list();
 			if ( list.isEmpty() ) {
-				throw new NoResultException(
-						String.format( "No result found for query [%s]", getQueryString() )
-				);
+				throw new NoResultException( "No result found for query [" + getQueryString() + "]" );
 			}
 			return uniqueElement( list );
 		}
@@ -614,7 +612,7 @@ public abstract class AbstractSelectionQuery<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQuery<R> setParameter(String name, Instant value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
@@ -638,7 +636,7 @@ public abstract class AbstractSelectionQuery<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQuery<R> setParameter(int position, Instant value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
@@ -668,37 +666,37 @@ public abstract class AbstractSelectionQuery<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQuery<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQuery<R> setParameter(String name, Calendar value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQuery<R> setParameter(String name, Date value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQuery<R> setParameter(int position, Calendar value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQuery<R> setParameter(int position, Date value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;

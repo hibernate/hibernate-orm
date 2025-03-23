@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
@@ -67,14 +67,20 @@ import jakarta.persistence.AttributeConverter;
 public interface InFlightMetadataCollector extends MetadataImplementor {
 	BootstrapContext getBootstrapContext();
 
-	SourceModelBuildingContext getSourceModelBuildingContext();
+	/**
+	 * @deprecated Use {@linkplain BootstrapContext#getModelsContext()} instead.
+	 */
+	@Deprecated
+	default SourceModelBuildingContext getSourceModelBuildingContext() {
+		return getBootstrapContext().getModelsContext();
+	}
 
 	default ClassDetailsRegistry getClassDetailsRegistry() {
-		return getSourceModelBuildingContext().getClassDetailsRegistry();
+		return getBootstrapContext().getModelsContext().getClassDetailsRegistry();
 	}
 
 	default AnnotationDescriptorRegistry getAnnotationDescriptorRegistry() {
-		return getSourceModelBuildingContext().getAnnotationDescriptorRegistry();
+		return getBootstrapContext().getModelsContext().getAnnotationDescriptorRegistry();
 	}
 
 	GlobalRegistrations getGlobalRegistrations();
@@ -330,7 +336,6 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 
 	PropertyData getPropertyAnnotatedWithMapsId(ClassDetails persistentClassDetails, String propertyName);
 	void addPropertyAnnotatedWithMapsId(ClassDetails entityClassDetails, PropertyData propertyAnnotatedElement);
-	void addInferredMapsIdProperty(ClassDetails entityClassDetails, PropertyData specJPropertyData, String s);
 
 	void addToOneAndIdProperty(ClassDetails entityClassDetails, PropertyData propertyAnnotatedElement);
 	PropertyData getPropertyAnnotatedWithIdAndToOne(ClassDetails persistentClassDetails, String propertyName);

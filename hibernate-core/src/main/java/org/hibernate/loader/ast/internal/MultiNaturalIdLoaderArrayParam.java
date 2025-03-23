@@ -1,17 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
-import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -27,25 +24,19 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 /**
  * Standard MultiNaturalIdLoader implementation
  */
-public class MultiNaturalIdLoaderArrayParam<E> implements MultiNaturalIdLoader<E>, SqlArrayMultiKeyLoader {
-	private final EntityMappingType entityDescriptor;
+public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoader<E> implements SqlArrayMultiKeyLoader {
 	private final Class<?> keyClass;
 
 	public MultiNaturalIdLoaderArrayParam(EntityMappingType entityDescriptor) {
-		assert entityDescriptor.getNaturalIdMapping() instanceof SimpleNaturalIdMapping;
+		super(entityDescriptor);
 
-		this.entityDescriptor = entityDescriptor;
+		assert entityDescriptor.getNaturalIdMapping() instanceof SimpleNaturalIdMapping;
 
 		this.keyClass = entityDescriptor.getNaturalIdMapping().getJavaType().getJavaTypeClass();
 	}
 
-	@Override
-	public EntityMappingType getLoadable() {
-		return entityDescriptor;
-	}
-
 	protected SimpleNaturalIdMapping getNaturalIdMapping()  {
-		return (SimpleNaturalIdMapping) entityDescriptor.getNaturalIdMapping();
+		return (SimpleNaturalIdMapping) getEntityDescriptor().getNaturalIdMapping();
 	}
 
 	protected BasicAttributeMapping getNaturalIdAttribute()  {
@@ -53,26 +44,11 @@ public class MultiNaturalIdLoaderArrayParam<E> implements MultiNaturalIdLoader<E
 	}
 
 	@Override
-	public <K> List<E> multiLoad(K[] naturalIds, MultiNaturalIdLoadOptions loadOptions, SharedSessionContractImplementor session) {
-		if ( naturalIds == null ) {
-			throw new IllegalArgumentException( "`naturalIds` is null" );
-		}
-
-		if ( naturalIds.length == 0 ) {
-			return Collections.emptyList();
-		}
-
-		if ( MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.tracef( "MultiNaturalIdLoaderArrayParam#multiLoadStarting - `%s`", entityDescriptor.getEntityName() );
-		}
+	public <K> List<E> unorderedMultiLoad( K[] naturalIds, SharedSessionContractImplementor session, LockOptions lockOptions ) {
 
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
-		naturalIds = LoaderHelper.normalizeKeys( naturalIds, getNaturalIdAttribute(), session, sessionFactory );
 
-		final LockOptions lockOptions =
-				loadOptions.getLockOptions() == null
-						? LockOptions.NONE
-						: loadOptions.getLockOptions();
+		naturalIds = LoaderHelper.normalizeKeys( naturalIds, getNaturalIdAttribute(), session, sessionFactory );
 
 		final JdbcMapping arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				getNaturalIdMapping().getSingleJdbcMapping(),

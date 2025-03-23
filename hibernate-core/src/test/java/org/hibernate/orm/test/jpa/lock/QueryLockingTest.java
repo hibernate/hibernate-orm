@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.lock;
@@ -286,31 +286,6 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em.remove( em.getReference( Lockable.class, reread.getId() ) );
 		em.getTransaction().commit();
 		em.close();
-	}
-
-	@Test
-	@JiraKey(value = "HHH-9419")
-	public void testNoVersionCheckAfterRemove() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Lockable lock = new Lockable( "name" );
-		em.persist( lock );
-		em.getTransaction().commit();
-		em.close();
-		Integer initial = lock.getVersion();
-		assertNotNull( initial );
-
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		Lockable reread = em.createQuery( "from Lockable", Lockable.class )
-				.setLockMode( LockModeType.OPTIMISTIC )
-				.getSingleResult();
-		assertEquals( initial, reread.getVersion() );
-		assertTrue( em.unwrap( SessionImpl.class ).getActionQueue().hasBeforeTransactionActions() );
-		em.remove( reread );
-		em.getTransaction().commit();
-		em.close();
-		assertEquals( initial, reread.getVersion() );
 	}
 
 	@Test

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.internal.bytebuddy;
@@ -1199,8 +1199,8 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			if ( getter instanceof GetterMethodImpl ) {
 				getterMember = getter.getMethod();
 			}
-			else if ( getter instanceof GetterFieldImpl ) {
-				getterMember = getter.getMember();
+			else if ( getter instanceof GetterFieldImpl getterField ) {
+				getterMember = getterField.getField();
 			}
 			else {
 				throw new InvalidPropertyAccessorException(
@@ -1304,7 +1304,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	/**
 	 * Similar to {@link #getEnhancer(EnhancementContext)} but intended for advanced users who wish
 	 * to customize how ByteBuddy is locating the class files and caching the types.
-	 * Possibly used in Quarkus in a future version.
+	 * Used in Quarkus.
 	 * @param enhancementContext
 	 * @param classLocator
 	 * @return

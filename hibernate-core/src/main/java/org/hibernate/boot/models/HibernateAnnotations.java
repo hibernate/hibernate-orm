@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models;
@@ -240,6 +240,10 @@ public interface HibernateAnnotations {
 			EmbeddableInstantiatorRegistrationAnnotation.class,
 			EMBEDDABLE_INSTANTIATOR_REGISTRATIONS
 	);
+	OrmAnnotationDescriptor<EmbeddedColumnNaming,EmbeddedColumnNamingAnnotation> EMBEDDED_COLUMN_NAMING = new OrmAnnotationDescriptor<>(
+			EmbeddedColumnNaming.class,
+			EmbeddedColumnNamingAnnotation.class
+	);
 	OrmAnnotationDescriptor<Fetch,FetchAnnotation> FETCH = new OrmAnnotationDescriptor<>(
 			Fetch.class,
 			FetchAnnotation.class
@@ -419,6 +423,15 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<Mutability, MutabilityAnnotation> MUTABILITY = new OrmAnnotationDescriptor<>(
 			Mutability.class,
 			MutabilityAnnotation.class
+	);
+	OrmAnnotationDescriptor<NamedEntityGraphs, NamedEntityGraphsAnnotation> NAMED_ENTITY_GRAPHS = new OrmAnnotationDescriptor<>(
+			NamedEntityGraphs.class,
+			NamedEntityGraphsAnnotation.class
+	);
+	OrmAnnotationDescriptor<NamedEntityGraph, NamedEntityGraphAnnotation> NAMED_ENTITY_GRAPH = new OrmAnnotationDescriptor<>(
+			NamedEntityGraph.class,
+			NamedEntityGraphAnnotation.class,
+			NAMED_ENTITY_GRAPHS
 	);
 	OrmAnnotationDescriptor<NamedNativeQueries, NamedNativeQueriesAnnotation> NAMED_NATIVE_QUERIES = new OrmAnnotationDescriptor<>(
 			NamedNativeQueries.class,

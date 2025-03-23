@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
@@ -296,11 +296,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.BatchSettings#STATEMENT_BATCH_SIZE
 	 */
 	int getJdbcBatchSize();
-
-	/**
-	 * @see org.hibernate.cfg.BatchSettings#BATCH_VERSIONED_DATA
-	 */
-	boolean isJdbcBatchVersionedData();
 
 	/**
 	 * @see org.hibernate.cfg.JdbcSettings#USE_SCROLLABLE_RESULTSET

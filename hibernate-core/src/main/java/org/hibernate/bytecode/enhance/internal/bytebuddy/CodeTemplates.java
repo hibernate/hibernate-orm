@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
@@ -19,7 +19,9 @@ import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CompositeOwner;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ExtendedSelfDirtinessTracker;
+import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
@@ -36,6 +38,26 @@ import net.bytebuddy.jar.asm.Opcodes;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asCompositeTracker;
 
 class CodeTemplates {
+
+	static class SetPersistenceInfo {
+		@Advice.OnMethodExit
+		static void $$_hibernate_setOwner(
+				@Advice.Argument(0) EntityEntry entityEntry,
+				@Advice.Argument(1) ManagedEntity previous,
+				@Advice.Argument(2) ManagedEntity next,
+				@Advice.Argument(3) int instanceId,
+				@Advice.Return(readOnly = false) EntityEntry previousEntry,
+				@Advice.FieldValue(value = EnhancerConstants.ENTITY_ENTRY_FIELD_NAME, readOnly = false) EntityEntry entityEntryField,
+				@Advice.FieldValue(value = EnhancerConstants.PREVIOUS_FIELD_NAME, readOnly = false) ManagedEntity previousField,
+				@Advice.FieldValue(value = EnhancerConstants.NEXT_FIELD_NAME, readOnly = false) ManagedEntity nextField,
+				@Advice.FieldValue(value = EnhancerConstants.INSTANCE_ID_FIELD_NAME, readOnly = false) int instanceIdField) {
+			previousEntry = entityEntryField;
+			entityEntryField = entityEntry;
+			previousField = previous;
+			nextField = next;
+			instanceIdField = instanceId;
+		}
+	}
 
 	static class SetOwner {
 		@Advice.OnMethodEnter

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc.internal;
@@ -9,17 +9,19 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.sql.Connection;
 
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.jdbc.LogicalConnection;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.IMMEDIATE_ACQUISITION_AND_HOLD;
 
 /**
  * @author Steve Ebersole
  */
 public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImplementor {
-	private static final Logger log = Logger.getLogger( LogicalConnection.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( LogicalConnection.class );
 
 	private transient Connection providedConnection;
 	private final boolean initiallyAutoCommit;
@@ -30,7 +32,6 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 		if ( providedConnection == null ) {
 			throw new IllegalArgumentException( "Provided Connection cannot be null" );
 		}
-
 		this.providedConnection = providedConnection;
 		this.initiallyAutoCommit = determineInitialAutoCommitMode( providedConnection );
 	}
@@ -43,7 +44,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 
 	@Override
 	public PhysicalConnectionHandlingMode getConnectionHandlingMode() {
-		return PhysicalConnectionHandlingMode.IMMEDIATE_ACQUISITION_AND_HOLD;
+		return IMMEDIATE_ACQUISITION_AND_HOLD;
 	}
 
 	@Override
@@ -53,17 +54,15 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 
 	@Override
 	public Connection close() {
-		log.trace( "Closing logical connection" );
-
+		log.closingLogicalConnection();
 		getResourceRegistry().releaseResources();
-
 		try {
 			return providedConnection;
 		}
 		finally {
 			providedConnection = null;
 			closed = true;
-			log.trace( "Logical connection closed" );
+			log.logicalConnectionClosed();
 		}
 	}
 
@@ -99,14 +98,13 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 			return providedConnection;
 		}
 		finally {
-			this.providedConnection = null;
+			providedConnection = null;
 		}
 	}
 
 	@Override
 	public void manualReconnect(Connection connection) {
 		errorIfClosed();
-
 		if ( connection == null ) {
 			throw new IllegalArgumentException( "cannot reconnect using a null connection" );
 		}
@@ -131,7 +129,6 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	@Override
 	protected void afterCompletion() {
 		afterTransaction();
-
 		resetConnection( initiallyAutoCommit );
 	}
 }

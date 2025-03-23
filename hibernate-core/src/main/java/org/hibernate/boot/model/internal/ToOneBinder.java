@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -53,7 +53,6 @@ import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.noConstraint;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.StringHelper.isBlank;
-import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
@@ -214,7 +213,6 @@ public class ToOneBinder {
 			joinColumns.setMapsId( mapsId.value() );
 		}
 
-		final boolean hasInferredMapsId = handleInferredMapsId( joinColumns, inferredData, property, context );
 		value.setTypeName( inferredData.getClassOrElementName() );
 		final String propertyName = inferredData.getPropertyName();
 		value.setTypeUsingReflection( propertyHolder.getClassName(), propertyName );
@@ -244,7 +242,7 @@ public class ToOneBinder {
 				joinColumns,
 				optional,
 				inferredData,
-				isIdentifierMapper || hasInferredMapsId,
+				isIdentifierMapper,
 				propertyBinder,
 				value,
 				property,
@@ -255,48 +253,6 @@ public class ToOneBinder {
 	static boolean isTargetAnnotatedEntity(ClassDetails targetEntity, MemberDetails property) {
 		final ClassDetails target = isDefault( targetEntity ) ? property.getType().determineRawClass() : targetEntity;
 		return target.hasDirectAnnotationUsage( Entity.class );
-	}
-
-	// The following code infers a "missing" @MapsId annotation
-	// when an @Id Column matches a @JoinColumn of another field.
-	// There's also some related code for this case over in
-	// PropertyBinder#handleInferredMapsIdProperty
-	private static boolean handleInferredMapsId(
-			AnnotatedJoinColumns columns,
-			PropertyData propertyData,
-			MemberDetails property,
-			MetadataBuildingContext context) {
-		if ( context.getBuildingOptions().isMapsIdInferenceEnabled() ) {
-			//Make sure that JPA1 key-many-to-one columns are read only too
-			boolean hasInferredMapsId = false;
-			final JoinColumn joinColumn = property.getDirectAnnotationUsage( JoinColumn.class );
-			if ( joinColumn != null
-					&& property.hasDirectAnnotationUsage( ManyToOne.class )
-					&& !property.hasDirectAnnotationUsage( MapsId.class ) ) {
-				final String joinColumnName = joinColumn.name();
-				if ( isNotBlank( joinColumnName ) ) {
-					for ( MemberDetails member : propertyData.getDeclaringClass().getFields() ) {
-						if ( member.hasDirectAnnotationUsage( Id.class )
-							//TODO Explicit @Column should not be mandatory here
-								&& member.hasDirectAnnotationUsage( Column.class ) ) {
-							final String columnName = member.getDirectAnnotationUsage( Column.class ).name();
-							if ( joinColumnName.equals( columnName ) ) {
-								hasInferredMapsId = true;
-								for ( AnnotatedJoinColumn column : columns.getJoinColumns() ) {
-									column.setInsertable( false );
-									column.setUpdatable( false );
-								}
-							}
-						}
-					}
-				}
-
-			}
-			return hasInferredMapsId;
-		}
-		else {
-			return false;
-		}
 	}
 
 	private static void processManyToOneProperty(
@@ -379,8 +335,8 @@ public class ToOneBinder {
 			PropertyData inferredData) {
 		final MetadataBuildingContext context = toOne.getBuildingContext();
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
-		final SourceModelBuildingContext sourceModelContext = collector.getSourceModelBuildingContext();
-		property.forEachAnnotationUsage( FetchProfileOverride.class, sourceModelContext,
+		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		property.forEachAnnotationUsage( FetchProfileOverride.class, modelsContext,
 				usage -> collector.addSecondPass( new FetchSecondPass( usage, propertyHolder, inferredData.getPropertyName(), context ) ));
 	}
 
@@ -649,14 +605,14 @@ public class ToOneBinder {
 	}
 
 	private static ClassDetails getTargetEntityClass(MemberDetails property, MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
 		final ManyToOne manyToOne = property.getDirectAnnotationUsage( ManyToOne.class );
 		if ( manyToOne != null ) {
-			return sourceModelContext.getClassDetailsRegistry().resolveClassDetails( manyToOne.targetEntity().getName() );
+			return modelsContext.getClassDetailsRegistry().resolveClassDetails( manyToOne.targetEntity().getName() );
 		}
 		final OneToOne oneToOne = property.getDirectAnnotationUsage( OneToOne.class );
 		if ( oneToOne != null ) {
-			return sourceModelContext.getClassDetailsRegistry().resolveClassDetails( oneToOne.targetEntity().getName() );
+			return modelsContext.getClassDetailsRegistry().resolveClassDetails( oneToOne.targetEntity().getName() );
 		}
 		throw new AssertionFailure( "Unexpected discovery of a targetEntity: " + property.getName() );
 	}

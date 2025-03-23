@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
@@ -146,12 +146,6 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	@Override
 	public MetadataBuilder enableGlobalNationalizedCharacterDataSupport(boolean enabled) {
 		delegate.enableGlobalNationalizedCharacterDataSupport( enabled );
-		return getThis();
-	}
-
-	@Override
-	public MetadataBuilder enableMapsIdInference(boolean enabled) {
-		delegate.enableMapsIdInference( enabled );
 		return getThis();
 	}
 

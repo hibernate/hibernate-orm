@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -11,6 +11,8 @@ import java.sql.ResultSet;
  * to use underneath a {@link ScrollableResults}.
  *
  * @author Gavin King
+ *
+ * @see org.hibernate.query.SelectionQuery#scroll(ScrollMode)
  */
 public enum ScrollMode {
 	/**

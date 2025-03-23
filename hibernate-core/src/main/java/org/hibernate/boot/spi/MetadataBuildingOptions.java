@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
@@ -204,12 +204,6 @@ public interface MetadataBuildingOptions {
 	 * @return {@code true} if nationalized character data should be used by default; {@code false} otherwise.
 	 */
 	boolean useNationalizedCharacterData();
-
-	/**
-	 * Do we attempt to infer missing {@link jakarta.persistence.MapsId}
-	 * annotations when they are not explicitly specified?
-	 */
-	boolean isMapsIdInferenceEnabled();
 
 	/**
 	 * Should we <em>disable</em> constraint creation when

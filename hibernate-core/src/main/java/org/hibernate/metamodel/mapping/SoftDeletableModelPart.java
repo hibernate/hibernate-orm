@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
@@ -15,5 +15,8 @@ public interface SoftDeletableModelPart extends ModelPartContainer {
 	 */
 	SoftDeleteMapping getSoftDeleteMapping();
 
+	/**
+	 * Details about the table which holds the soft-delete column.
+	 */
 	TableDetails getSoftDeleteTableDetails();
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -238,6 +238,16 @@ public class MySQLLegacyDialect extends Dialect {
 			default:
 				return super.columnType( sqlTypeCode );
 		}
+	}
+
+	/**
+	 * MySQL strips any trailing space character from a
+	 * value stored in a column of type {@code char(n)}.
+	 * @return {@code true}
+	 */
+	@Override
+	public boolean stripsTrailingSpacesFromChar() {
+		return true;
 	}
 
 	@Override
@@ -1491,6 +1501,47 @@ public class MySQLLegacyDialect extends Dialect {
 	@Override
 	public String getFromDualForSelectOnly() {
 		return getVersion().isSameOrAfter( 8 ) ? "" : ( " from " + getDual() );
+	}
+
+	@Override
+	public boolean supportsDistinctFromPredicate() {
+		// It supports a proprietary operator
+		return true;
+	}
+
+	@Override
+	public boolean supportsIntersect() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsJoinsInDelete() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsNestedSubqueryCorrelation() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsSimpleQueryGrouping() {
+		return getVersion().isSameOrAfter( 8 );
+	}
+
+	@Override
+	public boolean supportsWithClause() {
+		return getVersion().isSameOrAfter( 8 );
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return getVersion().isSameOrAfter( 5, 7 );
 	}
 
 }

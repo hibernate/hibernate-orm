@@ -1,13 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import jakarta.persistence.AttributeNode;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
@@ -21,8 +20,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.TypedQuery;
-import jakarta.persistence.metamodel.Attribute;
-import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.graph.GraphSemantic;
 
@@ -32,9 +29,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.hamcrest.CollectionMatchers.hasSize;
 import static org.hibernate.testing.hamcrest.InitializationCheckMatcher.isInitialized;
 
 /**
@@ -143,68 +138,6 @@ public class EntityGraphUsingFetchGraphTest {
 					query.setHint( GraphSemantic.LOAD.getJpaHintName(), entityGraph );
 					final List<CustomerOrder> results = query.getResultList();
 
-					assertEntityGraph( entityGraph );
-					assertThat( results, isInitialized() );
-				}
-		);
-	}
-
-	@Test
-	@JiraKey( value = "HHH-13233")
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	void fetchAttributeNodeByAttributeFromSubgraph(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					Address address = new Address();
-					address.city = "TestCity";
-
-					CustomerOrder customerOrder = new CustomerOrder();
-					customerOrder.shippingAddress = address;
-
-					Product product = new Product();
-
-					OrderPosition orderPosition = new OrderPosition();
-					orderPosition.product = product;
-
-					customerOrder.orderPosition = orderPosition;
-					session.persist( address );
-					session.persist( orderPosition );
-					session.persist( product );
-					session.persist( customerOrder );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					final EntityManager em = session.unwrap( EntityManager.class );
-					final EntityGraph<CustomerOrder> entityGraph = em.createEntityGraph( CustomerOrder.class );
-					EntityType<CustomerOrder> customerOrderEntityType =
-							scope.getSessionFactory().getMetamodel().entity( CustomerOrder.class );
-					entityGraph.addAttributeNodes(
-							customerOrderEntityType.getAttribute( "shippingAddress" ),
-							customerOrderEntityType.getAttribute( "orderDate" )
-					);
-					entityGraph.addAttributeNodes( customerOrderEntityType.getAttribute( "shippingAddress" ) );
-
-					final Subgraph<OrderPosition> orderProductsSubgraph =
-							entityGraph.addSubgraph( (Attribute) customerOrderEntityType.getAttribute( "orderPosition" ) );
-					EntityType<OrderPosition> positionEntityType =
-							scope.getSessionFactory().getMetamodel().entity( OrderPosition.class );
-					orderProductsSubgraph.addAttributeNodes( positionEntityType.getAttribute( "amount" ) );
-					orderProductsSubgraph.addAttributeNodes( positionEntityType.getAttribute( "product" ) );
-
-					final Subgraph<Product> productSubgraph =
-							orderProductsSubgraph.addSubgraph( (Attribute) positionEntityType.getAttribute( "product" ) );
-					EntityType<Product> productEntityType = scope.getSessionFactory().getMetamodel().entity( Product.class );
-					productSubgraph.addAttributeNodes( productEntityType.getAttribute( "productName" ) );
-
-					TypedQuery<CustomerOrder> query = em.createQuery(
-							"SELECT o FROM CustomerOrder o", CustomerOrder.class
-					);
-					query.setHint( GraphSemantic.LOAD.getJpaHintName(), entityGraph );
-					final List<CustomerOrder> results = query.getResultList();
-
-					assertEntityGraph( entityGraph );
 					assertThat( results, isInitialized() );
 				}
 		);
@@ -248,37 +181,6 @@ public class EntityGraphUsingFetchGraphTest {
 					assertThat( results, isInitialized() );
 				}
 		);
-	}
-
-	/**
-	 * Verify that entityGraph has expected state
-	 *
-	 * customerOrder - shippingAddress
-	 *               - orderDate
-	 *               - orderPosition - amount
-	 *                               - product - productName
-	 *
-	 * @param entityGraph entityGraph
-	 */
-	private void assertEntityGraph(EntityGraph<CustomerOrder> entityGraph) {
-		assertThat(entityGraph.getAttributeNodes(), hasSize( 3 ) );
-		for ( AttributeNode<?> entityGraphAttributeNode : entityGraph.getAttributeNodes() ) {
-			if ( "orderPosition".equals( entityGraphAttributeNode.getAttributeName() ) ) {
-				Collection<Subgraph> orderPositionGraph = entityGraphAttributeNode.getSubgraphs().values();
-				assertThat( orderPositionGraph, hasSize( 1 ) );
-				List<AttributeNode<?>> orderPositionAttributes = orderPositionGraph.iterator().next().getAttributeNodes();
-				assertThat( orderPositionAttributes, hasSize( 2 ) );
-				for ( AttributeNode<?> orderPositionAttributeNode : orderPositionAttributes ) {
-					if ( "product".equals( orderPositionAttributeNode.getAttributeName() ) ) {
-						assertThat( orderPositionAttributeNode.getSubgraphs().entrySet(), hasSize( 1 ) );
-					} else {
-						assertThat( orderPositionAttributeNode.getSubgraphs().isEmpty(), is( true ) );
-					}
-				}
-			} else {
-				assertThat( entityGraphAttributeNode.getSubgraphs().isEmpty(), is( true ) );
-			}
-		}
 	}
 
 	@Entity(name = "CustomerOrder")

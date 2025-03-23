@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -149,7 +149,7 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 	private Annotation findGeneratorAnnotation(AnnotationTarget annotationTarget) {
 		final List<? extends Annotation> metaAnnotated =
 				annotationTarget.getMetaAnnotated( IdGeneratorType.class,
-						buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
+						buildingContext.getBootstrapContext().getModelsContext() );
 		if ( CollectionHelper.size( metaAnnotated ) > 0 ) {
 			return metaAnnotated.get( 0 );
 		}

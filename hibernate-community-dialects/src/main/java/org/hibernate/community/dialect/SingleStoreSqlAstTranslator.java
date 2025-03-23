@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -69,21 +69,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 		else {
 			super.visitBinaryArithmeticExpression( arithmeticExpression );
 		}
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	@Override
@@ -173,11 +158,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected void visitConflictClause(ConflictClause conflictClause) {
 		visitOnDuplicateKeyConflictClause( conflictClause );
 	}
@@ -201,11 +181,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 		else {
 			return null;
 		}
-	}
-
-	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		return false;
 	}
 
 	@Override
@@ -234,7 +209,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	@Override
 	protected boolean shouldEmulateLateralWithIntersect(QueryPart queryPart) {
-		return supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
+		return getDialect().supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
 	}
 
 	//SingleStore doesn't support 'FOR UPDATE' clause with distributed joins
@@ -251,11 +226,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	@Override
 	public void visitEvery(Every every) {
 		throw new UnsupportedOperationException( "SingleStore doesn't support ALL clause" );
-	}
-
-	@Override
-	protected boolean supportsNestedSubqueryCorrelation() {
-		return false;
 	}
 
 	@Override
@@ -423,16 +393,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 				appendSql( CLOSE_PARENTHESIS );
 			}
 		}
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInSet() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsDistinctFromPredicate() {
-		return false;
 	}
 
 	@Override

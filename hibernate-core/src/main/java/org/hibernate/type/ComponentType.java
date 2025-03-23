@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -431,7 +431,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	@Override
 	public Object[] getPropertyValues(Object component) {
 		if (component == null) {
-			return new Object[propertySpan];
+			return new Object[propertySpan + discriminatorColumnSpan];
 		}
 		else if ( component instanceof Object[] ) {
 			// A few calls to hashCode pass the property values already in an

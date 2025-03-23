@@ -1,12 +1,11 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 plugins {
 	id "java-gradle-plugin"
 	id 'groovy-gradle-plugin'
+	id "com.diffplug.spotless" version "7.0.2"
 }
 
 repositories {
@@ -105,3 +104,16 @@ gradlePlugin {
 	}
 }
 
+spotless {
+	//Don't fail during the check: rather than enforcing guidelines, we use this plugin to fix mistakes automatically.
+	enforceCheck false
+	java {
+		targetExclude( "**/target/**/*.java" )
+		licenseHeaderFile project.file("../shared/config/spotless/license.java")
+		removeUnusedImports()
+		leadingSpacesToTabs( 4 )
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+}
+tasks.compileJava.dependsOn tasks.spotlessJavaApply

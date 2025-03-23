@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity;
@@ -19,7 +19,6 @@ import org.hibernate.PropertyValueException;
 import org.hibernate.QueryException;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -48,7 +47,6 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.ImmutableEntityEntryFactory;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
-import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
@@ -97,7 +95,7 @@ import org.hibernate.loader.ast.internal.EntityConcreteTypeLoader;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.internal.MultiIdEntityLoaderArrayParam;
-import org.hibernate.loader.ast.internal.MultiIdEntityLoaderStandard;
+import org.hibernate.loader.ast.internal.MultiIdEntityLoaderInPredicate;
 import org.hibernate.loader.ast.internal.SingleIdArrayLoadPlan;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderProvidedQueryImpl;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderStandardImpl;
@@ -118,7 +116,6 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
@@ -229,6 +226,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -283,6 +282,7 @@ import java.util.function.Supplier;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
+import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
@@ -849,7 +849,7 @@ public abstract class AbstractEntityPersister
 		final Dialect dialect = factory.getJdbcServices().getDialect();
 		return getIdentifierType() instanceof BasicType && supportsSqlArrayType( dialect )
 				? new MultiIdEntityLoaderArrayParam<>( this, factory )
-				: new MultiIdEntityLoaderStandard<>( this, identifierColumnSpan, factory );
+				: new MultiIdEntityLoaderInPredicate<>( this, identifierColumnSpan, factory );
 	}
 
 	private String getIdentitySelectString(Dialect dialect) {
@@ -2838,9 +2838,8 @@ public abstract class AbstractEntityPersister
 
 			if ( softDeleteMapping != null ) {
 				final TableReference tableReference = tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
-				final Predicate softDeletePredicate = SoftDeleteHelper.createNonSoftDeletedRestriction(
+				final Predicate softDeletePredicate = softDeleteMapping.createNonDeletedRestriction(
 						tableReference,
-						softDeleteMapping,
 						creationState.getSqlExpressionResolver()
 				);
 				additionalPredicateCollectorAccess.get().accept( softDeletePredicate );
@@ -3461,7 +3460,10 @@ public abstract class AbstractEntityPersister
 	public void addSoftDeleteToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 		if ( softDeleteMapping != null ) {
 			final TableInsertBuilder insertBuilder = insertGroupBuilder.getTableDetailsBuilder( getIdentifierTableName() );
-			insertBuilder.addValueColumn( softDeleteMapping );
+			final MutatingTableReference mutatingTable = insertBuilder.getMutatingTable();
+			final ColumnReference columnReference = new ColumnReference( mutatingTable, softDeleteMapping );
+			final ColumnValueBinding nonDeletedValueBinding = softDeleteMapping.createNonDeletedValueBinding( columnReference );
+			insertBuilder.addValueColumn( nonDeletedValueBinding );
 		}
 	}
 
@@ -3853,13 +3855,16 @@ public abstract class AbstractEntityPersister
 		// for reattachment of mutable natural-ids, we absolutely positively have to grab the snapshot from the
 		// database, because we have no other way to know if the state changed while detached.
 		final Object[] entitySnapshot = persistenceContext.getDatabaseSnapshot( id, this );
-		final Object naturalIdSnapshot = entitySnapshot == StatefulPersistenceContext.NO_ROW
-				? null
-				: naturalIdMapping.extractNaturalIdFromEntityState( entitySnapshot );
+		final Object naturalIdSnapshot = naturalIdFromSnapshot( entitySnapshot );
 
 		naturalIdResolutions.removeSharedResolution( id, naturalIdSnapshot, this, false );
 		final Object naturalId = naturalIdMapping.extractNaturalIdFromEntity( entity );
 		naturalIdResolutions.manageLocalResolution( id, naturalId, this, CachedNaturalIdValueSource.UPDATE );
+	}
+
+	private Object naturalIdFromSnapshot(Object[] entitySnapshot) {
+		return entitySnapshot == PersistenceContext.NO_ROW ? null
+				: naturalIdMapping.extractNaturalIdFromEntityState( entitySnapshot );
 	}
 
 	@Override
@@ -4911,27 +4916,18 @@ public abstract class AbstractEntityPersister
 		}
 
 		discriminatorMapping = generateDiscriminatorMapping( bootEntityDescriptor );
-		softDeleteMapping = resolveSoftDeleteMapping( this, bootEntityDescriptor, getIdentifierTableName(), creationProcess );
+		softDeleteMapping = resolveSoftDeleteMapping(
+				this,
+				bootEntityDescriptor.getRootClass(),
+				getIdentifierTableName(),
+				creationProcess
+		);
 
 		if ( softDeleteMapping != null ) {
 			if ( bootEntityDescriptor.getRootClass().getCustomSQLDelete() != null ) {
 				throw new UnsupportedMappingException( "Entity may not define both @SoftDelete and @SQLDelete" );
 			}
 		}
-	}
-
-	private static SoftDeleteMapping resolveSoftDeleteMapping(
-			AbstractEntityPersister persister,
-			PersistentClass bootEntityDescriptor,
-			String identifierTableName,
-			MappingModelCreationProcess creationProcess) {
-		final RootClass rootClass = bootEntityDescriptor.getRootClass();
-		return SoftDeleteHelper.resolveSoftDeleteMapping(
-				persister,
-				rootClass,
-				identifierTableName,
-				creationProcess.getCreationContext().getJdbcServices().getDialect()
-		);
 	}
 
 	private void postProcessAttributeMappings(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {

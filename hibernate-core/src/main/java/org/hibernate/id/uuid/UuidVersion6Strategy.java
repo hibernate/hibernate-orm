@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.uuid;
@@ -34,7 +34,8 @@ import org.hibernate.id.UUIDGenerationStrategy;
 public class UuidVersion6Strategy implements UUIDGenerationStrategy, UuidValueGenerator {
 	public static final UuidVersion6Strategy INSTANCE = new UuidVersion6Strategy();
 
-	private static class Holder {
+	@Internal
+	public static class Holder {
 		static final SecureRandom numberGenerator = new SecureRandom();
 		static final long EPOCH_1582_SECONDS = LocalDate.of( 1582, 10, 15 )
 				.atStartOfDay( ZoneId.of( "UTC" ) )

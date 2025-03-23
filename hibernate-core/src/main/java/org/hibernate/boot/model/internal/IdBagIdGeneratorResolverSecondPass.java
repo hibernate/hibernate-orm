@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -140,7 +140,7 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 
 		handleTableGenerator(
 				generatorName,
-				new TableGeneratorJpaAnnotation( metadataCollector.getSourceModelBuildingContext() ),
+				new TableGeneratorJpaAnnotation( buildingContext.getBootstrapContext().getModelsContext() ),
 				idValue,
 				idBagMember,
 				buildingContext
@@ -185,7 +185,7 @@ public class IdBagIdGeneratorResolverSecondPass implements IdGeneratorResolver {
 
 		handleSequenceGenerator(
 				generatorName,
-				new SequenceGeneratorJpaAnnotation( metadataCollector.getSourceModelBuildingContext() ),
+				new SequenceGeneratorJpaAnnotation( buildingContext.getBootstrapContext().getModelsContext() ),
 				idValue,
 				idBagMember,
 				buildingContext

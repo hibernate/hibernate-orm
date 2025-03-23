@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -519,7 +519,7 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.jsonArrayAppend_postgresql( false );
 		functionFactory.jsonArrayInsert_postgresql();
 
-		functionFactory.unnest_postgresql();
+		functionFactory.unnest_postgresql( false );
 		functionFactory.generateSeries( null, "ordinality", true );
 		functionFactory.jsonTable_cockroachdb();
 
@@ -1248,4 +1248,20 @@ public class CockroachLegacyDialect extends Dialect {
 	public boolean supportsFromClauseInUpdate() {
 		return true;
 	}
+
+	@Override
+	public boolean supportsRowConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
 }

@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.container.spi;
 
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.service.JavaServiceLoadable;
 import org.hibernate.service.spi.Stoppable;
 
 /**
@@ -19,6 +20,7 @@ import org.hibernate.service.spi.Stoppable;
  *
  * @author Steve Ebersole
  */
+@JavaServiceLoadable
 public interface BeanContainer extends Stoppable {
 	interface LifecycleOptions {
 		boolean canUseCachedReferences();

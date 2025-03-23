@@ -3,6 +3,128 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.0.0.Beta5 (March 21, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32581
+
+** Bug
+    * [HHH-19266] - inconsistencies in ScrollableResults
+    * [HHH-19259] - Static metamodel for id/timestamp not set (and triggers warnings) for DefaultRevisionEntity and similar
+    * [HHH-19258] - Remove @Entity annotation from default revision entities contributed internally by Envers
+    * [HHH-19254] - The return value of st_envelope() is not recognised as a geometry type on MariaDB 
+    * [HHH-19246] - Fetch join makes partially covered EntityGraph ineffective
+    * [HHH-19232] - BeanValidationEventListener not called if only associated collection is updated via getter
+    * [HHH-19227] - errors in class OracleSDOFunctionDescriptors
+    * [HHH-19220] - ClassCastException: class org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer$1 cannot be cast to class java.lang.String
+    * [HHH-19206] - Bytecode-enhanced dirty checking ineffective if entity's embedded ID set manually (to same value)
+    * [HHH-19195] - Embeddable inheritance: discriminator values are not hierarchically ordered
+    * [HHH-19173] - PostgreSQLLegacySqlAstTranslator does not implement visitInArrayPredicates
+    * [HHH-19143] - javadoc for 7 links to JPA 3.1 javadoc instead of 3.2
+    * [HHH-19140] - Enhanced entities with AccessType.PROPERTY does not work well with inheritance
+    * [HHH-19134] - Hibernate processor - find by id fails for entity with composite identifier with @IdClass
+    * [HHH-19126] - Plural valued paths should be collection-typed instead of element typed
+    * [HHH-19118] - The columnDefinition field of joinColumn does not take effect 
+    * [HHH-19116] - Error when using fk() function on left joined many-to-one association and is null predicate
+    * [HHH-19110] - Flush operation fails with "UnsupportedOperationException: compare() not implemented for EntityType"
+    * [HHH-19109] - Hibernate Data Repositories are @RequestScoped
+    * [HHH-19097] - CoercionException for empty CHAR(1) from MySQL when used with MySQLLegacyDialect
+    * [HHH-19091] - Nested entity classes not properly handled by jpamodelgen
+    * [HHH-19005] - High memory usage for JSON string literals in BasicFormatterImpl
+    * [HHH-18946] - Startup issues with HANA in failover situations
+    * [HHH-18780] - Performance regression on Postgres with polymorphic query due to incorrect casts of null columns
+    * [HHH-17151] - NPE when binding null parameter in native query with explicit TemporalType
+    * [HHH-11801] - AbstractPersistentCollection.SetProxy does not implement equals()
+
+** Deprecation
+    * [HHH-19274] - Deprecate MetadataBuilder#applyIndexView and friends
+    * [HHH-19265] - deprecate hibernate.jdbc.use_scrollable_resultset
+    * [HHH-19253] - deprecate use of lifecycle callbacks on embeddables
+    * [HHH-19063] - Drop forms of SchemaNameResolver performing reflection
+
+** Improvement
+    * [HHH-19271] - support HINT_FETCH_PROFILE in SelectionQuery
+    * [HHH-19260] - Move feature supports methods from the SqlAstTranslator base impl to Dialect
+    * [HHH-19252] - overriding @Id generation declared by @MappedSuperclass
+    * [HHH-19223] - Upgrade JBoss Logging Tools (processor) to 3.0.4.Final
+    * [HHH-19219] - Informix Catalog and schema support
+    * [HHH-19210] - Propagate exceptions from building a ValidatorFactory
+    * [HHH-19205] - Do not recreate the validator on each BeanValidationEventListener#validate call
+    * [HHH-19196] - Upgrade to JUnit 5.12.0
+    * [HHH-19145] - Relicense Hibernate ORM under ASL
+    * [HHH-19142] - StatelessSession.findMultiple() and second-level cache
+    * [HHH-19089] - Lower collection pre-sizing limit to avoid excessive memory usage
+    * [HHH-18724] - Support Hibernate Validator @ConstraintComposition(OR) for 'not null' DDL generation
+    * [HHH-18723] - Support @SQLRestriction in class marked as @MappedSuperclass
+    * [HHH-18482] - Provide access to a mutable ClassDetailsRegistry from the Integrator
+    * [HHH-17325] - @SoftDelete with timestamp
+    * [HHH-15271] - Don't initialize lazy associations via merge
+    * [HHH-4396] - Ability to patternize embedded column names
+
+** New Feature
+    * [HHH-19237] - Expand graph language to optionally specify entity
+    * [HHH-19217] - Expose GraphParser#parse on SessionFactory
+    * [HHH-19216] - NamedEntityGraph annotation supporting Hibernate parseable format
+
+
+Changes in 7.0.0.Beta4 (February 12, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32482
+
+** Bug
+    * [HHH-19107] - Entities with @EmbeddedId not supported with CrudRepository
+    * [HHH-19106] - @Transaction(TxType) not working with Hibernate Data Repositories
+    * [HHH-19104] - Envers is keeping references to classes and thus classloaders
+    * [HHH-19079] - ComponentType.replace can cause ArrayIndexOutOfBoundsException when used with embeddable inheritance
+    * [HHH-19072] - The hibernate.session_factory_name configuration property no longer works in Hibernate 7.0.0
+    * [HHH-19069] - Performance regression for wide inheritance models
+    * [HHH-19034] - Wrong reuse of a Join 
+    * [HHH-19033] - Move of Derby to community dialects is incomplete
+    * [HHH-19017] - Class Cast Exception for PersistentAttributeInterceptable
+    * [HHH-19011] - @ElementCollection comment overrides class level comment on an Entity
+    * [HHH-19004] - TenantId regression on @EmbeddedId 6.6.0 -> 6.6.1
+    * [HHH-18992] - Locking does not work with multiLoad
+    * [HHH-18988] - Embeddable inheritance + default_schema results in NPE at startup
+    * [HHH-18974] - UuidVersion6Strategy/UuidVersion7Strategy use random seed in static init + constructor
+    * [HHH-18968] - MySQLDialect wrongly uses Timestamp as type for localtime function
+    * [HHH-18961] - JtaIsolationDelegate, obtaining connection : NPE when SQLExceptionConversionDelegate#convert returns null
+    * [HHH-18949] - Hibernate Processor should not insert underscores within uppercase names
+    * [HHH-18945] - Hibernate Processor - fails if entity extends mapped superclass with same simple class name
+    * [HHH-18933] - the ordering of the class declaration in persistence.xml seems to affect the metamodel
+    * [HHH-18932] - Wrongly using FK column instead of PK when using joined alias
+    * [HHH-18912] - ORM release process
+    * [HHH-18904] - Bytecode Enhancement fails with UnsupportedEnhancementStrategy.FAIL for pre-persist method
+    * [HHH-18903] - Bytecode enhancement fails for entities that contain a method named get
+    * [HHH-18901] - AnnotationFormatError: Duplicate annotation for class: interface org.hibernate.bytecode.enhance.spi.EnhancementInfo
+    * [HHH-18894] - Hibernate 6.6 enum literal is considered field literal instead
+    * [HHH-18893] - DialectOverrides.SQLRestrictions
+    * [HHH-18883] - When initializing version attribute to a negative value then a TransientObjectException is thrown when loading an entity
+    * [HHH-18869] - Schema validation fails with MariaDB when entity field is of type BigDecimal[]
+    * [HHH-18868] - Wrong behaviour of getAttribute method in impl. of ManagedType when scattered id attributes are used in MappedSuperclass
+    * [HHH-18867] - beginTransaction() when a tx is already active
+    * [HHH-18858] - array fields and static metamodel
+    * [HHH-18819] - Error resolving persistent property of @MapperSuperclass if subtype @Embeddable used as @IdClass
+    * [HHH-18771] - ListInitializer should consistently consider @ListIndexBase
+    * [HHH-18750] - @OneToMany with @Any mapped in secondary table KO (ClassCastException)
+    * [HHH-18693] - Hibernate Processor does not handle inner @Embeddable types
+    * [HHH-18384] - @JoinColumnsOrFormulas broken
+    * [HHH-17652] - Cannot invoke "org.hibernate.envers.internal.entities.EntityConfiguration.getRelationDescription(String)" because "entCfg" is null
+    * [HHH-16883] - EntityGraph.addSubclassSubgraph() throws UnsupportedOperationException
+    * [HHH-16516] - Adding quoteOnNonIdentifierChar flag to org.hibernate.boot.model.naming.Identifier breaks backwards compatibility
+    * [HHH-16216] - SybaseASEDialect creates additional not null checks
+    * [HHH-15848] - session.isDirty() shouldn't throw exception for transient many-to-one object in a session
+    * [HHH-14725] - Using a InputStream with BlobProxy and Envers results in  java.sql.SQLException: could not reset reader
+    * [HHH-14519] - Misleading error message when unable to resolve table name
+    * [HHH-13969] - Fix handling of large varbinary for SAP/Sybase ASE
+    * [HHH-13915] - Shared state in ByteBuddy basic proxies leads to intermittently broken persistence
+    * [HHH-13815] - TransientObjectException after merging a bidirectional one-to-many with orphan deletion
+    * [HHH-13790] - Temporary session not being closed
+    * [HHH-13612] - Quoted table name in FROM clause and Column in @Formula gets wrongly qualified with generated alias
+    * [HHH-13377] - Lazy loaded properties of bytecode enhanced entity are left stale after refresh of entity
+    * [HHH-13243] - Setting @ManyToAny.fetch to FetchType.EAGER doesn't work
+
+
 Changes in 7.0.0.Beta3 (December 05, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -18,7 +18,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
@@ -121,12 +120,12 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	@Override
-	public Predicate notEqualTo(Expression<?> value) {
+	public SqmPredicate notEqualTo(Expression<?> value) {
 		return nodeBuilder().notEqual( this, value );
 	}
 
 	@Override
-	public Predicate notEqualTo(Object value) {
+	public SqmPredicate notEqualTo(Object value) {
 		return nodeBuilder().notEqual( this, value );
 	}
 

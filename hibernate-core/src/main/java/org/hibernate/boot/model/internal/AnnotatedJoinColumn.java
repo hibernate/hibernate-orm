@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -13,6 +13,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
@@ -316,7 +317,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			Column referencedColumn,
 			PersistentClass referencedEntity,
 			SimpleValue value) {
-		int columnIndex = getParent().getJoinColumns().indexOf(this);
+		final int columnIndex = getParent().getJoinColumns().indexOf( this );
 		linkValueUsingDefaultColumnNaming( columnIndex, referencedColumn, referencedEntity, value );
 	}
 
@@ -343,7 +344,9 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 				referencedColumn.getTemporalPrecision(),
 				referencedColumn.getArrayLength(),
 				mappingColumn != null && mappingColumn.isNullable(),
-				referencedColumn.getSqlType(),
+				mappingColumn != null && mappingColumn.getSqlType() != null
+						? mappingColumn.getSqlType()
+						: referencedColumn.getSqlType(),
 				mappingColumn != null && mappingColumn.isUnique(),
 				false
 		);
@@ -450,7 +453,9 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	@Override
 	public void redefineColumnName(String columnName, String propertyName, boolean applyNamingStrategy) {
-		super.redefineColumnName( columnName, null, applyNamingStrategy );
+		if ( StringHelper.isNotEmpty( columnName ) ) {
+			getMappingColumn().setName( processColumnName( columnName, applyNamingStrategy ) );
+		}
 	}
 
 	static AnnotatedJoinColumn buildImplicitJoinTableJoinColumn(

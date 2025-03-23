@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
@@ -212,7 +212,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataBuilder applyIndexView(Object jandexView) {
-		bootstrapContext.injectJandexView( jandexView );
 		return this;
 	}
 
@@ -340,11 +339,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public MetadataBuilder applyTempClassLoader(ClassLoader tempClassLoader) {
 		bootstrapContext.injectJpaTempClassLoader( tempClassLoader );
-		return this;
-	}
-
-	public MetadataBuilder enableMapsIdInference(boolean enabled) {
-		options.mapsIdInferenceEnabled = enabled;
 		return this;
 	}
 
@@ -644,7 +638,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private boolean implicitDiscriminatorsForJoinedInheritanceSupported;
 		private boolean implicitlyForceDiscriminatorInSelect;
 		private boolean useNationalizedCharacterData;
-		private boolean mapsIdInferenceEnabled;
 		private boolean noConstraintByDefault;
 
 		private final String schemaCharset;
@@ -733,12 +726,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 					},
 					// by default, see if the defined RegionFactory (if one) defines a default
 					regionFactory == null ? null : regionFactory.getDefaultAccessType()
-			);
-
-			mapsIdInferenceEnabled = configService.getSetting(
-					"hibernate.enable_mapsid_inference",
-					BOOLEAN,
-					false
 			);
 
 			noConstraintByDefault = ConstraintMode.NO_CONSTRAINT.name().equalsIgnoreCase( configService.getSetting(
@@ -917,11 +904,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public boolean useNationalizedCharacterData() {
 			return useNationalizedCharacterData;
-		}
-
-		@Override
-		public boolean isMapsIdInferenceEnabled() {
-			return mapsIdInferenceEnabled;
 		}
 
 		@Override

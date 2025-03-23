@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
@@ -13,6 +13,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -30,8 +31,10 @@ import static org.hamcrest.Matchers.is;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = ByteMappingTests.EntityOfBytes.class)
 @SessionFactory
+@JiraKey(value = "HHH-14021")
 public class ByteMappingTests {
 
 	@Test
@@ -67,15 +70,13 @@ public class ByteMappingTests {
 				(session) -> session.persist(new EntityOfBytes(1, (byte) 3, (byte) 5))
 		);
 		scope.inTransaction(
-				(session) -> session.get(EntityOfBytes.class, 1)
+				(session) -> session.find(EntityOfBytes.class, 1)
 		);
 	}
 
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createMutationQuery("delete EntityOfBytes").executeUpdate()
-		);
+		scope.dropData();
 	}
 
 	@Entity(name = "EntityOfBytes")

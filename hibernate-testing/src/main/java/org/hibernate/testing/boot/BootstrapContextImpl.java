@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.boot;
@@ -25,6 +25,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
+import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
@@ -36,7 +37,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Andrea Boriero
  */
-public class BootstrapContextImpl implements BootstrapContext {
+public class BootstrapContextImpl implements BootstrapContext, AutoCloseable {
 
 	private final BootstrapContext delegate;
 
@@ -60,6 +61,11 @@ public class BootstrapContextImpl implements BootstrapContext {
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return delegate.getTypeConfiguration();
+	}
+
+	@Override
+	public SourceModelBuildingContext getModelsContext() {
+		return delegate.getModelsContext();
 	}
 
 	@Override
@@ -181,6 +187,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		delegate.release();
 	}
 
+	@Override
 	public void close() {
 		delegate.release();
 		delegate.getServiceRegistry().close();

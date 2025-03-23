@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.derivedidentities.e1.b.specjmapid;
@@ -17,6 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
@@ -49,6 +50,7 @@ public class CustomerInventory implements Serializable, Comparator<CustomerInven
 
 	@ManyToOne(cascade = CascadeType.MERGE)
 	@JoinColumn(name = "CI_CUSTOMERID", nullable = false)
+	@MapsId("custId")
 	private Customer customer;
 
 	@ManyToOne(cascade = CascadeType.MERGE)

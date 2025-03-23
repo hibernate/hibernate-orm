@@ -18,12 +18,6 @@ The following settings control this behavior.
 	Controls the maximum number of statements Hibernate will batch together before asking the driver to execute the batch.
 	Zero or a negative number disables this feature.
 
-`hibernate.jdbc.batch_versioned_data`::
-	Some JDBC drivers return incorrect row counts when a batch is executed.
-	If your JDBC driver falls into this category this setting should be set to `false`.
-	Otherwise, it is safe to enable this which will allow Hibernate to still batch the DML for versioned entities and still use the returned row counts for optimistic lock checks.
-	Since 5.0, it defaults to true. Previously (versions 3.x and 4.x), it used to be false.
-
 `hibernate.jdbc.batch.builder`::
 	Names the implementation class used to manage batching capabilities.
 	It is almost never a good idea to switch from Hibernate's default implementation.

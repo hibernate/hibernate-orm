@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -138,6 +138,8 @@ public abstract class SimpleValue implements KeyValue {
 		this.attributeConverterDescriptor = original.attributeConverterDescriptor;
 		this.type = original.type;
 		this.customIdGeneratorCreator = original.customIdGeneratorCreator;
+		this.nullValueSemantic = original.nullValueSemantic;
+		this.foreignKeyOptions = original.foreignKeyOptions;
 	}
 
 	@Override

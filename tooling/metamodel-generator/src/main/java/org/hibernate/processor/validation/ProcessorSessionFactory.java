@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.validation;
@@ -166,7 +166,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	private Type propertyType(Element member, String entityName, String path, AccessType defaultAccessType) {
 		final TypeMirror memberType = memberType(member);
 		if (isEmbeddedProperty(member)) {
-			return component.make(asElement(memberType), entityName, path, defaultAccessType, this);
+			return componentType( entityName, path, defaultAccessType, memberType );
 		}
 		else if (isToOneAssociation(member)) {
 			return new ManyToOneType(getTypeConfiguration(), getToOneTargetEntity(member));
@@ -184,6 +184,10 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			return getTypeConfiguration().getBasicTypeRegistry()
 					.getRegisteredType(qualifiedName(memberType));
 		}
+	}
+
+	private Component componentType(String entityName, String path, AccessType defaultAccessType, TypeMirror memberType) {
+		return component.make( asElement( memberType ), entityName, path, defaultAccessType, this );
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
@@ -414,6 +418,12 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 		@Override
 		public Type identifierType() {
+			if (hasAnnotation( type, "IdClass" )) {
+				final TypeMirror annotationMember = (TypeMirror)getAnnotationMember( getAnnotation( type, "IdClass" ), "value" );
+				if (annotationMember != null) {
+					return factory.componentType( getEntityName(), EntityIdentifierMapping.ID_ROLE_NAME, defaultAccessType, annotationMember );
+				}
+			}
 			for (Element element : type.getEnclosedElements()) {
 				if ( hasAnnotation(element, "Id")|| hasAnnotation(element, "EmbeddedId") ) {
 					return factory.propertyType(element, getEntityName(), EntityIdentifierMapping.ID_ROLE_NAME, defaultAccessType);
@@ -490,7 +500,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	boolean isAttributeDefined(String entityName, String fieldName) {
 		final TypeElement entityClass = findEntityClass(entityName);
 		return entityClass != null
-			&& findPropertyByPath(entityClass, fieldName, getDefaultAccessType(entityClass)) != null;
+			&& (findPropertyByPath(entityClass, fieldName, getDefaultAccessType(entityClass)) != null
+				|| "id".equals( fieldName ) && hasAnnotation( entityClass, "IdClass" ));
 	}
 
 	public TypeElement findEntityClass(String entityName) {
@@ -578,7 +589,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		if (symbol.getKind() == ElementKind.CLASS) {
 			final TypeElement type = (TypeElement) symbol;
 			return isEntity(type)
-				&& getJpaEntityName(type).equals(entityName);
+				&& ( getJpaEntityName(type).equals(entityName)
+					|| type.getQualifiedName().contentEquals(entityName) );
 		}
 		else {
 			return false;

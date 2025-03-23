@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.internal;
@@ -17,7 +17,6 @@ import java.lang.invoke.MethodHandles;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.WARN;
 
 /**
  * @author Steve Ebersole
@@ -33,20 +32,11 @@ public interface BeansMessageLogger {
 
 	BeansMessageLogger BEANS_MSG_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), BeansMessageLogger.class, LOGGER_NAME );
 
-	@LogMessage( level = WARN )
-	@Message(
-			id = 10005001,
-			value = "An explicit CDI BeanManager reference [%s] was passed to Hibernate, " +
-					"but CDI is not available on the Hibernate ClassLoader. This is likely " +
-					"going to lead to exceptions later on in bootstrap."
-	)
-	void beanManagerButCdiNotAvailable(Object cdiBeanManagerReference);
-
 	@LogMessage( level = INFO )
 	@Message(
 			id = 10005002,
 			value = "No explicit CDI BeanManager reference was passed to Hibernate, " +
-					"but CDI is available on the Hibernate ClassLoader."
+					"but CDI is available on the Hibernate class loader"
 	)
 	void noBeanManagerButCdiAvailable();
 
@@ -56,4 +46,18 @@ public interface BeansMessageLogger {
 			value = "Stopping BeanContainer: %s"
 	)
 	void stoppingBeanContainer(BeanContainer beanContainer);
+
+	@LogMessage( level = DEBUG )
+	@Message(
+			id = 10005006,
+			value = "Standard access to BeanManager"
+	)
+	void standardAccessToBeanManager();
+
+	@LogMessage( level = DEBUG )
+	@Message(
+			id = 10005007,
+			value = "Extended access to BeanManager"
+	)
+	void extendedAccessToBeanManager();
 }

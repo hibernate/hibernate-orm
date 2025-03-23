@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
@@ -43,6 +43,7 @@ import org.hibernate.tool.schema.spi.SchemaFilterProvider;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaMigrator;
+import org.hibernate.tool.schema.spi.SchemaPopulator;
 import org.hibernate.tool.schema.spi.SchemaTruncator;
 import org.hibernate.tool.schema.spi.SchemaValidator;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
@@ -99,6 +100,11 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 	@Override
 	public SchemaTruncator getSchemaTruncator(Map<String,Object> options) {
 		return new SchemaTruncatorImpl( this, getSchemaFilterProvider( options ).getTruncatorFilter() );
+	}
+
+	@Override
+	public SchemaPopulator getSchemaPopulator(Map<String, Object> options) {
+		return new SchemaPopulatorImpl( this );
 	}
 
 	@Override

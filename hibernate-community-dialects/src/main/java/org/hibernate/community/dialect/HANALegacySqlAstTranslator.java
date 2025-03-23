@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -155,12 +155,6 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		// HANA doesn't seem to support correlation, so we just report false here for simplicity
-		return false;
-	}
-
-	@Override
 	protected boolean isCorrelated(CteStatement cteStatement) {
 		// Report false here, because apparently HANA does not need the "lateral" keyword to correlate a from clause subquery in a subquery
 		return false;
@@ -310,16 +304,6 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		else {
 			expression.accept( this );
 		}
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorGtLtSyntax() {
-		return false;
 	}
 
 	@Override

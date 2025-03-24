@@ -74,7 +74,7 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 				Configuration compileConfig = project
 						.getConfigurations()
 						.getByName( sourceSet.getCompileClasspathConfigurationName() );
-				Set<File> dependencyFiles = compileConfig.getResolvedConfiguration().getFiles();
+				Set<File> dependencyFiles = compileConfig.getFiles();
 				Logger logger = project.getLogger();
 				//noinspection Convert2Lambda
 				languageCompileTask.doLast(new Action<>() {

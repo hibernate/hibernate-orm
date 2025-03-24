@@ -12,8 +12,8 @@ repositories {
     mavenCentral()
 
     maven {
-        name 'ossrh-snapshots-repository'
-        url 'https://oss.sonatype.org/content/repositories/snapshots'
+        name = 'ossrh-snapshots-repository'
+        url = 'https://oss.sonatype.org/content/repositories/snapshots'
     }
 }
 

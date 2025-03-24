@@ -1,18 +1,20 @@
 [[preface]]
 == Preface
 
+:persistence: https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+:data: https://jakarta.ee/specifications/data/1.0/jakarta-data-1.0
+
 Hibernate 6 was a major redesign of the world's most popular and feature-rich ORM solution.
 The redesign touched almost every subsystem of Hibernate, including the APIs, mapping annotations, and the query language.
 This new Hibernate was suddenly more powerful, more robust, more portable, and more type safe.
 
-Hibernate 7 builds on this foundation, adds support for JPA 3.2, and introduces Hibernate Data Repositories, an implementation of the Jakarta Data specification.
+Hibernate 7 builds on this foundation, adds support for link:{persistence}[JPA 3.2], and introduces https://hibernate.org/repositories/[Hibernate Data Repositories], an implementation of the link:{data}[Jakarta Data specification].
 Taken together, these enhancements yield a level of compile-time type safety--and resulting developer productivity--which was previously impossible.
 Hibernate Data Repositories offers truly seamless integration of the ORM solution with the persistence layer, obsoleting older add-on repository frameworks.
 
-Hibernate and Hibernate Reactive are core components of Quarkus 3, the most exciting new environment for cloud-native development in Java, and Hibernate remains the persistence solution of choice for almost every major Java framework or server.
+Hibernate ORM and https://hibernate.org/reactive/[Hibernate Reactive] are core components of https://quarkus.io[Quarkus 3], the most exciting new environment for cloud-native development in Java, and Hibernate remains the persistence solution of choice for almost every major Java framework or server.
 
 Unfortunately, the changes in Hibernate 6 also obsoleted much of the information about Hibernate that's available in books, in blog posts, and on stackoverflow.
-
 
 This guide is an up-to-date, high-level discussion of the current feature set and recommended usage.
 It does not attempt to cover every feature and should be used in conjunction with other documentation:

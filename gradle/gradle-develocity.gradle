@@ -6,7 +6,7 @@
  */
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Applies details for `https://ge.hibernate.org`
+// Applies details for `https://develocity.commonhaus.dev`
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ext {
@@ -46,7 +46,7 @@ static boolean isEnabled(String setting) {
 }
 
 develocity {
-    server = 'https://ge.hibernate.org'
+    server = 'https://develocity.commonhaus.dev'
 
     buildScan {
         capture {

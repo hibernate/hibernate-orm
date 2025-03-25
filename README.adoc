@@ -5,7 +5,7 @@ Hibernate implements JPA, the standard API for object/relational persistence in 
 See https://hibernate.org/orm/[Hibernate.org] for more information.
 
 image:https://ci.hibernate.org/job/hibernate-orm-pipeline/job/main/badge/icon[Build Status,link=https://ci.hibernate.org/job/hibernate-orm-pipeline/job/main/]
-image:https://img.shields.io/badge/Revved%20up%20by-Develocity-06A0CE?logo=Gradle&labelColor=02303A[link=https://ge.hibernate.org/scans]
+image:https://img.shields.io/badge/Revved%20up%20by-Develocity-06A0CE?logo=Gradle&labelColor=02303A[link=https://develocity.commonhaus.dev/scans]
 
 == Continuous Integration
 

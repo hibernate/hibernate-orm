@@ -284,13 +284,13 @@ void runBuildOnNode(String label, Closure body) {
 void ciBuild(buildEnv, String args) {
   // On untrusted nodes, we use the same access key as for PRs:
   // it has limited access, essentially it can only push build scans.
-  def develocityCredentialsId = buildEnv.node ? 'ge.hibernate.org-access-key-pr' : 'ge.hibernate.org-access-key'
+  def develocityCredentialsId = buildEnv.node ? 'develocity.commonhaus.dev-access-key-pr' : 'develocity.commonhaus.dev-access-key'
 
   ciBuild(develocityCredentialsId, args)
 }
 
 void ciBuild(String args) {
-  ciBuild('ge.hibernate.org-access-key-pr', args)
+  ciBuild('develocity.commonhaus.dev-access-key-pr', args)
 }
 
 void ciBuild(String develocityCredentialsId, String args) {

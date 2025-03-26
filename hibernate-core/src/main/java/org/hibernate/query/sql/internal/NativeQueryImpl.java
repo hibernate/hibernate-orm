@@ -645,7 +645,8 @@ public class NativeQueryImpl<R>
 
 	@Override
 	protected void prepareForExecution() {
-		if ( getSynchronizedQuerySpaces() == null || getSynchronizedQuerySpaces().isEmpty() ) {
+		final Collection<String> spaces = getSynchronizedQuerySpaces();
+		if ( spaces == null || spaces.isEmpty() ) {
 			// We need to flush. The query itself is not required to execute in a
 			// transaction; if there is no transaction, the flush would throw a
 			// TransactionRequiredException which would potentially break existing
@@ -716,7 +717,8 @@ public class NativeQueryImpl<R>
 			mapping = resultSetMapping;
 		}
 		return isCacheableQuery()
-				? getInterpretationCache().resolveSelectQueryPlan( selectInterpretationsKey( mapping ), () -> createQueryPlan( mapping ) )
+				? getInterpretationCache()
+						.resolveSelectQueryPlan( selectInterpretationsKey( mapping ), () -> createQueryPlan( mapping ) )
 				: createQueryPlan( mapping );
 	}
 
@@ -1115,8 +1117,8 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> addEntity(String tableAlias, String entityName) {
-		final DynamicResultBuilderEntityCalculated builder = Builders.entityCalculated( tableAlias, entityName,
-				getSessionFactory() );
+		final DynamicResultBuilderEntityCalculated builder =
+				Builders.entityCalculated( tableAlias, entityName, getSessionFactory() );
 		entityMappingTypeByTableAlias.put( tableAlias, builder.getEntityMapping() );
 		registerBuilder( builder );
 		return this;
@@ -1124,8 +1126,8 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> addEntity(String tableAlias, String entityName, LockMode lockMode) {
-		final DynamicResultBuilderEntityCalculated builder = Builders.entityCalculated( tableAlias, entityName, lockMode,
-				getSessionFactory() );
+		final DynamicResultBuilderEntityCalculated builder =
+				Builders.entityCalculated( tableAlias, entityName, lockMode, getSessionFactory() );
 		entityMappingTypeByTableAlias.put( tableAlias, builder.getEntityMapping() );
 		registerBuilder( builder );
 		return this;
@@ -1162,8 +1164,7 @@ public class NativeQueryImpl<R>
 
 	private void addEntityMappingType(String tableAlias, ModelPart part) {
 		if ( part instanceof PluralAttributeMapping pluralAttributeMapping ) {
-			final MappingType partMappingType = pluralAttributeMapping.getElementDescriptor()
-					.getPartMappingType();
+			final MappingType partMappingType = pluralAttributeMapping.getElementDescriptor().getPartMappingType();
 			if ( partMappingType instanceof EntityMappingType entityMappingType ) {
 				entityMappingTypeByTableAlias.put( tableAlias, entityMappingType );
 			}

@@ -91,7 +91,6 @@ import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
@@ -1012,6 +1011,7 @@ public class OracleDialect extends Dialect {
 							.build()
 			);
 		}
+
 
 		final String mapperName = configurationService.getSetting( "hibernate.type.json_format_mapper",
 				StandardConverters.STRING,JACKSON_MAPPER_NAME);

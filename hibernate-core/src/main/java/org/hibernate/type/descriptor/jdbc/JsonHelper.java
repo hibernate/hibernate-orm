@@ -17,8 +17,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-
 import org.hibernate.Internal;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;

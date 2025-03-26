@@ -789,7 +789,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						.getDefaultConnectionHandlingMode();
 	}
 
-	private static FormatMapper determineJsonFormatMapper(Object setting, StrategySelector strategySelector, ConfigurationService configurationService) {
+	private static FormatMapper determineJsonFormatMapper(Object setting, StrategySelector strategySelector) {
 		return strategySelector.resolveDefaultableStrategy(
 				FormatMapper.class,
 				setting,

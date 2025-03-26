@@ -321,8 +321,8 @@ public class SchemaExport {
 			}
 		}
 		finally {
-			if ( exceptionHandler instanceof ExceptionHandlerCollectingImpl ) {
-				exceptions.addAll( ( (ExceptionHandlerCollectingImpl) exceptionHandler ).getExceptions() );
+			if ( exceptionHandler instanceof ExceptionHandlerCollectingImpl handler ) {
+				exceptions.addAll( handler.getExceptions() );
 			}
 		}
 	}

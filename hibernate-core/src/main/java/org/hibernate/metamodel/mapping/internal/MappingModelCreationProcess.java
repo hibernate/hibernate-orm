@@ -76,22 +76,22 @@ public class MappingModelCreationProcess {
 	 */
 	private void execute() {
 		for ( EntityPersister entityPersister : entityPersisterMap.values() ) {
-			if ( entityPersister instanceof InFlightEntityMappingType ) {
-				( (InFlightEntityMappingType) entityPersister ).linkWithSuperType( this );
+			if ( entityPersister instanceof InFlightEntityMappingType inFlightEntityMappingType ) {
+				inFlightEntityMappingType.linkWithSuperType( this );
 			}
 		}
 
 		for ( EntityPersister entityPersister : entityPersisterMap.values() ) {
 			currentlyProcessingRole = entityPersister.getEntityName();
 
-			if ( entityPersister instanceof InFlightEntityMappingType ) {
-				( (InFlightEntityMappingType) entityPersister ).prepareMappingModel( this );
+			if ( entityPersister instanceof InFlightEntityMappingType inFlightEntityMappingType ) {
+				inFlightEntityMappingType.prepareMappingModel( this );
 			}
 		}
 
 		for ( CollectionPersister collectionPersister : collectionPersisterMap.values() ) {
-			if ( collectionPersister instanceof InFlightCollectionMapping ) {
-				((InFlightCollectionMapping) collectionPersister).prepareMappingModel( this );
+			if ( collectionPersister instanceof InFlightCollectionMapping inFlightCollectionMapping ) {
+				inFlightCollectionMapping.prepareMappingModel( this );
 			}
 		}
 

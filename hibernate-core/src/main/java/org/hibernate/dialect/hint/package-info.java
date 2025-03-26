@@ -4,6 +4,7 @@
  */
 
 /**
- * @deprecated Moved to {@link org.hibernate.dialect.Dialect}
+ * @apiNote Moved to {@link org.hibernate.dialect.Dialect}
  */
+@Deprecated(forRemoval = true)
 package org.hibernate.dialect.hint;

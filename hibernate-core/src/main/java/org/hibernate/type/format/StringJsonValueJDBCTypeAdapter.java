@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.format;
@@ -133,7 +133,7 @@ public class StringJsonValueJDBCTypeAdapter implements JsonValueJDBCTypeAdapter 
 								options
 						);
 						final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
-						return instantiate( embeddableMappingType, subAttributeValues, options.getSessionFactory() ) ;
+						return instantiate( embeddableMappingType, subAttributeValues ) ;
 					}
 					return subValues;
 				}

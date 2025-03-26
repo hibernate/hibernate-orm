@@ -209,6 +209,9 @@ public class OracleDialect extends Dialect {
 	// Is the database accessed using a database service protected by Application Continuity.
 	protected final boolean applicationContinuity;
 
+	// Is the database OSON format should be disabled.
+	protected final boolean isOracleOsonDisabled;
+
 	protected final int driverMajorVersion;
 
 	protected final int driverMinorVersion;
@@ -223,6 +226,7 @@ public class OracleDialect extends Dialect {
 		autonomous = false;
 		extended = false;
 		applicationContinuity = false;
+		isOracleOsonDisabled = false;
 		driverMajorVersion = 19;
 		driverMinorVersion = 0;
 	}
@@ -236,6 +240,7 @@ public class OracleDialect extends Dialect {
 		autonomous = serverConfiguration.isAutonomous();
 		extended = serverConfiguration.isExtended();
 		applicationContinuity = serverConfiguration.isApplicationContinuity();
+		isOracleOsonDisabled = serverConfiguration.isOSONEnabled();
 		this.driverMinorVersion = serverConfiguration.getDriverMinorVersion();
 		this.driverMajorVersion = serverConfiguration.getDriverMajorVersion();
 	}
@@ -251,6 +256,8 @@ public class OracleDialect extends Dialect {
 	public boolean isApplicationContinuity() {
 		return applicationContinuity;
 	}
+
+	public boolean isOracleOsonDisabled() {return isOracleOsonDisabled;}
 
 	@Override
 	protected DatabaseVersion getMinimumSupportedVersion() {
@@ -993,7 +1000,7 @@ public class OracleDialect extends Dialect {
 
 		if ( getVersion().isSameOrAfter( 21 ) ) {
 
-			if ( JacksonIntegration.isOracleOsonExtensionAvailable() && JACKSON_MAPPER_NAME.equalsIgnoreCase( mapperName )) {
+			if ( !isOracleOsonDisabled() && JacksonIntegration.isOracleOsonExtensionAvailable() && JACKSON_MAPPER_NAME.equalsIgnoreCase( mapperName )) {
 				// We must check that that extension is available and actually used.
 				typeContributions.contributeJdbcType( OracleOsonJacksonJdbcType.INSTANCE );
 				typeContributions.contributeJdbcTypeConstructor( OracleOsonArrayJdbcTypeConstructor.INSTANCE );

@@ -101,20 +101,6 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 		return this;
 	}
 
-
-	@Override
-	public JsonDocumentWriter numberValue(Number value) {
-		if (value instanceof BigDecimal) {
-			this.generator.write((BigDecimal) value );
-		} else if (value instanceof BigInteger) {
-			this.generator.write((BigInteger) value );
-		} else {
-			//fallback.
-			this.generator.write( value.longValue() );
-		}
-		return this;
-	}
-
 	@Override
 	public JsonDocumentWriter serializeJsonValue(Object value, JavaType<Object> javaType, JdbcType jdbcType, WrapperOptions options) {
 		serializeValue(value, javaType, jdbcType, options);

@@ -12,6 +12,7 @@ import java.sql.SQLException;
 
 /**
  * Adapter for JSON value on given JDBC types.
+ * @author emmanuel Jannetti
  */
 public interface JsonValueJDBCTypeAdapter {
 	/**

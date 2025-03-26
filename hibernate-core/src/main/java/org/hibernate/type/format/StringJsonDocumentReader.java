@@ -5,20 +5,31 @@
 package org.hibernate.type.format;
 
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BigDecimalJavaType;
+import org.hibernate.type.descriptor.java.BigIntegerJavaType;
+import org.hibernate.type.descriptor.java.BooleanJavaType;
+import org.hibernate.type.descriptor.java.ByteJavaType;
+import org.hibernate.type.descriptor.java.DoubleJavaType;
+import org.hibernate.type.descriptor.java.FloatJavaType;
+import org.hibernate.type.descriptor.java.IntegerJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.LongJavaType;
+import org.hibernate.type.descriptor.java.ShortJavaType;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.CharBuffer;
 import java.util.NoSuchElementException;
 
 /**
  * Implementation of <code>JsonDocumentReader</code> for String representation of JSON objects.
  */
-public class StringJsonDocumentReader extends StringJsonDocument implements  JsonDocumentReader {
+public class StringJsonDocumentReader extends StringJsonDocument implements JsonDocumentReader {
 
-	private final CharBuffer json;
-	private final CharBuffer jsonValueWindow;
+	private final String jsonString;
+	private final int limit;
+	private int position;
+	private int jsonValueStart;
+	private int jsonValueEnd;
 
 	/**
 	 * Creates a new <code>StringJsonDocumentReader</code>
@@ -28,28 +39,29 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 		if (json == null) {
 			throw new IllegalArgumentException( "json cannot be null" );
 		}
-		this.json = CharBuffer.wrap( json.toCharArray() ).asReadOnlyBuffer();
-		this.jsonValueWindow = this.json.slice();
+		this.jsonString = json;
+		this.position = 0;
+		this.limit = jsonString.length();
+		this.jsonValueStart = 0;
+		this.jsonValueEnd = 0;
 	}
 
 	@Override
 	public boolean hasNext() {
-		// enough for now.
-		return this.json.hasRemaining();
+		return this.position < this.limit;
 	}
 
 	private void skipWhiteSpace() {
-		for (int i =  this.json.position(); i < this.json.limit(); i++ ) {
-			if (!Character.isWhitespace( this.json.get(i))) {
-				this.json.position(i);
+		for (;this.position  < this.limit; this.position++ ) {
+			if (!Character.isWhitespace( this.jsonString.charAt(this.position))) {
 				return;
 			}
 		}
 	}
 
 	private void resetValueWindow() {
-		this.jsonValueWindow.position(0);
-		this.jsonValueWindow.limit( 0);
+		this.jsonValueStart = 0;
+		this.jsonValueEnd = 0;
 	}
 
 	/**
@@ -58,61 +70,61 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 	 * @param marker the marker we just read
 	 */
 	private void moveStateMachine(StringJsonDocumentMarker marker) {
-		StringJsonDocument.PROCESSING_STATE currentState = this.processingStates.getCurrent();
+		JsonProcessingState currentState = this.processingStates.getCurrent();
 		switch (marker) {
 			case OBJECT_START:
-				if (currentState == PROCESSING_STATE.STARTING_ARRAY ) {
+				if ( currentState == JsonProcessingState.STARTING_ARRAY ) {
 					// move the state machine to ARRAY as we are adding something to it
-					this.processingStates.push(PROCESSING_STATE.ARRAY);
+					this.processingStates.push( JsonProcessingState.ARRAY);
 				}
-				this.processingStates.push( PROCESSING_STATE.STARTING_OBJECT );
+				this.processingStates.push( JsonProcessingState.STARTING_OBJECT );
 				break;
 			case OBJECT_END:
-				assert this.processingStates.getCurrent() == PROCESSING_STATE.OBJECT ||
-					this.processingStates.getCurrent() == PROCESSING_STATE.STARTING_OBJECT;
-				if (this.processingStates.pop() == PROCESSING_STATE.OBJECT) {
-					assert this.processingStates.getCurrent() == PROCESSING_STATE.STARTING_OBJECT;
+				assert this.processingStates.getCurrent() == JsonProcessingState.OBJECT ||
+					this.processingStates.getCurrent() == JsonProcessingState.STARTING_OBJECT;
+				if ( this.processingStates.pop() == JsonProcessingState.OBJECT) {
+					assert this.processingStates.getCurrent() == JsonProcessingState.STARTING_OBJECT;
 					this.processingStates.pop();
 				}
 				break;
 			case ARRAY_START:
-				this.processingStates.push( PROCESSING_STATE.STARTING_ARRAY );
+				this.processingStates.push( JsonProcessingState.STARTING_ARRAY );
 				break;
 			case ARRAY_END:
-				assert this.processingStates.getCurrent() == PROCESSING_STATE.ARRAY ||
-					this.processingStates.getCurrent() == PROCESSING_STATE.STARTING_ARRAY;
-				if (this.processingStates.pop() == PROCESSING_STATE.ARRAY) {
-					assert this.processingStates.getCurrent() == PROCESSING_STATE.STARTING_ARRAY;
+				assert this.processingStates.getCurrent() == JsonProcessingState.ARRAY ||
+					this.processingStates.getCurrent() == JsonProcessingState.STARTING_ARRAY;
+				if ( this.processingStates.pop() == JsonProcessingState.ARRAY) {
+					assert this.processingStates.getCurrent() == JsonProcessingState.STARTING_ARRAY;
 					this.processingStates.pop();
 				}
 				break;
 			case SEPARATOR:
 				// While processing an object, following SEPARATOR that will a key
-				if (currentState == PROCESSING_STATE.OBJECT) {
-					this.processingStates.push( PROCESSING_STATE.OBJECT_KEY_NAME );
+				if ( currentState == JsonProcessingState.OBJECT) {
+					this.processingStates.push( JsonProcessingState.OBJECT_KEY_NAME );
 				}
 				break;
 			case KEY_VALUE_SEPARATOR:
 				// that's the start of an attribute value
-				assert this.processingStates.getCurrent() == PROCESSING_STATE.OBJECT_KEY_NAME;
+				assert this.processingStates.getCurrent() == JsonProcessingState.OBJECT_KEY_NAME;
 				// flush the OBJECT_KEY_NAME
 				this.processingStates.pop();
-				assert this.processingStates.getCurrent() == PROCESSING_STATE.OBJECT;
+				assert this.processingStates.getCurrent() == JsonProcessingState.OBJECT;
 				break;
 			case QUOTE:
 				switch ( currentState ) {
-					case PROCESSING_STATE.STARTING_ARRAY:
-						this.processingStates.push( PROCESSING_STATE.ARRAY );
+					case JsonProcessingState.STARTING_ARRAY:
+						this.processingStates.push( JsonProcessingState.ARRAY );
 						break;
-					case PROCESSING_STATE.STARTING_OBJECT:
-						this.processingStates.push( PROCESSING_STATE.OBJECT );
-						this.processingStates.push( PROCESSING_STATE.OBJECT_KEY_NAME );
+					case JsonProcessingState.STARTING_OBJECT:
+						this.processingStates.push( JsonProcessingState.OBJECT );
+						this.processingStates.push( JsonProcessingState.OBJECT_KEY_NAME );
 						break;
 				}
 				break;
 			case OTHER:
-				if (currentState == PROCESSING_STATE.STARTING_ARRAY) {
-					this.processingStates.push( PROCESSING_STATE.ARRAY );
+				if ( currentState == JsonProcessingState.STARTING_ARRAY) {
+					this.processingStates.push( JsonProcessingState.ARRAY );
 				}
 				break;
 		}
@@ -131,11 +143,10 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 
 		while (hasNext()) {
 			skipWhiteSpace();
-			StringJsonDocumentMarker marker = StringJsonDocumentMarker.markerOf( this.json.get() );
+			StringJsonDocumentMarker marker = StringJsonDocumentMarker.markerOf( this.jsonString.charAt( this.position++ ) );
 			moveStateMachine( marker );
 			switch ( marker) {
 				case OBJECT_START:
-					//this.processingStates.push( PROCESSING_STATE.STARTING_OBJECT );
 					resetValueWindow();
 					return JsonDocumentItemType.OBJECT_START;
 				case OBJECT_END:
@@ -144,7 +155,7 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 					return JsonDocumentItemType.OBJECT_END;
 				case ARRAY_START:
 					resetValueWindow();
-					//this.processingStates.push( PROCESSING_STATE.STARTING_ARRAY );
+					//this.processingStates.push( JsonProcessingState.STARTING_ARRAY );
 					return JsonDocumentItemType.ARRAY_START;
 				case ARRAY_END:
 					resetValueWindow();
@@ -162,33 +173,30 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 					//        - if we just hit ':' that's a quoted value
 					//        - if we just hit ',' that's a quoted key
 					switch ( this.processingStates.getCurrent() ) {
-						case PROCESSING_STATE.STARTING_ARRAY:
-							//this.processingStates.push( PROCESSING_STATE.ARRAY );
+						case JsonProcessingState.STARTING_ARRAY:
+							//this.processingStates.push( JsonProcessingState.ARRAY );
 							return JsonDocumentItemType.VALUE;
-						case PROCESSING_STATE.ARRAY:
+						case JsonProcessingState.ARRAY:
 							return JsonDocumentItemType.VALUE;
-						case PROCESSING_STATE.STARTING_OBJECT:
-							//this.processingStates.push( PROCESSING_STATE.OBJECT );
-							//this.processingStates.push( PROCESSING_STATE.OBJECT_KEY_NAME );
+						case JsonProcessingState.STARTING_OBJECT:
+							//this.processingStates.push( JsonProcessingState.OBJECT );
+							//this.processingStates.push( JsonProcessingState.OBJECT_KEY_NAME );
 							return JsonDocumentItemType.VALUE_KEY;
-						case PROCESSING_STATE.OBJECT: // we are processing object attribute value elements
+						case JsonProcessingState.OBJECT: // we are processing object attribute value elements
 							return JsonDocumentItemType.VALUE;
-						case PROCESSING_STATE.OBJECT_KEY_NAME: // we are processing object elements key
+						case JsonProcessingState.OBJECT_KEY_NAME: // we are processing object elements key
 							return JsonDocumentItemType.VALUE_KEY;
 						default:
 							throw new IllegalStateException( "unexpected quote read in current processing state " +
 															this.processingStates.getCurrent() );
 					}
 				case KEY_VALUE_SEPARATOR:  // that's the start of an attribute value
-					//assert this.processingStates.getCurrent() == PROCESSING_STATE.OBJECT_KEY_NAME;
+					//assert this.processingStates.getCurrent() == JsonProcessingState.OBJECT_KEY_NAME;
 					// flush the OBJECT_KEY_NAME
 					//this.processingStates.pop();
 					break;
 				case SEPARATOR:
 					// unless we are processing an array, following SEPARATOR that will a key
-//					if (this.processingStates.getCurrent() == PROCESSING_STATE.OBJECT) {
-//						this.processingStates.push( PROCESSING_STATE.OBJECT_KEY_NAME );
-//					}
 					break;
 				case OTHER:
 					// here we are in front of a boolean, a null or a numeric value.
@@ -198,15 +206,15 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 					final int valueSize = consumeNonStringValue();
 					if (valueSize == -1) {
 						throw new IllegalStateException( "Unrecognized marker: " + StringJsonDocumentMarker.markerOf(
-								json.get( this.json.position() )));
+								this.jsonString.charAt( this.position )));
 					}
 					switch ( this.processingStates.getCurrent() ) {
-						case PROCESSING_STATE.ARRAY:
-						case PROCESSING_STATE.OBJECT:
-							return getUnquotedValueType(this.jsonValueWindow);
+						case JsonProcessingState.ARRAY:
+						case JsonProcessingState.OBJECT:
+							return getUnquotedValueType(this.jsonString.charAt( this.jsonValueStart));
 						default:
 							throw new IllegalStateException( "unexpected read ["+
-															this.jsonValueWindow.toString()+
+															this.jsonString.substring( this.jsonValueStart,this.jsonValueEnd )+
 															"] in current processing state " +
 															this.processingStates.getCurrent() );
 					}
@@ -220,12 +228,11 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 	 * Gets the type of unquoted value.
 	 * We assume that the String value follows JSON specification. I.e unquoted value that starts with 't' can't be anything else
 	 * than <code>true</code>
-	 * @param jsonValueWindow the value
+	 * @param jsonValueChar the value
 	 * @return the type of the value
 	 */
-	private JsonDocumentItemType getUnquotedValueType(CharBuffer jsonValueWindow) {
-		final int size = jsonValueWindow.remaining();
-		switch(jsonValueWindow.charAt( 0 )) {
+	private JsonDocumentItemType getUnquotedValueType(char jsonValueChar) {
+		switch(jsonValueChar) {
 			case 't': {
 				//true
 				return JsonDocumentItemType.BOOLEAN_VALUE;
@@ -257,40 +264,48 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 	}
 
 	private void moveBufferPosition(int shift) {
-		this.json.position(this.json.position() + shift);
+		this.position += shift;
 	}
 
 	/**
-	 * Moves the current position to a given character.
+	 * Moves the current position to a given character, skipping any whitespace
+	 * We expect the character to be the next non-blank character in the sequence
 	 * @param character the character we should stop at.
 	 * @throws IllegalStateException if we encounter an unexpected character other than white spaces before the desired one.
 	 */
 
 	private void moveTo(char character) throws IllegalStateException {
-		this.json.mark();
-		while ( this.json.hasRemaining()) {
-			char c = this.json.get();
+		int pointer = this.position;
+		while ( pointer < this.limit) {
+			char c = this.jsonString.charAt( pointer );
 			if ( c == character) {
-				this.json.reset();
+				this.position = pointer == this.position?this.position:pointer - 1;
 				return;
 			}
 			if (!Character.isWhitespace(c)) {
 				// we did find an unexpected character
 				// let the exception raise
-				this.json.reset();
+				//this.json.reset();
 				break;
 			}
+			pointer++;
 		}
-		throw new IllegalStateException("Can't find character: " + character);
+		throw new IllegalStateException("character [" + character + "] is not the next non-blank character");
 	}
 
+	/**
+	 * Goes through the json string to locate a character.
+	 * @param character character to be found
+	 * @param escape character to be found
+	 * @return the position of the character or -1 if not found.
+	 */
 	private int locateCharacter(char character, char escape) {
 		assert character != escape;
-		this.json.mark();
-		int found = -1;
+		int pointer = this.position;
+
 		boolean escapeIsOn = false;
-		while ( this.json.hasRemaining()) {
-			final char c = this.json.get();
+		while ( pointer< this.limit) {
+			final char c = this.jsonString.charAt( pointer );
 			if (c == escape) {
 				escapeIsOn = true;
 			}
@@ -300,14 +315,14 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 						escapeIsOn = false;
 					}
 					else {
-						found = this.json.position() - 1;
-						break;
+						// found
+						return pointer;
 					}
 				}
 			}
+			pointer++;
 		}
-		this.json.reset();
-		return found;
+		return -1;
 	}
 
 	/**
@@ -317,8 +332,8 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 	private int consumeNonStringValue() {
 		int newViewLimit = 0;
 		boolean allGood = false;
-		for (int i =  this.json.position(); i < this.json.limit(); i++ ) {
-			char c = this.json.get(i);
+		for (int i =  this.position; i < this.limit; i++ ) {
+			char c = this.jsonString.charAt(i);
 			if ((StringJsonDocumentMarker.markerOf( c ) != StringJsonDocumentMarker.OTHER) ||
 				Character.isWhitespace( c )) {
 				// hit a JSON marker or a space.
@@ -330,12 +345,16 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 		}
 
 		if (allGood) {
-			this.jsonValueWindow.limit(newViewLimit);
-			this.jsonValueWindow.position( this.json.position() );
-			this.json.position(newViewLimit);
+			this.jsonValueEnd = newViewLimit;
+			this.jsonValueStart = position;
+			this.position = newViewLimit;
 		}
-		return allGood?(this.jsonValueWindow.remaining()):-1;
+		return allGood?(this.jsonValueEnd-this.jsonValueStart):-1;
 	}
+	/**
+	 * Consume a quotted value
+	 * @return the length of this value. can be 0, -1 in case of error
+	 */
 	private void consumeQuottedString() {
 
 		// be sure we are at a meaningful place
@@ -343,7 +362,7 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 		moveTo( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 
 		// skip the quote we are positioned on.
-		this.json.get();
+		this.position++;
 
 		//locate ending quote
 		int endingQuote = locateCharacter( StringJsonDocumentMarker.QUOTE.getMarkerCharacter(), '\\');
@@ -351,40 +370,50 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 			throw new IllegalStateException("Can't find ending quote of key name");
 		}
 
-		this.jsonValueWindow.limit( endingQuote );
-		this.jsonValueWindow.position(this.json.position());
-		this.json.position( endingQuote + 1);
+		this.jsonValueEnd = endingQuote;
+		this.jsonValueStart = position;
+
+		this.position =  endingQuote + 1;
 
 	}
 
+	/**
+	 * Ensures that the current state is on value.
+	 * @throws IllegalStateException if not on "value" state
+	 */
 	private void ensureValueState() throws IllegalStateException {
-		if ((this.processingStates.getCurrent() !=  PROCESSING_STATE.OBJECT ) &&
-			this.processingStates.getCurrent() !=  PROCESSING_STATE.ARRAY)  {
+		if ( (this.processingStates.getCurrent() != JsonProcessingState.OBJECT ) &&
+			this.processingStates.getCurrent() != JsonProcessingState.ARRAY)  {
 			throw new IllegalStateException( "unexpected processing state: " + this.processingStates.getCurrent() );
 		}
 	}
+	/**
+	 * Ensures that we have a value ready to be exposed. i.e we just consume one.
+	 * @throws IllegalStateException if no value available
+	 */
 	private void ensureAvailableValue() throws IllegalStateException {
-		if (this.jsonValueWindow.limit() == 0 ) {
+		if (this.jsonValueEnd == 0 ) {
 			throw new IllegalStateException( "No available value");
 		}
 	}
 
 	@Override
 	public String getObjectKeyName() {
-		if (this.processingStates.getCurrent() !=  PROCESSING_STATE.OBJECT_KEY_NAME ) {
+		if ( this.processingStates.getCurrent() != JsonProcessingState.OBJECT_KEY_NAME ) {
 			throw new IllegalStateException( "unexpected processing state: " + this.processingStates.getCurrent() );
 		}
 		ensureAvailableValue();
-		return this.jsonValueWindow.toString();
+		return this.jsonString.substring( this.jsonValueStart, this.jsonValueEnd);
 	}
+
 	@Override
 	public String getStringValue() {
 		ensureValueState();
 		ensureAvailableValue();
-		if (hasEscape(this.jsonValueWindow)) {
-			return unescape(this.jsonValueWindow);
+		if ( currentValueHasEscape()) {
+			return unescape(this.jsonString, this.jsonValueStart , this.jsonValueEnd);
 		}
-		return this.jsonValueWindow.toString();
+		return this.jsonString.substring( this.jsonValueStart, this.jsonValueEnd);
 	}
 
 
@@ -392,79 +421,92 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 	public BigDecimal getBigDecimalValue() {
 		ensureValueState();
 		ensureAvailableValue();
-		return BigDecimal.valueOf( Long.valueOf(this.jsonValueWindow.toString()) );
+		return BigDecimalJavaType.INSTANCE.fromEncodedString( this.jsonString,this.jsonValueStart,this.jsonValueEnd );
 	}
 
 	@Override
 	public BigInteger getBigIntegerValue() {
 		ensureValueState();
 		ensureAvailableValue();
-		return BigInteger.valueOf( Long.valueOf(this.jsonValueWindow.toString()) );
+		return BigIntegerJavaType.INSTANCE.fromEncodedString( this.jsonString,this.jsonValueStart,this.jsonValueEnd );
 	}
 
 	@Override
 	public double getDoubleValue() {
 		ensureValueState();
 		ensureAvailableValue();
-		return Double.valueOf(this.jsonValueWindow.toString()).doubleValue();
+		return DoubleJavaType.INSTANCE.fromEncodedString( this.jsonString,this.jsonValueStart,this.jsonValueEnd );
 	}
 
 	@Override
 	public float getFloatValue() {
 		ensureValueState();
 		ensureAvailableValue();
-		return Float.valueOf(this.jsonValueWindow.toString()).floatValue();
+		return FloatJavaType.INSTANCE.fromEncodedString( this.jsonString,this.jsonValueStart,this.jsonValueEnd );
 	}
 
 	@Override
 	public long getLongValue() {
 		ensureValueState();
 		ensureAvailableValue();
-		return Long.valueOf(this.jsonValueWindow.toString()).longValue();
+		return LongJavaType.INSTANCE.fromEncodedString( this.jsonString,this.jsonValueStart,this.jsonValueEnd );
 	}
 
 	@Override
 	public int getIntegerValue() {
 		ensureValueState();
 		ensureAvailableValue();
-		return Integer.valueOf(this.jsonValueWindow.toString()).intValue();
+		return IntegerJavaType.INSTANCE.fromEncodedString( this.jsonString,this.jsonValueStart,this.jsonValueEnd );
 	}
 
 	@Override
 	public short getShortValue() {
 		ensureValueState();
 		ensureAvailableValue();
-		return Short.valueOf(this.jsonValueWindow.toString()).shortValue();
+		return ShortJavaType.INSTANCE.fromEncodedString( this.jsonString,this.jsonValueStart,this.jsonValueEnd );
 	}
 
 	@Override
 	public byte getByteValue() {
 		ensureValueState();
 		ensureAvailableValue();
-		return Byte.valueOf(this.jsonValueWindow.toString()).byteValue();
+		return ByteJavaType.INSTANCE.fromEncodedString( this.jsonString,this.jsonValueStart,this.jsonValueEnd );
 	}
 
 	@Override
 	public boolean getBooleanValue() {
 		ensureValueState();
 		ensureAvailableValue();
-		return Boolean.parseBoolean( this.jsonValueWindow.toString() );
+		return BooleanJavaType.INSTANCE.fromEncodedString( this.jsonString,this.jsonValueStart,this.jsonValueEnd );
 	}
 
 	@Override
 	public <T> T getValue(JavaType<T> javaType, WrapperOptions options) {
-		return javaType.fromEncodedString( this.jsonValueWindow.toString() );
+		return javaType.fromEncodedString( this.jsonString.subSequence( this.jsonValueStart,this.jsonValueEnd ));
 	}
 
-	private boolean hasEscape(CharBuffer jsonValueWindow) {
-		for (int i = 0;i<jsonValueWindow.remaining();i++) {
-			if (jsonValueWindow.charAt( i ) == '\\') return true;
+	/**
+	 * Walks through JSON value currently located on JSON string and check if escape is used
+	 *
+	 * @return <code>true</code> if escape is found
+	 */
+	private boolean currentValueHasEscape() {
+		for (int i = this.jsonValueStart; i<this.jsonValueEnd; i++) {
+			if (this.jsonString.charAt( i ) == '\\') return true;
 		}
 		return false;
 	}
-	private String unescape(CharBuffer string) {
-		final StringBuilder sb = new StringBuilder( string.remaining() );
-		for ( int i = 0; i < string.length(); i++ ) {
+
+	/**
+	 * Returns unescaped string
+	 * @param string the string to be unescaped
+	 * @param start the begin index within the string
+	 * @param end the end index within the string
+	 * @return the unescaped string
+	 */
+	private static String unescape(String string, int start, int end) {
+		final StringBuilder sb = new StringBuilder( end - start );
+		for ( int i = start; i < end; i++ ) {
 			final char c = string.charAt( i );
 			if ( c == '\\' ) {
 				i++;
@@ -501,5 +543,6 @@ public class StringJsonDocumentReader extends StringJsonDocument implements  Jso
 		}
 		return sb.toString();
 	}
+
 
 }

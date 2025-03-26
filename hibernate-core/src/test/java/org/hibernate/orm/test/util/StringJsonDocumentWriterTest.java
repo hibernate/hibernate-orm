@@ -42,11 +42,11 @@ public class StringJsonDocumentWriterTest {
 		StringBuilder sb = new StringBuilder();
 		StringJsonDocumentWriter writer = new StringJsonDocumentWriter(new JsonHelper.JsonAppender(sb) );
 		writer.startArray();
-		writer.numberValue( Integer.valueOf( 1 ) );
-		writer.numberValue( Integer.valueOf( 2 ) );
-		writer.numberValue( Integer.valueOf( 3 ) );
+		writer.booleanValue( false );
+		writer.booleanValue( true );
+		writer.booleanValue( false );
 		writer.endArray();
-		assertEquals( "[1,2,3]" , writer.toString() );
+		assertEquals( "[false,true,false]" , writer.toString() );
 	}
 
 	@Test
@@ -54,13 +54,12 @@ public class StringJsonDocumentWriterTest {
 		StringBuilder sb = new StringBuilder();
 		StringJsonDocumentWriter writer = new StringJsonDocumentWriter(new JsonHelper.JsonAppender(sb) );
 		writer.startArray();
-		writer.numberValue( Integer.valueOf( 1 ) );
 		writer.nullValue();
 		writer.booleanValue( false );
 		writer.stringValue( "foo" );
 		writer.endArray();
 		assertEqualsIgnoreSpace( """
-									[1,null,false,"foo"]
+									[null,false,"foo"]
 							""" , writer.toString() );
 	}
 	@Test
@@ -88,8 +87,6 @@ public class StringJsonDocumentWriterTest {
 		writer.startObject();
 		writer.objectKey( "aNull" );
 		writer.nullValue();
-		writer.objectKey( "aNumber" );
-		writer.numberValue( Integer.valueOf( 12 ) );
 		writer.objectKey( "aBoolean" );
 		writer.booleanValue( true );
 		writer.endObject();
@@ -97,8 +94,7 @@ public class StringJsonDocumentWriterTest {
 		assertEqualsIgnoreSpace( """
 						{
 						"aNull":null,
-						"aNumber" : 12 ,
-							"aBoolean" : true
+						"aBoolean" : true
 						}
 						""" , writer.toString() );
 
@@ -115,16 +111,16 @@ public class StringJsonDocumentWriterTest {
 		writer.endArray();
 		writer.objectKey( "anArray" );
 		writer.startArray();
-		writer.numberValue( Integer.valueOf( 1 ) );
-		writer.numberValue( Integer.valueOf( 2 ) );
-		writer.numberValue( Integer.valueOf( 3 ) );
+		writer.stringValue( "1" );
+		writer.stringValue( "2" );
+		writer.stringValue( "3" );
 		writer.endArray();
 		writer.endObject();
 
 		assertEqualsIgnoreSpace(  """
 				{
 				"anEmptyArray" : [],
-				"anArray" : [1,2,3]
+				"anArray" : ["1","2","3"]
 				}
 				""", writer.toString() );
 	}
@@ -133,12 +129,12 @@ public class StringJsonDocumentWriterTest {
 		StringBuilder sb = new StringBuilder();
 		StringJsonDocumentWriter writer = new StringJsonDocumentWriter( new JsonHelper.JsonAppender( sb ) );
 		writer.startObject();
-		writer.objectKey( "anArray" ).startArray().numberValue( Integer.valueOf( 1 ) ).nullValue().stringValue( "2" ).startObject()
+		writer.objectKey( "anArray" ).startArray().nullValue().stringValue( "2" ).startObject()
 		.objectKey( "foo" ).stringValue( "bar" ).endObject().endArray().endObject();
 
 		assertEqualsIgnoreSpace( """
 					{
-						"anArray" : [1, null, "2" , {\"foo\":\"bar\"}  ]
+						"anArray" : [null, "2" , {\"foo\":\"bar\"}  ]
 					}
 					""" , sb.toString() );
 
@@ -149,21 +145,20 @@ public class StringJsonDocumentWriterTest {
 		StringBuilder sb = new StringBuilder();
 		StringJsonDocumentWriter writer = new StringJsonDocumentWriter( new JsonHelper.JsonAppender( sb ) );
 		writer.startObject().objectKey( "nested" ).startObject()
-				.objectKey( "converted_gender" ).stringValue( "M" ).objectKey( "theInteger" ).numberValue( Integer.valueOf( -1 ) ).endObject()
+				.objectKey( "converted_gender" ).stringValue( "M" )
+				.endObject()
 				.objectKey( "doubleNested" ).startObject()
 				.objectKey( "theNested" ).startObject()
 				.objectKey( "theLeaf" )
 				.startObject().objectKey( "stringField" ).stringValue( "String \"<abc>A&B</abc>\"" ).endObject()
 				.endObject()
 				.endObject()
-				.objectKey( "integerField" ).numberValue( Integer.valueOf( 10 ) )
 				.endObject();
 
 		assertEqualsIgnoreSpace( """
 							{
 							"nested": {
-								"converted_gender": "M",
-								"theInteger": -1
+								"converted_gender": "M"
 							},
 							"doubleNested": {
 								"theNested": {
@@ -171,8 +166,7 @@ public class StringJsonDocumentWriterTest {
 										"stringField": "String \\"<abc>A&B</abc>\\""
 									}
 								}
-							},
-							"integerField": 10
+							}
 							}
 						""",writer.toString());
 

@@ -76,13 +76,6 @@ public interface JsonDocumentWriter {
 	JsonDocumentWriter stringValue(String value);
 
 	/**
-	 * Adds a new JSON element Number value.
-	 * @return this instance
-	 * @param value the element Number name.
-	 */
-	JsonDocumentWriter numberValue(Number value);
-
-	/**
 	 * Adds a JSON value to the document
 	 * @param value the value to be serialized
 	 * @param javaType the Java type of the value

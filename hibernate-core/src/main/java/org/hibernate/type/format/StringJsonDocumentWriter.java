@@ -36,7 +36,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	 * @param appender the appender to receive the serialze JSON object
 	 */
 	public StringJsonDocumentWriter(JsonHelper.JsonAppender appender) {
-		this.processingStates.push( PROCESSING_STATE.NONE );
+		this.processingStates.push( JsonProcessingState.NONE );
 		this.appender = appender;
 	}
 
@@ -46,20 +46,20 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	@Override
 	public JsonDocumentWriter startObject() {
 		// Note: startArray and startObject must not call moveProcessingStateMachine()
-		if (this.processingStates.getCurrent() == PROCESSING_STATE.STARTING_ARRAY) {
+		if ( this.processingStates.getCurrent() == JsonProcessingState.STARTING_ARRAY) {
 			// are we building an array of objects?
 			// i.e, [{},...]
-			// move to PROCESSING_STATE.ARRAY first
-			this.processingStates.push( PROCESSING_STATE.ARRAY);
+			// move to JsonProcessingState.ARRAY first
+			this.processingStates.push( JsonProcessingState.ARRAY);
 		}
-		else if (this.processingStates.getCurrent() == PROCESSING_STATE.ARRAY) {
+		else if ( this.processingStates.getCurrent() == JsonProcessingState.ARRAY) {
 			// That means that we ae building an array of object ([{},...])
 			// JSON object hee are treat as array item.
 			// -> add the marker first
 			this.appender.append(StringJsonDocumentMarker.SEPARATOR.getMarkerCharacter());
 		}
 		this.appender.append( StringJsonDocumentMarker.OBJECT_START.getMarkerCharacter());
-		this.processingStates.push( PROCESSING_STATE.STARTING_OBJECT );
+		this.processingStates.push( JsonProcessingState.STARTING_OBJECT );
 		return this;
 	}
 
@@ -69,7 +69,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	@Override
 	public JsonDocumentWriter endObject() {
 		this.appender.append( StringJsonDocumentMarker.OBJECT_END.getMarkerCharacter() );
-		this.processingStates.push( PROCESSING_STATE.ENDING_OBJECT);
+		this.processingStates.push( JsonProcessingState.ENDING_OBJECT);
 		moveProcessingStateMachine();
 		return this;
 	}
@@ -79,7 +79,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	 */
 	@Override
 	public JsonDocumentWriter startArray() {
-		this.processingStates.push( PROCESSING_STATE.STARTING_ARRAY );
+		this.processingStates.push( JsonProcessingState.STARTING_ARRAY );
 		// Note: startArray and startObject do not call moveProcessingStateMachine()
 		this.appender.append( StringJsonDocumentMarker.ARRAY_START.getMarkerCharacter() );
 		return this;
@@ -91,7 +91,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	@Override
 	public JsonDocumentWriter endArray() {
 		this.appender.append( StringJsonDocumentMarker.ARRAY_END.getMarkerCharacter() );
-		this.processingStates.push( PROCESSING_STATE.ENDING_ARRAY);
+		this.processingStates.push( JsonProcessingState.ENDING_ARRAY);
 		moveProcessingStateMachine();
 		return this;
 	}
@@ -104,7 +104,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 			throw new IllegalArgumentException( "key cannot be null or empty" );
 		}
 
-		if (this.processingStates.getCurrent().equals( PROCESSING_STATE.OBJECT )) {
+		if (this.processingStates.getCurrent().equals( JsonProcessingState.OBJECT )) {
 			// we have started an object, and we are adding an item key: we do add a separator.
 			this.appender.append( StringJsonDocumentMarker.SEPARATOR.getMarkerCharacter() );
 		}
@@ -122,7 +122,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	 * Separator is to separate array items or key/value pairs in an object.
 	 */
 	private void addItemsSeparator() {
-		if (this.processingStates.getCurrent().equals( PROCESSING_STATE.ARRAY )) {
+		if (this.processingStates.getCurrent().equals( JsonProcessingState.ARRAY )) {
 			// We started to serialize an array and already added item to it:add a separator anytime.
 			this.appender.append( StringJsonDocumentMarker.SEPARATOR.getMarkerCharacter() );
 		}
@@ -154,11 +154,11 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 		switch (this.processingStates.getCurrent()) {
 			case STARTING_OBJECT:
 				//after starting an object, we start adding key/value pairs
-				this.processingStates.push( PROCESSING_STATE.OBJECT );
+				this.processingStates.push( JsonProcessingState.OBJECT );
 				break;
 			case STARTING_ARRAY:
 				//after starting an array, we start adding value to it
-				this.processingStates.push( PROCESSING_STATE.ARRAY );
+				this.processingStates.push( JsonProcessingState.ARRAY );
 				break;
 			case ENDING_ARRAY:
 				// when ending an array, we have one or two states.
@@ -167,9 +167,9 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 				// first pop ENDING_ARRAY
 				this.processingStates.pop();
 				// if we have ARRAY, so that's not an empty array. pop that state
-				if (this.processingStates.getCurrent().equals( PROCESSING_STATE.ARRAY ))
+				if (this.processingStates.getCurrent().equals( JsonProcessingState.ARRAY ))
 					this.processingStates.pop();
-				assert this.processingStates.pop().equals( PROCESSING_STATE.STARTING_ARRAY );
+				assert this.processingStates.pop().equals( JsonProcessingState.STARTING_ARRAY );
 				break;
 			case ENDING_OBJECT:
 				// when ending an object, we have one or two states.
@@ -178,9 +178,9 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 				// first pop ENDING_OBJECT
 				this.processingStates.pop();
 				// if we have OBJECT, so that's not an empty object. pop that state
-				if (this.processingStates.getCurrent().equals( PROCESSING_STATE.OBJECT ))
+				if (this.processingStates.getCurrent().equals( JsonProcessingState.OBJECT ))
 					this.processingStates.pop();
-				assert this.processingStates.pop().equals( PROCESSING_STATE.STARTING_OBJECT );
+				assert this.processingStates.pop().equals( JsonProcessingState.STARTING_OBJECT );
 				break;
 			default:
 				//nothing to do for the other ones.
@@ -216,18 +216,6 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 		moveProcessingStateMachine();
 		return this;
 	}
-
-	@Override
-	public JsonDocumentWriter numberValue(Number value) {
-		if (value == null ) {
-			throw new IllegalArgumentException( "value cannot be null" );
-		}
-		addItemsSeparator();
-		this.appender.append( value.toString() );
-		moveProcessingStateMachine();
-		return this;
-	}
-
 
 	@Override
 	public JsonDocumentWriter serializeJsonValue(Object value, JavaType<Object> javaType, JdbcType jdbcType, WrapperOptions options) {
@@ -360,7 +348,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 			case SqlTypes.ARRAY:
 			case SqlTypes.JSON_ARRAY:
 				// Caller handles this. We should never end up here actually.
-				break;
+				throw new IllegalStateException("unexpected JSON array type");
 			default:
 				throw new UnsupportedOperationException( "Unsupported JdbcType nested in JSON: " + jdbcType );
 		}

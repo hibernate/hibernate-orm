@@ -760,6 +760,13 @@ public interface CoreMessageLogger extends BasicLogger {
 	)
 	void duplicatedPersistenceUnitName(String name);
 
+	@LogMessage(level = WARN)
+	@Message(
+			id = 15019,
+			value = "Invalid JSON column type [%s], was expecting [%s]; for efficiency schema should be migrate to JSON DDL type"
+	)
+	void invalidJSONColumnType(String actual, String expected);
+
 	@LogMessage(level = DEBUG)
 	@Message(
 			id = 455,

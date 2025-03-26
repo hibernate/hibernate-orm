@@ -10,6 +10,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -146,11 +147,9 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				fastClass = null;
 			}
 			else {
-				fastClass = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
-						.with( new NamingStrategy.SuffixingRandom(
-								INSTANTIATOR_PROXY_NAMING_SUFFIX,
-								new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() )
-						) )
+				final String className = clazz.getName() + "$" + INSTANTIATOR_PROXY_NAMING_SUFFIX;
+				fastClass = byteBuddyState.load( clazz, className, (byteBuddy, namingStrategy) -> byteBuddy
+						.with( namingStrategy )
 						.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
 						.method( newInstanceMethodName )
 						.intercept( MethodCall.construct( constructor ) )
@@ -210,11 +209,9 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				fastClass = null;
 			}
 			else {
-				fastClass = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
-						.with( new NamingStrategy.SuffixingRandom(
-								INSTANTIATOR_PROXY_NAMING_SUFFIX,
-								new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() )
-						) )
+				final String className = clazz.getName() + "$" + INSTANTIATOR_PROXY_NAMING_SUFFIX;
+				fastClass = byteBuddyState.load( clazz, className, (byteBuddy, namingStrategy) -> byteBuddy
+						.with( namingStrategy )
 						.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
 						.method( newInstanceMethodName )
 						.intercept( MethodCall.construct( constructor ) )
@@ -235,23 +232,41 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			return null;
 		}
 
-		Class<?> superClass = determineAccessOptimizerSuperClass( clazz, getters, setters );
-
 		final String[] propertyNames = propertyAccessMap.keySet().toArray( new String[0] );
-		final Class<?> bulkAccessor = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
-				.with( new NamingStrategy.SuffixingRandom(
-						OPTIMIZER_PROXY_NAMING_SUFFIX,
-						new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() )
-				) )
-				.subclass( superClass )
-				.implement( ReflectionOptimizer.AccessOptimizer.class )
-				.method( getPropertyValuesMethodName )
-				.intercept( new Implementation.Simple( new GetPropertyValues( clazz, propertyNames, getters ) ) )
-				.method( setPropertyValuesMethodName )
-				.intercept( new Implementation.Simple( new SetPropertyValues( clazz, propertyNames, setters ) ) )
-				.method( getPropertyNamesMethodName )
-				.intercept( MethodCall.call( new CloningPropertyCall( propertyNames ) ) )
-		);
+		final Class<?> superClass = determineAccessOptimizerSuperClass( clazz, propertyNames, getters, setters );
+
+		final String className = clazz.getName() + "$" + OPTIMIZER_PROXY_NAMING_SUFFIX + encodeName( propertyNames, getters, setters );
+		final Class<?> bulkAccessor;
+		if ( className.getBytes( StandardCharsets.UTF_8 ).length >= 0x10000 ) {
+			// The JVM has a 64K byte limit on class name length, so fallback to random name if encoding exceeds that
+			bulkAccessor = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
+					.with( new NamingStrategy.SuffixingRandom(
+							OPTIMIZER_PROXY_NAMING_SUFFIX,
+							new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( clazz.getName() )
+					) )
+					.subclass( superClass )
+					.implement( ReflectionOptimizer.AccessOptimizer.class )
+					.method( getPropertyValuesMethodName )
+					.intercept( new Implementation.Simple( new GetPropertyValues( clazz, propertyNames, getters ) ) )
+					.method( setPropertyValuesMethodName )
+					.intercept( new Implementation.Simple( new SetPropertyValues( clazz, propertyNames, setters ) ) )
+					.method( getPropertyNamesMethodName )
+					.intercept( MethodCall.call( new CloningPropertyCall( propertyNames ) ) )
+			);
+		}
+		else {
+			bulkAccessor = byteBuddyState.load( clazz, className, (byteBuddy, namingStrategy) -> byteBuddy
+					.with( namingStrategy )
+					.subclass( superClass )
+					.implement( ReflectionOptimizer.AccessOptimizer.class )
+					.method( getPropertyValuesMethodName )
+					.intercept( new Implementation.Simple( new GetPropertyValues( clazz, propertyNames, getters ) ) )
+					.method( setPropertyValuesMethodName )
+					.intercept( new Implementation.Simple( new SetPropertyValues( clazz, propertyNames, setters ) ) )
+					.method( getPropertyNamesMethodName )
+					.intercept( MethodCall.call( new CloningPropertyCall( propertyNames ) ) )
+			);
+		}
 
 		try {
 			return new ReflectionOptimizerImpl(
@@ -266,6 +281,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	private static class ForeignPackageClassInfo {
 		final Class<?> clazz;
+		final List<String> propertyNames = new ArrayList<>();
 		final List<Member> getters = new ArrayList<>();
 		final List<Member> setters = new ArrayList<>();
 
@@ -274,7 +290,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		}
 	}
 
-	private Class<?> determineAccessOptimizerSuperClass(Class<?> clazz, Member[] getters, Member[] setters) {
+	private Class<?> determineAccessOptimizerSuperClass(Class<?> clazz, String[] propertyNames, Member[] getters, Member[] setters) {
 		if ( clazz.isInterface() ) {
 			return Object.class;
 		}
@@ -288,11 +304,17 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			for ( int i = 0; i < getters.length; i++ ) {
 				final Member getter = getters[i];
 				final Member setter = setters[i];
+				boolean found = false;
 				if ( getter.getDeclaringClass() == foreignPackageClassInfo.clazz && !Modifier.isPublic( getter.getModifiers() ) ) {
 					foreignPackageClassInfo.getters.add( getter );
+					found = true;
 				}
 				if ( setter.getDeclaringClass() == foreignPackageClassInfo.clazz && !Modifier.isPublic( setter.getModifiers() ) ) {
 					foreignPackageClassInfo.setters.add( setter );
+					found = true;
+				}
+				if ( found ) {
+					foreignPackageClassInfo.propertyNames.add( propertyNames[i] );
 				}
 			}
 			if ( foreignPackageClassInfo.getters.isEmpty() && foreignPackageClassInfo.setters.isEmpty() ) {
@@ -304,16 +326,13 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		for ( int i = foreignPackageClassInfos.size() - 1; i >= 0; i-- ) {
 			final ForeignPackageClassInfo foreignPackageClassInfo = foreignPackageClassInfos.get( i );
 			final Class<?> newSuperClass = superClass;
+
+			final String className = foreignPackageClassInfo.clazz.getName() + "$" + OPTIMIZER_PROXY_NAMING_SUFFIX + encodeName( foreignPackageClassInfo.propertyNames, foreignPackageClassInfo.getters, foreignPackageClassInfo.setters );
 			superClass = byteBuddyState.load(
 					foreignPackageClassInfo.clazz,
-					byteBuddy -> {
-						DynamicType.Builder<?> builder = byteBuddy.with(
-								new NamingStrategy.SuffixingRandom(
-										OPTIMIZER_PROXY_NAMING_SUFFIX,
-										new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue(
-												foreignPackageClassInfo.clazz.getName() )
-								)
-						).subclass( newSuperClass );
+					className,
+					(byteBuddy, namingStrategy) -> {
+						DynamicType.Builder<?> builder = byteBuddy.with( namingStrategy ).subclass( newSuperClass );
 						for ( Member getter : foreignPackageClassInfo.getters ) {
 							final Class<?> getterType;
 							if ( getter instanceof Field ) {
@@ -381,6 +400,42 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		}
 
 		return superClass;
+	}
+
+	private static String encodeName(String[] propertyNames, Member[] getters, Member[] setters) {
+		return encodeName( Arrays.asList( propertyNames ), Arrays.asList( getters ), Arrays.asList( setters ) );
+	}
+
+	private static String encodeName(List<String> propertyNames, List<Member> getters, List<Member> setters) {
+		final StringBuilder sb = new StringBuilder();
+		for ( int i = 0; i < propertyNames.size(); i++ ) {
+			final String propertyName = propertyNames.get( i );
+			final Member getter = getters.get( i );
+			final Member setter = setters.get( i );
+			// Encode the two member types as 4 bit integer encoded as hex character
+			sb.append( Integer.toHexString( getKind( getter ) << 2 | getKind( setter ) ) );
+			sb.append( propertyName );
+		}
+		return sb.toString();
+	}
+
+	private static int getKind(Member member) {
+		// Encode the member type as 2 bit integer
+		if ( member == EMBEDDED_MEMBER ) {
+			return 0;
+		}
+		else if ( member instanceof Field ) {
+			return 1;
+		}
+		else if ( member instanceof Method ) {
+			return 2;
+		}
+		else if ( member instanceof ForeignPackageMember ) {
+			return 3;
+		}
+		else {
+			throw new IllegalArgumentException( "Unknown member type: " + member );
+		}
 	}
 
 	private static class ForeignPackageMember implements Member {

@@ -135,8 +135,9 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	}
 
 	private static SqlAstTranslatorFactory resolveSqlAstTranslatorFactory(Dialect dialect) {
-		return dialect.getSqlAstTranslatorFactory() != null
-				? dialect.getSqlAstTranslatorFactory()
+		final SqlAstTranslatorFactory sqlAstTranslatorFactory = dialect.getSqlAstTranslatorFactory();
+		return sqlAstTranslatorFactory != null
+				? sqlAstTranslatorFactory
 				: new StandardSqlAstTranslatorFactory();
 	}
 

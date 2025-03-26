@@ -204,27 +204,6 @@ public final class JacksonXmlFormatMapper implements FormatMapper {
 		return writeValueAsString( value, javaType, javaType.getJavaType() );
 	}
 
-	@Override
-	public boolean supportsSourceType(Class<?> sourceType) {
-		return CharSequence.class.isAssignableFrom(sourceType);
-	}
-
-	@Override
-	public boolean supportsTargetType(Class<?> targetType) {
-		return String.class.isAssignableFrom( targetType );
-	}
-
-	@Override
-	public <T> void writeToTarget(T value, JavaType<T> javaType, Object target, WrapperOptions options)
-			throws IOException {
-		target = toString(value, javaType, options);
-	}
-
-	@Override
-	public <T> T readFromSource(JavaType<T> javaType, Object source, WrapperOptions options) throws IOException {
-		return fromString((CharSequence) source, javaType, options);
-	}
-
 	private <T> String writeValueAsString(Object value, JavaType<T> javaType, Type type) {
 		try {
 			return objectMapper.writerFor( objectMapper.constructType( type ) ).writeValueAsString( value );

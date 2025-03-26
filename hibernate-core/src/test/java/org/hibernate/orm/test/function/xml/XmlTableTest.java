@@ -116,7 +116,7 @@ public class XmlTableTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resoving.not support")
 	public void testSimple(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-xml-table-example[]
@@ -158,7 +158,7 @@ public class XmlTableTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE needs a special emulation for query columns that is impossible with parameters")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resoving.not support")
 	public void testNodeBuilderXmlTableObject(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -197,7 +197,7 @@ public class XmlTableTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase doesn't support such xpath expressions directly in xmltable. We could emulate that through generating xmlextract calls though")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resoving.not support")
 	public void testCorrelateXmlTable(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final String query = """

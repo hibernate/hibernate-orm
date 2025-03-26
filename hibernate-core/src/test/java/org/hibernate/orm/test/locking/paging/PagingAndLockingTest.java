@@ -73,7 +73,7 @@ public class PagingAndLockingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "page not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.gauss's bug")
 	public void testCriteria() {
 		inTransaction(
 				s -> {
@@ -99,7 +99,7 @@ public class PagingAndLockingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 //	@Ignore( "Support for locking on native-sql queries not yet implemented" )
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testNativeSql() {
 		inTransaction(
 				session -> {

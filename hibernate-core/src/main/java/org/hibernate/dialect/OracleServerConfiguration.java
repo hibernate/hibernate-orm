@@ -20,6 +20,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_APPLICATION_CONTINUITY;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_AUTONOMOUS_DATABASE;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_EXTENDED_STRING_SIZE;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
@@ -33,6 +34,7 @@ public class OracleServerConfiguration {
 	private final boolean autonomous;
 	private final boolean extended;
 	private final boolean applicationContinuity;
+	private final boolean osonDisabled;
 	private final int driverMajorVersion;
 	private final int driverMinorVersion;
 
@@ -48,6 +50,10 @@ public class OracleServerConfiguration {
 		return applicationContinuity;
 	}
 
+	public boolean isOSONEnabled() {
+		return osonDisabled;
+	}
+
 	public int getDriverMajorVersion() {
 		return driverMajorVersion;
 	}
@@ -57,7 +63,7 @@ public class OracleServerConfiguration {
 	}
 
 	public OracleServerConfiguration(boolean autonomous, boolean extended) {
-		this( autonomous, extended, false, 19, 0 );
+		this( autonomous, extended, false, false, 19, 0 );
 	}
 
 	public OracleServerConfiguration(
@@ -65,18 +71,20 @@ public class OracleServerConfiguration {
 			boolean extended,
 			int driverMajorVersion,
 			int driverMinorVersion) {
-		this( autonomous, extended, false, driverMajorVersion, driverMinorVersion );
+		this( autonomous, extended, false, false, driverMajorVersion, driverMinorVersion );
 	}
 
 	public OracleServerConfiguration(
 			boolean autonomous,
 			boolean extended,
 			boolean applicationContinuity,
+			boolean osonDisabled,
 			int driverMajorVersion,
 			int driverMinorVersion) {
 		this.autonomous = autonomous;
 		this.extended = extended;
 		this.applicationContinuity = applicationContinuity;
+		this.osonDisabled = osonDisabled;
 		this.driverMajorVersion = driverMajorVersion;
 		this.driverMinorVersion = driverMinorVersion;
 	}
@@ -88,10 +96,13 @@ public class OracleServerConfiguration {
 		final boolean defaultExtended = getBoolean( ORACLE_EXTENDED_STRING_SIZE, configuration, false );
 		final boolean defaultAutonomous =  getBoolean( ORACLE_AUTONOMOUS_DATABASE, configuration, false );
 		final boolean defaultContinuity = getBoolean( ORACLE_APPLICATION_CONTINUITY, configuration, false );
+		final boolean defaultOsonDisabled = getBoolean( ORACLE_OSON_DISABLED , configuration, false );
 
 		boolean extended;
 		boolean autonomous;
 		boolean applicationContinuity;
+		boolean osonDisabled = defaultOsonDisabled;
+
 		int majorVersion;
 		int minorVersion;
 		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
@@ -127,7 +138,7 @@ public class OracleServerConfiguration {
 			}
 		}
 
-		return new OracleServerConfiguration( autonomous, extended, applicationContinuity, majorVersion, minorVersion );
+		return new OracleServerConfiguration( autonomous, extended, applicationContinuity, osonDisabled,majorVersion, minorVersion );
 	}
 
 	private static boolean isExtended(Statement statement) {

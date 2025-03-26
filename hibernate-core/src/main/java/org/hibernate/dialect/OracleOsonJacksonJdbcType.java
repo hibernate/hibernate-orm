@@ -8,10 +8,13 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import oracle.jdbc.OracleType;
+import oracle.jdbc.driver.DatabaseError;
 import oracle.sql.json.OracleJsonDatum;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonGenerator;
 import oracle.sql.json.OracleJsonParser;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -22,9 +25,11 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.format.OsonDocumentReader;
 import org.hibernate.type.format.OsonDocumentWriter;
 import org.hibernate.type.format.jackson.JacksonOsonFormatMapper;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.sql.CallableStatement;
@@ -43,12 +48,15 @@ import java.sql.SQLException;
 public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 	public static final OracleOsonJacksonJdbcType INSTANCE = new OracleOsonJacksonJdbcType( null );
 
-	private static final Class osonFactoryKlass;
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( OracleOsonJacksonJdbcType.class );
+
+	private static final Object osonFactory;
 	static {
 		try {
-			osonFactoryKlass = JacksonOsonFormatMapper.class.getClassLoader().loadClass( "oracle.jdbc.provider.oson.OsonFactory" );
+			Class osonFactoryKlass = JacksonOsonFormatMapper.class.getClassLoader().loadClass( "oracle.jdbc.provider.oson.OsonFactory" );
+			osonFactory = osonFactoryKlass.getDeclaredConstructor().newInstance();
 		}
-		catch (ClassNotFoundException | LinkageError e) {
+		catch (Exception | LinkageError e) {
 			// should not happen as OracleOsonJacksonJdbcType is loaded
 			// only when Oracle OSON JDBC extension is present
 			// see OracleDialect class.
@@ -98,8 +106,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 				}
 
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
-				JsonFactory osonFactory = (JsonFactory) osonFactoryKlass.getDeclaredConstructor().newInstance();
-				try (JsonGenerator osonGen = osonFactory.createGenerator( out )) {
+				try (JsonGenerator osonGen = ((JsonFactory)osonFactory).createGenerator( out )) {
 					mapper.writeToTarget( value, javaType, osonGen, options );
 				}
 				return out.toByteArray();
@@ -151,7 +158,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 					OracleJsonParser osonParser = new OracleJsonFactory().createJsonBinaryParser( osonBytes );
 					Object[] objects =  JsonHelper.deserialize(
 							getEmbeddableMappingType(),
-							osonParser,
+							new OsonDocumentReader(osonParser),
 							javaType.getJavaTypeClass() != Object[].class,
 							options
 					);
@@ -164,12 +171,23 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 					type = (JavaType<X>) getEmbeddableMappingType().getJavaType();
 				}
 
-				JsonFactory osonFactory = (JsonFactory) osonFactoryKlass.getDeclaredConstructor().newInstance();
-				try (JsonParser osonParser = osonFactory.createParser(  osonBytes )) {
+				try (JsonParser osonParser = ((JsonFactory)osonFactory).createParser(  osonBytes )) {
 					return mapper.readFromSource( type, osonParser, options );
 				}
 			}
 
+			private X doExtraction(byte[] bytes,  WrapperOptions options) throws SQLException {
+				if ( bytes == null ) {
+					return null;
+				}
+
+				try {
+					return fromOson( new ByteArrayInputStream(bytes) ,options);
+				}
+				catch (Exception e) {
+					throw new SQLException( e );
+				}
+			}
 			private X doExtraction(OracleJsonDatum datum,  WrapperOptions options) throws SQLException {
 				if ( datum == null ) {
 					return null;
@@ -185,22 +203,55 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				OracleJsonDatum ojd = rs.getObject( paramIndex, OracleJsonDatum.class );
-				return doExtraction(ojd,options);
-
+				try {
+					OracleJsonDatum ojd = rs.getObject( paramIndex, OracleJsonDatum.class );
+					return doExtraction(ojd,options);
+				} catch (SQLException exc) {
+					if ( exc.getErrorCode() == DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
+						// this may happen if we are fetching data from an existing schema
+						// that use CBLOB for JSON column
+						LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
+						return doExtraction(rs.getBytes( paramIndex ), options);
+					} else {
+						throw exc;
+					}
+				}
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				OracleJsonDatum ojd = statement.getObject( index, OracleJsonDatum.class );
-				return doExtraction(ojd,options);
+				try {
+					OracleJsonDatum ojd = statement.getObject( index, OracleJsonDatum.class );
+					return doExtraction(ojd,options);
+				} catch (SQLException exc) {
+					if ( exc.getErrorCode() == DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
+						// this may happen if we are fetching data from an existing schema
+						// that use CBLOB for JSON column
+						LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
+						return doExtraction(statement.getBytes( index ), options);
+					} else {
+						throw exc;
+					}
+				}
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				OracleJsonDatum ojd = statement.getObject( name, OracleJsonDatum.class );
-				return doExtraction(ojd,options);
+				try {
+					OracleJsonDatum ojd = statement.getObject( name, OracleJsonDatum.class );
+					return doExtraction(ojd,options);
+				} catch (SQLException exc) {
+					if ( exc.getErrorCode() == DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
+						// this may happen if we are fetching data from an existing schema
+						// that use CBLOB for JSON column
+						LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
+						return doExtraction(statement.getBytes( name ), options);
+					} else {
+						throw exc;
+					}
+				}
+
 			}
 
 		};

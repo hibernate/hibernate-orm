@@ -7,7 +7,6 @@ package org.hibernate.type.format;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import java.io.IOException;
 import java.lang.reflect.Type;
 
 /**
@@ -38,23 +37,4 @@ public abstract class AbstractJsonFormatMapper implements FormatMapper {
 
 	protected abstract <T> String toString(T value, Type type);
 
-	@Override
-	public boolean supportsSourceType(Class<?> sourceType) {
-		return CharSequence.class.isAssignableFrom(sourceType);
-	}
-
-	@Override
-	public boolean supportsTargetType(Class<?> targetType) {
-		return String.class.isAssignableFrom( targetType );
-	}
-
-	@Override
-	public <T> void writeToTarget(T value, JavaType<T> javaType, Object target, WrapperOptions options)
-			throws IOException {
-	}
-
-	@Override
-	public <T> T readFromSource(JavaType<T> javaType, Object source, WrapperOptions options) throws IOException {
-		return null;
-	}
 }

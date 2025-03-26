@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.CacheMode;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -16,6 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.SqlExecLogger;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
@@ -44,6 +46,8 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 
 /**
  * Standard JdbcSelectExecutor implementation used by Hibernate,
@@ -258,18 +262,17 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final SessionFactoryImplementor factory = session.getFactory();
 		final boolean queryCacheEnabled = factory.getSessionFactoryOptions().isQueryCacheEnabled();
 
-		final List<?> cachedResults;
-		final CacheMode cacheMode = JdbcExecHelper.resolveCacheMode( executionContext );
-
+		final CacheMode cacheMode = resolveCacheMode( executionContext );
 		final JdbcValuesMappingProducer mappingProducer = jdbcSelect.getJdbcValuesMappingProducer();
 		final boolean cacheable = queryCacheEnabled && canBeCached
 				&& executionContext.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE;
-		final QueryKey queryResultsCacheKey;
 
+		final QueryKey queryResultsCacheKey;
+		final List<?> cachedResults;
 		if ( cacheable && cacheMode.isGetEnabled() ) {
 			SqlExecLogger.SQL_EXEC_LOGGER.debugf( "Reading Query result cache data per CacheMode#isGetEnabled [%s]", cacheMode.name() );
 			final Set<String> querySpaces = jdbcSelect.getAffectedTableNames();
-			if ( querySpaces == null || querySpaces.size() == 0 ) {
+			if ( querySpaces == null || querySpaces.isEmpty() ) {
 				SqlExecLogger.SQL_EXEC_LOGGER.tracef( "Unexpected querySpaces is empty" );
 			}
 			else {
@@ -366,6 +369,16 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 			return new JdbcValuesCacheHit( cachedResults, jdbcValuesMapping );
 		}
+	}
+
+	private static CacheMode resolveCacheMode(ExecutionContext executionContext) {
+		final QueryOptions queryOptions = executionContext.getQueryOptions();
+		final SharedSessionContract session = executionContext.getSession();
+		return coalesceSuppliedValues(
+				() -> queryOptions == null ? null : queryOptions.getCacheMode(),
+				session::getCacheMode,
+				() -> CacheMode.NORMAL
+		);
 	}
 
 	static class CapturingJdbcValuesMetadata implements JdbcValuesMetadata {

@@ -313,8 +313,8 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 
 	private static Object handleGeneratedId(boolean useIdentityColumn, Object id, AbstractEntityInsertAction insert) {
 		if ( useIdentityColumn && insert.isEarlyInsert() ) {
-			if ( insert instanceof EntityIdentityInsertAction ) {
-				final Object generatedId = ((EntityIdentityInsertAction) insert).getGeneratedId();
+			if ( insert instanceof EntityIdentityInsertAction entityIdentityInsertAction ) {
+				final Object generatedId = entityIdentityInsertAction.getGeneratedId();
 				insert.handleNaturalIdPostSaveNotifications( generatedId );
 				return generatedId;
 			}

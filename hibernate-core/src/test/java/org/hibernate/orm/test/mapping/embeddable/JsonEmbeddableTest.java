@@ -221,7 +221,7 @@ public class JsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.do not support")
 	public void testUpdateAggregateMember() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
@@ -235,7 +235,7 @@ public class JsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.do not support")
 	public void testUpdateMultipleAggregateMembers() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
@@ -250,7 +250,7 @@ public class JsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.do not support")
 	public void testUpdateAllAggregateMembers() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {

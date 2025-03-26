@@ -68,7 +68,7 @@ public class JsonTableTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testSimple(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-table-example[]
@@ -117,7 +117,7 @@ public class JsonTableTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testNodeBuilderJsonTableObject(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -166,7 +166,7 @@ public class JsonTableTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testArray(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final String query = """
@@ -188,7 +188,7 @@ public class JsonTableTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testArrayParam(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final String query = """

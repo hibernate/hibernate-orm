@@ -628,7 +628,6 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.dateTrunc();
 
 		functionFactory.unnest( null, "ordinality" );
-		functionFactory.generateSeries( null, "ordinality", false );
 
 		functionFactory.hex( "encode(?1, 'hex')" );
 		functionFactory.sha( "sha256(?1)" );

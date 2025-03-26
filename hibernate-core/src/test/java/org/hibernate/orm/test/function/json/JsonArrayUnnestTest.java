@@ -71,7 +71,7 @@ public class JsonArrayUnnestTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testUnnest(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-array-unnest-aggregate-example[]
@@ -101,7 +101,7 @@ public class JsonArrayUnnestTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testNodeBuilderUnnest(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -141,7 +141,7 @@ public class JsonArrayUnnestTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testUnnestOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-array-unnest-aggregate-with-ordinality-example[]
@@ -165,7 +165,7 @@ public class JsonArrayUnnestTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testNodeBuilderUnnestOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();

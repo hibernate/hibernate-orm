@@ -70,7 +70,7 @@ public class XmlArrayUnnestTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testUnnest(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-xml-array-unnest-aggregate-example[]
@@ -100,7 +100,7 @@ public class XmlArrayUnnestTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testNodeBuilderUnnest(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -140,7 +140,7 @@ public class XmlArrayUnnestTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testUnnestOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-xml-array-unnest-aggregate-with-ordinality-example[]

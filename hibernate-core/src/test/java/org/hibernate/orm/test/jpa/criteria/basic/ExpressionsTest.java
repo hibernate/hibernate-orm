@@ -17,7 +17,6 @@ import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.GaussDBDialect;
-import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.orm.test.jpa.metamodel.Phone;
@@ -307,9 +306,9 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test @SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "numeric overflows")
-	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "does not support extract(epoch)")
+//	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "does not support extract(epoch)")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "datediff overflow limits")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.interval_mul result month: 0.000000, day: 796176000000000000.000000 overflow")
 	public void testDateTimeOperations() {
 		HibernateCriteriaBuilder builder = (HibernateCriteriaBuilder) this.builder;
 		doInJPA(

@@ -146,7 +146,7 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.Function structfunction() does not exist.")
 	public void testFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final ProcedureCall structFunction = session.createStoredProcedureCall( "structFunction" )
@@ -164,7 +164,7 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 	@SkipForDialect( dialectClass = PostgreSQLDialect.class, majorVersion = 10, reason = "Procedures were only introduced in version 11" )
 	@SkipForDialect( dialectClass = PostgresPlusDialect.class, majorVersion = 10, reason = "Procedures were only introduced in version 11" )
 	@SkipForDialect( dialectClass = DB2Dialect.class, reason = "DB2 does not support struct types in procedures" )
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.This statement does not declare an OUT parameter")
 	public void testProcedure(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Dialect dialect = session.getJdbcServices().getDialect();

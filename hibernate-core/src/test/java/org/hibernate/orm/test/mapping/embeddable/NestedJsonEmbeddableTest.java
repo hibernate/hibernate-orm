@@ -73,7 +73,6 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testUpdate() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
@@ -218,7 +217,7 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+//	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testDeleteWhere() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {

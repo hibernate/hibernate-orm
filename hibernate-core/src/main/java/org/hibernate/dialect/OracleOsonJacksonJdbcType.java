@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -85,7 +85,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 
 			private <X> byte[] toOson(X value, JavaType<X> javaType, WrapperOptions options) throws Exception {
 
-				FormatMapper mapper = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
+				FormatMapper mapper = options.getJsonFormatMapper();
 
 				if (getEmbeddableMappingType() != null) {
 					ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -96,7 +96,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 					}
 					return out.toByteArray();
 				}
-				
+
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				JsonFactory osonFactory = (JsonFactory) osonFactoryKlass.getDeclaredConstructor().newInstance();
 				try (JsonGenerator osonGen = osonFactory.createGenerator( out )) {
@@ -140,7 +140,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 
 			private X fromOson(InputStream osonBytes, WrapperOptions options) throws Exception {
 
-				FormatMapper mapper = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
+				FormatMapper mapper = options.getJsonFormatMapper();
 
 				if (getEmbeddableMappingType() != null &&
 						getJavaType().getJavaTypeClass() == Object[].class) {
@@ -185,8 +185,8 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				 OracleJsonDatum ojd = rs.getObject( paramIndex, OracleJsonDatum.class );
-				 return doExtraction(ojd,options);
+				OracleJsonDatum ojd = rs.getObject( paramIndex, OracleJsonDatum.class );
+				return doExtraction(ojd,options);
 
 			}
 

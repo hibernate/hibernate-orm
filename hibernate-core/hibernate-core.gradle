@@ -264,6 +264,7 @@ tasks.withType( Test.class ).each { test ->
 tasks.named( "javadoc", Javadoc ) {
     configure(options) {
         overview = rootProject.file( "shared/javadoc/overview.html" )
+        exclude( "**/internal/**", "org/hibernate/boot/jaxb/**", "org/hibernate/tuple/**" )
     }
 }
 

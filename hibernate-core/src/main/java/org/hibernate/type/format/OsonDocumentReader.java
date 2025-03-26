@@ -21,6 +21,7 @@ import java.util.NoSuchElementException;
 
 /**
  * OSON-based implementation of <code>JsonDocumentReader</code>
+ * @author Emmanuel Jannetti
  */
 public class OsonDocumentReader implements JsonDocumentReader {
 
@@ -172,7 +173,7 @@ public class OsonDocumentReader implements JsonDocumentReader {
 	@Override
 	public <T> T getValue(JavaType<T> javaType, WrapperOptions options) {
 		if ( currentValue instanceof String ) {
-			if (javaType.equals(PrimitiveByteArrayJavaType.INSTANCE)) {
+			if (((String)currentValue).length() == 36 && javaType == PrimitiveByteArrayJavaType.INSTANCE) {
 				// be sure that we have only allowed characters.
 				// that may happen for string representation of UUID (i.e 53886a8a-7082-4879-b430-25cb94415be8) for instance
 				return javaType.fromEncodedString(  (((String) currentValue).replaceAll( "-","" )) );

@@ -16,7 +16,7 @@ public abstract class StringJsonDocument {
 	 * When processing objects, values are stored as [,]"key":"value"[,]. we add separator when adding new key
 	 * When processing arrays, values are stored as [,]"value"[,]. we add separator when adding new value
 	 */
-	enum PROCESSING_STATE {
+	enum JsonProcessingState {
 		NONE,
 		STARTING_OBJECT, // object started but no value added
 		OBJECT_KEY_NAME, // We are processing an object key name
@@ -27,7 +27,7 @@ public abstract class StringJsonDocument {
 		ARRAY // we are piling array values
 	}
 	// Stack of current processing states
-	protected StandardStack<PROCESSING_STATE> processingStates = new StandardStack<>();
+	protected final StandardStack<JsonProcessingState> processingStates = new StandardStack<>();
 
 
 

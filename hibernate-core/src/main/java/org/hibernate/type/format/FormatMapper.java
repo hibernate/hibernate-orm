@@ -49,16 +49,24 @@ public interface FormatMapper {
 	 * @param sourceType the source type
 	 * @return <code>true</code> if the type is supported, false otherwise.
 	 */
-	boolean supportsSourceType(Class<?> sourceType);
+	default boolean supportsSourceType(Class<?> sourceType) {
+		return false;
+	};
 
 	/**
 	 * Checks that this mapper supports a type as a target type.
 	 * @param targetType the target type
 	 * @return <code>true</code> if the type is supported, false otherwise.
 	 */
-	boolean supportsTargetType(Class<?> targetType);
+	default boolean supportsTargetType(Class<?> targetType) {
+		return false;
+	}
 
-	<T> void writeToTarget(T value, JavaType<T> javaType, Object target, WrapperOptions options) throws IOException;
+	default <T> void writeToTarget(T value, JavaType<T> javaType, Object target, WrapperOptions options) throws IOException {
+		throw new UnsupportedOperationException( "Unsupportd target type " + target.getClass() );
+	};
 
-	<T> T readFromSource(JavaType<T> javaType, Object source, WrapperOptions options) throws IOException;
+	default <T> T readFromSource(JavaType<T> javaType, Object source, WrapperOptions options) throws IOException {
+		throw new UnsupportedOperationException( "Unsupportd source type " + source.getClass() );
+	};
 }

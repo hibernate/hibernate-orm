@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -133,7 +133,7 @@ public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 
 			private X fromOson(InputStream osonBytes, WrapperOptions options) throws Exception {
-				FormatMapper mapper = options.getSession().getSessionFactory().getFastSessionServices().getJsonFormatMapper();
+				FormatMapper mapper = options.getJsonFormatMapper();
 				JsonFactory osonFactory = (JsonFactory) osonFactoryKlass.getDeclaredConstructor().newInstance();
 				JsonParser osonParser = osonFactory.createParser( osonBytes );
 				return mapper.readFromSource(  getJavaType(), osonParser, options);

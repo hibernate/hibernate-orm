@@ -90,7 +90,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			default -> version.isSameOrAfter( 23 )
 				? useDateStoredAsString?OracleAggregateSupport.V23_INSTANCE:
 				OracleAggregateSupport.V23_OSON_EXT_INSTANCE
-                                : OracleAggregateSupport.LEGACY_INSTANCE;
+								: OracleAggregateSupport.LEGACY_INSTANCE;
 		};
 	}
 

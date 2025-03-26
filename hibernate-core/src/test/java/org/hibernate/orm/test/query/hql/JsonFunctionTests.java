@@ -631,7 +631,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonMergepatch.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss has different function definition")
 	public void testJsonMergepatch(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

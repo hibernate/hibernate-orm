@@ -81,6 +81,7 @@ public class GenerateSeriesTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.not support index")
 	public void testGenerateSeriesOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-set-returning-function-generate-series-ordinality-example[]
@@ -100,7 +101,7 @@ public class GenerateSeriesTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.not support index")
 	public void testNodeBuilderGenerateSeriesOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -135,7 +136,7 @@ public class GenerateSeriesTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase bug?")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.not support index")
 	public void testGenerateSeriesCorrelation(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<Integer> resultList = em.createQuery(
@@ -169,7 +170,7 @@ public class GenerateSeriesTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.not support index")
 	public void testGenerateSeriesNoProgressionOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<Tuple> resultList = em.createQuery( "select index(e), e from generate_series(2, 1, 1) e", Tuple.class )

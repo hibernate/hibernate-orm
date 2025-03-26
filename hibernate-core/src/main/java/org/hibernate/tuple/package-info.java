@@ -6,10 +6,11 @@
 /**
  * Most contracts here have been replaced by the new runtime
  * {@linkplain org.hibernate.metamodel.mapping mapping model}.
- * <p>
- * @apiNote This entire package (and sub-packages) is considered deprecated
+ *
+ * @apiNote This entire package (and subpackages) is considered
+ *          deprecated and will be removed
  */
-@Remove
+@Remove @Deprecated(forRemoval = true)
 package org.hibernate.tuple;
 
 import org.hibernate.Remove;

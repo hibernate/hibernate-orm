@@ -45,17 +45,17 @@ import java.sql.SQLException;
 public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
 
 
-	private static final Class osonFactoryKlass;
-
+	private static final Object osonFactory;
 	static {
 		try {
-			osonFactoryKlass = JacksonOsonFormatMapper.class.getClassLoader().loadClass( "oracle.jdbc.provider.oson.OsonFactory" );
+			Class osonFactoryKlass = JacksonOsonFormatMapper.class.getClassLoader().loadClass( "oracle.jdbc.provider.oson.OsonFactory" );
+			osonFactory = osonFactoryKlass.getDeclaredConstructor().newInstance();
 		}
-		catch (ClassNotFoundException | LinkageError e) {
-			// should not happen as OracleOsonJacksonArrayJdbcType is loaded
-			// only when an Oracle OSON JDBC extension is present
+		catch (Exception | LinkageError e) {
+			// should not happen as OracleOsonJacksonJdbcType is loaded
+			// only when Oracle OSON JDBC extension is present
 			// see OracleDialect class.
-			throw new ExceptionInInitializerError( "OracleOsonJacksonArrayJdbcType class loaded without OSON extension: " + e.getClass()+ " " + e.getMessage());
+			throw new ExceptionInInitializerError( "OracleOsonJacksonJdbcType class loaded without OSON extension: " + e.getClass()+" "+ e.getMessage());
 		}
 	}
 
@@ -134,8 +134,7 @@ public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
 
 			private X fromOson(InputStream osonBytes, WrapperOptions options) throws Exception {
 				FormatMapper mapper = options.getJsonFormatMapper();
-				JsonFactory osonFactory = (JsonFactory) osonFactoryKlass.getDeclaredConstructor().newInstance();
-				JsonParser osonParser = osonFactory.createParser( osonBytes );
+				JsonParser osonParser = ((JsonFactory)osonFactory).createParser( osonBytes );
 				return mapper.readFromSource(  getJavaType(), osonParser, options);
 			}
 

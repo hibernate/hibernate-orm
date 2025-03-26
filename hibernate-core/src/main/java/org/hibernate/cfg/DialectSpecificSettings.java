@@ -44,6 +44,20 @@ public interface DialectSpecificSettings {
 	String ORACLE_APPLICATION_CONTINUITY = "hibernate.dialect.oracle.application_continuity";
 
 	/**
+	 * Specifies whether usage of the Oracle JSON binary format (aka OSON) should be disabled.
+	 * <p>
+	 * Starting to 21c, if the ojdbc-provider-jackson-oson extension is available. JSON data in an oracle
+	 * database are stored using the OSON binary format. This setting can be used to fallback to the old implementation
+	 * based on String serialization.
+	 *
+	 * @settingDefault {@code false}
+	 *
+	 * @see <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/adjsn/json-oracle-database.html">Orace OSON format</a>
+	 * @see <a href="https://github.com/oracle/ojdbc-extensions/blob/main/ojdbc-provider-jackson-oson/README.md">Jackson OSON provider</a>
+	 */
+	String ORACLE_OSON_DISABLED = "hibernate.dialect.oracle.oson_format_disabled";
+
+	/**
 	 * Specifies whether the {@code ansinull} setting is enabled on Sybase.
 	 * <p>
 	 * Ignored if Hibernate is able to determine the value of {@code ansinull}

@@ -38,12 +38,12 @@ import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.format.JsonDocumentItemType;
 import org.hibernate.type.format.JsonDocumentReader;
-import org.hibernate.type.format.JsonDocumentReaderFactory;
 import org.hibernate.type.format.JsonDocumentWriter;
 import static org.hibernate.type.descriptor.jdbc.StructHelper.getEmbeddedPart;
 import static org.hibernate.type.descriptor.jdbc.StructHelper.instantiate;
 import org.hibernate.type.format.JsonValueJDBCTypeAdapter;
 import org.hibernate.type.format.JsonValueJDBCTypeAdapterFactory;
+import org.hibernate.type.format.StringJsonDocumentReader;
 
 /**
  * A Helper for serializing and deserializing JSON, based on an {@link org.hibernate.metamodel.mapping.EmbeddableMappingType}.
@@ -395,7 +395,7 @@ public class JsonHelper {
 	/**
 	 * Deserialize a JSON value to Java Object
 	 * @param embeddableMappingType the mapping type
-	 * @param source the JSON value
+	 * @param reader the JSON reader
 	 * @param returnEmbeddable do we return an Embeddable object or array of Objects
 	 * @param options wrappping options
 	 * @return the deserialized value
@@ -404,14 +404,10 @@ public class JsonHelper {
 	 */
 	public static <X> X deserialize(
 			EmbeddableMappingType embeddableMappingType,
-			Object source,
+			JsonDocumentReader reader,
 			boolean returnEmbeddable,
 			WrapperOptions options) throws SQLException {
 
-		if ( source == null ) {
-			return null;
-		}
-		JsonDocumentReader reader = JsonDocumentReaderFactory.getJsonDocumentReader(source);
 
 		final Object[] values = consumeJsonDocumentItems(reader, embeddableMappingType, returnEmbeddable, options);
 		if ( returnEmbeddable ) {
@@ -448,7 +444,7 @@ public class JsonHelper {
 		else {
 			jdbcJavaType = options.getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( preferredJavaTypeClass );
 		}
-		JsonDocumentReader reader = JsonDocumentReaderFactory.getJsonDocumentReader(string);
+		JsonDocumentReader reader = new StringJsonDocumentReader(string);
 		JsonValueJDBCTypeAdapter adapter = JsonValueJDBCTypeAdapterFactory.getAdapter(reader,false);
 
 		assert reader.hasNext():"Invalid array string";
@@ -457,7 +453,7 @@ public class JsonHelper {
 		while(reader.hasNext()) {
 			JsonDocumentItemType type = reader.next();
 			switch ( type ) {
-				case JsonDocumentItemType.ARRAY_END:
+				case ARRAY_END:
 					endArrayFound=true;
 					break;
 				case NULL_VALUE:
@@ -473,7 +469,7 @@ public class JsonHelper {
 					arrayList.add( adapter.fromValue(jdbcJavaType, elementJdbcType ,reader, options) );
 					break;
 				default:
-					assert false : "Unexpected type " + type;
+					throw new UnsupportedOperationException( "Unexpected JSON type " + type );
 			}
 		}
 

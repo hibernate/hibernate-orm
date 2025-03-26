@@ -157,7 +157,7 @@ public class MultiLoadLockingTest {
 
 	// (1) simple Id entity w/ pessimistic read lock
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+//	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	void testMultiLoadSimpleIdEntityPessimisticReadLock(SessionFactoryScope scope) {
 		final LockOptions lockOptions = new LockOptions(LockMode.PESSIMISTIC_READ);
 		final String lockString = scope.getSessionFactory().getJdbcServices().getDialect().getForUpdateString(lockOptions);

@@ -749,20 +749,27 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 		else {
 			final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( name );
-			final QueryParameter<Object> param = binding.getQueryParameter();
-			if ( param.allowsMultiValuedBinding() ) {
-				final BindableType<?> hibernateType = param.getHibernateType();
-				if ( hibernateType == null || isInstance( hibernateType, value ) ) {
-					if ( value instanceof Collection<?> collection
-							&& !isRegisteredAsBasicType( value.getClass() ) ) {
-						return setParameterList( name, collection );
-					}
-				}
+			if ( multipleBinding( binding.getQueryParameter(), value )
+				&& value instanceof Collection<?> collectionValue
+				&& !isRegisteredAsBasicType( value.getClass() ) ) {
+				return setParameterList( name, collectionValue );
 			}
 			binding.setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		}
 
 		return this;
+	}
+
+	private boolean multipleBinding(QueryParameter<Object> param, Object value){
+		if ( param.allowsMultiValuedBinding() ) {
+			final BindableType<?> hibernateType = param.getHibernateType();
+			if ( hibernateType == null
+				|| hibernateType instanceof NullSqmExpressible
+				|| isInstance( hibernateType, value ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private <T> void setTypedParameter(String name, TypedParameterValue<T> typedValue) {
@@ -815,17 +822,10 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 		else {
 			final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( position );
-			final QueryParameter<Object> param = binding.getQueryParameter();
-			if ( param.allowsMultiValuedBinding() ) {
-				final BindableType<?> hibernateType = param.getHibernateType();
-				if ( hibernateType == null
-						|| hibernateType instanceof NullSqmExpressible
-						|| isInstance( hibernateType, value ) ) {
-					if ( value instanceof Collection<?> collection
-							&& !isRegisteredAsBasicType( value.getClass() ) ) {
-						return setParameterList( position, collection );
-					}
-				}
+			if ( multipleBinding( binding.getQueryParameter(), value )
+				&& value instanceof Collection<?> collectionValue
+				&& !isRegisteredAsBasicType( value.getClass() ) ) {
+				return setParameterList( position, collectionValue );
 			}
 			binding.setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		}

@@ -69,39 +69,10 @@ public class JsonHelper {
 		}
 		for ( Object value : values ) {
 			try {
-				if (value == null) {
-					writer.nullValue();
-				}
-				else if ( elementMappingType instanceof EmbeddableMappingType ) {
-					JsonHelper.serialize( (EmbeddableMappingType) elementMappingType, value, options, writer );
-				} else if ( elementMappingType instanceof BasicType<?> ) {
-					//noinspection unchecked
-					final BasicType<Object> basicType = (BasicType<Object>) elementMappingType;
-
-					if ( isArrayType(basicType.getJdbcType())) {
-						final int length = Array.getLength( value );
-						if ( length != 0 ) {
-							//noinspection unchecked
-							final JavaType<Object> elementJavaType = ( (BasicPluralJavaType<Object>) basicType.getJdbcJavaType() ).getElementJavaType();
-							final JdbcType elementJdbcType = ( (ArrayJdbcType) basicType.getJdbcType() ).getElementJdbcType();
-							final Object domainArray = basicType.convertToRelationalValue( value );
-							for ( int j = 0; j < length; j++ ) {
-								writer.serializeJsonValue(Array.get(domainArray,j), elementJavaType, elementJdbcType, options);
-							}
-						}
-					}
-					else {
-						writer.serializeJsonValue(basicType.convertToRelationalValue( value),
-								(JavaType<Object>)basicType.getJdbcJavaType(),basicType.getJdbcType(), options);
-					}
-				}
-				else {
-					throw new UnsupportedOperationException( "Support for mapping type not yet implemented: " + elementMappingType.getClass().getName() );
-				}
+				serialize(elementMappingType, value, options, writer);
 			}
 			catch (IOException e) {
-				// TODO : do better than this
-				throw new RuntimeException( e );
+				throw new IllegalArgumentException( "Could not serialize JSON array value" , e );
 			}
 		}
 		writer.endArray();
@@ -158,6 +129,42 @@ public class JsonHelper {
 		writer.endObject();
 	}
 
+	private static void serialize(MappingType mappedType, Object value, WrapperOptions options, JsonDocumentWriter writer)
+			throws IOException {
+		if ( value == null ) {
+			writer.nullValue();
+		}
+		else if ( mappedType instanceof EmbeddableMappingType ) {
+			serialize( (EmbeddableMappingType) mappedType, value, options, writer );
+		}
+		else if ( mappedType instanceof BasicType<?> ) {
+			//noinspection unchecked
+			final BasicType<Object> basicType = (BasicType<Object>) mappedType;
+
+			if ( isArrayType(basicType.getJdbcType())) {
+				final int length = Array.getLength( value );
+				writer.startArray();
+				if ( length != 0 ) {
+					//noinspection unchecked
+					final JavaType<Object> elementJavaType = ( (BasicPluralJavaType<Object>) basicType.getJdbcJavaType() ).getElementJavaType();
+					final JdbcType elementJdbcType = ( (ArrayJdbcType) basicType.getJdbcType() ).getElementJdbcType();
+					final Object domainArray = basicType.convertToRelationalValue( value );
+					for ( int j = 0; j < length; j++ ) {
+						writer.serializeJsonValue(Array.get(domainArray,j), elementJavaType, elementJdbcType, options);
+					}
+				}
+				writer.endArray();
+			}
+			else {
+				writer.serializeJsonValue(basicType.convertToRelationalValue( value),
+						(JavaType<Object>)basicType.getJdbcJavaType(),basicType.getJdbcType(), options);
+			}
+		}
+		else {
+			throw new UnsupportedOperationException( "Support for mapping type not yet implemented: " + mappedType.getClass().getName() );
+		}
+	}
+
 	/**
 	 * JSON object attirbute serialization
 	 * @see #serialize(EmbeddableMappingType, Object, WrapperOptions, JsonDocumentWriter)
@@ -175,40 +182,18 @@ public class JsonHelper {
 			if ( attributeMapping instanceof SelectableMapping ) {
 				final String name = ( (SelectableMapping) attributeMapping ).getSelectableName();
 				writer.objectKey( name );
-				if (values[i] == null) {
-					writer.nullValue();
-				}
-				else if (attributeMapping.getMappedType() instanceof BasicType<?>) {
-					final BasicType<Object> basicType = (BasicType<Object>) attributeMapping.getMappedType();
-					if ( isArrayType(basicType.getJdbcType())) {
-						final int length = Array.getLength( values[i] );
-						writer.startArray();
-						if ( length != 0 ) {
-							//noinspection unchecked
-							final JavaType<Object> elementJavaType = ( (BasicPluralJavaType<Object>) basicType.getJdbcJavaType() ).getElementJavaType();
-							final JdbcType elementJdbcType = ( (ArrayJdbcType) basicType.getJdbcType() ).getElementJdbcType();
-							final Object domainArray = basicType.convertToRelationalValue(   values[i] );
-							for ( int j = 0; j < length; j++ ) {
-								writer.serializeJsonValue(Array.get(domainArray,j), elementJavaType, elementJdbcType, options);
-							}
-						}
-						writer.endArray();
-					}
-					else {
-						writer.serializeJsonValue(basicType.convertToRelationalValue( values[i]),
-								(JavaType<Object>)basicType.getJdbcJavaType(),basicType.getJdbcType(), options);
-					}
-				}
-				else if ( attributeMapping.getMappedType() instanceof EmbeddableMappingType ) {
+
+				if ( attributeMapping.getMappedType() instanceof EmbeddableMappingType ) {
 					writer.startObject();
 					serializeMapping(  (EmbeddableMappingType)attributeMapping.getMappedType(), values[i], options,writer);
 					writer.endObject();
+				} else {
+					serialize(attributeMapping.getMappedType(), values[i], options, writer);
 				}
 
 			}
 			else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
 				if ( values[i] == null ) {
-					//writer.nullValue();
 					continue;
 				}
 				final EmbeddableMappingType mappingType = (EmbeddableMappingType) attributeMapping.getMappedType();

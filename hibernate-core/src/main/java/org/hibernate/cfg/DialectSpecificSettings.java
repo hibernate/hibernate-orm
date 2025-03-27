@@ -53,10 +53,10 @@ public interface DialectSpecificSettings {
 	String ORACLE_USE_BINARY_FLOATS = "hibernate.dialect.oracle.use_binary_floats";
 
 	/**
-	 * Specifies whether usage of the Oracle JSON binary format (aka OSON) should be disabled.
+	 * Specifies whether usage of the Oracle JSON binary format (also known as OSON) should be disabled.
 	 * <p>
-	 * Starting to 21c, if the ojdbc-provider-jackson-oson extension is available. JSON data in an oracle
-	 * database are stored using the OSON binary format. This setting can be used to fallback to the old implementation
+	 * Starting in 21c, if the ojdbc-provider-jackson-oson extension is available, JSON data in an oracle
+	 * database is stored using the OSON binary format. This setting can be used to fallback to the old implementation
 	 * based on String serialization.
 	 *
 	 * @settingDefault {@code false}

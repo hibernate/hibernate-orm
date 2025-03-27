@@ -132,7 +132,11 @@ public class ArraySliceTest {
 					cb.collectionSlice( root.get( "theCollection" ), cb.literal( 1 ), cb.literal( 1 ) ),
 					cb.collectionSlice( root.get( "theCollection" ), cb.literal( 1 ), 1 ),
 					cb.collectionSlice( root.get( "theCollection" ), 1, cb.literal( 1 ) ),
-					cb.collectionSlice( root.get( "theCollection" ), 1, 1 )
+					cb.collectionSlice( root.get( "theCollection" ), 1, 1 ),
+					cb.collectionSlice( root.get( "theLabels" ), cb.literal( 1 ), cb.literal( 1 ) ),
+					cb.collectionSlice( root.get( "theLabels" ), cb.literal( 1 ), 1 ),
+					cb.collectionSlice( root.get( "theLabels" ), 1, cb.literal( 1 ) ),
+					cb.collectionSlice( root.get( "theLabels" ), 1, 1 )
 			);
 			em.createQuery( cq ).getResultList();
 		} );

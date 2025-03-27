@@ -122,7 +122,9 @@ public class ArrayPositionTest {
 			cq.multiselect(
 					root.get( "id" ),
 					cb.collectionPosition( root.<Collection<String>>get( "theCollection" ), cb.literal( "xyz" ) ),
-					cb.collectionPosition( root.get( "theCollection" ), "xyz" )
+					cb.collectionPosition( root.get( "theCollection" ), "xyz" ),
+					cb.collectionPosition( root.<Collection<String>>get( "theLabels" ), cb.literal( Label.A ) ),
+					cb.collectionPosition( root.get( "theLabels" ), Label.A )
 			);
 			em.createQuery( cq ).getResultList();
 

@@ -117,7 +117,13 @@ public class ArrayContainsTest {
 					cb.collectionContains( List.of( "abc", "xyz" ), cb.literal( "xyz" ) ),
 					cb.collectionContainsNullable( root.<Collection<String>>get( "theCollection" ), cb.literal( "xyz" ) ),
 					cb.collectionContainsNullable( root.get( "theCollection" ), "xyz" ),
-					cb.collectionContainsNullable( List.of( "abc", "xyz" ), cb.literal( "xyz" ) )
+					cb.collectionContainsNullable( List.of( "abc", "xyz" ), cb.literal( "xyz" ) ),
+					cb.collectionContains( root.<Collection<Label>>get( "theLabels" ), cb.literal( Label.A ) ),
+					cb.collectionContains( root.get( "theLabels" ), Label.A ),
+					cb.collectionContains( List.of( Label.A, Label.B ), cb.literal( Label.A ) ),
+					cb.collectionContainsNullable( root.<Collection<Label>>get( "theLabels" ), cb.literal( Label.A ) ),
+					cb.collectionContainsNullable( root.get( "theLabels" ), Label.A ),
+					cb.collectionContainsNullable( List.of( Label.A, Label.B ), cb.literal( Label.A ) )
 			);
 			em.createQuery( cq ).getResultList();
 

@@ -135,7 +135,11 @@ public class ArraySetTest {
 					cb.collectionSet( root.<Collection<String>>get( "theCollection" ), cb.literal( 1 ), cb.literal( "xyz" ) ),
 					cb.collectionSet( root.get( "theCollection" ), cb.literal( 1 ), "xyz" ),
 					cb.collectionSet( root.<Collection<String>>get( "theCollection" ), 1, cb.literal( "xyz" ) ),
-					cb.collectionSet( root.get( "theCollection" ), 1, "xyz" )
+					cb.collectionSet( root.get( "theCollection" ), 1, "xyz" ),
+					cb.collectionSet( root.<Collection<Label>>get( "theLabels" ), cb.literal( 1 ), cb.literal( Label.A ) ),
+					cb.collectionSet( root.get( "theLabels" ), cb.literal( 1 ), Label.A ),
+					cb.collectionSet( root.<Collection<Label>>get( "theLabels" ), 1, cb.literal( Label.A ) ),
+					cb.collectionSet( root.get( "theLabels" ), 1, Label.A )
 			);
 			em.createQuery( cq ).getResultList();
 

@@ -136,7 +136,11 @@ public class ArrayReplaceTest {
 					cb.collectionReplace( root.<Collection<String>>get( "theCollection" ), cb.literal( "abc" ), cb.literal( "xyz" ) ),
 					cb.collectionReplace( root.<Collection<String>>get( "theCollection" ), cb.literal( "abc" ), "xyz" ),
 					cb.collectionReplace( root.<Collection<String>>get( "theCollection" ), "abc", cb.literal( "xyz" ) ),
-					cb.collectionReplace( root.get( "theCollection" ), "abc", "xyz" )
+					cb.collectionReplace( root.get( "theCollection" ), "abc", "xyz" ),
+					cb.collectionReplace( root.<Collection<Label>>get( "theLabels" ), cb.literal( Label.A ), cb.literal( Label.B ) ),
+					cb.collectionReplace( root.<Collection<Label>>get( "theLabels" ), cb.literal( Label.A ), Label.B ),
+					cb.collectionReplace( root.<Collection<Label>>get( "theLabels" ), Label.A, cb.literal( Label.B ) ),
+					cb.collectionReplace( root.get( "theLabels" ), Label.A, Label.B )
 			);
 			em.createQuery( cq ).getResultList();
 

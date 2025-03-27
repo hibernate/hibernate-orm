@@ -139,7 +139,11 @@ public class ArrayPositionsTest {
 					cb.collectionPositions( root.<Collection<String>>get( "theCollection" ), cb.literal( "xyz" ) ),
 					cb.collectionPositions( root.get( "theCollection" ), "xyz" ),
 					cb.collectionPositionsList( root.<Collection<String>>get( "theCollection" ), cb.literal( "xyz" ) ),
-					cb.collectionPositionsList( root.get( "theCollection" ), "xyz" )
+					cb.collectionPositionsList( root.get( "theCollection" ), "xyz" ),
+					cb.collectionPositions( root.<Collection<Label>>get( "theLabels" ), cb.literal( Label.A ) ),
+					cb.collectionPositions( root.get( "theLabels" ), Label.A ),
+					cb.collectionPositionsList( root.<Collection<Label>>get( "theLabels" ), cb.literal( Label.A ) ),
+					cb.collectionPositionsList( root.get( "theLabels" ), Label.A )
 			);
 			em.createQuery( cq ).getResultList();
 

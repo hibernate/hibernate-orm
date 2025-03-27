@@ -229,7 +229,7 @@ strategy so that we can load entities from the second-level cache, therefore ski
 `withBatchSize(int batchSize)`::
 This setting allows you to specify a batch size for loading the entities (e.g. how many at a time).
 +
-The default is to use a batch sizing strategy defined by the `Dialect.getDefaultBatchLoadSizingStrategy()` method.
+The default is to use a batch sizing strategy defined by the configuration settings in Hibernate. 
 +
 Any greater-than-one value here will override that default behavior.
 `with(RootGraph<T> graph)`::

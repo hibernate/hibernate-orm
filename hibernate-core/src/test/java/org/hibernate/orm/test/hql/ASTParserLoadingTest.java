@@ -38,7 +38,6 @@ import org.hibernate.orm.test.cid.Order;
 import org.hibernate.orm.test.cid.Product;
 import org.hibernate.query.Query;
 import org.hibernate.query.SyntaxException;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -1451,7 +1450,7 @@ public class ASTParserLoadingTest {
 	public void testComponentQueries(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<?> query = session.createQuery( "select h.name from Human h" );
+					final Query<?> query = session.createQuery( "select h.name from Human h" );
 					final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) query.unwrap(
 							QuerySqmImpl.class ).getSqmStatement();
 					assertThat( sqmStatement.getQuerySpec().getSelectClause().getSelections().size() ).isEqualTo( 1 );

@@ -10,7 +10,7 @@ import java.util.List;
 import jakarta.persistence.CascadeType;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -57,7 +57,7 @@ public class ForwardOnlyScrollNoTransactionTest {
 	public void testScroll(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
-					QueryImplementor query = session.createQuery( "select f from Father f" );
+					Query query = session.createQuery( "select f from Father f" );
 
 					try (ScrollableResults result = query.scroll( ScrollMode.FORWARD_ONLY )) {
 						while ( result.next() ) {

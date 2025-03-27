@@ -13,11 +13,11 @@ import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaRoot;
-import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -110,7 +110,7 @@ public class CompositeParameterTests {
 			final JpaParameterExpression parameter = builder.parameter( SimpleComposite.class );
 			criteria.where( builder.in( attrPath, parameter ) );
 
-			final QueryImplementor query = session.createQuery( criteria );
+			final Query query = session.createQuery( criteria );
 			query.setParameter( parameter, new SimpleComposite() );
 			query.list();
 		});

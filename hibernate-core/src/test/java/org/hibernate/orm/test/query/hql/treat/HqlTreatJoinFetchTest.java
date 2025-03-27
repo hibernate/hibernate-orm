@@ -6,7 +6,7 @@ package org.hibernate.orm.test.query.hql.treat;
 
 import java.util.List;
 
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -54,7 +54,7 @@ public class HqlTreatJoinFetchTest {
 	public void testTreatJoinFetch(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					QueryImplementor<TestEntity> query = session.createQuery(
+					Query<TestEntity> query = session.createQuery(
 							"select t from TestEntity t join fetch treat(t.joined as JoinedEntity) j left join fetch j.testEntity e",
 							TestEntity.class
 					);
@@ -68,7 +68,7 @@ public class HqlTreatJoinFetchTest {
 	public void testJoinFetchRootTreat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					QueryImplementor<BaseEntity> query = session.createQuery(
+					Query<BaseEntity> query = session.createQuery(
 							"select t from BaseEntity t join fetch treat(t as JoinedEntity).testEntity j left join fetch j.joined2 e",
 							BaseEntity.class
 					);

@@ -28,8 +28,8 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.query.Query;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
@@ -139,9 +139,9 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 			);
 			query.where( predicate );
 
-			QueryImplementor<?> criteriaQuery = (QueryImplementor<?>) entityManager.createQuery( query );
+			TypedQuery<?> criteriaQuery = entityManager.createQuery( query );
 
-			criteriaQuery.setParameter( "name", "2" ).list();
+			criteriaQuery.setParameter( "name", "2" ).getResultList();
 		} );
 	}
 
@@ -157,7 +157,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 			);
 			query.where( predicate );
 
-			QueryImplementor<?> criteriaQuery = (QueryImplementor<?>) entityManager.createQuery( query );
+			Query<?> criteriaQuery = (Query<?>) entityManager.createQuery( query );
 
 			criteriaQuery.setParameter( "placedAt", Instant.now() ).list();
 		} );
@@ -175,7 +175,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 			);
 			query.where( predicate );
 
-			QueryImplementor<?> criteriaQuery = (QueryImplementor<?>) entityManager.createQuery( query );
+			Query<?> criteriaQuery = (Query<?>) entityManager.createQuery( query );
 
 			criteriaQuery.setParameter( "placedAt", Instant.now() ).list();
 		} );
@@ -194,7 +194,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 			);
 			query.where( predicate );
 
-			QueryImplementor<?> criteriaQuery = (QueryImplementor<?>) entityManager.createQuery( query );
+			Query<?> criteriaQuery = (Query<?>) entityManager.createQuery( query );
 
 			criteriaQuery.setParameter( "placedAt", Date.from(Instant.now()), TemporalType.DATE ).list();
 		} );

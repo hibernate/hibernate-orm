@@ -17,8 +17,8 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.query.spi.QueryImplementor;
 
+import org.hibernate.query.Query;
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -63,7 +63,7 @@ public class BasicSortedSetTest {
 			em.persist( new TableWithIntegerSortedSet( 2L, new TreeSet<>( Arrays.asList( 512, 112, 0 ) ) ) );
 			em.persist( new TableWithIntegerSortedSet( 3L, null ) );
 
-			QueryImplementor q;
+			Query q;
 			q = em.createNamedQuery( "TableWithIntegerSortedSet.Native.insert" );
 			q.setParameter( "id", 4L );
 			q.setParameter( "data", new TreeSet<>( Arrays.asList( 0 ) ), integerSortedSetType );
@@ -134,7 +134,7 @@ public class BasicSortedSetTest {
 			final Dialect dialect = em.getDialect();
 			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
 			final String param = integerSortedSetType.getJdbcType().wrapWriteExpression( ":data", dialect );
-			QueryImplementor<TableWithIntegerSortedSet> tq = em.createNativeQuery(
+			Query<TableWithIntegerSortedSet> tq = em.createNativeQuery(
 					"SELECT * FROM table_with_integer_sorted_set t WHERE the_sorted_set " + op + " " + param,
 					TableWithIntegerSortedSet.class
 			);

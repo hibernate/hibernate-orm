@@ -16,8 +16,8 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.query.spi.QueryImplementor;
 
+import org.hibernate.query.Query;
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -64,7 +64,7 @@ public class EnumSetTest {
 			em.persist( new TableWithEnumSet( 2L, EnumSet.of( MyEnum.VALUE1, MyEnum.VALUE2 ) ) );
 			em.persist( new TableWithEnumSet( 3L, null ) );
 
-			QueryImplementor q;
+			Query q;
 			q = em.createNamedQuery( "TableWithEnumSet.Native.insert" );
 			q.setParameter( "id", 4L );
 			q.setParameter( "data", EnumSet.of( MyEnum.VALUE2, MyEnum.VALUE1, MyEnum.VALUE3 ), enumSetType );
@@ -135,7 +135,7 @@ public class EnumSetTest {
 			final Dialect dialect = em.getDialect();
 			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
 			final String param = enumSetType.getJdbcType().wrapWriteExpression( ":data", dialect );
-			QueryImplementor<TableWithEnumSet> tq = em.createNativeQuery(
+			Query<TableWithEnumSet> tq = em.createNativeQuery(
 					"SELECT * FROM table_with_enum_set t WHERE the_set " + op + " " + param,
 					TableWithEnumSet.class
 			);

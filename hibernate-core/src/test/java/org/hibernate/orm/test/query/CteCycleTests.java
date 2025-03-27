@@ -7,7 +7,7 @@ package org.hibernate.orm.test.query;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Address;
@@ -41,7 +41,7 @@ public class CteCycleTests {
 	public void testRecursiveCycleClause(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<Tuple> query = session.createQuery(
+					final Query<Tuple> query = session.createQuery(
 							"with alternativeContacts as (" +
 									"select c.alternativeContact alt from Contact c where c.id = :param " +
 									"union all " +

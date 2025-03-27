@@ -17,11 +17,13 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
 
 /**
- * The internal contract for QueryProducer implementations.  Acts as the value passed to
- * produced queries and provides them with access to needed functionality.
+ * The internal contract for {@link QueryProducer} implementations.
+ *
+ * @deprecated This interface is no longer needed and will be removed.
  *
  * @author Steve Ebersole
  */
+@Deprecated(since = "7.0", forRemoval = true)
 public interface QueryProducerImplementor extends QueryProducer {
 	SessionFactoryImplementor getFactory();
 

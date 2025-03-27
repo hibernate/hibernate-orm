@@ -423,13 +423,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	QueryOptions getQueryOptions();
 
 	/**
-	 * Access to information about query parameters.
-	 *
-	 * @return information about query parameters.
-	 */
-	ParameterMetadata getParameterMetadata();
-
-	/**
 	 * Bind the given argument to a named query parameter.
 	 * <p>
 	 * If the type of the parameter cannot be inferred from the context

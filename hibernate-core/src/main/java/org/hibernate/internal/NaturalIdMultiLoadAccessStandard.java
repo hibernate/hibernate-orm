@@ -4,19 +4,24 @@
  */
 package org.hibernate.internal;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import org.hibernate.CacheMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.loader.LoaderLogging;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
+import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -81,6 +86,8 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public List<T> multiLoad(Object... ids) {
+		performAnyNeededCrossReferenceSynchronizations();
+
 		final CacheMode sessionCacheMode = session.getCacheMode();
 		boolean cacheModeChanged = false;
 
@@ -109,7 +116,6 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 			}
 
 			try {
-				session.autoFlushIfRequired( (Set) CollectionHelper.setOf( entityDescriptor.getQuerySpaces() ) );
 				return (List<T>) entityDescriptor.getMultiNaturalIdLoader().multiLoad( ids, this, session );
 			}
 			finally {
@@ -130,6 +136,53 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 			}
 		}
 
+	}
+
+	protected void performAnyNeededCrossReferenceSynchronizations() {
+		final NaturalIdMapping naturalIdMapping = entityDescriptor.getNaturalIdMapping();
+
+		if ( !naturalIdMapping.isMutable() ) {
+			// only mutable natural-ids need this processing
+			return;
+		}
+
+		if ( ! session.isTransactionInProgress() ) {
+			// not in a transaction so skip synchronization
+			return;
+		}
+
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final Collection<?> cachedPkResolutions =
+				persistenceContext.getNaturalIdResolutions()
+						.getCachedPkResolutions( entityDescriptor );
+		final boolean loggerDebugEnabled = LoaderLogging.LOADER_LOGGER.isDebugEnabled();
+		for ( Object pk : cachedPkResolutions ) {
+			final EntityKey entityKey = session.generateEntityKey( pk, entityDescriptor );
+			final Object entity = persistenceContext.getEntity( entityKey );
+			final EntityEntry entry = persistenceContext.getEntry( entity );
+
+			if ( entry == null ) {
+				if ( loggerDebugEnabled ) {
+					LoaderLogging.LOADER_LOGGER.debugf(
+							"Cached natural-id/pk resolution linked to null EntityEntry in persistence context : %s#%s",
+							entityDescriptor.getEntityName(),
+							pk
+					);
+				}
+				continue;
+			}
+
+			if ( !entry.requiresDirtyCheck( entity ) ) {
+				continue;
+			}
+
+			// MANAGED is the only status we care about here...
+			if ( entry.getStatus() != Status.MANAGED ) {
+				continue;
+			}
+
+			persistenceContext.getNaturalIdResolutions().handleSynchronization( pk, entity, entityDescriptor );
+		}
 	}
 
 	@Override

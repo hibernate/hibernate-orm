@@ -286,7 +286,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected void applySynchronizeSpacesHint(Object value) {
-		QueryLogging.QUERY_LOGGER.debug( "Query spaces hint was specified for non-native query; ignoring" );
+		throw new IllegalArgumentException( "Query spaces hint was specified for non-native query" );
 	}
 
 	protected final boolean applySelectionHint(String hintName, Object value) {
@@ -452,13 +452,13 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		else if ( value instanceof LockModeType lockModeType ) {
 			applyLockModeType( lockModeType );
 		}
-		else if ( value instanceof String ) {
-			applyHibernateLockMode( interpretLockMode( value ) );
+		else if ( value instanceof String string ) {
+			applyHibernateLockMode( LockMode.fromExternalForm( string ) );
 		}
 		else {
 			throw new IllegalArgumentException(
 					String.format(
-							"Native lock-mode hint [%s] must specify %s or %s.  Encountered type : %s",
+							"Native lock-mode hint [%s] must specify %s or %s. Encountered type: %s",
 							HINT_NATIVE_LOCKMODE,
 							LockMode.class.getName(),
 							LockModeType.class.getName(),
@@ -469,15 +469,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected void applyAliasSpecificLockModeHint(String hintName, Object value) {
-		// extract the alias
 		final String alias = hintName.substring( HINT_NATIVE_LOCKMODE.length() + 1 );
-		// determine the LockMode
-		try {
-			getLockOptions().setAliasSpecificLockMode( alias, interpretLockMode( value ) );
-		}
-		catch ( Exception e ) {
-			QueryLogging.QUERY_MESSAGE_LOGGER.unableToDetermineLockModeValue( hintName, value );
-		}
+		getLockOptions().setAliasSpecificLockMode( alias, interpretLockMode( value ) );
 	}
 
 	protected void applyFollowOnLockingHint(Boolean followOnLocking) {
@@ -700,8 +693,6 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	public <T> T getParameterValue(Parameter<T> param) {
-		QueryLogging.QUERY_LOGGER.tracef( "#getParameterValue(%s)", param );
-
 		checkOpenNoRollback();
 
 		final QueryParameterImplementor<T> parameter = getParameterMetadata().resolve( param );

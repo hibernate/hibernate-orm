@@ -17,8 +17,8 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.query.spi.QueryImplementor;
 
+import org.hibernate.query.Query;
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -71,7 +71,7 @@ public class EnumSetConverterTest {
 			em.persist( new TableWithEnumSetConverter( 2L, EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ) ) );
 			em.persist( new TableWithEnumSetConverter( 3L, null ) );
 
-			QueryImplementor q;
+			Query q;
 			q = em.createNamedQuery( "TableWithEnumSetConverter.Native.insert" );
 			q.setParameter( "id", 4L );
 			q.setParameter( "data", EnumSet.of( MySpecialEnum.VALUE2, MySpecialEnum.VALUE1, MySpecialEnum.VALUE3 ), enumSetType );
@@ -142,7 +142,7 @@ public class EnumSetConverterTest {
 			final Dialect dialect = em.getDialect();
 			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
 			final String param = enumSetType.getJdbcType().wrapWriteExpression( ":data", dialect );
-			QueryImplementor<TableWithEnumSetConverter> tq = em.createNativeQuery(
+			Query<TableWithEnumSetConverter> tq = em.createNativeQuery(
 					"SELECT * FROM table_with_enum_set_convert t WHERE the_set " + op + " " + param,
 					TableWithEnumSetConverter.class
 			);

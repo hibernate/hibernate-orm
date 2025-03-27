@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.any.annotations;
 
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -247,7 +247,7 @@ public class AnyImplicitDiscriminatorTest {
 	public void testDefaultAnyAssociation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<ImplicitPropertySet> query = session.createQuery(
+					final Query<ImplicitPropertySet> query = session.createQuery(
 							"select s from ImplicitPropertySet s where name = :name",
 							ImplicitPropertySet.class
 					);

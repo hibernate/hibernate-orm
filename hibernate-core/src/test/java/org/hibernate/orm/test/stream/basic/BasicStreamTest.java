@@ -12,7 +12,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import org.hibernate.internal.util.MutableInteger;
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -97,7 +97,7 @@ public class BasicStreamTest {
 					.hasRegisteredResources(), is( false ) );
 			assertThat( onCloseCount.get(), equalTo( 0 ) );
 
-			final QueryImplementor<MyEntity> query = session.createQuery( "from MyEntity", MyEntity.class );
+			final Query<MyEntity> query = session.createQuery( "from MyEntity", MyEntity.class );
 			try ( final Stream<MyEntity> stream = query.stream().onClose( onCloseCount::increment ) ) {
 				stream.forEach( System.out::println );
 

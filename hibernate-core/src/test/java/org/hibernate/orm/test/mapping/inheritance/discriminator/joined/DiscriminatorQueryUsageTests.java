@@ -6,7 +6,7 @@ package org.hibernate.orm.test.mapping.inheritance.discriminator.joined;
 
 import jakarta.persistence.Tuple;
 
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -68,7 +68,7 @@ public class DiscriminatorQueryUsageTests {
 	@Test
 	public void testUsageAsPredicateWithParamOfUnderlyingType(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			QueryImplementor<Integer> query = session.createQuery(
+			Query<Integer> query = session.createQuery(
 					"select p.id from ParentEntity p where type(p) = :type",
 					Integer.class
 			);

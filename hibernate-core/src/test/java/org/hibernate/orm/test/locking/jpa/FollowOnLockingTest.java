@@ -11,7 +11,7 @@ import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -73,7 +73,7 @@ public class FollowOnLockingTest {
 					session -> {
 						statementInspector.clear();
 
-						final QueryImplementor<Employee> query = session.createQuery(
+						final Query<Employee> query = session.createQuery(
 								"select e from Employee e where e.salary > 10",
 								Employee.class
 						);

@@ -18,10 +18,10 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
-import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -61,7 +61,7 @@ public class NativeQueryResultBuilderTests {
 		scope.inTransaction(
 				session -> {
 					final String sql = "select the_string, the_integer, id from EntityOfBasics";
-					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
+					final NativeQuery<?> query = session.createNativeQuery( sql );
 
 					final List<?> results = query.list();
 					assertThat( results.size(), is( 1 ) );
@@ -92,7 +92,7 @@ public class NativeQueryResultBuilderTests {
 							.isNotInstanceOf( SybaseDialect.class )
 							.isNotInstanceOf( OracleDialect.class );
 					final String sql = "select count(the_string) from EntityOfBasics";
-					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
+					final NativeQuery<?> query = session.createNativeQuery( sql );
 
 					final List<?> results = query.list();
 					assertThat( results.size(), is( 1 ) );
@@ -110,7 +110,7 @@ public class NativeQueryResultBuilderTests {
 		scope.inTransaction(
 				session -> {
 					final String sql = "select the_string, the_integer, id from EntityOfBasics";
-					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
+					final NativeQuery<?> query = session.createNativeQuery( sql );
 					// notice the reverse order from the select clause
 					query.addScalar( "id" );
 					query.addScalar( "the_integer" );
@@ -139,7 +139,7 @@ public class NativeQueryResultBuilderTests {
 		// first, without explicit typing
 		scope.inTransaction(
 				session -> {
-					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
+					final NativeQuery<?> query = session.createNativeQuery( sql );
 					query.addScalar( "id" );
 					query.addScalar( "gender" );
 					query.addScalar( "ordinal_gender" );
@@ -162,7 +162,7 @@ public class NativeQueryResultBuilderTests {
 		// then using explicit typing
 		scope.inTransaction(
 				session -> {
-					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
+					final NativeQuery<?> query = session.createNativeQuery( sql );
 					query.addScalar( "id" );
 					query.addScalar( "gender", EntityOfBasics.Gender.class );
 					query.addScalar( "ordinal_gender", EntityOfBasics.Gender.class );
@@ -189,7 +189,7 @@ public class NativeQueryResultBuilderTests {
 		// Control
 		scope.inTransaction(
 				session -> {
-					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
+					final NativeQuery<?> query = session.createNativeQuery( sql );
 
 					final List<?> results = query.list();
 					assertThat( results.size(), is( 1 ) );
@@ -205,7 +205,7 @@ public class NativeQueryResultBuilderTests {
 		// Converter instance
 		scope.inTransaction(
 				session -> {
-					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
+					final NativeQuery<?> query = session.createNativeQuery( sql );
 					query.addScalar(
 							"converted_gender",
 							EntityOfBasics.Gender.class,
@@ -226,7 +226,7 @@ public class NativeQueryResultBuilderTests {
 		// Converter class
 		scope.inTransaction(
 				session -> {
-					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );
+					final NativeQuery<?> query = session.createNativeQuery( sql );
 					query.addScalar(
 							"converted_gender",
 							EntityOfBasics.Gender.class,
@@ -258,7 +258,7 @@ public class NativeQueryResultBuilderTests {
 	public void testConvertedAttributeBasedBuilder(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final NativeQueryImplementor qry = session.createNativeQuery(
+					final NativeQuery qry = session.createNativeQuery(
 							"select converted_gender from EntityOfBasics"
 					);
 
@@ -285,7 +285,7 @@ public class NativeQueryResultBuilderTests {
 		scope.inTransaction(
 				session -> {
 					final String sql = "select data, id from BasicEntity";
-					final NativeQueryImplementor<?> query = session.createNativeQuery( sql, BasicEntity.class );
+					final NativeQuery<?> query = session.createNativeQuery( sql, BasicEntity.class );
 
 					final List<?> results = query.list();
 					assertThat( results.size(), is( 1 ) );
@@ -304,7 +304,7 @@ public class NativeQueryResultBuilderTests {
 		scope.inTransaction(
 				session -> {
 					final String sql = "select {be.*} from BasicEntity be";
-					final NativeQueryImplementor<?> query = session.createNativeQuery( sql, BasicEntity.class );
+					final NativeQuery<?> query = session.createNativeQuery( sql, BasicEntity.class );
 					query.addEntity( "be", BasicEntity.class );
 
 					final List<?> results = query.list();

@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.polymorphic;
 
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -39,7 +39,7 @@ public class PolymorphicQueriesTest2 {
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					QueryImplementor<Animal> query = session.createQuery(
+					Query<Animal> query = session.createQuery(
 							"from org.hibernate.orm.test.polymorphic.PolymorphicQueriesTest2$Animal u where (u.name = ?1)",
 							Animal.class
 					);

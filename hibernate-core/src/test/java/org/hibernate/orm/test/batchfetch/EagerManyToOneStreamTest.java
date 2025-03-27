@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -74,7 +74,7 @@ public class EagerManyToOneStreamTest {
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
-					QueryImplementor<Child> query = session
+					Query<Child> query = session
 							.createQuery( "select c from Child as c where c.parent.someField=:someField", Child.class )
 							.setParameter( "someField", FIELD_VALUE );
 					try (Stream<Child> resultStream = query.getResultStream()) {
@@ -103,7 +103,7 @@ public class EagerManyToOneStreamTest {
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
-					QueryImplementor<Child> query = session
+					Query<Child> query = session
 							.createQuery( "select c from Child as c ", Child.class );
 					try (Stream<Child> resultStream = query.getResultStream()) {
 
@@ -137,7 +137,7 @@ public class EagerManyToOneStreamTest {
 	public void testGetResultStreamForEach(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					QueryImplementor<Child> query = session
+					Query<Child> query = session
 							.createQuery( "select c from Child as c", Child.class );
 
 					try (Stream<Child> resultStream = query.getResultStream()) {
@@ -153,7 +153,7 @@ public class EagerManyToOneStreamTest {
 	public void testGetResultStreamFindFirst(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					QueryImplementor<Child> query = session
+					Query<Child> query = session
 							.createQuery( "select c from Child as c where c.parent.someField=:someField", Child.class )
 							.setParameter( "someField", FIELD_VALUE );
 					try (Stream<Child> resultStream = query.getResultStream()) {

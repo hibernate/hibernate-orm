@@ -191,16 +191,8 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 				generator.write(writeTimeStamp);
 				break;
 			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
-				try {
-					OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, options );
-					generator.write( dateTime );
-				}
-				catch (Exception e) {
-					Timestamp tswtz = javaType.unwrap( value, Timestamp.class, options );
-					TIMESTAMP TSWTZ = new TIMESTAMP(tswtz);
-					OracleJsonTimestamp writeTimeStampWTZ = new OracleJsonTimestampImpl(TSWTZ.shareBytes());
-					generator.write(writeTimeStampWTZ);
-				}
+				OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, options );
+				generator.write( dateTime );
 				break;
 			case SqlTypes.TIMESTAMP_UTC:
 				OffsetDateTime odt = javaType.unwrap( value, OffsetDateTime.class, options );

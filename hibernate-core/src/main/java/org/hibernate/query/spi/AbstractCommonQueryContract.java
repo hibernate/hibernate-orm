@@ -564,7 +564,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter handling
 
-	protected abstract ParameterMetadataImplementor getParameterMetadata();
+	@Override
+	public abstract ParameterMetadataImplementor getParameterMetadata();
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public Set<Parameter<?>> getParameters() {

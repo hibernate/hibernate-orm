@@ -193,6 +193,14 @@ public interface CommonQueryContract {
 	CommonQueryContract setHint(String hintName, Object value);
 
 	/**
+	 * Get the {@link ParameterMetadata} object representing the parameters
+	 * of this query, and providing access to the {@link QueryParameter}s.
+	 *
+	 * @since 7.0
+	 */
+	ParameterMetadata getParameterMetadata();
+
+	/**
 	 * Bind the given argument to a named query parameter.
 	 * <p>
 	 * If the type of the parameter cannot be inferred from the context in

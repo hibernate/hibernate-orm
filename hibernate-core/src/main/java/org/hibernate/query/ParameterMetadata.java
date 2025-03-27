@@ -4,6 +4,7 @@
  */
 package org.hibernate.query;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.function.Consumer;
 import jakarta.persistence.Parameter;
@@ -20,6 +21,14 @@ import org.hibernate.Incubating;
 public interface ParameterMetadata {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
 	// General purpose
+
+	/**
+	 * The {@link QueryParameter}s representing the parameters of the query,
+	 * in no particular well-defined order.
+	 *
+	 * @since 7.0
+	 */
+	Collection<QueryParameter<?>> getParameters();
 
 	/**
 	 * The total number of registered parameters.

@@ -25,6 +25,8 @@ import java.util.NoSuchElementException;
  */
 public class StringJsonDocumentReader extends StringJsonDocument implements JsonDocumentReader {
 
+	private static final char ESCAPE_CHAR = '\\';
+
 	private final String jsonString;
 	private final int limit;
 	private int position;
@@ -294,30 +296,30 @@ public class StringJsonDocumentReader extends StringJsonDocument implements Json
 	}
 
 	/**
-	 * Goes through the json string to locate a character.
+	 * Goes through the JSON string to locate a character.
+	 * Escaped characters are taken into account.
+	 * ex: on 'AB\"C"' this method returns 5 (not 3)
+	 *
 	 * @param character character to be found
-	 * @param escape character to be found
 	 * @return the position of the character or -1 if not found.
 	 */
-	private int locateCharacter(char character, char escape) {
-		assert character != escape;
+	private int locateCharacter(char character) {
 		int pointer = this.position;
 
-		boolean escapeIsOn = false;
-		while ( pointer< this.limit) {
+		while ( pointer < this.limit) {
 			final char c = this.jsonString.charAt( pointer );
-			if (c == escape) {
-				escapeIsOn = true;
+			if (c == ESCAPE_CHAR) {
+				// We encountered an escape character.
+				// We should just skip the next one as it is either the expected character
+				// but as escaped one, we should ignore it, either this is something else
+				// and we should ignore it also
+				pointer += 2;
+				continue;
 			}
 			else {
 				if ( c == character ) {
-					if (escapeIsOn) {
-						escapeIsOn = false;
-					}
-					else {
-						// found
-						return pointer;
-					}
+					// found
+					return pointer;
 				}
 			}
 			pointer++;
@@ -365,7 +367,7 @@ public class StringJsonDocumentReader extends StringJsonDocument implements Json
 		this.position++;
 
 		//locate ending quote
-		int endingQuote = locateCharacter( StringJsonDocumentMarker.QUOTE.getMarkerCharacter(), '\\');
+		int endingQuote = locateCharacter( StringJsonDocumentMarker.QUOTE.getMarkerCharacter());
 		if (endingQuote == -1) {
 			throw new IllegalStateException("Can't find ending quote of key name");
 		}

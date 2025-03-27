@@ -44,7 +44,7 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 	}
 
 	@Override
-	public <K> List<E> unorderedMultiLoad( K[] naturalIds, SharedSessionContractImplementor session, LockOptions lockOptions ) {
+	public List<E> loadEntitiesWithUnresolvedIds(Object[] naturalIds, SharedSessionContractImplementor session, LockOptions lockOptions) {
 
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 
@@ -77,17 +77,17 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 				} );
 
 		return LoaderHelper.loadByArrayParameter(
-				naturalIds,
-				sqlAst,
-				jdbcSelectOperation,
-				jdbcParameter,
-				arrayJdbcMapping,
-				null,
-				null,
-				null,
-				lockOptions,
-				session.isDefaultReadOnly(),
-				session
+					naturalIds,
+					sqlAst,
+					jdbcSelectOperation,
+					jdbcParameter,
+					arrayJdbcMapping,
+					null,
+					null,
+					null,
+					lockOptions,
+					session.isDefaultReadOnly(),
+					session
 		);
 	}
 

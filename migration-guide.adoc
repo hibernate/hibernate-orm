@@ -62,7 +62,7 @@ Hibernate now baselines on Java 17.  Newer Java versions may also be used.
 
 * Type parameters:
   ** Affects much of the Criteria API - especially roots, joins, paths
-  ** Affects much of the Graph API - see <<load-fetch-graphs>> for details.
+  ** Affects much of the Entity Graph API - see <<load-fetch-graphs>> for details.
 * New JPA features colliding with previous Hibernate extension features:
   ** `Nulls` (JPA) v. `NullPrecedence` (Hibernate), including JPA's new `Order#getNullPrecedence()` returning `Nulls`
         colliding with Hibernate's `SqmSortSpecification#getNullPrecedence` returning `NullPrecedence`.  Hibernate's form
@@ -126,7 +126,12 @@ A general theme in 7.0 has been to remove Hibernate-specific features that have 
 
 `Session#load` methods have been removed in favor of `Session#getReference` which have the same semantic.
 
-NOTE: `Session#get` was not previously deprecated as `Session#load` was, so it was not appropriate to remove.  Starting in 7.0, `Session#get` is considered deprecated, to be removed in 8.0.  Per the deprecation notes, use `Session#find` instead.
+
+[[session-get]]
+==== Session#get
+`Session#get` methods were deprecated in favor of the JPA-standard `Session#find`, and new overloads of `Session#find` were added.
+
+NOTE: `Session#get` was not previously deprecated as `Session#load` was, so it was not appropriate to remove it.
 
 [[session-refresh]]
 ==== Session#refresh
@@ -228,6 +233,8 @@ The effect can also often be mitigated using Hibernate's bytecode-based laziness
 * Removed `SqmQualifiedJoin` - all joins are qualified.
 * Both `NaturalIdLoadAccess#using(Map)` and `NaturalIdMultiLoadAccess#compoundValue()` have been removed in favor of `Map#of()`
 * Removed `Session.LockRequest` - use `LockOptions` instead
+* `SessionFactory.createEntityManager()` now returns `Session` for convenience
+* `CommonQueryContract.setFlushMode()` was deprecated in favor of `setQueryFlushMode` accepting a `QueryFlushMode`
 
 
 
@@ -267,6 +274,20 @@ Quite a few (again, previously deprecated) methods on `Interceptor` have been re
 
 Additionally, `EmptyInterceptor` was removed.  As `org.hibernate.Interceptor` now uses default methods, one can simply implement `Interceptor` to the same end.
 
+
+[[usertype]]
+=== Changes to UserType and CompositeUserType
+
+The API interfaces `UserType` and `CompositeUserType` leaked the SPI types `SharedSessionContractImplementor` and `SessionFactoryImplementor`, which was a layer-breaker.
+
+The solution was to change the signature of `nullSafeSet()` and `nullSafeGet()` in `UserType` via deprecation of the previous declarations, and remove some unnecessary parameters from methods of the incubating interface `CompositeUserType`.
+
+[[jfr-spi]]
+=== JFR SPI
+
+The types `EventMonitor` and `DiagonosticEvent` replace the now-deprecated SPIs `EventManager` and `HibernateMonitoringEvent` use for integration with Java Flight Recorder.
+
+Hibernate now reports many more kinds of `DiagnosticEvent` to JFR.
 
 [[misc-spi]]
 === Miscellaneous
@@ -413,10 +434,11 @@ The select list was inferred based on the `from` clause.
 
 In Hibernate 6 we decided to deprecate this overload of `createQuery()`, since:
 
-- it returns a raw type, resulting in compiler warnings in client code, and
+- it returns a raw type `Query`, resulting in compiler warnings in client code,
+- each query result must be explicitly cast from `Object` to the query result type, and
 - the second query is truly ambiguous, with no obviously intuitive interpretation.
 
-As of Hibernate 7, the method is remains deprecated, and potentially-ambiguous queries _are no longer accepted_.
+As of Hibernate 7, the method remains deprecated, and potentially-ambiguous queries _are no longer accepted_.
 Migration paths include:
 
 1. explicitly specify the `select` list,
@@ -440,11 +462,16 @@ List<X> result =
 [[flush-persist]]
 === Session flush and persist
 
-The removal of `CascadeType.SAVE_UPDATE` slightly changes the persist and flush behaviour to conform with Jakarta Persistence.
 
-Persisting a transient entity or flushing a manged entity with an associated detached entity having the association annotated with `cascade = CascadeType.ALL` or `cascade = CascadeType.PERSIST` throws now an `jakarta.persistence.EntityExistsException` if the detached entity has not been re-associated with the Session.
+The removal of `CascadeType.SAVE_UPDATE` slightly changes the persist and flush behaviour to conform with the Jakarta Persistence specification.
 
-To re-associate the detached entity with the Session the `Session#merge` method can be used.
+Making a transient entity persistent or flushing a managed entity now results in an `jakarta.persistence.EntityExistsException` if:
+
+- the entity has an association with `cascade = CascadeType.ALL` or `cascade = CascadeType.PERSIST`, and
+- the association references a detached instance of the associated entity class.
+
+To avoid this exception, the reference to the detached instance should be replaced with a reference to a managed instance associated with the current session.
+Such a reference may be obtained by calling `merge()` or `getReference()` on the detached entity instance.
 
 Consider the following model
 
@@ -477,7 +504,7 @@ Assuming we have `c1` as a detached `Child`, the following code will now result 
 
 [source,java]
 ----
-Parent parent = session.get( Parent.class, parentId );
+Parent parent = session.find( Parent.class, parentId );
 parent.addChild( c1 );
 ----
 
@@ -486,7 +513,7 @@ Instead, `c1` must first be re-associated with the Session using merge:
 
 [source,java]
 ----
-Parent parent = session.get( Parent.class, parentId );
+Parent parent = session.find( Parent.class, parentId );
 Child merged = session.merge( c1 );
 parent.addChild( merged );
 ----
@@ -644,7 +671,9 @@ Now, `varchar(1)` is used by default.
 [[pools]]
 == Connection Pools
 
-We have decided to drop built-in support for the Vibur, Proxool and UCP Connection Pools.  This is dues to a variety of reasons, a main one being that we are not able to properly test them.
+We have decided to drop built-in support for the Vibur, Proxool and UCP Connection Pools for a variety of reasons - the main one being that we are not able to properly test them.
 
-We recommend using Agroal or HikariCP instead; or implement the `ConnectionProvider` yourself to integrate with the Connection Pool of your choice (in fact other Connection Pools are known to ship implementations of the Hibernate `ConnectionProvider` already).
+We recommend using https://github.com/agroal/agroal[Agroal] or https://github.com/brettwooldridge/HikariCP[HikariCP] instead.
+Alternatively, you may implement the `ConnectionProvider` interface to integrate the connection pool of your choice.
+In fact, some connection pools already include their own implementations of `ConnectionProvider`.
 

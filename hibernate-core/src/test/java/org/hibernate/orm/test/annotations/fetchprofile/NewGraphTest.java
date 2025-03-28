@@ -6,6 +6,7 @@ package org.hibernate.orm.test.annotations.fetchprofile;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -53,6 +54,74 @@ public class NewGraphTest {
 			RootGraph<E> graph = s.createEntityGraph(E.class);
 			graph.addAttributeNodes("f");
 			return s.byId(E.class).withFetchGraph(graph).load(1);
+		});
+		assertTrue( isInitialized( ee.f ) );
+	}
+
+	@Test void testFind(SessionFactoryScope scope) {
+		scope.inTransaction( s-> {
+			G g = new G();
+			F f = new F();
+			E e = new E();
+			f.g = g;
+			e.f = f;
+			s.persist(g);
+			s.persist(f);
+			s.persist(e);
+		});
+
+		F f = scope.fromSession( s -> s.find(F.class, 1) );
+		assertFalse( isInitialized( f.g ) );
+		assertFalse( isInitialized( f.es ) );
+		F ff = scope.fromSession( s -> {
+			RootGraph<F> graph = s.createEntityGraph(F.class);
+			graph.addAttributeNodes("g", "es");
+			return s.find(graph, 1);
+		});
+		assertTrue( isInitialized( ff.g ) );
+		assertTrue( isInitialized( ff.es ) );
+
+		E e = scope.fromSession( s -> s.find(E.class, 1) );
+		assertFalse( isInitialized( e.f ) );
+		E ee = scope.fromSession( s -> {
+			RootGraph<E> graph = s.createEntityGraph(E.class);
+			graph.addAttributeNodes("f");
+			return s.find(graph, 1);
+		});
+		assertTrue( isInitialized( ee.f ) );
+	}
+
+	@Test void testGet(SessionFactoryScope scope) {
+		scope.inTransaction( s-> {
+			G g = new G();
+			F f = new F();
+			E e = new E();
+			f.g = g;
+			e.f = f;
+			s.persist(g);
+			s.persist(f);
+			s.persist(e);
+		});
+
+		SessionFactoryImplementor factory = scope.getSessionFactory();
+
+		F f = factory.fromStatelessSession( s -> s.get(F.class, 1L) );
+		assertFalse( isInitialized( f.g ) );
+		assertFalse( isInitialized( f.es ) );
+		F ff = factory.fromStatelessSession( s -> {
+			RootGraph<F> graph = s.createEntityGraph(F.class);
+			graph.addAttributeNodes("g", "es");
+			return s.get(graph, 1L);
+		});
+		assertTrue( isInitialized( ff.g ) );
+		assertTrue( isInitialized( ff.es ) );
+
+		E e = factory.fromStatelessSession( s -> s.get(E.class, 1L) );
+		assertFalse( isInitialized( e.f ) );
+		E ee = factory.fromStatelessSession( s -> {
+			RootGraph<E> graph = s.createEntityGraph(E.class);
+			graph.addAttributeNodes("f");
+			return s.get(graph, 1L);
 		});
 		assertTrue( isInitialized( ee.f ) );
 	}

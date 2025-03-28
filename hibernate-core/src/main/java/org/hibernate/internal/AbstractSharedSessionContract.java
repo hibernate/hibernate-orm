@@ -49,6 +49,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -875,6 +876,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> expectedResultType) {
 		return interpretAndCreateSelectionQuery( hqlString, expectedResultType );
+	}
+
+	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
+		final RootGraph<R> rootGraph = (RootGraph<R>) resultGraph;
+		return interpretAndCreateSelectionQuery( hqlString, rootGraph.getGraphedType().getJavaType() )
+				.setEntityGraph( resultGraph, GraphSemantic.LOAD );
 	}
 
 

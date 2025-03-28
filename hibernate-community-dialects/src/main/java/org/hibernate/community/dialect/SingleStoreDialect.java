@@ -84,6 +84,7 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
@@ -103,7 +104,9 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BIT;
@@ -582,23 +585,19 @@ public class SingleStoreDialect extends Dialect {
 		commonFunctionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 		commonFunctionFactory.listagg_groupConcat();
-		functionContributions.getFunctionRegistry()
+		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
+		BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
+		functionRegistry
 				.namedDescriptorBuilder( "time" )
 				.setExactArgumentCount( 1 )
-				.setInvariantType( functionContributions.getTypeConfiguration()
-				.getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.STRING ) )
+				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.STRING ) )
 				.register();
-		functionContributions.getFunctionRegistry()
+		functionRegistry
 				.patternDescriptorBuilder( "median", "median(?1) over ()" )
-				.setInvariantType( functionContributions.getTypeConfiguration()
-				.getBasicTypeRegistry()
-				.resolve( StandardBasicTypes.DOUBLE ) )
+				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes( NUMERIC )
 				.register();
-		BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
-		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 		functionRegistry.noArgsBuilder( "localtime" )
 				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ) )
 				.setUseParenthesesWhenNoArgs( false )
@@ -611,6 +610,45 @@ public class SingleStoreDialect extends Dialect {
 				.setParameterTypes( FunctionParameterType.INTEGER )
 				.register();
 		functionRegistry.registerAlternateKey( "char", "chr" );
+		BasicType<Boolean> booleanType = basicTypeRegistry.resolve( StandardBasicTypes.BOOLEAN );
+		functionRegistry.namedDescriptorBuilder( "json_array_contains_string" )
+				.setInvariantType( booleanType )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes( ANY, STRING )
+				.register();
+		functionRegistry.registerAlternateKey( "json_array_contains", "json_array_contains_string" );
+		functionRegistry.namedDescriptorBuilder( "json_array_contains_json" )
+				.setInvariantType( booleanType )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes( ANY, ANY )
+				.register();
+		functionRegistry.namedDescriptorBuilder( "json_array_contains_double" )
+				.setInvariantType( booleanType )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes( ANY, NUMERIC )
+				.register();
+		functionRegistry.namedDescriptorBuilder( "json_match_any_exists" )
+				.setInvariantType( booleanType )
+				.setMinArgumentCount( 1 )
+				.register();
+		functionRegistry.namedDescriptorBuilder( "json_match_any" )
+				.setInvariantType( booleanType )
+				.setMinArgumentCount( 1 )
+				.register();
+		functionRegistry.namedDescriptorBuilder( "json_extract_string" )
+				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.STRING ) )
+				.setMinArgumentCount( 1 )
+				.register();
+		functionRegistry.namedDescriptorBuilder( "json_extract_double" )
+				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )
+				.setMinArgumentCount( 1 )
+				.register();
+		functionRegistry.namedDescriptorBuilder( "json_extract_bigint" )
+				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.BIG_INTEGER ) )
+				.setMinArgumentCount( 1 )
+				.register();
+		functionRegistry.registerAlternateKey( "json_extract", "json_extract_string" );
+		functionRegistry.registerAlternateKey( "json_extract_json", "json_extract_string" );
 	}
 
 

@@ -5,6 +5,7 @@
 :versionDocBase: {docsBase}/7.0
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
 :javadocsBase: {versionDocBase}/javadocs
+:releaseSeriesBase: https://hibernate.org/orm/releases/7.0/
 :fn-cascase-type: footnote:cascade-type[`org.hibernate.annotations.Cascade` and `org.hibernate.annotations.CascadeType` are both fully deprecated as of 7.0]
 
 This guide discusses migration to Hibernate ORM version 7.0. For migration from
@@ -44,9 +45,14 @@ This required a few actions on our part:
 [[requirements]]
 == Requirements
 
-* Java 17, or greater
+* <<java-17>>, or greater
 * <<jpa-32>>
 * <<hibernate-models>>
+
+[[java-17]]
+=== Java 17
+
+Hibernate now baselines on Java 17.  Newer Java versions may also be used.
 
 
 [[jpa-32]]
@@ -69,6 +75,9 @@ This required a few actions on our part:
   ** `Transaction#getTimeout`.  JPA 3.2 adds `#getTimeout` but uses `Integer` whereas Hibernate has historically used `int`.  Note that this raises the possibility of a `NullPointerException` during migration if, e.g., performing direct comparisons on the timeout value against an in (auto unboxing).
 
 See this https://in.relation.to/2024/04/01/jakarta-persistence-3/[blog post] for a good discussion of the changes in Jakarta Persistence 3.2.
+
+- https://ci.hibernate.org/view/ORM/job/hibernate-orm-tck-3.2/job/wip%252F7.0/24/[TCK Results] with Java 17
+- https://ci.hibernate.org/view/ORM/job/hibernate-orm-tck-3.2/job/wip%252F7.0/25/[TCK Results] with Java 21
 
 [[hibernate-models]]
 === Hibernate Models
@@ -94,144 +103,8 @@ annotations.  Check out its project page for complete details.
 [[new-features]]
 == New Features
 
-New features introduced in 7.0...
+See the link:{releaseSeriesBase}#whats-new[website] for the list of new features in the 7.0 series.
 
-[[soft-delete-timestamp]]
-=== @SoftDelete with TIMESTAMP
-
-Soft-delete now supports the strategy of tracking the timestamp at which the soft-delete occurred,
-in addition to the previous truth-based strategies.
-See the link:{user-guide-url}#soft-delete[User Guide] for details.
-
-
-[[embedded-column-naming]]
-=== @EmbeddedColumnNaming
-
-A long-requested feature for both Hibernate and Jakarta Persistence has been the ability to
-define a prefix for the names of columns associated with an embedded value.
-
-7.0 adds support for this using the new `@EmbeddedColumnNaming` annotation.  The annotation
-accepts a format pattern, so is a little more flexible than just a prefix.
-
-Consider a typical `Person` / `Address` composition:
-
-[source,java]
-----
-@Embeddable
-class Address {
-    String street;
-	String city;
-	...
-}
-
-@Entity
-class Person {
-	...
-
-    @Embedded
-    @EmbeddedColumnNaming("home_%")
-    Address homeAddress;
-
-    @Embedded
-    @EmbeddedColumnNaming("work_%")
-    Address workAddress;
-
-}
-----
-
-This instructs Hibernate to use the column names `home_street`, `home_city`, `work_street`, and so on.
-
-See the link:{user-guide-url}#embeddable-column-naming[User Guide] for details.
-
-[[NamedEntityGraph]]
-=== @NamedEntityGraph
-
-A new annotation (`@org.hibernate.annotations.NamedEntityGraph`) has been added to allow
-specifying a named entity-graph using Hibernate's ability to parse a string representation of the graph.
-
-
-[source,java]
-----
-@Entity
-@NamedEntityGraph( graph="title, isbn, author( name, phoneNumber )" )
-class Book {
-	// ...
-}
-----
-
-
-See `org.hibernate.graph.GraphParser` for details on the syntax and the
-link:{user-guide-url}#fetching-strategies-dynamic-fetching-entity-graph-parsing-annotation[User Guide] for additional details.
-
-
-[[enum-checks]]
-=== Converted Enums and Check Constraints
-
-Hibernate previously added support for generating check constraints for enums mapped using `@Enumerated`
-as part of schema generation.  7.0 adds the same capability for enums mapped using an `AttributeConverter`,
-by asking the converter to convert all the enum constants on start up.
-
-[[hbm-transform]]
-=== hbm.xml Transformation
-
-Hibernate's legacy `hbm.xml` mapping schema has been deprecated for quite some time, replaced by a new `mapping.xml`
-schema.  In 7.0, this `mapping.xml` is stabilized and we now offer a transformation of `hbm.xml` files into `mapping.xml` files.
-
-This tool is available as both:
-
-* a build-time transformation (currently only offered as a Gradle plugin), or
-* a runtime transformation, using `hibernate.transform_hbm_xml.enabled=true`
-
-Build-time transformation is preferred.
-
-[NOTE]
-====
-Initial versions of the transformation processed one file at a time.
-This is now done across the entire set of `hbm.xml` files at once.
-While most users will never see this change, it might impact integrations which tie-in to XML processing.
-====
-
-[[stateless-session-cache]]
-=== StatelessSession and Second Level Cache
-
-Previously, stateless sessions never interacted with the second-level cache.
-This reflected their original intended role in bulk processing.
-With the advent of Jakarta Data and Hibernate Data Repositories, the responsibilities of `StatelessSession` have now expanded, and this behavior is no longer appropriate.
-
-Thus, a stateless session now makes use of the second-level cache by default.
-To completely bypass the second-level cache, recovering the previous behavior, call `setCacheMode(CacheMode.IGNORE)`.
-
-It's often important to explicitly disable puts to the second-level cache in code which performs bulk processing.
-Set the cache mode to `GET` or configure `jakarta.persistence.cache.storeMode` to `BYPASS`.
-
-[[stateless-session-jdbc-batching]]
-=== StatelessSession and JDBC Batching
-
-Automatic JDBC batching has the side effect of delaying the execution of the batched operation, and this undermines the synchronous nature of operations performed through a stateless session.
-In Hibernate 7, the configuration property `hibernate.jdbc.batch_size` now has no effect on a stateless session.
-Automatic batching may be enabled by explicitly calling `setJdbcBatchSize()`.
-However, the preferred approach is to explicitly batch operations via `insertMultiple()`, `updateMultiple()`, or `deleteMultiple()`.
-
-[[session-find-multiple]]
-=== findMultiple()
-
-The new operation `Session.findMultiple()`, along with the `BatchSize` option provides a convenient way to fetch a batch of entities by id.
-
-[[session-managed-entities]]
-=== Direct access to first-level cache
-
-The new operation `Session.getManagedEntities()` allows the application program to iterate over all entities in the first-level cache, or over all entities of a given type.
-
-[[schema-manager-populate]]
-=== Data population
-
-Setting `jakarta.persistence.schema-generation.database.action=populate` or calling `SchemaManager.populate()` populates an existing schema with initial data in `/import.sql` or other SQL scripts specified via `jakarta.persistence.sql-load-script-source`.
-
-[[transaction-api]]
-=== Improvements to Transaction
-
-The `Transaction` interface leaks the SPI type `TransactionStatus` via `getStatus()`, and the JTA-defined type `Synchronization` via `registerSynchronization()`, which breaks layering in a fairly harmless way.
-New operations were added to the `Transaction` interface, allowing code to inspect the status of the transaction or register callbacks without the use of layer-breaking operations.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -241,21 +114,27 @@ New operations were added to the `Transaction` interface, allowing code to inspe
 [[api-changes]]
 == Changes to API
 
+This section describes changes to contracts (classes, interfaces, methods, etc.) which are consider https://hibernate.org/community/compatibility-policy/#api[API].
+
+[[defer-to-jpa]]
+=== Defer to JPA
+
 A general theme in 7.0 has been to remove Hibernate-specific features that have a direct replacement in JPA.
 
 [[session-load]]
-=== Session#load
+==== Session#load
 
 `Session#load` methods have been removed in favor of `Session#getReference` which have the same semantic.
 
+
 [[session-get]]
-=== Session#get
+==== Session#get
 `Session#get` methods were deprecated in favor of the JPA-standard `Session#find`, and new overloads of `Session#find` were added.
 
 NOTE: `Session#get` was not previously deprecated as `Session#load` was, so it was not appropriate to remove it.
 
 [[session-refresh]]
-=== Session#refresh
+==== Session#refresh
 
 The forms of `Session#refresh` accepting an entity-name have been removed; the passed entity already indicates the entity-name (even with dynamic models).
 
@@ -265,7 +144,7 @@ The forms of `Session#refresh` accepting an entity-name have been removed; the p
         Removed in favor of `Session#refresh(Object object, LockOptions lockOptions)`
 
 [[session-save-update]]
-=== Session#save, Session#update, Session#saveOrUpdate
+==== Session#save, Session#update, Session#saveOrUpdate
 
 All forms of `Session#save`, `Session#update`, `Session#saveOrUpdate` have been removed.  See the discussion at <<flush-persist>>.
 
@@ -280,7 +159,7 @@ Relatedly, `org.hibernate.annotations.CascadeType#SAVE_UPDATE` has been removed 
 
 
 [[session-delete]]
-=== Session#delete
+==== Session#delete
 
 `Session#delete` methods has been removed in favor of `Session#remove`.  Relatedly, `org.hibernate.annotations.CascadeType#DELETE` was removed in favor of `org.hibernate.annotations.CascadeType#REMOVE`{fn-cascase-type}
 
@@ -346,13 +225,6 @@ All such cases though are already controllable by the application.
 
 The effect can also often be mitigated using Hibernate's bytecode-based laziness (possibly combined with `@ConcreteProxy`).
 
-[[usertype]]
-=== Changes to UserType and CompositeUserType
-
-The API interfaces `UserType` and `CompositeUserType` leaked the SPI types `SharedSessionContractImplementor` and `SessionFactoryImplementor`, which was a layer-breaker.
-
-The solution was to change the signature of `nullSafeSet()` and `nullSafeGet()` in `UserType` via deprecation of the previous declarations, and remove some unnecessary parameters from methods of the incubating interface `CompositeUserType`.
-
 
 [[misc-api]]
 === Miscellaneous
@@ -372,6 +244,8 @@ The solution was to change the signature of `nullSafeSet()` and `nullSafeGet()` 
 
 [[spi-changes]]
 == Changes to SPI
+
+This section describes changes to contracts (classes, interfaces, methods, etc.) which are consider https://hibernate.org/community/compatibility-policy/#spi[SPI].
 
 [[configurable-generators]]
 === Configurable generators
@@ -401,13 +275,12 @@ Quite a few (again, previously deprecated) methods on `Interceptor` have been re
 Additionally, `EmptyInterceptor` was removed.  As `org.hibernate.Interceptor` now uses default methods, one can simply implement `Interceptor` to the same end.
 
 
-[[misc-spi]]
-=== Miscellaneous
+[[usertype]]
+=== Changes to UserType and CompositeUserType
 
-* `org.hibernate.metamodel.spi.MetamodelImplementor`
-was removed in favor of `org.hibernate.metamodel.MappingMetmodel` or `org.hibernate.metamodel.model.domain.JpaMetamodel`
-* Removed `AdditionalJaxbMappingProducer` in favor of `AdditionalMappingContributor`.
-* Removed `MetadataContributor` in favor of `AdditionalMappingContributor`
+The API interfaces `UserType` and `CompositeUserType` leaked the SPI types `SharedSessionContractImplementor` and `SessionFactoryImplementor`, which was a layer-breaker.
+
+The solution was to change the signature of `nullSafeSet()` and `nullSafeGet()` in `UserType` via deprecation of the previous declarations, and remove some unnecessary parameters from methods of the incubating interface `CompositeUserType`.
 
 [[jfr-spi]]
 === JFR SPI
@@ -416,6 +289,15 @@ The types `EventMonitor` and `DiagonosticEvent` replace the now-deprecated SPIs 
 
 Hibernate now reports many more kinds of `DiagnosticEvent` to JFR.
 
+[[misc-spi]]
+=== Miscellaneous
+
+* `org.hibernate.metamodel.spi.MetamodelImplementor`
+was removed in favor of `org.hibernate.metamodel.MappingMetmodel` or `org.hibernate.metamodel.model.domain.JpaMetamodel`
+* Removed `AdditionalJaxbMappingProducer` in favor of `AdditionalMappingContributor`.
+* Removed `MetadataContributor` in favor of `AdditionalMappingContributor`
+
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
@@ -423,6 +305,7 @@ Hibernate now reports many more kinds of `DiagnosticEvent` to JFR.
 
 [[behavior-changes]]
 == Changes in Behavior
+
 
 [[model-validation]]
 === Domain Model Validations
@@ -506,6 +389,29 @@ This includes auto-applied converters.
 To suppress the error for an auto-applied converter, use `@Convert(disableConversion=true)`.
 
 
+[[stateless-session-behavior]]
+=== StatelessSession Behavior
+
+The behavior of Hibernate's `StatelessSession` has changed in 2 specific ways to be aware of:
+
+[[stateless-session-cache]]
+==== StatelessSession and Second-Level Cache
+
+A stateless session now link:{releaseSeriesBase}#stateless-session-cache[makes use of the second-level cache] by default.  This will affect migrating applications using second-level cache and `StatelessSession`.
+
+To completely bypass the second-level cache, recovering the previous behavior, call `setCacheMode(CacheMode.IGNORE)`.
+
+It's often important to explicitly disable puts to the second-level cache in code which performs bulk processing.
+Set the cache mode to `GET` or configure `jakarta.persistence.cache.storeMode` to `BYPASS`.
+
+
+[[stateless-session-jdbc-batching]]
+==== StatelessSession and JDBC Batching
+
+The configuration property `hibernate.jdbc.batch_size` now has link:{releaseSeriesBase}#stateless-session-jdbc-batching[no effect on a StatelessSession].
+JDBC batching may be enabled by explicitly calling `setJdbcBatchSize()`.
+However, the preferred approach is to use the new link:{releaseSeriesBase}#stateless-session-multiple[explicit batch operations] via `insertMultiple()`, `updateMultiple()`, or `deleteMultiple()`.
+
 
 [[create-query]]
 === Query with Implicit SELECT and No Explicit Result Type
@@ -521,7 +427,7 @@ or:
 
 [source,java]
 List query =
-        session.createQuery("from X join ys")
+        session.createQuery("from X join y")
                 .getResultList()
 
 The select list was inferred based on the `from` clause.
@@ -550,11 +456,12 @@ or:
 
 [source,java]
 List<X> result =
-        session.createQuery("from X join ys", X.class)
+        session.createQuery("from X join y", X.class)
                 .getResultList()
 
 [[flush-persist]]
 === Session flush and persist
+
 
 The removal of `CascadeType.SAVE_UPDATE` slightly changes the persist and flush behaviour to conform with the Jakarta Persistence specification.
 
@@ -710,6 +617,8 @@ Starting in 7.0, when `ValidationMode#AUTO` is specified and a Bean Validation p
 [[ddl-changes]]
 == Changes Affecting DDL
 
+This section describes changes which may affect the application's database schema.
+
 [[ddl-implicit-datatype-timestamp]]
 === Default Precision for timestamp
 
@@ -762,9 +671,7 @@ Now, `varchar(1)` is used by default.
 [[pools]]
 == Connection Pools
 
-Since Vibur and Proxool are no longer actively developed, support for these connection pools was removed.
-
-As part of the effort to relicense Hibernate, it also became necessary to drop support for Oracle UCP connection pool.
+We have decided to drop built-in support for the Vibur, Proxool and UCP Connection Pools for a variety of reasons - the main one being that we are not able to properly test them.
 
 We recommend using https://github.com/agroal/agroal[Agroal] or https://github.com/brettwooldridge/HikariCP[HikariCP] instead.
 Alternatively, you may implement the `ConnectionProvider` interface to integrate the connection pool of your choice.

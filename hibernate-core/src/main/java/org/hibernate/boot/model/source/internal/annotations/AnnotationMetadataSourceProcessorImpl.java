@@ -7,10 +7,12 @@
 package org.hibernate.boot.model.source.internal.annotations;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
@@ -36,6 +38,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
+
+import static org.hibernate.boot.model.internal.AnnotationBinder.preBindClass;
 
 /**
  * @author Steve Ebersole
@@ -248,6 +252,13 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				orderedClasses,
 				rootMetadataBuildingContext
 		);
+		// we want to go through all classes and collect the filter definitions first,
+		//  so that when we bind the classes we have the complete list of filters to search from:
+		for ( XClass clazz : orderedClasses ) {
+			if ( !processedEntityNames.contains( clazz.getName() ) ) {
+				preBindClass( clazz, rootMetadataBuildingContext );
+			}
+		}
 
 		for ( XClass clazz : orderedClasses ) {
 			if ( processedEntityNames.contains( clazz.getName() ) ) {

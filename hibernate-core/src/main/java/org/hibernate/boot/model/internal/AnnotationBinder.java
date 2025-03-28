@@ -371,6 +371,12 @@ public final class AnnotationBinder {
 		}
 	}
 
+	public static void preBindClass(
+			XClass annotatedClass,
+			MetadataBuildingContext context) throws MappingException {
+		bindFilterDefs( annotatedClass, context );
+	}
+
 	/**
 	 * Bind an annotated class. A subclass must be bound <em>after</em> its superclass.
 	 *
@@ -388,7 +394,6 @@ public final class AnnotationBinder {
 
 		bindQueries( annotatedClass, context );
 		handleImport( annotatedClass, context );
-		bindFilterDefs( annotatedClass, context );
 		bindTypeDescriptorRegistrations( annotatedClass, context );
 		bindEmbeddableInstantiatorRegistrations( annotatedClass, context );
 		bindUserTypeRegistrations( annotatedClass, context );

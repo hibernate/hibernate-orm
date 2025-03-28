@@ -372,6 +372,8 @@ public interface QueryProducer {
 	 * @throws IllegalSelectQueryException if the given HQL query
 	 *         is an {@code insert}, {@code update} or {@code delete}
 	 *         statement
+	 *
+	 * @since 7.0
 	 */
 	<R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph);
 

@@ -278,6 +278,38 @@ public interface StatelessSession extends SharedSessionContract {
 
 	/**
 	 * Retrieve a record, fetching associations specified by the
+	 * given {@link EntityGraph}, which is interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}.
+	 *
+	 * @param graph The {@link EntityGraph}, interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}
+	 * @param id The id of the entity to retrieve
+	 *
+	 * @return a detached entity instance
+	 *
+	 * @since 7.0
+	 */
+	<T> T get(EntityGraph<T> graph, Object id);
+
+	/**
+	 * Retrieve a record, fetching associations specified by the
+	 * given {@link EntityGraph}, which is interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph},
+	 * and obtaining the specified lock mode.
+	 *
+	 * @param graph The {@link EntityGraph}, interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}
+	 * @param id The id of the entity to retrieve
+	 * @param lockMode The lock mode to apply to the entity
+	 *
+	 * @return a detached entity instance
+	 *
+	 * @since 7.0
+	 */
+	<T> T get(EntityGraph<T> graph, Object id, LockMode lockMode);
+
+	/**
+	 * Retrieve a record, fetching associations specified by the
 	 * given {@link EntityGraph}.
 	 *
 	 * @param graph The {@link EntityGraph}

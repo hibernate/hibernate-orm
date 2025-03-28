@@ -729,6 +729,16 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
+	public <T> T get(EntityGraph<T> graph, Object id) {
+		return get( graph, GraphSemantic.LOAD , id);
+	}
+
+	@Override
+	public <T> T get(EntityGraph<T> graph, Object id, LockMode lockMode) {
+		return get( graph, GraphSemantic.LOAD, id, lockMode);
+	}
+
+	@Override
 	public <T> T get(EntityGraph<T> graph, GraphSemantic graphSemantic, Object id) {
 		return get( graph, graphSemantic, id, LockMode.NONE );
 	}

@@ -595,7 +595,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @see #byMultipleIds(Class)
 	 * @since 7.0
 	 */
-	<E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options);
+	<E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options);
 
 	/**
 	 * Read the persistent state associated with the given identifier into the given

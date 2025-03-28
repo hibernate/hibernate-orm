@@ -353,7 +353,7 @@ public interface StatelessSession extends SharedSessionContract {
 	 *         null elements representing missing entities
 	 * @since 7.0
 	 */
-	<T> List<T> getMultiple(Class<T> entityClass, List<Object> ids);
+	<T> List<T> getMultiple(Class<T> entityClass, List<?> ids);
 
 	/**
 	 * Refresh the entity instance state from the database.

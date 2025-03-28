@@ -1026,7 +1026,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public <E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options) {
+	public <E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options) {
 		final MultiIdentifierLoadAccess<E> loadAccess = byMultipleIds( entityType );
 		setMultiIdentifierLoadAccessOptions( options, loadAccess );
 		return loadAccess.multiLoad( ids );

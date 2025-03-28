@@ -82,6 +82,7 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import jakarta.persistence.EntityGraph;
 import jakarta.transaction.SystemException;
 
+import static java.util.Collections.unmodifiableList;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.PersistenceContexts.createPersistenceContext;
@@ -763,7 +764,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public <T> List<T> getMultiple(Class<T> entityClass, List<Object> ids) {
+	public <T> List<T> getMultiple(Class<T> entityClass, List<?> ids) {
 		for (Object id : ids) {
 			if ( id == null ) {
 				throw new IllegalArgumentException("Null id");
@@ -791,7 +792,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 		else {
-			uncachedIds = ids;
+			uncachedIds = unmodifiableList(ids);
 			for (int i = 0; i < ids.size(); i++) {
 				list.add( null );
 			}

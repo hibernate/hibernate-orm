@@ -209,12 +209,10 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 									);
 								}
 							case UUID:
-								if (this.dateTypesStoreAsString) {
-									return template.replace(
-											placeholder,
-											"hextoraw(replace(json_value(" + parentPartExpression + columnExpression + "'),'-',''))"
-									);
-								}
+								return template.replace(
+										placeholder,
+										"hextoraw(replace(json_value(" + parentPartExpression + columnExpression + "'),'-',''))"
+								);
 							case BINARY:
 							case VARBINARY:
 							case LONG32VARBINARY:

@@ -148,6 +148,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
+		return queryDelegate().createSelectionQuery( hqlString, resultGraph );
+	}
+
+	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria) {
 		return queryDelegate().createSelectionQuery( criteria );
 	}

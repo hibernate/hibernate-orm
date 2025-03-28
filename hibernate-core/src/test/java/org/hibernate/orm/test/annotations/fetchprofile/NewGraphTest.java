@@ -168,6 +168,45 @@ public class NewGraphTest {
 		assertTrue( isInitialized( ee.f ) );
 	}
 
+	@Test void testSelectionQuery(SessionFactoryScope scope) {
+		scope.inTransaction( s-> {
+			G g = new G();
+			F f = new F();
+			E e = new E();
+			f.g = g;
+			e.f = f;
+			s.persist(g);
+			s.persist(f);
+			s.persist(e);
+		});
+
+		F f = scope.fromSession(s ->
+				s.createSelectionQuery("from F where id = 1", F.class)
+						.getSingleResult());
+		assertFalse( isInitialized( f.g ) );
+		assertFalse( isInitialized( f.es ) );
+		F ff = scope.fromSession(s -> {
+			RootGraph<F> graph = s.createEntityGraph(F.class);
+			graph.addAttributeNodes("g", "es");
+			return s.createSelectionQuery("from F where id = 1", graph)
+					.getSingleResult();
+		});
+		assertTrue( isInitialized( ff.g ) );
+		assertTrue( isInitialized( ff.es ) );
+
+		E e = scope.fromSession(s ->
+				s.createSelectionQuery("from E where id = 1", E.class)
+						.getSingleResult());
+		assertFalse( isInitialized( e.f ) );
+		E ee = scope.fromSession(s -> {
+			RootGraph<E> graph = s.createEntityGraph(E.class);
+			graph.addAttributeNodes("f");
+			return s.createSelectionQuery("from E where id = 1", graph)
+					.getSingleResult();
+		});
+		assertTrue( isInitialized( ee.f ) );
+	}
+
 	@Entity(name = "E")
 	static class E {
 		@Id @GeneratedValue

@@ -700,6 +700,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
+		return this.lazySession.get().createSelectionQuery( hqlString, resultGraph );
+	}
+
+	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria) {
 		return this.lazySession.get().createSelectionQuery( criteria );
 	}

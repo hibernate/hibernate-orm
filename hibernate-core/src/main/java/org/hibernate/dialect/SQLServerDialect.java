@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -1223,4 +1223,38 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public boolean supportsBindingNullForSetObject() {
 		return true;
 	}
+
+	@Override
+	public boolean supportsJoinsInDelete() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsSimpleQueryGrouping() {
+		// SQL Server is quite strict i.e. it requires `select ... union all select * from (select ...)`
+		// rather than `select ... union all (select ...)` because parenthesis followed by select
+		// is always treated as a subquery, which is not supported in a set operation
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
 }

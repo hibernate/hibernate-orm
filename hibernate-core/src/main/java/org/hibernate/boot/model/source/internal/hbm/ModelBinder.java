@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -2141,15 +2141,10 @@ public class ModelBinder {
 
 		anyBinding.createForeignKey();
 
-		Property prop = new Property();
-		prop.setValue( anyBinding );
-		bindProperty(
-				sourceDocument,
-				anyMapping,
-				prop
-		);
-
-		return prop;
+		final Property property = new Property();
+		property.setValue( anyBinding );
+		bindProperty( sourceDocument, anyMapping, property );
+		return property;
 	}
 
 	private void bindAny(

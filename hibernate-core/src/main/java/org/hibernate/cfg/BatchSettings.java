@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
@@ -21,9 +21,11 @@ public interface BatchSettings {
 
 	/**
 	 * Specifies the maximum number of {@linkplain java.sql.PreparedStatement statements}
-	 * to {@linkplain PreparedStatement#addBatch batch} together.
-	 * <p/>
-	 * A nonzero value enables batching
+	 * to {@linkplain PreparedStatement#addBatch batch} together in a stateful session.
+	 * <p>
+	 * Any positive value enables batching.
+	 * <p>
+	 * This setting has no effect on {@linkplain org.hibernate.StatelessSession stateless sessions}.
 	 *
 	 * @see java.sql.PreparedStatement#executeBatch
 	 * @see java.sql.PreparedStatement#addBatch
@@ -52,16 +54,6 @@ public interface BatchSettings {
 	 * @settingDefault {@code false}
 	 */
 	String ORDER_INSERTS = "hibernate.order_inserts";
-
-	/**
-	 * When enabled, specifies that {@linkplain jakarta.persistence.Version versioned}
-	 * data should be included in batching.
-	 *
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchingForVersionedEntities(boolean)
-	 *
-	 * @settingDefault Generally {@code true}, though can vary based on Dialect
-	 */
-	String BATCH_VERSIONED_DATA = "hibernate.jdbc.batch_versioned_data";
 
 	/**
 	 * @deprecated Use {@link #BUILDER} instead

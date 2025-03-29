@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.joinedsubclassbatch;
@@ -33,7 +33,6 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 /**
@@ -134,77 +133,6 @@ public class IdentityJoinedSubclassBatchingTest {
 			}
 		} );
 	}
-
-	@Test
-	public void testAssertSubclassInsertedSuccessfullyAfterCommit(SessionFactoryScope scope) {
-		final int nEntities = 10;
-
-		scope.inTransaction( s -> {
-			for ( int i = 0; i < nEntities; i++ ) {
-				Employee e = new Employee();
-				e.setName( "Mark" );
-				e.setTitle( "internal sales" );
-				e.setSex( 'M' );
-				e.setAddress( "buckhead" );
-				e.setZip( "30305" );
-				e.setCountry( "USA" );
-				s.persist( e );
-			}
-		} );
-
-		scope.inTransaction( s -> {
-			long numberOfInsertedEmployee = (long) s.createQuery( "select count(e) from Employee e" ).uniqueResult();
-			assertEquals( nEntities, numberOfInsertedEmployee );
-		} );
-
-		scope.inTransaction( s -> {
-			try (ScrollableResults sr = s.createQuery(
-							"select e from Employee e" )
-					.scroll( ScrollMode.FORWARD_ONLY )) {
-
-				while ( sr.next() ) {
-					Employee e = (Employee) sr.get();
-					s.remove( e );
-				}
-			}
-		} );
-
-	}
-
-	@Test
-	public void testAssertSubclassInsertedSuccessfullyAfterFlush(SessionFactoryScope scope) {
-
-		scope.inTransaction( s -> {
-
-			Employee e = new Employee();
-			e.setName( "Mark" );
-			e.setTitle( "internal sales" );
-			e.setSex( 'M' );
-			e.setAddress( "buckhead" );
-			e.setZip( "30305" );
-			e.setCountry( "USA" );
-			s.persist( e );
-			s.flush();
-
-			long numberOfInsertedEmployee = (long) s.createQuery( "select count(e) from Employee e" ).uniqueResult();
-			assertEquals( 1L, numberOfInsertedEmployee );
-		} );
-
-
-		scope.inTransaction( s -> {
-			try (ScrollableResults sr = s.createQuery(
-							"select e from Employee e" )
-					.scroll( ScrollMode.FORWARD_ONLY )) {
-
-				while ( sr.next() ) {
-					Employee e = (Employee) sr.get();
-					s.remove( e );
-				}
-			}
-		} );
-
-	}
-
 
 	@Embeddable
 	public static class Address implements Serializable {

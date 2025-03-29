@@ -1,22 +1,26 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKeyClass;
+import jakarta.persistence.MapKeyEnumerated;
+import jakarta.persistence.MapKeyTemporal;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -55,17 +59,12 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
-import jakarta.persistence.MapKeyClass;
-import jakarta.persistence.MapKeyEnumerated;
-import jakarta.persistence.MapKeyTemporal;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-import jakarta.persistence.Version;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.model.internal.AnnotationHelper.extractParameterMap;
@@ -112,8 +111,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private Map<String,String> explicitLocalTypeParams;
 
 	private Function<TypeConfiguration, JdbcType> explicitJdbcTypeAccess;
-	private Function<TypeConfiguration, BasicJavaType> explicitJavaTypeAccess;
-	private Function<TypeConfiguration, MutabilityPlan> explicitMutabilityAccess;
+	private Function<TypeConfiguration, BasicJavaType<?>> explicitJavaTypeAccess;
+	private Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityAccess;
 	private Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess;
 
 	private MemberDetails memberDetails;
@@ -152,7 +151,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	protected SourceModelBuildingContext getSourceModelContext() {
-		return getMetadataCollector().getSourceModelBuildingContext();
+		return buildingContext.getBootstrapContext().getModelsContext();
 	}
 
 	private InFlightMetadataCollector getMetadataCollector() {
@@ -749,8 +748,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		if ( elementCollectionAnn != null ) {
 			final Class<?> targetClassDetails = elementCollectionAnn.targetClass();
 			if ( targetClassDetails != void.class) {
-				//noinspection rawtypes
-				final Function<TypeConfiguration, BasicJavaType> original = explicitJavaTypeAccess;
+				final Function<TypeConfiguration, BasicJavaType<?>> original = explicitJavaTypeAccess;
 				explicitJavaTypeAccess = typeConfiguration -> {
 					final BasicJavaType<?> originalResult = original.apply( typeConfiguration );
 					if ( originalResult != null ) {

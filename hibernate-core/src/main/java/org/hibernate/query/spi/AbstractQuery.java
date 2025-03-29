@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
-import java.io.Serializable;
 import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
@@ -129,7 +128,7 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public QueryImplementor<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
+	public QueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
 		super.setEntityGraph( graph, semantic );
 		return this;
 	}
@@ -174,10 +173,10 @@ public abstract class AbstractQuery<R>
 		return this;
 	}
 
-	@Override @SuppressWarnings("unchecked")
+	@Override
 	public <T> QueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer) {
 		getQueryOptions().setTupleTransformer( transformer );
-		// this is bad, we should really return a new instance:
+		//TODO: this is bad, we should really return a new instance
 		return (QueryImplementor<T>) this;
 	}
 
@@ -418,7 +417,7 @@ public abstract class AbstractQuery<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
@@ -442,13 +441,11 @@ public abstract class AbstractQuery<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
-
-
 
 	@Override
 	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value) {
@@ -586,37 +583,37 @@ public abstract class AbstractQuery<R>
 	}
 
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
@@ -670,18 +667,4 @@ public abstract class AbstractQuery<R>
 		throw new UnsupportedOperationException("Getting keyed result list is not supported by this query.");
 	}
 
-	@Override
-	public void setOptionalId(Serializable id) {
-		throw new UnsupportedOperationException( "Not sure yet how to handle this in SQM based queries, but for sure it will be different" );
-	}
-
-	@Override
-	public void setOptionalEntityName(String entityName) {
-		throw new UnsupportedOperationException( "Not sure yet how to handle this in SQM based queries, but for sure it will be different" );
-	}
-
-	@Override
-	public void setOptionalObject(Object optionalObject) {
-		throw new UnsupportedOperationException( "Not sure yet how to handle this in SQM based queries, but for sure it will be different" );
-	}
 }

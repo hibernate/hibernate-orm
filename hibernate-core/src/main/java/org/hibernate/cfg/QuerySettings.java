@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
@@ -252,9 +252,10 @@ public interface QuerySettings {
 	 * When enabled, specifies that {@linkplain QueryPlan query plans} should be
 	 * {@linkplain org.hibernate.query.spi.QueryInterpretationCache cached}.
 	 * <p>
-	 * By default, the query plan cache is disabled, unless one of the configuration
-	 * properties {@value #QUERY_PLAN_CACHE_MAX_SIZE} or
-	 * {@value #QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE} is set.
+	 * By default, the query plan cache is enabled. It is also enabled if the configuration
+	 * property {@value #QUERY_PLAN_CACHE_MAX_SIZE} is set.
+	 *
+	 * @settingDefault {@code true} (enabled) - query plan cache is enabled.
 	 */
 	String QUERY_PLAN_CACHE_ENABLED = "hibernate.query.plan_cache_enabled";
 

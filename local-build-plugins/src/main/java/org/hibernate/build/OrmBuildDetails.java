@@ -1,11 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.build;
 
 import org.gradle.api.Project;
-import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 
 import javax.inject.Inject;

@@ -1,10 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.sqm.exec;
 
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
@@ -49,7 +49,7 @@ public class ParameterTest {
 		String query = "from SalesAssociate p where p.name.familiarName in :names";
 		scope.inTransaction(
 				session -> {
-					QueryImplementor q = session.createQuery( query );
+					Query q = session.createQuery( query );
 					DomainParameterXref xref = q.unwrap( QuerySqmImpl.class ).getDomainParameterXref();
 					for ( QueryParameterImplementor<?> p : xref.getQueryParameters().keySet() ) {
 						Assertions.assertTrue( q.getParameterMetadata().containsReference( p ) );
@@ -58,7 +58,7 @@ public class ParameterTest {
 		);
 		scope.inTransaction(
 				session -> {
-					QueryImplementor q = session.createQuery( query );
+					Query q = session.createQuery( query );
 					DomainParameterXref xref = q.unwrap( QuerySqmImpl.class ).getDomainParameterXref();
 					for ( QueryParameterImplementor<?> p : xref.getQueryParameters().keySet() ) {
 						Assertions.assertTrue( q.getParameterMetadata().containsReference( p ) );

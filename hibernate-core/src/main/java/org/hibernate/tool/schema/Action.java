@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema;
@@ -105,7 +105,18 @@ public enum Action {
 	 *
 	 * @since 6.2
 	 */
-	TRUNCATE;
+	TRUNCATE,
+	/**
+	 * Populate an existing schema by executing {@code /import.sql} and other scripts specified
+	 * via {@value org.hibernate.cfg.SchemaToolingSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE}.
+	 *
+	 * @apiNote This action is not defined by JPA.
+	 *
+	 * @see org.hibernate.tool.schema.spi.SchemaPopulator
+	 *
+	 * @since 7.0
+	 */
+	POPULATE;
 
 	/**
 	 * @see #NONE
@@ -135,6 +146,10 @@ public enum Action {
 	 * @see #UPDATE
 	 */
 	public static final String ACTION_UPDATE = "update";
+	/**
+	 * @see #POPULATE
+	 */
+	public static final String ACTION_POPULATE = "populate";
 
 	/**
 	 * @see #NONE
@@ -159,18 +174,13 @@ public enum Action {
 	 * or {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_SCRIPTS_ACTION}.
 	 */
 	public String getExternalJpaName() {
-		switch (this) {
-			case NONE:
-				return SPEC_ACTION_NONE;
-			case CREATE_ONLY:
-				return SPEC_ACTION_CREATE;
-			case DROP:
-				return SPEC_ACTION_DROP;
-			case CREATE:
-				return SPEC_ACTION_DROP_AND_CREATE;
-			default:
-				return null;
-		}
+		return switch ( this ) {
+			case NONE -> SPEC_ACTION_NONE;
+			case CREATE_ONLY -> SPEC_ACTION_CREATE;
+			case DROP -> SPEC_ACTION_DROP;
+			case CREATE -> SPEC_ACTION_DROP_AND_CREATE;
+			default -> null;
+		};
 	}
 
 	/**
@@ -178,24 +188,17 @@ public enum Action {
 	 * configuration via  {@value org.hibernate.cfg.AvailableSettings#HBM2DDL_AUTO}.
 	 */
 	public String getExternalHbm2ddlName() {
-		switch (this) {
-			case NONE:
-				return ACTION_NONE;
-			case CREATE_ONLY:
-				return ACTION_CREATE_ONLY;
-			case DROP:
-				return ACTION_DROP;
-			case CREATE:
-				return ACTION_CREATE;
-			case CREATE_DROP:
-				return ACTION_CREATE_THEN_DROP;
-			case VALIDATE:
-				return ACTION_VALIDATE;
-			case UPDATE:
-				return ACTION_UPDATE;
-			default:
-				return null;
-		}
+		return switch ( this ) {
+			case NONE -> ACTION_NONE;
+			case CREATE_ONLY -> ACTION_CREATE_ONLY;
+			case DROP -> ACTION_DROP;
+			case CREATE -> ACTION_CREATE;
+			case CREATE_DROP -> ACTION_CREATE_THEN_DROP;
+			case VALIDATE -> ACTION_VALIDATE;
+			case UPDATE -> ACTION_UPDATE;
+			case POPULATE -> ACTION_POPULATE;
+			default -> null;
+		};
 	}
 
 	@Override
@@ -222,8 +225,8 @@ public enum Action {
 			return NONE;
 		}
 
-		if ( value instanceof Action ) {
-			return (Action) value;
+		if ( value instanceof Action action ) {
+			return action;
 		}
 
 		final String name = value.toString().trim();
@@ -274,8 +277,8 @@ public enum Action {
 			return NONE;
 		}
 
-		if ( value instanceof Action ) {
-			return (Action) value;
+		if ( value instanceof Action action ) {
+			return action;
 		}
 
 		final String name = value.toString().trim();

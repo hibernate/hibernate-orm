@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -22,6 +22,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.DiscriminatorFormula;
+import org.hibernate.annotations.EmbeddedColumnNaming;
 import org.hibernate.annotations.Instantiator;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.binder.TypeBinder;
@@ -31,6 +32,8 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.MutableInteger;
+import org.hibernate.internal.util.NullnessHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
@@ -59,10 +62,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TreeMap;
 
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
@@ -314,9 +317,9 @@ public class EmbeddableBinder {
 	}
 
 	private static void callTypeBinders(Component component, MetadataBuildingContext context, TypeDetails annotatedClass ) {
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
 
-		final List<? extends Annotation> metaAnnotatedAnnotations = annotatedClass.determineRawClass().getMetaAnnotated( TypeBinderType.class, sourceModelContext );
+		final List<? extends Annotation> metaAnnotatedAnnotations = annotatedClass.determineRawClass().getMetaAnnotated( TypeBinderType.class, modelsContext );
 		if ( isEmpty( metaAnnotatedAnnotations ) ) {
 			return;
 		}
@@ -474,7 +477,7 @@ public class EmbeddableBinder {
 		else {
 			compositeUserType = compositeUserType( compositeUserTypeClass, context );
 			component.setTypeName( compositeUserTypeClass.getName() );
-			returnedClassOrElement = context.getMetadataCollector().getSourceModelBuildingContext().getClassDetailsRegistry().resolveClassDetails( compositeUserType.embeddable().getName() );
+			returnedClassOrElement = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry().resolveClassDetails( compositeUserType.embeddable().getName() );
 		}
 		AggregateComponentBinder.processAggregate(
 				component,
@@ -516,7 +519,7 @@ public class EmbeddableBinder {
 			final BasicType<?> discriminatorType = (BasicType<?>) component.getDiscriminator().getType();
 			// Discriminator values are used to construct the embeddable domain
 			// type hierarchy so order of processing is important
-			final Map<Object, String> discriminatorValues = new TreeMap<>();
+			final Map<Object, String> discriminatorValues = new LinkedHashMap<>();
 			collectDiscriminatorValue( returnedClassOrElement, discriminatorType, discriminatorValues );
 			collectSubclassElements(
 					propertyAccessor,
@@ -996,7 +999,45 @@ public class EmbeddableBinder {
 			final ComponentPropertyHolder componentPropertyHolder = (ComponentPropertyHolder) propertyHolder;
 			component.setParentAggregateColumn( componentPropertyHolder.getAggregateColumn() );
 		}
+		applyColumnNamingPattern( component, inferredData );
 		return component;
+	}
+
+	private static void applyColumnNamingPattern(Component component, PropertyData inferredData) {
+		final Class<?> componentClass = component.getComponentClass();
+		if ( componentClass == null || Map.class.equals( componentClass ) ) {
+			// dynamic models
+			return;
+		}
+
+		if ( inferredData.getAttributeMember() == null ) {
+			// generally indicates parts of a plural mapping (element, key, bag-id)
+			return;
+		}
+
+		final EmbeddedColumnNaming columnNaming = inferredData.getAttributeMember().getDirectAnnotationUsage( EmbeddedColumnNaming.class );
+		if ( columnNaming == null ) {
+			return;
+		}
+
+		final String columnNamingPattern = NullnessHelper.coalesce(
+				columnNaming.value(),
+				inferredData.getPropertyName() + "_%s"
+		);
+
+		final int markerCount = StringHelper.count( columnNamingPattern, '%' );
+		if ( markerCount != 1 ) {
+			throw new MappingException( String.format(
+					Locale.ROOT,
+					"@EmbeddedColumnNaming expects pattern with exactly 1 format maker, but found %s - `%s` (%s#%s)",
+					markerCount,
+					columnNamingPattern,
+					inferredData.getAttributeMember().getDeclaringType().getName(),
+					inferredData.getAttributeMember().getName()
+			) );
+		}
+
+		component.setColumnNamingPattern( columnNamingPattern );
 	}
 
 	private static Constructor<?> resolveInstantiator(TypeDetails embeddableClass) {

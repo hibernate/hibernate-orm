@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -335,8 +335,8 @@ public class ToOneBinder {
 			PropertyData inferredData) {
 		final MetadataBuildingContext context = toOne.getBuildingContext();
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
-		final SourceModelBuildingContext sourceModelContext = collector.getSourceModelBuildingContext();
-		property.forEachAnnotationUsage( FetchProfileOverride.class, sourceModelContext,
+		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		property.forEachAnnotationUsage( FetchProfileOverride.class, modelsContext,
 				usage -> collector.addSecondPass( new FetchSecondPass( usage, propertyHolder, inferredData.getPropertyName(), context ) ));
 	}
 
@@ -605,14 +605,14 @@ public class ToOneBinder {
 	}
 
 	private static ClassDetails getTargetEntityClass(MemberDetails property, MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
 		final ManyToOne manyToOne = property.getDirectAnnotationUsage( ManyToOne.class );
 		if ( manyToOne != null ) {
-			return sourceModelContext.getClassDetailsRegistry().resolveClassDetails( manyToOne.targetEntity().getName() );
+			return modelsContext.getClassDetailsRegistry().resolveClassDetails( manyToOne.targetEntity().getName() );
 		}
 		final OneToOne oneToOne = property.getDirectAnnotationUsage( OneToOne.class );
 		if ( oneToOne != null ) {
-			return sourceModelContext.getClassDetailsRegistry().resolveClassDetails( oneToOne.targetEntity().getName() );
+			return modelsContext.getClassDetailsRegistry().resolveClassDetails( oneToOne.targetEntity().getName() );
 		}
 		throw new AssertionFailure( "Unexpected discovery of a targetEntity: " + property.getName() );
 	}

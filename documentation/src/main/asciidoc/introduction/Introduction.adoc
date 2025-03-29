@@ -1,6 +1,10 @@
 [[introduction]]
 == Introduction
 
+:persistence: https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2
+:data: https://jakarta.ee/specifications/data/1.0/jakarta-data-1.0
+
+
 Hibernate is usually described as a library that makes it easy to map Java classes to relational database tables.
 But this formulation does no justice to the central role played by the relational data itself.
 So a better description might be:
@@ -35,7 +39,7 @@ Developers often ask about the relationship between Hibernate and JPA, so let's 
 [[hibernate-and-jpa]]
 === Hibernate and JPA
 
-Hibernate was the inspiration behind the _Java_ (now _Jakarta_) _Persistence API_, or JPA, and includes a complete implementation of the latest revision of this specification.
+Hibernate was the inspiration behind the _Java_ (now _Jakarta_) _Persistence API_, or JPA, and includes a complete implementation of the latest revision of link:{persistence}[this specification].
 
 .The early history of Hibernate and JPA
 ****
@@ -116,28 +120,6 @@ Take your time with this code, and try to produce a Java model that's as close a
 When in the slightest doubt, map a foreign key relationship using `@ManyToOne` with `@OneToMany(mappedBy=...)` in preference to more complicated association mappings.
 ====
 
-.What sort of logic belongs in an entity?
-****
-There exists an extensive online literature which posits that there are _rich domain models_, where entities have methods implementing interesting business logic, and _anemic domain models_, where the entities are pure data holders, and that a developer should hold an opinion that one or the other of these sorts of domain model is "better".
-
-We do not hold any such opinion, and if you ask us for one, we will most likely suddenly discover somewhere else we need to be.
-
-A more interesting question is not _how much_ logic belongs in the entity class, but _what sort_ of logic belongs there.
-We think the answer is that an entity should never implement technical concerns, and should never obtain references to framework objects.
-Nor should it hold extra mutable state which is not very directly related to its role in representing persistent state.
-For example:
-
-- an entity may compute totals and averages, even caching them if necessary, enforce its invariants, interact with and construct other entities, and so on,
-- but the entity should never call the `EntityManager` or a Jakarta Data repository, build a criteria query, send a JMS message, start a transaction, publish events to the CDI event bus, maintain a stateful queue of events to be published later, or anything of a similar nature.
-
-One way to summarize this is:
-
-> Entities do business logic; but they don't do orchestration.
-
-Later, we'll discuss various ways to <<managing-transactions,manage transactions>>, <<callbacks,send event notifications>>, and <<organizing-persistence,query the database>>.
-Such code will always be external to the entity itself.
-****
-
 The second part of the code is much trickier to get right. This code must:
 
 - manage transactions and sessions,
@@ -158,7 +140,6 @@ Responsibility for transaction and session management, and for recovery from cer
 // ====
 
 We're going to <<organizing-persistence,come back soon>> to the thorny question of how this persistence logic should be organized, and how it should fit into the rest of the system.
-// First we want to make the ideas above concrete by seeing a simple example program that uses Hibernate in isolation.
 
 [[hello-hibernate]]
 === Hello, Hibernate
@@ -431,6 +412,58 @@ So now let's talk about how to organize persistence logic in a real system.
 The rest of this chapter is not compulsory.
 If you're itching for more details about Hibernate itself, you're quite welcome to skip straight to the <<configuration,next chapter>>, and come back later.
 
+[[entities]]
+=== Entities
+
+A class in the domain model which directly represents a relational database table is called an _entity_.
+Entity classes are central to object persistence and to object/relational mapping.
+They're also, typically, central players in the business logic of our application program.
+Entities represent the _things_ in our business domain.
+This makes them very important objects indeed!
+
+Given how much weight an entity already bears due to its very nature, we need to think carefully before weighing it down with too many additional responsibilities.
+
+[[entity-logic]]
+.What sort of logic belongs in an entity?
+****
+There exists an extensive online literature which posits that there are _rich domain models_, where entities have methods implementing interesting business logic, and _anemic domain models_, where the entities are pure data holders, and that a developer should hold an opinion that one or the other of these sorts of domain model is "better".
+
+We do not hold any such opinion, and if you ask us for one, we will most likely suddenly discover somewhere else we need to be.
+
+A more interesting question is not _how much_ logic belongs in the entity class, but _what sort_ of logic belongs there.
+We think the answer is that an entity should never implement technical concerns, and should never obtain references to framework objects.
+Nor should it hold extra mutable state which is not very directly related to its role in representing persistent state.
+For example:
+
+- an entity may compute totals and averages, even caching them if necessary, enforce its invariants, interact with and construct other entities, and so on, and its annotations express how it maps to database tables,
+- but the entity should not call the `EntityManager` or a Jakarta Data repository, build a criteria query, send a JMS message, start a transaction, publish events to the CDI event bus, maintain a stateful queue of events to be published later, or anything of a similar nature.
+
+One way to summarize this is:
+
+> Entities do business logic; but they don't do orchestration.
+
+Later, we'll discuss various ways to <<managing-transactions,manage transactions>>, <<callbacks,send event notifications>>, and <<organizing-persistence,query the database>>.
+Such code will always be external to the entity itself.
+****
+
+In keeping with our commitment to anti-dogmatism, we would like to add the following important caveat to the discussion in the previous callout.
+
+[[active-record]]
+.Active Record
+****
+The discussion <<entity-logic,above>> expresses our "traditional" approach--which lay behind the design of Hibernate, of JPA, and of Jakarta Data--where entity classes are plain Java objects without dependence on framework code.
+An alternative approach is the Active Record pattern, as exemplified by link:https://quarkus.io/guides/hibernate-orm-panache[Panache].
+In Active Record, entity types inherit framework objects, and persistence operations are located directly on the entities.
+You can think of this as merging the roles of entity and DAO/Repository into a single object.
+
+Active Record comes with both upsides and downsides, but we don't mean to exclude it from consideration.
+We must therefore slightly modify the prescription we've given above: in an Active Record, it's obviously OK to access the `EntityManager` and perform other persistence-related operations, and we therefore expect our Active Record class to look somewhat more "technical" than a trad entity.
+
+But the basic principle remains intact: an entity does not do orchestration, it does not manage transactions, it does not obtain references to _other_ sorts of framework object, and it does not hold mutable state unrelated to its persistent state.
+****
+
+For now, we're going to assume that entities are implemented as plain Java classes.
+
 [[organizing-persistence]]
 === Organizing persistence logic
 
@@ -669,7 +702,7 @@ Alternatively, if CDI isn't available, we may directly instantiate the generated
 
 [TIP]
 ====
-The Jakarta Data specification now formalizes this approach using standard annotations, and our implementation of this specification, Hibernate Data Repositories, is built into <<generator,Hibernate Processor>>.
+The link:{data}[Jakarta Data specification] now formalizes this approach using standard annotations, and our implementation of this specification, Hibernate Data Repositories, is built into <<generator,Hibernate Processor>>.
 You probably already have it available in your program.
 
 Unlike other repository frameworks, Hibernate Data Repositories offers something that plain JPA simply doesn’t have: full compile-time type safety for your queries. To learn more, please refer to link:{doc-data-repositories-url}[Introducing Hibernate Data Repositories].

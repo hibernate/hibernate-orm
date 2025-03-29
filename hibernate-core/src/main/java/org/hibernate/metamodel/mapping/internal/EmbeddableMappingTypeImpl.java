@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -904,11 +904,10 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
-		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
-			return discriminatorMapping;
-		}
+		return EntityDiscriminatorMapping.matchesRoleName( name )
+				? discriminatorMapping
+				: super.findSubPart( name, treatTargetType );
 
-		return super.findSubPart( name, treatTargetType );
 	}
 
 	@Override

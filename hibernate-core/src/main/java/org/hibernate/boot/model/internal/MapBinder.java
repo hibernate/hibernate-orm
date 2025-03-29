@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -243,9 +243,12 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private ClassDetails mapKeyClass(String mapKeyType) {
-		return isPrimitive( mapKeyType ) ? null
-				: buildingContext.getMetadataCollector().getSourceModelBuildingContext()
-						.getClassDetailsRegistry().resolveClassDetails( mapKeyType );
+		return isPrimitive( mapKeyType )
+				? null
+				: buildingContext.getBootstrapContext()
+						.getModelsContext()
+						.getClassDetailsRegistry()
+						.resolveClassDetails( mapKeyType );
 	}
 
 	private static String getKeyType(MemberDetails property) {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal;
@@ -185,14 +185,17 @@ public class Builders {
 		);
 	}
 
-	public static ResultBuilder attributeResult(String columnAlias, SingularAttribute<?, ?> attribute) {
-		if ( ! ( attribute.getDeclaringType() instanceof EntityType ) ) {
+	public static ResultBuilder attributeResult(
+			String columnAlias,
+			SingularAttribute<?, ?> attribute,
+			SessionFactoryImplementor sessionFactory) {
+		if ( ! ( attribute.getDeclaringType() instanceof EntityType<?> entityType ) ) {
 			throw new UnsupportedOperationException(
 					"Support for defining a NativeQuery attribute result based on a composite path is not yet implemented"
 			);
 		}
 
-		throw new UnsupportedOperationException();
+		return attributeResult( columnAlias, entityType.getName(), attribute.getName(), sessionFactory );
 	}
 
 	/**

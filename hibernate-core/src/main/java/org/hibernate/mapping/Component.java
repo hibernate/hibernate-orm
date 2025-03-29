@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -104,6 +104,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private String[] structColumnNames;
 	private transient Class<?> componentClass;
 	private transient Boolean simpleRecord;
+	private String columnNamingPattern;
 
 	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
@@ -733,6 +734,24 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public void clearProperties() {
 		properties.clear();
+	}
+
+	/**
+	 * Apply a column naming pattern.
+	 *
+	 * @see org.hibernate.annotations.EmbeddedColumnNaming
+	 */
+	public void setColumnNamingPattern(String columnNamingPattern) {
+		this.columnNamingPattern = columnNamingPattern;
+	}
+
+	/**
+	 * Column naming pattern applied to the component
+	 *
+	 * @see org.hibernate.annotations.EmbeddedColumnNaming
+	 */
+	public String getColumnNamingPattern() {
+		return columnNamingPattern;
 	}
 
 	public static class StandardGenerationContextLocator

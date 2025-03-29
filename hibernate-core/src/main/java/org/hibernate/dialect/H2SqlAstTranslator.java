@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -198,21 +198,6 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	}
 
 	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowConstructor() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsArrayConstructor() {
-		return true;
-	}
-
-	@Override
 	protected String getArrayContainsFunction() {
 		return "array_contains";
 	}
@@ -329,35 +314,6 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 		}
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		// Just a guess
-		return true;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		// Just a guess
-		return true;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		// Just a guess
-		return true;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorDistinctFromSyntax() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsNullPrecedence() {
-		// Support for nulls clause in listagg was added in 2.0
-		return true;
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return true;
 	}
@@ -365,17 +321,6 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	private boolean supportsOffsetFetchClausePercentWithTies() {
 		// Introduction of TIES clause https://github.com/h2database/h2database/commit/876e9fbe7baf11d01675bfe871aac2cf1b6104ce
 		// Introduction of PERCENT support https://github.com/h2database/h2database/commit/f45913302e5f6ad149155a73763c0c59d8205849
-		return true;
-	}
-
-	@Override
-	protected boolean supportsJoinInMutationStatementSubquery() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsFilterClause() {
-		// Introduction of FILTER clause https://github.com/h2database/h2database/commit/9e6dbf3baa57000f670826ede431dc7fb4cd9d9c
 		return true;
 	}
 }

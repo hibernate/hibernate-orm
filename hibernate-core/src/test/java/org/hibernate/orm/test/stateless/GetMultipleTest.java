@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.stateless;
@@ -29,6 +29,12 @@ public class GetMultipleTest {
 			assertEquals("hello mars",all.get(0).message);
 			assertEquals("hello earth",all.get(1).message);
 			assertNull(all.get(2));
+		});
+		scope.inStatelessTransaction(s-> {
+			List<Record> all = s.getMultiple(Record.class, List.of(123L, 2L, 456L));
+			assertEquals("hello earth",all.get(0).message);
+			assertEquals("hello mars",all.get(2).message);
+			assertNull(all.get(1));
 		});
 	}
 	@Entity

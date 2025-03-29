@@ -69,7 +69,7 @@ driver for your database.
 | MariaDB                   | `org.mariadb.jdbc:mariadb-java-client:{version}`
 | DB2                       | `com.ibm.db2:jcc:{version}`
 | SQL Server                | `com.microsoft.sqlserver:mssql-jdbc:{version}`
-| Oracle                    | `com.oracle.database.jdbc:ojdbc11:{version}`
+| Oracle                    | `com.oracle.database.jdbc:ojdbc17:{version}`
 | H2                        | `com.h2database:h2:{version}`
 | HSQLDB                    | `org.hsqldb:hsqldb:{version}`
 |===

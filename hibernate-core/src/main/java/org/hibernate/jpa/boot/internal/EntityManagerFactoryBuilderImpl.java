@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.boot.internal;
@@ -52,6 +52,7 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
+import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -113,6 +114,7 @@ import static org.hibernate.cfg.AvailableSettings.SCANNER_DISCOVERY;
 import static org.hibernate.cfg.AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.URL;
 import static org.hibernate.cfg.AvailableSettings.USER;
+import static org.hibernate.cfg.BytecodeSettings.BYTECODE_PROVIDER_INSTANCE;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_DIRTY_TRACKING;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION;
@@ -422,6 +424,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			final boolean dirtyTrackingEnabled,
 			final boolean lazyInitializationEnabled,
 			final boolean associationManagementEnabled ) {
+		final Object propValue = configurationValues.get( BYTECODE_PROVIDER_INSTANCE );
+		if ( propValue != null && ( ! ( propValue instanceof BytecodeProvider ) ) ) {
+			throw new PersistenceException( "Property " + BYTECODE_PROVIDER_INSTANCE + " was set to '" + propValue + "', which is not compatible with the expected type " + BytecodeProvider.class );
+		}
+		final BytecodeProvider overriddenBytecodeProvider = (BytecodeProvider) propValue;
 		return new DefaultEnhancementContext() {
 
 			@Override
@@ -460,6 +467,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			public boolean doExtendedEnhancement(UnloadedClass classDescriptor) {
 				// doesn't make any sense to have extended enhancement enabled at runtime. we only enhance entities anyway.
 				return false;
+			}
+
+			@Override
+			public BytecodeProvider getBytecodeProvider() {
+				return overriddenBytecodeProvider;
 			}
 		};
 	}

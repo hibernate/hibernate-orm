@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
@@ -95,7 +95,7 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 			List<SortSpecification> withinGroup,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		if ( filter != null && !translator.supportsFilterClause() ) {
+		if ( filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause() ) {
 			throw new IllegalArgumentException( "Can't emulate filter clause for inverse distribution function [" + getName() + "]" );
 		}
 		sqlAppender.appendSql( getName() );

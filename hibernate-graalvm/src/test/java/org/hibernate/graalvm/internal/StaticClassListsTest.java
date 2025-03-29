@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graalvm.internal;
@@ -16,6 +16,8 @@ import java.util.stream.Stream;
 
 import org.hibernate.Session;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.id.uuid.UuidVersion6Strategy;
+import org.hibernate.id.uuid.UuidVersion7Strategy;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -35,6 +37,38 @@ public class StaticClassListsTest {
 	@BeforeAll
 	public static void index() throws IOException {
 		hibernateIndex = JandexTestUtils.indexJar( Session.class );
+	}
+
+	@Nested
+	// Related Jira issue: https://hibernate.atlassian.net/browse/HHH-18974
+	class TypesNeedingRuntimeInitialization {
+		@ParameterizedTest
+		@EnumSource(TypesNeedingRuntimeInitialization_Category.class)
+		void containsAllExpectedClasses(TypesNeedingRuntimeInitialization_Category category) {
+			assertThat( StaticClassLists.typesNeedingRuntimeInitialization() )
+					.containsAll( category.classes().collect( Collectors.toSet() ) );
+		}
+
+		@Test
+		void meta_noMissingTestCategory() {
+			assertThat( Arrays.stream( TypesNeedingRuntimeInitialization_Category.values() ).flatMap( TypesNeedingRuntimeInitialization_Category::classes ) )
+					.as( "If this fails, a category is missing in " + TypesNeedingRuntimeInitialization_Category.class )
+					.contains( StaticClassLists.typesNeedingRuntimeInitialization() );
+		}
+	}
+
+	enum TypesNeedingRuntimeInitialization_Category {
+		UUID_STRATGY_HOLDERS_USING_SECURE_RANDOM {
+			@Override
+			Stream<Class<?>> classes() {
+				return Stream.of(
+						UuidVersion6Strategy.Holder.class,
+						UuidVersion7Strategy.Holder.class
+				);
+			}
+		};
+
+		abstract Stream<Class<?>> classes();
 	}
 
 	@Nested

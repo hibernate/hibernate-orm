@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.customsql;
@@ -27,6 +27,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SessionFactory
 @DomainModel(annotatedClasses = CustomSqlRestrictionOverridesTest.Secure.class)
@@ -39,12 +40,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class CustomSqlRestrictionOverridesTest {
 	@Test
 	public void testCustomSql(SessionFactoryScope scope) throws NoSuchAlgorithmException {
-		Secure sec = new Secure();
-		sec.hash = MessageDigest.getInstance( "SHA-256" ).digest("hello".getBytes());
-		scope.inTransaction(s -> s.persist(sec) );
-		Secure secure = scope.fromTransaction( s -> s.find( Secure.class, sec.id ) );
-		assertNotNull(secure);
+		Secure sec1 = new Secure();
+		sec1.hash = MessageDigest.getInstance( "SHA-256" ).digest( "hello".getBytes() );
+		scope.inTransaction( s -> s.persist( sec1 ) );
+		Secure sec2 = new Secure();
+		sec2.hash = MessageDigest.getInstance( "SHA-256" ).digest( "not hello".getBytes() );
+		scope.inTransaction( s -> s.persist( sec2 ) );
+		Secure secure1 = scope.fromTransaction( s -> s.find( Secure.class, sec1.id ) );
+		assertNotNull( secure1 );
+		Secure secure2 = scope.fromTransaction( s -> s.find( Secure.class, sec2.id ) );
+		assertNull( secure2 );
 	}
+
 	@Entity
 	@Table(name = "SecureTable")
 	@DialectOverride.SQLRestriction(dialect = H2Dialect.class,
@@ -60,7 +67,8 @@ public class CustomSqlRestrictionOverridesTest {
 	@DialectOverride.SQLRestriction(dialect = OracleDialect.class,
 			override = @SQLRestriction("hash = standard_hash('hello', 'SHA256')"))
 	static class Secure {
-		@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		Long id;
 		byte[] hash;
 	}

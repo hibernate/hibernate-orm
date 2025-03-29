@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 
 /**
- * @deprecated Moved to {@link org.hibernate.dialect.Dialect}
+ * @apiNote Moved to {@link org.hibernate.dialect.Dialect}
  */
+@Deprecated(forRemoval = true)
 package org.hibernate.dialect.hint;

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.util;
@@ -8,7 +8,6 @@ import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.MetaModelGenerationException;
-import org.hibernate.processor.annotation.AnnotationMetaEntity;
 import org.hibernate.processor.model.Metamodel;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -17,6 +16,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
@@ -27,7 +27,6 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.ElementFilter;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.tools.Diagnostic;
 import java.util.HashMap;
@@ -512,6 +511,14 @@ public final class TypeUtils {
 		return kind.isClass() && kind != ElementKind.ENUM;
 	}
 
+	public static boolean isClassRecordOrInterfaceType(Element element) {
+		final ElementKind kind = element.getKind();
+		// we want to accept classes and records but not enums,
+		// and we want to avoid depending on ElementKind.RECORD
+		return kind.isClass() && kind != ElementKind.ENUM
+			|| kind.isInterface() && kind != ElementKind.ANNOTATION_TYPE;
+	}
+
 	public static boolean primitiveClassMatchesKind(Class<?> itemType, TypeKind kind) {
 		return switch ( kind ) {
 			case SHORT -> itemType.equals( Short.class );
@@ -573,23 +580,23 @@ public final class TypeUtils {
 		return null;
 	}
 
-	public static String propertyName(AnnotationMetaEntity parent, Element element) {
-		final Elements elementsUtil = parent.getContext().getElementUtils();
-		if ( element.getKind() == ElementKind.FIELD ) {
-			return element.getSimpleName().toString();
-		}
-		else if ( element.getKind() == ElementKind.METHOD ) {
-			final String name = element.getSimpleName().toString();
-			if ( name.startsWith( "get" ) ) {
-				return elementsUtil.getName(decapitalize(name.substring(3))).toString();
-			}
-			else if ( name.startsWith( "is" ) ) {
-				return elementsUtil.getName(decapitalize(name.substring(2))).toString();
-			}
-			return elementsUtil.getName(decapitalize(name)).toString();
-		}
-		else {
-			return elementsUtil.getName(element.getSimpleName() + "/* " + element.getKind() + " */").toString();
+	public static String propertyName(Element element) {
+		switch ( element.getKind() ) {
+			case FIELD:
+				return element.getSimpleName().toString();
+			case METHOD:
+				final Name name = element.getSimpleName();
+				if ( name.length() > 3 && name.subSequence( 0, 3 ).equals( "get" ) ) {
+					return decapitalize( name.subSequence( 3, name.length() ).toString() );
+				}
+				else if ( name.length() > 2 && name.subSequence( 0, 2 ).equals( "is" ) ) {
+					return decapitalize( name.subSequence( 2, name.length() ).toString() );
+				}
+				else {
+					return decapitalize( name.toString() );
+				}
+			default:
+				return element.getSimpleName() + "/* " + element.getKind() + " */";
 		}
 	}
 
@@ -666,10 +673,35 @@ public final class TypeUtils {
 		return element.getEnclosingElement() instanceof TypeElement;
 	}
 
+	public static String getGeneratedClassFullyQualifiedName(TypeElement typeElement, boolean jakartaDataStyle) {
+		final String simpleName = typeElement.getSimpleName().toString();
+		final Element enclosingElement = typeElement.getEnclosingElement();
+		return qualifiedName( enclosingElement, jakartaDataStyle )
+				+ "." + (jakartaDataStyle ? '_' + simpleName : simpleName + '_');
+	}
+
+	private static String qualifiedName(Element enclosingElement, boolean jakartaDataStyle) {
+		if ( enclosingElement instanceof TypeElement typeElement ) {
+			return getGeneratedClassFullyQualifiedName( typeElement, jakartaDataStyle );
+		}
+		else if ( enclosingElement instanceof PackageElement packageElement ) {
+			return packageElement.getQualifiedName().toString();
+		}
+		else {
+			throw new MetaModelGenerationException( "Unexpected enclosing element: " + enclosingElement );
+		}
+	}
+
+
 	public static String getGeneratedClassFullyQualifiedName(TypeElement element, String packageName, boolean jakartaDataStyle) {
-		final StringBuilder builder = new StringBuilder( packageName.isEmpty() ? "" : packageName + "." );
-		for ( String s : split( ".", element.getQualifiedName().toString().substring( builder.length() ) ) ) {
-			final String part = removeDollar( s );
+		final StringBuilder builder = new StringBuilder( packageName );
+		final Name qualifiedName = element.getQualifiedName();
+		final String tail = qualifiedName.subSequence( builder.length(), qualifiedName.length() ).toString();
+		for ( String bit : split( ".", tail ) ) {
+			final String part = removeDollar( bit );
+			if ( !builder.isEmpty() ) {
+				builder.append( "." );
+			}
 			builder.append( jakartaDataStyle ? '_' + part : part + '_' );
 		}
 		return builder.toString();

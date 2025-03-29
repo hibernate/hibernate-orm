@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
+import jakarta.persistence.Access;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Target;
 import org.hibernate.boot.models.internal.ModelsHelper;
@@ -18,8 +19,6 @@ import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeVariableScope;
-
-import jakarta.persistence.Access;
 
 /**
  * Retrieve all inferred data from an annotated element
@@ -81,14 +80,12 @@ public class PropertyInferredData implements PropertyData {
 	@Override
 	public TypeDetails getPropertyType() throws MappingException {
 		final org.hibernate.boot.internal.Target targetAnnotation = propertyMember.getDirectAnnotationUsage( org.hibernate.boot.internal.Target.class );
-		final SourceModelBuildingContext sourceModelContext = buildingContext.getMetadataCollector()
-				.getSourceModelBuildingContext();
+		final SourceModelBuildingContext sourceModelContext = buildingContext.getBootstrapContext().getModelsContext();
 		if ( targetAnnotation != null ) {
 			final String targetName = targetAnnotation.value();
-			final SourceModelBuildingContext sourceModelBuildingContext = sourceModelContext;
 			final ClassDetails classDetails = ModelsHelper.resolveClassDetails(
 					targetName,
-					sourceModelBuildingContext.getClassDetailsRegistry(),
+					sourceModelContext.getClassDetailsRegistry(),
 					() -> new DynamicClassDetails( targetName, sourceModelContext )
 			);
 			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
@@ -112,24 +109,21 @@ public class PropertyInferredData implements PropertyData {
 
 	@Override
 	public TypeDetails getClassOrElementType() throws MappingException {
-		final SourceModelBuildingContext sourceModelBuildingContext = buildingContext
-				.getMetadataCollector()
-				.getSourceModelBuildingContext();
-
+		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		final org.hibernate.boot.internal.Target annotationUsage = propertyMember.getDirectAnnotationUsage( org.hibernate.boot.internal.Target.class );
 		if ( annotationUsage != null ) {
 			final String targetName = annotationUsage.value();
 			final ClassDetails classDetails = ModelsHelper.resolveClassDetails(
 					targetName,
-					sourceModelBuildingContext.getClassDetailsRegistry(),
-					() -> new DynamicClassDetails( targetName, sourceModelBuildingContext )
+					modelsContext.getClassDetailsRegistry(),
+					() -> new DynamicClassDetails( targetName, modelsContext )
 			);
 			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
 		}
 
 		final Target legacyTargetAnnotation = propertyMember.getDirectAnnotationUsage( Target.class );
 		if ( legacyTargetAnnotation != null ) {
-			return resolveLegacyTargetAnnotation( legacyTargetAnnotation, sourceModelBuildingContext );
+			return resolveLegacyTargetAnnotation( legacyTargetAnnotation, modelsContext );
 		}
 
 		return propertyMember.resolveRelativeAssociatedType( ownerType );

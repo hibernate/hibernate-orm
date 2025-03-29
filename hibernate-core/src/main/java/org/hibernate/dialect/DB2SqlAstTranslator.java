@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -70,11 +70,6 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 
 	@Override
 	protected boolean needsRecursiveKeywordInWithClause() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsWithClauseInSubquery() {
 		return false;
 	}
 
@@ -602,21 +597,6 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 			SqlTuple tuple,
 			ComparisonOperator operator) {
 		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	@Override

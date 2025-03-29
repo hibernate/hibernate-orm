@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -302,4 +302,25 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	public String getFromDualForSelectOnly() {
 		return getVersion().isBefore( 10, 4 ) ? ( " from " + getDual() ) : "";
 	}
+
+	@Override
+	public boolean supportsIntersect() {
+		return getVersion().isSameOrAfter( 10, 3 );
+	}
+
+	@Override
+	public boolean supportsSimpleQueryGrouping() {
+		return getVersion().isSameOrAfter( 10, 4 );
+	}
+
+	@Override
+	public boolean supportsWithClause() {
+		return getVersion().isSameOrAfter( 10, 2 );
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
 }

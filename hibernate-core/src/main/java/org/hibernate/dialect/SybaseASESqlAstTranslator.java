@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -95,11 +95,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
 		if ( statement.getFromClause().getRoots().isEmpty() ) {
 			appendSql( " from " );
@@ -118,11 +113,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
 			}
 		}
-	}
-
-	@Override
-	protected boolean supportsWithClause() {
-		return false;
 	}
 
 	// Sybase ASE does not allow CASE expressions where all result arms contain plain parameters.
@@ -432,7 +422,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		}
 		// I think intersect is only supported in 16.0 SP3
 		if ( ansiNullOn ) {
-			if ( supportsDistinctFromPredicate() ) {
+			if ( getDialect().supportsDistinctFromPredicate() ) {
 				renderComparisonEmulateIntersect( lhs, operator, rhs );
 			}
 			else {
@@ -469,7 +459,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 				}
 			}
 			else {
-				if ( supportsDistinctFromPredicate() ) {
+				if ( getDialect().supportsDistinctFromPredicate() ) {
 					renderComparisonEmulateIntersect( lhs, operator, rhs );
 				}
 				else {
@@ -492,12 +482,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 				SqlTypes.BLOB -> true;
 			default -> false;
 		};
-	}
-
-	@Override
-	protected boolean supportsIntersect() {
-		// At least the version that
-		return false;
 	}
 
 	@Override
@@ -567,21 +551,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected boolean needsRowsToSkip() {
 		return true;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {

@@ -1,13 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
 import jakarta.persistence.FindOption;
+import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.Work;
 import org.hibernate.query.Query;
@@ -42,7 +44,14 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  *     {@code Session}.
  * </ul>
  * <p>
- * At any given time, an instance may be associated with at most one open session.
+ * Each persistent instance has a <em>persistent identity</em> determined by its type
+ * and identifier value. There may be at most one persistent instance with a given
+ * persistent identity associated with a given session. A persistent identity is
+ * assigned when an {@linkplain #persist(Object) instance is made persistent}.
+ * <p>
+ * An instance of an entity class may be associated with at most one open session.
+ * Distinct sessions represent state with the same persistent identity using distinct
+ * persistent instances of the mapped entity class.
  * <p>
  * Any instance returned by {@link #get(Class, Object)}, {@link #find(Class, Object)},
  * or by a query is persistent. A persistent instance might hold references to other
@@ -57,8 +66,8 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * <p>
  * A transient instance may be made persistent by calling {@link #persist(Object)}.
  * A persistent instance may be made detached by calling {@link #detach(Object)}.
- * A persistent instance may be marked for removal, and eventually made transient, by
- * calling {@link #remove(Object)}.
+ * A persistent instance may be marked for removal, and eventually made transient,
+ * by calling {@link #remove(Object)}.
  * <p>
  * Persistent instances are held in a managed state by the persistence context. Any
  * change to the state of a persistent instance is automatically detected and eventually
@@ -586,7 +595,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @see #byMultipleIds(Class)
 	 * @since 7.0
 	 */
-	<E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options);
+	<E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options);
 
 	/**
 	 * Read the persistent state associated with the given identifier into the given
@@ -659,6 +668,22 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return an updated persistent instance
 	 */
 	<T> T merge(String entityName, T object);
+
+	/**
+	 * Copy the state of the given object onto the persistent object with the same
+	 * identifier. If there is no persistent instance currently associated with
+	 * the session, it will be loaded. Return the persistent instance. If the
+	 * given instance is unsaved, save a copy and return it as a newly persistent
+	 * instance. The given instance does not become associated with the session.
+	 * This operation cascades to associated instances if the association is mapped
+	 * with {@link jakarta.persistence.CascadeType#MERGE}.
+	 *
+	 * @param object a detached instance with state to be copied
+	 * @param loadGraph entity graph interpreted as a load graph
+	 *
+	 * @return an updated persistent instance
+	 */
+	<T> T merge( T object, EntityGraph<?> loadGraph);
 
 	/**
 	 * Make a transient instance persistent and mark it for later insertion in the
@@ -1252,6 +1277,44 @@ public interface Session extends SharedSessionContract, EntityManager {
 	LobHelper getLobHelper();
 
 	/**
+	 * Obtain the collection of all managed entities which belong to this
+	 * persistence context.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	Collection<?> getManagedEntities();
+
+	/**
+	 * Obtain a collection of all managed instances of the entity type with the
+	 * given entity name which belong to this persistence context.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	Collection<?> getManagedEntities(String entityName);
+
+	/**
+	 * Obtain a collection of all managed entities of the given type which belong
+	 * to this persistence context. This operation is not polymorphic, and does
+	 * not return instances of subtypes of the given entity type.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	<E> Collection<E> getManagedEntities(Class<E> entityType);
+
+	/**
+	 * Obtain a collection of all managed entities of the given type which belong
+	 * to this persistence context. This operation is not polymorphic, and does
+	 * not return instances of subtypes of the given entity type.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	<E> Collection<E> getManagedEntities(EntityType<E> entityType);
+
+	/**
 	 * Obtain a {@link Session} builder with the ability to copy certain
 	 * information from this session.
 	 *
@@ -1265,6 +1328,25 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param listeners the listener(s) to add
 	 */
 	void addEventListeners(SessionEventListener... listeners);
+
+	/**
+	 * Set a hint. The hints understood by Hibernate are enumerated by
+	 * {@link org.hibernate.jpa.AvailableHints}.
+	 *
+	 * @see org.hibernate.jpa.HibernateHints
+	 * @see org.hibernate.jpa.SpecHints
+	 *
+	 * @apiNote Hints are a
+	 * {@linkplain jakarta.persistence.EntityManager#setProperty
+	 * JPA-standard way} to control provider-specific behavior of the
+	 * {@code EntityManager}. Clients of the native API defined by
+	 * Hibernate should make use of type-safe operations of this
+	 * interface. For example, {@link #enableFetchProfile(String)}
+	 * should be used in preference to the hint
+	 * {@link org.hibernate.jpa.HibernateHints#HINT_FETCH_PROFILE}.
+	 */
+	@Override
+	void setProperty(String propertyName, Object value);
 
 	/**
 	 * Create a new mutable instance of {@link EntityGraph}, with only

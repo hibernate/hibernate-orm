@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -729,4 +729,16 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 	public String getDual() {
 		return "(select 1 c1)";
 	}
+
+	@Override
+	public boolean supportsIntersect() {
+		// At least the version that
+		return false;
+	}
+
+	@Override
+	public boolean supportsJoinsInDelete() {
+		return true;
+	}
+
 }

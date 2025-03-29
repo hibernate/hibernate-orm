@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
@@ -17,7 +17,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.SessionFactory;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -205,8 +204,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public SessionFactory buildSessionFactory() {
-		return getSessionFactoryBuilder().build();
+	public SessionFactoryImplementor buildSessionFactory() {
+		return (SessionFactoryImplementor) getSessionFactoryBuilder().build();
 	}
 
 	@Override

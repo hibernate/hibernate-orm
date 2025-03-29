@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
@@ -15,7 +15,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
-import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
@@ -1090,7 +1089,7 @@ abstract public class DialectFeatureChecks {
 		return sqmFunctionRegistry;
 	}
 
-	private static class FakeTypeContributions implements TypeContributions {
+	public static class FakeTypeContributions implements TypeContributions {
 		private final TypeConfiguration typeConfiguration;
 
 		public FakeTypeContributions(TypeConfiguration typeConfiguration) {
@@ -1103,7 +1102,7 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	private static class FakeFunctionContributions implements FunctionContributions {
+	public static class FakeFunctionContributions implements FunctionContributions {
 		private final Dialect dialect;
 		private final TypeConfiguration typeConfiguration;
 		private final SqmFunctionRegistry functionRegistry;
@@ -1642,7 +1641,7 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public SessionFactory buildSessionFactory() {
+		public SessionFactoryImplementor buildSessionFactory() {
 			return null;
 		}
 

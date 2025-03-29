@@ -1,20 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -53,11 +47,16 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.internal.Helper;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Version;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import static jakarta.persistence.GenerationType.AUTO;
 import static java.util.Collections.emptyMap;
@@ -265,17 +264,16 @@ public class GeneratorBinder {
 	public static void visitIdGeneratorDefinitions(
 			AnnotationTarget annotatedElement,
 			Consumer<IdentifierGeneratorDefinition> consumer,
-			MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext =
-				context.getMetadataCollector().getSourceModelBuildingContext();
+			MetadataBuildingContext buildingContext) {
+		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 
-		annotatedElement.forEachAnnotationUsage( TableGenerator.class, sourceModelContext,
+		annotatedElement.forEachAnnotationUsage( TableGenerator.class, modelsContext,
 				usage -> consumer.accept( buildTableIdGenerator( usage ) ) );
 
-		annotatedElement.forEachAnnotationUsage( SequenceGenerator.class, sourceModelContext,
+		annotatedElement.forEachAnnotationUsage( SequenceGenerator.class, modelsContext,
 				usage -> consumer.accept( buildSequenceIdGenerator( usage ) ) );
 
-		annotatedElement.forEachAnnotationUsage( GenericGenerator.class, sourceModelContext,
+		annotatedElement.forEachAnnotationUsage( GenericGenerator.class, modelsContext,
 				usage -> consumer.accept( buildIdGenerator( usage ) ) );
 
 	}
@@ -476,11 +474,11 @@ public class GeneratorBinder {
 	 * @param beanContainer an optional {@code BeanContainer}
 	 * @param generatorClass a class which implements {@code Generator}
 	 */
-	private static Generator instantiateGeneratorAsBean(
+	private static <T extends Generator> Generator instantiateGeneratorAsBean(
 			Annotation annotation,
 			BeanContainer beanContainer,
 			GeneratorCreationContext creationContext,
-			Class<? extends Generator> generatorClass,
+			Class<T> generatorClass,
 			MemberDetails memberDetails,
 			Class<? extends Annotation> annotationType) {
 		return Helper.getBean(
@@ -800,15 +798,13 @@ public class GeneratorBinder {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			SimpleValue idValue,
-			MetadataBuildingContext context) {
-
-		final SourceModelBuildingContext sourceModelContext =
-				context.getMetadataCollector().getSourceModelBuildingContext();
+			MetadataBuildingContext buildingContext) {
+		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		final MemberDetails idAttributeMember = inferredData.getAttributeMember();
 		final List<? extends Annotation> idGeneratorAnnotations =
-				idAttributeMember.getMetaAnnotated( IdGeneratorType.class, sourceModelContext );
+				idAttributeMember.getMetaAnnotated( IdGeneratorType.class, modelsContext );
 		final List<? extends Annotation> generatorAnnotations =
-				idAttributeMember.getMetaAnnotated( ValueGenerationType.class, sourceModelContext );
+				idAttributeMember.getMetaAnnotated( ValueGenerationType.class, modelsContext );
 		// Since these collections may contain Proxies created by common-annotations module we cannot reliably use simple remove/removeAll
 		// collection methods as those proxies do not implement hashcode/equals and even a simple `a.equals(a)` will return `false`.
 		// Instead, we will check the annotation types, since generator annotations should not be "repeatable" we should have only
@@ -830,7 +826,7 @@ public class GeneratorBinder {
 					idAttributeMember,
 					idGeneratorAnnotations.get(0),
 					idValue,
-					beanContainer( context )
+					beanContainer( buildingContext )
 			) );
 		}
 		else if ( !generatorAnnotations.isEmpty() ) {
@@ -843,7 +839,7 @@ public class GeneratorBinder {
 			) );
 		}
 		else if ( idAttributeMember.hasDirectAnnotationUsage( GeneratedValue.class ) ) {
-			createIdGenerator( idAttributeMember, idValue, propertyHolder.getPersistentClass(), context );
+			createIdGenerator( idAttributeMember, idValue, propertyHolder.getPersistentClass(), buildingContext );
 		}
 	}
 
@@ -853,13 +849,13 @@ public class GeneratorBinder {
 	 */
 	static GeneratorCreator createValueGeneratorFromAnnotations(
 			PropertyHolder holder, String propertyName,
-			Value value, MemberDetails property, MetadataBuildingContext context) {
+			Value value, MemberDetails property, MetadataBuildingContext buildingContext) {
+		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		final List<? extends Annotation> generatorAnnotations =
-				property.getMetaAnnotated( ValueGenerationType.class,
-						context.getMetadataCollector().getSourceModelBuildingContext() );
+				property.getMetaAnnotated( ValueGenerationType.class, modelsContext );
 		return switch ( generatorAnnotations.size() ) {
 			case 0 -> null;
-			case 1 -> generatorCreator( property, value, generatorAnnotations.get(0), beanContainer( context ) );
+			case 1 -> generatorCreator( property, value, generatorAnnotations.get(0), beanContainer( buildingContext ) );
 			default -> throw new AnnotationException( "Property '" + qualify( holder.getPath(), propertyName )
 					+ "' has too many generator annotations: " + generatorAnnotations );
 		};

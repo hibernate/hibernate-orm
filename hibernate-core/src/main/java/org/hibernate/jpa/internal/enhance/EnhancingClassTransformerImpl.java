@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.internal.enhance;
@@ -9,6 +9,7 @@ import java.security.ProtectionDomain;
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.hibernate.bytecode.enhance.internal.bytebuddy.CorePrefixFilter;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContextWrapper;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
@@ -29,13 +30,11 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 	private final ReentrantLock lock = new ReentrantLock();
 	private volatile WeakReference<Entry> entryReference;
 
-	//This list is matching the constants used by CoreTypePool's default constructor
-	private static final String[] NO_TRANSFORM_PREFIXES = { "jakarta/", "java/", "org/hibernate/annotations/" };
-
 	public EnhancingClassTransformerImpl(EnhancementContext enhancementContext) {
 		Objects.requireNonNull( enhancementContext );
 		this.enhancementContext = enhancementContext;
-		this.bytecodeProvider = BytecodeProviderInitiator.buildDefaultBytecodeProvider();
+		final BytecodeProvider overriddenProvider = enhancementContext.getBytecodeProvider();
+		this.bytecodeProvider = overriddenProvider == null ? BytecodeProviderInitiator.buildDefaultBytecodeProvider() : overriddenProvider;
 	}
 
 	@Override
@@ -46,14 +45,13 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 			ProtectionDomain protectionDomain,
 			byte[] classfileBuffer)  throws TransformerException {
 
-		//Take care to not transform certain types; this is both an optimisation (we can skip this unnecessary work)
-		//and a safety precaution as we otherwise risk attempting to redefine classes which have already been loaded:
-		//see https://hibernate.atlassian.net/browse/HHH-18108
-		//N.B. this className doesn't use the dot-format but the slashes for package separators.
-		for ( String prefix : NO_TRANSFORM_PREFIXES ) {
-			if ( className.startsWith( prefix ) ) {
-				return null;
-			}
+		//N.B. the "className" argument doesn't use the dot-format but the slashes for package separators.
+		final String classNameDotFormat = className.replace( '/', '.' );
+		if ( CorePrefixFilter.DEFAULT_INSTANCE.isCoreClassName( classNameDotFormat ) ) {
+			//Take care to not transform certain types; this is both an optimisation (we can skip this unnecessary work)
+			//and a safety precaution as we otherwise risk attempting to redefine classes which have already been loaded:
+			//see https://hibernate.atlassian.net/browse/HHH-18108
+			return null;
 		}
 
 		try {
@@ -61,9 +59,6 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 		}
 		catch (final Exception e) {
 			throw new TransformerException( "Error performing enhancement of " + className, e );
-		}
-		finally {
-			bytecodeProvider.resetCaches();
 		}
 	}
 

@@ -134,6 +134,147 @@ include::{extrasdir}/embeddable/embeddable-type-override-mapping-example.sql[]
 ----
 ====
 
+[[embeddable-column-naming]]
+==== @EmbeddedColumnNaming
+
+The most common use case for `@AttributeOverride` in relation to an embeddable is to rename the associated columns.
+
+Consider a typical embeddable mapping -
+
+[[embeddable-column-naming-example-model]]
+.Typical embeddable mapping
+====
+[source,java]
+----
+@Entity
+class Person {
+	// ...
+    @Embedded
+    Address homeAddress;
+    @Embedded
+    Address workAddress;
+}
+
+@Embeddable
+class Address {
+	String street;
+	String city;
+	// ...
+}
+----
+====
+
+In strict Jakarta Persistence sense, this will lead to a bootstrapping error because
+Jakarta Persistence requires that the implicit names for the columns for both of the
+embedded `Address` mappings to be based on the attribute names from the embeddable -
+`street`, `city`, etc.  However, that will lead to duplicate column names here.
+
+The strict compliance way to accomplish this would be a tedious use of the `@AttributeOverride` annotation
+as <<embeddable-override,discussed previously>>.
+
+Since this is such a common pattern, Hibernate offers a much simpler solution through its `@EmbeddedColumnNaming` annotation
+which allows to "patternize" the column naming -
+
+[[embeddable-column-naming-example-basic]]
+.Simple `@EmbeddedColumnNaming` example
+====
+[source,java]
+----
+@Entity
+class Person {
+	// ...
+    @Embedded
+    @EmbeddedColumnNaming("home_%s")
+    Address homeAddress;
+    @Embedded
+    @EmbeddedColumnNaming("work_%s")
+    Address workAddress;
+}
+----
+====
+
+This mapping produces implicit column names `home_street`, `home_city`, `work_street`, `work_city`, etc.
+
+`@EmbeddedColumnNaming` also works in nested usages and plays nicely with explicit column names.
+
+[[embeddable-column-naming-example-column]]
+.Explicit @Column example
+====
+[source,java]
+----
+@Entity
+class Person {
+	// ...
+    @Embedded
+	@EmbeddedColumnNaming("home_%s")
+    Address homeAddress;
+    @Embedded
+    @EmbeddedColumnNaming("work_%s")
+    Address workAddress;
+}
+
+@Embeddable
+class Address {
+	String street;
+	String city;
+    @Embedded
+    private ZipPlus zip;
+	// ...
+}
+
+@Embeddable
+public static class ZipPlus {
+    @Column(name="zip_code")
+    private String code;
+    @Column(name="zip_plus4")
+    private String plus4;
+}
+----
+====
+
+This will produce implicit column names `home_street`, `home_city`, `home_zip_code`, `home_zip_plus4`, ...
+
+
+When `@EmbeddedColumnNaming` is used withing nested embeddables, the affect will be cumulative.
+Given the following model:
+
+[[embeddable-column-naming-example-cumulative]]
+.Cumulative @EmbeddedColumnNaming example
+====
+[source,java]
+----
+@Entity
+class Person {
+	// ...
+    @Embedded
+	@EmbeddedColumnNaming("home_%s")
+    Address homeAddress;
+    @Embedded
+    @EmbeddedColumnNaming("work_%s")
+    Address workAddress;
+}
+
+@Embeddable
+class Address {
+	String street;
+	String city;
+    @Embedded
+    @EmbeddedColumnNaming("zip_%s")
+    private ZipPlus zip;
+	// ...
+}
+
+@Embeddable
+public static class ZipPlus {
+    private String code;
+    private String plus4;
+}
+----
+====
+
+Here we will end up with the columns `home_street`, `home_city`, `home_zip_code`, `home_zip_plus4`, ...
+
+
 
 [[embeddable-collections]]
 ==== Collections of embeddable types
@@ -466,28 +607,50 @@ The following table outlines the current support for the different aggregate typ
 |PostgreSQL
 |Yes
 |Yes
-|No (not yet)
+|Yes
 
 |Oracle
 |Yes
 |Yes
-|No (not yet)
+|Yes
+
+|MySQL/MariaDB
+|No
+|Yes
+|No
 
 |DB2
 |Yes
-|No (not yet)
-|No (not yet)
+|Yes
+|Yes
 
 |SQL Server
-|No (not yet)
-|No (not yet)
-|No (not yet)
+|No https://hibernate.atlassian.net/browse/HHH-16158[(not yet)]
+|Yes
+|Yes
+
+|Sybase ASE
+|No
+|No
+|Yes
+
+|H2
+|No
+|Yes
+|No
+
+|CockroachDB
+|No
+|Yes
+|No
+
+|SAP HANA
+|No
+|Yes
+|Yes
 |===
 
-Also note that embeddable types that are used in aggregate mappings do not yet support all kinds of attribute mappings, most notably:
-
-* Association mappings (`@ManyToOne`, `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@ElementCollection`)
-* Basic array mappings
+Also note that embeddable types that are used in array aggregate mappings do not support association mappings.
 
 ===== `@Struct` aggregate embeddable mapping
 

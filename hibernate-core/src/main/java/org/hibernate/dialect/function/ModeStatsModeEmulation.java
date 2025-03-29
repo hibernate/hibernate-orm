@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
@@ -38,7 +38,7 @@ public class ModeStatsModeEmulation extends InverseDistributionFunction {
 			List<SortSpecification> withinGroup,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
+		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
 		sqlAppender.appendSql( "stats_mode(" );
 		if ( withinGroup == null || withinGroup.size() != 1 ) {
 			throw new IllegalArgumentException( "MODE function requires a WITHIN GROUP clause with exactly one order by item" );

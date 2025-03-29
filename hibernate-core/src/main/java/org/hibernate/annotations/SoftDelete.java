@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -13,6 +13,7 @@ import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 
 import jakarta.persistence.AttributeConverter;
+import org.hibernate.metamodel.UnsupportedMappingException;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -87,7 +88,8 @@ public @interface SoftDelete {
 	/**
 	 * The strategy to use for storing/reading values to/from the database.
 	 * <p/>
-	 * The strategy also affects the default {@linkplain #columnName() column name}.
+	 * The strategy also affects the default {@linkplain #columnName() column name} - see
+	 * {@linkplain SoftDeleteType#getDefaultColumnName}.
 	 */
 	SoftDeleteType strategy() default SoftDeleteType.DELETED;
 
@@ -105,7 +107,11 @@ public @interface SoftDelete {
 	 * the {@linkplain Dialect#getPreferredSqlTypeCodeForBoolean() dialect}
 	 * and {@linkplain org.hibernate.cfg.MappingSettings#PREFERRED_BOOLEAN_JDBC_TYPE settings}
 	 *
-	 * @apiNote The converter should never return {@code null}
+	 * @apiNote Only valid when {@linkplain #strategy} is {@linkplain SoftDeleteType#DELETED}
+	 * or {@linkplain SoftDeleteType#ACTIVE}.  Will lead to a {@linkplain UnsupportedMappingException}
+	 * when combined with {@linkplain SoftDeleteType#TIMESTAMP}.
+	 *
+	 * @implSpec The specified converter should never return {@code null}
 	 */
 	Class<? extends AttributeConverter<Boolean,?>> converter() default UnspecifiedConversion.class;
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -34,7 +34,7 @@ import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.event.spi.PersistContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.EntityPrinter;
-import org.hibernate.internal.util.collections.IdentityMap;
+import org.hibernate.internal.util.collections.InstanceIdentityMap;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
@@ -190,7 +190,7 @@ public abstract class AbstractFlushingEventListener {
 				persistenceContext.getCollectionEntries();
 		if ( collectionEntries != null ) {
 			for ( Map.Entry<PersistentCollection<?>, CollectionEntry> entry :
-					( (IdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries ).entryArray() ) {
+					( (InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries ).toArray() ) {
 				entry.getValue().preFlush( entry.getKey() );
 			}
 		}
@@ -271,7 +271,7 @@ public abstract class AbstractFlushingEventListener {
 		}
 		else {
 			count = collectionEntries.size();
-			for ( Map.Entry<PersistentCollection<?>, CollectionEntry> me : ( (IdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries ).entryArray() ) {
+			for ( Map.Entry<PersistentCollection<?>, CollectionEntry> me : ( (InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries ).toArray() ) {
 				final CollectionEntry ce = me.getValue();
 				if ( !ce.isReached() && !ce.isIgnore() ) {
 					Collections.processUnreachableCollection( me.getKey(), session );

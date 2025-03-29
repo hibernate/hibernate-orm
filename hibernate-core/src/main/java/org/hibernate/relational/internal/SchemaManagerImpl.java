@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.relational.internal;
@@ -80,6 +80,19 @@ public class SchemaManagerImpl implements SchemaManager {
 	public void truncateMappedObjects() {
 		Map<String, Object> properties = new HashMap<>( sessionFactory.getProperties() );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.TRUNCATE );
+		properties.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
+		SchemaManagementToolCoordinator.process(
+				metadata,
+				sessionFactory.getServiceRegistry(),
+				properties,
+				action -> {}
+		);
+	}
+
+	@Override
+	public void populate() {
+		Map<String, Object> properties = new HashMap<>( sessionFactory.getProperties() );
+		properties.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.POPULATE );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
 		SchemaManagementToolCoordinator.process(
 				metadata,

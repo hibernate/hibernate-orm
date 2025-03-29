@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -116,11 +116,6 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
 		if ( statement.getFromClause().getRoots().isEmpty() ) {
 			appendSql( " from " );
@@ -142,11 +137,6 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 
 	@Override
 	protected boolean needsRecursiveKeywordInWithClause() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsWithClauseInSubquery() {
 		return false;
 	}
 
@@ -335,14 +325,6 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 		}
 	}
 
-	@Override
-	protected boolean supportsSimpleQueryGrouping() {
-		// SQL Server is quite strict i.e. it requires `select .. union all select * from (select ...)`
-		// rather than `select .. union all (select ...)` because parenthesis followed by select
-		// is always treated as a subquery, which is not supported in a set operation
-		return false;
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return getQueryPartForRowNumbering() != queryPart && getOffsetFetchClauseMode( queryPart ) == OffsetFetchClauseMode.EMULATED;
@@ -464,11 +446,11 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 			// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
 			switch ( operator ) {
 				case DISTINCT_FROM:
-					if ( !supportsDistinctFromPredicate() ) {
+					if ( !getDialect().supportsDistinctFromPredicate() ) {
 						appendSql( "not " );
 					}
 				case NOT_DISTINCT_FROM: {
-					if ( !supportsDistinctFromPredicate() ) {
+					if ( !getDialect().supportsDistinctFromPredicate() ) {
 						appendSql( "exists (select cast(" );
 						getClauseStack().push( Clause.SELECT );
 						visitSqlSelectExpression( lhs );
@@ -498,17 +480,12 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 					break;
 			}
 		}
-		if ( supportsDistinctFromPredicate() ) {
+		if ( getDialect().supportsDistinctFromPredicate() ) {
 			renderComparisonStandard( lhs, operator, rhs );
 		}
 		else {
 			renderComparisonEmulateIntersect( lhs, operator, rhs );
 		}
-	}
-
-	@Override
-	protected boolean supportsDistinctFromPredicate() {
-		return getDialect().getVersion().isSameOrAfter( 16 );
 	}
 
 	@Override
@@ -541,21 +518,6 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
 		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	enum OffsetFetchClauseMode {

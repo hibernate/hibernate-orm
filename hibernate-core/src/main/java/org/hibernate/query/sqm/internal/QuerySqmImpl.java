@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
 
-import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -811,7 +810,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public Query<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
+	public Query<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
 		super.setEntityGraph( graph, semantic );
 		return this;
 	}
@@ -1068,7 +1067,7 @@ public class QuerySqmImpl<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
@@ -1092,7 +1091,7 @@ public class QuerySqmImpl<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmQueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
@@ -1122,37 +1121,37 @@ public class QuerySqmImpl<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmQueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmQueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
@@ -1266,22 +1265,4 @@ public class QuerySqmImpl<R>
 		return this;
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// optional object loading
-
-	@Override
-	public void setOptionalId(Serializable id) {
-		throw new UnsupportedOperationException( "Not sure yet how to handle this in SQM based queries, but for sure it will be different" );
-	}
-
-	@Override
-	public void setOptionalEntityName(String entityName) {
-		throw new UnsupportedOperationException( "Not sure yet how to handle this in SQM based queries, but for sure it will be different" );
-	}
-
-	@Override
-	public void setOptionalObject(Object optionalObject) {
-		throw new UnsupportedOperationException( "Not sure yet how to handle this in SQM based queries, but for sure it will be different" );
-	}
 }

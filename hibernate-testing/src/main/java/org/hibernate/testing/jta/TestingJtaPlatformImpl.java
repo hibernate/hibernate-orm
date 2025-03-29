@@ -1,10 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.jta;
 
+import jakarta.transaction.NotSupportedException;
 import jakarta.transaction.Status;
+import jakarta.transaction.SystemException;
 import jakarta.transaction.TransactionManager;
 import jakarta.transaction.TransactionSynchronizationRegistry;
 import jakarta.transaction.UserTransaction;
@@ -82,6 +84,51 @@ public class TestingJtaPlatformImpl extends AbstractJtaPlatform {
 		}
 		else {
 			transactionManager().commit();
+		}
+	}
+
+	public static void inNoopJtaTransaction(TransactionManager tm, Runnable action) throws Exception {
+		tm.begin();
+		action.run();
+		tm.rollback();
+	}
+
+	public static void inJtaTransaction(TransactionManager tm, Runnable action) throws Exception {
+		inJtaTransaction( tm, -1, action );
+	}
+
+	public static void inJtaTransaction(TransactionManager tm, int timeout, Runnable action) throws Exception {
+		// account for the timeout, if one was requested
+		if ( timeout > 0 ) {
+			try {
+				tm.setTransactionTimeout( timeout );
+			}
+			catch (SystemException e) {
+				throw new RuntimeException( "Unable to set requested JTA timeout", e );
+			}
+		}
+
+		try {
+			tm.begin();
+		}
+		catch (NotSupportedException | SystemException e) {
+			throw new RuntimeException( "TransactionManager#begin exception", e );
+		}
+
+		try {
+			action.run();
+
+			tm.commit();
+		}
+		catch (Exception e) {
+			try {
+				tm.rollback();
+			}
+			catch (SystemException ex) {
+				throw new RuntimeException( ex );
+			}
+
+			throw e;
 		}
 	}
 

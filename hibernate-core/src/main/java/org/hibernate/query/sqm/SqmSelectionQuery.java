@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
@@ -35,13 +35,13 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	@Override
 	<P> SqmSelectionQuery<R> setParameter(String name, P value, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setParameter(String name, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setParameter(String name, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
@@ -53,13 +53,13 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	@Override
 	<P> SqmSelectionQuery<R> setParameter(int position, P value, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setParameter(int position, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setParameter(int position, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
@@ -74,10 +74,10 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	@Override
 	<T> SqmSelectionQuery<R> setParameter(Parameter<T> param, T value);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override

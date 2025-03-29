@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.boot.internal;
@@ -18,6 +18,7 @@ import org.hibernate.envers.event.spi.EnversPostUpdateEventListenerImpl;
 import org.hibernate.envers.event.spi.EnversPreCollectionRemoveEventListenerImpl;
 import org.hibernate.envers.event.spi.EnversPreCollectionUpdateEventListenerImpl;
 import org.hibernate.envers.event.spi.EnversPreUpdateEventListenerImpl;
+import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
@@ -117,6 +118,6 @@ public class EnversIntegrator implements Integrator {
 
 	@Override
 	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
-		// nothing to do
+		ReflectionTools.reset();
 	}
 }

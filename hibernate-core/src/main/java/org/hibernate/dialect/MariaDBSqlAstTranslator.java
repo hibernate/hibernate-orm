@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -151,11 +151,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected JdbcOperationQueryInsert translateInsert(InsertSelectStatement sqlAst) {
 		visitInsertStatement( sqlAst );
 
@@ -193,11 +188,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		else {
 			return null;
 		}
-	}
-
-	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		return false;
 	}
 
 	@Override
@@ -248,13 +238,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		// Intersect emulation requires nested correlation when no simple query grouping is possible
 		// and the query has an offset/fetch clause, so we have to disable the emulation in this case,
 		// because nested correlation is not supported though
-		return supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
-	}
-
-	@Override
-	protected boolean supportsNestedSubqueryCorrelation() {
-		// It seems it doesn't support it
-		return false;
+		return getDialect().supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
 	}
 
 	@Override
@@ -397,27 +381,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 			appendSql( " escape " );
 			likePredicate.getEscapeCharacter().accept( this );
 		}
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInSet() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsIntersect() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsDistinctFromPredicate() {
-		// It supports a proprietary operator
-		return true;
 	}
 
 	@Override

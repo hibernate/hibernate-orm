@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -17,6 +17,7 @@ import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.AccessTypeInformation;
 import org.hibernate.processor.util.Constants;
+import org.hibernate.processor.util.TypeUtils;
 import org.hibernate.processor.validation.ProcessorSessionFactory;
 import org.hibernate.processor.validation.Validation;
 import org.hibernate.query.criteria.JpaEntityJoin;
@@ -184,8 +185,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						jakartaDataStaticModel ) );
 	}
 
-	public static AnnotationMetaEntity create(TypeElement element, Context context) {
-		return create( element,context, false, false, false, null );
+	public static AnnotationMetaEntity create(TypeElement element, Context context, @Nullable AnnotationMetaEntity parent) {
+		return create( element,context, false, false, false, parent );
 	}
 
 	public static AnnotationMetaEntity create(
@@ -469,7 +470,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final List<MetaAttribute> components = new ArrayList<>();
 		for ( Element field : fields ) {
 			if ( hasAnnotation( field, ID ) && isPersistent( field, AccessType.FIELD ) ) {
-				final String propertyName = propertyName( this, field );
+				final String propertyName = propertyName( field );
 				if ( members.containsKey( propertyName ) ) {
 					components.add( members.get( propertyName ) );
 				}
@@ -477,7 +478,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		for ( Element method : methods ) {
 			if ( hasAnnotation( method, ID ) && isPersistent( method, AccessType.PROPERTY ) ) {
-				final String propertyName = propertyName( this, method );
+				final String propertyName = propertyName( method );
 				if ( members.containsKey( propertyName ) ) {
 					components.add( members.get( propertyName ) );
 				}
@@ -1037,7 +1038,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return;
 			}
 			for ( Element member : context.getAllMembers( assocTypeElement ) ) {
-				if ( propertyName( this, member ).contentEquals( mappedBy )
+				if ( propertyName( member ).contentEquals( mappedBy )
 						&& compatibleAccess( assocTypeElement, member ) ) {
 					validateBackRef( memberOfClass, annotation, assocTypeElement, member, annotationVal );
 					return;
@@ -1644,6 +1645,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				checkFinderParameter(entity, parameter);
 			}
 		}
+		warnAboutMissingOrder( method );
 		putMember( methodKey,
 				new CriteriaFinderMethod(
 						this, method,
@@ -1673,12 +1675,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final TypeMirror parameterType = parameterType(parameter);
 		final String typeName = parameterType.toString();
 		if ( isOrderParam( typeName ) || isRestrictionParam( typeName ) ) {
-			final TypeMirror typeArgument = getTypeArgument( parameterType, entity );
+			final TypeMirror typeArgument = getTypeArgument( parameterType );
 			if ( typeArgument == null ) {
-				missingTypeArgError( entity.getSimpleName().toString(), parameter );
+				missingTypeArgError( entity.getSimpleName().toString(), parameter, typeName );
 			}
 			else if ( !types.isSameType( typeArgument, entity.asType() ) ) {
-				wrongTypeArgError( entity.getSimpleName().toString(), parameter );
+				wrongTypeArgError( entity.getSimpleName().toString(), parameter, typeName );
 			}
 		}
 	}
@@ -1726,14 +1728,35 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private void wrongTypeArgError(String entity, VariableElement parameter) {
-		message(parameter, "mismatched type of order (should be 'Order<? super " + entity + ">')",
+	private void wrongTypeArgError(String entity, VariableElement parameter, String parameterType) {
+		message(parameter, "mismatched type of " + message(parameterType, entity),
 				Diagnostic.Kind.ERROR );
 	}
 
-	private void missingTypeArgError(String entity, VariableElement parameter) {
-		message(parameter, "missing type of order (should be 'Order<? super " + entity + ">')",
+	private void missingTypeArgError(String entity, VariableElement parameter, String parameterType) {
+		message(parameter, "missing type of " + message(parameterType, entity),
 				Diagnostic.Kind.ERROR );
+	}
+
+	private String message(String parameterType, String entity) {
+		if (parameterType.startsWith(HIB_ORDER) || parameterType.startsWith(JD_ORDER)) {
+			return "order (should be 'Order<? super " + entity + ">')";
+		}
+		else if (parameterType.startsWith(LIST + "<" + HIB_ORDER)) {
+			return "order (should be 'List<Order<? super " + entity + ">>')";
+		}
+		else if (parameterType.startsWith(HIB_RESTRICTION)) {
+			return "restriction (should be 'Restriction<? super " + entity + ">')";
+		}
+		else if (parameterType.startsWith(LIST + "<" + HIB_RESTRICTION)) {
+			return "restriction (should be 'List<Restriction<? super " + entity + ">>')";
+		}
+		else if (parameterType.startsWith(JD_SORT)) {
+			return "sort (should be 'Sort<? super " + entity + ">')";
+		}
+		else {
+			return "parameter";
+		}
 	}
 
 	private List<OrderBy> orderByList(ExecutableElement method, TypeElement returnType) {
@@ -1779,17 +1802,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return new OrderBy( path, descending, ignoreCase );
 	}
 
-	private static @Nullable TypeMirror getTypeArgument(TypeMirror parameterType, TypeElement entity) {
+	private static @Nullable TypeMirror getTypeArgument(TypeMirror parameterType) {
 		switch ( parameterType.getKind() ) {
 			case ARRAY:
 				final ArrayType arrayType = (ArrayType) parameterType;
-				return getTypeArgument( arrayType.getComponentType(), entity);
+				return getTypeArgument( arrayType.getComponentType() );
 			case DECLARED:
 				final DeclaredType type = (DeclaredType) parameterType;
 				switch ( typeName(parameterType) ) {
 					case LIST:
 						for (TypeMirror arg : type.getTypeArguments()) {
-							return getTypeArgument( arg, entity);
+							return getTypeArgument( arg );
 						}
 						return null;
 					case HIB_ORDER:
@@ -1799,9 +1822,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						for ( TypeMirror arg : type.getTypeArguments() ) {
 							switch ( arg.getKind() ) {
 								case WILDCARD:
-									final TypeMirror superBound = ((WildcardType) arg).getSuperBound();
-									// horrible hack b/c Jakarta Data is not typesafe
-									return superBound == null ? entity.asType() : superBound;
+									return ((WildcardType) arg).getSuperBound();
 								case ARRAY:
 								case DECLARED:
 								case TYPEVAR:
@@ -1891,6 +1912,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				multivalued.add( false );
 			}
 		}
+		warnAboutMissingOrder( method );
 		if ( !usingStatelessSession( sessionType[0] ) // no byNaturalId() lookup API for SS
 				&& matchesNaturalKey( entity, fieldTypes ) ) {
 			putMember( methodKey,
@@ -1936,6 +1958,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							hasAnnotation(method, NULLABLE)
 					)
 			);
+		}
+	}
+
+	private void warnAboutMissingOrder(ExecutableElement method) {
+		if ( !hasAnnotation(  method, JD_ORDER_BY, JD_ORDER_BY_LIST ) ) {
+			boolean hasPageRequest = false;
+			boolean hasSortOrOrder = false;
+			for ( VariableElement parameter : method.getParameters() ) {
+				final String parameterType = parameter.asType().toString();
+				if ( isOrderParam( parameterType ) ) {
+					hasSortOrOrder = true;
+				}
+				if ( isPageParam( parameterType ) ) {
+					hasPageRequest = true;
+				}
+			}
+			if ( hasPageRequest && !hasSortOrOrder ) {
+				context.message( method, "'PageRequest' with no 'Sort' or 'Order' and no '@OrderBy'", Diagnostic.Kind.MANDATORY_WARNING );
+			}
 		}
 	}
 
@@ -2226,7 +2267,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final AccessType accessType = getAccessType(entityType);
 		final String nextToken = tokens.nextToken();
 		for ( Element member : context.getAllMembers(entityType) ) {
-			if ( isIdRef(nextToken) && hasAnnotation( member, ID) ) {
+			if ( isIdRef(nextToken) && hasAnnotation(member, ID, EMBEDDED_ID) ) {
 				return member;
 			}
 			final Element match =
@@ -2965,7 +3006,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				// account for special @By("#id") hack in Jakarta Data
 				entity.getEnclosedElements().stream()
 						.filter(member -> hasAnnotation(member, ID))
-						.map(member -> propertyName(this, member))
+						.map(TypeUtils::propertyName)
 						.findFirst()
 						.orElse("id");
 		return method.getParameters().stream()

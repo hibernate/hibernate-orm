@@ -1,15 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
@@ -39,7 +41,6 @@ import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
-import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.stat.SessionStatistics;
 
 import jakarta.persistence.ConnectionConsumer;
@@ -212,6 +213,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public <T> T merge(T object, EntityGraph<?> loadGraph) {
+		return this.lazySession.get().merge( object, loadGraph );
+	}
+
+	@Override
 	public void persist(Object object) {
 		this.lazySession.get().persist( object );
 	}
@@ -262,7 +268,7 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options) {
+	public <E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options) {
 		return this.lazySession.get().findMultiple( entityType, ids, options );
 	}
 
@@ -414,6 +420,26 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public LobHelper getLobHelper() {
 		return this.lazySession.get().getLobHelper();
+	}
+
+	@Override
+	public Collection<?> getManagedEntities() {
+		return this.lazySession.get().getManagedEntities();
+	}
+
+	@Override
+	public Collection<?> getManagedEntities(String entityName) {
+		return this.lazySession.get().getManagedEntities( entityName );
+	}
+
+	@Override
+	public <E> Collection<E> getManagedEntities(Class<E> entityType) {
+		return this.lazySession.get().getManagedEntities( entityType );
+	}
+
+	@Override
+	public <E> Collection<E> getManagedEntities(EntityType<E> entityType) {
+		return this.lazySession.get().getManagedEntities( entityType );
 	}
 
 	@Override
@@ -674,6 +700,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
+		return this.lazySession.get().createSelectionQuery( hqlString, resultGraph );
+	}
+
+	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria) {
 		return this.lazySession.get().createSelectionQuery( criteria );
 	}
@@ -694,13 +725,8 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect) {
-		return this.lazySession.get().createMutationQuery( insertSelect );
-	}
-
-	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect) {
-		return this.lazySession.get().createMutationQuery( insertSelect );
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insert) {
+		return this.lazySession.get().createMutationQuery( insert );
 	}
 
 	@Override

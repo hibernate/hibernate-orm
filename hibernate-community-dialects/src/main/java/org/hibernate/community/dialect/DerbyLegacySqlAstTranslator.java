@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -103,11 +103,6 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
-	}
-
-	@Override
-	protected boolean supportsWithClause() {
-		return false;
 	}
 
 	@Override
@@ -284,21 +279,6 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
 	protected boolean needsRowsToSkip() {
 		return !supportsOffsetFetchClause();
 	}
@@ -315,11 +295,6 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	private boolean supportsOffsetFetchClause() {
 		// Before version 10.5 Derby didn't support OFFSET and FETCH
 		return getDialect().getVersion().isSameOrAfter( 10, 5 );
-	}
-
-	@Override
-	protected boolean supportsJoinInMutationStatementSubquery() {
-		return false;
 	}
 
 	@Override

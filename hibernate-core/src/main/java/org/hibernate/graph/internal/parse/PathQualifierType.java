@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graph.internal.parse;
 
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
 /**
@@ -14,26 +13,22 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
  */
 public enum PathQualifierType {
 
-	KEY( (attributeNode, subtypeName, sessionFactory) -> subtypeName == null
+	KEY( (attributeNode, subtypeName, entityNameResolver) -> subtypeName == null
 			? attributeNode.addKeySubgraph()
-			: attributeNode.addKeySubgraph().addTreatedSubgraph( managedType( subtypeName, sessionFactory ) )
+			: attributeNode.addKeySubgraph().addTreatedSubgraph( managedType( subtypeName, entityNameResolver ) )
 	),
 
-	VALUE( (attributeNode, subtypeName, sessionFactory) -> subtypeName == null
+	VALUE( (attributeNode, subtypeName, entityNameResolver) -> subtypeName == null
 			? attributeNode.addValueSubgraph()
-			: attributeNode.addValueSubgraph().addTreatedSubgraph( managedType( subtypeName, sessionFactory ) )
+			: attributeNode.addValueSubgraph().addTreatedSubgraph( managedType( subtypeName, entityNameResolver ) )
 	);
 
-	private static <T> ManagedDomainType<T> managedType(String subtypeName, SessionFactoryImplementor sessionFactory) {
-		final JpaMetamodel metamodel = sessionFactory.getJpaMetamodel();
-		ManagedDomainType<T> managedType = metamodel.findManagedType( subtypeName );
-		if ( managedType == null ) {
-			managedType = metamodel.getHqlEntityReference( subtypeName );
-		}
-		if ( managedType == null ) {
+	private static <T> ManagedDomainType<T> managedType(String subtypeName, EntityNameResolver entityNameResolver) {
+		final EntityDomainType<T> entityDomainType = entityNameResolver.resolveEntityName( subtypeName );
+		if ( entityDomainType == null ) {
 			throw new IllegalArgumentException( "Unknown managed type: " + subtypeName );
 		}
-		return managedType;
+		return entityDomainType;
 	}
 
 	private final SubGraphGenerator subGraphCreator;

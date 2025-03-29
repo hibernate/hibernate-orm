@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -41,8 +41,8 @@ public class FilterDefBinder {
 	private static final CoreMessageLogger LOG = messageLogger( FilterDefBinder.class );
 
 	public static void bindFilterDefs(AnnotationTarget annotatedElement, MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
-		annotatedElement.forEachAnnotationUsage( FilterDef.class, sourceModelContext, (usage) -> {
+		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		annotatedElement.forEachAnnotationUsage( FilterDef.class, modelsContext, (usage) -> {
 			bindFilterDef( usage, context );
 		} );
 	}

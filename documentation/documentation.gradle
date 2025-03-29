@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 import java.util.function.Function
 
@@ -59,7 +57,7 @@ configurations {
 
 	javadocClasspath {
 		description = 'Class files for the javadoc to be built'
-		resolutionStrategy.capabilitiesResolution.withCapability('org.junit.jupiter:junit-jupiter-params:5.7.1') { details ->
+		resolutionStrategy.capabilitiesResolution.withCapability('org.junit.jupiter:junit-jupiter-params:'+testLibs.versions.junit5.get()) { details ->
 			details.select( details.candidates.first() ).because( 'first' )
 		}
 

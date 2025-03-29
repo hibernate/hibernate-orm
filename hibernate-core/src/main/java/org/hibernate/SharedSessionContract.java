@@ -1,11 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import jakarta.persistence.EntityGraph;
 import org.hibernate.graph.RootGraph;
@@ -14,6 +16,8 @@ import org.hibernate.jdbc.Work;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.QueryProducer;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+
+import static org.hibernate.internal.TransactionManagement.manageTransaction;
 
 /**
  * Declares operations that are common between {@link Session} and {@link StatelessSession}.
@@ -261,6 +265,15 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	 * factory-level} JDBC batch size controlled by the configuration property
 	 * {@value org.hibernate.cfg.AvailableSettings#STATEMENT_BATCH_SIZE}.
 	 *
+	 * @apiNote Setting a session-level JDBC batch size for a
+	 * {@link StatelessSession} triggers a sort of write-behind behaviour
+	 * where operations are batched and executed asynchronously, undermining
+	 * the semantics of the stateless programming model. We recommend the use
+	 * of explicitly-batching operations like
+	 * {@link StatelessSession#insertMultiple insertMultiple()},
+	 * {@link StatelessSession#updateMultiple updateMultiple()}, and
+	 * {@link StatelessSession#deleteMultiple deleteMultiple()} instead.
+	 *
 	 * @param jdbcBatchSize the new session-level JDBC batch size
 	 *
 	 * @since 5.2
@@ -432,4 +445,31 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	 * The factory which created this session.
 	 */
 	SessionFactory getFactory();
+
+	/**
+	 * Perform an action within the bounds of a {@linkplain Transaction
+	 * transaction} associated with this session.
+	 *
+	 * @param action a void function which accepts the {@link Transaction}
+	 *
+	 * @since 7.0
+	 */
+	default void inTransaction(Consumer<? super Transaction> action) {
+		final Transaction transaction = beginTransaction();
+		manageTransaction( transaction, transaction, action );
+	}
+
+	/**
+	 * Obtain a value within the bounds of a {@linkplain Transaction
+	 * transaction} associated with this session.
+	 *
+	 * @param action a function which accepts the {@link Transaction} and
+	 *        returns the value
+	 *
+	 * @since 7.0
+	 */
+	default <R> R fromTransaction(Function<? super Transaction,R> action) {
+		final Transaction transaction = beginTransaction();
+		return manageTransaction( transaction, transaction, action );
+	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.function.array;
@@ -86,7 +86,7 @@ public class ArrayTrimTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 12, matchSubTypes = true, reason = "The PostgreSQL emulation for version < 14 doesn't throw an error")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 13, matchSubTypes = true, reason = "The PostgreSQL emulation for version < 14 doesn't throw an error")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "The Cockroach emulation doesn't throw an error")
 	public void testTrimOutOfRange(SessionFactoryScope scope) {
 		scope.inSession( em -> {

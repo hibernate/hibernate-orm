@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 
 /**
@@ -28,7 +26,7 @@
  * <li>It is the responsibility of the metadata binders in the package
  *     {@link org.hibernate.boot.model.internal} to process a set of
  *     annotated classes and produce fully-initialized mapping model
- *     objects. This is in itself a complicated multi-phase process,
+ *     objects. This is in itself a complicated multiphase process,
  *     since, for example, the type of an association mapping in one
  *     entity cannot be fully assigned until the target entity has
  *     been processed.

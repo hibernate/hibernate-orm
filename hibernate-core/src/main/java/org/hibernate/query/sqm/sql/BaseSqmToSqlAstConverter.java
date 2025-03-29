@@ -1,32 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -51,39 +32,7 @@ import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.AssociationKey;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.Bindable;
-import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.DiscriminatorConverter;
-import org.hibernate.metamodel.mapping.DiscriminatorMapping;
-import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityAssociationMapping;
-import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityVersionMapping;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.metamodel.mapping.SelectableMappings;
-import org.hibernate.metamodel.mapping.SoftDeleteMapping;
-import org.hibernate.metamodel.mapping.SqlExpressible;
-import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.metamodel.mapping.ValueMapping;
-import org.hibernate.metamodel.mapping.ValuedModelPart;
+import org.hibernate.metamodel.mapping.*;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
@@ -98,6 +47,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
@@ -109,15 +59,13 @@ import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryLogging;
-import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSearchOrder;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleEntityValuedModelPart;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -127,12 +75,10 @@ import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
-import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
-import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
@@ -192,52 +138,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
-import org.hibernate.query.sqm.tree.expression.AsWrapperSqmExpression;
-import org.hibernate.query.sqm.tree.expression.Conversion;
-import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
-import org.hibernate.query.sqm.tree.expression.SqmAny;
-import org.hibernate.query.sqm.tree.expression.SqmAnyDiscriminatorValue;
-import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
-import org.hibernate.query.sqm.tree.expression.SqmByUnit;
-import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
-import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
-import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
-import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
-import org.hibernate.query.sqm.tree.expression.SqmCollation;
-import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
-import org.hibernate.query.sqm.tree.expression.SqmDistinct;
-import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
-import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmEvery;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmExpressionHelper;
-import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
-import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmFormat;
-import org.hibernate.query.sqm.tree.expression.SqmFunction;
-import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
-import org.hibernate.query.sqm.tree.expression.SqmLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralEmbeddableType;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
-import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
-import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
-import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
-import org.hibernate.query.sqm.tree.expression.SqmOver;
-import org.hibernate.query.sqm.tree.expression.SqmOverflow;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
-import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
-import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
-import org.hibernate.query.sqm.tree.expression.SqmStar;
-import org.hibernate.query.sqm.tree.expression.SqmSummarization;
-import org.hibernate.query.sqm.tree.expression.SqmToDuration;
-import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
-import org.hibernate.query.sqm.tree.expression.SqmTuple;
-import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.SqmWindow;
+import org.hibernate.query.sqm.tree.expression.*;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
@@ -289,6 +190,9 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleEntityValuedModelPart;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -316,41 +220,7 @@ import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.AliasedExpression;
-import org.hibernate.sql.ast.tree.expression.Any;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.Collation;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Distinct;
-import org.hibernate.sql.ast.tree.expression.Duration;
-import org.hibernate.sql.ast.tree.expression.DurationUnit;
-import org.hibernate.sql.ast.tree.expression.EmbeddableTypeLiteral;
-import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
-import org.hibernate.sql.ast.tree.expression.Every;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.ExtractUnit;
-import org.hibernate.sql.ast.tree.expression.Format;
-import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
-import org.hibernate.sql.ast.tree.expression.Over;
-import org.hibernate.sql.ast.tree.expression.Overflow;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.expression.QueryTransformer;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
-import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
-import org.hibernate.sql.ast.tree.expression.Star;
-import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.expression.TrimSpecification;
-import org.hibernate.sql.ast.tree.expression.UnaryOperation;
-import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
+import org.hibernate.sql.ast.tree.expression.*;
 import org.hibernate.sql.ast.tree.from.CorrelatedPluralTableGroup;
 import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
 import org.hibernate.sql.ast.tree.from.EmbeddableFunctionTableGroup;
@@ -426,30 +296,46 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserVersionType;
-
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.TemporalType;
-import jakarta.persistence.metamodel.SingularAttribute;
-import jakarta.persistence.metamodel.Type;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
-import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
 import static org.hibernate.boot.model.process.internal.InferredBasicValueResolver.resolveSqlTypeIndicators;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
-import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
-import static org.hibernate.query.sqm.BinaryArithmeticOperator.MULTIPLY;
-import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.query.common.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.common.TemporalUnit.NATIVE;
 import static org.hibernate.query.common.TemporalUnit.SECOND;
+import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
+import static org.hibernate.query.sqm.BinaryArithmeticOperator.MULTIPLY;
+import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
 import static org.hibernate.query.sqm.UnaryArithmeticOperator.UNARY_MINUS;
 import static org.hibernate.query.sqm.internal.SqmMappingModelHelper.resolveExplicitTreatTarget;
 import static org.hibernate.query.sqm.internal.SqmMappingModelHelper.resolveMappingModelExpressible;
@@ -3171,8 +3057,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			for ( EntityMappingType subType : persister.getSubMappingTypes() ) {
 				entityNameUses.compute( subType.getEntityName(),
 						(s, existingUse) -> finalEntityNameUse.stronger( existingUse ) );
-				actualTableGroup.resolveTableReference( null,
-						subType.getEntityPersister().getMappedTableDetails().getTableName() );
 			}
 		}
 	}
@@ -3522,9 +3406,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
 		if ( softDeleteMapping != null ) {
-			final Predicate softDeleteRestriction = createNonSoftDeletedRestriction(
-					tableGroup.resolveTableReference( softDeleteMapping.getTableName() ),
-					softDeleteMapping
+			final Predicate softDeleteRestriction = softDeleteMapping.createNonDeletedRestriction(
+					tableGroup.resolveTableReference( softDeleteMapping.getTableName() )
 			);
 			tableGroupJoin.applyPredicate( softDeleteRestriction );
 		}
@@ -4567,11 +4450,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitFkExpression(SqmFkExpression<?> fkExpression) {
-		final SqmPath<?> lhs = fkExpression.getToOnePath().getLhs();
+		final SqmPath<?> toOnePath = fkExpression.getLhs();
+		final SqmPath<?> lhs = toOnePath.getLhs();
 		prepareReusablePath( lhs, () -> null );
 		final TableGroup tableGroup = getFromClauseIndex().findTableGroup( lhs.getNavigablePath() );
 		final ModelPart subPart = tableGroup.getModelPart()
-				.findSubPart( fkExpression.getToOnePath().getModel().getPathName(), null );
+				.findSubPart( toOnePath.getReferencedPathSource().getPathName(), null );
 		assert subPart instanceof ToOneAttributeMapping;
 
 		final ToOneAttributeMapping toOneMapping = (ToOneAttributeMapping) subPart;
@@ -7137,6 +7021,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			inferrableTypeAccessStack.push( () -> fixtureType );
 			final Expression checkValue = (Expression) whenFragment.getCheckValue().accept( this );
 			inferrableTypeAccessStack.pop();
+			handleTypeInCaseExpression( fixture, checkValue );
+
 			final MappingModelExpressible<?> alreadyKnown = resolved;
 			inferrableTypeAccessStack.push(
 					() -> alreadyKnown == null && inferenceSupplier != null ? inferenceSupplier.get() : alreadyKnown
@@ -7170,6 +7056,40 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				whenFragments,
 				otherwise
 		);
+	}
+
+	private void handleTypeInCaseExpression(Expression fixture, Expression checkValue) {
+		if ( fixture instanceof DiscriminatorPathInterpretation<?> typeExpression ) {
+			final TableGroup tableGroup = getFromClauseIndex().getTableGroup( typeExpression.getNavigablePath().getParent() );
+			final MappingType partMappingType = tableGroup.getModelPart().getPartMappingType();
+			if ( !(partMappingType instanceof EntityMappingType entityMappingType) ) {
+				return;
+			}
+			if ( entityMappingType.getDiscriminatorMapping().hasPhysicalColumn() ) {
+				// If the entity type has a physical type column we only need to register an expression
+				// usage for the root type to prevent pruning the table where the discriminator is found
+				registerEntityNameUsage(
+						tableGroup,
+						EntityNameUse.EXPRESSION,
+						entityMappingType.getRootEntityDescriptor().getEntityName()
+				);
+			}
+			else if ( checkValue instanceof EntityTypeLiteral typeLiteral ) {
+				// Register an expression type usage for the literal subtype to prevent pruning its table group
+				registerEntityNameUsage(
+						tableGroup,
+						EntityNameUse.EXPRESSION,
+						typeLiteral.getEntityTypeDescriptor().getEntityName()
+				);
+			}
+			else {
+				// We have to assume all types are possible and can't do optimizations
+				registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION, entityMappingType.getEntityName() );
+				for ( EntityMappingType subMappingType : entityMappingType.getSubMappingTypes() ) {
+					registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION, subMappingType.getEntityName() );
+				}
+			}
+		}
 	}
 
 	@Override
@@ -8337,6 +8257,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			joined = true;
 			alias = fetchedJoin.getExplicitAlias();
 			explicitFetch = true;
+
+			if ( entityGraphTraversalState != null ) {
+				// Still do traverse the entity graph even if we encounter a fetch join
+				traversalResult = entityGraphTraversalState.traverse(
+						fetchParent,
+						fetchable,
+						isKeyFetchable
+				);
+			}
 		}
 		else {
 			fetchablePath = resolvedNavigablePath;

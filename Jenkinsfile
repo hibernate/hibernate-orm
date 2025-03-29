@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 
 import groovy.transform.Field
@@ -240,7 +238,7 @@ void ciBuild(buildEnv, String args) {
 
 		// On untrusted nodes, we use the same access key as for PRs:
 		// it has limited access, essentially it can only push build scans.
-		def develocityCredentialsId = buildEnv.node ? 'ge.hibernate.org-access-key-pr' : 'ge.hibernate.org-access-key'
+		def develocityCredentialsId = buildEnv.node ? 'develocity.commonhaus.dev-access-key-pr' : 'develocity.commonhaus.dev-access-key'
 
 		withCredentials([string(credentialsId: develocityCredentialsId,
 				variable: 'DEVELOCITY_ACCESS_KEY')]) {
@@ -255,7 +253,7 @@ void ciBuild(buildEnv, String args) {
 		tryFinally({
 			sh "./ci/build.sh $args"
 		}, { // Finally
-			withCredentials([string(credentialsId: 'ge.hibernate.org-access-key-pr',
+			withCredentials([string(credentialsId: 'develocity.commonhaus.dev-access-key-pr',
 					variable: 'DEVELOCITY_ACCESS_KEY')]) {
 				withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
 					// Don't fail a build if publishing fails

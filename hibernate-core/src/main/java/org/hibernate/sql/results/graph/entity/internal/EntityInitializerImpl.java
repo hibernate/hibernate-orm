@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.entity.internal;
@@ -131,6 +131,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	private final @Nullable DomainResultAssembler<Object> rowIdAssembler;
 
 	private final DomainResultAssembler<?>[][] assemblers;
+	private final @Nullable Initializer<?>[] allInitializers;
 	private final @Nullable Initializer<?>[][] subInitializers;
 	private final @Nullable Initializer<?>[][] subInitializersForResolveFromInitialized;
 	private final @Nullable Initializer<?>[][] collectionContainingSubInitializers;
@@ -283,8 +284,10 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				? rowIdResult.createResultAssembler( this, creationState )
 				: null;
 
+		final int fetchableCount = entityDescriptor.getNumberOfFetchables();
 		final Collection<EntityMappingType> subMappingTypes = rootEntityDescriptor.getSubMappingTypes();
 		final DomainResultAssembler<?>[][] assemblers = new DomainResultAssembler[subMappingTypes.size() + 1][];
+		final Initializer<?>[] allInitializers = new Initializer<?>[fetchableCount];
 		final Initializer<?>[][] subInitializers = new Initializer<?>[subMappingTypes.size() + 1][];
 		final Initializer<?>[][] eagerSubInitializers = new Initializer<?>[subMappingTypes.size() + 1][];
 		final Initializer<?>[][] collectionContainingSubInitializers = new Initializer<?>[subMappingTypes.size() + 1][];
@@ -304,8 +307,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		}
 
 		boolean hasLazySubInitializers = false;
-		final int size = entityDescriptor.getNumberOfFetchables();
-		for ( int i = 0; i < size; i++ ) {
+		for ( int i = 0; i < fetchableCount; i++ ) {
 			final AttributeMapping attributeMapping = entityDescriptor.getFetchable( i ).asAttributeMapping();
 			final Fetch fetch = resultDescriptor.findFetch( attributeMapping );
 			final DomainResultAssembler<?> stateAssembler = fetch == null
@@ -318,12 +320,13 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 
 			final Initializer<?> subInitializer = stateAssembler.getInitializer();
 			if ( subInitializer != null ) {
+				allInitializers[i] = subInitializer;
 				if ( subInitializers[subclassId] == null ) {
-					subInitializers[subclassId] = new Initializer<?>[size];
-					eagerSubInitializers[subclassId] = new Initializer<?>[size];
-					collectionContainingSubInitializers[subclassId] = new Initializer<?>[size];
-					lazySets[subclassId] = new BitSet( size );
-					maybeLazySets[subclassId] = new BitSet( size );
+					subInitializers[subclassId] = new Initializer<?>[fetchableCount];
+					eagerSubInitializers[subclassId] = new Initializer<?>[fetchableCount];
+					collectionContainingSubInitializers[subclassId] = new Initializer<?>[fetchableCount];
+					lazySets[subclassId] = new BitSet( fetchableCount );
+					maybeLazySets[subclassId] = new BitSet( fetchableCount );
 				}
 				subInitializers[subclassId][stateArrayPosition] = subInitializer;
 				if ( subInitializer.isEager() ) {
@@ -358,11 +361,11 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 						updatableAttributeMutabilityPlans[subclassId][stateArrayPosition];
 				if ( subInitializer != null ) {
 					if ( subInitializers[subMappingType.getSubclassId()] == null ) {
-						subInitializers[subMappingType.getSubclassId()] = new Initializer<?>[size];
-						eagerSubInitializers[subMappingType.getSubclassId()] = new Initializer<?>[size];
-						collectionContainingSubInitializers[subMappingType.getSubclassId()] = new Initializer<?>[size];
-						lazySets[subMappingType.getSubclassId()] = new BitSet(size);
-						maybeLazySets[subMappingType.getSubclassId()] = new BitSet(size);
+						subInitializers[subMappingType.getSubclassId()] = new Initializer<?>[fetchableCount];
+						eagerSubInitializers[subMappingType.getSubclassId()] = new Initializer<?>[fetchableCount];
+						collectionContainingSubInitializers[subMappingType.getSubclassId()] = new Initializer<?>[fetchableCount];
+						lazySets[subMappingType.getSubclassId()] = new BitSet(fetchableCount);
+						maybeLazySets[subMappingType.getSubclassId()] = new BitSet(fetchableCount);
 					}
 					subInitializers[subMappingType.getSubclassId()][stateArrayPosition] = subInitializer;
 					eagerSubInitializers[subMappingType.getSubclassId()][stateArrayPosition] =
@@ -422,6 +425,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		}
 
 		this.assemblers = assemblers;
+		this.allInitializers = allInitializers;
 		this.subInitializers = subInitializers;
 		this.subInitializersForResolveFromInitialized =
 				rootEntityDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
@@ -928,10 +932,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			// Entity is most probably initialized
 			data.entityInstanceForNotify = instance;
 			data.concreteDescriptor = session.getEntityPersister( null, instance );
-			resolveEntityKey(
-					data,
-					data.concreteDescriptor.getIdentifier( instance, session )
-			);
+			resolveEntityKey( data, data.concreteDescriptor.getIdentifier( instance, session ) );
 			data.entityHolder = persistenceContext.getEntityHolder( data.entityKey );
 			if ( data.entityHolder == null ) {
 				// Entity was most probably removed in the same session without setting this association to null.
@@ -946,7 +947,8 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			}
 			if ( data.concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
 					&& isPersistentAttributeInterceptable( data.entityInstanceForNotify )
-					&& getAttributeInterceptor( data.entityInstanceForNotify ) instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor
+					&& getAttributeInterceptor( data.entityInstanceForNotify )
+						instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor
 					&& !enhancementInterceptor.isInitialized() ) {
 				data.setState( State.RESOLVED );
 			}
@@ -1029,14 +1031,14 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			}
 			resolveEntityKey( data, id );
 		}
-		final PersistenceContext persistenceContext = rowProcessingState.getSession()
-				.getPersistenceContextInternal();
-		data.entityHolder = persistenceContext.claimEntityHolderIfPossible(
-				data.entityKey,
-				null,
-				rowProcessingState.getJdbcValuesSourceProcessingState(),
-				this
-		);
+		data.entityHolder =
+				rowProcessingState.getSession().getPersistenceContextInternal()
+						.claimEntityHolderIfPossible(
+								data.entityKey,
+								null,
+								rowProcessingState.getJdbcValuesSourceProcessingState(),
+								this
+						);
 
 		if ( useEmbeddedIdentifierInstanceAsEntity( data ) ) {
 			data.setInstance( data.entityInstanceForNotify = rowProcessingState.getEntityId() );
@@ -1074,8 +1076,9 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 
 	protected void resolveEntityInstance1(EntityInitializerData data) {
 		final Object proxy = data.entityHolder.getProxy();
-		final boolean unwrapProxy = proxy != null && referencedModelPart instanceof ToOneAttributeMapping
-				&& ( (ToOneAttributeMapping) referencedModelPart ).isUnwrapProxy()
+		final boolean unwrapProxy = proxy != null
+				&& referencedModelPart instanceof ToOneAttributeMapping toOneAttributeMapping
+				&& toOneAttributeMapping.isUnwrapProxy()
 				&& getConcreteDescriptor( data ).getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 		final Object entityFromExecutionContext;
 		if ( !unwrapProxy && isProxyInstance( proxy ) ) {
@@ -1261,10 +1264,8 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	}
 
 	protected Object instantiateEntity(EntityInitializerData data) {
-		return data.getRowProcessingState().getSession().instantiate(
-				data.concreteDescriptor,
-				data.entityKey.getIdentifier()
-		);
+		return data.getRowProcessingState().getSession()
+				.instantiate( data.concreteDescriptor, data.entityKey.getIdentifier() );
 	}
 
 	private Object resolveToOptionalInstance(EntityInitializerData data) {
@@ -1272,7 +1273,9 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 			// this isEntityReturn bit is just for entity loaders, not hql/criteria
 			final JdbcValuesSourceProcessingOptions processingOptions =
 					data.getRowProcessingState().getJdbcValuesSourceProcessingState().getProcessingOptions();
-			return matchesOptionalInstance( data, processingOptions ) ? processingOptions.getEffectiveOptionalObject() : null;
+			return matchesOptionalInstance( data, processingOptions )
+					? processingOptions.getEffectiveOptionalObject()
+					: null;
 		}
 		else {
 			return null;
@@ -1285,8 +1288,8 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		final Object optionalEntityInstance = processingOptions.getEffectiveOptionalObject();
 		final Object requestedEntityId = processingOptions.getEffectiveOptionalId();
 		return requestedEntityId != null
-				&& optionalEntityInstance != null
-				&& areKeysEqual( requestedEntityId, data.entityKey.getIdentifier() );
+			&& optionalEntityInstance != null
+			&& areKeysEqual( requestedEntityId, data.entityKey.getIdentifier() );
 	}
 
 	private Object resolveInstanceFromCache(EntityInitializerData data) {
@@ -1780,11 +1783,9 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		}
 		final EntityInitializerData entityInitializerData = (EntityInitializerData) data;
 		if ( entityInitializerData.concreteDescriptor == null ) {
-			for ( Initializer<?>[] initializers : subInitializers ) {
-				for ( Initializer<?> initializer : initializers ) {
-					if ( initializer != null ) {
-						consumer.accept( initializer, rowProcessingState );
-					}
+			for ( Initializer<?> initializer : allInitializers ) {
+				if ( initializer != null ) {
+					consumer.accept( initializer, rowProcessingState );
 				}
 			}
 		}

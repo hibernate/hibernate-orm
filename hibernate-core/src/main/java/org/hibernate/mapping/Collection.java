@@ -1,20 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.function.Supplier;
-
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheLayout;
+import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -29,13 +22,21 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CustomCollectionType;
-import org.hibernate.type.Type;
 import org.hibernate.type.MappingContext;
+import org.hibernate.type.Type;
 import org.hibernate.usertype.UserCollectionType;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.function.Supplier;
+
 import static java.util.Collections.emptyList;
-import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.expectationConstructor;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 import static org.hibernate.mapping.MappingHelper.classForName;
 import static org.hibernate.mapping.MappingHelper.createUserTypeBean;
 
@@ -106,6 +107,7 @@ public abstract sealed class Collection
 	private ExecuteUpdateResultCheckStyle deleteAllCheckStyle;
 
 	private Column softDeleteColumn;
+	private SoftDeleteType softDeleteStrategy;
 
 	private String loaderName;
 
@@ -842,8 +844,14 @@ public abstract sealed class Collection
 	}
 
 	@Override
-	public void enableSoftDelete(Column indicatorColumn) {
+	public void enableSoftDelete(Column indicatorColumn, SoftDeleteType strategy) {
 		this.softDeleteColumn = indicatorColumn;
+		this.softDeleteStrategy = strategy;
+	}
+
+	@Override
+	public SoftDeleteType getSoftDeleteStrategy() {
+		return softDeleteStrategy;
 	}
 
 	@Override

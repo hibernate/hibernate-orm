@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -128,22 +128,6 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		// Oracle has some limitations, see ORA-32034, so we just report false here for simplicity
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRecursiveSearchClause() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsRecursiveCycleClause() {
-		return true;
-	}
-
-	@Override
 	public void visitSqlSelection(SqlSelection sqlSelection) {
 		if ( getCurrentCteStatement() != null ) {
 			if ( getCurrentCteStatement().getMaterialization() == CteMaterialization.MATERIALIZED ) {
@@ -196,12 +180,6 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		// On Oracle 11 where there is no lateral support,
 		// make sure we don't use intersect if the query has an offset/fetch clause
 		return !queryPart.hasOffsetOrFetchClause();
-	}
-
-	@Override
-	protected boolean supportsNestedSubqueryCorrelation() {
-		// It seems it doesn't support it, at least on version 11
-		return false;
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
@@ -684,31 +662,6 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		else {
 			expression.accept( this );
 		}
-	}
-
-	@Override
-	protected boolean supportsDuplicateSelectItemsInQueryGroup() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return getDialect().getVersion().isSameOrAfter( 8, 2 );
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInSubQuery() {
-		return getDialect().getVersion().isSameOrAfter( 9 );
 	}
 
 	private boolean supportsOffsetFetchClause() {

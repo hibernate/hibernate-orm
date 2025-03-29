@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
@@ -49,6 +50,7 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	private Property declaredIdentifierProperty;
 	private Property declaredVersion;
 	private Column softDeleteColumn;
+	private SoftDeleteType softDeleteStrategy;
 
 	public RootClass(MetadataBuildingContext buildingContext) {
 		super( buildingContext );
@@ -209,7 +211,7 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	/**
 	 * @deprecated No longer supported
 	 */
-	@Deprecated
+	@Deprecated(since = "7", forRemoval = true)
 	public void setExplicitPolymorphism(boolean explicitPolymorphism) {
 	}
 
@@ -395,13 +397,19 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	}
 
 	@Override
-	public void enableSoftDelete(Column indicatorColumn) {
+	public void enableSoftDelete(Column indicatorColumn, SoftDeleteType strategy) {
 		this.softDeleteColumn = indicatorColumn;
+		this.softDeleteStrategy = strategy;
 	}
 
 	@Override
 	public Column getSoftDeleteColumn() {
 		return softDeleteColumn;
+	}
+
+	@Override
+	public SoftDeleteType getSoftDeleteStrategy() {
+		return softDeleteStrategy;
 	}
 
 	@Override

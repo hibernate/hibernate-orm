@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spatial.dialect.oracle;
@@ -129,7 +129,7 @@ public class OracleSDOFunctionDescriptors implements KeyedSqmFunctionDescriptors
 
 		map.put(
 				CommonSpatialFunction.ST_OVERLAPS.getKey(),
-				new SDORelateFunction( List.of( "CONTAINS" ), typeRegistry )
+				new SDORelateFunction( List.of( "OVERLAPBDYDISJOINT", "OVERLAPBDYINTERSECT" ), typeRegistry )
 		);
 
 		map.put(
@@ -147,12 +147,12 @@ public class OracleSDOFunctionDescriptors implements KeyedSqmFunctionDescriptors
 
 		map.put(
 				CommonSpatialFunction.ST_INTERSECTS.getKey(),
-				new SDORelateFunction( List.of( "OVERLAPBDYDISJOINT", "OVERLAPBDYINTERSECT" ), typeRegistry )
+				new SDORelateFunction( List.of( "ANYINTERACT" ), typeRegistry )
 		);
 
 		map.put(
 				CommonSpatialFunction.ST_CONTAINS.getKey(),
-				new SDORelateFunction( List.of( "CONTAINS" ), typeRegistry )
+				new SDORelateFunction( List.of( "CONTAINS", "COVERS" ), typeRegistry )
 		);
 
 		map.put(
@@ -169,7 +169,7 @@ public class OracleSDOFunctionDescriptors implements KeyedSqmFunctionDescriptors
 
 		map.put(
 				CommonSpatialFunction.ST_WITHIN.getKey(),
-				new SDORelateFunction( List.of( "COVERS", "CONTAINS" ), typeRegistry )
+				new SDORelateFunction( List.of( "INSIDE", "COVEREDBY" ), typeRegistry )
 		);
 
 		map.put(

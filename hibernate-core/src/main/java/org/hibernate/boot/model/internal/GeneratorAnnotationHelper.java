@@ -1,18 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.annotation.Annotation;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.TableGenerator;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.IdGeneratorType;
@@ -41,8 +34,14 @@ import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
 import org.hibernate.models.spi.SourceModelContext;
 
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.TableGenerator;
+import java.lang.annotation.Annotation;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.hibernate.boot.model.internal.GeneratorBinder.beanContainer;
 import static org.hibernate.boot.model.internal.GeneratorBinder.instantiateGenerator;
@@ -66,14 +65,13 @@ public class GeneratorAnnotationHelper {
 			@Nullable Function<A,String> nameExtractor,
 			@Nullable String matchName,
 			MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext =
-				context.getMetadataCollector().getSourceModelBuildingContext();
+		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
 
 		A possibleMatch = null;
 
 		// first we look on the member
 		for ( A generatorAnnotation:
-				idMember.getRepeatedAnnotationUsages( generatorAnnotationType, sourceModelContext ) ) {
+				idMember.getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext ) ) {
 			if ( nameExtractor != null ) {
 				final String registrationName = nameExtractor.apply( generatorAnnotation );
 				if ( registrationName.isEmpty() ) {
@@ -92,7 +90,7 @@ public class GeneratorAnnotationHelper {
 
 		// next, on the entity class
 		for ( A generatorAnnotation :
-				entityType.getRepeatedAnnotationUsages( generatorAnnotationType, sourceModelContext ) ) {
+				entityType.getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext ) ) {
 			if ( nameExtractor != null ) {
 				final String registrationName = nameExtractor.apply( generatorAnnotation );
 				if ( registrationName.isEmpty() ) {
@@ -111,7 +109,7 @@ public class GeneratorAnnotationHelper {
 
 		// next, on the declaring class
 		for ( A generatorAnnotation:
-				idMember.getDeclaringType().getRepeatedAnnotationUsages( generatorAnnotationType, sourceModelContext ) ) {
+				idMember.getDeclaringType().getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext ) ) {
 			if ( nameExtractor != null ) {
 				final String registrationName = nameExtractor.apply( generatorAnnotation );
 				if ( registrationName.isEmpty() ) {
@@ -132,7 +130,7 @@ public class GeneratorAnnotationHelper {
 		final ClassDetails packageInfo = locatePackageInfoDetails( idMember.getDeclaringType(), context );
 		if ( packageInfo != null ) {
 			for ( A generatorAnnotation:
-					packageInfo.getRepeatedAnnotationUsages( generatorAnnotationType, sourceModelContext ) ) {
+					packageInfo.getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext ) ) {
 				if ( nameExtractor != null ) {
 					final String registrationName = nameExtractor.apply( generatorAnnotation );
 					if ( registrationName.isEmpty() ) {
@@ -154,7 +152,8 @@ public class GeneratorAnnotationHelper {
 	}
 
 	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, MetadataBuildingContext buildingContext) {
-		return locatePackageInfoDetails( classDetails, buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
+		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		return locatePackageInfoDetails( classDetails, modelsContext );
 	}
 
 	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, SourceModelContext modelContext) {
@@ -250,7 +249,7 @@ public class GeneratorAnnotationHelper {
 			MetadataBuildingContext buildingContext) {
 		final IdGeneratorType markerAnnotation =
 				generatorAnnotation.annotationType().getAnnotation( IdGeneratorType.class );
-		idValue.setCustomIdGeneratorCreator( (creationContext) -> {
+		idValue.setCustomIdGeneratorCreator( creationContext -> {
 			final Generator identifierGenerator =
 					instantiateGenerator( beanContainer( buildingContext ), markerAnnotation.value() );
 			prepareForUse(

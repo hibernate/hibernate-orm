@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -42,7 +42,8 @@ import static org.hibernate.generator.EventType.INSERT;
  * <ul>
  * <li>a database table has a column value populated by a database trigger,
  * <li>a mapped column has a default value defined in DDL, in which case
- *     {@code @Generated} is used in conjunction with {@link ColumnDefault},
+ *     {@code @Generated} is used in conjunction with the
+ *     {@link ColumnDefault @ColumnDefault} annotation,
  * <li>a {@linkplain #sql() SQL expression} is used to compute the value of
  *     a mapped column,
  * <li>a custom SQL {@link SQLInsert insert} or {@link SQLUpdate update}
@@ -50,7 +51,7 @@ import static org.hibernate.generator.EventType.INSERT;
  *     property of the entity, or {@linkplain #writable transforms} the
  *     value currently assigned to the annotated property, or
  * <li>there is no mapped column, and the value of the field is determined
- *     by evaluating a SQL {@link Formula}.
+ *     by evaluating a SQL {@link Formula @Formula}.
  * </ul>
  * <p>
  * On the other hand:

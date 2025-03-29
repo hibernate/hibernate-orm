@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot;
@@ -563,19 +563,6 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#STATEMENT_BATCH_SIZE
 	 */
 	SessionFactoryBuilder applyJdbcBatchSize(int size);
-
-	/**
-	 * This setting controls whether versioned entities will be included in JDBC batching.  The reason
-	 * being that some JDBC drivers have a problems returning "accurate" update counts from batch statements.
-	 * This is setting is {@code false} by default.
-	 *
-	 * @param enabled The batch size to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#BATCH_VERSIONED_DATA
-	 */
-	SessionFactoryBuilder applyJdbcBatchingForVersionedEntities(boolean enabled);
 
 	/**
 	 * Should scrollable results be supported in queries?  We ask the JDBC driver whether it

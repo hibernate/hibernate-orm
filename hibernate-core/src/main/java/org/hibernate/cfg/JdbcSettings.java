@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
@@ -235,7 +235,7 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * either:
 	 * <ul>
 	 *     <li>a short strategy name like {@code agroal}, {@code hikaricp},
-	 *         {@code c3p0}, or {@code ucp},
+	 *         {@code c3p0},
 	 *     <li>an instance of {@code ConnectionProvider},
 	 *     <li>a {@link Class} object representing a class that implements
 	 *         {@code ConnectionProvider}, or
@@ -405,21 +405,24 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	String STATEMENT_FETCH_SIZE = "hibernate.jdbc.fetch_size";
 
 	/**
-	 * Controls how Hibernate should handle scrollable results - <ul>
-	 * 	 <li>
-	 * 	     {@code true} indicates that {@linkplain java.sql.ResultSet#TYPE_SCROLL_INSENSITIVE insensitive} scrolling can be used
-	 * 	 </li>
-	 * 	 <li>
-	 * 	     {@code false} indicates that {@linkplain java.sql.ResultSet#TYPE_SCROLL_SENSITIVE sensitive} scrolling must be used
-	 * 	 </li>
+	 * Controls how Hibernate should handle scrollable results:
+	 * <ul>
+	 * <li>{@code true} indicates that {@linkplain java.sql.ResultSet#TYPE_SCROLL_INSENSITIVE insensitive}
+	 *     scrolling can be used;
+	 * <li>{@code false} indicates that {@linkplain java.sql.ResultSet#TYPE_FORWARD_ONLY forward-only}
+	 *     scrolling must be used.
 	 * </ul>
 	 *
-	 * @settingDefault {@code true} if the underlying driver supports scrollable results
+	 * @settingDefault {@code true} if the underlying driver supports scrollable results,
+	 *                 {@code false} otherwise
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyScrollableResultsSupport(boolean)
 	 * @see Query#scroll
 	 * @see ExtractedDatabaseMetaData#supportsScrollableResults()
+	 *
+	 * @deprecated It's not necessary to set this explicitly
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	String USE_SCROLLABLE_RESULTSET = "hibernate.jdbc.use_scrollable_resultset";
 
 	/**
@@ -488,6 +491,9 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * <p>
 	 * Usually, performance will be improved if this behavior is enabled, assuming
 	 * the JDBC driver supports {@code getGeneratedKeys()}.
+	 *
+	 * @settingDefault {@code true} if the underlying driver supports
+	 *                 {@code getGeneratedKeys()}, {@code false} otherwise
 	 *
 	 * @see java.sql.PreparedStatement#getGeneratedKeys
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyGetGeneratedKeysSupport(boolean)

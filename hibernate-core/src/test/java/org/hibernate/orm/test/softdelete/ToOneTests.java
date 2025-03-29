@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.softdelete;
 
-import java.sql.Statement;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -31,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = { ToOneTests.Issue.class, ToOneTests.User.class } )
 @SessionFactory(useCollectingStatementInspector = true)
 public class ToOneTests {
@@ -60,11 +60,7 @@ public class ToOneTests {
 
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.doWork( (connection) -> {
-			final Statement statement = connection.createStatement();
-			statement.execute( "delete from issues" );
-			statement.execute( "delete from users" );
-		} ) );
+		scope.dropData();
 	}
 
 	@Test
@@ -73,7 +69,7 @@ public class ToOneTests {
 		sqlInspector.clear();
 
 		scope.inTransaction( (session) -> {
-			final Issue issue1 = session.get( Issue.class, 1 );
+			final Issue issue1 = session.find( Issue.class, 1 );
 			assertThat( issue1 ).isNotNull();
 			assertThat( issue1.reporter ).isNotNull();
 			assertThat( issue1.assignee ).isNotNull();

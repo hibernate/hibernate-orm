@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.uuid;
@@ -39,7 +39,8 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 
 	public static final UuidVersion7Strategy INSTANCE = new UuidVersion7Strategy();
 
-	private static class Holder {
+	@Internal
+	public static class Holder {
 		private static final SecureRandom numberGenerator = new SecureRandom();
 
 	}
@@ -82,7 +83,7 @@ public class UuidVersion7Strategy implements UUIDGenerationStrategy, UuidValueGe
 
 	@Internal
 	public UuidVersion7Strategy() {
-		this( Instant.EPOCH, Holder.numberGenerator.nextLong( MAX_RANDOM_SEQUENCE ) );
+		this( Instant.EPOCH, Long.MIN_VALUE );
 	}
 
 	@Internal

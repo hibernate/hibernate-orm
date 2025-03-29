@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -278,6 +278,38 @@ public interface StatelessSession extends SharedSessionContract {
 
 	/**
 	 * Retrieve a record, fetching associations specified by the
+	 * given {@link EntityGraph}, which is interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}.
+	 *
+	 * @param graph The {@link EntityGraph}, interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}
+	 * @param id The id of the entity to retrieve
+	 *
+	 * @return a detached entity instance
+	 *
+	 * @since 7.0
+	 */
+	<T> T get(EntityGraph<T> graph, Object id);
+
+	/**
+	 * Retrieve a record, fetching associations specified by the
+	 * given {@link EntityGraph}, which is interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph},
+	 * and obtaining the specified lock mode.
+	 *
+	 * @param graph The {@link EntityGraph}, interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}
+	 * @param id The id of the entity to retrieve
+	 * @param lockMode The lock mode to apply to the entity
+	 *
+	 * @return a detached entity instance
+	 *
+	 * @since 7.0
+	 */
+	<T> T get(EntityGraph<T> graph, Object id, LockMode lockMode);
+
+	/**
+	 * Retrieve a record, fetching associations specified by the
 	 * given {@link EntityGraph}.
 	 *
 	 * @param graph The {@link EntityGraph}
@@ -321,7 +353,7 @@ public interface StatelessSession extends SharedSessionContract {
 	 *         null elements representing missing entities
 	 * @since 7.0
 	 */
-	<T> List<T> getMultiple(Class<T> entityClass, List<Object> ids);
+	<T> List<T> getMultiple(Class<T> entityClass, List<?> ids);
 
 	/**
 	 * Refresh the entity instance state from the database.

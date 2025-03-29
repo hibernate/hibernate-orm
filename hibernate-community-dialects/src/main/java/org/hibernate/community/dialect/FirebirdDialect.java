@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -1112,4 +1112,37 @@ public class FirebirdDialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual();
 	}
+
+	@Override
+	public boolean supportsIntersect() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsSimpleQueryGrouping() {
+		// Firebird 4 and earlier are quite strict i.e. it requires `select ... union all select * from (select ...)`
+		// rather than `select ... union all (select ...)`
+		return getVersion().isSameOrAfter( 5 );
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsNestedWithClause() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
 }

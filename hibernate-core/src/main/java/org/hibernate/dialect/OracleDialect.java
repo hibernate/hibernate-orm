@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -104,7 +104,6 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static org.hibernate.LockOptions.NO_WAIT;
 import static org.hibernate.LockOptions.SKIP_LOCKED;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
-import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
 import static org.hibernate.dialect.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.dialect.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -832,12 +831,6 @@ public class OracleDialect extends Dialect {
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
 		return TimeZoneSupport.NATIVE;
-	}
-
-	@Override
-	protected void initDefaultProperties() {
-		super.initDefaultProperties();
-		getDefaultProperties().setProperty( BATCH_VERSIONED_DATA, "true" );
 	}
 
 	@Override
@@ -1745,6 +1738,48 @@ public class OracleDialect extends Dialect {
 	@Override
 	public String getFromDualForSelectOnly() {
 		return getVersion().isSameOrAfter( 23 ) ? "" : ( " from " + getDual() );
+	}
+
+	@Override
+	public boolean supportsDuplicateSelectItemsInQueryGroup() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsNestedSubqueryCorrelation() {
+		// It seems it doesn't support it, at least on version 11
+		return false;
+	}
+
+	@Override
+	public boolean supportsRecursiveCycleClause() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRecursiveSearchClause() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsSimpleQueryGrouping() {
+		return supportsFetchClause( FetchClauseType.ROWS_ONLY );
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		// Oracle has some limitations, see ORA-32034, so we just report false here for simplicity
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
 	}
 
 }

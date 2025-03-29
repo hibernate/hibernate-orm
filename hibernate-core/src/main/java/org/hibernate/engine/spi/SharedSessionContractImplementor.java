@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
@@ -353,7 +353,10 @@ public interface SharedSessionContractImplementor
 
 	/**
 	 * Instantiate the entity class, initializing with the given identifier.
+	 *
+	 * @deprecated No longer used, replaced by {@link #instantiate(EntityPersister, Object)}
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	Object instantiate(String entityName, Object id) throws HibernateException;
 
 	/**

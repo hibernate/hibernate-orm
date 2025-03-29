@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
@@ -793,9 +793,11 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			SqmPathSource<A> joinedPathSource,
 			SqmJoinType joinType,
 			boolean fetched) {
-		final SqmAttributeJoin<T, A> compatibleFetchJoin = findCompatibleFetchJoin( this, joinedPathSource, joinType );
-		if ( compatibleFetchJoin != null ) {
-			return compatibleFetchJoin;
+		if ( fetched ) {
+			final SqmAttributeJoin<T, A> compatibleFetchJoin = findCompatibleFetchJoin( this, joinedPathSource, joinType );
+			if ( compatibleFetchJoin != null ) {
+				return compatibleFetchJoin;
+			}
 		}
 
 		final SqmAttributeJoin<T, A> sqmJoin;

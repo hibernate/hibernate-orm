@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.predicate;
@@ -35,7 +35,7 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 		this.pluralPath = pluralPath;
 		this.leftHandExpression = leftHandExpression;
 
-		final SimpleDomainType<?> simpleDomainType = pluralPath.getReferencedPathSource().getElementType();
+		final SimpleDomainType<?> simpleDomainType = pluralPath.getPluralAttribute().getElementType();
 
 		if ( !areTypesComparable( leftHandExpression.getNodeType(), simpleDomainType, nodeBuilder ) ) {
 			throw new SemanticException(

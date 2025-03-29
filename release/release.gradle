@@ -1,14 +1,13 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 import java.nio.charset.StandardCharsets
 import java.util.function.Function
 
 import groovy.json.JsonSlurper
 
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
+
 
 plugins {
     id "local.module"
@@ -121,7 +120,7 @@ def changeToReleaseVersionTask = tasks.register( "changeToReleaseVersion" ) {
     doFirst {
         def releaseVersion = ormBuildDetails.releaseDetails.releaseVersion
         logger.lifecycle( "Updating version-file to release-version : `${releaseVersion}`" )
-        updateVersionFile( releaseVersion )
+        updateVersionFile( releaseVersion.toString() )
     }
 }
 
@@ -153,13 +152,13 @@ def gitPostStepsTask = tasks.register( 'gitPostSteps' ) {
         def releaseVersion = releaseDetails.releaseVersion
         def developmentVersion = releaseDetails.developmentVersion
 
-        if ( releaseDetails.shouldCreateTag ) {
+        if ( releaseDetails.shouldCreateTag() ) {
             logger.lifecycle( "Tagging release : `${releaseDetails.tagNameToUse}`..." )
             executeGitCommand( 'tag', '-a', releaseDetails.tagNameToUse, '-m', "Release $releaseVersion.fullName" )
         }
 
         logger.lifecycle( "Updating version-file to development-version : `${developmentVersion.fullName}`" )
-        updateVersionFile( developmentVersion )
+        updateVersionFile( developmentVersion.toString() )
 
         logger.lifecycle( "Performing post-steps Git commit : `${releaseVersion}`" )
         executeGitCommand( 'add', '.' )
@@ -169,7 +168,7 @@ def gitPostStepsTask = tasks.register( 'gitPostSteps' ) {
 
 void updateVersionFile(String version) {
     logger.lifecycle( "Updating `gradle/version.properties` version to `${version}`" )
-    ormBuildDetails.versionFileAccess.get().text = "ormBuildDetails.hibernateVersion=${version}"
+    ormBuildDetails.versionFileAccess.get().text = "hibernateVersion=${version}"
 }
 
 tasks.register("releasePrepare") {
@@ -409,10 +408,18 @@ tasks.register( 'releasePerform' ) {
     dependsOn uploadDocumentationTask
     dependsOn uploadDocumentationDescriptor
 
+    doFirst {
+        if ( ormBuildDetails.releaseDetails.shouldCreateTag() ) {
+            assert project.gitRemote != null
+            assert project.gitBranch != null
+            assert project.ormBuildDetails.releaseDetails.tagNameToUse != null
+        }
+    }
+
     doLast {
-        if ( ormBuildDetails.releaseDetails.shouldCreateTag ) {
+        if ( ormBuildDetails.releaseDetails.shouldCreateTag() ) {
             logger.lifecycle( "Pushing branch and tag to remote `${project.gitRemote}`..." )
-            executeGitCommand( 'push', '--atomic', project.gitRemote, project.gitBranch, project.releaseTag )
+            executeGitCommand( 'push', '--atomic', project.gitRemote, project.gitBranch, project.ormBuildDetails.releaseDetails.tagNameToUse )
         }
         else {
             logger.lifecycle( "Pushing branch to remote `${project.gitRemote}`..." )
@@ -508,15 +515,15 @@ class ChangeLogFile {
         return releaseNotes.notes
     }
 
-    private static getVersionId(jsonReleaseNotes, String restReleaseVersion) {
-        def fixVersions = jsonReleaseNotes.issues.get( 0 ).fields.fixVersions
-
-        for ( def fixVersion : fixVersions ) {
-            if ( fixVersion.name.equals( restReleaseVersion ) ) {
-                return fixVersion.id
+    private static String getVersionId(jsonReleaseNotes, String restReleaseVersion) {
+        for ( def issue : jsonReleaseNotes.issues ) {
+            for ( def fixVersion : issue.fields.fixVersions ) {
+                if ( fixVersion.name == restReleaseVersion ) {
+                    return fixVersion.id
+                }
             }
         }
-        throw new GradleException( "Unable to determine the version id of the current release." )
+        throw new GradleException("No issues found for current release version (" + restReleaseVersion + "), aborting.")
     }
 }
 

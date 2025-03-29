@@ -1,9 +1,27 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FindOption;
+import jakarta.persistence.SynchronizationType;
+import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.graph.GraphParser;
+import org.hibernate.graph.InvalidGraphException;
+import org.hibernate.graph.RootGraph;
+import org.hibernate.graph.internal.RootGraphImpl;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.relational.SchemaManager;
+import org.hibernate.stat.Statistics;
+
+import javax.naming.Referenceable;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.List;
@@ -11,20 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import javax.naming.Referenceable;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.FindOption;
-import jakarta.persistence.SynchronizationType;
-import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.graph.RootGraph;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.relational.SchemaManager;
-import org.hibernate.stat.Statistics;
-
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManagerFactory;
 
 import static org.hibernate.internal.TransactionManagement.manageTransaction;
 
@@ -415,6 +419,20 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	RootGraph<?> findEntityGraphByName(String name);
 
 	/**
+	 *
+	 * Create an {@link EntityGraph} for the given entity type.
+	 *
+	 * @param entityType The entity type for the graph
+	 *
+	 * @see #createGraphForDynamicEntity(String)
+	 *
+	 * @since 7.0
+	 */
+	default <T> RootGraph<T> createEntityGraph(Class<T> entityType) {
+		return new RootGraphImpl<>( null, (EntityDomainType<T>) getMetamodel().entity( entityType ) );
+	}
+
+	/**
 	 * Create an {@link EntityGraph} which may be used from loading a
 	 * {@linkplain org.hibernate.metamodel.RepresentationMode#MAP dynamic}
 	 * entity with {@link Session#find(EntityGraph, Object, FindOption...)}.
@@ -432,8 +450,68 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 * @since 7.0
 	 *
 	 * @see Session#find(EntityGraph, Object, FindOption...)
+	 * @see #createEntityGraph(Class)
 	 */
 	RootGraph<Map<String,?>> createGraphForDynamicEntity(String entityName);
+
+	/**
+	 * Creates a RootGraph for the given {@code rootEntityClass} and parses the graph text into
+	 * it.
+	 *
+	 * @param rootEntityClass The entity class to use as the base of the created root-graph
+	 * @param graphText The textual representation of the graph
+	 *
+	 * @throws InvalidGraphException if the textual representation is invalid.
+	 *
+	 * @see GraphParser#parse(Class, CharSequence, SessionFactory)
+	 * @see #createEntityGraph(Class)
+	 *
+	 * @apiNote The string representation is expected to just be an attribute list.  E.g.
+	 * {@code "title, isbn, author(name, books)"}
+	 *
+	 * @since 7.0
+	 */
+	default <T> RootGraph<T> parseEntityGraph(Class<T> rootEntityClass, CharSequence graphText) {
+		return GraphParser.parse( rootEntityClass, graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
+	}
+
+	/**
+	 * Creates a RootGraph for the given {@code rootEntityName} and parses the graph text into
+	 * it.
+	 *
+	 * @param rootEntityName The name of the entity to use as the base of the created root-graph
+	 * @param graphText The textual representation of the graph
+	 *
+	 * @throws InvalidGraphException if the textual representation is invalid.
+	 *
+	 * @see GraphParser#parse(String, CharSequence, SessionFactory)
+	 * @see #createEntityGraph(Class)
+	 *
+	 * @apiNote The string representation is expected to just be an attribute list.  E.g.
+	 * {@code "title, isbn, author(name, books)"}
+	 *
+	 * @since 7.0
+	 */
+	default <T> RootGraph<T> parseEntityGraph(String rootEntityName, CharSequence graphText) {
+		return GraphParser.parse( rootEntityName, graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
+	}
+
+	/**
+	 * Creates a RootGraph based on the passed string representation.  Here, the
+	 * string representation is expected to include the root entity name.
+	 *
+	 * @param graphText The textual representation of the graph
+	 *
+	 * @throws InvalidGraphException if the textual representation is invalid.
+	 *
+	 * @apiNote The string representation is expected to an attribute list prefixed
+	 * with the name of the root entity.  E.g. {@code "Book: title, isbn, author(name, books)"}
+	 *
+	 * @since 7.0
+	 */
+	default <T> RootGraph<T> parseEntityGraph(CharSequence graphText) {
+		return GraphParser.parse( graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
+	}
 
 	/**
 	 * Obtain the set of names of all {@link org.hibernate.annotations.FilterDef

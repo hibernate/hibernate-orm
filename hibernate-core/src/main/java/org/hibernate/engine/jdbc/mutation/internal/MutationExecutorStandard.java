@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.mutation.internal;
@@ -171,8 +171,18 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 	}
 
 	//Used by Hibernate Reactive
+	protected PreparedStatementGroup getBatchedPreparedStatementGroup() {
+		return this.batch != null ? this.batch.getStatementGroup() : null;
+	}
+
+	//Used by Hibernate Reactive
 	protected PreparedStatementGroup getNonBatchedStatementGroup() {
 		return nonBatchedStatementGroup;
+	}
+
+	//Used by Hibernate Reactive
+	protected List<SelfExecutingUpdateOperation> getSelfExecutingMutations() {
+		return selfExecutingMutations;
 	}
 
 	@Override

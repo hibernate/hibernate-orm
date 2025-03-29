@@ -12,9 +12,9 @@ elif [ "$RDBMS" == "mysql" ] || [ "$RDBMS" == "mysql_8_0" ]; then
   goal="-Pdb=mysql_ci"
 elif [ "$RDBMS" == "mariadb" ] || [ "$RDBMS" == "mariadb_10_4" ]; then
   goal="-Pdb=mariadb_ci"
-elif [ "$RDBMS" == "postgresql" ] || [ "$RDBMS" == "postgresql_12" ]; then
+elif [ "$RDBMS" == "postgresql" ] || [ "$RDBMS" == "postgresql_13" ]; then
   goal="-Pdb=pgsql_ci"
-elif [ "$RDBMS" == "edb" ] || [ "$RDBMS" == "edb_12" ]; then
+elif [ "$RDBMS" == "edb" ] || [ "$RDBMS" == "edb_13" ]; then
   goal="-Pdb=edb_ci -DdbHost=localhost:5444"
 elif [ "$RDBMS" == "oracle" ]; then
   goal="-Pdb=oracle_ci"

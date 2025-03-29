@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.fetch.runtime.managed;
@@ -17,7 +17,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -107,7 +107,7 @@ public class RuntimeFetchFromManagedTest extends BaseNonConfigCoreFunctionalTest
 						final RootGraphImplementor<RootEntity> entityGraph = session.createEntityGraph( RootEntity.class );
 						entityGraph.addAttributeNode( "child" );
 
-						final QueryImplementor<RootEntity> query = session.createQuery(
+						final Query<RootEntity> query = session.createQuery(
 								"select r from RootEntity r",
 								RootEntity.class
 						);

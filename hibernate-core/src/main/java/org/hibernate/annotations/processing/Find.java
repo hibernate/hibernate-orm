@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations.processing;
@@ -169,7 +169,7 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * </ul>
  * <p>
  * Finally, a method might have a parameter of type
- * {@link org.hibernate.query.restriction.Restriction Restriction<? super E>},
+ * {@link org.hibernate.query.restriction.Restriction Restriction&lt;? super E&gt;},
  * allowing the caller to apply an arbitrary filtering criterion to
  * the query results.
  * <p>

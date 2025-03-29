@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
@@ -78,8 +78,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.logging.Logger;
-
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
@@ -107,7 +105,6 @@ import static org.hibernate.query.results.ResultSetMapping.resolveResultSetMappi
 public class ProcedureCallImpl<R>
 		extends AbstractQuery<R>
 		implements ProcedureCallImplementor<R>, ResultContext {
-	private static final Logger LOG = Logger.getLogger( ProcedureCallImpl.class );
 
 	private final String procedureName;
 
@@ -656,7 +653,6 @@ public class ProcedureCallImpl<R>
 			}
 		}
 
-		LOG.debugf( "Preparing procedure call : %s", call);
 		final String sqlString = call.getSqlString();
 		final CallableStatement statement = (CallableStatement) getSession()
 				.getJdbcCoordinator()
@@ -1207,7 +1203,7 @@ public class ProcedureCallImpl<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public ProcedureCallImplementor<R> setParameter(
 			Parameter<Calendar> parameter,
 			Calendar value,
@@ -1216,31 +1212,31 @@ public class ProcedureCallImpl<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public ProcedureCallImplementor<R> setParameter(Parameter<Date> parameter, Date value, TemporalType temporalPrecision) {
 		super.setParameter( parameter, value, temporalPrecision );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public ProcedureCallImplementor<R> setParameter(String name, Calendar value, TemporalType temporalPrecision) {
 		super.setParameter( name, value, temporalPrecision );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public ProcedureCallImplementor<R> setParameter(String name, Date value, TemporalType temporalPrecision) {
 		super.setParameter( name, value, temporalPrecision );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public ProcedureCallImplementor<R> setParameter(int position, Calendar value, TemporalType temporalPrecision) {
 		super.setParameter( position, value, temporalPrecision );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public ProcedureCallImplementor<R> setParameter(int position, Date value, TemporalType temporalPrecision) {
 		super.setParameter( position, value, temporalPrecision );
 		return this;

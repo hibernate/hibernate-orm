@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,6 +28,7 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Specialized ParameterMetadataImplementor for callable queries implementing
@@ -78,6 +80,11 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 		if ( parameters != null ) {
 			parameters.forEach( consumer );
 		}
+	}
+
+	@Override
+	public Collection<QueryParameter<?>> getParameters() {
+		return unmodifiableList( parameters );
 	}
 
 	@Override

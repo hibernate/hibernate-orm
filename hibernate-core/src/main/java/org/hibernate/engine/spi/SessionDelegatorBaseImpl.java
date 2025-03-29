@@ -1,15 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
+import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
@@ -46,7 +48,6 @@ import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
-import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
@@ -197,7 +198,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.guessEntityName( entity );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Object instantiate(String entityName, Object id) throws HibernateException {
 		return delegate.instantiate( entityName, id );
 	}
@@ -530,15 +531,9 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insert) {
 		//noinspection resource
-		return delegate().createMutationQuery( insertSelect );
-	}
-
-	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect) {
-		//noinspection resource
-		return delegate().createMutationQuery( insertSelect );
+		return delegate().createMutationQuery( insert );
 	}
 
 	@Override
@@ -546,13 +541,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createQuery( criteriaQuery );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(CriteriaUpdate updateQuery) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(CriteriaUpdate updateQuery) {
 		return queryDelegate().createQuery( updateQuery );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(CriteriaDelete deleteQuery) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(CriteriaDelete deleteQuery) {
 		return queryDelegate().createQuery( deleteQuery );
 	}
 
@@ -561,18 +556,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createQuery( typedQueryReference );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor getNamedQuery(String name) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor getNamedQuery(String name) {
 		return queryDelegate().getNamedQuery( name );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor getNamedNativeQuery(String name) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor getNamedNativeQuery(String name) {
 		return queryDelegate().getNamedNativeQuery( name );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping) {
 		return queryDelegate().getNamedNativeQuery( name, resultSetMapping );
 	}
 
@@ -592,6 +587,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
+		return queryDelegate().createSelectionQuery( hqlString, resultGraph );
+	}
+
+	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria) {
 		return queryDelegate().createSelectionQuery( criteria );
 	}
@@ -601,8 +601,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createQuery( queryString, resultType );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createNamedQuery(String name) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createNamedQuery(String name) {
 		return queryDelegate().createNamedQuery( name );
 	}
 
@@ -623,8 +623,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate().createNamedSelectionQuery( name, resultType );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor createNativeQuery(String sqlString) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor createNativeQuery(String sqlString) {
 		return queryDelegate().createNativeQuery( sqlString );
 	}
 
@@ -640,8 +640,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createNativeQuery( sqlString, resultClass, tableAlias );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
 		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName );
 	}
 
@@ -833,6 +833,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <T> T merge(T object, EntityGraph<?> loadGraph) {
+		return delegate.merge( object, loadGraph );
+	}
+
+	@Override
 	public void persist(Object object) {
 		delegate.persist( object );
 	}
@@ -963,7 +968,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options) {
+	public <E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options) {
 		return delegate.findMultiple( entityType, ids, options );
 	}
 
@@ -1115,6 +1120,26 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public LobHelper getLobHelper() {
 		return delegate.getLobHelper();
+	}
+
+	@Override
+	public Collection<?> getManagedEntities() {
+		return delegate.getManagedEntities();
+	}
+
+	@Override
+	public Collection<?> getManagedEntities(String entityName) {
+		return delegate.getManagedEntities( entityName );
+	}
+
+	@Override
+	public <E> Collection<E> getManagedEntities(Class<E> entityType) {
+		return delegate.getManagedEntities( entityType );
+	}
+
+	@Override
+	public <E> Collection<E> getManagedEntities(EntityType<E> entityType) {
+		return delegate.getManagedEntities( entityType );
 	}
 
 	@Override

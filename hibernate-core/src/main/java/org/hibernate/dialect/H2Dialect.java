@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -1081,6 +1081,49 @@ public class H2Dialect extends Dialect {
 	@Override
 	public String getDual() {
 		return "dual";
+	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		// Introduction of FILTER clause https://github.com/h2database/h2database/commit/9e6dbf3baa57000f670826ede431dc7fb4cd9d9c
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsJoinInMutationStatementSubquery() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		// Just a guess
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorDistinctFromSyntax() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		// Just a guess
+		return true;
 	}
 
 }

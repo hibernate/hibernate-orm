@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -122,7 +122,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A {@linkplain Dialect SQL dialect} for CockroachDB 21.1 and above.
+ * A {@linkplain Dialect SQL dialect} for CockroachDB 23.1 and above.
  *
  * @author Gavin King
  */
@@ -135,7 +135,7 @@ public class CockroachDialect extends Dialect {
 	// Pre-compile and reuse pattern
 	private static final Pattern CRDB_VERSION_PATTERN = Pattern.compile( "v[\\d]+(\\.[\\d]+)?(\\.[\\d]+)?" );
 
-	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 22, 2 );
+	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 23, 1 );
 
 	protected final PostgreSQLDriverKind driverKind;
 
@@ -487,7 +487,7 @@ public class CockroachDialect extends Dialect {
 		functionFactory.jsonArrayAppend_postgresql( false );
 		functionFactory.jsonArrayInsert_postgresql();
 
-		functionFactory.unnest_postgresql();
+		functionFactory.unnest_postgresql( false );
 		functionFactory.generateSeries( null, "ordinality", true );
 		functionFactory.jsonTable_cockroachdb();
 
@@ -1172,4 +1172,20 @@ public class CockroachDialect extends Dialect {
 	public boolean supportsFromClauseInUpdate() {
 		return true;
 	}
+
+	@Override
+	public boolean supportsRowConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
 }

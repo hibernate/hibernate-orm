@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.spi;
@@ -458,12 +458,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void addAdditionalWherePredicate(Predicate predicate) {
 		additionalWherePredicate = Predicate.combinePredicates( additionalWherePredicate, predicate );
-	}
-
-	@Override
-	public boolean supportsFilterClause() {
-		// By default, we report false because not many dialects support this
-		return false;
 	}
 
 	@Override
@@ -1031,17 +1025,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void visitDeleteStatementOnly(DeleteStatement statement) {
 		renderDeleteClause( statement );
-		if ( supportsJoinsInDelete() || !hasNonTrivialFromClause( statement.getFromClause() ) ) {
+		if ( dialect.supportsJoinsInDelete() || !hasNonTrivialFromClause( statement.getFromClause() ) ) {
 			visitWhereClause( statement.getRestriction() );
 		}
 		else {
 			visitWhereClause( determineWhereClauseRestrictionWithJoinEmulation( statement ) );
 		}
 		visitReturningColumns( statement.getReturningColumns() );
-	}
-
-	protected boolean supportsJoinsInDelete() {
-		return false;
 	}
 
 	protected void renderDeleteClause(DeleteStatement statement) {
@@ -1104,7 +1094,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		);
 		querySpec.applyPredicate( statement.getRestriction() );
 
-		if ( supportsJoinInMutationStatementSubquery() ) {
+		if ( dialect.supportsJoinInMutationStatementSubquery() ) {
 			for ( TableGroup root : statement.getFromClause().getRoots() ) {
 				if ( root.getPrimaryTableReference() == statement.getTargetTable() ) {
 					final TableGroup dmlTargetTableGroup = new StandardTableGroup(
@@ -2136,11 +2126,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( cteStatements.isEmpty() && cteObjects.isEmpty() ) {
 			return;
 		}
-		if ( !supportsWithClause() ) {
+		if ( !dialect.supportsWithClause() ) {
 			if ( isRecursive( cteStatements ) && cteObjects.isEmpty() ) {
 				throw new UnsupportedOperationException( "Can't emulate recursive CTEs!" );
 			}
-			// This should be unreachable, because #needsCteInlining() must return true if #supportsWithClause() returns false,
+			// This should be unreachable, because #needsCteInlining() must return true if org.hibernate.dialect.Dialect#supportsWithClause() returns false,
 			// and hence the cteStatements should either contain a recursive CTE or be empty
 			throw new IllegalStateException( "Non-recursive CTEs found that need inlining, but were collected: " + cteStatements );
 		}
@@ -2155,8 +2145,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			pushToTopLevel = false;
 		}
 		else {
-			pushToTopLevel = !supportsNestedWithClause()
-					|| !supportsWithClauseInSubquery() && isInSubquery();
+			pushToTopLevel = !dialect.supportsNestedWithClause()
+					|| !dialect.supportsWithClauseInSubquery() && isInSubquery();
 		}
 		final boolean inNestedWithClause = clauseStack.findCurrentFirst( AbstractSqlAstTranslator::matchWithClause ) != null;
 		clauseStack.push( Clause.WITH );
@@ -2330,7 +2320,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		if ( cte.isRecursive() ) {
-			if ( !supportsRecursiveSearchClause() ) {
+			if ( !dialect.supportsRecursiveSearchClause() ) {
 				if ( cte.getSearchColumn() != null ) {
 					appendSql( COMMA_SEPARATOR );
 					if ( cte.getSearchClauseKind() == CteSearchClauseKind.BREADTH_FIRST ) {
@@ -2340,14 +2330,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( cte.getSearchColumn().getColumnExpression() );
 				}
 			}
-			if ( !supportsRecursiveCycleClause() ) {
+			if ( !dialect.supportsRecursiveCycleClause() ) {
 				if ( cte.getCycleMarkColumn() != null ) {
 					appendSql( COMMA_SEPARATOR );
 					appendSql( cte.getCycleMarkColumn().getColumnExpression() );
 				}
 			}
-			if ( cte.getCycleMarkColumn() != null && !supportsRecursiveCycleClause()
-					|| cte.getCyclePathColumn() != null && !supportsRecursiveCycleUsingClause() ) {
+			if ( cte.getCycleMarkColumn() != null && !dialect.supportsRecursiveCycleClause()
+					|| cte.getCyclePathColumn() != null && !dialect.supportsRecursiveCycleUsingClause() ) {
 				appendSql( COMMA_SEPARATOR );
 				appendSql( determineCyclePathColumnName( cte ) );
 			}
@@ -2425,31 +2415,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	/**
-	 * Whether the SQL with clause is supported.
-	 */
-	protected boolean supportsWithClause() {
-		return true;
-	}
-
-	/**
-	 * Whether the SQL with clause is supported within a CTE.
-	 */
-	protected boolean supportsNestedWithClause() {
-		return supportsWithClauseInSubquery();
-	}
-
-	/**
-	 * Whether the SQL with clause is supported within a subquery.
-	 */
-	protected boolean supportsWithClauseInSubquery() {
-		return supportsWithClause();
-	}
-
-	/**
 	 * Whether CTEs should be inlined rather than rendered as CTEs.
 	 */
 	protected boolean needsCteInlining() {
-		return !supportsWithClause() || !supportsWithClauseInSubquery() && isInSubquery();
+		return !dialect.supportsWithClause() || !dialect.supportsWithClauseInSubquery() && isInSubquery();
 	}
 
 	/**
@@ -2457,10 +2426,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 */
 	protected boolean shouldInlineCte(TableGroup tableGroup) {
 		if ( tableGroup instanceof CteTableGroup ) {
-			if (!supportsWithClause()) {
+			if (!dialect.supportsWithClause()) {
 				return true;
 			}
-			if ( !supportsWithClauseInSubquery() && isInSubquery() ) {
+			if ( !dialect.supportsWithClauseInSubquery() && isInSubquery() ) {
 				final String cteName = tableGroup.getPrimaryTableReference().getTableId();
 				final CteContainer cteOwner = statementStack.findCurrentFirstWithParameter( cteName, AbstractSqlAstTranslator::matchCteContainerByStatement );
 				// If the CTE is owned by the root statement, it will be rendered as CTE, so we can refer to it
@@ -2478,47 +2447,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	/**
-	 * Whether the SQL search clause is supported, which can be used for recursive CTEs.
-	 */
-	protected boolean supportsRecursiveSearchClause() {
-		return false;
-	}
-
-	/**
-	 * Whether the SQL cycle clause is supported, which can be used for recursive CTEs.
-	 */
-	protected boolean supportsRecursiveCycleClause() {
-		return false;
-	}
-
-	/**
-	 * Whether the SQL cycle clause supports the using sub-clause.
-	 */
-	protected boolean supportsRecursiveCycleUsingClause() {
-		return false;
-	}
-
-	/**
 	 * Whether the recursive search and cycle clause emulations based on the array and row constructor is supported.
 	 */
 	protected boolean supportsRecursiveClauseArrayAndRowEmulation() {
-		return ( supportsRowConstructor() || currentCteStatement.getSearchClauseKind() == CteSearchClauseKind.DEPTH_FIRST
+		return ( dialect.supportsRowConstructor() || currentCteStatement.getSearchClauseKind() == CteSearchClauseKind.DEPTH_FIRST
 				&& currentCteStatement.getSearchBySpecifications().size() == 1 )
-				&& supportsArrayConstructor();
-	}
-
-	/**
-	 * Whether the SQL row constructor is supported.
-	 */
-	protected boolean supportsRowConstructor() {
-		return false;
-	}
-
-	/**
-	 * Whether the SQL array constructor is supported.
-	 */
-	protected boolean supportsArrayConstructor() {
-		return false;
+				&& dialect.supportsArrayConstructor();
 	}
 
 	protected void renderMaterializationHint(CteMaterialization materialization) {
@@ -2526,7 +2460,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderSearchClause(CteStatement cte) {
-		if ( supportsRecursiveSearchClause() ) {
+		if ( dialect.supportsRecursiveSearchClause() ) {
 			renderStandardSearchClause( cte );
 		}
 	}
@@ -2577,7 +2511,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderCycleClause(CteStatement cte) {
-		if ( supportsRecursiveCycleClause() ) {
+		if ( dialect.supportsRecursiveCycleClause() ) {
 			renderStandardCycleClause( cte );
 		}
 	}
@@ -2598,7 +2532,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			cte.getCycleValue().accept( this );
 			appendSql( " default " );
 			cte.getNoCycleValue().accept( this );
-			if ( cte.getCyclePathColumn() != null && supportsRecursiveCycleUsingClause() ) {
+			if ( cte.getCyclePathColumn() != null && dialect.supportsRecursiveCycleUsingClause() ) {
 				appendSql( " using " );
 				appendSql( cte.getCyclePathColumn().getColumnExpression() );
 			}
@@ -2607,7 +2541,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void renderRecursiveCteVirtualSelections(SelectClause selectClause) {
 		if ( currentCteStatement != null && currentCteStatement.isRecursive() ) {
-			if ( currentCteStatement.getSearchColumn() != null && !supportsRecursiveSearchClause() ) {
+			if ( currentCteStatement.getSearchColumn() != null && !dialect.supportsRecursiveSearchClause() ) {
 				appendSql( COMMA_SEPARATOR );
 				if ( supportsRecursiveClauseArrayAndRowEmulation() ) {
 					emulateSearchClauseOrderWithRowAndArray( selectClause );
@@ -2616,7 +2550,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					emulateSearchClauseOrderWithString( selectClause );
 				}
 			}
-			if ( !supportsRecursiveCycleClause() || currentCteStatement.getCyclePathColumn() != null && !supportsRecursiveCycleUsingClause() ) {
+			if ( !dialect.supportsRecursiveCycleClause() || currentCteStatement.getCyclePathColumn() != null && !dialect.supportsRecursiveCycleUsingClause() ) {
 				if ( currentCteStatement.getCycleMarkColumn() != null ) {
 					appendSql( COMMA_SEPARATOR );
 					if ( supportsRecursiveClauseArrayAndRowEmulation() ) {
@@ -2625,7 +2559,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					else {
 						emulateCycleClauseWithString( selectClause );
 					}
-					if ( !supportsRecursiveCycleClause() && isInRecursiveQueryPart() ) {
+					if ( !dialect.supportsRecursiveCycleClause() && isInRecursiveQueryPart() ) {
 						final ColumnReference cycleColumnReference = new ColumnReference(
 								findTableReferenceByTableId( currentCteStatement.getCteTable().getTableExpression() ),
 								currentCteStatement.getCycleMarkColumn().getColumnExpression(),
@@ -3005,7 +2939,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					stringType
 			);
 
-			if ( !supportsRecursiveCycleClause() ) {
+			if ( !dialect.supportsRecursiveCycleClause() ) {
 				// Cycle mark
 				appendSql( "case when " );
 				final String arrayContainsFunction = getArrayContainsFunction();
@@ -3072,7 +3006,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( ']' );
 		}
 		else {
-			if ( !supportsRecursiveCycleClause() ) {
+			if ( !dialect.supportsRecursiveCycleClause() ) {
 				// Cycle mark
 				currentCteStatement.getNoCycleValue().accept( this );
 				appendSql( COMMA_SEPARATOR );
@@ -3173,7 +3107,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			arguments.add( nullSeparator );
 
-			if ( !supportsRecursiveCycleClause() ) {
+			if ( !dialect.supportsRecursiveCycleClause() ) {
 				// Cycle mark
 				appendSql( "case when " );
 				renderStringContainsExactlyPredicate(
@@ -3200,7 +3134,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			concat.render( this, arguments, stringType, this );
 		}
 		else {
-			if ( !supportsRecursiveCycleClause() ) {
+			if ( !dialect.supportsRecursiveCycleClause() ) {
 				// Cycle mark
 				currentCteStatement.getNoCycleValue().accept( this );
 				appendSql( COMMA_SEPARATOR );
@@ -3540,7 +3474,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			// order by and offset fetch clause, so we must do row counting on the query group level
 			final boolean needsRowNumberingWrapper = queryPartForRowNumbering == queryGroup
 					|| additionalWherePredicate != null && !additionalWherePredicate.isEmpty();
-			final boolean needsQueryGroupWrapper = currentQueryPart instanceof QueryGroup && !supportsSimpleQueryGrouping();
+			final boolean needsQueryGroupWrapper = currentQueryPart instanceof QueryGroup && !dialect.supportsSimpleQueryGrouping();
 			final boolean needsParenthesis;
 			if ( currentQueryPart instanceof QueryGroup ) {
 				// When this is query group within a query group, we can only do simple grouping if that is supported,
@@ -3653,7 +3587,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					queryGroupAlias = "";
 					// If the parent is a query group with a fetch clause we must use a select wrapper,
 					// or if the database does not support simple query grouping, we must use a select wrapper
-					if ( ( !supportsSimpleQueryGrouping() || currentQueryPart.hasOffsetOrFetchClause() )
+					if ( ( !dialect.supportsSimpleQueryGrouping() || currentQueryPart.hasOffsetOrFetchClause() )
 							// We can skip it though if this query spec is being row numbered,
 							// because then we already have a wrapper
 							&& queryPartForRowNumbering != querySpec ) {
@@ -3665,7 +3599,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						// We need to assign aliases when we render a query spec as subquery to avoid clashing aliases
 						this.needsSelectAliases = this.needsSelectAliases || hasDuplicateSelectItems( querySpec );
 					}
-					else if ( !supportsDuplicateSelectItemsInQueryGroup() ) {
+					else if ( !dialect.supportsDuplicateSelectItemsInQueryGroup() ) {
 						this.needsSelectAliases = this.needsSelectAliases || hasDuplicateSelectItems( querySpec );
 					}
 				}
@@ -3712,14 +3646,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		return false;
-	}
-
-	protected boolean supportsSimpleQueryGrouping() {
-		return true;
-	}
-
-	protected boolean supportsDuplicateSelectItemsInQueryGroup() {
-		return true;
 	}
 
 	protected final void visitWhereClause(Predicate whereClauseRestrictions) {
@@ -4000,7 +3926,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			case DISTINCT_FROM:
 				appendSql( "not " );
 			case NOT_DISTINCT_FROM: {
-				if ( supportsIntersect() ) {
+				if ( dialect.supportsIntersect() ) {
 					appendSql( "exists (select " );
 					renderCommaSeparatedSelectExpression( lhsExpressions );
 					appendSql( getFromDualForSelectOnly() );
@@ -4096,14 +4022,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( isCurrentWhereClause ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
-	}
-
-	protected boolean supportsIntersect() {
-		return true;
-	}
-
-	protected boolean supportsNestedSubqueryCorrelation() {
-		return true;
 	}
 
 	protected void renderExpressionsAsSubquery(final List<? extends Expression> expressions) {
@@ -4360,7 +4278,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		final boolean renderNullPrecedence = nullPrecedence != null
 				&& !NullPrecedenceHelper.isDefaultOrdering( nullPrecedence, sortOrder, dialect.getNullOrdering() );
-		final boolean supportsNullPrecedence = renderNullPrecedence && supportsNullPrecedence();
+		final boolean supportsNullPrecedence = renderNullPrecedence && dialect.supportsNullPrecedence();
 		if ( renderNullPrecedence && !supportsNullPrecedence ) {
 			emulateSortSpecificationNullPrecedence( sortExpression, nullPrecedence );
 		}
@@ -4396,10 +4314,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( ignoreCase ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
-	}
-
-	protected boolean supportsNullPrecedence() {
-		return dialect.supportsNullPrecedence();
 	}
 
 	protected void emulateSortSpecificationNullPrecedence(Expression sortExpression, Nulls nullPrecedence) {
@@ -6520,8 +6434,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 
 			// The following optimization only makes sense if the necessary features are supported natively
-			if ( ( columnReferences.size() == 1 || supportsRowValueConstructorSyntax() )
-					&& supportsRowValueConstructorDistinctFromSyntax() ) {
+			if ( ( columnReferences.size() == 1 || dialect.supportsRowValueConstructorSyntax() )
+					&& dialect.supportsRowValueConstructorDistinctFromSyntax() ) {
 				// Special case for limit 1 sub-queries to avoid double nested sub-query
 				// ... x(c) on x.c is not distinct from (... fetch first 1 rows only)
 				if ( isFetchFirstRowOnly( statement.getQueryPart() ) ) {
@@ -6554,7 +6468,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				);
 			}
 
-			if ( supportsNestedSubqueryCorrelation() ) {
+			if ( dialect.supportsNestedSubqueryCorrelation() ) {
 				// Double nested sub-query rendering might not work on all DBs
 				// We try to avoid this as much as possible as it is not very efficient and some DBs don't like it
 				// when a correlation happens in a sub-query that is not a direct child
@@ -6787,7 +6701,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected boolean shouldEmulateLateralWithIntersect(QueryPart queryPart) {
-		return supportsIntersect();
+		return dialect.supportsIntersect();
 	}
 
 	private boolean isNullsFirst(SortSpecification sortSpecification) {
@@ -6880,9 +6794,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private boolean needsLateralSortExpressionVirtualSelections(QuerySpec querySpec) {
-		return !( ( querySpec.getSelectClause().getSqlSelections().size() == 1 || supportsRowValueConstructorSyntax() ) && supportsDistinctFromPredicate() && isFetchFirstRowOnly( querySpec ) )
+		return !( ( querySpec.getSelectClause().getSqlSelections().size() == 1
+				|| dialect.supportsRowValueConstructorSyntax() )
+				&& dialect.supportsDistinctFromPredicate()
+				&& isFetchFirstRowOnly( querySpec ) )
 				&& !shouldEmulateLateralWithIntersect( querySpec )
-				&& !supportsNestedSubqueryCorrelation()
+				&& !dialect.supportsNestedSubqueryCorrelation()
 				&& querySpec.hasOffsetOrFetchClause();
 	}
 
@@ -7725,12 +7642,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
 				itemAccessor = listExpression -> SqlTupleContainer.getSqlTuple( listExpression ).getExpressions().get( 0 );
 			}
-			else if ( !supportsRowValueConstructorSyntaxInInList() ) {
+			else if ( !dialect.supportsRowValueConstructorSyntaxInInList() ) {
 				final ComparisonOperator comparisonOperator = inListPredicate.isNegated() ?
 						ComparisonOperator.NOT_EQUAL :
 						ComparisonOperator.EQUAL;
 				// Some DBs like Oracle support tuples only for the IN subquery predicate
-				if ( supportsRowValueConstructorSyntaxInInSubQuery() && dialect.supportsUnionAll() ) {
+				if ( dialect.supportsRowValueConstructorSyntaxInInSubQuery() && dialect.supportsUnionAll() ) {
 					inListPredicate.getTestExpression().accept( this );
 					if ( inListPredicate.isNegated() ) {
 						appendSql( " not" );
@@ -7867,7 +7784,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( " in " );
 				inSubQueryPredicate.getSubQuery().accept( this );
 			}
-			else if ( !supportsRowValueConstructorSyntaxInInSubQuery() ) {
+			else if ( !dialect.supportsRowValueConstructorSyntaxInInSubQuery() ) {
 				emulateSubQueryRelationalRestrictionPredicate(
 						inSubQueryPredicate,
 						inSubQueryPredicate.isNegated(),
@@ -8357,7 +8274,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					renderComparison( lhsTuple.getExpressions().get( 0 ), operator, rhsExpression );
 				}
 			}
-			else if ( subquery != null && !supportsRowValueConstructorSyntaxInQuantifiedPredicates() ) {
+			else if ( subquery != null && !dialect.supportsRowValueConstructorSyntaxInQuantifiedPredicates() ) {
 				// For quantified relational comparisons, we can do an optimized emulation
 				if ( !needsTupleComparisonEmulation( operator ) && all ) {
 					switch ( operator ) {
@@ -8400,7 +8317,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				assert rhsTuple != null;
 				// If the DB supports tuples in the IN list predicate, use that syntax as it's more concise
 				if ( ( operator == ComparisonOperator.EQUAL || operator == ComparisonOperator.NOT_EQUAL )
-						&& supportsRowValueConstructorSyntaxInInList() ) {
+						&& dialect.supportsRowValueConstructorSyntaxInInList() ) {
 					comparisonPredicate.getLeftHandExpression().accept( this );
 					if ( operator == ComparisonOperator.NOT_EQUAL ) {
 						appendSql( " not" );
@@ -8470,145 +8387,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private boolean needsTupleComparisonEmulation(ComparisonOperator operator) {
-		if ( !supportsRowValueConstructorSyntax() ) {
+		if ( !dialect.supportsRowValueConstructorSyntax() ) {
 			return true;
 		}
 		return switch (operator) {
 			case LESS_THAN, LESS_THAN_OR_EQUAL, GREATER_THAN, GREATER_THAN_OR_EQUAL ->
-					!supportsRowValueConstructorGtLtSyntax();
+					!dialect.supportsRowValueConstructorGtLtSyntax();
 			case DISTINCT_FROM, NOT_DISTINCT_FROM ->
-					!supportsRowValueConstructorDistinctFromSyntax();
+					!dialect.supportsRowValueConstructorDistinctFromSyntax();
 			default -> false;
 		};
-	}
-
-	/**
-	 * Is this dialect known to support quantified predicates.
-	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... where FIRST_NAME > ALL (select ...) ...}
-	 *
-	 * @return True if this SQL dialect is known to support quantified predicates; false otherwise.
-	 */
-	protected boolean supportsQuantifiedPredicates() {
-		return true;
-	}
-
-	/**
-	 * Is this SQL dialect known to support some kind of distinct from predicate.
-	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... where FIRST_NAME IS DISTINCT FROM LAST_NAME}
-	 *
-	 * @return True if this SQL dialect is known to support some kind of distinct from predicate; false otherwise
-	 */
-	protected boolean supportsDistinctFromPredicate() {
-		return dialect.supportsDistinctFromPredicate();
-	}
-
-	/**
-	 * Is this dialect known to support what ANSI-SQL terms "row value
-	 * constructor" syntax; sometimes called tuple syntax.
-	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... where (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...}
-	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax; false otherwise.
-	 */
-	protected boolean supportsRowValueConstructorSyntax() {
-		return true;
-	}
-
-	/**
-	 * Is this dialect known to support what ANSI-SQL terms "row value
-	 * constructor" syntax; sometimes called tuple syntax with <code>&lt;</code>, <code>&gt;</code>, <code>&le;</code>
-	 * and <code>&ge;</code> operators.
-	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... where (FIRST_NAME, LAST_NAME) &lt; ('Steve', 'Ebersole') ...}
-	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax with relational comparison operators; false otherwise.
-	 */
-	protected boolean supportsRowValueConstructorGtLtSyntax() {
-		return supportsRowValueConstructorSyntax();
-	}
-
-	/**
-	 * Is this dialect known to support what ANSI-SQL terms "row value
-	 * constructor" syntax; sometimes called tuple syntax with <code>is distinct from</code>
-	 * and <code>is not distinct from</code> operators.
-	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... where (FIRST_NAME, LAST_NAME) is distinct from ('Steve', 'Ebersole') ...}
-	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax with distinct from comparison operators; false otherwise.
-	 */
-	protected boolean supportsRowValueConstructorDistinctFromSyntax() {
-		return supportsRowValueConstructorSyntax() && supportsDistinctFromPredicate();
-	}
-
-	/**
-	 * Is this dialect known to support  what ANSI-SQL terms "row value constructor" syntax,
-	 * sometimes called tuple syntax, in the SET clause;
-	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... SET (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...}
-	 *
-	 * @return True if this SQL dialect is known to support "row value constructor" syntax in the SET clause; false otherwise.
-	 */
-	protected boolean supportsRowValueConstructorSyntaxInSet() {
-		return supportsRowValueConstructorSyntax();
-	}
-
-	/**
-	 * Is this dialect known to support what ANSI-SQL terms "row value
-	 * constructor" syntax; sometimes called tuple syntax with quantified predicates.
-	 * <p>
-	 * Basically, does it support syntax like
-	 * {@code ... where (FIRST_NAME, LAST_NAME) = ALL (select ...) ...}
-	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax with quantified predicates; false otherwise.
-	 */
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return true;
-	}
-
-	/**
-	 * If the dialect supports {@link #supportsRowValueConstructorSyntax() row values},
-	 * does it offer such support in IN lists as well?
-	 * <p>
-	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( (?, ?), (?, ?) ) ...}
-	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax in the IN list; false otherwise.
-	 */
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return true;
-	}
-
-	/**
-	 * If the dialect supports {@link #supportsRowValueConstructorSyntax() row values},
-	 * does it offer such support in IN subqueries as well?
-	 * <p>
-	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( select ... ) ...}
-	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax in the IN subqueries; false otherwise.
-	 */
-	protected boolean supportsRowValueConstructorSyntaxInInSubQuery() {
-		return supportsRowValueConstructorSyntaxInInList();
-	}
-
-	/**
-	 * If the dialect supports using joins in mutation statement subquery
-	 * that could also use columns from the mutation target table
-	 */
-	protected boolean supportsJoinInMutationStatementSubquery() {
-		return true;
 	}
 
 	/**
@@ -8954,7 +8742,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				tableUpdate.forEachOptimisticLockBinding( (position, columnValueBinding) -> {
 					sqlBuffer.append( " and " );
 					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
-					if ( columnValueBinding.getValueExpression() == null ) {
+					if ( columnValueBinding.getValueExpression() == null
+							|| columnValueBinding.getValueExpression().getFragment() == null ) {
 						sqlBuffer.append( " is null" );
 					}
 					else {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.xml.internal;
@@ -175,6 +175,9 @@ import static org.hibernate.boot.models.JpaAnnotations.SECONDARY_TABLE;
 import static org.hibernate.boot.models.JpaAnnotations.UNIQUE_CONSTRAINT;
 import static org.hibernate.boot.models.xml.internal.UserTypeCasesMapKey.MAP_KEY_USER_TYPE_CASES;
 import static org.hibernate.boot.models.xml.internal.UserTypeCasesStandard.STANDARD_USER_TYPE_CASES;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.unqualify;
 
 /**
  * Helper for creating annotation from equivalent JAXB
@@ -194,7 +197,7 @@ public class XmlAnnotationHelper {
 				JpaAnnotations.ENTITY,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		if ( StringHelper.isNotEmpty( jaxbEntity.getName() ) ) {
+		if ( isNotEmpty( jaxbEntity.getName() ) ) {
 			entityAnn.name( jaxbEntity.getName() );
 		}
 	}
@@ -227,8 +230,8 @@ public class XmlAnnotationHelper {
 			JaxbColumnImpl jaxbColumn,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( StringHelper.isEmpty( jaxbColumn.getRead() )
-				&& StringHelper.isEmpty( jaxbColumn.getWrite() ) ) {
+		if ( isEmpty( jaxbColumn.getRead() )
+				&& isEmpty( jaxbColumn.getWrite() ) ) {
 			return;
 		}
 
@@ -239,10 +242,10 @@ public class XmlAnnotationHelper {
 
 		annotationUsage.forColumn( jaxbColumn.getName() );
 
-		if ( StringHelper.isNotEmpty( jaxbColumn.getRead() ) ) {
+		if ( isNotEmpty( jaxbColumn.getRead() ) ) {
 			annotationUsage.read( jaxbColumn.getRead() );
 		}
-		if ( StringHelper.isNotEmpty( jaxbColumn.getWrite() ) ) {
+		if ( isNotEmpty( jaxbColumn.getWrite() ) ) {
 			annotationUsage.write( jaxbColumn.getWrite() );
 		}
 	}
@@ -266,7 +269,7 @@ public class XmlAnnotationHelper {
 			MutableMemberDetails memberDetails,
 			UserTypeCases cases,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbType == null || StringHelper.isEmpty( jaxbType.getValue() ) ) {
+		if ( jaxbType == null || isEmpty( jaxbType.getValue() ) ) {
 			cases.handleNone( jaxbType, memberDetails, xmlDocumentContext );
 			return;
 		}
@@ -383,7 +386,7 @@ public class XmlAnnotationHelper {
 		}
 
 		final JaxbGeneratedValueImpl generator = jaxbCollectionId.getGenerator();
-		if ( generator != null && StringHelper.isNotEmpty( generator.getGenerator() ) ) {
+		if ( generator != null && isNotEmpty( generator.getGenerator() ) ) {
 			collectionIdAnn.generator( generator.getGenerator() );
 		}
 	}
@@ -510,7 +513,7 @@ public class XmlAnnotationHelper {
 			generatedValueAnn.strategy( jaxbGeneratedValue.getStrategy() );
 		}
 
-		if ( StringHelper.isNotEmpty( jaxbGeneratedValue.getGenerator() ) ) {
+		if ( isNotEmpty( jaxbGeneratedValue.getGenerator() ) ) {
 			generatedValueAnn.generator( jaxbGeneratedValue.getGenerator() );
 		}
 	}
@@ -528,7 +531,7 @@ public class XmlAnnotationHelper {
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
-		if ( StringHelper.isNotEmpty( jaxbGenerator.getName() ) ) {
+		if ( isNotEmpty( jaxbGenerator.getName() ) ) {
 			sequenceAnn.name( jaxbGenerator.getName() );
 		}
 
@@ -536,11 +539,11 @@ public class XmlAnnotationHelper {
 			sequenceAnn.sequenceName( jaxbGenerator.getSequenceName() );
 		}
 
-		if ( StringHelper.isNotEmpty( jaxbGenerator.getCatalog() ) ) {
+		if ( isNotEmpty( jaxbGenerator.getCatalog() ) ) {
 			sequenceAnn.catalog( jaxbGenerator.getCatalog() );
 		}
 
-		if ( StringHelper.isNotEmpty( jaxbGenerator.getSchema() ) ) {
+		if ( isNotEmpty( jaxbGenerator.getSchema() ) ) {
 			sequenceAnn.schema( jaxbGenerator.getSchema() );
 		}
 
@@ -552,7 +555,7 @@ public class XmlAnnotationHelper {
 			sequenceAnn.allocationSize( jaxbGenerator.getAllocationSize() );
 		}
 
-		if ( StringHelper.isNotEmpty( jaxbGenerator.getOptions() ) ) {
+		if ( isNotEmpty( jaxbGenerator.getOptions() ) ) {
 			sequenceAnn.options( jaxbGenerator.getOptions() );
 		}
 	}
@@ -839,10 +842,10 @@ public class XmlAnnotationHelper {
 			ConvertJpaAnnotation convert,
 			String namePrefix,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( StringHelper.isNotEmpty( jaxbConvert.getConverter() ) ) {
+		if ( isNotEmpty( jaxbConvert.getConverter() ) ) {
 			convert.converter( xmlDocumentContext.resolveJavaType( jaxbConvert.getConverter() ).toJavaClass() );
 		}
-		if ( StringHelper.isNotEmpty( jaxbConvert.getAttributeName() ) ) {
+		if ( isNotEmpty( jaxbConvert.getAttributeName() ) ) {
 			convert.attributeName( prefixIfNotAlready( jaxbConvert.getAttributeName(), namePrefix ) );
 		}
 		if ( jaxbConvert.isDisableConversion() != null ) {
@@ -858,16 +861,16 @@ public class XmlAnnotationHelper {
 			final XmlDocument.Defaults defaults = xmlDocumentContext.getXmlDocument().getDefaults();
 			final String catalog = defaults.getCatalog();
 			final String schema = defaults.getSchema();
-			if ( StringHelper.isNotEmpty( catalog ) || StringHelper.isNotEmpty( schema ) ) {
+			if ( isNotEmpty( catalog ) || isNotEmpty( schema ) ) {
 				final TableJpaAnnotation tableAnn = (TableJpaAnnotation) target.applyAnnotationUsage(
 						JpaAnnotations.TABLE,
 						xmlDocumentContext.getModelBuildingContext()
 				);
-				if ( StringHelper.isNotEmpty( catalog ) ) {
+				if ( isNotEmpty( catalog ) ) {
 					tableAnn.catalog( catalog );
 
 				}
-				if ( StringHelper.isNotEmpty( schema ) ) {
+				if ( isNotEmpty( schema ) ) {
 					tableAnn.schema( schema );
 				}
 			}
@@ -882,7 +885,7 @@ public class XmlAnnotationHelper {
 	}
 
 	public static void applyOptionalString(String value, Consumer<String> target) {
-		if ( StringHelper.isNotEmpty( value ) ) {
+		if ( isNotEmpty( value ) ) {
 			target.accept( value );
 		}
 	}
@@ -901,7 +904,7 @@ public class XmlAnnotationHelper {
 		);
 
 		final JaxbCachingImpl jaxbCaching = jaxbNaturalId.getCaching();
-		if ( StringHelper.isNotEmpty( jaxbCaching.getRegion() ) ) {
+		if ( isNotEmpty( jaxbCaching.getRegion() ) ) {
 			naturalIdCacheUsage.region( jaxbCaching.getRegion() );
 		}
 	}
@@ -948,7 +951,7 @@ public class XmlAnnotationHelper {
 	}
 
 	public static ClassDetails resolveJavaType(String packageName, String name, ClassDetailsRegistry classDetailsRegistry) {
-		if ( StringHelper.isEmpty( name ) ) {
+		if ( isEmpty( name ) ) {
 			name = Object.class.getName();
 		}
 		else if ( byte.class.getName().equals( name )
@@ -1013,17 +1016,17 @@ public class XmlAnnotationHelper {
 		else if ( jaxbBasicMapping.getJavaType() != null ) {
 			applyJavaTypeDescriptor( jaxbBasicMapping.getJavaType(), memberDetails, xmlDocumentContext );
 		}
-		else if ( StringHelper.isNotEmpty( jaxbBasicMapping.getTarget() ) ) {
+		else if ( isNotEmpty( jaxbBasicMapping.getTarget() ) ) {
 			applyTargetClass( jaxbBasicMapping.getTarget(), memberDetails, xmlDocumentContext );
 		}
 
-		if ( StringHelper.isNotEmpty( jaxbBasicMapping.getJdbcType() ) ) {
+		if ( isNotEmpty( jaxbBasicMapping.getJdbcType() ) ) {
 			applyJdbcTypeDescriptor( jaxbBasicMapping.getJdbcType(), memberDetails, xmlDocumentContext );
 		}
 		else if ( jaxbBasicMapping.getJdbcTypeCode() != null ) {
 			applyJdbcTypeCode( jaxbBasicMapping.getJdbcTypeCode(), memberDetails, xmlDocumentContext );
 		}
-		else if ( StringHelper.isNotEmpty( jaxbBasicMapping.getJdbcTypeName() ) ) {
+		else if ( isNotEmpty( jaxbBasicMapping.getJdbcTypeName() ) ) {
 			applyJdbcTypeCode(
 					resolveJdbcTypeName( jaxbBasicMapping.getJdbcTypeName() ),
 					memberDetails,
@@ -1143,7 +1146,7 @@ public class XmlAnnotationHelper {
 			String sqlRestriction,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( StringHelper.isEmpty( sqlRestriction ) ) {
+		if ( isEmpty( sqlRestriction ) ) {
 			return;
 		}
 
@@ -1158,7 +1161,7 @@ public class XmlAnnotationHelper {
 			String sqlRestriction,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( StringHelper.isEmpty( sqlRestriction ) ) {
+		if ( isEmpty( sqlRestriction ) ) {
 			return;
 		}
 		final SQLJoinTableRestrictionAnnotation sqlRestrictionAnn = (SQLJoinTableRestrictionAnnotation) target.applyAnnotationUsage(
@@ -1195,7 +1198,7 @@ public class XmlAnnotationHelper {
 		annotation.sql( jaxbCustomSql.getValue() );
 		annotation.callable( jaxbCustomSql.isCallable() );
 
-		if ( StringHelper.isNotEmpty( jaxbCustomSql.getTable() ) ) {
+		if ( isNotEmpty( jaxbCustomSql.getTable() ) ) {
 			annotation.table( jaxbCustomSql.getTable() );
 		}
 
@@ -1217,7 +1220,7 @@ public class XmlAnnotationHelper {
 			JaxbIdClassImpl jaxbIdClass,
 			MutableClassDetails target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbIdClass == null || StringHelper.isEmpty( jaxbIdClass.getClazz() ) ) {
+		if ( jaxbIdClass == null || isEmpty( jaxbIdClass.getClazz() ) ) {
 			return;
 		}
 
@@ -1325,7 +1328,8 @@ public class XmlAnnotationHelper {
 			JpaEventListenerStyle callbackType,
 			ClassDetails classDetails) {
 		for ( MethodDetails method : classDetails.getMethods() ) {
-			if ( method.getName().equals( name ) && JpaEventListener.matchesSignature( callbackType, method ) ) {
+			if ( method.getName().equals( name )
+					&& JpaEventListener.matchesSignature( callbackType, method ) ) {
 				return (MutableMemberDetails) method;
 			}
 		}
@@ -1344,14 +1348,14 @@ public class XmlAnnotationHelper {
 				HibernateAnnotations.ROW_ID,
 				xmlDocumentContext.getModelBuildingContext()
 		);
-		if ( StringHelper.isNotEmpty( rowId ) ) {
+		if ( isNotEmpty( rowId ) ) {
 			rowIdAnn.value( rowId );
 		}
 	}
 
 	private static String prefixIfNotAlready(String value, String prefix) {
-		if ( StringHelper.isNotEmpty( prefix ) ) {
-			final String previous = StringHelper.unqualify( value );
+		if ( isNotEmpty( prefix ) ) {
+			final String previous = unqualify( value );
 			if ( !previous.equalsIgnoreCase( prefix ) ) {
 				return StringHelper.qualify( prefix, value );
 			}
@@ -1363,7 +1367,7 @@ public class XmlAnnotationHelper {
 			String discriminatorValue,
 			MutableClassDetails target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( StringHelper.isEmpty( discriminatorValue ) ) {
+		if ( isEmpty( discriminatorValue ) ) {
 			return;
 		}
 
@@ -1408,7 +1412,7 @@ public class XmlAnnotationHelper {
 		if ( jaxbDiscriminatorFormula == null ) {
 			return;
 		}
-		if ( StringHelper.isEmpty( jaxbDiscriminatorFormula.getFragment() ) ) {
+		if ( isEmpty( jaxbDiscriminatorFormula.getFragment() ) ) {
 			return;
 		}
 
@@ -1464,10 +1468,10 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		if ( StringHelper.isNotEmpty( jaxbNode.getSchema() ) ) {
+		if ( isNotEmpty( jaxbNode.getSchema() ) ) {
 			annotationUsage.schema( jaxbNode.getSchema() );
 		}
-		else if ( StringHelper.isNotEmpty( documentSchema( xmlDocumentContext ) ) ) {
+		else if ( isNotEmpty( documentSchema( xmlDocumentContext ) ) ) {
 			annotationUsage.schema( documentSchema( xmlDocumentContext ) );
 		}
 	}
@@ -1500,10 +1504,10 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		if ( StringHelper.isNotEmpty( jaxbNode.getCatalog() ) ) {
+		if ( isNotEmpty( jaxbNode.getCatalog() ) ) {
 			annotationUsage.catalog( jaxbNode.getCatalog() );
 		}
-		else if ( StringHelper.isNotEmpty( documentCatalog( xmlDocumentContext ) ) ) {
+		else if ( isNotEmpty( documentCatalog( xmlDocumentContext ) ) ) {
 			annotationUsage.catalog( documentCatalog( xmlDocumentContext ) );
 		}
 	}

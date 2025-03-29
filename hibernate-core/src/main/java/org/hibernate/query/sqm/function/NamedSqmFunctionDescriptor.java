@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
@@ -164,7 +164,7 @@ public class NamedSqmFunctionDescriptor
 			Boolean fromFirst,
 			SqlAstTranslator<?> translator) {
 		final boolean useParens = useParenthesesWhenNoArgs || !sqlAstArguments.isEmpty();
-		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
+		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().	supportsFilterClause();
 
 		sqlAppender.appendSql( functionName );
 		if ( useParens ) {

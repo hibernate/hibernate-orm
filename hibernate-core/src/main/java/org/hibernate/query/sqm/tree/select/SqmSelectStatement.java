@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
@@ -180,8 +180,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	@Override
 	public SqmQuerySpec<T> getQuerySpec() {
 		if ( querySource == CRITERIA ) {
-			final SqmQueryPart<T> queryPart = getQueryPart();
-			if ( queryPart instanceof SqmQuerySpec<T> querySpec ) {
+			if ( getQueryPart() instanceof SqmQuerySpec<T> querySpec ) {
 				return querySpec;
 			}
 			throw new IllegalStateException(
@@ -355,9 +354,8 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 				checkSelectionIsJpaCompliant( selection );
 			}
 		}
-
-		final Selection<? extends T> resultSelection = getResultSelection( selections );
-		getQuerySpec().getSelectClause().setSelection( (SqmSelectableNode<?>) resultSelection );
+		getQuerySpec().getSelectClause()
+				.setSelection( (SqmSelectableNode<?>) getResultSelection( selections ) );
 		return this;
 	}
 
@@ -368,32 +366,29 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 				checkSelectionIsJpaCompliant( selection );
 			}
 		}
-		final Selection<? extends T> resultSelection = getResultSelection( selectionList );
-		getQuerySpec().getSelectClause().setSelection( (SqmSelectableNode<?>) resultSelection );
+		getQuerySpec().getSelectClause()
+				.setSelection( (SqmSelectableNode<?>) getResultSelection( selectionList ) );
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
-	private Selection<? extends T> getResultSelection(List<?> selections) {
+	private JpaSelection<?> getResultSelection(List<Selection<?>> selections) {
 		final Class<T> resultType = getResultType();
 		if ( resultType == null || resultType == Object.class ) {
-			switch ( selections.size() ) {
-				case 0:
-					throw new IllegalArgumentException( "Empty selections passed to criteria query typed as Object" );
-				case 1:
-					return (Selection<? extends T>) selections.get( 0 );
-				default:
-					return (Selection<? extends T>) nodeBuilder().array( (List<Selection<?>>) selections );
-			}
+			return switch ( selections.size() ) {
+				case 0 -> throw new IllegalArgumentException(
+						"empty selections passed to criteria query typed as Object" );
+				case 1 -> (JpaSelection<?>) selections.get( 0 );
+				default -> nodeBuilder().array( selections );
+			};
 		}
 		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
-			return (Selection<? extends T>) nodeBuilder().tuple( (List<Selection<?>>) selections );
+			return nodeBuilder().tuple( selections );
 		}
 		else if ( resultType.isArray() ) {
-			return nodeBuilder().array( resultType, (List<? extends JpaSelection<?>>) selections );
+			return nodeBuilder().array( resultType, selections );
 		}
 		else {
-			return nodeBuilder().construct( resultType, (List<? extends JpaSelection<?>>) selections );
+			return nodeBuilder().construct( resultType, selections );
 		}
 	}
 
@@ -566,10 +561,12 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 			final SqmQuerySpec<S> querySpec = queryPart.getFirstQuerySpec();
 			final LinkedHashSet<JpaSelection<?>> newSelections = new LinkedHashSet<>();
 			aliasSelection( querySpec.getSelection(), newSelections );
+			final JpaSelection<?> selection =
+					newSelections.size() == 1
+							? newSelections.iterator().next()
+							: nodeBuilder().tuple( newSelections.toArray( new JpaSelection<?>[0] ) );
 			//noinspection unchecked
-			querySpec.setSelection( (JpaSelection<S>) ( newSelections.size() == 1 ?
-					newSelections.iterator().next() :
-					nodeBuilder().tuple( newSelections.toArray( new JpaSelection<?>[0] ) ) ) );
+			querySpec.setSelection( (JpaSelection<S>) selection );
 		}
 		else {
 			( (SqmQueryGroup<?>) queryPart ).getQueryParts().forEach( this::aliasSelections );

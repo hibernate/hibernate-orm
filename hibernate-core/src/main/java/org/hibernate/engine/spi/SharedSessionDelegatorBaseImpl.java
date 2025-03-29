@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
@@ -35,7 +35,6 @@ import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
-import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
@@ -98,15 +97,9 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insert) {
 		//noinspection resource
-		return delegate().createMutationQuery( insertSelect );
-	}
-
-	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect) {
-		//noinspection resource
-		return delegate().createMutationQuery( insertSelect );
+		return delegate().createMutationQuery( insert );
 	}
 
 	@Override
@@ -114,33 +107,33 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 		return queryDelegate().createQuery( criteriaQuery );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(CriteriaUpdate updateQuery) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(CriteriaUpdate updateQuery) {
 		return queryDelegate().createQuery( updateQuery );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(CriteriaDelete deleteQuery) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(CriteriaDelete deleteQuery) {
 		return queryDelegate().createQuery( deleteQuery );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor getNamedQuery(String name) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor getNamedQuery(String name) {
 		return queryDelegate().getNamedQuery( name );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor getNamedNativeQuery(String name) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor getNamedNativeQuery(String name) {
 		return queryDelegate().getNamedNativeQuery( name );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping) {
 		return queryDelegate().getNamedNativeQuery( name, resultSetMapping );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(String queryString) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(String queryString) {
 		return queryDelegate().createQuery( queryString );
 	}
 
@@ -152,6 +145,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> resultType) {
 		return queryDelegate().createSelectionQuery( hqlString, resultType );
+	}
+
+	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
+		return queryDelegate().createSelectionQuery( hqlString, resultGraph );
 	}
 
 	@Override
@@ -169,8 +167,8 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 		return queryDelegate().createQuery( typedQueryReference );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createNamedQuery(String name) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createNamedQuery(String name) {
 		return queryDelegate().createNamedQuery( name );
 	}
 
@@ -191,8 +189,8 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 		return delegate().createNamedSelectionQuery( name, resultType );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor createNativeQuery(String sqlString) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor createNativeQuery(String sqlString) {
 		return queryDelegate().createNativeQuery( sqlString );
 	}
 
@@ -208,8 +206,8 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 		return queryDelegate().createNativeQuery( sqlString, resultClass, tableAlias );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
 		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName );
 	}
 
@@ -463,7 +461,7 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 		return delegate.guessEntityName( entity );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Object instantiate(String entityName, Object id) throws HibernateException {
 		return delegate.instantiate( entityName, id );
 	}

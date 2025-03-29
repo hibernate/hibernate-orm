@@ -222,6 +222,11 @@ public abstract class CriteriaDefinition<R>
 		return existing == null ? where( predicate ) : where( existing, predicate );
 	}
 
+	@Incubating
+	public JpaRoot<R> root() {
+		return from(query.getResultType());
+	}
+
 	@Override
 	public HibernateCriteriaBuilder getCriteriaBuilder() {
 		return query.getCriteriaBuilder();

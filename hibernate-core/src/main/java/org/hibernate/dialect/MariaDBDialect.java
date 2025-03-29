@@ -28,6 +28,8 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -44,6 +46,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
@@ -332,6 +335,18 @@ public class MariaDBDialect extends MySQLDialect {
 		return "dual";
 	}
 
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
+		return EXTRACTOR;
+	}
+
+	private static final ViolatedConstraintNameExtractor EXTRACTOR =
+			new TemplatedViolatedConstraintNameExtractor( sqle -> switch ( sqle.getErrorCode() ) {
+				case 1062 -> extractUsingTemplate( " for key '", "'", sqle.getMessage() );
+				case 1451, 1452, 4025 -> extractUsingTemplate( " CONSTRAINT `", "`", sqle.getMessage() );
+				case 3819 -> extractUsingTemplate( " constraint '", "'", sqle.getMessage() );
+				case 1048 -> extractUsingTemplate( "Column '", "'", sqle.getMessage() );
+				default -> null;
+			} );
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
@@ -356,15 +371,18 @@ public class MariaDBDialect extends MySQLDialect {
 				case 1048:
 					// Null constraint violation
 					return new ConstraintViolationException( message, sqlException, sql,
-							ConstraintViolationException.ConstraintKind.NOT_NULL, null );
+							ConstraintViolationException.ConstraintKind.NOT_NULL,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 				case 1451, 1452:
 					// Foreign key constraint violation
 					return new ConstraintViolationException( message, sqlException, sql,
-							ConstraintViolationException.ConstraintKind.FOREIGN_KEY, null );
-				case 3819:
+							ConstraintViolationException.ConstraintKind.FOREIGN_KEY,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+				case 3819, 4025: // 4025 seems to usually be a check constraint violation
 					// Check constraint violation
 					return new ConstraintViolationException( message, sqlException, sql,
-							ConstraintViolationException.ConstraintKind.CHECK, null );
+							ConstraintViolationException.ConstraintKind.CHECK,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 			}
 
 			final String sqlState = extractSqlState( sqlException );

@@ -1119,7 +1119,9 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getSelectGUIDString() {
-		return getVersion().isSameOrAfter( 23 ) ? "select rawtohex(sys_guid())" : "select rawtohex(sys_guid()) from dual";
+		return getVersion().isSameOrAfter( 23 )
+				? "select rawtohex(sys_guid())"
+				: "select rawtohex(sys_guid()) from dual";
 	}
 
 	@Override
@@ -1130,8 +1132,12 @@ public class OracleDialect extends Dialect {
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle ->
 					switch ( extractErrorCode( sqle ) ) {
-						case 1, 2291, 2292 -> extractUsingTemplate( "(", ")", sqle.getMessage() );
-						case 1400 -> null; // simple nullability constraint
+						case 1, 2291, 2292, 2290 ->
+								extractUsingTemplate( "(", ")", sqle.getMessage() );
+						case 1400, 1407 ->
+								extractUsingTemplate( "(", ")",
+										// Oracle quotes the column in this message, which is ugly
+										sqle.getMessage().replace( "\"", "" ) );
 						default -> null;
 					});
 

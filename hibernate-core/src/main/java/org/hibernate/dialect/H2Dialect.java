@@ -81,6 +81,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.query.common.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -783,24 +784,21 @@ public class H2Dialect extends Dialect {
 	}
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
-			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				// 23000: Check constraint violation: {0}
-				// 23001: Unique index or primary key violation: {0}
-				if ( sqle.getSQLState().startsWith( "23" ) ) {
-					final String message = sqle.getMessage();
-					final int i = message.indexOf( "violation: " );
-					if ( i > 0 ) {
-						String constraintDescription =
-								message.substring( i + "violation: ".length() )
-										.replace( "\"", "" );
-						if ( sqle.getSQLState().equals( "23506" ) ) {
-							constraintDescription = constraintDescription.substring( 1, constraintDescription.indexOf( ':' ) );
-						}
-						final int j = constraintDescription.indexOf(" ON ");
-						return j>0 ? constraintDescription.substring(0, j) : constraintDescription;
-					}
+			new TemplatedViolatedConstraintNameExtractor( sqle -> switch ( extractErrorCode( sqle ) ) {
+				case 23505 -> {
+					// Unique index or primary key violation
+					final String constraint =
+							extractUsingTemplate( "violation: \"", "\"", sqle.getMessage() );
+					final int onIndex = constraint == null ? -1 : constraint.indexOf( " ON " );
+					yield onIndex > 0 ? constraint.substring( 0, onIndex ) : constraint;
 				}
-				return null;
+				case 23502 ->
+					// NULL not allowed for column
+						extractUsingTemplate( "column \"", "\"", sqle.getMessage() );
+				case 23503, 23506, 23513, 23514 ->
+					// Referential integrity or check constraint violation
+						extractUsingTemplate( "constraint violation: \"", ":", sqle.getMessage() );
+				default -> null;
 			} );
 
 	@Override

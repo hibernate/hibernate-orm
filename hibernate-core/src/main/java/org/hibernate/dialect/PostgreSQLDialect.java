@@ -49,7 +49,6 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -105,7 +104,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
+import static java.lang.Integer.parseInt;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.type.SqlTypes.ARRAY;
@@ -1019,29 +1020,17 @@ public class PostgreSQLDialect extends Dialect {
 	 */
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
+				final String sqlState = extractSqlState( sqle );
 				if ( sqlState != null ) {
-					switch ( Integer.parseInt( sqlState ) ) {
-						// CHECK VIOLATION
-						case 23514:
-							return extractUsingTemplate( "violates check constraint \"", "\"", sqle.getMessage() );
-						// UNIQUE VIOLATION
-						case 23505:
-							return extractUsingTemplate( "violates unique constraint \"", "\"", sqle.getMessage() );
-						// FOREIGN KEY VIOLATION
-						case 23503:
-							return extractUsingTemplate( "violates foreign key constraint \"", "\"", sqle.getMessage() );
-						// NOT NULL VIOLATION
-						case 23502:
-							return extractUsingTemplate(
-									"null value in column \"",
-									"\" violates not-null constraint",
-									sqle.getMessage()
-							);
-						// TODO: RESTRICT VIOLATION
-						case 23001:
-							return null;
-					}
+					return switch ( parseInt( sqlState ) ) {
+						case 23505, 23514, 23503 ->
+							// UNIQUE, CHECK, OR FOREIGN KEY VIOLATION
+								extractUsingTemplate( "constraint \"", "\"", sqle.getMessage() );
+						case 23502 ->
+							// NOT NULL VIOLATION
+								extractUsingTemplate( "column \"", "\"", sqle.getMessage() );
+						default -> null;
+					};
 				}
 				return null;
 			} );
@@ -1049,7 +1038,7 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+			final String sqlState = extractSqlState( sqlException );
 			if ( sqlState != null ) {
 				switch ( sqlState ) {
 					case "40P01":

@@ -970,15 +970,12 @@ public class MySQLDialect extends Dialect {
 	}
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
-			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				final String sqlState = extractSqlState( sqle );
-				if ( sqlState != null ) {
-					return switch ( parseInt( sqlState ) ) {
-						case 23000 -> extractUsingTemplate( " for key '", "'", sqle.getMessage() );
-						default -> null;
-					};
-				}
-				return null;
+			new TemplatedViolatedConstraintNameExtractor( sqle -> switch ( sqle.getErrorCode() ) {
+				case 1062 -> extractUsingTemplate( " for key '", "'", sqle.getMessage() );
+				case 1451, 1452 -> extractUsingTemplate( " CONSTRAINT `", "`", sqle.getMessage() );
+				case 3819-> extractUsingTemplate( " constraint '", "'", sqle.getMessage() );
+				case 1048 -> extractUsingTemplate( "Column '", "'", sqle.getMessage() );
+				default -> null;
 			} );
 
 	@Override
@@ -1259,15 +1256,18 @@ public class MySQLDialect extends Dialect {
 				case 1048:
 					// Null constraint violation
 					return new ConstraintViolationException( message, sqlException, sql,
-							ConstraintViolationException.ConstraintKind.NOT_NULL, null );
+							ConstraintViolationException.ConstraintKind.NOT_NULL,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 				case 1451, 1452:
 					// Foreign key constraint violation
 					return new ConstraintViolationException( message, sqlException, sql,
-							ConstraintViolationException.ConstraintKind.FOREIGN_KEY, null );
+							ConstraintViolationException.ConstraintKind.FOREIGN_KEY,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 				case 3819:
 					// Check constraint violation
 					return new ConstraintViolationException( message, sqlException, sql,
-							ConstraintViolationException.ConstraintKind.CHECK, null );
+							ConstraintViolationException.ConstraintKind.CHECK,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 			}
 
 			final String sqlState = extractSqlState( sqlException );

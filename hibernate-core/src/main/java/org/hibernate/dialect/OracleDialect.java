@@ -39,6 +39,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -1166,16 +1167,20 @@ public class OracleDialect extends Dialect {
 				// data integrity violation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 				case 1 ->
 					// ORA-00001: unique constraint violated
-						new ConstraintViolationException(
-								message,
-								sqlException,
-								sql,
-								ConstraintViolationException.ConstraintKind.UNIQUE,
-								getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-						);
-				case 1407 ->
+						new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
+								getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+				case 1400, 1407 ->
+					// ORA-01400: cannot insert NULL into column
 					// ORA-01407: cannot update column to NULL
-						new ConstraintViolationException( message, sqlException, sql,
+						new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
+								getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+				case 2291, 2292 ->
+					// ORA-02291, ORA-02292: integrity constraint violated
+						new ConstraintViolationException( message, sqlException, sql, ConstraintKind.FOREIGN_KEY,
+								getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+				case 2290 ->
+					//ORA-02290 check constraint violated
+						new ConstraintViolationException( message, sqlException, sql, ConstraintKind.CHECK,
 								getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 				default -> null;
 			};

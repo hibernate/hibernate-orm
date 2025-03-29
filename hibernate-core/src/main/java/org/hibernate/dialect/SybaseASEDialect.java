@@ -708,40 +708,27 @@ public class SybaseASEDialect extends SybaseDialect {
 						switch ( errorCode ) {
 							case 515:
 								// Attempt to insert NULL value into column; column does not allow nulls.
-								return new ConstraintViolationException(
-										message,
-										sqlException,
-										sql,
-										getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-								);
+								return new ConstraintViolationException( message, sqlException, sql,
+										ConstraintViolationException.ConstraintKind.NOT_NULL,
+										getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 							case 546:
 								// Foreign key violation
-								return new ConstraintViolationException(
-										message,
-										sqlException,
-										sql,
-										getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-								);
+								return new ConstraintViolationException( message, sqlException, sql,
+										ConstraintViolationException.ConstraintKind.FOREIGN_KEY,
+										getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 							case 2601:
 								// Unique constraint violation
-								return new ConstraintViolationException(
-										message,
-										sqlException,
-										sql,
+								return new ConstraintViolationException( message, sqlException, sql,
 										ConstraintViolationException.ConstraintKind.UNIQUE,
-										getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-								);
+										getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 						}
 						break;
 					case "ZZZZZ":
 						if ( 515 == errorCode ) {
 							// Attempt to insert NULL value into column; column does not allow nulls.
-							return new ConstraintViolationException(
-									message,
-									sqlException,
-									sql,
-									getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-							);
+							return new ConstraintViolationException( message, sqlException, sql,
+									ConstraintViolationException.ConstraintKind.NOT_NULL,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 						}
 						break;
 				}

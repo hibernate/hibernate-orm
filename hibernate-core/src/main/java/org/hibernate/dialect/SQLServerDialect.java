@@ -830,13 +830,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 			return switch ( extractErrorCode( sqlException ) ) {
 				case 1222 -> new LockTimeoutException( message, sqlException, sql );
-				case 2627, 2601 -> new ConstraintViolationException(
-						message,
-						sqlException,
-						sql,
+				case 2627, 2601 -> new ConstraintViolationException( message, sqlException, sql,
 						ConstraintViolationException.ConstraintKind.UNIQUE,
 						getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
 				);
+				case 515 -> new ConstraintViolationException( message, sqlException, sql,
+						ConstraintViolationException.ConstraintKind.NOT_NULL, null );
 				default -> null;
 			};
 		};

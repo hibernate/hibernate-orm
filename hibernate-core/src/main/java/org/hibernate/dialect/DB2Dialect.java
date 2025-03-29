@@ -1133,13 +1133,18 @@ public class DB2Dialect extends Dialect {
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> switch ( extractErrorCode( sqlException ) ) {
 			case -952 -> new LockTimeoutException( message, sqlException, sql );
-			case -803 -> new ConstraintViolationException(
-					message,
-					sqlException,
-					sql,
+			case -803 -> new ConstraintViolationException( message, sqlException, sql,
 					ConstraintViolationException.ConstraintKind.UNIQUE,
-					getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-			);
+					getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+			case -530,-531 -> new ConstraintViolationException( message, sqlException, sql,
+					ConstraintViolationException.ConstraintKind.FOREIGN_KEY,
+					getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+			case -407 -> new ConstraintViolationException( message, sqlException, sql,
+					ConstraintViolationException.ConstraintKind.NOT_NULL,
+					getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+			case -543,-545 -> new ConstraintViolationException( message, sqlException, sql,
+					ConstraintViolationException.ConstraintKind.CHECK,
+					getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 			default -> null;
 		};
 	}

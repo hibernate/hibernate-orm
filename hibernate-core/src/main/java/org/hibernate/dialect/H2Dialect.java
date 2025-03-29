@@ -36,6 +36,7 @@ import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
@@ -807,23 +808,26 @@ public class H2Dialect extends Dialect {
 		return (sqlException, message, sql) ->
 				switch ( extractErrorCode( sqlException ) ) {
 					case 23505 ->
-						// Unique constraint violation
-							new ConstraintViolationException(
-									message,
-									sqlException,
-									sql,
-									ConstraintViolationException.ConstraintKind.UNIQUE,
-									getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-							);
+						// Unique index or primary key violation
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					case 40001 ->
 						// DEADLOCK DETECTED
 							new LockAcquisitionException(message, sqlException, sql);
 					case 50200 ->
 						// LOCK NOT AVAILABLE
 							new PessimisticLockException(message, sqlException, sql);
-					case 90006 ->
-						// NULL not allowed for column [90006-145]
-							new ConstraintViolationException( message, sqlException, sql,
+					case 23502 ->
+						// NULL not allowed for column
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
+									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
+					case 23503, 23506 ->
+						// Referential integrity constraint violation
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.FOREIGN_KEY,
+									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
+					case 23513, 23514 ->
+						// Check constraint violation
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.CHECK,
 									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
 					case 57014 ->
 							new QueryTimeoutException( message, sqlException, sql );

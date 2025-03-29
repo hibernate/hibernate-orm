@@ -349,13 +349,22 @@ public class MariaDBDialect extends MySQLDialect {
 					return new LockAcquisitionException( message, sqlException, sql );
 				case 1062:
 					// Unique constraint violation
-					return new ConstraintViolationException(
-							message,
-							sqlException,
-							sql,
+					return new ConstraintViolationException( message, sqlException, sql,
 							ConstraintViolationException.ConstraintKind.UNIQUE,
 							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
 					);
+				case 1048:
+					// Null constraint violation
+					return new ConstraintViolationException( message, sqlException, sql,
+							ConstraintViolationException.ConstraintKind.NOT_NULL, null );
+				case 1451, 1452:
+					// Foreign key constraint violation
+					return new ConstraintViolationException( message, sqlException, sql,
+							ConstraintViolationException.ConstraintKind.FOREIGN_KEY, null );
+				case 3819:
+					// Check constraint violation
+					return new ConstraintViolationException( message, sqlException, sql,
+							ConstraintViolationException.ConstraintKind.CHECK, null );
 			}
 
 			final String sqlState = extractSqlState( sqlException );

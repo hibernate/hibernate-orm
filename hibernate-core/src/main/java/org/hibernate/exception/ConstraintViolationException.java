@@ -57,7 +57,10 @@ public class ConstraintViolationException extends JDBCException {
 	}
 
 	public enum ConstraintKind {
+		NOT_NULL,
 		UNIQUE,
+		FOREIGN_KEY,
+		CHECK,
 		OTHER
 	}
 }

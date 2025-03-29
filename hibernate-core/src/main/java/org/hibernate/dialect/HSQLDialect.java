@@ -453,6 +453,7 @@ public class HSQLDialect extends Dialect {
 			new TemplatedViolatedConstraintNameExtractor( sqle ->
 					switch ( extractErrorCode( sqle ) ) {
 						case -8, -9, -104, -177, -157 -> extractUsingTemplate( "; ", " table: ", sqle.getMessage() );
+						case -10 -> extractUsingTemplate( " column: ", "\n", sqle.getMessage() );
 						default -> null;
 					});
 
@@ -463,7 +464,8 @@ public class HSQLDialect extends Dialect {
 					case -10 ->
 						// Not null constraint violation
 						new ConstraintViolationException( message, sqlException, sql,
-								ConstraintViolationException.ConstraintKind.NOT_NULL, null );
+								ConstraintViolationException.ConstraintKind.NOT_NULL,
+								getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
 					case -104 ->
 						// Unique constraint violation
 							new ConstraintViolationException( message, sqlException, sql,
@@ -477,7 +479,7 @@ public class HSQLDialect extends Dialect {
 					case -177 ->
 						// Foreign key constraint violation
 							new ConstraintViolationException( message, sqlException, sql,
-									ConstraintViolationException.ConstraintKind.CHECK,
+									ConstraintViolationException.ConstraintKind.FOREIGN_KEY,
 									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
 					default -> null;
 				};

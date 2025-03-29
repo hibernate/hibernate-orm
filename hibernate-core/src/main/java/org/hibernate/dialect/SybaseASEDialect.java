@@ -678,9 +678,12 @@ public class SybaseASEDialect extends SybaseDialect {
 							case 546, 548 ->
 								// Foreign key or check constraint violation
 									extractUsingTemplate( "constraint name = '", "'", sqle.getMessage() );
-							case 151 ->
+							case 515 ->
 								// Not null violation
 									extractUsingTemplate( "column '", "'", sqle.getMessage() );
+							case 233 ->
+								// Not null violation
+									extractUsingTemplate( "The column ", " ", sqle.getMessage() );
 							default -> null;
 						};
 						default -> null;
@@ -704,7 +707,7 @@ public class SybaseASEDialect extends SybaseDialect {
 					case "S1000":
 					case "23000":
 						switch ( errorCode ) {
-							case 515:
+							case 515, 233:
 								// Attempt to insert NULL value into column; column does not allow nulls.
 								return new ConstraintViolationException( message, sqlException, sql,
 										ConstraintViolationException.ConstraintKind.NOT_NULL,

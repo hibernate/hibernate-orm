@@ -97,6 +97,7 @@ import static org.hibernate.cfg.DialectSpecificSettings.SQL_SERVER_COMPATIBILITY
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.query.common.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
@@ -1217,7 +1218,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String getCheckConstraintString(CheckConstraint checkConstraint) {
 		final String constraintName = checkConstraint.getName();
-		return constraintName == null
+		return isBlank( constraintName )
 				? " check " + getCheckConstraintOptions( checkConstraint )
 						+ "(" + checkConstraint.getConstraint() + ")"
 				: " constraint " + constraintName + " check " + getCheckConstraintOptions( checkConstraint )

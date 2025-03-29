@@ -211,6 +211,7 @@ import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.internal.util.MathHelper.ceilingPowerOfTwo;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
@@ -5840,7 +5841,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String getCheckConstraintString(CheckConstraint checkConstraint) {
 		final String constraintName = checkConstraint.getName();
-		final String constraint = constraintName == null
+		final String constraint = isBlank( constraintName )
 				? " check (" + checkConstraint.getConstraint() + ")"
 				: " constraint " + constraintName + " check (" + checkConstraint.getConstraint() + ")";
 		return appendCheckConstraintOptions( checkConstraint, constraint );

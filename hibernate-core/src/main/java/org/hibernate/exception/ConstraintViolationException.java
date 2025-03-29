@@ -56,11 +56,29 @@ public class ConstraintViolationException extends JDBCException {
 		return kind;
 	}
 
+	/**
+	 * Enumerates the kinds of constraint violation recognized by Hibernate.
+	 */
 	public enum ConstraintKind {
+		/**
+		 * A {@code not null} constraint violation.
+		 */
 		NOT_NULL,
+		/**
+		 * A {@code unique} or {@code primary key} constraint violation.
+		 */
 		UNIQUE,
+		/**
+		 * A {@code foreign key} constraint violation.
+		 */
 		FOREIGN_KEY,
+		/**
+		 * A {@code check} constraint violation.
+		 */
 		CHECK,
+		/**
+		 * A constraint violation whose kind was unknown or unrecognized.
+		 */
 		OTHER
 	}
 }

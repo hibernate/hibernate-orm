@@ -452,7 +452,7 @@ public class HSQLDialect extends Dialect {
 			// messages may be localized, therefore use the common, non-locale element " table: "
 			new TemplatedViolatedConstraintNameExtractor( sqle ->
 					switch ( extractErrorCode( sqle ) ) {
-						case -8, -9, -104, -177 -> extractUsingTemplate( "; ", " table: ", sqle.getMessage() );
+						case -8, -9, -104, -177, -157 -> extractUsingTemplate( "; ", " table: ", sqle.getMessage() );
 						default -> null;
 					});
 
@@ -460,15 +460,25 @@ public class HSQLDialect extends Dialect {
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) ->
 				switch ( extractErrorCode( sqlException ) ) {
+					case -10 ->
+						// Not null constraint violation
+						new ConstraintViolationException( message, sqlException, sql,
+								ConstraintViolationException.ConstraintKind.NOT_NULL, null );
 					case -104 ->
 						// Unique constraint violation
-							new ConstraintViolationException(
-									message,
-									sqlException,
-									sql,
+							new ConstraintViolationException( message, sqlException, sql,
 									ConstraintViolationException.ConstraintKind.UNIQUE,
-									getViolatedConstraintNameExtractor().extractConstraintName(sqlException)
-							);
+									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
+					case -157 ->
+						// Check constraint violation
+							new ConstraintViolationException( message, sqlException, sql,
+									ConstraintViolationException.ConstraintKind.CHECK,
+									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
+					case -177 ->
+						// Foreign key constraint violation
+							new ConstraintViolationException( message, sqlException, sql,
+									ConstraintViolationException.ConstraintKind.CHECK,
+									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
 					default -> null;
 				};
 	}

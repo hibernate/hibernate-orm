@@ -802,20 +802,16 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return new TemplatedViolatedConstraintNameExtractor(
-				sqle -> {
-					switch ( extractErrorCode( sqle ) ) {
-						case 2627:
-						case 2601:
-							String message = sqle.getMessage();
-							if ( message.contains("unique index ") ) {
-								return extractUsingTemplate( "unique index '", "'", message);
-							}
-							else {
-								return extractUsingTemplate( "'", "'", message);
-							}
-						default:
-							return null;
+				sqle -> switch ( extractErrorCode( sqle ) ) {
+					case 2627, 2601 -> {
+						final String message = sqle.getMessage();
+						yield message.contains( "unique index " )
+								? extractUsingTemplate( "unique index '", "'", message )
+								: extractUsingTemplate( "'", "'", message );
 					}
+					case 547 -> extractUsingTemplate( "constraint \"", "\"", sqle.getMessage() );
+					case 515 -> extractUsingTemplate( "column '", "'", sqle.getMessage() );
+					default -> null;
 				}
 		);
 	}
@@ -823,8 +819,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			final String sqlState = extractSqlState( sqlException );
-			if ( "HY008".equals( sqlState ) ) {
+			if ( "HY008".equals( extractSqlState( sqlException ) ) ) {
 				return new QueryTimeoutException( message, sqlException, sql );
 			}
 
@@ -832,10 +827,25 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				case 1222 -> new LockTimeoutException( message, sqlException, sql );
 				case 2627, 2601 -> new ConstraintViolationException( message, sqlException, sql,
 						ConstraintViolationException.ConstraintKind.UNIQUE,
-						getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-				);
+						getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 				case 515 -> new ConstraintViolationException( message, sqlException, sql,
-						ConstraintViolationException.ConstraintKind.NOT_NULL, null );
+						ConstraintViolationException.ConstraintKind.NOT_NULL,
+						getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+				case 547 -> {
+					if ( message.contains( " CHECK " ) ) {
+						yield new ConstraintViolationException( message, sqlException, sql,
+								ConstraintViolationException.ConstraintKind.CHECK,
+								getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					}
+					else if ( message.contains( " FOREIGN KEY " ) ) {
+						yield new ConstraintViolationException( message, sqlException, sql,
+								ConstraintViolationException.ConstraintKind.FOREIGN_KEY,
+								getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					}
+					else {
+						yield null;
+					}
+				}
 				default -> null;
 			};
 		};

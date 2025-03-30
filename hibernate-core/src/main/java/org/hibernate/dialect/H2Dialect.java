@@ -805,28 +805,28 @@ public class H2Dialect extends Dialect {
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) ->
 				switch ( extractErrorCode( sqlException ) ) {
-					case 23505 ->
-						// Unique index or primary key violation
-							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
-									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					case 40001 ->
 						// DEADLOCK DETECTED
 							new LockAcquisitionException(message, sqlException, sql);
 					case 50200 ->
 						// LOCK NOT AVAILABLE
 							new PessimisticLockException(message, sqlException, sql);
+					case 23505 ->
+						// Unique index or primary key violation
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					case 23502 ->
 						// NULL not allowed for column
 							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
-									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					case 23503, 23506 ->
 						// Referential integrity constraint violation
 							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.FOREIGN_KEY,
-									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					case 23513, 23514 ->
 						// Check constraint violation
 							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.CHECK,
-									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					case 57014 ->
 							new QueryTimeoutException( message, sqlException, sql );
 					default -> null;

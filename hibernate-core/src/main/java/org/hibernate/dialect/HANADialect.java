@@ -44,6 +44,8 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -126,6 +128,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.hibernate.dialect.HANAServerConfiguration.MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE;
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -618,8 +621,6 @@ public class HANADialect extends Dialect {
 							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
 									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					case 461, 462 ->
-						// 257 - Cannot insert NULL or update to NULL
-						// 301 - Unique constraint violated
 						// 461 - foreign key constraint violation
 						// 462 - failed on update or delete by foreign key constraint violation
 							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.FOREIGN_KEY,
@@ -631,6 +632,17 @@ public class HANADialect extends Dialect {
 
 					default -> null;
 				};
+	}
+
+	@Override
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
+		return new TemplatedViolatedConstraintNameExtractor( sqlException ->
+				switch ( extractErrorCode( sqlException ) ) {
+					case 301 -> extractUsingTemplate(" Index(", ") ", sqlException.getMessage() );
+					case 287 -> extractUsingTemplate(" NULL: ", ": ", sqlException.getMessage() );
+					case 677 -> extractUsingTemplate(" violation: ", ": ", sqlException.getMessage() );
+					default -> null;
+				} );
 	}
 
 	@Override

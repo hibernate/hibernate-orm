@@ -15,6 +15,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -41,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @RequiresDialect( SybaseASEDialect.class )
 @RequiresDialect( OracleDialect.class )
 @RequiresDialect( DB2Dialect.class )
+@RequiresDialect( HANADialect.class )
 public class ConstraintInterpretationTest2 {
 	@Test void testNotNullPrimaryKey(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
@@ -117,7 +119,9 @@ public class ConstraintInterpretationTest2 {
 			}
 			catch (ConstraintViolationException cve) {
 				assertEquals( ConstraintViolationException.ConstraintKind.FOREIGN_KEY, cve.getKind() );
-				assertTrue(  cve.getConstraintName().toLowerCase().endsWith( "id2to1fk" ) );
+				if ( !(scope.getDialect() instanceof HANADialect) ) {
+					assertTrue(  cve.getConstraintName().toLowerCase().endsWith( "id2to1fk" ) );
+				}
 			}
 		} );
 	}

@@ -3,6 +3,23 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.12.Final (March 30, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32945
+
+** Bug
+    * [HHH-19109] - Hibernate Data Repositories are @RequestScoped
+    * [HHH-19059] - Bytecode enhancement fails when inherited fields are mapped using property access in subclass
+    * [HHH-19017] - Class Cast Exception for PersistentAttributeInterceptable
+    * [HHH-18920] - Enum parameters in Jakarta Data repository method return type constructor are not properly matched
+    * [HHH-18745] - Unnecessary joins when use TREAT operator 
+    * [HHH-14694] - Use stable proxy names to avoid managing proxy state and memory leaks
+
+** Task
+    * [HHH-19230] - Ensure that thread local for org.hibernate.bytecode.enhance.internal.bytebuddy.SafeCacheProvider + OverridingClassFileLocator are completely cleared
+
+
 Changes in 6.6.11.Final (March 16, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -87,12 +87,4 @@ public enum GraphSemantic {
 			);
 		};
 	}
-
-	/**
-	 * @deprecated Use {@link #fromHintName} instead
-	 */
-	@Deprecated(since = "6.0")
-	public static GraphSemantic fromJpaHintName(String hintName) {
-		return fromHintName( hintName );
-	}
 }

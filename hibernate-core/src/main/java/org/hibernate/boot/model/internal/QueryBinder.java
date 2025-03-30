@@ -32,7 +32,6 @@ import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.SqlResultSetMappingDescriptor;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.models.spi.AnnotationTarget;
@@ -49,7 +48,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.function.Supplier;
 
-import static java.lang.Boolean.TRUE;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
@@ -234,28 +232,15 @@ public abstract class QueryBinder {
 		final NamedNativeQueryDefinition.Builder<?> builder =
 				createQueryDefinition( namedNativeQuery, registrationName, resultSetMappingName, resultClass,
 						namedNativeQuery.timeout(), namedNativeQuery.fetchSize(), querySpaces, location );
-
-		if ( TRUE == namedNativeQuery.callable() ) {
-			final NamedProcedureCallDefinition definition =
-					createStoredProcedure( builder, context, () -> illegalCallSyntax( namedNativeQuery ) );
-			context.getMetadataCollector().addNamedProcedureCallDefinition( definition );
-			DeprecationLogger.DEPRECATION_LOGGER.warn(
-					"Marking named native queries as callable is no longer supported; use '@jakarta.persistence.NamedStoredProcedureQuery' instead. Ignoring."
+		final NamedNativeQueryDefinition<?> queryDefinition = builder.build();
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf(
+					"Binding named native query: %s => %s",
+					queryDefinition.getRegistrationName(),
+					queryDefinition.getSqlQueryString()
 			);
 		}
-		else {
-			final NamedNativeQueryDefinition<?> queryDefinition = builder.build();
-
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf(
-						"Binding named native query: %s => %s",
-						queryDefinition.getRegistrationName(),
-						queryDefinition.getSqlQueryString()
-				);
-			}
-
-			context.getMetadataCollector().addNamedNativeQuery( queryDefinition );
-		}
+		context.getMetadataCollector().addNamedNativeQuery( queryDefinition );
 	}
 
 	private static <T> NamedNativeQueryDefinition.Builder<T> createQueryDefinition(
@@ -552,10 +537,5 @@ public abstract class QueryBinder {
 			i++;
 		}
 		return i;
-	}
-
-	private static AnnotationException illegalCallSyntax(org.hibernate.annotations.NamedNativeQuery queryAnn) {
-		return new AnnotationException( "Callable 'NamedNativeQuery' named '" + queryAnn.name()
-				+ "' does not use the JDBC call syntax" );
 	}
 }

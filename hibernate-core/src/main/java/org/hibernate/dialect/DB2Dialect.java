@@ -49,6 +49,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
@@ -1139,22 +1140,24 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return (sqlException, message, sql) -> switch ( extractErrorCode( sqlException ) ) {
-			case -952 -> new LockTimeoutException( message, sqlException, sql );
-			case -803 -> new ConstraintViolationException( message, sqlException, sql,
-					ConstraintViolationException.ConstraintKind.UNIQUE,
-					getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-			case -530,-531 -> new ConstraintViolationException( message, sqlException, sql,
-					ConstraintViolationException.ConstraintKind.FOREIGN_KEY,
-					getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-			case -407 -> new ConstraintViolationException( message, sqlException, sql,
-					ConstraintViolationException.ConstraintKind.NOT_NULL,
-					getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-			case -543,-545 -> new ConstraintViolationException( message, sqlException, sql,
-					ConstraintViolationException.ConstraintKind.CHECK,
-					getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-			default -> null;
-		};
+		return (sqlException, message, sql) ->
+				switch ( extractErrorCode( sqlException ) ) {
+					case -952 ->
+							new LockTimeoutException( message, sqlException, sql );
+					case -803 ->
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case -530,-531 ->
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.FOREIGN_KEY,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case -407 ->
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case -543,-545 ->
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.CHECK,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					default -> null;
+				};
 	}
 
 	@Override

@@ -24,6 +24,7 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
@@ -696,50 +697,52 @@ public class SybaseASEDialect extends SybaseDialect {
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final String sqlState = extractSqlState( sqlException );
-			final int errorCode = extractErrorCode( sqlException );
 			if ( sqlState != null ) {
-				switch ( sqlState ) {
-					case "HY008":
-						return new QueryTimeoutException( message, sqlException, sql );
-					case "JZ0TO":
-					case "JZ006":
-						return new LockTimeoutException( message, sqlException, sql );
-					case "S1000":
-					case "23000":
-						switch ( errorCode ) {
-							case 515, 233:
-								// Attempt to insert NULL value into column; column does not allow nulls.
-								return new ConstraintViolationException( message, sqlException, sql,
-										ConstraintViolationException.ConstraintKind.NOT_NULL,
-										getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-							case 546:
-								// Foreign key violation
-								return new ConstraintViolationException( message, sqlException, sql,
-										ConstraintViolationException.ConstraintKind.FOREIGN_KEY,
-										getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-							case 548:
-								// Check constraint violation
-								return new ConstraintViolationException( message, sqlException, sql,
-										ConstraintViolationException.ConstraintKind.CHECK,
-										getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-							case 2601:
-								// Unique constraint violation
-								return new ConstraintViolationException( message, sqlException, sql,
-										ConstraintViolationException.ConstraintKind.UNIQUE,
-										getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-						}
-						break;
-					case "ZZZZZ":
+				final int errorCode = extractErrorCode( sqlException );
+				return switch ( sqlState ) {
+					case "HY008" ->
+						new QueryTimeoutException( message, sqlException, sql );
+					case "JZ0TO", "JZ006" ->
+						new LockTimeoutException( message, sqlException, sql );
+					case "S1000", "23000" ->
+						convertConstraintViolation( sqlException, message, sql, errorCode );
+					case "ZZZZZ" -> {
 						if ( 515 == errorCode ) {
 							// Attempt to insert NULL value into column; column does not allow nulls.
-							return new ConstraintViolationException( message, sqlException, sql,
-									ConstraintViolationException.ConstraintKind.NOT_NULL,
+							yield new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
 									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 						}
-						break;
-				}
+						else {
+							yield null;
+						}
+					}
+					default -> null;
+				};
 			}
 			return null;
+		};
+	}
+
+	private ConstraintViolationException convertConstraintViolation(
+			SQLException sqlException, String message, String sql, int errorCode) {
+		return switch ( errorCode ) {
+			case 515, 233 ->
+				// Attempt to insert NULL value into column; column does not allow nulls.
+					new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+			case 546 ->
+				// Foreign key violation
+					new ConstraintViolationException( message, sqlException, sql, ConstraintKind.FOREIGN_KEY,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+			case 548 ->
+				// Check constraint violation
+					new ConstraintViolationException( message, sqlException, sql, ConstraintKind.CHECK,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+			case 2601 ->
+				// Unique constraint violation
+					new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+			default -> null;
 		};
 	}
 

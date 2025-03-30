@@ -49,6 +49,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
@@ -825,22 +826,21 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			}
 
 			return switch ( extractErrorCode( sqlException ) ) {
-				case 1222 -> new LockTimeoutException( message, sqlException, sql );
-				case 2627, 2601 -> new ConstraintViolationException( message, sqlException, sql,
-						ConstraintViolationException.ConstraintKind.UNIQUE,
-						getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-				case 515 -> new ConstraintViolationException( message, sqlException, sql,
-						ConstraintViolationException.ConstraintKind.NOT_NULL,
-						getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+				case 1222 ->
+						new LockTimeoutException( message, sqlException, sql );
+				case 2627, 2601 ->
+						new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
+								getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+				case 515 ->
+						new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
+								getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 				case 547 -> {
 					if ( message.contains( " CHECK " ) ) {
-						yield new ConstraintViolationException( message, sqlException, sql,
-								ConstraintViolationException.ConstraintKind.CHECK,
+						yield new ConstraintViolationException( message, sqlException, sql, ConstraintKind.CHECK,
 								getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					}
 					else if ( message.contains( " FOREIGN KEY " ) ) {
-						yield new ConstraintViolationException( message, sqlException, sql,
-								ConstraintViolationException.ConstraintKind.FOREIGN_KEY,
+						yield new ConstraintViolationException( message, sqlException, sql, ConstraintKind.FOREIGN_KEY,
 								getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					}
 					else {

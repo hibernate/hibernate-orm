@@ -28,6 +28,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
@@ -463,24 +464,20 @@ public class HSQLDialect extends Dialect {
 				switch ( extractErrorCode( sqlException ) ) {
 					case -10 ->
 						// Not null constraint violation
-						new ConstraintViolationException( message, sqlException, sql,
-								ConstraintViolationException.ConstraintKind.NOT_NULL,
-								getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					case -104 ->
 						// Unique constraint violation
-							new ConstraintViolationException( message, sqlException, sql,
-									ConstraintViolationException.ConstraintKind.UNIQUE,
-									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					case -157 ->
 						// Check constraint violation
-							new ConstraintViolationException( message, sqlException, sql,
-									ConstraintViolationException.ConstraintKind.CHECK,
-									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.CHECK,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					case -177 ->
 						// Foreign key constraint violation
-							new ConstraintViolationException( message, sqlException, sql,
-									ConstraintViolationException.ConstraintKind.FOREIGN_KEY,
-									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.FOREIGN_KEY,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					default -> null;
 				};
 	}

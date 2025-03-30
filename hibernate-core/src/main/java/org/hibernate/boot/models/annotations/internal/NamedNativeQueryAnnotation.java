@@ -42,7 +42,6 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 	CacheRetrieveMode cacheRetrieveMode;
 	boolean readOnly;
 	String[] querySpaces;
-	boolean callable;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
@@ -61,7 +60,6 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 		cacheRetrieveMode = CacheRetrieveMode.USE;
 		readOnly = false;
 		querySpaces = new String[0];
-		callable = false;
 	}
 
 	/**
@@ -87,7 +85,6 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 		}
 		this.readOnly = annotation.readOnly();
 		this.querySpaces = annotation.querySpaces();
-		this.callable = annotation.callable();
 	}
 
 	/**
@@ -109,7 +106,6 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 		this.cacheRetrieveMode = (CacheRetrieveMode) attributeValues.get( "cacheRetrieveMode" );
 		this.readOnly = (boolean) attributeValues.get( "readOnly" );
 		this.querySpaces = (String[]) attributeValues.get( "querySpaces" );
-		this.callable = (boolean) attributeValues.get( "callable" );
 	}
 
 	@Override
@@ -257,15 +253,6 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 
 	public void querySpaces(String[] value) {
 		this.querySpaces = value;
-	}
-
-	@Override
-	public boolean callable() {
-		return callable;
-	}
-
-	public void callable(boolean value) {
-		this.callable = value;
 	}
 
 	public void apply(JaxbNamedNativeQueryImpl jaxbNamedQuery, XmlDocumentContext xmlDocumentContext) {

@@ -133,22 +133,6 @@ public class LoadQueryInfluencers implements Serializable {
 		this.enabledCascadingFetchProfile = enabledCascadingFetchProfile;
 	}
 
-	/**
-	 * @deprecated Use {@link #getEnabledCascadingFetchProfile} instead
-	 */
-	@Deprecated( since = "6.0" )
-	public String getInternalFetchProfile() {
-		return getEnabledCascadingFetchProfile().getLegacyName();
-	}
-
-	/**
-	 * @deprecated Use {@link #setEnabledCascadingFetchProfile} instead
-	 */
-	@Deprecated( since = "6.0" )
-	public void setInternalFetchProfile(String internalFetchProfile) {
-		setEnabledCascadingFetchProfile( CascadingFetchProfile.fromLegacyName( internalFetchProfile ) );
-	}
-
 
 	// filter support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

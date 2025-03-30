@@ -171,17 +171,4 @@ public @interface NamedNativeQuery {
 	 * @see Synchronize
 	 */
 	String[] querySpaces() default {};
-
-	/**
-	 * Is the {@linkplain #query() SQL query} a call to a stored procedure
-	 * or function?
-	 *
-	 * @deprecated Calling database procedures and functions through
-	 *             {@link org.hibernate.query.NativeQuery} is no longer supported;
-	 *             use {@link jakarta.persistence.NamedStoredProcedureQuery} instead.
-	 *
-	 * @see org.hibernate.jpa.HibernateHints#HINT_CALLABLE_FUNCTION
-	 */
-	@Deprecated(since = "6.0", forRemoval = true)
-	boolean callable() default false;
 }

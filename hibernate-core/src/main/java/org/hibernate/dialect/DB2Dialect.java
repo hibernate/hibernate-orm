@@ -1123,7 +1123,15 @@ public class DB2Dialect extends Dialect {
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return new TemplatedViolatedConstraintNameExtractor(
 				sqle -> switch ( extractErrorCode( sqle ) ) {
-					case -803 -> extractUsingTemplate( "SQLERRMC=1;", ",", sqle.getMessage() );
+					case -803 -> {
+						// Unique constraint
+						final String constraintWithKind = extractUsingTemplate( "SQLERRMC=", ",", sqle.getMessage() );
+						// strip off "1;" for PK, or "2;" for other UK
+						yield constraintWithKind == null ? null : constraintWithKind.substring(2);
+					}
+					case -543, -545, -530,-531 ->
+						// Foreign key or check constraint
+							extractUsingTemplate( "SQLERRMC=", ",", sqle.getMessage() );
 					default -> null;
 				}
 		);

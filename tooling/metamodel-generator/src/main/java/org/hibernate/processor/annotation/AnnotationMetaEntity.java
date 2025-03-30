@@ -183,6 +183,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		importContext.importType(
 				getGeneratedClassFullyQualifiedName( element, getPackageName( context, element ),
 						jakartaDataStaticModel ) );
+		if ( !element.getQualifiedName().toString().endsWith( "$" ) ) {
+			importContext.importType( element.getQualifiedName().toString() );
+		}
 	}
 
 	public static AnnotationMetaEntity create(TypeElement element, Context context, @Nullable AnnotationMetaEntity parent) {

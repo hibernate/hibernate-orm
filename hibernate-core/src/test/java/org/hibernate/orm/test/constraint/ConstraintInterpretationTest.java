@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
@@ -42,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @RequiresDialect( SQLServerDialect.class )
 @RequiresDialect( SybaseASEDialect.class )
 @RequiresDialect( OracleDialect.class )
+@RequiresDialect( DB2Dialect.class )
 @SkipForDialect(dialectClass = MariaDBDialect.class) // Maria doesn't allow named column-level check constraints
 public class ConstraintInterpretationTest {
 	@Test void testNotNullPrimaryKey(EntityManagerFactoryScope scope) {
@@ -52,7 +54,9 @@ public class ConstraintInterpretationTest {
 			}
 			catch (ConstraintViolationException cve) {
 				assertEquals( ConstraintViolationException.ConstraintKind.NOT_NULL, cve.getKind() );
-				assertTrue( cve.getConstraintName().toLowerCase().endsWith( "id" ) );
+				if ( !(scope.getDialect() instanceof DB2Dialect) ) {
+					assertTrue( cve.getConstraintName().toLowerCase().endsWith( "id" ) );
+				}
 			}
 		} );
 	}
@@ -76,7 +80,9 @@ public class ConstraintInterpretationTest {
 			}
 			catch (ConstraintViolationException cve) {
 				assertEquals( ConstraintViolationException.ConstraintKind.NOT_NULL, cve.getKind() );
-				assertTrue( cve.getConstraintName().toLowerCase().endsWith( "name" ) );
+				if ( !(scope.getDialect() instanceof DB2Dialect) ) {
+					assertTrue( cve.getConstraintName().toLowerCase().endsWith( "name" ) );
+				}
 			}
 		} );
 	}
@@ -89,7 +95,9 @@ public class ConstraintInterpretationTest {
 			}
 			catch (ConstraintViolationException cve) {
 				assertEquals( ConstraintViolationException.ConstraintKind.UNIQUE, cve.getKind() );
-				assertTrue( cve.getConstraintName().toLowerCase().contains( "ssnuk" ) );
+				if ( !(scope.getDialect() instanceof DB2Dialect) ) {
+					assertTrue( cve.getConstraintName().toLowerCase().contains( "ssnuk" ) );
+				}
 			}
 		} );
 	}

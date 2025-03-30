@@ -498,7 +498,7 @@ The JPQL specification provides the `select new` construct for this.
 @Query("select new AuthorBookSummary(b.isbn, a.ssn, a.name, b.title " +
        "from Author a join books b " +
        "where title like :pattern")
-List<AuthorBookSummary> summariesForTitle(@Pattern String pattern);
+List<AuthorBookSummary> summariesForTitle(String pattern);
 ----
 
 Note that the `from` clause is required here, since it's impossible to infer the queried entity type from the return type of the repository method.
@@ -511,7 +511,7 @@ Since this is quite verbose, Hibernate doesn't require the use of `select new`, 
 @Query("select isbn, ssn, name, title " +
        "from Author join books " +
        "where title like :pattern")
-List<AuthorBookSummary> summariesForTitle(@Pattern String pattern);
+List<AuthorBookSummary> summariesForTitle(String pattern);
 ----
 ====
 

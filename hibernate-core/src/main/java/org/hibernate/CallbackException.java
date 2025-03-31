@@ -8,10 +8,13 @@ package org.hibernate;
  * Intended to be thrown from {@link Interceptor} callbacks.
  *
  * @implNote This is a legacy exception type from back in the day before
- * Hibernate moved to an unchecked exception strategy.
+ *           Hibernate moved to an unchecked exception strategy.
+ * @deprecated Methods of {@link Interceptor} are no longer required to
+ *             throw this exception type.
  *
  * @author Gavin King
  */
+@Deprecated(since = "7")
 public class CallbackException extends HibernateException {
 	/**
 	 * Creates a CallbackException using the given underlying cause.

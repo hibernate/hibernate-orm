@@ -42,7 +42,6 @@ import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -69,7 +68,6 @@ import jakarta.persistence.TableGenerators;
 
 import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.ENTITY;
-import static org.hibernate.boot.model.internal.FilterDefBinder.bindFilterDefs;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildIdGenerator;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
@@ -226,7 +224,7 @@ public final class AnnotationBinder {
 
 		bindGenericGenerators( annotatedPackage, context );
 		bindQueries( annotatedPackage, context );
-		bindFilterDefs( annotatedPackage, context );
+		FilterDefBinder.bindFilterDefs( annotatedPackage, context );
 	}
 
 	private static void handleIdGenerators(XPackage annotatedPackage, MetadataBuildingContext context) {
@@ -371,6 +369,12 @@ public final class AnnotationBinder {
 		}
 	}
 
+	public static void bindFilterDefs(
+			XClass annotatedClass,
+			MetadataBuildingContext context) throws MappingException {
+		FilterDefBinder.bindFilterDefs( annotatedClass, context );
+	}
+
 	/**
 	 * Bind an annotated class. A subclass must be bound <em>after</em> its superclass.
 	 *
@@ -388,7 +392,6 @@ public final class AnnotationBinder {
 
 		bindQueries( annotatedClass, context );
 		handleImport( annotatedClass, context );
-		bindFilterDefs( annotatedClass, context );
 		bindTypeDescriptorRegistrations( annotatedClass, context );
 		bindEmbeddableInstantiatorRegistrations( annotatedClass, context );
 		bindUserTypeRegistrations( annotatedClass, context );

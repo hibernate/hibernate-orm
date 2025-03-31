@@ -10,6 +10,7 @@ import java.sql.Types;
 import java.util.Set;
 
 import org.hibernate.PessimisticLockException;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.aggregate.AggregateSupport;
@@ -352,17 +353,19 @@ public class MariaDBDialect extends MySQLDialect {
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			switch ( sqlException.getErrorCode() ) {
-				// If @@innodb_snapshot_isolation is set (default since 11.6.2),
-				// if an attempt to acquire a lock on a record that does not exist in the current read view is made,
-				// an error DB_RECORD_CHANGED will be raised.
-				case 1020:
-					return new LockAcquisitionException( message, sqlException, sql );
-				case 1205:
-				case 3572:
+				case 1205: // ER_LOCK_WAIT_TIMEOUT
+					return new LockTimeoutException( message, sqlException, sql );
+				case 3572: // ER_LOCK_NOWAIT
 					return new PessimisticLockException( message, sqlException, sql );
-				case 1207:
-				case 1206:
+				case 1020:
+					// If @@innodb_snapshot_isolation is set (default since 11.6.2),
+					// and an attempt to acquire a lock on a record that does not exist
+					// in the current read view is made, error DB_RECORD_CHANGED is raised.
+				case 1207: // ER_READ_ONLY_TRANSACTION
+				case 1206: // ER_LOCK_TABLE_FULL
 					return new LockAcquisitionException( message, sqlException, sql );
+				case 3024: // ER_QUERY_TIMEOUT
+					return new QueryTimeoutException( message, sqlException, sql );
 				case 1062:
 					// Unique constraint violation
 					return new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,

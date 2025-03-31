@@ -26,5 +26,5 @@ public abstract class XmlSource {
 		return origin;
 	}
 
-	public abstract Binding doBind(Binder binder);
+	public abstract <T> Binding<T> doBind(Binder<T> binder);
 }

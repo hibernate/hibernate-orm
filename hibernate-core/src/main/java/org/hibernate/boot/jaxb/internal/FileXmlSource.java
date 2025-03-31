@@ -26,11 +26,11 @@ public class FileXmlSource extends XmlSource {
 	}
 
 	@Override
-	public Binding doBind(Binder binder) {
+	public <T> Binding<T> doBind(Binder<T> binder) {
 		return doBind( binder, file, getOrigin() );
 	}
 
-	public static Binding doBind(Binder binder, File file, Origin origin) {
+	public static <T> Binding<T> doBind(Binder<T> binder, File file, Origin origin) {
 		final FileInputStream fis;
 		try {
 			fis = new FileInputStream( file );

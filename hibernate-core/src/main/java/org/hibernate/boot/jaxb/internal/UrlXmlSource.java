@@ -29,7 +29,7 @@ public class UrlXmlSource extends XmlSource {
 	}
 
 	@Override
-	public Binding doBind(Binder binder) {
+	public <T> Binding<T> doBind(Binder<T> binder) {
 		try {
 			InputStream stream = url.openStream();
 			return InputStreamXmlSource.doBind( binder, stream, getOrigin(), true );

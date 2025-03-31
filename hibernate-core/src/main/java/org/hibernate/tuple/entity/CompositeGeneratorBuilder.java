@@ -171,7 +171,7 @@ class CompositeGeneratorBuilder {
 					final Object[] generatedValues = new Object[size];
 					for ( int i = 0; i < size; i++ ) {
 						final Generator generator = generators.get(i);
-						if ( generator != null ) {
+						if ( generator != null && generator.getEventTypes().contains( eventType ) ) {
 							generatedValues[i] = ((BeforeExecutionGenerator) generator)
 									.generate( session, owner, null, eventType );
 						}
@@ -182,7 +182,7 @@ class CompositeGeneratorBuilder {
 				else {
 					for ( int i = 0; i < size; i++ ) {
 						final Generator generator = generators.get(i);
-						if ( generator != null ) {
+						if ( generator != null && generator.getEventTypes().contains( eventType ) ) {
 							final Object value = descriptor.getValue( currentValue, i );
 							final Object generatedValue = ((BeforeExecutionGenerator) generator)
 									.generate( session, owner, value, eventType );

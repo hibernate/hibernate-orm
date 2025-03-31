@@ -13,7 +13,6 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Gavin King
  */
 public class AssertionFailure extends RuntimeException {
-	private static final long serialVersionUID = 1L;
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AssertionFailure.class );
 

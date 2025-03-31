@@ -72,7 +72,7 @@ public abstract class AnnotationMeta implements Metamodel {
 	private void handleNamedQueryRepeatableAnnotation(String annotationName, boolean checkHql) {
 		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
-			final AnnotationValue value = getAnnotationValue( mirror, "value" );
+			final AnnotationValue value = getAnnotationValue( mirror );
 			if ( value != null ) {
 				@SuppressWarnings("unchecked")
 				final List<? extends AnnotationValue> annotationValues =
@@ -151,7 +151,7 @@ public abstract class AnnotationMeta implements Metamodel {
 	private void addAuxiliaryMembersForRepeatableAnnotation(String annotationName, String prefix) {
 		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
-			final AnnotationValue value = getAnnotationValue( mirror, "value" );
+			final AnnotationValue value = getAnnotationValue( mirror );
 			if ( value != null ) {
 				@SuppressWarnings("unchecked")
 				final List<? extends AnnotationValue> annotationValues =

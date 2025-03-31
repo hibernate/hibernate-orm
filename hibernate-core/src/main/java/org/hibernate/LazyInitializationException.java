@@ -19,6 +19,8 @@ import java.lang.invoke.MethodHandles;
  *
  * @see Hibernate#initialize(Object)
  * @see Hibernate#isInitialized(Object)
+ * @see StatelessSession#fetch(Object)
+ *
  * @author Gavin King
  */
 public class LazyInitializationException extends HibernateException {

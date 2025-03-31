@@ -9,10 +9,13 @@ import org.hibernate.JDBCException;
 import java.sql.SQLException;
 
 /**
- * A {@link JDBCException} indicating that a lock request
- * timed out on the database.
+ * A {@link JDBCException} indicating that a {@linkplain org.hibernate.LockMode lock}
+ * request timed out on the database.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.LockOptions#getTimeOut
+ * @see org.hibernate.LockOptions#setTimeOut
  */
 public class LockTimeoutException extends LockAcquisitionException {
 	public LockTimeoutException(String string, SQLException root) {

@@ -11,6 +11,8 @@ import org.hibernate.proxy.HibernateProxy;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
+ * Thrown when an {@link IllegalArgumentException} occurs calling a property setter method.
+ *
  * @author Steve Ebersole
  */
 public class PropertySetterAccessException extends PropertyAccessException {

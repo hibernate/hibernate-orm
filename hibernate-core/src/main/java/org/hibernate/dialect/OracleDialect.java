@@ -12,6 +12,7 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -105,6 +106,7 @@ import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.format.jackson.JacksonIntegration;
+import org.hibernate.type.format.jackson.JacksonJsonFormatMapper;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.CallableStatement;
@@ -121,6 +123,7 @@ import org.jboss.logging.Logger;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_USE_BINARY_FLOATS;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
 import static org.hibernate.dialect.DialectLogging.DIALECT_MESSAGE_LOGGER;
 import static org.hibernate.dialect.type.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.dialect.type.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
@@ -268,8 +271,15 @@ public class OracleDialect extends Dialect {
 	public boolean isApplicationContinuity() {
 		return applicationContinuity;
 	}
-
 	public boolean isOracleOsonDisabled() {return isOracleOsonDisabled;}
+
+	private static boolean isJacksonJsonFormatMapper(ConfigurationService configService) {
+		// Mirror the behavior of SessionFactoryOptionsBuilder#determineJsonFormatMapper
+		final String mapperName = configService.getSetting( MappingSettings.JSON_FORMAT_MAPPER,
+				StandardConverters.STRING,JacksonJsonFormatMapper.SHORT_NAME);
+		return JacksonJsonFormatMapper.SHORT_NAME.equalsIgnoreCase( mapperName )
+			|| mapperName == null && JacksonIntegration.getJsonJacksonFormatMapperOrNull() != null;
+	}
 
 	@Override
 	protected DatabaseVersion getMinimumSupportedVersion() {

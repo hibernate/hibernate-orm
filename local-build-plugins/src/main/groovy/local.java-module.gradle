@@ -52,6 +52,9 @@ dependencies {
     compileOnly libs.loggingAnnotations
     // Used for compiling some Oracle specific JdbcTypes
     compileOnly jdbcLibs.oracle
+    compileOnly (jdbcLibs.oracleJdbcJacksonOsonExtension) {
+        exclude group: 'com.oracle.database.jdbc', module: 'ojdbc8'
+    }
 
     // JUnit dependencies made up of:
     // 		* JUnit 5

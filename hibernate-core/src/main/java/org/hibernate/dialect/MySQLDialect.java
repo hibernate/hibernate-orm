@@ -17,7 +17,6 @@ import java.util.TimeZone;
 
 import org.hibernate.Length;
 import org.hibernate.LockOptions;
-import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -1247,11 +1246,11 @@ public class MySQLDialect extends Dialect {
 				case 1205: // ER_LOCK_WAIT_TIMEOUT
 					return new LockTimeoutException( message, sqlException, sql );
 				case 3572: // ER_LOCK_NOWAIT
-					return new PessimisticLockException( message, sqlException, sql );
 				case 1207: // ER_READ_ONLY_TRANSACTION
 				case 1206: // ER_LOCK_TABLE_FULL
 					return new LockAcquisitionException( message, sqlException, sql );
 				case 3024: // ER_QUERY_TIMEOUT
+				case 1317: // ER_QUERY_INTERRUPTED
 					return new QueryTimeoutException( message, sqlException, sql );
 				case 1062:
 					// Unique constraint violation

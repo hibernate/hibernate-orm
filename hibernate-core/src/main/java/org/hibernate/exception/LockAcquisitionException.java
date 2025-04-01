@@ -6,6 +6,7 @@ package org.hibernate.exception;
 
 import java.sql.SQLException;
 
+import org.hibernate.PessimisticLockException;
 import org.hibernate.JDBCException;
 
 /**
@@ -14,7 +15,7 @@ import org.hibernate.JDBCException;
  *
  * @author Steve Ebersole
  */
-public class LockAcquisitionException extends JDBCException {
+public class LockAcquisitionException extends PessimisticLockException {
 	public LockAcquisitionException(String string, SQLException root) {
 		super( string, root );
 	}

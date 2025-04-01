@@ -16,6 +16,7 @@ import org.hibernate.query.Query;
  *
  * @see jakarta.persistence.Query#getSingleResult
  * @see org.hibernate.query.SelectionQuery#getSingleResult
+ * @see jakarta.persistence.NonUniqueResultException
  */
 public class NonUniqueResultException extends HibernateException {
 

@@ -10,6 +10,8 @@ import java.sql.SQLException;
  * Thrown when a pessimistic locking conflict occurs.
  *
  * @author Scott Marlow
+ *
+ * @see jakarta.persistence.PessimisticLockException
  */
 public class PessimisticLockException extends JDBCException {
 	/**

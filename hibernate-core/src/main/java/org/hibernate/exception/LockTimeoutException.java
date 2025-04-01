@@ -16,6 +16,7 @@ import java.sql.SQLException;
  *
  * @see org.hibernate.LockOptions#getTimeOut
  * @see org.hibernate.LockOptions#setTimeOut
+ * @see jakarta.persistence.LockTimeoutException
  */
 public class LockTimeoutException extends LockAcquisitionException {
 	public LockTimeoutException(String string, SQLException root) {

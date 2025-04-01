@@ -11,6 +11,8 @@ package org.hibernate;
  * does not exist.
  *
  * @author Gavin King
+ *
+ * @see jakarta.persistence.OptimisticLockException
  */
 public class StaleStateException extends HibernateException {
 	/**

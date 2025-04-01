@@ -7,6 +7,7 @@ package org.hibernate.internal;
 import java.io.Serializable;
 import java.sql.SQLException;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
@@ -80,18 +81,18 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			rollbackIfNecessary( converted );
 			return converted;
 		}
-		else if ( exception instanceof LockAcquisitionException ) {
-			final PersistenceException converted = wrapLockException( exception, lockOptions );
+		else if ( exception instanceof LockAcquisitionException lockAcquisitionException ) {
+			final PersistenceException converted = wrapLockException( lockAcquisitionException, lockOptions );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
-		else if ( exception instanceof LockingStrategyException ) {
-			final PersistenceException converted = wrapLockException( exception, lockOptions );
+		else if ( exception instanceof LockingStrategyException lockingStrategyException ) {
+			final PersistenceException converted = wrapLockException( lockingStrategyException, lockOptions );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
-		else if ( exception instanceof org.hibernate.PessimisticLockException ) {
-			final PersistenceException converted = wrapLockException( exception, lockOptions );
+		else if ( exception instanceof org.hibernate.PessimisticLockException pessimisticLockException ) {
+			final PersistenceException converted = wrapLockException( pessimisticLockException, lockOptions );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
@@ -202,12 +203,18 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 		return new OptimisticLockException( exception.getMessage(), exception );
 	}
 
-	protected PersistenceException wrapLockException(HibernateException exception, LockOptions lockOptions) {
+	protected PersistenceException wrapLockException(LockAcquisitionException exception, LockOptions lockOptions) {
+		if ( exception instanceof org.hibernate.exception.LockTimeoutException ) {
+			return new LockTimeoutException( exception.getMessage(), exception );
+		}
+		else {
+			throw new PessimisticLockException( exception.getMessage(), exception );
+		}
+	}
+
+	protected PersistenceException wrapLockException(LockingStrategyException exception, LockOptions lockOptions) {
 		if ( exception instanceof OptimisticEntityLockException lockException ) {
 			return new OptimisticLockException( lockException.getMessage(), lockException, lockException.getEntity() );
-		}
-		else if ( exception instanceof org.hibernate.exception.LockTimeoutException ) {
-			return new LockTimeoutException( exception.getMessage(), exception, null );
 		}
 		else if ( exception instanceof PessimisticEntityLockException lockException ) {
 			// assume lock timeout occurred if a timeout or NO WAIT was specified
@@ -215,15 +222,16 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 					? new LockTimeoutException( lockException.getMessage(), lockException, lockException.getEntity() )
 					: new PessimisticLockException( lockException.getMessage(), lockException, lockException.getEntity() );
 		}
-		else if ( exception instanceof org.hibernate.PessimisticLockException lockException ) {
-			// assume lock timeout occurred if a timeout or NO WAIT was specified
-			return lockOptions != null && lockOptions.getTimeOut() > -1
-					? new LockTimeoutException( lockException.getMessage(), lockException, null )
-					: new PessimisticLockException( lockException.getMessage(), lockException, null );
-		}
 		else {
-			return new OptimisticLockException( exception );
+			throw new AssertionFailure( "Unrecognized exception type" );
 		}
+	}
+
+	protected PersistenceException wrapLockException(org.hibernate.PessimisticLockException exception, LockOptions lockOptions) {
+		// assume lock timeout occurred if a timeout or NO WAIT was specified
+		return lockOptions != null && lockOptions.getTimeOut() > -1
+				? new LockTimeoutException( exception.getMessage(), exception )
+				: new PessimisticLockException( exception.getMessage(), exception );
 	}
 
 	private void rollbackIfNecessary(PersistenceException persistenceException) {

@@ -6,8 +6,8 @@ package org.hibernate.type.format.jackson;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import oracle.jdbc.provider.oson.OsonModule;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -15,7 +15,7 @@ import java.io.IOException;
 
 
 /**
- * Implementation of FormatMapper for Orale OSON support
+ * Implementation of FormatMapper for Oracle OSON support
  *
  * @author Emmanuel Jannetti
  * @author Bidyadhar Mohanty
@@ -25,30 +25,12 @@ public class JacksonOsonFormatMapper extends JacksonJsonFormatMapper {
 	public static final String SHORT_NAME = "jackson";
 
 
-	private static final Class osonModuleKlass;
-	static {
-		try {
-			osonModuleKlass = JacksonOsonFormatMapper.class.getClassLoader().loadClass( "oracle.jdbc.provider.oson.OsonModule" );
-		}
-		catch (ClassNotFoundException | LinkageError e) {
-			// should not happen as JacksonOsonFormatMapper is loaded
-			// only when Oracle OSON JDBC extension is present
-			// see OracleDialect class.
-			throw new ExceptionInInitializerError( "JacksonOsonFormatMapper class loaded without OSON extension: " + e.getClass()+" "+ e.getMessage());
-		}
-	}
-
 	/**
 	 * Creates a new JacksonOsonFormatMapper
 	 */
 	public JacksonOsonFormatMapper() {
 		super();
-		try {
-			objectMapper.registerModule( (Module) osonModuleKlass.getDeclaredConstructor().newInstance() );
-		}
-		catch (Exception e) {
-			throw new RuntimeException( "Cannot instanciate " + osonModuleKlass.getCanonicalName(), e );
-		}
+		objectMapper.registerModule( new OsonModule() );
 		objectMapper.disable( SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 	}
 

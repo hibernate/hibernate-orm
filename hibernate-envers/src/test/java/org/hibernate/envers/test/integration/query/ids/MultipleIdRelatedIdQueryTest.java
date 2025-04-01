@@ -12,6 +12,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
+import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
@@ -29,6 +30,7 @@ import static org.junit.Assert.assertNull;
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-11748")
+@Exclude
 public class MultipleIdRelatedIdQueryTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

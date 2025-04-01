@@ -166,7 +166,7 @@ public class StringJsonDocumentReader extends StringJsonDocument implements Json
 				case QUOTE:  // that's the start of an attribute key or a quoted value
 					// put back the quote
 					moveBufferPosition(-1);
-					consumeQuottedString();
+					consumeQuotedString();
 					// That's a quote:
 					//   - if we are at the beginning of an array that's a quoted value
 					//   - if we are in the middle of an array, that's a quoted value
@@ -202,7 +202,7 @@ public class StringJsonDocumentReader extends StringJsonDocument implements Json
 					break;
 				case OTHER:
 					// here we are in front of a boolean, a null or a numeric value.
-					// if none of these cases we going to raise IllegalStateException
+					// if none of these cases we're going to raise IllegalStateException
 					// put back what we've read
 					moveBufferPosition(-1);
 					final int valueSize = consumeNonStringValue();
@@ -296,9 +296,8 @@ public class StringJsonDocumentReader extends StringJsonDocument implements Json
 	}
 
 	/**
-	 * Goes through the JSON string to locate a character.
-	 * Escaped characters are taken into account.
-	 * ex: on 'AB\"C"' this method returns 5 (not 3)
+	 * Goes through the JSON string to locate a non-escaped instance of a given character.
+	 * Ex: on 'AB\"C"' this method returns 5 (not 3)
 	 *
 	 * @param character character to be found
 	 * @return the position of the character or -1 if not found.
@@ -328,7 +327,7 @@ public class StringJsonDocumentReader extends StringJsonDocument implements Json
 	}
 
 	/**
-	 * Consume a non-quotted value
+	 * Consume a non-quoted value
 	 * @return the length of this value. can be 0, -1 in case of error
 	 */
 	private int consumeNonStringValue() {
@@ -354,10 +353,10 @@ public class StringJsonDocumentReader extends StringJsonDocument implements Json
 		return allGood?(this.jsonValueEnd-this.jsonValueStart):-1;
 	}
 	/**
-	 * Consume a quotted value
+	 * Consumes a quoted value
 	 * @return the length of this value. can be 0, -1 in case of error
 	 */
-	private void consumeQuottedString() {
+	private void consumeQuotedString() {
 
 		// be sure we are at a meaningful place
 		// key name are unquoted

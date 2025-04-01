@@ -4,9 +4,9 @@
  */
 package org.hibernate.dialect;
 
-import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import oracle.jdbc.OracleType;
+import oracle.jdbc.provider.oson.OsonFactory;
 import oracle.sql.json.OracleJsonDatum;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonGenerator;
@@ -24,7 +24,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.format.OsonDocumentWriter;
-import org.hibernate.type.format.jackson.JacksonOsonFormatMapper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -45,20 +44,7 @@ import java.sql.SQLException;
 public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
 
 
-	private static final Object osonFactory;
-	static {
-		try {
-			Class osonFactoryKlass = JacksonOsonFormatMapper.class.getClassLoader().loadClass( "oracle.jdbc.provider.oson.OsonFactory" );
-			osonFactory = osonFactoryKlass.getDeclaredConstructor().newInstance();
-		}
-		catch (Exception | LinkageError e) {
-			// should not happen as OracleOsonJacksonJdbcType is loaded
-			// only when Oracle OSON JDBC extension is present
-			// see OracleDialect class.
-			throw new ExceptionInInitializerError( "OracleOsonJacksonJdbcType class loaded without OSON extension: " + e.getClass()+" "+ e.getMessage());
-		}
-	}
-
+	private static final OsonFactory osonFactory = new OsonFactory();
 
 	public OracleOsonJacksonArrayJdbcType(JdbcType elementJdbcType) {
 		super(elementJdbcType);
@@ -134,7 +120,7 @@ public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
 
 			private X fromOson(InputStream osonBytes, WrapperOptions options) throws Exception {
 				FormatMapper mapper = options.getJsonFormatMapper();
-				JsonParser osonParser = ((JsonFactory)osonFactory).createParser( osonBytes );
+				JsonParser osonParser = osonFactory.createParser( osonBytes );
 				return mapper.readFromSource(  getJavaType(), osonParser, options);
 			}
 

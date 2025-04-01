@@ -229,6 +229,7 @@ dependencyResolutionManagement {
             def mssqlVersion = version "mssql", "12.8.1.jre11"
             def mysqlVersion = version "mysql", "9.2.0"
             def oracleVersion = version "oracle", "23.7.0.25.01"
+            def oracleJacksonOsonExtension = version "oracleJacksonOsonExtension", "1.0.3"
             def pgsqlVersion = version "pgsql", "42.7.4"
             def sybaseVersion = version "sybase", "1.3.1"
             def tidbVersion = version "tidb", mysqlVersion
@@ -247,6 +248,7 @@ dependencyResolutionManagement {
             library( "oracle", "com.oracle.database.jdbc", "ojdbc17" ).versionRef( oracleVersion )
             library( "oracleXml", "com.oracle.database.xml", "xdb" ).versionRef( oracleVersion )
             library( "oracleXmlParser", "com.oracle.database.xml", "xmlparserv2" ).versionRef( oracleVersion )
+            library( "oracleJdbcJacksonOsonExtension", "com.oracle.database.jdbc", "ojdbc-provider-jackson-oson" ).versionRef( oracleJacksonOsonExtension )
             library( "mssql", "com.microsoft.sqlserver", "mssql-jdbc" ).versionRef( mssqlVersion )
             library( "db2", "com.ibm.db2", "jcc" ).versionRef( db2Version )
             library( "hana", "com.sap.cloud.db.jdbc", "ngdbc" ).versionRef( hanaVersion )

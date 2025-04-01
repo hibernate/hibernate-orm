@@ -693,26 +693,14 @@ public class HANADialect extends Dialect {
 		return getForUpdateString( aliases, lockMode, lockOptions.getTimeOut() );
 	}
 
-	@SuppressWarnings({ "deprecation" })
 	private String getForUpdateString(String aliases, LockMode lockMode, int timeout) {
-		switch ( lockMode ) {
-			case PESSIMISTIC_READ: {
-				return getReadLockString( aliases, timeout );
-			}
-			case PESSIMISTIC_WRITE: {
-				return getWriteLockString( aliases, timeout );
-			}
-			case UPGRADE_NOWAIT:
-			case PESSIMISTIC_FORCE_INCREMENT: {
-				return getForUpdateNowaitString( aliases );
-			}
-			case UPGRADE_SKIPLOCKED: {
-				return getForUpdateSkipLockedString( aliases );
-			}
-			default: {
-				return "";
-			}
-		}
+		return switch ( lockMode ) {
+			case PESSIMISTIC_READ -> getReadLockString( aliases, timeout );
+			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, timeout );
+			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
+			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
+			default -> "";
+		};
 	}
 
 	@Override

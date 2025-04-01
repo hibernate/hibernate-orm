@@ -2270,8 +2270,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The appropriate {@code LOCK} clause string.
 	 */
 	public String getWriteLockString(String aliases, int timeout) {
-		// by default we simply return the getWriteLockString(timeout) result since
-		// the default is to say no support for "FOR UPDATE OF ..."
+		// by default, we simply return getWriteLockString(timeout),
+		// since the default is no support for "FOR UPDATE OF ..."
 		return getWriteLockString( timeout );
 	}
 

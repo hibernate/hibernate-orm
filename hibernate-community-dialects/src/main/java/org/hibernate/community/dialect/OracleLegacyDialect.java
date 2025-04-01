@@ -1411,16 +1411,12 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	private String withTimeout(String lockString, int timeout) {
-		switch (timeout) {
-			case LockOptions.NO_WAIT:
-				return supportsNoWait() ? lockString + " nowait" : lockString;
-			case LockOptions.SKIP_LOCKED:
-				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			case LockOptions.WAIT_FOREVER:
-				return lockString;
-			default:
-				return supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
-		}
+		return switch ( timeout ) {
+			case LockOptions.NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case LockOptions.SKIP_LOCKED -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case LockOptions.WAIT_FOREVER -> lockString;
+			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
+		};
 	}
 
 	@Override

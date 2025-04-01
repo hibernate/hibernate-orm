@@ -24,7 +24,6 @@ import static org.hibernate.cfg.DialectSpecificSettings.MYSQL_BYTES_PER_CHARACTE
 import static org.hibernate.cfg.DialectSpecificSettings.MYSQL_NO_BACKSLASH_ESCAPES;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_AUTONOMOUS_DATABASE;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_EXTENDED_STRING_SIZE;
-import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
 import static org.hibernate.cfg.DialectSpecificSettings.SYBASE_ANSI_NULL;
 import static org.hibernate.dialect.DatabaseVersion.NO_VERSION;
 
@@ -54,28 +53,6 @@ public class DialectSpecificConfigTest {
 
 		assertThat( dialect ).isInstanceOf( OracleDialect.class );
 		assertThat( ( (OracleDialect) dialect ).isAutonomous() ).isTrue();
-	}
-
-	@Test
-	public void testOracleIsOsonEnabled() {
-		final Dialect dialect = resolveDialect(
-				"Oracle",
-				values -> values.put( "emptyOne", "true" )
-		);
-
-		assertThat( dialect ).isInstanceOf( OracleDialect.class );
-		assertThat( ( (OracleDialect) dialect ).isOracleOsonDisabled() ).isFalse();
-	}
-
-	@Test
-	public void testOracleIsOsonDisabled() {
-		final Dialect dialect = resolveDialect(
-				"Oracle",
-				values -> values.put( ORACLE_OSON_DISABLED, "true" )
-		);
-
-		assertThat( dialect ).isInstanceOf( OracleDialect.class );
-		assertThat( ( (OracleDialect) dialect ).isOracleOsonDisabled() ).isTrue();
 	}
 
 	@Test

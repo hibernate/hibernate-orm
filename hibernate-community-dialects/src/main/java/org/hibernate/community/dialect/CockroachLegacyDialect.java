@@ -991,38 +991,21 @@ public class CockroachLegacyDialect extends Dialect {
 		if (lockMode == null ) {
 			lockMode = lockOptions.getLockMode();
 		}
-		switch ( lockMode ) {
-			case PESSIMISTIC_READ: {
-				return getReadLockString( aliases, lockOptions.getTimeOut() );
-			}
-			case PESSIMISTIC_WRITE: {
-				return getWriteLockString( aliases, lockOptions.getTimeOut() );
-			}
-			case UPGRADE_NOWAIT:
-			case PESSIMISTIC_FORCE_INCREMENT: {
-				return getForUpdateNowaitString(aliases);
-			}
-			case UPGRADE_SKIPLOCKED: {
-				return getForUpdateSkipLockedString(aliases);
-			}
-			default: {
-				return "";
-			}
-		}
+		return switch ( lockMode ) {
+			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeOut() );
+			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeOut() );
+			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
+			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
+			default -> "";
+		};
 	}
 
 	private String withTimeout(String lockString, int timeout) {
-		switch (timeout) {
-			case LockOptions.NO_WAIT: {
-				return supportsNoWait() ? lockString + " nowait" : lockString;
-			}
-			case LockOptions.SKIP_LOCKED: {
-				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			}
-			default: {
-				return lockString;
-			}
-		}
+		return switch ( timeout ) {
+			case LockOptions.NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case LockOptions.SKIP_LOCKED -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			default -> lockString;
+		};
 	}
 
 	@Override

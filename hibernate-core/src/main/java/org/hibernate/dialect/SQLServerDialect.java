@@ -643,25 +643,27 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String appendLockHint(LockOptions lockOptions, String tableName) {
-		LockMode lockMode = lockOptions.getAliasSpecificLockMode( tableName );
-		if ( lockMode == null ) {
-			lockMode = lockOptions.getLockMode();
-		}
+		final LockMode lockMode = lockModeForAlias( lockOptions, tableName );
+		final int timeOut = lockOptions.getTimeOut();
 
-		final String writeLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? "updlock" : "updlock,holdlock";
-		final String readLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? "updlock" : "holdlock";
+		final String writeLockStr = timeOut == LockOptions.SKIP_LOCKED ? "updlock" : "updlock,holdlock";
+		final String readLockStr = timeOut == LockOptions.SKIP_LOCKED ? "updlock" : "holdlock";
 
-		final String noWaitStr = lockOptions.getTimeOut() == LockOptions.NO_WAIT ? ",nowait" : "";
-		final String skipLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? ",readpast" : "";
+		final String noWaitStr = timeOut == LockOptions.NO_WAIT ? ",nowait" : "";
+		final String skipLockStr = timeOut == LockOptions.SKIP_LOCKED ? ",readpast" : "";
 
-		return switch (lockMode) {
-			case PESSIMISTIC_WRITE, WRITE ->
-					tableName + " with (" + writeLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
-			case PESSIMISTIC_READ -> tableName + " with (" + readLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
-			case UPGRADE_SKIPLOCKED -> tableName + " with (updlock,rowlock,readpast" + noWaitStr + ")";
-			case UPGRADE_NOWAIT -> tableName + " with (updlock,holdlock,rowlock,nowait)";
-			default -> tableName;
+		return tableName + switch (lockMode) {
+			case PESSIMISTIC_WRITE, WRITE -> " with (" + writeLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
+			case PESSIMISTIC_READ ->  " with (" + readLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
+			case UPGRADE_SKIPLOCKED -> " with (updlock,rowlock,readpast" + noWaitStr + ")";
+			case UPGRADE_NOWAIT -> " with (updlock,holdlock,rowlock,nowait)";
+			default -> "";
 		};
+	}
+
+	private static LockMode lockModeForAlias(LockOptions lockOptions, String tableName) {
+		final LockMode lockMode = lockOptions.getAliasSpecificLockMode( tableName );
+		return lockMode == null ? lockOptions.getLockMode() : lockMode;
 	}
 
 

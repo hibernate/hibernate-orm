@@ -8,6 +8,8 @@ package org.hibernate.dialect.lock;
  * Represents an error trying to apply an optimistic {@link LockingStrategy} to an entity
  *
  * @author Steve Ebersole
+ *
+ * @see jakarta.persistence.OptimisticLockException
  */
 public class OptimisticEntityLockException extends LockingStrategyException {
 	/**

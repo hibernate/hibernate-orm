@@ -14,6 +14,7 @@ import java.sql.SQLException;
  *
  * @see jakarta.persistence.Query#setTimeout
  * @see org.hibernate.query.CommonQueryContract#setTimeout
+ * @see jakarta.persistence.QueryTimeoutException
  */
 public class QueryTimeoutException extends JDBCException {
 	/**

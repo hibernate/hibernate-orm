@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -38,6 +37,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
@@ -810,7 +810,7 @@ public class H2Dialect extends Dialect {
 							new LockAcquisitionException(message, sqlException, sql);
 					case 50200 ->
 						// LOCK NOT AVAILABLE
-							new PessimisticLockException(message, sqlException, sql);
+							new LockTimeoutException(message, sqlException, sql);
 					case 23505 ->
 						// Unique index or primary key violation
 							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
@@ -828,6 +828,7 @@ public class H2Dialect extends Dialect {
 							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.CHECK,
 									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					case 57014 ->
+						// QUERY CANCELLED
 							new QueryTimeoutException( message, sqlException, sql );
 					default -> null;
 				};

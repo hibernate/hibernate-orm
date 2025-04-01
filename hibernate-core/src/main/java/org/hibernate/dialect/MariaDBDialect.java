@@ -27,6 +27,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.SnapshotIsolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
@@ -348,6 +349,7 @@ public class MariaDBDialect extends MySQLDialect {
 				case 1048 -> extractUsingTemplate( "Column '", "'", sqle.getMessage() );
 				default -> null;
 			} );
+
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
@@ -357,7 +359,8 @@ public class MariaDBDialect extends MySQLDialect {
 				case 1020:
 					// If @@innodb_snapshot_isolation is set (default since 11.6.2),
 					// and an attempt to acquire a lock on a record that does not exist
-					// in the current read view is made, error DB_RECORD_CHANGED is raised.
+					// in the current read view is made, error DB_RECORD_CHANGED is raised
+					return new SnapshotIsolationException( message, sqlException, sql );
 				case 3572: // ER_LOCK_NOWAIT
 				case 1207: // ER_READ_ONLY_TRANSACTION
 				case 1206: // ER_LOCK_TABLE_FULL

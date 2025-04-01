@@ -22,6 +22,7 @@ import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.exception.SnapshotIsolationException;
 import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -89,6 +90,9 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			final PersistenceException converted = wrapLockException( lockingStrategyException, lockOptions );
 			rollbackIfNecessary( converted );
 			return converted;
+		}
+		else if ( exception instanceof SnapshotIsolationException ) {
+			return new OptimisticLockException( exception.getMessage(), exception );
 		}
 		else if ( exception instanceof org.hibernate.QueryTimeoutException ) {
 			final QueryTimeoutException converted = new QueryTimeoutException( exception.getMessage(), exception );

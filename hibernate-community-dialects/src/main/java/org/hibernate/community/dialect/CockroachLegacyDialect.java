@@ -4,7 +4,6 @@
  */
 package org.hibernate.community.dialect;
 
-import java.lang.invoke.MethodHandles;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -47,7 +46,6 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.SemanticException;
@@ -76,7 +74,6 @@ import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
@@ -124,7 +121,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class CockroachLegacyDialect extends Dialect {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CockroachLegacyDialect.class.getName() );
 	// KNOWN LIMITATIONS:
 	// * no support for java.sql.Clob
 
@@ -188,11 +184,6 @@ public class CockroachLegacyDialect extends Dialect {
 		}
 		if ( databaseVersion == null ) {
 			// Recur to the default version of the no-args constructor
-			LOG.unableToDetermineCockroachDatabaseVersion(
-					DEFAULT_VERSION.getDatabaseMajorVersion() + "." +
-							DEFAULT_VERSION.getDatabaseMinorVersion() + "." +
-							DEFAULT_VERSION.getDatabaseMicroVersion()
-			);
 			databaseVersion = DEFAULT_VERSION;
 		}
 		return databaseVersion;

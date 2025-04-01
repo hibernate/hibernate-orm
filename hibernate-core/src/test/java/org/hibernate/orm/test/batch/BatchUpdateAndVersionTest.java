@@ -14,7 +14,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.SnapshotIsolationException;
 import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -141,7 +141,7 @@ public class BatchUpdateAndVersionTest {
 		catch (OptimisticLockException ole) {
 			if (getDialect() instanceof MariaDBDialect && getDialect().getVersion().isAfter( 11, 6, 2 )) {
 				// if @@innodb_snapshot_isolation is set, database throw an exception if record is not available anymore
-				assertTrue( ole.getCause() instanceof LockAcquisitionException );
+				assertTrue( ole.getCause() instanceof SnapshotIsolationException );
 			} else {
 				assertTrue( ole.getCause() instanceof StaleObjectStateException );
 			}

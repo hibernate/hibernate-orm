@@ -72,7 +72,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 	private final JsonSupport jsonSupport;
 	private final boolean dateTypesStoreAsString;
 
-	OracleAggregateSupport(boolean checkConstraintSupport, JsonSupport jsonSupport, boolean dateTypesStoreAsString) {
+	private OracleAggregateSupport(boolean checkConstraintSupport, JsonSupport jsonSupport, boolean dateTypesStoreAsString) {
 		this.checkConstraintSupport = checkConstraintSupport;
 		this.jsonSupport = jsonSupport;
 		// this flag tell us if data is serialized/de-serialized as String. As opposed to using OSON

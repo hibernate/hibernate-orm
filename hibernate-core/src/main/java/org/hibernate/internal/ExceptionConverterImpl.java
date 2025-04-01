@@ -22,7 +22,6 @@ import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -81,18 +80,13 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			rollbackIfNecessary( converted );
 			return converted;
 		}
-		else if ( exception instanceof LockAcquisitionException lockAcquisitionException ) {
-			final PersistenceException converted = wrapLockException( lockAcquisitionException, lockOptions );
+		else if ( exception instanceof org.hibernate.PessimisticLockException pessimisticLockException ) {
+			final PersistenceException converted = wrapLockException( pessimisticLockException, lockOptions );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
 		else if ( exception instanceof LockingStrategyException lockingStrategyException ) {
 			final PersistenceException converted = wrapLockException( lockingStrategyException, lockOptions );
-			rollbackIfNecessary( converted );
-			return converted;
-		}
-		else if ( exception instanceof org.hibernate.PessimisticLockException pessimisticLockException ) {
-			final PersistenceException converted = wrapLockException( pessimisticLockException, lockOptions );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
@@ -203,15 +197,6 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 		return new OptimisticLockException( exception.getMessage(), exception );
 	}
 
-	protected PersistenceException wrapLockException(LockAcquisitionException exception, LockOptions lockOptions) {
-		if ( exception instanceof org.hibernate.exception.LockTimeoutException ) {
-			return new LockTimeoutException( exception.getMessage(), exception );
-		}
-		else {
-			throw new PessimisticLockException( exception.getMessage(), exception );
-		}
-	}
-
 	protected PersistenceException wrapLockException(LockingStrategyException exception, LockOptions lockOptions) {
 		if ( exception instanceof OptimisticEntityLockException lockException ) {
 			return new OptimisticLockException( lockException.getMessage(), lockException, lockException.getEntity() );
@@ -228,10 +213,15 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 	}
 
 	protected PersistenceException wrapLockException(org.hibernate.PessimisticLockException exception, LockOptions lockOptions) {
-		// assume lock timeout occurred if a timeout or NO WAIT was specified
-		return lockOptions != null && lockOptions.getTimeOut() > -1
-				? new LockTimeoutException( exception.getMessage(), exception )
-				: new PessimisticLockException( exception.getMessage(), exception );
+		if ( exception instanceof org.hibernate.exception.LockTimeoutException ) {
+			return new LockTimeoutException( exception.getMessage(), exception );
+		}
+		else {
+			// assume lock timeout occurred if a timeout or NO WAIT was specified
+			return lockOptions != null && lockOptions.getTimeOut() > -1
+					? new LockTimeoutException( exception.getMessage(), exception )
+					: new PessimisticLockException( exception.getMessage(), exception );
+		}
 	}
 
 	private void rollbackIfNecessary(PersistenceException persistenceException) {

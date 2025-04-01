@@ -9,7 +9,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Set;
 
-import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -355,12 +354,11 @@ public class MariaDBDialect extends MySQLDialect {
 			switch ( sqlException.getErrorCode() ) {
 				case 1205: // ER_LOCK_WAIT_TIMEOUT
 					return new LockTimeoutException( message, sqlException, sql );
-				case 3572: // ER_LOCK_NOWAIT
-					return new PessimisticLockException( message, sqlException, sql );
 				case 1020:
 					// If @@innodb_snapshot_isolation is set (default since 11.6.2),
 					// and an attempt to acquire a lock on a record that does not exist
 					// in the current read view is made, error DB_RECORD_CHANGED is raised.
+				case 3572: // ER_LOCK_NOWAIT
 				case 1207: // ER_READ_ONLY_TRANSACTION
 				case 1206: // ER_LOCK_TABLE_FULL
 					return new LockAcquisitionException( message, sqlException, sql );

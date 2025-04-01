@@ -7,8 +7,6 @@ package org.hibernate.exception.internal;
 import java.sql.SQLException;
 
 import org.hibernate.JDBCException;
-import org.hibernate.PessimisticLockException;
-import org.hibernate.QueryTimeoutException;
 import org.hibernate.exception.AuthException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
@@ -22,7 +20,6 @@ import org.hibernate.exception.spi.ConversionContext;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.util.JdbcExceptionHelper.determineSqlStateClassCode;
-import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 
 /**
@@ -53,17 +50,6 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 					return new AuthException( message, sqlException, sql );
 				case "40001":
 					return new LockAcquisitionException( message, sqlException, sql );
-				case "40XL1", "40XL2":
-					// Derby "A lock could not be obtained within the time requested."
-					return new PessimisticLockException( message, sqlException, sql );
-				case "70100":
-					// MySQL Query execution was interrupted
-					return new QueryTimeoutException(  message, sqlException, sql );
-				case "72000":
-					if ( extractErrorCode( sqlException ) == 1013 ) {
-						// Oracle user requested cancel of current operation
-						return new QueryTimeoutException(  message, sqlException, sql );
-					}
 			}
 			switch ( determineSqlStateClassCode( sqlState ) ) {
 				case

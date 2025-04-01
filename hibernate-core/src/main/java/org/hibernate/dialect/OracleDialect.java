@@ -19,6 +19,7 @@ import org.hibernate.Length;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -34,6 +35,8 @@ import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -96,21 +99,27 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.format.jackson.JacksonIntegration;
+import org.hibernate.type.format.jackson.JacksonJsonFormatMapper;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
+import org.jboss.logging.Logger;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static org.hibernate.LockOptions.NO_WAIT;
 import static org.hibernate.LockOptions.SKIP_LOCKED;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
+import static org.hibernate.dialect.DialectLogging.DIALECT_MESSAGE_LOGGER;
 import static org.hibernate.dialect.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.dialect.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.HOUR;
 import static org.hibernate.query.common.TemporalUnit.MINUTE;
@@ -125,6 +134,7 @@ import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.DOUBLE;
+import static org.hibernate.type.SqlTypes.DURATION;
 import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTEGER;
@@ -177,6 +187,8 @@ public class OracleDialect extends Dialect {
 	private static final String ADD_MONTH_EXPRESSION = String.format( yqmSelect, "?2", "?3" );
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 19 );
+
+	private boolean OracleOsonExtensionUsed = false;
 
 	private final OracleUserDefinedTypeExporter userDefinedTypeExporter = new OracleUserDefinedTypeExporter( this );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
@@ -242,6 +254,14 @@ public class OracleDialect extends Dialect {
 
 	public boolean isApplicationContinuity() {
 		return applicationContinuity;
+	}
+
+	private static boolean isJacksonJsonFormatMapper(ConfigurationService configService) {
+		// Mirror the behavior of SessionFactoryOptionsBuilder#determineJsonFormatMapper
+		final String mapperName = configService.getSetting( MappingSettings.JSON_FORMAT_MAPPER,
+				StandardConverters.STRING,JacksonJsonFormatMapper.SHORT_NAME);
+		return JacksonJsonFormatMapper.SHORT_NAME.equalsIgnoreCase( mapperName )
+			|| mapperName == null && JacksonIntegration.getJsonJacksonFormatMapperOrNull() != null;
 	}
 
 	@Override
@@ -799,6 +819,9 @@ public class OracleDialect extends Dialect {
 			case VARBINARY:
 				return "raw($l)";
 
+			case DURATION:
+				return "interval day to second";
+
 			default:
 				return super.columnType( sqlTypeCode );
 		}
@@ -827,6 +850,7 @@ public class OracleDialect extends Dialect {
 		}
 		// We need the DDL type during runtime to produce the proper encoding in certain functions
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( BIT, "number(1,0)", this ) );
+
 	}
 
 	@Override
@@ -972,9 +996,32 @@ public class OracleDialect extends Dialect {
 			typeContributions.contributeJdbcType( OracleReflectionStructJdbcType.INSTANCE );
 		}
 
+
+		final ConfigurationService configService = serviceRegistry.requireService( ConfigurationService.class );
+
 		if ( getVersion().isSameOrAfter( 21 ) ) {
-			typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
-			typeContributions.contributeJdbcTypeConstructor( OracleJsonArrayJdbcTypeConstructor.NATIVE_INSTANCE );
+			final boolean osonDisabled = getBoolean( ORACLE_OSON_DISABLED , configService.getSettings() );
+			if ( !osonDisabled && JacksonIntegration.isOracleOsonExtensionAvailable() && isJacksonJsonFormatMapper( configService )) {
+				// We must check that that extension is available and actually used.
+				typeContributions.contributeJdbcType( OracleOsonJacksonJdbcType.INSTANCE );
+				typeContributions.contributeJdbcTypeConstructor( OracleOsonArrayJdbcTypeConstructor.INSTANCE );
+
+				DIALECT_MESSAGE_LOGGER.DIALECT_LOGGER.log( Logger.Level.DEBUG,
+						"Oracle OSON Jackson extension used" );
+				// as we speak, this is not supported by OSON extension
+				OracleOsonExtensionUsed = true;
+			}
+			else {
+				if (DIALECT_MESSAGE_LOGGER.DIALECT_LOGGER.isDebugEnabled()) {
+					DIALECT_MESSAGE_LOGGER.DIALECT_LOGGER.log( Logger.Level.DEBUG,
+							"Oracle OSON Jackson extension not used" );
+					DIALECT_MESSAGE_LOGGER.DIALECT_LOGGER.log( Logger.Level.DEBUG,
+							"JacksonIntegration.isOracleOsonExtensionAvailable(): " +
+									JacksonIntegration.isOracleOsonExtensionAvailable());
+				}
+				typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
+				typeContributions.contributeJdbcTypeConstructor( OracleJsonArrayJdbcTypeConstructor.NATIVE_INSTANCE );
+			}
 		}
 		else {
 			typeContributions.contributeJdbcType( OracleJsonBlobJdbcType.INSTANCE );
@@ -1021,7 +1068,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return OracleAggregateSupport.valueOf( this );
+		return OracleAggregateSupport.valueOf( this ,!OracleOsonExtensionUsed);
 	}
 
 	@Override

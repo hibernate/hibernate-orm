@@ -39,7 +39,7 @@ public abstract class TestsBase {
 				.withProjectDir( projectDir.toFile() )
 				.withPluginClasspath()
 				.withDebug( true )
-				.withArguments( "clean", compileTaskName, "--stacktrace", "--no-build-cache" )
+				.withArguments( compileTaskName, "--stacktrace", "--no-build-cache", "--configuration-cache" )
 				.forwardOutput();
 
 		final BuildResult result = gradleRunner.build();
@@ -69,7 +69,7 @@ public abstract class TestsBase {
 					.withProjectDir( projectDir.toFile() )
 					.withPluginClasspath()
 					.withDebug( true )
-					.withArguments( "clean", compileTaskName, "--stacktrace", "--no-build-cache" )
+					.withArguments( compileTaskName, "--stacktrace", "--no-build-cache", "--configuration-cache" )
 					.forwardOutput();
 
 			final BuildResult result = gradleRunner.build();
@@ -88,7 +88,7 @@ public abstract class TestsBase {
 					.withProjectDir( projectDir.toFile() )
 					.withPluginClasspath()
 					.withDebug( true )
-					.withArguments( compileTaskName, "--stacktrace", "--no-build-cache" )
+					.withArguments( compileTaskName, "--stacktrace", "--no-build-cache", "--configuration-cache" )
 					.forwardOutput();
 			final BuildResult result = gradleRunner.build();
 			final BuildTask task = result.task( ":" + compileTaskName );

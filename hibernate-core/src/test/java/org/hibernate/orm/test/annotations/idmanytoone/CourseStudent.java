@@ -12,12 +12,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.processing.Exclude;
 
 /**
  * @author Alex Kalashnikov
  */
 @Entity
 @Table(name = "idmanytoone_course_student")
+@Exclude // Avoid generating an IdClass through the annotation processor. See https://hibernate.atlassian.net/browse/HHH-18829
 public class CourseStudent implements Serializable {
 
 	@Id

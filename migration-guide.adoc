@@ -225,6 +225,14 @@ All such cases though are already controllable by the application.
 
 The effect can also often be mitigated using Hibernate's bytecode-based laziness (possibly combined with `@ConcreteProxy`).
 
+[[jdbc-exceptions]]
+=== JDBC exception interpretation
+
+Hibernate now does a better and more consistent job of interpreting database-specific error codes in ``JDBCException``s and translating to subtypes of `PersistenceException`.
+In particular, interpretation of integrity constraint violations was improved significantly.
+
+Also, `LockAcquisitionException` now extends `PessimisticLockException`.
+
 
 [[misc-api]]
 === Miscellaneous

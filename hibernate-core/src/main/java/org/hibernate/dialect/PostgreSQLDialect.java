@@ -21,7 +21,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -46,6 +45,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
@@ -1041,13 +1041,13 @@ public class PostgreSQLDialect extends Dialect {
 			final String sqlState = extractSqlState( sqlException );
 			if ( sqlState != null ) {
 				switch ( sqlState ) {
-					case "40P01":
-						// DEADLOCK DETECTED
+					case "40P01": // DEADLOCK DETECTED
 						return new LockAcquisitionException( message, sqlException, sql );
-					case "55P03":
-						// LOCK NOT AVAILABLE
-						return new PessimisticLockException( message, sqlException, sql );
-					case "57014":
+					case "55P03": // LOCK NOT AVAILABLE
+						//TODO: should we check that the message is "canceling statement due to lock timeout"
+						//      and return LockAcquisitionException if it is not?
+						return new LockTimeoutException( message, sqlException, sql );
+					case "57014": // QUERY CANCELLED
 						return new QueryTimeoutException( message, sqlException, sql );
 				}
 			}

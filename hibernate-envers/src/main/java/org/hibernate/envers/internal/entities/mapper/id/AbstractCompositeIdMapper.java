@@ -4,6 +4,8 @@
  */
 package org.hibernate.envers.internal.entities.mapper.id;
 
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.envers.exception.AuditException;
@@ -46,6 +48,10 @@ public abstract class AbstractCompositeIdMapper extends AbstractIdMapper impleme
 			return null;
 		}
 
+		if ( compositeIdClass.isRecord() ) {
+			return mapToRecordFromMap( data );
+		}
+
 		final Object compositeId = instantiateCompositeId();
 		for ( AbstractIdMapper mapper : ids.values() ) {
 			if ( !mapper.mapToEntityFromMap( compositeId, data ) ) {
@@ -54,6 +60,36 @@ public abstract class AbstractCompositeIdMapper extends AbstractIdMapper impleme
 		}
 
 		return compositeId;
+	}
+
+	protected Object mapToRecordFromMap(Map data) {
+		final var map = new HashMap<String, Object>();
+		for ( AbstractIdMapper mapper : ids.values() ) {
+			if ( !(mapper instanceof SingleIdMapper single && single.mapToMapFromMap( map, data )) ) {
+				return null;
+			}
+		}
+		return recordFromMap( map );
+	}
+
+	protected Object recordFromMap(Map<String, Object> map) {
+		final var recordComponents = compositeIdClass.getRecordComponents();
+		final var constructoryTypes = new Class[recordComponents.length];
+		final var constructoryParameters = new Object[recordComponents.length];
+		for ( var i = 0; i < recordComponents.length; ++i ) {
+			constructoryTypes[i] = recordComponents[i].getType();
+			if ( !map.containsKey( recordComponents[i].getName() ) ) {
+				return null;
+			}
+			constructoryParameters[i] = map.get( recordComponents[i].getName() );
+		}
+		try {
+			final Constructor<?> idClassConstructor = compositeIdClass.getConstructor( constructoryTypes );
+			return idClassConstructor.newInstance( constructoryParameters );
+		}
+		catch (ReflectiveOperationException e) {
+			return null;
+		}
 	}
 
 	@Override

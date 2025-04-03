@@ -341,13 +341,13 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	private String extractUserPropertyName(String redundantString, String propertyName) {
 		String className = component.getOwner().getClassName();
-		boolean specialCase = propertyName.startsWith(className)
-				&& propertyName.length() > className.length() + 2 + redundantString.length() // .id.
-				&& propertyName.substring( className.length() + 1, className.length() + 1 + redundantString.length() )
-						.equals(redundantString);
-		if (specialCase) {
-			//remove id we might be in a @IdClass case
-			return className + propertyName.substring( className.length() + 1 + redundantString.length() );
+		if ( className != null && propertyName.startsWith( className ) ) {
+			boolean specialCase = propertyName.length() > className.length() + 2 + redundantString.length()
+					&& propertyName.substring( className.length() + 1, className.length() + 1 + redundantString.length() ).equals( redundantString );
+			if ( specialCase ) {
+				//remove id we might be in a @IdClass case
+				return className + propertyName.substring( className.length() + 1 + redundantString.length() );
+			}
 		}
 		return null;
 	}

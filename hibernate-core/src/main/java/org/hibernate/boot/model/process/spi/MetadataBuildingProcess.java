@@ -69,6 +69,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ClassDetails;
@@ -452,7 +453,7 @@ public class MetadataBuildingProcess {
 
 		return new DomainModelSource(
 				classDetailsRegistry,
-				allKnownClassNames,
+				CollectionHelper.mutableJoin( allKnownClassNames, xmlPreProcessingResult.getMappedNames() ),
 				modelCategorizationCollector.getGlobalRegistrations(),
 				rootMappingDefaults,
 				xmlPreProcessingResult.getPersistenceUnitMetadata()

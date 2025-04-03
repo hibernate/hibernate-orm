@@ -12,6 +12,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -39,10 +40,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" )
 		}
 )
-@DomainModel(
-		xmlMappings = "/mappings/subselectfetch/ParentChild.hbm.xml"
-)
+@DomainModel(xmlMappings = "/mappings/subselectfetch/parent-child.xml")
 @SessionFactory( useCollectingStatementInspector = true )
+@FailureExpected(reason = "SUBSELECT fetch defined in mapping.xml not working - https://hibernate.atlassian.net/browse/HHH-19316")
 public class SubselectFetchTest {
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {

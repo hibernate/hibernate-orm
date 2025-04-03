@@ -8,6 +8,17 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URL;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.NClob;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -999,6 +1010,39 @@ public class XmlAnnotationHelper {
 		else if ( UUID.class.getSimpleName().equalsIgnoreCase( name ) ) {
 			name = Character.class.getName();
 		}
+		else if ( URL.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = URL.class.getName();
+		}
+		else if ( Blob.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = Blob.class.getName();
+		}
+		else if ( Clob.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = Clob.class.getName();
+		}
+		else if ( NClob.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = NClob.class.getName();
+		}
+		else if ( Instant.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = Instant.class.getName();
+		}
+		else if ( LocalDate.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = LocalDate.class.getName();
+		}
+		else if ( LocalTime.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = LocalTime.class.getName();
+		}
+		else if ( LocalDateTime.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = LocalDateTime.class.getName();
+		}
+		else if ( ZonedDateTime.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = ZonedDateTime.class.getName();
+		}
+		else if ( OffsetTime.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = OffsetTime.class.getName();
+		}
+		else if ( OffsetDateTime.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = OffsetDateTime.class.getName();
+		}
 		else {
 			name = StringHelper.qualifyConditionallyIfNot( packageName, name );
 		}
@@ -1015,9 +1059,6 @@ public class XmlAnnotationHelper {
 		}
 		else if ( jaxbBasicMapping.getJavaType() != null ) {
 			applyJavaTypeDescriptor( jaxbBasicMapping.getJavaType(), memberDetails, xmlDocumentContext );
-		}
-		else if ( isNotEmpty( jaxbBasicMapping.getTarget() ) ) {
-			applyTargetClass( jaxbBasicMapping.getTarget(), memberDetails, xmlDocumentContext );
 		}
 
 		if ( isNotEmpty( jaxbBasicMapping.getJdbcType() ) ) {

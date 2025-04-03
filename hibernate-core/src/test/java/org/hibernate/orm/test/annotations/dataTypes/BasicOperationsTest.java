@@ -14,6 +14,7 @@ import java.util.Locale;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
@@ -41,7 +42,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @SkipForDialect(dialectClass = OracleDialect.class, reason = "HHH-6834")
 @SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "HHH-6834")
-@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.Gaussdb Oracle/Mysql model has different behavior, Oralce model will map date to TIMESTAMP")
 @SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "jConnect reports the type code 11 for bigdatetime columns, which is an unknown type code..")
 @SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase reports the type code 93 for date columns")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class, jiraKey = "HHH-6834")
@@ -66,7 +66,11 @@ public class BasicOperationsTest {
 
 		scope.inTransaction(
 				session -> {
-					session.doWork( new ValidateSomeEntityColumns( session ) );
+
+					Dialect dialect = session.getJdbcServices().getDialect();
+					if ( !(dialect instanceof GaussDBDialect ) ) {
+						session.doWork( new ValidateSomeEntityColumns( session ) );
+					}
 					session.doWork( new ValidateRowCount( session, SOME_ENTITY_TABLE_NAME, 0 ) );
 					session.doWork( new ValidateRowCount( session, SOME_OTHER_ENTITY_TABLE_NAME, 0 ) );
 

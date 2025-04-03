@@ -1469,7 +1469,7 @@ public class CommonFunctionFactory {
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 		functionRegistry.noArgsBuilder( "local_datetime", "localtimestamp" )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_DATE_TIME ) )
+				.setInvariantType ( basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_DATE_TIME ) )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 	}
@@ -2571,6 +2571,15 @@ public class CommonFunctionFactory {
 	 */
 	public void format_toChar() {
 		functionRegistry.register( "format", new FormatFunction( "to_char", typeConfiguration ) );
+	}
+
+	/**
+	 * Usually Oracle-style (except for Informix which quite close to MySQL-style)
+	 *
+	 * @see org.hibernate.dialect.OracleDialect#datetimeFormat
+	 */
+	public void format_toChar_gauss() {
+		functionRegistry.register( "format", new GaussDBFormatFunction( "to_char", typeConfiguration ) );
 	}
 
 	/**
@@ -4175,6 +4184,13 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonArrayInsert_postgresql() {
 		functionRegistry.register( "json_array_insert", new PostgreSQLJsonArrayInsertFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * gauss json_array_insert() function
+	 */
+	public void jsonArrayInsert_gauss() {
+		functionRegistry.register( "json_array_insert", new GaussDBJsonArrayInsertFunction( typeConfiguration ) );
 	}
 
 	/**

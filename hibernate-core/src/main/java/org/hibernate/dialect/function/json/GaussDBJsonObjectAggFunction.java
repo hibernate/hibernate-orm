@@ -32,7 +32,6 @@ public class GaussDBJsonObjectAggFunction extends JsonObjectAggFunction {
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
 
-
 		sqlAppender.appendSql( "json_object_agg(" );
 		sqlAppender.appendSql( "CASE WHEN " );
 		arguments.key().accept( translator );

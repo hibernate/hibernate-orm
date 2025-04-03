@@ -525,7 +525,13 @@ public class MetadataContext {
 			if ( identifierMapper != null ) {
 				cidProperties = identifierMapper.getProperties();
 				propertySpan = identifierMapper.getPropertySpan();
-				idClassType = applyIdClassMetadata( (Component) persistentClass.getIdentifier() );
+				if ( identifierMapper.getComponentClassName() == null ) {
+					// support for no id-class, especially for dynamic models
+					idClassType = null;
+				}
+				else {
+					idClassType = applyIdClassMetadata( (Component) persistentClass.getIdentifier() );
+				}
 			}
 			else {
 				cidProperties = compositeId.getProperties();

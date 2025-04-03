@@ -3163,7 +3163,10 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
-            <xsd:element name="type" type="xsd:string" minOccurs="0"/>
+            <xsd:choice>
+                <xsd:element name="type" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="java-class" type="xsd:string" minOccurs="0"/>
+            </xsd:choice>
             <xsd:element name="column" type="orm:column" minOccurs="0" maxOccurs="unbounded" />
         </xsd:sequence>
     </xsd:complexType>
@@ -3196,6 +3199,8 @@
             <xsd:element name="discriminator" type="orm:any-discriminator"/>
             <xsd:element name="key" type="orm:any-key"/>
             <xsd:element name="cascade" type="orm:cascade-type" minOccurs="0"/>
+
+            <xsd:element name="join-table" type="orm:join-table"/>
         </xsd:sequence>
 
         <xsd:attribute name="name" use="required" type="xsd:string"/>

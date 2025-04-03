@@ -17,57 +17,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.Bag;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheLayout;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.Check;
-import org.hibernate.annotations.Checks;
-import org.hibernate.annotations.CollectionId;
-import org.hibernate.annotations.CollectionIdJavaType;
-import org.hibernate.annotations.CollectionIdJdbcType;
-import org.hibernate.annotations.CollectionIdJdbcTypeCode;
-import org.hibernate.annotations.CollectionType;
-import org.hibernate.annotations.Columns;
-import org.hibernate.annotations.CompositeType;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchProfileOverride;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterJoinTable;
-import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.HQLSelect;
-import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.LazyGroup;
-import org.hibernate.annotations.ListIndexBase;
-import org.hibernate.annotations.ListIndexJavaType;
-import org.hibernate.annotations.ListIndexJdbcType;
-import org.hibernate.annotations.ListIndexJdbcTypeCode;
-import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.MapKeyJavaType;
-import org.hibernate.annotations.MapKeyJdbcType;
-import org.hibernate.annotations.MapKeyJdbcTypeCode;
-import org.hibernate.annotations.MapKeyMutability;
-import org.hibernate.annotations.MapKeyType;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.annotations.OptimisticLock;
-import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.QueryCacheLayout;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLDeleteAll;
-import org.hibernate.annotations.SQLInsert;
-import org.hibernate.annotations.SQLJoinTableRestriction;
-import org.hibernate.annotations.SQLOrder;
-import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.annotations.SQLSelect;
-import org.hibernate.annotations.SQLUpdate;
-import org.hibernate.annotations.SoftDelete;
-import org.hibernate.annotations.SortComparator;
-import org.hibernate.annotations.SortNatural;
-import org.hibernate.annotations.SqlFragmentAlias;
-import org.hibernate.annotations.Synchronize;
+import org.hibernate.annotations.*;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
@@ -1004,6 +954,7 @@ public abstract class CollectionBinder {
 		}
 
 		if ( property.hasDirectAnnotationUsage( CollectionId.class )
+				|| property.hasDirectAnnotationUsage( CollectionIdJavaClass.class )
 				|| property.hasDirectAnnotationUsage( CollectionIdJdbcType.class )
 				|| property.hasDirectAnnotationUsage( CollectionIdJdbcTypeCode.class )
 				|| property.hasDirectAnnotationUsage( CollectionIdJavaType.class ) ) {

@@ -397,8 +397,21 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		implicitJavaTypeAccess = typeConfiguration -> null;
 
 		explicitJavaTypeAccess = typeConfiguration -> {
-			final CollectionIdJavaType javaTypeAnn =
-					attribute.locateAnnotationUsage( CollectionIdJavaType.class, getSourceModelContext() );
+			final CollectionIdJavaClass javaClassAnn = attribute.locateAnnotationUsage(
+					CollectionIdJavaClass.class,
+					getSourceModelContext()
+			);
+			if ( javaClassAnn != null ) {
+				return (BasicJavaType<?>) buildingContext
+						.getBootstrapContext()
+						.getTypeConfiguration()
+						.getJavaTypeRegistry()
+						.getDescriptor( javaClassAnn.idType() );
+			}
+			final CollectionIdJavaType javaTypeAnn = attribute.locateAnnotationUsage(
+					CollectionIdJavaType.class,
+					getSourceModelContext()
+			);
 			if ( javaTypeAnn != null ) {
 				final Class<? extends BasicJavaType<?>> javaTypeClass = javaTypeAnn.value();
 				if ( javaTypeClass != null ) {

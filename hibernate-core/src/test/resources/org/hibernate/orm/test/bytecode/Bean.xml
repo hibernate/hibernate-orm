@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 version="7.0">
+	<package>org.hibernate.orm.test.bytecode</package>
+
+	<entity class="Bean">
+		<attributes>
+			<id name="someString"/>
+			<basic name="someLong">
+				<column name="some_long"/>
+			</basic>
+			<basic name="someInteger">
+				<column name="some_integer"/>
+			</basic>
+			<basic name="someDate">
+				<column name="some_date"/>
+				<temporal>TIMESTAMP</temporal>
+			</basic>
+			<basic name="somelong">
+				<column name="some_long2"/>
+			</basic>
+			<basic name="someint">
+				<column name="some_integer2"/>
+			</basic>
+			<basic name="someObject">
+				<column name="some_obj"/>
+				<jdbc-type-code>2004</jdbc-type-code>
+			</basic>
+		</attributes>
+	</entity>
+</entity-mappings>

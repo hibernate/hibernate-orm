@@ -16,7 +16,14 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Describe an identifier column for a bag.
+ * Describe the identifier for an id-bag.
+ *
+ * @see CollectionIdJavaClass
+ * @see CollectionIdJavaType
+ * @see CollectionIdJdbcType
+ * @see CollectionIdJdbcTypeCode
+ * @see CollectionIdMutability
+ * @see CollectionIdType
  *
  * @author Emmanuel Bernard
  */

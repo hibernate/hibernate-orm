@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.collection.bag</package>
+
+    <entity class="BagOwner">
+        <attributes>
+            <id name="name"/>
+            <many-to-one name="parent">
+                <join-column name="parent_fk"/>
+            </many-to-one>
+            <one-to-many name="children" target-entity="BagOwner" mapped-by="parent" classification="BAG">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="Order">
+        <table name="orders"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <one-to-many name="items" target-entity="Item" mapped-by="order" classification="BAG" orphan-removal="true">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="Item">
+        <table name="items"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="name"/>
+            <many-to-one name="order">
+                <join-column name="order_fk"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>
+

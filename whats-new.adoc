@@ -285,6 +285,22 @@ New operations were added to the `Transaction` interface, allowing code to inspe
 This feature is considered incubating.
 ====
 
+[[collection-id-java-class]]
+== @CollectionIdJavaClass
+
+`@CollectionIdJavaClass` is an alternative to `@CollectionIdJavaType` for simpler cases of id-bag mappings.  E.g.
+
+====
+[source, java, indent=0]
+----
+@Bag
+@CollectionId(generator="increment")
+@CollectionIdJavaClass(Integer.class)
+Collection<Person> authors;
+----
+====
+
+
 [[schema-manager-populate]]
 == Data population
 

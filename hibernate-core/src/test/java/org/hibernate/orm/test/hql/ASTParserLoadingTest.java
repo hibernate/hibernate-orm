@@ -27,10 +27,10 @@ import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
-import org.hibernate.orm.test.any.hbm.IntegerPropertyValue;
-import org.hibernate.orm.test.any.hbm.PropertySet;
-import org.hibernate.orm.test.any.hbm.PropertyValue;
-import org.hibernate.orm.test.any.hbm.StringPropertyValue;
+import org.hibernate.orm.test.any.xml.IntegerPropertyValue;
+import org.hibernate.orm.test.any.xml.PropertySet;
+import org.hibernate.orm.test.any.xml.PropertyValue;
+import org.hibernate.orm.test.any.xml.StringPropertyValue;
 import org.hibernate.orm.test.cid.Customer;
 import org.hibernate.orm.test.cid.LineItem;
 import org.hibernate.orm.test.cid.LineItem.Id;
@@ -110,7 +110,7 @@ import static org.junit.Assert.assertEquals;
 				"/org/hibernate/orm/test/cid/Order.hbm.xml",
 				"/org/hibernate/orm/test/cid/LineItem.hbm.xml",
 				"/org/hibernate/orm/test/cid/Product.hbm.xml",
-				"/org/hibernate/orm/test/any/hbm/Properties.hbm.xml",
+				"/org/hibernate/orm/test/any/xml/Properties.xml",
 				"/org/hibernate/orm/test/legacy/Commento.hbm.xml",
 				"/org/hibernate/orm/test/legacy/Marelo.hbm.xml"
 		},

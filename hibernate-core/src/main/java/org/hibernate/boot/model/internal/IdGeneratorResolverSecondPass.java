@@ -12,6 +12,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation;
 import org.hibernate.boot.models.spi.GenericGeneratorRegistration;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.spi.SequenceGeneratorRegistration;
@@ -351,6 +352,21 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 	}
 
 	private boolean handleAsLocalAutoGenerator() {
+		if ( "increment".equals( generatedValue.generator() ) ) {
+			final GenericGeneratorAnnotation incrementGenerator = new GenericGeneratorAnnotation( buildingContext.getBootstrapContext().getModelsContext() );
+			incrementGenerator.name( "increment" );
+			incrementGenerator.strategy( "increment" );
+
+			GeneratorAnnotationHelper.handleGenericGenerator(
+					generatedValue.generator(),
+					incrementGenerator,
+					entityMapping,
+					idValue,
+					buildingContext
+			);
+			return true;
+		}
+
 		final String generator = generatedValue.generator();
 		assert !generator.isEmpty();
 

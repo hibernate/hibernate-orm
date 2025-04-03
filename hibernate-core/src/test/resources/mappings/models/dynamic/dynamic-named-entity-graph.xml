@@ -18,13 +18,13 @@
         </named-entity-graph>
         <attributes>
             <id name="id">
-                <target>integer</target>
+                <target>Integer</target>
             </id>
             <basic name="name">
-                <target>string</target>
+                <target>String</target>
             </basic>
             <basic name="surname">
-                <target>string</target>
+                <target>String</target>
             </basic>
             <one-to-one name="address" fetch="LAZY" target-entity="Address"/>
         </attributes>
@@ -32,10 +32,10 @@
     <entity name="Address" metadata-complete="true">
         <attributes>
             <id name="id">
-                <target>integer</target>
+                <target>Integer</target>
             </id>
             <basic name="city">
-                <target>string</target>
+                <target>String</target>
             </basic>
         </attributes>
     </entity>

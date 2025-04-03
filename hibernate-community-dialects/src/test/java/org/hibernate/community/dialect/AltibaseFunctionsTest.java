@@ -23,10 +23,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@DomainModel(
-		annotatedClasses = { Person.class },
-		xmlMappings = "org/hibernate/community/dialect/Person.hbm.xml"
-)
+@DomainModel(annotatedClasses = Person.class)
 @RequiresDialect(AltibaseDialect.class)
 @SessionFactory
 public class AltibaseFunctionsTest {

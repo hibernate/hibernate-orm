@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.any.xml2</package>
+    <access>FIELD</access>
+
+    <entity class="NamedStringProperty">
+        <table name="string_props"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <basic name="value">
+                <column name="val" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="NamedIntegerProperty">
+        <table name="integer_props"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <basic name="value">
+                <column name="val" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+</entity-mappings>

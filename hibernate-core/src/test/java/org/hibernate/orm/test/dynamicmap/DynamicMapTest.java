@@ -20,7 +20,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 
 @JiraKey(value = "HHH-12539")
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/dynamicmap/Test.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/dynamicmap/Test.xml"
 )
 @SessionFactory
 public class DynamicMapTest {

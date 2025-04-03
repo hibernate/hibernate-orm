@@ -4,14 +4,12 @@
  */
 package org.hibernate.orm.test.annotations.bytecode;
 
-
 /**
  * @author Emmanuel Bernard
  */
 public interface Tool {
-	public Long getId();
+	Long getId();
+	void setId(Long id);
 
-	public void setId(Long id);
-
-	public Number usage();
+	Number usage();
 }

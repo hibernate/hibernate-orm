@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.loader.ast.spi.SqlInPredicateMultiKeyLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 
@@ -22,9 +22,9 @@ public class MultiNaturalIdLoaderInPredicate<E> extends AbstractMultiNaturalIdLo
 	}
 
 	@Override
-	public <K> List<E> unorderedMultiLoad(K[] naturalIds, SharedSessionContractImplementor session, LockOptions lockOptions) {
+	public <K> List<E> unorderedMultiLoad(K[] naturalIds, EventSource eventSource, LockOptions lockOptions) {
 
-		final SessionFactoryImplementor sessionFactory = session.getFactory();
+		final SessionFactoryImplementor sessionFactory = eventSource.getFactory();
 
 		final int maxBatchSize;
 		if ( options.getBatchSize() != null && options.getBatchSize() > 0 ) {
@@ -32,7 +32,7 @@ public class MultiNaturalIdLoaderInPredicate<E> extends AbstractMultiNaturalIdLo
 		}
 		else {
 			maxBatchSize =
-					session.getJdbcServices().getJdbcEnvironment().getDialect()
+					eventSource.getJdbcServices().getJdbcEnvironment().getDialect()
 							.getMultiKeyLoadSizingStrategy().determineOptimalBatchLoadSize(
 									getEntityDescriptor().getNaturalIdMapping().getJdbcTypeCount(),
 									naturalIds.length,
@@ -50,12 +50,12 @@ public class MultiNaturalIdLoaderInPredicate<E> extends AbstractMultiNaturalIdLo
 					// `naturalId` here is the one passed in by the API as part of the values array
 					return getEntityDescriptor().getNaturalIdMapping().normalizeInput( naturalId );
 				},
-				session.getLoadQueryInfluencers(),
+				eventSource.getLoadQueryInfluencers(),
 				lockOptions,
 				sessionFactory
 		);
 
-		return batcher.multiLoad( naturalIds, session );
+		return batcher.multiLoad( naturalIds, eventSource );
 	}
 
 }

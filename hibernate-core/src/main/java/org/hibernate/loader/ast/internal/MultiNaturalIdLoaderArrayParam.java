@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -44,11 +44,11 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 	}
 
 	@Override
-	public <K> List<E> unorderedMultiLoad( K[] naturalIds, SharedSessionContractImplementor session, LockOptions lockOptions ) {
+	public <K> List<E> unorderedMultiLoad(K[] naturalIds, EventSource eventSource, LockOptions lockOptions ) {
 
-		final SessionFactoryImplementor sessionFactory = session.getFactory();
+		final SessionFactoryImplementor sessionFactory = eventSource.getFactory();
 
-		naturalIds = LoaderHelper.normalizeKeys( naturalIds, getNaturalIdAttribute(), session, sessionFactory );
+		naturalIds = LoaderHelper.normalizeKeys( naturalIds, getNaturalIdAttribute(), eventSource, sessionFactory );
 
 		final JdbcMapping arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				getNaturalIdMapping().getSingleJdbcMapping(),
@@ -60,7 +60,7 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
 				getNaturalIdAttribute(),
-				session.getLoadQueryInfluencers(),
+				eventSource.getLoadQueryInfluencers(),
 				lockOptions,
 				jdbcParameter,
 				sessionFactory
@@ -86,8 +86,8 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 				null,
 				null,
 				lockOptions,
-				session.isDefaultReadOnly(),
-				session
+				eventSource.isDefaultReadOnly(),
+				eventSource
 		);
 	}
 

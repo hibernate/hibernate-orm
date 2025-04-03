@@ -10,6 +10,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -31,7 +32,7 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 	}
 
 	@Override
-	public <K> List<E> multiLoad(K[] naturalIds, MultiNaturalIdLoadOptions options, SharedSessionContractImplementor session) {
+	public <K> List<E> multiLoad(K[] naturalIds, MultiNaturalIdLoadOptions options, EventSource eventSource) {
 		assert naturalIds != null;
 
 		this.options = options;
@@ -41,41 +42,41 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 		}
 
 		return options.isOrderReturnEnabled()
-				? performOrderedMultiLoad( naturalIds, options, session )
-				: performUnorderedMultiLoad( naturalIds, options, session );
+				? performOrderedMultiLoad( naturalIds, options, eventSource )
+				: performUnorderedMultiLoad( naturalIds, options, eventSource );
 	}
 
-	private <K> List<E> performUnorderedMultiLoad(K[] naturalIds, MultiNaturalIdLoadOptions options, SharedSessionContractImplementor session) {
+	private <K> List<E> performUnorderedMultiLoad(K[] naturalIds, MultiNaturalIdLoadOptions options, EventSource eventSource) {
 		if ( MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.tracef( "Unordered MultiLoad Starting - `%s`", getEntityDescriptor().getEntityName() );
 		}
 
 		return unorderedMultiLoad(
 				naturalIds,
-				session,
+				eventSource,
 				options.getLockOptions() == null ? LockOptions.NONE : options.getLockOptions()
 		);
 	}
 
-	protected abstract <K> List<E> unorderedMultiLoad(K[] naturalIds, SharedSessionContractImplementor session, LockOptions lockOptions);
+	protected abstract <K> List<E> unorderedMultiLoad(K[] naturalIds, EventSource eventSource, LockOptions lockOptions);
 
-	private <K> List<E> performOrderedMultiLoad(K[] naturalIds, MultiNaturalIdLoadOptions options, SharedSessionContractImplementor session) {
+	private <K> List<E> performOrderedMultiLoad(K[] naturalIds, MultiNaturalIdLoadOptions options, EventSource eventSource) {
 		if ( MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.tracef( "Ordered MultiLoad Starting - `%s`", getEntityDescriptor().getEntityName() );
 		}
 
 		return orderedMultiLoad(
 				naturalIds,
-				session,
+				eventSource,
 				options.getLockOptions() == null ? LockOptions.NONE : options.getLockOptions()
 		);
 	}
 
-	protected <K> List<E> orderedMultiLoad( K[] naturalIds, SharedSessionContractImplementor session, LockOptions lockOptions ) {
+	protected <K> List<E> orderedMultiLoad( K[] naturalIds, EventSource eventSource, LockOptions lockOptions ) {
 
-		unorderedMultiLoad( naturalIds, session, lockOptions );
+		unorderedMultiLoad( naturalIds, eventSource, lockOptions );
 
-		return handleResults( naturalIds, session, lockOptions );
+		return handleResults( naturalIds, eventSource, lockOptions );
 	}
 
 	protected <K> List<E> handleResults( K[] naturalIds, SharedSessionContractImplementor session, LockOptions lockOptions ) {

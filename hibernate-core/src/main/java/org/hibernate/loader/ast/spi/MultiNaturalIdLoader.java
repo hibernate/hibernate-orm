@@ -6,7 +6,7 @@ package org.hibernate.loader.ast.spi;
 
 import java.util.List;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventSource;
 
 /**
  * Loader for entities by multiple natural-ids
@@ -24,5 +24,5 @@ public interface MultiNaturalIdLoader<E> extends EntityMultiLoader<E> {
 	 * values positioned according to "attribute ordering".  Simple natural-ids can also be expressed
 	 * by their simple (basic/embedded) type.
 	 */
-	<K> List<E> multiLoad(K[] naturalIds, MultiNaturalIdLoadOptions options, SharedSessionContractImplementor session);
+	<K> List<E> multiLoad(K[] naturalIds, MultiNaturalIdLoadOptions options, EventSource eventSource);
 }

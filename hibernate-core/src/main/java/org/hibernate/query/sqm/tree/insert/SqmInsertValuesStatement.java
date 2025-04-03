@@ -82,7 +82,8 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 				valuesList.add( sqmValues.copy( context ) );
 			}
 		}
-		return context.registerCopy(
+
+		final SqmInsertValuesStatement<T> sqmInsertValuesStatementCopy = context.registerCopy(
 				this,
 				new SqmInsertValuesStatement<>(
 						nodeBuilder(),
@@ -91,10 +92,16 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 						copyCteStatements( context ),
 						getTarget().copy( context ),
 						copyInsertionTargetPaths( context ),
-						getConflictClause() == null ? null : getConflictClause().copy( context ),
+						null,
 						valuesList
 				)
 		);
+
+		if ( getConflictClause() != null ) {
+			sqmInsertValuesStatementCopy.setConflictClause( getConflictClause().copy( context ) );
+		}
+
+		return sqmInsertValuesStatementCopy;
 	}
 
 	public SqmInsertValuesStatement<T> copyWithoutValues(SqmCopyContext context) {

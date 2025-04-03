@@ -218,7 +218,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonQueryNestedPath.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "Not supported")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.Not support $.theNestedObjects[*].id")
 	public void testJsonQueryNested(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -420,7 +420,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObjectAgg.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not supported")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.not supported")
 	public void testJsonObjectAggNullFilter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -463,7 +463,7 @@ public class JsonFunctionTests {
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 has no way to throw an error on duplicate json object keys.")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 15, matchSubTypes = true, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not supported")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.not supported")
 	public void testJsonObjectAggUniqueKeys(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -643,7 +643,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonMergepatch.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss has different behavior")
 	public void testJsonMergepatchVarargs(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -726,7 +726,6 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayInsert.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testJsonArrayInsert(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -743,7 +742,6 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayInsert.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testJsonArrayInsertNonExisting(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -760,7 +758,6 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayInsert.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testJsonArrayInsertNonArray(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -777,7 +774,6 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayInsert.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testJsonArrayInsertToNull(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

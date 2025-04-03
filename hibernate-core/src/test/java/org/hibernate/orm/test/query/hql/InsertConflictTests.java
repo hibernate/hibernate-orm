@@ -61,7 +61,7 @@ public class InsertConflictTests {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict do\"")
 	public void testOnConflictDoNothing(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -86,7 +86,7 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict(\"")
 	public void testOnConflictDoUpdate(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -114,7 +114,7 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict(")
 	public void testOnConflictDoUpdateWithWhere(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -145,7 +145,7 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict(")
 	public void testOnConflictDoUpdateWithWhereCriteria(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -181,7 +181,7 @@ public class InsertConflictTests {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict do\"")
 	public void testOnConflictDoNothingMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -209,7 +209,7 @@ public class InsertConflictTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "MERGE into a table that has a self-referential FK does not work")
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict(")
 	public void testOnConflictDoUpdateMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -238,7 +238,7 @@ public class InsertConflictTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "MERGE into a table that has a self-referential FK does not work")
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "syntax error at or near \"conflict(\"")
 	public void testOnConflictDoUpdateWithWhereMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

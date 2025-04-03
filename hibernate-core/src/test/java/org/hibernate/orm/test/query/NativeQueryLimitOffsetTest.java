@@ -57,7 +57,7 @@ public class NativeQueryLimitOffsetTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.guass's bug,page not supported")
 	public void testFullLimitOffsetOnNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -73,7 +73,7 @@ public class NativeQueryLimitOffsetTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.guass's bug,page not supported")
 	public void testPartialLimitOffsetOnNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

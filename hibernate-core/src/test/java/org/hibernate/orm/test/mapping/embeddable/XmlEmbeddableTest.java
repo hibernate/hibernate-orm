@@ -133,7 +133,7 @@ public class XmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not supported")
 	public void testSelectionItems() {
 		sessionFactoryScope().inSession(
 				entityManager -> {
@@ -223,7 +223,7 @@ public class XmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not supported")
 	public void testUpdateAggregateMember() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
@@ -237,7 +237,7 @@ public class XmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not supported")
 	public void testUpdateMultipleAggregateMembers() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {

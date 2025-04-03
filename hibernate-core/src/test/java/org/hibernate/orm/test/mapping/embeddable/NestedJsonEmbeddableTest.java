@@ -89,7 +89,6 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testFetch() {
 		sessionFactoryScope().inSession(
 				entityManager -> {
@@ -106,7 +105,6 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testFetchNull() {
 		sessionFactoryScope().inSession(
 				entityManager -> {
@@ -122,7 +120,6 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testDomainResult() {
 		sessionFactoryScope().inSession(
 				entityManager -> {
@@ -138,7 +135,6 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testSelectionItems() {
 		sessionFactoryScope().inSession(
 				entityManager -> {
@@ -217,7 +213,6 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-//	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testDeleteWhere() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
@@ -229,7 +224,6 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testUpdateAggregate() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
@@ -241,7 +235,6 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-17695" )
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testNullNestedAggregate() {
 		sessionFactoryScope().inTransaction(
 			entityManager -> {
@@ -262,7 +255,6 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-17695" )
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testNullNestedEmbeddable() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
@@ -284,7 +276,6 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-17695" )
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testNullNestedEmbeddableAndAggregate() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
@@ -306,7 +297,7 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not suppported")
 	public void testUpdateAggregateMember() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
@@ -320,7 +311,7 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not suppported")
 	public void testUpdateMultipleAggregateMembers() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
@@ -335,7 +326,6 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testUpdateAllAggregateMembers() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {

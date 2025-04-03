@@ -178,6 +178,10 @@ public class GaussDBDialect extends Dialect {
 		this.optionalTableUpdateStrategy = determineOptionalTableUpdateStrategy( version );
 	}
 
+	public boolean supportsColumnCheck() {
+		return false;
+	}
+
 	private static OptionalTableUpdateStrategy determineOptionalTableUpdateStrategy(DatabaseVersion version) {
 		return version.isSameOrAfter( DatabaseVersion.make( 15, 0 ) )
 				? GaussDBDialect::usingMerge
@@ -553,6 +557,7 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.insert_overlay();
 		functionFactory.overlay();
 		functionFactory.soundex(); //was introduced apparently
+		functionFactory.format_toChar_gauss();
 
 		functionFactory.locate_positionSubstring();
 		functionFactory.windowFunctions();
@@ -590,6 +595,7 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.jsonInsert_gaussdb();
 		functionFactory.jsonArray_gaussdb();
 		functionFactory.jsonMergepatch_gaussdb();
+		functionFactory.jsonArrayInsert_gauss();
 
 		functionFactory.xmlelement();
 		functionFactory.xmlcomment();

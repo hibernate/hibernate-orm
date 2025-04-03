@@ -80,7 +80,7 @@ public class GaussDBCastingIntervalSecondJdbcType implements AdjustableJdbcType 
 			Dialect dialect) {
 		appender.append( '(' );
 		appender.append( writeExpression );
-		appender.append( "*interval'1 second)" );
+		appender.append( "*interval'1 second')" );
 	}
 
 	@Override

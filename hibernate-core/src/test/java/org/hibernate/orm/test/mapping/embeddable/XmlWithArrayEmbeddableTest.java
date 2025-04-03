@@ -129,7 +129,7 @@ public class XmlWithArrayEmbeddableTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not supported")
 	public void testSelectionItems(SessionFactoryScope scope) {
 		scope.inSession(
 				entityManager -> {
@@ -219,7 +219,7 @@ public class XmlWithArrayEmbeddableTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not supported")
 	public void testUpdateAggregateMember(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -233,7 +233,7 @@ public class XmlWithArrayEmbeddableTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not supported")
 	public void testUpdateMultipleAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -249,7 +249,7 @@ public class XmlWithArrayEmbeddableTest {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not supported")
 	public void testUpdateAllAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

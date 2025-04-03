@@ -4,14 +4,11 @@
  */
 package org.hibernate.orm.test.boot.models.hbm.notfound;
 
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.orm.test.unconstrained.UnconstrainedTest;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,12 +20,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@ServiceRegistry(settings = @Setting(name= MappingSettings.TRANSFORM_HBM_XML, value = "true"))
-@DomainModel(xmlMappings = "mappings/models/hbm/notfound/Person2.hbm.xml")
+@DomainModel(xmlMappings = "mappings/models/hbm/notfound/mapping.xml")
 @SessionFactory
 public class HbmNotFoundTransformationTests {
 	@Test
-	void testNotFoundTransformation(SessionFactoryScope scope) {
+	void testNotFound(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final Employee2 employee = new Employee2( 1, "employee" );
 			final Person2 person = new Person2( 1, "person", employee );
@@ -45,9 +41,6 @@ public class HbmNotFoundTransformationTests {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Person2" ).executeUpdate();
-			session.createMutationQuery( "delete Employee2" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 }

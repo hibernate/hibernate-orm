@@ -18,6 +18,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Form of {@link JavaType} for describing the id of an id-bag mapping.
  *
+ * @see CollectionIdJavaClass
+ *
  * @since 6.0
  */
 @Inherited

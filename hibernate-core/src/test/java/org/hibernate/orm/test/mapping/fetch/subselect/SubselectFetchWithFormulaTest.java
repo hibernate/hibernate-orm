@@ -4,57 +4,46 @@
  */
 package org.hibernate.orm.test.mapping.fetch.subselect;
 
-import java.util.List;
-
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.mapping.Collection;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import java.util.List;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@SkipForDialect(SQLServerDialect.class)
-@SkipForDialect(SybaseDialect.class)
-@SkipForDialect(FirebirdDialect.class)
-public class SubselectFetchWithFormulaTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected String getBaseForMappings() {
-		return "";
-	}
 
-	@Override
-	protected String[] getMappings() {
-		return new String[] {
-				"mappings/subselectfetch/Name.hbm.xml",
-				"mappings/subselectfetch/Value.hbm.xml"
-		};
-	}
-
-	@Before
-	public void before() {
-
-		doInHibernate( this::sessionFactory, session -> {
-			Name chris = new Name();
+@SuppressWarnings("JUnitMalformedDeclaration")
+@SkipForDialect(dialectClass = SQLServerDialect.class)
+@SkipForDialect(dialectClass = SybaseDialect.class)
+@SkipForDialect(dialectClass = FirebirdDialect.class)
+@DomainModel(xmlMappings = {"mappings/subselectfetch/name.xml", "mappings/subselectfetch/value.xml"})
+@SessionFactory(useCollectingStatementInspector = true)
+@FailureExpected(reason = "https://hibernate.atlassian.net/browse/HHH-19316")
+public class SubselectFetchWithFormulaTest {
+	static void prepareTestData(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			final Name chris = new Name();
 			chris.setId( 1 );
 			chris.setName( "chris" );
 
-			Value cat = new Value();
+			final Value cat = new Value();
 			cat.setId(1);
 			cat.setName( chris );
 			cat.setValue( "cat" );
 
-			Value canary = new Value();
+			final Value canary = new Value();
 			canary.setId( 2 );
 			canary.setName( chris );
 			canary.setValue( "canary" );
@@ -63,16 +52,16 @@ public class SubselectFetchWithFormulaTest extends BaseNonConfigCoreFunctionalTe
 			session.persist( cat );
 			session.persist( canary );
 
-			Name sam = new Name();
+			final Name sam = new Name();
 			sam.setId(2);
 			sam.setName( "sam" );
 
-			Value seal = new Value();
+			final Value seal = new Value();
 			seal.setId( 3 );
 			seal.setName( sam );
 			seal.setValue( "seal" );
 
-			Value snake = new Value();
+			final Value snake = new Value();
 			snake.setId( 4 );
 			snake.setName( sam );
 			snake.setValue( "snake" );
@@ -80,41 +69,43 @@ public class SubselectFetchWithFormulaTest extends BaseNonConfigCoreFunctionalTe
 			session.persist( sam );
 			session.persist(seal);
 			session.persist( snake );
-
 		} );
 	}
 
-	@After
-	public void after() {
-		inTransaction(
-				session -> {
-					session.createQuery( "delete Value" ).executeUpdate();
-					session.createQuery( "delete Name" ).executeUpdate();
-				}
-		);
+	@BeforeEach
+	void createTestData(SessionFactoryScope factoryScope) {
+		prepareTestData( factoryScope );
 	}
 
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
-	public void checkSubselectWithFormula() throws Exception {
+	public void checkSubselectWithFormula(DomainModelScope modelScope, SessionFactoryScope factoryScope) {
+		verify( modelScope, factoryScope );
+
+	}
+
+	static void verify(DomainModelScope modelScope, SessionFactoryScope factoryScope) {
 		// as a pre-condition make sure that subselect fetching is enabled for the collection...
-		Collection collectionBinding = metadata().getCollectionBinding( Name.class.getName() + ".values" );
-		assertThat( collectionBinding.isSubselectLoadable(), is( true ) );
+		Collection collectionBinding = modelScope.getDomainModel().getCollectionBinding( Name.class.getName() + ".values" );
+		assertThat( collectionBinding.isSubselectLoadable() ).isTrue();
+
 
 		// Now force the subselect fetch and make sure we do not get SQL errors
-		inTransaction(
-				session -> {
-					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-					CriteriaQuery<Name> criteria = criteriaBuilder.createQuery( Name.class );
-					criteria.from( Name.class );
-					List<Name> results = session.createQuery( criteria ).list();
-//					List results = session.createCriteria(Name.class).list();
-					for (Name name : results) {
-						name.getValues().size();
-					}
-				}
-		);
+		factoryScope.inTransaction( (session) -> {
+			final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+			final List<Name> names = session.createSelectionQuery( "from Name", Name.class ).list();
+			sqlCollector.clear();
 
+			names.forEach( (name) -> {
+				assertThat( name.getValues() ).hasSize( 2 );
+			} );
+			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+
+		} );
 	}
 
 }

@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.boot.models.hbm.notfound</package>
+    <access>FIELD</access>
+
+    <entity class="Person2">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <many-to-one name="employee" not-found="IGNORE">
+                <join-column name="employee_fk"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="Employee2">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+</entity-mappings>

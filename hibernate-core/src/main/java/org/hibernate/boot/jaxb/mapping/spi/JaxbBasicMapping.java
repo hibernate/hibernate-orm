@@ -11,6 +11,12 @@ package org.hibernate.boot.jaxb.mapping.spi;
  * @author Steve Ebersole
  */
 public interface JaxbBasicMapping {
+	/**
+	 * The attribute's name
+	 */
+	String getName();
+	void setName(String name);
+
 	JaxbUserTypeImpl getType();
 
 	void setType(JaxbUserTypeImpl value);

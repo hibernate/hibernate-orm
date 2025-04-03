@@ -69,6 +69,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
@@ -431,24 +432,28 @@ public class MetadataBuildingProcess {
 		);
 
 		final HashSet<String> categorizedClassNames = new HashSet<>();
-		allKnownClassNames.forEach( (className) -> applyKnownClass(
-				className,
-				categorizedClassNames,
-				classDetailsRegistry,
-				modelCategorizationCollector
-		) );
-		xmlPreProcessingResult.getMappedNames().forEach( (className) -> applyKnownClass(
-				className,
-				categorizedClassNames,
-				classDetailsRegistry,
-				modelCategorizationCollector
-		) );
+		// apply known classes
+		allKnownClassNames.forEach( (className) -> {
+			if ( categorizedClassNames.add( className ) ) {
+				// not known yet
+				final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( className );
+				applyKnownClass( classDetails, categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
+			}
+		} );
+		// apply known "names" - generally this handles dynamic models
+		xmlPreProcessingResult.getMappedNames().forEach( (mappedName) -> {
+			if ( categorizedClassNames.add( mappedName ) ) {
+				// not known yet
+				final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( mappedName );
+				applyKnownClass( classDetails, categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
+			}
+		} );
 
 		xmlProcessingResult.apply();
 
 		return new DomainModelSource(
 				classDetailsRegistry,
-				allKnownClassNames,
+				CollectionHelper.mutableJoin( allKnownClassNames, xmlPreProcessingResult.getMappedNames() ),
 				modelCategorizationCollector.getGlobalRegistrations(),
 				rootMappingDefaults,
 				aggregatedPersistenceUnitMetadata

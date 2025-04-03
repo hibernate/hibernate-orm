@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+  <package>org.hibernate.orm.test.mapping.fetch.subselect</package>
+  <access>FIELD</access>
+
+  <entity class="Child" metadata-complete="true">
+    <attributes>
+      <id name="name"/>
+      <many-to-many name="friends" target-entity="Child" fetch-mode="SUBSELECT" classification="BAG">
+        <join-table name="child_friends">
+          <join-column name="in_fk" nullable="false"/>
+          <inverse-join-column name="out_fk"/>
+        </join-table>
+      </many-to-many>
+    </attributes>
+  </entity>
+
+  <entity class="Parent" metadata-complete="true">
+    <attributes>
+      <id name="name"/>
+
+      <one-to-many name="children" target-entity="Child" fetch-mode="SUBSELECT">
+        <order-column name="loc"/>
+        <join-column name="parent_fk"/>
+        <cascade>
+          <cascade-persist/>
+          <cascade-remove/>
+        </cascade>
+      </one-to-many>
+
+      <many-to-many name="moreChildren" target-entity="Child" fetch-mode="SUBSELECT">
+        <join-table name="parent_more_children">
+          <join-column name="parent_fk"/>
+          <inverse-join-column name="child_fk"/>
+        </join-table>
+      </many-to-many>
+
+    </attributes>
+  </entity>
+
+</entity-mappings>

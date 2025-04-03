@@ -114,6 +114,10 @@ public interface HibernateAnnotations {
 			CollectionId.class,
 			CollectionIdAnnotation.class
 	);
+	OrmAnnotationDescriptor<CollectionIdJavaClass,CollectionIdJavaClassAnnotation> COLLECTION_ID_JAVA_CLASS = new OrmAnnotationDescriptor<>(
+			CollectionIdJavaClass.class,
+			CollectionIdJavaClassAnnotation.class
+	);
 	OrmAnnotationDescriptor<CollectionIdJavaType,CollectionIdJavaTypeAnnotation> COLLECTION_ID_JAVA_TYPE = new OrmAnnotationDescriptor<>(
 			CollectionIdJavaType.class,
 			CollectionIdJavaTypeAnnotation.class

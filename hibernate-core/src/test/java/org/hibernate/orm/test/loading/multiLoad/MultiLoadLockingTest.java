@@ -21,6 +21,7 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -30,6 +31,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -61,6 +63,17 @@ import jakarta.persistence.Id;
 		}
 )
 @JiraKey(value = "HHH-18992")
+@FailureExpected(reason = "Ordered loading by multiple natural-id values is not yet supported", jiraKey = "HHH-19115")
+// TODO remove the SkipForDialectGroup when the @FailureExpected is removed
+@SkipForDialectGroup(
+		// The tests don't actually fail for the dialects below, skipping them so that the non-occurring expected failure doesn't fail the Test case
+		value = {
+				@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true),
+				@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true),
+				@SkipForDialect(dialectClass = HSQLDialect.class),
+				@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.same as postgresql"),
+		}
+)
 public class MultiLoadLockingTest {
 
 	private SQLStatementInspector sqlStatementInspector;
@@ -157,7 +170,6 @@ public class MultiLoadLockingTest {
 
 	// (1) simple Id entity w/ pessimistic read lock
 	@Test
-//	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	void testMultiLoadSimpleIdEntityPessimisticReadLock(SessionFactoryScope scope) {
 		final LockOptions lockOptions = new LockOptions(LockMode.PESSIMISTIC_READ);
 		final String lockString = scope.getSessionFactory().getJdbcServices().getDialect().getForUpdateString(lockOptions);
@@ -194,7 +206,6 @@ public class MultiLoadLockingTest {
 
 	// (2) composite Id entity w/ pessimistic read lock (one of the entities already in L1C)
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	void testMultiLoadCompositeIdEntityPessimisticReadLockAlreadyInSession(SessionFactoryScope scope) {
 		final LockOptions lockOptions = new LockOptions(LockMode.PESSIMISTIC_READ);
 		final String lockString = scope.getSessionFactory().getJdbcServices().getDialect().getForUpdateString(lockOptions);
@@ -248,7 +259,6 @@ public class MultiLoadLockingTest {
 
 	// (3) simple Id entity w/ pessimistic write lock (one in L1C & some in L2C)
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testMultiLoadSimpleIdEntityPessimisticWriteLockSomeInL1CAndSomeInL2C(SessionFactoryScope scope) {
 		final Integer userInL2CId = userIds.get(0);
 		final Integer userInL1CId = userIds.get(1);
@@ -313,7 +323,6 @@ public class MultiLoadLockingTest {
 
 	// (4) simple Id entity w/ optimistic read lock
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	void testMultiLoadSimpleIdEntityOptimisticReadLock(SessionFactoryScope scope) {
 		// test byMultipleIds
 		scope.inTransaction( session -> {
@@ -345,7 +354,6 @@ public class MultiLoadLockingTest {
 
 	// (5) simple Id entity w/ optimistic force increment lock
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	void testMultiLoadSimpleIdEntityOptimisticForceIncrementLock(SessionFactoryScope scope) {
 		// test byMultipleIds
 		scope.inTransaction( session -> {

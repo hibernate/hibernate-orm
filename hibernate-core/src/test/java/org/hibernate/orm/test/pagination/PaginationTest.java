@@ -41,7 +41,6 @@ public class PaginationTest {
 
 	@Test
 	@SessionFactory
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.gauss's bug")
 	public void testLimit(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

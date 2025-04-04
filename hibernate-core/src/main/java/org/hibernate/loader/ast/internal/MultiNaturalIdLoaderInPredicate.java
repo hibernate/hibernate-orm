@@ -22,7 +22,7 @@ public class MultiNaturalIdLoaderInPredicate<E> extends AbstractMultiNaturalIdLo
 	}
 
 	@Override
-	public <K> List<E> unorderedMultiLoad(K[] naturalIds, SharedSessionContractImplementor session, LockOptions lockOptions) {
+	public void loadEntitiesWithUnresolvedIds(Object[] naturalIds, SharedSessionContractImplementor session, LockOptions lockOptions, List<E> results) {
 
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 
@@ -55,7 +55,7 @@ public class MultiNaturalIdLoaderInPredicate<E> extends AbstractMultiNaturalIdLo
 				sessionFactory
 		);
 
-		return batcher.multiLoad( naturalIds, session );
+		results.addAll( batcher.multiLoad( naturalIds, session ) );
 	}
 
 }

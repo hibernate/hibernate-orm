@@ -77,19 +77,26 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 		if ( existing != null ) {
 			return existing;
 		}
-		return context.registerCopy(
-				this,
-				new SqmInsertSelectStatement<>(
-						nodeBuilder(),
-						context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
-						copyParameters( context ),
-						copyCteStatements( context ),
-						getTarget().copy( context ),
-						copyInsertionTargetPaths( context ),
-						getConflictClause() == null ? null : getConflictClause().copy( context ),
-						selectQueryPart.copy( context )
-				)
+		final SqmInsertSelectStatement<T> sqmInsertSelectStatementCopy = new SqmInsertSelectStatement<>(
+				nodeBuilder(),
+				context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
+				copyParameters( context ),
+				copyCteStatements( context ),
+				getTarget().copy( context ),
+				null,
+				null,
+				selectQueryPart.copy( context )
 		);
+
+		context.registerCopy( this, sqmInsertSelectStatementCopy );
+
+		sqmInsertSelectStatementCopy.setInsertionTargetPaths( copyInsertionTargetPaths( context ) );
+
+		if ( getConflictClause() != null ) {
+			sqmInsertSelectStatementCopy.setConflictClause( getConflictClause().copy( context ) );
+		}
+
+		return sqmInsertSelectStatementCopy;
 	}
 
 	@Override

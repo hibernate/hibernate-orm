@@ -89,6 +89,10 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 		}
 	}
 
+	void setConflictClause(SqmConflictClause<T> conflictClause) {
+		this.conflictClause = conflictClause;
+	}
+
 	protected void verifyInsertTypesMatch(
 			List<SqmPath<?>> insertionTargetPaths,
 			List<? extends SqmTypedNode<?>> expressions) {

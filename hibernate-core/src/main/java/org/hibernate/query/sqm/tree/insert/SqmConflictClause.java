@@ -54,7 +54,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 		this.insertStatement = insertStatement;
 		this.excludedRoot = excludedRoot;
 		this.constraintName = constraintName;
-		this.constraintPaths = Collections.unmodifiableList( constraintPaths );
+		this.constraintPaths = constraintPaths == null ? null : Collections.unmodifiableList( constraintPaths );
 		this.updateAction = updateAction;
 	}
 
@@ -157,7 +157,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 						insertStatement.copy( context ),
 						excludedRoot.copy( context ),
 						constraintName,
-						copyOf( constraintPaths, context ),
+						constraintPaths == null ? null : copyOf( constraintPaths, context ),
 						updateAction == null ? null : updateAction.copy( context )
 				)
 		);

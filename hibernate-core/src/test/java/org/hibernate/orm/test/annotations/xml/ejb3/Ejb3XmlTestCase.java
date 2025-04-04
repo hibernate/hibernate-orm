@@ -102,7 +102,6 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 		);
 
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
-				true,
 				globalRegistrations,
 				modelBuildingContext
 		);
@@ -115,13 +114,14 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 
 		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
 				xmlPreProcessingResult,
-				modelCategorizationCollector,
+				persistenceUnitMetadata,
+				modelCategorizationCollector::apply,
 				modelBuildingContext,
 				bootstrapContext,
 				rootMappingDefaults
 		);
 
-		xmlProcessingResult.apply( persistenceUnitMetadata );
+		xmlProcessingResult.apply();
 
 		return modelBuildingContext.getClassDetailsRegistry().resolveClassDetails( entityClass.getName() );
 	}

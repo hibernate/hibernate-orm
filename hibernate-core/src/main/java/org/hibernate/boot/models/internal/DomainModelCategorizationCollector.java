@@ -29,8 +29,6 @@ import java.util.Set;
  * @author Steve Ebersole
  */
 public class DomainModelCategorizationCollector {
-	private final boolean areIdGeneratorsGlobal;
-
 	private final GlobalRegistrationsImpl globalRegistrations;
 	private final SourceModelBuildingContext modelsContext;
 
@@ -39,10 +37,8 @@ public class DomainModelCategorizationCollector {
 	private final Map<String,ClassDetails> embeddables = new HashMap<>();
 
 	public DomainModelCategorizationCollector(
-			boolean areIdGeneratorsGlobal,
 			GlobalRegistrations globalRegistrations,
 			SourceModelBuildingContext modelsContext) {
-		this.areIdGeneratorsGlobal = areIdGeneratorsGlobal;
 		this.globalRegistrations = (GlobalRegistrationsImpl) globalRegistrations;
 		this.modelsContext = modelsContext;
 	}

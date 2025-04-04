@@ -25,18 +25,20 @@ public class XmlPreProcessor {
 	public static XmlPreProcessingResult preProcessXmlResources(
 			ManagedResources managedResources,
 			PersistenceUnitMetadata persistenceUnitMetadata) {
-		final XmlPreProcessingResultImpl collected = new XmlPreProcessingResultImpl( persistenceUnitMetadata );
+		final XmlPreProcessingResultImpl result = new XmlPreProcessingResultImpl( persistenceUnitMetadata );
 
-		for ( Binding<JaxbBindableMappingDescriptor> mappingXmlBinding : managedResources.getXmlMappingBindings() ) {
+		for ( Binding<? extends JaxbBindableMappingDescriptor> xmlBinding : managedResources.getXmlMappingBindings() ) {
 			// for now skip hbm.xml
-			final JaxbBindableMappingDescriptor root = mappingXmlBinding.getRoot();
+			final JaxbBindableMappingDescriptor root = xmlBinding.getRoot();
 			if ( root instanceof JaxbHbmHibernateMapping ) {
 				continue;
 			}
-			final JaxbEntityMappingsImpl jaxbEntityMappings = (JaxbEntityMappingsImpl) root;
-			collected.addDocument( jaxbEntityMappings );
+
+			//noinspection unchecked
+			final Binding<JaxbEntityMappingsImpl> mappingXmlBinding = (Binding<JaxbEntityMappingsImpl>) xmlBinding;
+			result.addDocument( mappingXmlBinding );
 		}
 
-		return collected;
+		return result;
 	}
 }

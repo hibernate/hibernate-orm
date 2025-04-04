@@ -296,14 +296,14 @@ public class SourceModelTestHelper {
 
 		final GlobalRegistrationsImpl globalRegistrations = new GlobalRegistrationsImpl( sourceModelBuildingContext, bootstrapContext );
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
-				true,
 				globalRegistrations,
 				sourceModelBuildingContext
 		);
 
 		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
 				xmlPreProcessingResult,
-				modelCategorizationCollector,
+				persistenceUnitMetadata,
+				modelCategorizationCollector::apply,
 				sourceModelBuildingContext,
 				bootstrapContext,
 				rootMappingDefaults
@@ -328,7 +328,7 @@ public class SourceModelTestHelper {
 			}
 		} );
 
-		xmlProcessingResult.apply( xmlPreProcessingResult.getPersistenceUnitMetadata() );
+		xmlProcessingResult.apply();
 
 		return sourceModelBuildingContext;
 	}

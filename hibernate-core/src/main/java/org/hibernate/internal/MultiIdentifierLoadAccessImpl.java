@@ -89,12 +89,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 
 	@Override
 	public MultiIdentifierLoadAccess<T> withBatchSize(int batchSize) {
-		if ( batchSize < 1 ) {
-			this.batchSize = null;
-		}
-		else {
-			this.batchSize = batchSize;
-		}
+		this.batchSize = batchSize < 1 ? null : batchSize;
 		return this;
 	}
 
@@ -186,16 +181,9 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public <K> List<T> multiLoad(List<K> ids) {
-		if ( ids.isEmpty() ) {
-			return emptyList();
-		}
-		else {
-			return perform( () -> (List<T>) entityPersister.multiLoad(
-					ids.toArray( new Object[0] ),
-					session,
-					this
-			) );
-		}
+		return ids.isEmpty()
+				? emptyList()
+				: perform( () -> (List<T>) entityPersister.multiLoad( ids.toArray(), session, this ) );
 	}
 
 	@Override

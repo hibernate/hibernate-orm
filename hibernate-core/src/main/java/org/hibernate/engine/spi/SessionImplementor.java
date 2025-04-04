@@ -7,7 +7,6 @@ package org.hibernate.engine.spi;
 import jakarta.persistence.ConnectionConsumer;
 import jakarta.persistence.ConnectionFunction;
 import org.hibernate.HibernateException;
-import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -94,11 +93,6 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 * Initiate a flush to force deletion of a re-persisted entity.
 	 */
 	void forceFlush(EntityKey e) throws HibernateException;
-
-	/**
-	 * Cascade the lock operation to the given child entity.
-	 */
-	void lock(String entityName, Object child, LockOptions lockOptions);
 
 	@Override
 	default SessionImplementor asSessionImplementor() {

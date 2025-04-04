@@ -134,13 +134,9 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 	 * For Hibernate Reactive
 	 */
 	protected void registerAfterLoadAction(ExecutionContext executionContext, LockOptions lockOptionsToUse) {
-		executionContext.getCallback().registerAfterLoadAction( (entity, persister, session) ->
-				session.asSessionImplementor().lock(
-						persister.getEntityName(),
-						entity,
-						lockOptionsToUse
-				)
-		);
+		executionContext.getCallback()
+				.registerAfterLoadAction( (entity, persister, session) ->
+						session.lock( persister.getEntityName(), entity, lockOptionsToUse ) );
 	}
 
 	private static boolean useFollowOnLocking(

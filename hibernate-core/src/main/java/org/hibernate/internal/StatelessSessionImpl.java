@@ -128,42 +128,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 public class StatelessSessionImpl extends AbstractSharedSessionContract implements StatelessSession {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StatelessSessionImpl.class );
 
-	public static final MultiIdLoadOptions MULTI_ID_LOAD_OPTIONS = new MultiIdLoadOptions() {
-		@Override
-		public boolean isSessionCheckingEnabled() {
-			return false;
-		}
-
-		@Override
-		public boolean isSecondLevelCacheCheckingEnabled() {
-			return true;
-		}
-
-		@Override
-		public Boolean getReadOnly(SessionImplementor session) {
-			return null;
-		}
-
-		@Override
-		public boolean isReturnOfDeletedEntitiesEnabled() {
-			return false;
-		}
-
-		@Override
-		public boolean isOrderReturnEnabled() {
-			return true;
-		}
-
-		@Override
-		public LockOptions getLockOptions() {
-			return null;
-		}
-
-		@Override
-		public Integer getBatchSize() {
-			return null;
-		}
-	};
+	public static final MultiIdLoadOptions MULTI_ID_LOAD_OPTIONS = new MultiLoadOptions();
 
 	private final LoadQueryInfluencers influencers;
 	private final PersistenceContext temporaryPersistenceContext;
@@ -803,8 +768,23 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
+	public <T> List<T> getMultiple(Class<T> entityClass, List<?> ids, LockMode lockMode) {
+		for ( Object id : ids ) {
+			if ( id == null ) {
+				throw new IllegalArgumentException( "Null id" );
+			}
+		}
+
+		final EntityPersister persister = requireEntityPersister( entityClass.getName() );
+
+		final List<?> results = persister.multiLoad( ids.toArray(), this, new MultiLoadOptions(lockMode) );
+		//noinspection unchecked
+		return (List<T>) results;
+	}
+
+	@Override
 	public <T> List<T> getMultiple(Class<T> entityClass, List<?> ids) {
-		for (Object id : ids) {
+		for ( Object id : ids ) {
 			if ( id == null ) {
 				throw new IllegalArgumentException("Null id");
 			}
@@ -1407,4 +1387,50 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return CacheLoadHelper.loadFromSecondLevelCache( this, instanceToLoad, lockMode, persister, entityKey );
 	}
 
+	private static final class MultiLoadOptions implements MultiIdLoadOptions {
+		private final  LockOptions lockOptions;
+
+		private MultiLoadOptions() {
+			this.lockOptions = null;
+		}
+
+		private MultiLoadOptions(LockMode lockOptions) {
+			this.lockOptions = new LockOptions( lockOptions );
+		}
+
+		@Override
+		public boolean isSessionCheckingEnabled() {
+			return false;
+		}
+
+		@Override
+		public boolean isSecondLevelCacheCheckingEnabled() {
+			return true;
+		}
+
+		@Override
+		public Boolean getReadOnly(SessionImplementor session) {
+			return null;
+		}
+
+		@Override
+		public boolean isReturnOfDeletedEntitiesEnabled() {
+			return false;
+		}
+
+		@Override
+		public boolean isOrderReturnEnabled() {
+			return true;
+		}
+
+		@Override
+		public LockOptions getLockOptions() {
+			return lockOptions;
+		}
+
+		@Override
+		public Integer getBatchSize() {
+			return null;
+		}
+	}
 }

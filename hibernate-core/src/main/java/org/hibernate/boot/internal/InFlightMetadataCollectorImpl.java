@@ -1836,6 +1836,11 @@ public class InFlightMetadataCollectorImpl
 			if ( sp.isInPrimaryKey() ) {
 				final String referenceEntityName = sp.getReferencedEntityName();
 				final PersistentClass classMapping = getEntityBinding( referenceEntityName );
+				if ( classMapping == null ) {
+					throw new HibernateException(
+							"Primary key referenced an unknown entity : " + referenceEntityName
+					);
+				}
 				final String dependentTable = classMapping.getTable().getQualifiedTableName().render();
 				if ( !isADependencyOf.containsKey( dependentTable ) ) {
 					isADependencyOf.put( dependentTable, new HashSet<>() );

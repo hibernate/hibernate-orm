@@ -2150,8 +2150,13 @@ public abstract class AbstractEntityPersister
 			Object version,
 			Object object,
 			LockMode lockMode,
-			EventSource session) throws HibernateException {
+			SharedSessionContractImplementor session) throws HibernateException {
 		getLocker( lockMode ).lock( id, version, object, LockOptions.WAIT_FOREVER, session );
+	}
+
+	@Override
+	public void lock(Object id, Object version, Object object, LockMode lockMode, EventSource session) {
+		lock( id, version, object, lockMode, (SharedSessionContractImplementor) session );
 	}
 
 	@Override
@@ -2160,8 +2165,13 @@ public abstract class AbstractEntityPersister
 			Object version,
 			Object object,
 			LockOptions lockOptions,
-			EventSource session) throws HibernateException {
+			SharedSessionContractImplementor session) throws HibernateException {
 		getLocker( lockOptions.getLockMode() ).lock( id, version, object, lockOptions.getTimeOut(), session );
+	}
+
+	@Override
+	public void lock(Object id, Object version, Object object, LockOptions lockOptions, EventSource session) {
+		lock( id, version, object, lockOptions, (SharedSessionContractImplementor) session );
 	}
 
 	@Override
@@ -3584,6 +3594,11 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
+		return multiLoad( ids, (SharedSessionContractImplementor) session, loadOptions );
+	}
+
+	@Override
+	public List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
 		return multiIdLoader.load( ids, loadOptions, session );
 	}
 

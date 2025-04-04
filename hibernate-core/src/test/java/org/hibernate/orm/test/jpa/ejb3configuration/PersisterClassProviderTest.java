@@ -31,7 +31,6 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.IdentifierGenerator;
@@ -441,16 +440,16 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public List multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
+		public List multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
 			return Collections.emptyList();
 		}
 
 		@Override
-		public void lock(Object id, Object version, Object object, LockMode lockMode, EventSource session) {
+		public void lock(Object id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session) {
 		}
 
 		@Override
-		public void lock(Object id, Object version, Object object, LockOptions lockOptions, EventSource session) {
+		public void lock(Object id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session) {
 		}
 
 		@Override

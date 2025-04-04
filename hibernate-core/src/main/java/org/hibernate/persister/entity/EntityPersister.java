@@ -624,8 +624,24 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @param loadOptions The options for loading
 	 *
 	 * @return The loaded, matching entities
+	 *
+	 * @deprecated Use {@link #multiLoad(Object[], SharedSessionContractImplementor, MultiIdLoadOptions)}
 	 */
-	List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions);
+	@Deprecated(since = "7")
+	default List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
+		return multiLoad( ids, (SharedSessionContractImplementor) session, loadOptions );
+	}
+
+	/**
+	 * Performs a load of multiple entities (of this type) by identifier simultaneously.
+	 *
+	 * @param ids The identifiers to load
+	 * @param session The originating Session
+	 * @param loadOptions The options for loading
+	 *
+	 * @return The loaded, matching entities
+	 */
+	List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions);
 
 	@Override
 	default Object loadByUniqueKey(String propertyName, Object uniqueKey, SharedSessionContractImplementor session) {
@@ -637,13 +653,33 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Do a version check (optional operation)
+	 *
+	 * @deprecated Use {@link #lock(Object, Object, Object, LockMode, SharedSessionContractImplementor)}
 	 */
-	void lock(Object id, Object version, Object object, LockMode lockMode, EventSource session);
+	@Deprecated(since = "7")
+	default void lock(Object id, Object version, Object object, LockMode lockMode, EventSource session) {
+		lock( id, version, object, lockMode, (SharedSessionContractImplementor) session );
+	}
 
 	/**
 	 * Do a version check (optional operation)
 	 */
-	void lock(Object id, Object version, Object object, LockOptions lockOptions, EventSource session);
+	void lock(Object id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session);
+
+	/**
+	 * Do a version check (optional operation)
+	 *
+	 * @deprecated Use {@link #lock(Object, Object, Object, LockOptions, SharedSessionContractImplementor)}
+	 */
+	@Deprecated(since = "7")
+	default void lock(Object id, Object version, Object object, LockOptions lockOptions, EventSource session) {
+		lock( id, version, object, lockOptions, (SharedSessionContractImplementor) session );
+	}
+
+	/**
+	 * Do a version check (optional operation)
+	 */
+	void lock(Object id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session);
 
 	/**
 	 * Persist an instance

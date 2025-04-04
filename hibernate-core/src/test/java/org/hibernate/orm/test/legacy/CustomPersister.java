@@ -431,7 +431,7 @@ public 	class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
+	public List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
 		return Collections.emptyList();
 	}
 
@@ -489,7 +489,7 @@ public 	class CustomPersister implements EntityPersister {
 			Object version,
 			Object object,
 			LockOptions lockOptions,
-			EventSource session
+			SharedSessionContractImplementor session
 	) throws HibernateException {
 
 		throw new UnsupportedOperationException();
@@ -503,7 +503,7 @@ public 	class CustomPersister implements EntityPersister {
 			Object version,
 			Object object,
 			LockMode lockMode,
-			EventSource session
+			SharedSessionContractImplementor session
 	) throws HibernateException {
 
 		throw new UnsupportedOperationException();

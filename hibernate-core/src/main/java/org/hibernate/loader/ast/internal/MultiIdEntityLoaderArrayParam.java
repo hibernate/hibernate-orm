@@ -10,7 +10,8 @@ import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.spi.EventSource;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
@@ -80,7 +81,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 			List<Object> idsInBatch,
 			LockOptions lockOptions,
 			MultiIdLoadOptions loadOptions,
-			EventSource session) {
+			SharedSessionContractImplementor session) {
 		final SelectStatement sqlAst = createSelectBySingleArrayParameter(
 				getLoadable(),
 				getIdentifierMapping(),
@@ -111,7 +112,9 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 								JdbcParametersList.singleton( jdbcParameter ),
 								jdbcParameterBindings
 						),
-						TRUE.equals( loadOptions.getReadOnly( session ) ),
+						// stateless sessions don't have a read-only mode
+						session instanceof SessionImplementor statefulSession
+								&& TRUE.equals( loadOptions.getReadOnly( statefulSession ) ),
 						lockOptions
 				),
 				RowTransformerStandardImpl.instance(),
@@ -125,7 +128,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 	protected void loadEntitiesWithUnresolvedIds(
 			MultiIdLoadOptions loadOptions,
 			LockOptions lockOptions,
-			EventSource session,
+			SharedSessionContractImplementor session,
 			Object[] unresolvableIds,
 			List<E> result) {
 		final SelectStatement sqlAst = createSelectBySingleArrayParameter(

@@ -17,6 +17,7 @@ import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.LockMode;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
@@ -690,5 +691,10 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public FormatMapper getXmlFormatMapper() {
 		return delegate.getXmlFormatMapper();
+	}
+
+	@Override
+	public Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode) {
+		return delegate.loadFromSecondLevelCache( persister, entityKey, instanceToLoad, lockMode );
 	}
 }

@@ -9,9 +9,9 @@ import java.util.List;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
 import org.hibernate.persister.entity.EntityPersister;
@@ -73,7 +73,7 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 			List<Object> idsInBatch,
 			LockOptions lockOptions,
 			MultiIdLoadOptions loadOptions,
-			EventSource session) {
+			SharedSessionContractImplementor session) {
 		assert idsInBatch != null;
 		assert !idsInBatch.isEmpty();
 		listEntitiesById( idsInBatch, lockOptions, loadOptions, session );
@@ -83,7 +83,7 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 			List<Object> idsInBatch,
 			LockOptions lockOptions,
 			MultiIdLoadOptions loadOptions,
-			EventSource session) {
+			SharedSessionContractImplementor session) {
 		final int numberOfIdsInBatch = idsInBatch.size();
 		return numberOfIdsInBatch == 1
 				? performSingleMultiLoad( idsInBatch.get( 0 ), lockOptions, session )
@@ -94,7 +94,7 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 			List<Object> idsInBatch,
 			LockOptions lockOptions,
 			MultiIdLoadOptions loadOptions,
-			EventSource session,
+			SharedSessionContractImplementor session,
 			int numberOfIdsInBatch) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.tracef( "#loadEntitiesById(`%s`, `%s`, ..)",
@@ -144,7 +144,8 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 				new ExecutionContextWithSubselectFetchHandler(
 						session,
 						fetchableKeysHandler( session, sqlAst, jdbcParameters, jdbcParameterBindings ),
-						TRUE.equals( loadOptions.getReadOnly( session ) ),
+						session instanceof SessionImplementor statefulSession
+								&& TRUE.equals( loadOptions.getReadOnly( statefulSession ) ),
 						lockOptions
 				),
 				RowTransformerStandardImpl.instance(),
@@ -155,7 +156,7 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 	}
 
 	private SubselectFetch.RegistrationHandler fetchableKeysHandler(
-			EventSource session,
+			SharedSessionContractImplementor session,
 			SelectStatement sqlAst,
 			JdbcParametersList jdbcParameters,
 			JdbcParameterBindings jdbcParameterBindings) {
@@ -175,7 +176,7 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 	protected void loadEntitiesWithUnresolvedIds(
 			MultiIdLoadOptions loadOptions,
 			LockOptions lockOptions,
-			EventSource session,
+			SharedSessionContractImplementor session,
 			Object[] unresolvableIds,
 			List<T> result) {
 		final int maxBatchSize = maxBatchSize( unresolvableIds, loadOptions );

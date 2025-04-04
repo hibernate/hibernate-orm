@@ -84,7 +84,7 @@ public interface NamedObjectRepository {
 	/**
 	 * Resolve the named query with the given name.
 	 */
-	NamedQueryMemento resolve(
+	NamedQueryMemento<?> resolve(
 			SessionFactoryImplementor sessionFactory,
 			MetadataImplementor bootMetamodel,
 			String registrationName);

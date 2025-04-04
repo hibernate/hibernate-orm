@@ -38,13 +38,14 @@ import java.util.Map;
  * @author Andrea Boriero
  */
 public class BootstrapContextImpl implements BootstrapContext, AutoCloseable {
-
 	private final BootstrapContext delegate;
 
 	public BootstrapContextImpl() {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build();
-		MetadataBuildingOptions buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
+		this( new StandardServiceRegistryBuilder().build() );
+	}
 
+	public BootstrapContextImpl(StandardServiceRegistry serviceRegistry) {
+		final MetadataBuildingOptions buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
 		delegate = new org.hibernate.boot.internal.BootstrapContextImpl( serviceRegistry, buildingOptions );
 	}
 

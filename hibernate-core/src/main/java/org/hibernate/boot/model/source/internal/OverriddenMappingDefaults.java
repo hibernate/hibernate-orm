@@ -170,6 +170,7 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 			this.autoImportEnabled = parentDefaults.isDefaultAutoImport();
 
 			this.implicitCascadeTypes = parentDefaults.getDefaultCascadeTypes();
+			this.implicitPropertyAccessType = parentDefaults.getDefaultPropertyAccessType();
 			this.implicitPropertyAccessorName = parentDefaults.getDefaultAccessStrategyName();
 			this.entitiesImplicitlyLazy = parentDefaults.isDefaultEntityLaziness();
 			this.pluralAttributesImplicitlyLazy = parentDefaults.isDefaultCollectionLaziness();

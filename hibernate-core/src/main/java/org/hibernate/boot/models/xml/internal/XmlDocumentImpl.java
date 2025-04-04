@@ -4,11 +4,8 @@
  */
 package org.hibernate.boot.models.xml.internal;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import jakarta.persistence.AccessType;
+import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionUserTypeRegistrationImpl;
@@ -22,15 +19,19 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJavaTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJdbcTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStoredProcedureQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeRegistrationImpl;
+import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.models.xml.spi.XmlDocument;
 import org.hibernate.internal.util.NullnessHelper;
 
-import jakarta.persistence.AccessType;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
@@ -38,6 +39,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
  * @author Steve Ebersole
  */
 public class XmlDocumentImpl implements XmlDocument {
+	private final Origin origin;
+	private final JaxbEntityMappingsImpl root;
 	private final DefaultsImpl defaults;
 	private final List<JaxbEntityImpl> entityMappings;
 	private final List<JaxbMappedSuperclassImpl> mappedSuperclassMappings;
@@ -57,6 +60,8 @@ public class XmlDocumentImpl implements XmlDocument {
 	private final Map<String, JaxbNamedStoredProcedureQueryImpl> namedStoredProcedureQueries;
 
 	private XmlDocumentImpl(
+			Origin origin,
+			JaxbEntityMappingsImpl root,
 			DefaultsImpl defaults,
 			List<JaxbEntityImpl> entityMappings,
 			List<JaxbMappedSuperclassImpl> mappedSuperclassMappings,
@@ -74,6 +79,8 @@ public class XmlDocumentImpl implements XmlDocument {
 			Map<String, JaxbNamedStoredProcedureQueryImpl> namedStoredProcedureQueries,
 			Map<String, JaxbHbmNamedQueryType> hibernateNamedQueries,
 			Map<String, JaxbHbmNamedNativeQueryType> hibernateNamedNativeQueries) {
+		this.origin = origin;
+		this.root = root;
 		this.defaults = defaults;
 		this.entityMappings = entityMappings;
 		this.mappedSuperclassMappings = mappedSuperclassMappings;
@@ -91,6 +98,16 @@ public class XmlDocumentImpl implements XmlDocument {
 		this.namedStoredProcedureQueries = namedStoredProcedureQueries;
 		this.hibernateNamedQueries = hibernateNamedQueries;
 		this.hibernateNamedNativeQueries = hibernateNamedNativeQueries;
+	}
+
+	@Override
+	public Origin getOrigin() {
+		return origin;
+	}
+
+	@Override
+	public JaxbEntityMappingsImpl getRoot() {
+		return root;
 	}
 
 	@Override
@@ -252,8 +269,11 @@ public class XmlDocumentImpl implements XmlDocument {
 		}
 	}
 
-	public static XmlDocumentImpl consume(JaxbEntityMappingsImpl jaxbRoot, PersistenceUnitMetadata metadata) {
+	public static XmlDocumentImpl consume(Binding<JaxbEntityMappingsImpl> xmlBinding, PersistenceUnitMetadata metadata) {
+		final JaxbEntityMappingsImpl jaxbRoot = xmlBinding.getRoot();
 		return new XmlDocumentImpl(
+				xmlBinding.getOrigin(),
+				xmlBinding.getRoot(),
 				DefaultsImpl.consume( jaxbRoot, metadata ),
 				jaxbRoot.getEntities(),
 				jaxbRoot.getMappedSuperclasses(),

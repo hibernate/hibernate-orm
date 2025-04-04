@@ -50,6 +50,7 @@ import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
 import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
@@ -371,13 +372,12 @@ public class MetadataBuildingProcess {
 		//		- allKnownClassNames (technically could be included in xmlPreProcessingResult)
 		//		- ModelsContext
 
+		final PersistenceUnitMetadata aggregatedPersistenceUnitMetadata = metadataCollector.getPersistenceUnitMetadata();
 		final ModelsContext modelsContext = bootstrapContext.getModelsContext();
 		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources(
 				managedResources,
-				metadataCollector.getPersistenceUnitMetadata()
+				aggregatedPersistenceUnitMetadata
 		);
-
-		assert metadataCollector.getPersistenceUnitMetadata() == xmlPreProcessingResult.getPersistenceUnitMetadata();
 
 		final List<String> allKnownClassNames = mutableJoin(
 				managedResources.getAnnotatedClassReferences().stream().map( Class::getName ).collect( Collectors.toList() ),
@@ -411,22 +411,20 @@ public class MetadataBuildingProcess {
 		//		- mappedSuperClasses
 		//  	- embeddables
 
-		// JPA id generator global-ity thing
-		final boolean areIdGeneratorsGlobal = true;
 		final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
-				areIdGeneratorsGlobal,
 				metadataCollector.getGlobalRegistrations(),
 				modelsContext
 		);
 
 		final RootMappingDefaults rootMappingDefaults = new RootMappingDefaults(
 				optionDefaults,
-				xmlPreProcessingResult.getPersistenceUnitMetadata()
+				aggregatedPersistenceUnitMetadata
 		);
 		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
 				xmlPreProcessingResult,
-				modelCategorizationCollector,
+				aggregatedPersistenceUnitMetadata,
+				modelCategorizationCollector::apply,
 				modelsContext,
 				bootstrapContext,
 				rootMappingDefaults
@@ -446,14 +444,14 @@ public class MetadataBuildingProcess {
 				modelCategorizationCollector
 		) );
 
-		xmlProcessingResult.apply( xmlPreProcessingResult.getPersistenceUnitMetadata() );
+		xmlProcessingResult.apply();
 
 		return new DomainModelSource(
 				classDetailsRegistry,
 				allKnownClassNames,
 				modelCategorizationCollector.getGlobalRegistrations(),
 				rootMappingDefaults,
-				xmlPreProcessingResult.getPersistenceUnitMetadata()
+				aggregatedPersistenceUnitMetadata
 		);
 	}
 

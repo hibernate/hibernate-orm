@@ -130,7 +130,9 @@ public class ArrayRemoveTest {
 			cq.multiselect(
 					root.get( "id" ),
 					cb.collectionRemove( root.<Collection<String>>get( "theCollection" ), cb.literal( "xyz" ) ),
-					cb.collectionRemove( root.get( "theCollection" ), "xyz" )
+					cb.collectionRemove( root.get( "theCollection" ), "xyz" ),
+					cb.collectionRemove( root.<Collection<Label>>get( "theLabels" ), cb.literal( Label.A ) ),
+					cb.collectionRemove( root.get( "theLabels" ), Label.A )
 			);
 			em.createQuery( cq ).getResultList();
 

@@ -170,7 +170,13 @@ public class ArrayIncludesTest {
 					cb.collectionIncludes( List.of( "abc", "xyz" ), cb.collectionLiteral( "xyz" ) ),
 					cb.collectionIncludesNullable( root.<Collection<String>>get( "theCollection" ), cb.collectionLiteral( "xyz" ) ),
 					cb.collectionIncludesNullable( root.get( "theCollection" ), List.of( "xyz" ) ),
-					cb.collectionIncludesNullable( List.of( "abc", "xyz" ), cb.collectionLiteral( "xyz" ) )
+					cb.collectionIncludesNullable( List.of( "abc", "xyz" ), cb.collectionLiteral( "xyz" ) ),
+					cb.collectionIncludes( root.<Collection<Label>>get( "theLabels" ), cb.collectionLiteral( Label.A ) ),
+					cb.collectionIncludes( root.get( "theLabels" ), List.of( Label.A ) ),
+					cb.collectionIncludes( List.of( Label.A, Label.B ), cb.collectionLiteral( Label.A ) ),
+					cb.collectionIncludesNullable( root.<Collection<Label>>get( "theLabels" ), cb.collectionLiteral( Label.A ) ),
+					cb.collectionIncludesNullable( root.get( "theLabels" ), List.of( Label.A ) ),
+					cb.collectionIncludesNullable( List.of( Label.A, Label.B ), cb.collectionLiteral( Label.A ) )
 			);
 			em.createQuery( cq ).getResultList();
 

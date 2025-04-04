@@ -33,6 +33,7 @@ import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
@@ -75,19 +76,17 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.loader.ast.internal.LoaderHelper;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
+import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.internal.CacheLoadHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.query.criteria.JpaCriteriaQuery;
-import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import jakarta.persistence.EntityGraph;
 import jakarta.transaction.SystemException;
 
-import static java.util.Collections.unmodifiableList;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.PersistenceContexts.createPersistenceContext;
@@ -128,6 +127,43 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  */
 public class StatelessSessionImpl extends AbstractSharedSessionContract implements StatelessSession {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StatelessSessionImpl.class );
+
+	public static final MultiIdLoadOptions MULTI_ID_LOAD_OPTIONS = new MultiIdLoadOptions() {
+		@Override
+		public boolean isSessionCheckingEnabled() {
+			return false;
+		}
+
+		@Override
+		public boolean isSecondLevelCacheCheckingEnabled() {
+			return true;
+		}
+
+		@Override
+		public Boolean getReadOnly(SessionImplementor session) {
+			return null;
+		}
+
+		@Override
+		public boolean isReturnOfDeletedEntitiesEnabled() {
+			return false;
+		}
+
+		@Override
+		public boolean isOrderReturnEnabled() {
+			return true;
+		}
+
+		@Override
+		public LockOptions getLockOptions() {
+			return null;
+		}
+
+		@Override
+		public Integer getBatchSize() {
+			return null;
+		}
+	};
 
 	private final LoadQueryInfluencers influencers;
 	private final PersistenceContext temporaryPersistenceContext;
@@ -776,43 +812,47 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 		final EntityPersister persister = requireEntityPersister( entityClass.getName() );
 
-		final List<Object> uncachedIds;
-		final List<T> list = new ArrayList<>( ids.size() );
-		if ( persister.canReadFromCache() ) {
-			uncachedIds = new ArrayList<>( ids.size() );
-			for (Object id : ids) {
-				final Object cachedEntity =
-						loadFromSecondLevelCache( persister, generateEntityKey( id, persister ), null, LockMode.NONE );
-				if ( cachedEntity == null ) {
-					uncachedIds.add( id );
-					list.add( null );
-				}
-				else {
-					//noinspection unchecked
-					list.add( (T) cachedEntity );
-				}
-			}
-		}
-		else {
-			uncachedIds = unmodifiableList(ids);
-			for (int i = 0; i < ids.size(); i++) {
-				list.add( null );
-			}
-		}
+		final List<?> results = persister.multiLoad( ids.toArray(), this, MULTI_ID_LOAD_OPTIONS );
+		//noinspection unchecked
+		return (List<T>) results;
 
-		final JpaCriteriaQuery<T> query = getCriteriaBuilder().createQuery(entityClass);
-		final JpaRoot<T> from = query.from(entityClass);
-		query.where( from.get( persister.getIdentifierPropertyName() ).in(uncachedIds) );
-		final List<T> resultList = createSelectionQuery(query).getResultList();
-		for (int i = 0; i < ids.size(); i++) {
-			if ( list.get(i) == null ) {
-				final Object id = ids.get(i);
-				list.set( i, resultList.stream()
-						.filter( entity -> entity != null && persister.getIdentifier( entity, this ).equals(id) )
-						.findFirst().orElse( null ) );
-			}
-		}
-		return list;
+//		final List<Object> uncachedIds;
+//		final List<T> list = new ArrayList<>( ids.size() );
+//		if ( persister.canReadFromCache() ) {
+//			uncachedIds = new ArrayList<>( ids.size() );
+//			for (Object id : ids) {
+//				final Object cachedEntity =
+//						loadFromSecondLevelCache( persister, generateEntityKey( id, persister ), null, LockMode.NONE );
+//				if ( cachedEntity == null ) {
+//					uncachedIds.add( id );
+//					list.add( null );
+//				}
+//				else {
+//					//noinspection unchecked
+//					list.add( (T) cachedEntity );
+//				}
+//			}
+//		}
+//		else {
+//			uncachedIds = unmodifiableList(ids);
+//			for (int i = 0; i < ids.size(); i++) {
+//				list.add( null );
+//			}
+//		}
+//
+//		final JpaCriteriaQuery<T> query = getCriteriaBuilder().createQuery(entityClass);
+//		final JpaRoot<T> from = query.from(entityClass);
+//		query.where( from.get( persister.getIdentifierPropertyName() ).in(uncachedIds) );
+//		final List<T> resultList = createSelectionQuery(query).getResultList();
+//		for (int i = 0; i < ids.size(); i++) {
+//			if ( list.get(i) == null ) {
+//				final Object id = ids.get(i);
+//				list.set( i, resultList.stream()
+//						.filter( entity -> entity != null && persister.getIdentifier( entity, this ).equals(id) )
+//						.findFirst().orElse( null ) );
+//			}
+//		}
+//		return list;
 	}
 
 	@Override

@@ -153,10 +153,14 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			databaseConnectionInfo = buildDbInfo( configurationValues, jdbcEnvironment.getDialect() );
 		}
 
+		logConnectionInfo( databaseConnectionInfo );
+		return jdbcEnvironment;
+	}
+
+	// For Hibernate Reactive: it needs to disable or customize the log
+	protected void logConnectionInfo(DatabaseConnectionInfo databaseConnectionInfo) {
 		// Standardized DB info logging
 		ConnectionInfoLogger.INSTANCE.logConnectionInfoDetails( databaseConnectionInfo.toInfoString() );
-
-		return jdbcEnvironment;
 	}
 
 	private DatabaseConnectionInfo buildDbInfo(ServiceRegistryImplementor registry, Dialect dialect) {
@@ -174,7 +178,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		return new DatabaseConnectionInfoImpl( configurationValues, dialect );
 	}
 
-	private static JdbcEnvironmentImpl getJdbcEnvironmentWithDefaults(
+	// Used by Hibernate Reactive
+	protected JdbcEnvironmentImpl getJdbcEnvironmentWithDefaults(
 			Map<String, Object> configurationValues,
 			ServiceRegistryImplementor registry,
 			DialectFactory dialectFactory) {
@@ -182,7 +187,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		return new JdbcEnvironmentImpl( registry, dialect );
 	}
 
-	private static JdbcEnvironmentImpl getJdbcEnvironmentWithExplicitConfiguration(
+	// Used by Hibernate Reactive
+	protected JdbcEnvironmentImpl getJdbcEnvironmentWithExplicitConfiguration(
 			Map<String, Object> configurationValues,
 			ServiceRegistryImplementor registry,
 			DialectFactory dialectFactory,
@@ -203,6 +209,15 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				null,
 				configurationValues
 		);
+		return getJdbcEnvironmentWithExplicitConfiguration( configurationValues, registry, dialectFactory, dialectResolutionInfo );
+	}
+
+	// Used by Hibernate Reactive
+	protected JdbcEnvironmentImpl getJdbcEnvironmentWithExplicitConfiguration(
+			Map<String, Object> configurationValues,
+			ServiceRegistryImplementor registry,
+			DialectFactory dialectFactory,
+			DialectResolutionInfo dialectResolutionInfo) {
 		final Dialect dialect = dialectFactory.buildDialect( configurationValues, () -> dialectResolutionInfo );
 		return new JdbcEnvironmentImpl( registry, dialect );
 	}
@@ -295,7 +310,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		);
 	}
 
-	private JdbcEnvironmentImpl getJdbcEnvironmentUsingJdbcMetadata(
+	// Used by Hibernate Reactive
+	protected JdbcEnvironmentImpl getJdbcEnvironmentUsingJdbcMetadata(
 			Map<String, Object> configurationValues,
 			ServiceRegistryImplementor registry,
 			DialectFactory dialectFactory, String explicitDatabaseName,

@@ -15,6 +15,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.StatelessSession;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.dialect.Dialect;
@@ -585,6 +586,11 @@ public interface SharedSessionContractImplementor
 	default boolean isStatelessSession() {
 		return false;
 	}
+
+	/**
+	 * Cascade the lock operation to the given child entity.
+	 */
+	void lock(String entityName, Object child, LockOptions lockOptions);
 
 	/**
 	 * Attempts to load the entity from the second-level cache.

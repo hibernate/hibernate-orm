@@ -9,9 +9,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
 import org.hibernate.TransientObjectException;
@@ -26,6 +28,7 @@ import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -70,6 +73,7 @@ import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerationException;
+import org.hibernate.loader.ast.internal.LoaderHelper;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.loader.internal.CacheLoadHelper;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -1345,6 +1349,17 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( persister.hasCache() ) {
 			persister.getCacheAccessStrategy().remove( this, ck );
 		}
+	}
+
+	@Override
+	public void lock(String entityName, Object child, LockOptions lockOptions) {
+		final EntityPersister persister = getEntityPersister( entityName, child );
+		persister.lock( persister.getIdentifier( child ), persister.getVersion( child ), child, lockOptions, this );
+		final EntityEntry entry = getPersistenceContextInternal().getEntry( child );
+		if ( entry == null ) {
+			throw new AssertionFailure( "no entry in temporary persistence context" );
+		}
+		LoaderHelper.upgradeLock( child, entry, lockOptions, this );
 	}
 
 	@Override

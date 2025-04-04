@@ -340,11 +340,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public int getSubclassPropertyTableNumber(String propertyName) {
-		return 0;
-	}
-
-	@Override
 	public String physicalTableNameForMutation(SelectableMapping selectableMapping) {
 		assert !selectableMapping.isFormula();
 		return tableName;

@@ -24,7 +24,6 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -81,7 +80,7 @@ public class CacheLoadHelper {
 	public static PersistenceContextEntry loadFromSessionCache(
 			EntityKey keyToLoad, LockOptions lockOptions,
 			LoadEventListener.LoadType options,
-			EventSource session) {
+			SharedSessionContractImplementor session) {
 		final Object old = session.getEntityUsingInterceptor( keyToLoad );
 		if ( old != null ) {
 			// this object was already loaded

@@ -1236,4 +1236,9 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	public FormatMapper getXmlFormatMapper() {
 		return delegate.getXmlFormatMapper();
 	}
+
+	@Override
+	public Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode) {
+		return delegate.loadFromSecondLevelCache( persister, entityKey, instanceToLoad, lockMode );
+	}
 }

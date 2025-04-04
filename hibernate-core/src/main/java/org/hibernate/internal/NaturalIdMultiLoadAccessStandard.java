@@ -12,6 +12,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -24,7 +25,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAccess<T>, MultiNaturalIdLoadOptions {
 	private final EntityPersister entityDescriptor;
-	private final SessionImpl session;
+	private final SharedSessionContractImplementor session;
 
 	private LockOptions lockOptions;
 	private CacheMode cacheMode;
@@ -36,7 +37,7 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	private boolean returnOfDeletedEntitiesEnabled;
 	private boolean orderedReturnEnabled = true;
 
-	public NaturalIdMultiLoadAccessStandard(EntityPersister entityDescriptor, SessionImpl session) {
+	public NaturalIdMultiLoadAccessStandard(EntityPersister entityDescriptor, SharedSessionContractImplementor session) {
 		this.entityDescriptor = entityDescriptor;
 		this.session = session;
 	}

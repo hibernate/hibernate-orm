@@ -71,6 +71,7 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
+import org.hibernate.loader.internal.CacheLoadHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
@@ -93,7 +94,6 @@ import static org.hibernate.event.internal.DefaultInitializeCollectionEventListe
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.loader.internal.CacheLoadHelper.initializeCollectionFromCache;
-import static org.hibernate.loader.internal.CacheLoadHelper.loadFromSecondLevelCache;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
@@ -715,8 +715,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final EntityPersister persister = requireEntityPersister( entityName );
 		if ( persister.canReadFromCache() ) {
 			final Object cachedEntity =
-					loadFromSecondLevelCache( this, null, lockMode, persister,
-							generateEntityKey( id, persister ) );
+					loadFromSecondLevelCache( persister, generateEntityKey( id, persister ), null, lockMode );
 			if ( cachedEntity != null ) {
 				temporaryPersistenceContext.clear();
 				return cachedEntity;
@@ -779,8 +778,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			uncachedIds = new ArrayList<>( ids.size() );
 			for (Object id : ids) {
 				final Object cachedEntity =
-						loadFromSecondLevelCache( this, null, LockMode.NONE, persister,
-								generateEntityKey( id, persister ) );
+						loadFromSecondLevelCache( persister, generateEntityKey( id, persister ), null, LockMode.NONE );
 				if ( cachedEntity == null ) {
 					uncachedIds.add( id );
 					list.add( null );
@@ -1348,4 +1346,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			persister.getCacheAccessStrategy().remove( this, ck );
 		}
 	}
+
+	@Override
+	public Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode) {
+		return CacheLoadHelper.loadFromSecondLevelCache( this, instanceToLoad, lockMode, persister, entityKey );
+	}
+
 }

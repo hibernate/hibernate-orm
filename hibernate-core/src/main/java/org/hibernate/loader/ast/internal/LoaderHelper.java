@@ -54,7 +54,8 @@ public class LoaderHelper {
 	 * @param lockOptions Contains the requested lock mode.
 	 * @param session The session which is the source of the event being processed.
 	 */
-	public static void upgradeLock(Object object, EntityEntry entry, LockOptions lockOptions, EventSource session) {
+	public static void upgradeLock(
+			Object object, EntityEntry entry, LockOptions lockOptions, SharedSessionContractImplementor session) {
 		final LockMode requestedLockMode = lockOptions.getLockMode();
 		if ( requestedLockMode.greaterThan( entry.getLockMode() ) ) {
 			// Request is for a more restrictive lock than the lock already held
@@ -108,22 +109,23 @@ public class LoaderHelper {
 							persister.forceVersionIncrement( entry.getId(), entry.getVersion(), false, session );
 					entry.forceLocked( object, nextVersion );
 				}
-				else {
-					if ( entry.isExistsInDatabase() ) {
-						final EventMonitor eventMonitor = session.getEventMonitor();
-						final DiagnosticEvent entityLockEvent = eventMonitor.beginEntityLockEvent();
-						boolean success = false;
-						try {
-							persister.lock( entry.getId(), entry.getVersion(), object, lockOptions, session );
-							success = true;
-						}
-						finally {
-							eventMonitor.completeEntityLockEvent( entityLockEvent, entry.getId(),
-									persister.getEntityName(), lockOptions.getLockMode(), success, session );
-						}
+				else if ( entry.isExistsInDatabase() ) {
+					final EventMonitor eventMonitor = session.getEventMonitor();
+					final DiagnosticEvent entityLockEvent = eventMonitor.beginEntityLockEvent();
+					boolean success = false;
+					try {
+						persister.lock( entry.getId(), entry.getVersion(), object, lockOptions, session );
+						success = true;
 					}
-					else {
-						session.forceFlush( entry );
+					finally {
+						eventMonitor.completeEntityLockEvent( entityLockEvent, entry.getId(),
+								persister.getEntityName(), lockOptions.getLockMode(), success, session );
+					}
+				}
+				else {
+					// should only be possible for a stateful session
+					if ( session instanceof EventSource eventSource ) {
+						eventSource.forceFlush( entry );
 					}
 				}
 				entry.setLockMode(requestedLockMode);

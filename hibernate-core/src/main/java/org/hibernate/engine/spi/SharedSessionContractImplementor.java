@@ -12,7 +12,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
+import org.hibernate.LockMode;
 import org.hibernate.StatelessSession;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.dialect.Dialect;
@@ -584,4 +586,18 @@ public interface SharedSessionContractImplementor
 		return false;
 	}
 
+	/**
+	 * Attempts to load the entity from the second-level cache.
+	 *
+	 * @param persister The persister for the entity being requested for load
+	 * @param entityKey The entity key
+	 * @param instanceToLoad The instance that is being initialized, or null
+	 * @param lockMode The lock mode
+	 *
+	 * @return The entity from the second-level cache, or null.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode);
 }

@@ -5,7 +5,6 @@
 package org.hibernate.engine.jdbc.internal;
 
 import org.hibernate.engine.jdbc.env.spi.AnsiSqlKeywords;
-import org.hibernate.internal.util.StringHelper;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -13,6 +12,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import static org.hibernate.internal.util.StringHelper.WHITESPACE;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
@@ -25,7 +25,7 @@ public final class HighlightingFormatter implements Formatter {
 	private static final Set<String> KEYWORDS_LOWERCASED = new HashSet<>( new AnsiSqlKeywords().sql2003() );
 	static {
 		// additional keywords not reserved by ANSI SQL 2003
-		KEYWORDS_LOWERCASED.addAll( Arrays.asList( "key", "sequence", "cascade", "increment", "boolean", "offset", "next", "returning" ) );
+		KEYWORDS_LOWERCASED.addAll( Arrays.asList( "key", "sequence", "cascade", "increment", "boolean", "offset", "first", "next", "returning" ) );
 	}
 
 	public static final Formatter INSTANCE =
@@ -34,7 +34,7 @@ public final class HighlightingFormatter implements Formatter {
 					"36", // cyan
 					"32"
 			);
-	private static final String SYMBOLS_AND_WS = "=><!+-*/()',.|&`\"?" + StringHelper.WHITESPACE;
+	private static final String SYMBOLS_AND_WS = "=><!+-*/()',.|&`\"?" + WHITESPACE;
 
 	private static String escape(String code) {
 		return "\u001b[" + code + "m";

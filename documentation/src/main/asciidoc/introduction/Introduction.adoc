@@ -412,10 +412,10 @@ So now let's talk about how to organize persistence logic in a real system.
 The rest of this chapter is not compulsory.
 If you're itching for more details about Hibernate itself, you're quite welcome to skip straight to the <<configuration,next chapter>>, and come back later.
 
-[[entities]]
+[[domain-model]]
 === Entities
 
-A class in the domain model which directly represents a relational database table is called an _entity_.
+A class in the domain model which directly represents a relational database table is called an <<entities,_entity_>>.
 Entity classes are central to object persistence and to object/relational mapping.
 They're also, typically, central players in the business logic of our application program.
 Entities represent the _things_ in our business domain.
@@ -463,6 +463,54 @@ But the basic principle remains intact: an entity does not do orchestration, it 
 ****
 
 For now, we're going to assume that entities are implemented as plain Java classes.
+
+[[stateful-and-stateless-sessions]]
+=== Stateful and stateless sessions
+
+It should be very clear from the example code <<hello-hibernate,above>>, that the session is also a very important object.
+It exposes basic operations like `persist()` and `createQuery()`, and so it's our first port of call when we want to <<interacting,interact with the database>> via Hibernate.
+In the code we just saw, we've used a _stateful session_.
+
+Later, we'll learn about the idea of a <<persistence-contexts,_persistence context_>>.
+Oversimplifying for now, you can think of it as a cache of data which has been read in the current transaction.
+Thus, in the architecture of Hibernate, it's sometimes called the _first-level cache_.
+Each stateful session -- that is, every Hibernate `Session`, and every JPA <<hibernate-and-jpa,`EntityManager`>> -- has its own persistence context.
+
+But stateful sessions have never been the only possibility.
+The <<stateless-sessions,`StatelessSession`>> interface offers a way to interact with Hibernate _without_ going through a persistence context.
+However, the programming model is somewhat different.
+
+.Stateless sessions
+****
+Among our biggest regrets is that we didn't give enough love to `StatelessSession` twenty years ago.
+Sure, a stateful session is in some sense more powerful, or at least more magical.
+But with that magic comes a loss of direct control over persistence operations, and some traps for inexperienced users.
+A significant minority of developers find working with a persistence context frustrating, and they would surely be better served by a stateless session.
+
+- We used to view `StatelessSession` as an API directed toward very specific usage patterns, in particular, batch processing of large numbers of entities.
+As a result, we left out certain functionality -- for example, use of the <<second-level-cache,second-level cache>> -- which didn't seem relevant to those use cases.
+This left `StatelessSession` lacking feature parity with `Session`, and it was a mistake.
+In Hibernate 7, we've fixed this mistake.
+A `StatelessSession` now offers essentially all the functionality of Hibernate except, naturally, the first-level cache.
+
+- Compounding our error, we left `StatelessSession` out of JPA.
+This meant that a large number of Hibernate users _didn't even realize this option existed._
+We promise to make sure there are stateless sessions in Jakarta Persistence 4.
+
+So, finally, let us state for the record: we messed up here.
+Hibernate is all about _object/relational mapping;_ persistence contexts are something extra on top.
+You don't have to use stateful sessions, and you're not doing anything wrong if you decide to use stateless sessions instead.
+****
+
+As of Hibernate 7, a key decision for any new project is which of these programming models to take as a baseline.
+Fortunately, the two models aren't mutually exclusive.
+This is a friendly competition, where the two APIs are designed to complement each other.
+Even if we decide to use `StatefulSession` most of the time, we can still use a `StatelessSession` wherever it's more convenient.
+
+NOTE: On the other hand, if you decide to adopt Jakarta Data, the decision is made for you: repositories in Jakarta Data 1.0 are always stateless, and in https://hibernate.org/repositories/[Hibernate Data Repositories] a repository is backed by a `StatelessSession`.
+
+But now we've got just a little bit ahead of ourselves.
+In the next section taking we're taking a journey which _might_ -- but definitely doesn't _necessarily_ -- end at the idea of a "repository".
 
 [[organizing-persistence]]
 === Organizing persistence logic
@@ -714,7 +762,7 @@ At the time we wrote _An Introduction to Hibernate 6_, we were especially frustr
 In our considered opinion, such frameworks typically made JPA harder to use, sometimes misleading users into misuse of the technology.
 
 The birth of the Jakarta Data specification has obsoleted our arguments against repositories, along with the older frameworks which were the source of our frustration.
-Jakarta Data--as realized by Hibernate Data Repositories--offers a clean but very flexible way to organize code, along with much better compile-time type safety, without getting in the way of direct use of the `StatelessSession`.
+Jakarta Data--as realized by Hibernate Data Repositories--offers a clean but very flexible way to organize code, along with much better compile-time type safety, without getting in the way of direct use of the <<stateless-sessions,`StatelessSession`>>.
 ****
 
 Now that we have a rough picture of what our persistence logic might look like, it's natural to ask how we should test our code.

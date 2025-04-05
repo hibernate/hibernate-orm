@@ -15,9 +15,7 @@
             <id name="id">
                 <column name="pk"/>
             </id>
-            <basic name="name">
-                <type value="string"/>
-            </basic>
+            <basic name="name"/>
         </attributes>
     </entity>
     <entity class="Sub" metadata-complete="true" access="FIELD">

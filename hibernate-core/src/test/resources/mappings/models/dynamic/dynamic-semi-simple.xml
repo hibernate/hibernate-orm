@@ -11,7 +11,7 @@
                 <target>Integer</target>
                 <jdbc-type-name>BIGINT</jdbc-type-name>
             </id>
-            <element-collection name="labels" target-class="string" classification="SET">
+            <element-collection name="labels" target-class="java.lang.String" classification="SET">
                 <sort-natural/>
                 <collection-table name="labels">
                     <join-column name="contact_fk"/>
@@ -26,10 +26,10 @@
     <embeddable name="Name" metadata-complete="true">
         <attributes>
             <basic name="first">
-                <target>string</target>
+                <target>java.lang.String</target>
             </basic>
             <basic name="last">
-                <target>string</target>
+                <target>java.lang.String</target>
             </basic>
         </attributes>
     </embeddable>

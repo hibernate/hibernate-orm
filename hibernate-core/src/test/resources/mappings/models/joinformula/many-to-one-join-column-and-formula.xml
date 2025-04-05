@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="7.0">
+    <package>org.hibernate.orm.test.boot.models.hbm.joinformula</package>
+    <entity class="Contact">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <many-to-one name="mailingAddress" fetch-mode="JOIN" target-entity="Address">
+                <join-column name="mailing_address_fk"/>
+                <join-formula>'MAILING'</join-formula>
+            </many-to-one>
+            <many-to-one name="shippingAddress" fetch-mode="JOIN" target-entity="Address">
+                <join-column name="shipping_address_fk"/>
+                <join-formula>'SHIPPING'</join-formula>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="Address">
+        <attributes>
+            <id name="id"/>
+            <id name="type"/>
+            <basic name="txt"/>
+        </attributes>
+    </entity>
+</entity-mappings>

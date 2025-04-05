@@ -210,7 +210,8 @@ public class BasicFormatterImpl implements Formatter {
 				decrementIndent();
 				newline();
 				out();
-				beginLine = false;
+				incrementIndent();
+				newline();
 			}
 			else {
 				misc();

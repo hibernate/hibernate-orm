@@ -621,10 +621,7 @@ public abstract class AbstractEntityPersister
 					foundFormula = true;
 					final Formula formula = (Formula) selectable;
 					formula.setFormula( substituteBrackets( formula.getFormula() ) );
-					formulaTemplates[k] = selectable.getTemplate(
-							dialect,
-							typeConfiguration
-					);
+					formulaTemplates[k] = selectable.getTemplate( dialect, typeConfiguration );
 				}
 				else {
 					final Column column = (Column) selectable;
@@ -811,14 +808,15 @@ public abstract class AbstractEntityPersister
 			final NamedQueryMemento<?> memento = getNamedQueryMemento( null );
 			return new SingleIdEntityLoaderProvidedQueryImpl<>( this, memento );
 		}
-		return buildSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
+		else {
+			return buildSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
+		}
 	}
 
 	private SingleIdEntityLoader<?> buildSingleIdEntityLoader(LoadQueryInfluencers loadQueryInfluencers) {
 		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
-			return factory.getServiceRegistry()
-					.requireService( BatchLoaderFactory.class )
+			return factory.getServiceRegistry().requireService( BatchLoaderFactory.class )
 					.createEntityBatchLoader( batchSize, this, loadQueryInfluencers );
 		}
 		else {
@@ -1219,7 +1217,6 @@ public abstract class AbstractEntityPersister
 			// use the subclass closure
 			partsToSelect.add( getAttributeMapping( getSubclassPropertyIndex( lazyAttributeDescriptor.getName() ) ) );
 		}
-
 		return createLazyLoanPlan( partsToSelect );
 	}
 
@@ -1386,8 +1383,10 @@ public abstract class AbstractEntityPersister
 
 		identifierMapping.forEachSelectable(
 				(columnIndex, selection) -> {
+					final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
+
 					final String rootPkColumnName = pkColumnNames[ columnIndex ];
-					final Expression pkColumnExpression = creationState.getSqlExpressionResolver().resolveSqlExpression(
+					final Expression pkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
 							createColumnReferenceKey(
 									rootTableReference,
 									rootPkColumnName,
@@ -1403,7 +1402,7 @@ public abstract class AbstractEntityPersister
 					);
 
 					final String fkColumnName = fkColumnNames[ columnIndex ];
-					final Expression fkColumnExpression = creationState.getSqlExpressionResolver().resolveSqlExpression(
+					final Expression fkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
 							createColumnReferenceKey(
 									joinedTableReference,
 									fkColumnName,
@@ -1521,19 +1520,16 @@ public abstract class AbstractEntityPersister
 			EntityEntry ownerEntry,
 			SharedSessionContractImplementor session) {
 		final CollectionType collectionType = persister.getCollectionType();
-
 		if ( ownerEntry != null ) {
 			// this call only works when the owner is associated with the Session, which is not always the case
 			return collectionType.getKeyOfOwner( owner, session );
 		}
-
-		final EntityPersister ownerPersister = persister.getOwnerEntityPersister();
-		if ( collectionType.getLHSPropertyName() == null ) {
-			// collection key is defined by the owning entity identifier
-			return ownerPersister.getIdentifier( owner, session );
-		}
 		else {
-			return ownerPersister.getPropertyValue( owner, collectionType.getLHSPropertyName() );
+			final EntityPersister ownerPersister = persister.getOwnerEntityPersister();
+			return collectionType.getLHSPropertyName() == null
+					// collection key is defined by the owning entity identifier
+					? ownerPersister.getIdentifier( owner, session )
+					: ownerPersister.getPropertyValue( owner, collectionType.getLHSPropertyName() );
 		}
 	}
 
@@ -1593,12 +1589,11 @@ public abstract class AbstractEntityPersister
 
 			LOG.tracef( "Initializing lazy properties from datastore (triggered for `%s`)", fieldName );
 
-			final String fetchGroup = getEntityMetamodel().getBytecodeEnhancementMetadata()
-					.getLazyAttributesMetadata()
-					.getFetchGroupName( fieldName );
-			final List<LazyAttributeDescriptor> fetchGroupAttributeDescriptors = getEntityMetamodel().getBytecodeEnhancementMetadata()
-					.getLazyAttributesMetadata()
-					.getFetchGroupAttributeDescriptors( fetchGroup );
+			final LazyAttributesMetadata lazyAttributesMetadata =
+					getEntityMetamodel().getBytecodeEnhancementMetadata().getLazyAttributesMetadata();
+			final String fetchGroup = lazyAttributesMetadata.getFetchGroupName( fieldName );
+			final List<LazyAttributeDescriptor> fetchGroupAttributeDescriptors =
+					lazyAttributesMetadata.getFetchGroupAttributeDescriptors( fetchGroup );
 
 			final Set<String> initializedLazyAttributeNames = interceptor.getInitializedLazyAttributeNames();
 
@@ -3286,17 +3281,17 @@ public abstract class AbstractEntityPersister
 
 			final boolean inverseTable = isInverseTable( relativePosition );
 			if ( existing == null ) {
-				final Consumer<SelectableConsumer> selectableConsumerConsumer = tableKeyColumnVisitationSupplier.get();
 				final List<EntityTableMapping.KeyColumn> keyColumns = new ArrayList<>();
-				selectableConsumerConsumer.accept( (selectionIndex, selectableMapping) -> {
-					keyColumns.add( new EntityTableMapping.KeyColumn(
-							tableExpression,
-							selectableMapping.getSelectionExpression(),
-							selectableMapping.getWriteExpression(),
-							selectableMapping.isFormula(),
-							selectableMapping.getJdbcMapping()
-					) );
-				} );
+				tableKeyColumnVisitationSupplier.get()
+						.accept( (selectionIndex, selectableMapping) -> {
+							keyColumns.add( new EntityTableMapping.KeyColumn(
+									tableExpression,
+									selectableMapping.getSelectionExpression(),
+									selectableMapping.getWriteExpression(),
+									selectableMapping.isFormula(),
+									selectableMapping.getJdbcMapping()
+							) );
+						} );
 
 				final boolean isIdentifierTable = isIdentifierTable( tableExpression );
 

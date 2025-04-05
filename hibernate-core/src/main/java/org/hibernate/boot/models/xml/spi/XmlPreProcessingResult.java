@@ -4,10 +4,9 @@
  */
 package org.hibernate.boot.models.xml.spi;
 
-import java.util.List;
-
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManagedType;
+
+import java.util.List;
 
 /**
  * Result of {@linkplain XmlPreProcessor#preProcessXmlResources}
@@ -15,15 +14,11 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbManagedType;
  * @author Steve Ebersole
  */
 public interface XmlPreProcessingResult {
-	/**
-	 * Aggregated persistence unit defaults and metadata
-	 */
-	PersistenceUnitMetadata getPersistenceUnitMetadata();
 
 	/**
 	 * All XML documents (JAXB roots)
 	 */
-	List<JaxbEntityMappingsImpl> getDocuments();
+	List<XmlDocument> getDocuments();
 
 	/**
 	 * All classes named across all XML mappings

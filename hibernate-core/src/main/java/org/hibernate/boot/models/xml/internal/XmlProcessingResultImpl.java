@@ -10,7 +10,6 @@ import java.util.List;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
-import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
 
 /**
@@ -34,7 +33,7 @@ public class XmlProcessingResultImpl implements XmlProcessingResult {
 	}
 
 	@Override
-	public void apply(PersistenceUnitMetadata metadata) {
+	public void apply() {
 		ManagedTypeProcessor.processOverrideEmbeddable( getEmbeddableOverrides() );
 
 		ManagedTypeProcessor.processOverrideMappedSuperclass( getMappedSuperclassesOverrides() );

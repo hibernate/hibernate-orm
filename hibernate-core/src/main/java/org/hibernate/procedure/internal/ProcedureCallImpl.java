@@ -424,7 +424,8 @@ public class ProcedureCallImpl<R>
 	// Parameter registrations
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked") // This suppression is used to suppress unchecked conversion warnings that occur when converting a raw Class to a generic type.
+	// The underlying call to registerParameter is type-safe, so ignoring this warning is acceptable.
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class type, ParameterMode mode) {
 		getSession().checkOpen( true );
 
@@ -443,7 +444,8 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked") // This suppression is used to suppress unchecked conversion warnings that occur when converting a raw Class to a generic type.
+	// The underlying call to registerParameter is type-safe, so ignoring this warning is acceptable.
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(
 			String parameterName,
 			Class type,

@@ -992,7 +992,10 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked") // This suppression is used to suppress unchecked conversion warnings in two cases:
+	// 1. Returning Collections.EMPTY_LIST, which is a raw type, as a List<R>.
+	// 2. Casting the result of ResultSetOutput.getResultList() to List<R>.
+	// Both conversions are considered safe based on the intended usage.
 	public List<R> getResultList() {
 		if ( getMaxResults() == 0 ) {
 			return Collections.EMPTY_LIST;

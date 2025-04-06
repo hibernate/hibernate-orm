@@ -1065,7 +1065,9 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked") // This suppression is used to suppress unchecked cast warnings occurring when casting 'this', parameterMetadata,
+	// paramBindings, queryOptions, getSession(), or getOutputs() to the desired generic type T.
+	// Each cast is checked using cls.isInstance() or isAssignableFrom(), ensuring that the conversion is safe.
 	public <T> T unwrap(Class<T> cls) {
 		if ( cls.isInstance( this ) ) {
 			return (T) this;

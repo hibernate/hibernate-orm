@@ -182,7 +182,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 					OracleJsonDatum ojd = rs.getObject( paramIndex, OracleJsonDatum.class );
 					return doExtraction(ojd,options);
 				} catch (SQLException exc) {
-					if ( exc.getErrorCode() == DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
+					if ( exc.getErrorCode() == DatabaseError.JDBC_ERROR_BASE + DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
 						// this may happen if we are fetching data from an existing schema
 						// that use CBLOB for JSON column In that case we assume byte are
 						// UTF-8 bytes (i.e not OSON)
@@ -203,7 +203,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 					OracleJsonDatum ojd = statement.getObject( index, OracleJsonDatum.class );
 					return doExtraction(ojd,options);
 				} catch (SQLException exc) {
-					if ( exc.getErrorCode() == DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
+					if ( exc.getErrorCode() == DatabaseError.JDBC_ERROR_BASE + DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
 						// this may happen if we are fetching data from an existing schema
 						// that use CBLOB for JSON column. In that case we assume byte are
 						// UTF-8 bytes (i.e not OSON)
@@ -225,7 +225,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 					OracleJsonDatum ojd = statement.getObject( name, OracleJsonDatum.class );
 					return doExtraction(ojd,options);
 				} catch (SQLException exc) {
-					if ( exc.getErrorCode() == DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
+					if ( exc.getErrorCode() == DatabaseError.JDBC_ERROR_BASE + DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
 						// this may happen if we are fetching data from an existing schema
 						// that use CBLOB for JSON column In that case we assume byte are
 						//						// UTF-8 bytes (i.e not OSON)

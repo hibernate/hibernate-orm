@@ -149,10 +149,10 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 
 		try {
 			//fetch the generated id in a separate query
-			PreparedStatement idSelect = statementPreparer.prepareStatement( selectSQL, false );
+			final PreparedStatement idSelect = statementPreparer.prepareStatement( selectSQL );
 			try {
 				bindParameters( binder.getEntity(), idSelect, session );
-				ResultSet resultSet = jdbcCoordinator.getResultSetReturn().extract( idSelect, selectSQL );
+				final ResultSet resultSet = jdbcCoordinator.getResultSetReturn().extract( idSelect, selectSQL );
 				try {
 					return extractReturningValues( resultSet, session );
 				}

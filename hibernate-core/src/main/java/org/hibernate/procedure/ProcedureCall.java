@@ -155,7 +155,7 @@ public interface ProcedureCall
 	 * @throws ParameterStrategyException If the ProcedureCall is defined using named parameters
 	 * @throws NoSuchParameterException If no parameter with that position exists
 	 */
-	ProcedureParameter getParameterRegistration(int position);
+	ProcedureParameter<?> getParameterRegistration(int position);
 
 	/**
 	 * Basic form for registering a named parameter.
@@ -205,14 +205,14 @@ public interface ProcedureCall
 	 * @throws ParameterStrategyException If the ProcedureCall is defined using positional parameters
 	 * @throws NoSuchParameterException If no parameter with that name exists
 	 */
-	ProcedureParameter getParameterRegistration(String name);
+	ProcedureParameter<?> getParameterRegistration(String name);
 
 	/**
 	 * Retrieve all registered parameters.
 	 *
 	 * @return The (immutable) list of all registered parameters.
 	 */
-	List<ProcedureParameter> getRegisteredParameters();
+	List<ProcedureParameter<?>> getRegisteredParameters();
 
 	/**
 	 * Retrieves access to outputs of this procedure call.  Can be called multiple times, returning the same
@@ -243,8 +243,8 @@ public interface ProcedureCall
 	@Override
 	ProcedureCall addSynchronizedEntityName(String entityName) throws MappingException;
 
-	@Override @SuppressWarnings("rawtypes")
-	ProcedureCall addSynchronizedEntityClass(Class entityClass) throws MappingException;
+	@Override
+	ProcedureCall addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) throws MappingException;
 
 	@Override
 	NamedCallableQueryMemento toMemento(String name);
@@ -283,8 +283,8 @@ public interface ProcedureCall
 	ProcedureCall setFlushMode(FlushModeType flushMode);
 
 	@Override
-	ProcedureCall registerStoredProcedureParameter(int position, Class type, ParameterMode mode);
+	ProcedureCall registerStoredProcedureParameter(int position, Class<?> type, ParameterMode mode);
 
 	@Override
-	ProcedureCall registerStoredProcedureParameter(String parameterName, Class type, ParameterMode mode);
+	ProcedureCall registerStoredProcedureParameter(String parameterName, Class<?> type, ParameterMode mode);
 }

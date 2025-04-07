@@ -40,6 +40,15 @@ public interface SqmMultiTableMutationStrategy {
 	}
 
 	/**
+	 * Prepare the strategy for use.  Called one time as the SessionFactory
+	 * is being built.
+	 */
+	default void prepare(MappingModelCreationProcess mappingModelCreationProcess) {
+		prepare( mappingModelCreationProcess,
+				mappingModelCreationProcess.getCreationContext().getJdbcServices().getBootstrapJdbcConnectionAccess() );
+	}
+
+	/**
 	 * Release the strategy.   Called one time as the SessionFactory is
 	 * being shut down.
 	 */

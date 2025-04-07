@@ -514,11 +514,12 @@ public abstract class AbstractEntityPersister
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		representationStrategy = creationContext.getBootstrapContext().getRepresentationStrategySelector()
-				.resolveStrategy( persistentClass, this, creationContext );
-
+		representationStrategy =
+				creationContext.getBootstrapContext().getRepresentationStrategySelector()
+						.resolveStrategy( persistentClass, this, creationContext );
 		javaType = representationStrategy.getLoadJavaType();
 		assert javaType != null;
+		accessOptimizer = accessOptimizer( representationStrategy );
 
 		concreteProxy = entityMetamodel.isPolymorphic()
 				&& ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() || hasProxy() )
@@ -4438,13 +4439,9 @@ public abstract class AbstractEntityPersister
 				generatedBasicAttributes.add( generatedAttribute );
 			}
 		}
-
-		if ( generatedBasicAttributes.size() == originalSize ) {
-			return unmodifiableList( generatedBasicAttributes );
-		}
-		else  {
-			return emptyList();
-		}
+		return generatedBasicAttributes.size() == originalSize
+				? unmodifiableList( generatedBasicAttributes )
+				: emptyList();
 	}
 
 	@Override
@@ -4570,20 +4567,20 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected String determineTableName(Table table) {
-		if ( table.getSubselect() != null ) {
-			final SQLQueryParser sqlQueryParser = new SQLQueryParser(
-					table.getSubselect(),
-					null,
-					// NOTE : this allows finer control over catalog and schema used for placeholder
-					// handling (`{h-catalog}`, `{h-schema}`, `{h-domain}`)
-					new ExplicitSqlStringGenerationContext( table.getCatalog(), table.getSchema(), factory )
-			);
-			return "( " + sqlQueryParser.process() + " )";
-		}
-
-		return factory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
+		return table.getSubselect() != null
+				? "( " + createSqlQueryParser( table ).process() + " )"
+				: factory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
 	}
 
+	private SQLQueryParser createSqlQueryParser(Table table) {
+		return new SQLQueryParser(
+				table.getSubselect(),
+				null,
+				// NOTE: this allows finer control over catalog and schema used for
+				// placeholder handling (`{h-catalog}`, `{h-schema}`, `{h-domain}`)
+				new ExplicitSqlStringGenerationContext( table.getCatalog(), table.getSchema(), factory )
+		);
+	}
 
 	@Override
 	public EntityEntryFactory getEntityEntryFactory() {
@@ -4679,66 +4676,93 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void forEachAttributeMapping(final IndexedConsumer<? super AttributeMapping> consumer) {
+	public void forEachAttributeMapping(IndexedConsumer<? super AttributeMapping> consumer) {
 		attributeMappings.indexedForEach( consumer );
 	}
 
 	@Override
 	public void prepareMappingModel(MappingModelCreationProcess creationProcess) {
-		if ( identifierMapping != null ) {
-			return;
+		if ( identifierMapping == null ) {
+			prepareMappings( creationProcess );
+			handleSubtypeMappings( creationProcess );
+			prepareMultiTableMutationStrategy( creationProcess );
+			prepareMultiTableInsertStrategy( creationProcess );
 		}
+	}
 
-		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
+	private void handleSubtypeMappings(MappingModelCreationProcess creationProcess) {
+		// Register a callback for after all `#prepareMappingModel` calls have finished. Here we want to delay the
+		// generation of `staticFetchableList` because we need to wait until after all subclasses have had their
+		// `#prepareMappingModel` called (and their declared attribute mappings resolved)
+		creationProcess.registerInitializationCallback(
+				"Entity(" + getEntityName() + ") `staticFetchableList` generator",
+				() -> {
+					final var builder = new ImmutableAttributeMappingList.Builder( attributeMappings.size() );
+					visitSubTypeAttributeMappings( builder::add );
+					assert superMappingType != null || builder.assertFetchableIndexes();
+					staticFetchableList = builder.build();
+					return true;
+				}
+		);
+	}
 
-		final PersistentClass bootEntityDescriptor = creationContext
-				.getBootModel()
-				.getEntityBinding( getEntityName() );
+	private static ReflectionOptimizer.AccessOptimizer accessOptimizer(EntityRepresentationStrategy strategy) {
+		final ReflectionOptimizer reflectionOptimizer = strategy.getReflectionOptimizer();
+		return reflectionOptimizer == null ? null : reflectionOptimizer.getAccessOptimizer();
+	}
 
-//		EntityMappingType rootEntityDescriptor;
+	private void prepareMappings(MappingModelCreationProcess creationProcess) {
+		final PersistentClass bootEntityDescriptor =
+				creationProcess.getCreationContext().getBootModel()
+						.getEntityBinding( getEntityName() );
+		initializeSpecialAttributeMappings( creationProcess, bootEntityDescriptor );
+		versionGenerator = createVersionGenerator( entityMetamodel, versionMapping );
+		buildDeclaredAttributeMappings( creationProcess, bootEntityDescriptor );
+		getAttributeMappings();
+		initializeNaturalIdMapping( creationProcess, bootEntityDescriptor );
+	}
+
+	private void initializeSpecialAttributeMappings
+			(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		if ( superMappingType != null ) {
-			( (InFlightEntityMappingType) superMappingType ).prepareMappingModel( creationProcess );
+			((InFlightEntityMappingType) superMappingType).prepareMappingModel( creationProcess );
 			if ( shouldProcessSuperMapping() ) {
-				discriminatorMapping = superMappingType.getDiscriminatorMapping();
-				identifierMapping = superMappingType.getIdentifierMapping();
-				naturalIdMapping = superMappingType.getNaturalIdMapping();
-				versionMapping = superMappingType.getVersionMapping();
-				rowIdMapping = superMappingType.getRowIdMapping();
-				softDeleteMapping = superMappingType.getSoftDeleteMapping();
+				inheritSupertypeSpecialAttributeMappings();
 			}
 			else {
 				prepareMappingModel( creationProcess, bootEntityDescriptor );
 			}
-//			rootEntityDescriptor = superMappingType.getRootEntityDescriptor();
 		}
 		else {
 			prepareMappingModel( creationProcess, bootEntityDescriptor );
-//			rootEntityDescriptor = this;
 		}
+	}
 
-		final EntityMetamodel currentEntityMetamodel = getEntityMetamodel();
+	private void inheritSupertypeSpecialAttributeMappings() {
+		discriminatorMapping = superMappingType.getDiscriminatorMapping();
+		identifierMapping = superMappingType.getIdentifierMapping();
+		naturalIdMapping = superMappingType.getNaturalIdMapping();
+		versionMapping = superMappingType.getVersionMapping();
+		rowIdMapping = superMappingType.getRowIdMapping();
+		softDeleteMapping = superMappingType.getSoftDeleteMapping();
+	}
 
-		if ( currentEntityMetamodel.isVersioned() ) {
-			final BeforeExecutionGenerator generator = currentEntityMetamodel.getVersionGenerator();
-			// need to do this here because EntityMetamodel doesn't have the EntityVersionMapping :-(
-			versionGenerator = generator == null ? new VersionGeneration( versionMapping ) : generator;
-		}
-
+	private void buildDeclaredAttributeMappings
+			(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		int stateArrayPosition = getStateArrayInitialPosition( creationProcess );
-
-		final NonIdentifierAttribute[] properties = currentEntityMetamodel.getProperties();
-		AttributeMappingsMap.Builder mappingsBuilder = AttributeMappingsMap.builder();
+		final NonIdentifierAttribute[] properties = entityMetamodel.getProperties();
+		final AttributeMappingsMap.Builder mappingsBuilder = AttributeMappingsMap.builder();
 		int fetchableIndex = getFetchableIndexOffset();
-		for ( int i = 0; i < currentEntityMetamodel.getPropertySpan(); i++ ) {
-			final NonIdentifierAttribute runtimeAttrDefinition = properties[i];
-			final Property bootProperty = bootEntityDescriptor.getProperty( runtimeAttrDefinition.getName() );
-
+		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
+			final NonIdentifierAttribute runtimeAttributeDefinition = properties[i];
+			final String attributeName = runtimeAttributeDefinition.getName();
+			final Property bootProperty = bootEntityDescriptor.getProperty( attributeName );
 			if ( superMappingType == null
 					|| superMappingType.findAttributeMapping( bootProperty.getName() ) == null ) {
 				mappingsBuilder.put(
-						runtimeAttrDefinition.getName(),
+						attributeName,
 						generateNonIdAttributeMapping(
-								runtimeAttrDefinition,
+								runtimeAttributeDefinition,
 								bootProperty,
 								stateArrayPosition++,
 								fetchableIndex++,
@@ -4747,35 +4771,24 @@ public abstract class AbstractEntityPersister
 				);
 			}
 			declaredAttributeMappings = mappingsBuilder.build();
-//			else {
-				// its defined on the supertype, skip it here
-//			}
+			// otherwise, it's defined on the supertype, skip it here
 		}
+	}
 
-		getAttributeMappings();
+	private static BeforeExecutionGenerator createVersionGenerator
+			(EntityMetamodel currentEntityMetamodel, EntityVersionMapping versionMapping) {
+		if ( currentEntityMetamodel.isVersioned() ) {
+			final BeforeExecutionGenerator generator = currentEntityMetamodel.getVersionGenerator();
+			// need to do this here because EntityMetamodel doesn't have the EntityVersionMapping :-(
+			return generator == null ? new VersionGeneration( versionMapping ) : generator;
+		}
+		else {
+			return null;
+		}
+	}
 
-		postProcessAttributeMappings( creationProcess, bootEntityDescriptor );
-
-		final ReflectionOptimizer reflectionOptimizer = representationStrategy.getReflectionOptimizer();
-		accessOptimizer = reflectionOptimizer != null ? reflectionOptimizer.getAccessOptimizer() : null;
-
-		// register a callback for after all `#prepareMappingModel` calls have finished.  here we want to delay the
-		// generation of `staticFetchableList` because we need to wait until after all subclasses have had their
-		// `#prepareMappingModel` called (and their declared attribute mappings resolved)
-		creationProcess.registerInitializationCallback(
-				"Entity(" + getEntityName() + ") `staticFetchableList` generator",
-				() -> {
-					final ImmutableAttributeMappingList.Builder builder =
-							new ImmutableAttributeMappingList.Builder( attributeMappings.size() );
-					visitSubTypeAttributeMappings( builder::add );
-					assert superMappingType != null || builder.assertFetchableIndexes();
-					staticFetchableList = builder.build();
-					return true;
-				}
-		);
-
-		boolean needsMultiTableInsert = hasMultipleTables();
-		if ( needsMultiTableInsert ) {
+	private void prepareMultiTableMutationStrategy(MappingModelCreationProcess creationProcess) {
+		if ( hasMultipleTables() ) {
 			creationProcess.registerInitializationCallback(
 					"Entity(" + getEntityName() + ") `sqmMultiTableMutationStrategy` interpretation",
 					() -> {
@@ -4785,28 +4798,16 @@ public abstract class AbstractEntityPersister
 							return false;
 						}
 						else {
-							sqmMultiTableMutationStrategy.prepare(
-									creationProcess,
-									creationContext.getJdbcServices().getBootstrapJdbcConnectionAccess()
-							);
+							sqmMultiTableMutationStrategy.prepare( creationProcess );
 							return true;
 						}
 					}
 			);
-
 		}
-		else {
-			sqmMultiTableMutationStrategy = null;
-		}
+	}
 
-		if ( !needsMultiTableInsert && getGenerator() instanceof BulkInsertionCapableIdentifierGenerator ) {
-			if ( getGenerator() instanceof OptimizableGenerator ) {
-				final Optimizer optimizer = ( (OptimizableGenerator) getGenerator() ).getOptimizer();
-				needsMultiTableInsert = optimizer != null && optimizer.getIncrementSize() > 1;
-			}
-		}
-
-		if ( needsMultiTableInsert ) {
+	private void prepareMultiTableInsertStrategy(MappingModelCreationProcess creationProcess) {
+		if ( hasMultipleTables() || generatorNeedsMultiTableInsert() ) {
 			creationProcess.registerInitializationCallback(
 					"Entity(" + getEntityName() + ") `sqmMultiTableInsertStrategy` interpretation",
 					() -> {
@@ -4816,18 +4817,23 @@ public abstract class AbstractEntityPersister
 							return false;
 						}
 						else {
-							sqmMultiTableInsertStrategy.prepare(
-									creationProcess,
-									creationContext.getJdbcServices().getBootstrapJdbcConnectionAccess()
-							);
+							sqmMultiTableInsertStrategy.prepare( creationProcess );
 							return true;
 						}
 					}
 			);
+		}
+	}
 
+	private boolean generatorNeedsMultiTableInsert() {
+		final Generator generator = getGenerator();
+		if ( generator instanceof BulkInsertionCapableIdentifierGenerator
+				&& generator instanceof OptimizableGenerator optimizableGenerator ) {
+			final Optimizer optimizer = optimizableGenerator.getOptimizer();
+			return optimizer != null && optimizer.getIncrementSize() > 1;
 		}
 		else {
-			sqmMultiTableInsertStrategy = null;
+			return false;
 		}
 	}
 
@@ -4842,11 +4848,10 @@ public abstract class AbstractEntityPersister
 				// Determining the number of attribute mappings unfortunately has to be done this way,
 				// because calling `subMappingType.getNumberOfDeclaredAttributeMappings()` at this point
 				// may produce wrong results because subMappingType might not have completed prepareMappingModel yet
-				final int propertySpan = subMappingType.getEntityPersister().getEntityMetamodel().getPropertySpan();
-				final int superPropertySpan = subMappingType.getSuperMappingType()
-						.getEntityPersister()
-						.getEntityMetamodel()
-						.getPropertySpan();
+				final int propertySpan =
+						subMappingType.getEntityPersister().getEntityMetamodel().getPropertySpan();
+				final int superPropertySpan =
+						subMappingType.getSuperMappingType().getEntityPersister().getEntityMetamodel().getPropertySpan();
 				final int numberOfDeclaredAttributeMappings = propertySpan - superPropertySpan;
 				offset += numberOfDeclaredAttributeMappings;
 			}
@@ -4858,26 +4863,12 @@ public abstract class AbstractEntityPersister
 	private void prepareMappingModel(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		final EntityInstantiator instantiator = getRepresentationStrategy().getInstantiator();
 		final Supplier<?> instantiate = instantiator.canBeInstantiated() ? instantiator::instantiate : null;
-
-		identifierMapping = creationProcess.processSubPart(
-				EntityIdentifierMapping.ID_ROLE_NAME,
-				(role, process)
-						-> generateIdentifierMapping( instantiate, bootEntityDescriptor, process )
-		);
-
+		identifierMapping = creationProcess.processSubPart( EntityIdentifierMapping.ID_ROLE_NAME,
+				(role, process) -> generateIdentifierMapping( instantiate, bootEntityDescriptor, process ) );
 		versionMapping = generateVersionMapping( instantiate, bootEntityDescriptor, creationProcess );
-
-		if ( rowIdName == null ) {
-			rowIdMapping = null;
-		}
-		else {
-			rowIdMapping = creationProcess.processSubPart(
-					rowIdName,
-					(role, process)
-							-> new EntityRowIdMappingImpl( rowIdName, getTableName(), this )
-			);
-		}
-
+		rowIdMapping = rowIdName == null ? null
+				: creationProcess.processSubPart( rowIdName,
+						(role, process) -> new EntityRowIdMappingImpl( rowIdName, getTableName(), this ) );
 		discriminatorMapping = generateDiscriminatorMapping( bootEntityDescriptor );
 		softDeleteMapping = resolveSoftDeleteMapping(
 				this,
@@ -4885,7 +4876,6 @@ public abstract class AbstractEntityPersister
 				getIdentifierTableName(),
 				creationProcess
 		);
-
 		if ( softDeleteMapping != null ) {
 			if ( bootEntityDescriptor.getRootClass().getCustomSQLDelete() != null ) {
 				throw new UnsupportedMappingException( "Entity may not define both @SoftDelete and @SQLDelete" );
@@ -4893,7 +4883,8 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private void postProcessAttributeMappings(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+	private void initializeNaturalIdMapping
+			(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		if ( superMappingType != null ) {
 			naturalIdMapping = superMappingType.getNaturalIdMapping();
 		}
@@ -4905,7 +4896,8 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	protected NaturalIdMapping generateNaturalIdMapping(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+	protected NaturalIdMapping generateNaturalIdMapping
+			(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		//noinspection AssertWithSideEffects
 		assert bootEntityDescriptor.hasNaturalId();
 
@@ -4922,7 +4914,7 @@ public abstract class AbstractEntityPersister
 		// collect the names of the attributes making up the natural-id.
 		final Set<String> attributeNames = setOfSize( naturalIdAttributeIndexes.length );
 		for ( int naturalIdAttributeIndex : naturalIdAttributeIndexes ) {
-			attributeNames.add( this.getPropertyNames()[ naturalIdAttributeIndex ] );
+			attributeNames.add( getPropertyNames()[ naturalIdAttributeIndex ] );
 		}
 
 		// then iterate over the attribute mappings finding the ones having names
@@ -5644,7 +5636,7 @@ public abstract class AbstractEntityPersister
 			for ( AttributeMapping am : declaredAttributeMappings.valueIterator() ) {
 				builder.add( am );
 			}
-			this.attributeMappings = builder.build();
+			attributeMappings = builder.build();
 			final Getter[] getters = new Getter[attributeMappings.size()];
 			final Setter[] setters = new Setter[attributeMappings.size()];
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
@@ -5652,8 +5644,8 @@ public abstract class AbstractEntityPersister
 				getters[i] = propertyAccess.getGetter();
 				setters[i] = propertyAccess.getSetter();
 			}
-			this.getterCache = getters;
-			this.setterCache = setters;
+			getterCache = getters;
+			setterCache = setters;
 			// subclasses?  it depends on the usage
 		}
 

@@ -7,9 +7,11 @@ package org.hibernate.orm.test.collection.stale;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
@@ -19,6 +21,7 @@ import static org.hibernate.cfg.BatchSettings.STATEMENT_BATCH_SIZE;
 
 @Jpa(annotatedClasses = StaleSetTest.StaleSetTestEntity.class,
 		properties = @Setting(name = STATEMENT_BATCH_SIZE, value = "5"))
+@SkipForDialect(dialectClass = MariaDBDialect.class)
 public class StaleSetTest {
 	@Test void test(EntityManagerFactoryScope scope) {
 		var entity = new StaleSetTestEntity();

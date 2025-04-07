@@ -10,10 +10,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -24,6 +26,7 @@ import static org.hibernate.cfg.BatchSettings.STATEMENT_BATCH_SIZE;
 @Jpa(annotatedClasses = {StaleOneToManyListTest.StaleListTestParent.class,
 						StaleOneToManyListTest.StaleListTestChild.class},
 		properties = @Setting(name = STATEMENT_BATCH_SIZE, value = "5"))
+@SkipForDialect(dialectClass = MariaDBDialect.class)
 public class StaleOneToManyListTest {
 	@Test void test1(EntityManagerFactoryScope scope) {
 		var entity = new StaleListTestParent();

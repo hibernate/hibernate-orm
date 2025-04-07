@@ -62,7 +62,6 @@ import org.hibernate.usertype.CompositeUserType;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
-import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
 import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
@@ -798,10 +797,9 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		}
 
 		@Override
-		public Object execute(SharedSessionContractImplementor session, Object incomingObject) {
-			if ( !subgenerator.generatedOnExecution( incomingObject, session ) ) {
-				return ( (BeforeExecutionGenerator) subgenerator)
-						.generate( session, incomingObject, null, INSERT );
+		public BeforeExecutionGenerator getGenerator() {
+			if ( subgenerator instanceof BeforeExecutionGenerator ) {
+				return (BeforeExecutionGenerator) subgenerator;
 			}
 			else {
 				throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );

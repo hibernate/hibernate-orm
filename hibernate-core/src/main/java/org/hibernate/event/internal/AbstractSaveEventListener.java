@@ -152,7 +152,8 @@ public abstract class AbstractSaveEventListener<C>
 			EventSource source,
 			BeforeExecutionGenerator generator,
 			EntityPersister persister) {
-		final Object id = generator.generate( source, entity, null, INSERT );
+		final Object currentValue = generator.allowAssignedIdentifiers() ? persister.getIdentifier( entity, source ) : null;
+		final Object id = generator.generate( source, entity, currentValue, INSERT );
 		if ( id == null ) {
 			throw new IdentifierGenerationException( "Null id generated for entity '" + persister.getEntityName() + "'" );
 		}

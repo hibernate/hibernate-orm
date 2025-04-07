@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.generator.internal;
+package org.hibernate.internal;
 
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.persister.entity.EntityPersister;

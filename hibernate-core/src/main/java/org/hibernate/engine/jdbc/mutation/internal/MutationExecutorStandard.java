@@ -70,9 +70,9 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 			int batchSize,
 			SharedSessionContractImplementor session) {
 		this.mutationOperationGroup = mutationOperationGroup;
-		this.generatedValuesDelegate = mutationOperationGroup.asEntityMutationOperationGroup() != null ?
-				mutationOperationGroup.asEntityMutationOperationGroup().getMutationDelegate() :
-				null;
+		this.generatedValuesDelegate = mutationOperationGroup.asEntityMutationOperationGroup() != null
+				? mutationOperationGroup.asEntityMutationOperationGroup().getMutationDelegate()
+				: null;
 
 		final BatchKey batchKey = batchKeySupplier.getBatchKey();
 
@@ -88,11 +88,11 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 
 		for ( int i = mutationOperationGroup.getNumberOfOperations() - 1; i >= 0; i-- ) {
 			final MutationOperation operation = mutationOperationGroup.getOperation( i );
-			if ( operation instanceof SelfExecutingUpdateOperation ) {
+			if ( operation instanceof SelfExecutingUpdateOperation selfExecutingUpdateOperation ) {
 				if ( selfExecutingMutations == null ) {
 					selfExecutingMutations = new ArrayList<>();
 				}
-				selfExecutingMutations.add( 0, ( (SelfExecutingUpdateOperation) operation ) );
+				selfExecutingMutations.add( 0, selfExecutingUpdateOperation );
 			}
 			else {
 				final PreparableMutationOperation preparableMutationOperation = (PreparableMutationOperation) operation;
@@ -245,9 +245,11 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 					session
 			);
 
-			final Object id = entityGroup.getMutationType() == MutationType.INSERT && details.getMutatingTableDetails().isIdentifierTable() ?
-					generatedValues.getGeneratedValue( entityTarget.getTargetPart().getIdentifierMapping() ) :
-					null;
+			final Object id =
+					entityGroup.getMutationType() == MutationType.INSERT
+						&& details.getMutatingTableDetails().isIdentifierTable()
+							? generatedValues.getGeneratedValue( entityTarget.getTargetPart().getIdentifierMapping() )
+							: null;
 			nonBatchedStatementGroup.forEachStatement( (tableName, statementDetails) -> {
 				if ( !statementDetails.getMutatingTableDetails().isIdentifierTable() ) {
 					performNonBatchedMutation(

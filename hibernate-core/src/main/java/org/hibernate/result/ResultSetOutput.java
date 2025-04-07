@@ -11,13 +11,13 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public interface ResultSetOutput extends Output {
+public interface ResultSetOutput<T> extends Output {
 	/**
 	 * Consume the underlying {@link java.sql.ResultSet} and return the resulting List.
 	 *
 	 * @return The consumed ResultSet values.
 	 */
-	List getResultList();
+	List<T> getResultList();
 
 	/**
 	 * Consume the underlying {@link java.sql.ResultSet} with the expectation that there is just a single level of

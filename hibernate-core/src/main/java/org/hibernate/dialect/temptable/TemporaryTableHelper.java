@@ -147,26 +147,23 @@ public class TemporaryTableHelper {
 			TemporaryTableExporter exporter,
 			Function<SharedSessionContractImplementor,String> sessionUidAccess,
 			SharedSessionContractImplementor session) {
-		PreparedStatement ps = null;
+		PreparedStatement preparedStatement = null;
 		try {
 			final String sql = exporter.getSqlTruncateCommand( temporaryTable, sessionUidAccess, session );
-
-			ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
-
+			preparedStatement = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			if ( temporaryTable.getSessionUidColumn() != null ) {
 				final String sessionUid = sessionUidAccess.apply( session );
-				ps.setString( 1, sessionUid );
+				preparedStatement.setString( 1, sessionUid );
 			}
-
-			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps, sql );
+			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql );
 		}
 		catch( Throwable t ) {
 			log.unableToCleanupTemporaryIdTable(t);
 		}
 		finally {
-			if ( ps != null ) {
+			if ( preparedStatement != null ) {
 				try {
-					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
+					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( preparedStatement );
 				}
 				catch( Throwable ignore ) {
 					// ignore

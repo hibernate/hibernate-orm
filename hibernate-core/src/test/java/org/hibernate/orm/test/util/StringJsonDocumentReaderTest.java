@@ -381,4 +381,39 @@ public class StringJsonDocumentReaderTest {
 		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
 	}
 
+	@Test
+	public void testUnicode() {
+		final StringJsonDocumentReader reader = new StringJsonDocumentReader( """
+							{
+							"myUnicode1": "\\u0074\\u0068\\u0069\\u0073\\u005f\\u0069\\u0073\\u005f\\u0075\\u006e\\u0069\\u0063\\u006f\\u0064\\u0065",
+							"myUnicode2": "this_\\u0069\\u0073_unicode",
+							"myUnicode3": "this_is_unicode"
+							}
+
+
+						""");
+
+		assertTrue(reader.hasNext(), "should have more element");
+		assertEquals( JsonDocumentItemType.OBJECT_START, reader.next());
+
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals("myUnicode1", reader.getObjectKeyName());
+		assertEquals( JsonDocumentItemType.VALUE, reader.next());
+		assertEquals("this_is_unicode", reader.getStringValue());
+
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals("myUnicode2", reader.getObjectKeyName());
+		assertEquals( JsonDocumentItemType.VALUE, reader.next());
+		assertEquals("this_is_unicode", reader.getStringValue());
+
+		assertEquals( JsonDocumentItemType.VALUE_KEY,reader.next());
+		assertEquals("myUnicode3", reader.getObjectKeyName());
+		assertEquals( JsonDocumentItemType.VALUE, reader.next());
+		assertEquals("this_is_unicode", reader.getStringValue());
+
+		assertEquals( JsonDocumentItemType.OBJECT_END, reader.next());
+
+	}
+
+
 }

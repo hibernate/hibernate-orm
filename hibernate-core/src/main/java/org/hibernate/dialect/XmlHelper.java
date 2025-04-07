@@ -43,7 +43,7 @@ import org.hibernate.type.descriptor.jdbc.XmlArrayJdbcType;
 
 import static java.lang.Character.isLetter;
 import static java.lang.Character.isLetterOrDigit;
-import static org.hibernate.dialect.StructHelper.getEmbeddedPart;
+import static org.hibernate.dialect.StructHelper.getSubPart;
 import static org.hibernate.dialect.StructHelper.instantiate;
 
 /**
@@ -762,7 +762,7 @@ public class XmlHelper {
 		final int attributeCount = embeddableMappingType.getNumberOfAttributeMappings();
 		for ( int i = 0; i < attributeCount; i++ ) {
 			final Object attributeValue = attributeValues == null ? null : attributeValues[i];
-			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, i );
+			final ValuedModelPart attributeMapping = getSubPart( embeddableMappingType, i );
 			if ( attributeMapping instanceof SelectableMapping selectable ) {
 				final String tagName = selectable.getSelectableName();
 				sb.append( '<' );

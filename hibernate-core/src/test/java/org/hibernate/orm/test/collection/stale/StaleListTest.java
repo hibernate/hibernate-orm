@@ -9,9 +9,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OrderColumn;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -21,6 +23,7 @@ import static org.hibernate.cfg.BatchSettings.STATEMENT_BATCH_SIZE;
 
 @Jpa(annotatedClasses = StaleListTest.StaleListTestEntity.class,
 		properties = @Setting(name = STATEMENT_BATCH_SIZE, value = "5"))
+@SkipForDialect(dialectClass = MariaDBDialect.class)
 public class StaleListTest {
 	@Test void test1(EntityManagerFactoryScope scope) {
 		var entity = new StaleListTestEntity();

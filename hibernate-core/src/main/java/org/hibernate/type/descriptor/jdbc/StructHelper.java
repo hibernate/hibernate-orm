@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
@@ -38,13 +39,13 @@ public class StructHelper {
 			Object[] rawJdbcValues,
 			WrapperOptions options) throws SQLException {
 		final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
-		final int size = numberOfAttributeMappings + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
+		final int size = numberOfAttributeMappings + (embeddableMappingType.isPolymorphic() ? 1 : 0);
 		final StructAttributeValues attributeValues =
 				new StructAttributeValues( numberOfAttributeMappings, rawJdbcValues );
 		int jdbcIndex = 0;
 		for ( int i = 0; i < size; i++ ) {
 			jdbcIndex += injectAttributeValue(
-					getEmbeddedPart( embeddableMappingType, i ),
+					getSubPart( embeddableMappingType, i ),
 					attributeValues,
 					i,
 					rawJdbcValues,
@@ -171,7 +172,7 @@ public class StructHelper {
 		int offset = 0;
 		for ( int i = 0; i < values.length; i++ ) {
 			offset += injectJdbcValue(
-					getEmbeddedPart( embeddableMappingType, i ),
+					getSubPart( embeddableMappingType, i ),
 					values,
 					i,
 					jdbcValues,
@@ -203,10 +204,12 @@ public class StructHelper {
 		}
 	}
 
-	public static ValuedModelPart getEmbeddedPart(EmbeddableMappingType embeddableMappingType, int position) {
-		return position == embeddableMappingType.getNumberOfAttributeMappings()
-				? embeddableMappingType.getDiscriminatorMapping()
-				: embeddableMappingType.getAttributeMapping( position );
+	public static ValuedModelPart getSubPart(ManagedMappingType type, int position) {
+		if ( position == type.getNumberOfAttributeMappings() ) {
+			assert type instanceof EmbeddableMappingType;
+			return ( (EmbeddableMappingType) type ).getDiscriminatorMapping();
+		}
+		return type.getAttributeMapping( position );
 	}
 
 	private static int injectJdbcValue(

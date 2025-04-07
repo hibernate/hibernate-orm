@@ -32,7 +32,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.type.descriptor.jdbc.StructHelper.getEmbeddedPart;
+import static org.hibernate.type.descriptor.jdbc.StructHelper.getSubPart;
 import static org.hibernate.type.descriptor.jdbc.StructHelper.instantiate;
 
 /**
@@ -241,7 +241,7 @@ public class StructJdbcType implements StructuredJdbcType {
 		for ( int i = 0; i < size; i++ ) {
 			final int attributeIndex = orderMapping == null ? i : orderMapping[i];
 			jdbcIndex += injectAttributeValue(
-					getEmbeddedPart( embeddableMappingType, attributeIndex ),
+					getSubPart( embeddableMappingType, attributeIndex ),
 					attributeValues,
 					attributeIndex,
 					rawJdbcValues,
@@ -383,7 +383,7 @@ public class StructJdbcType implements StructuredJdbcType {
 			WrapperOptions options) throws SQLException {
 		final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
 		for ( int i = 0; i < numberOfAttributeMappings + ( embeddableMappingType.isPolymorphic() ? 1 : 0 ); i++ ) {
-			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, i );
+			final ValuedModelPart attributeMapping = getSubPart( embeddableMappingType, i );
 			if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
 				if ( toOneAttributeMapping.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
 					continue;

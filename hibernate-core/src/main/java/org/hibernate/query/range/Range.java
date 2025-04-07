@@ -198,7 +198,7 @@ public interface Range<U> {
 	 * with case-sensitivity.
 	 */
 	static Range<String> containing(String substring) {
-		return pattern( substring, true );
+		return containing( substring, true );
 	}
 
 	/**

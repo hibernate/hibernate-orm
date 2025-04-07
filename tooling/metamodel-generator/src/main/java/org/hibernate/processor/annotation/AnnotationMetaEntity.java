@@ -1791,17 +1791,37 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		);
 	}
 
-	private void checkFinderParameter(TypeElement entity, VariableElement parameter) {
+	private void checkFinderParameter(@Nullable TypeElement entity, VariableElement parameter) {
 		final Types types = context.getTypeUtils();
 		final TypeMirror parameterType = parameterType(parameter);
 		final String typeName = parameterType.toString();
-		if ( isOrderParam( typeName ) || isRestrictionParam( typeName ) ) {
+		if ( isRestrictionParam( typeName ) ) {
 			final TypeMirror typeArgument = getTypeArgument( parameterType );
-			if ( typeArgument == null ) {
-				missingTypeArgError( entity.getSimpleName().toString(), parameter, typeName );
+			final TypeElement implicitEntityType = entity == null ? primaryEntity : entity;
+			if ( implicitEntityType != null ) {
+				if ( typeArgument == null ) {
+					missingTypeArgError( implicitEntityType.getSimpleName().toString(), parameter, typeName );
+				}
+				else if ( !types.isSameType( typeArgument, implicitEntityType.asType() ) ) {
+					wrongTypeArgError( implicitEntityType.getSimpleName().toString(), parameter, typeName );
+				}
 			}
-			else if ( !types.isSameType( typeArgument, entity.asType() ) ) {
-				wrongTypeArgError( entity.getSimpleName().toString(), parameter, typeName );
+//			else {
+//				message( parameter, "repository method does have well-defined entity type", Diagnostic.Kind.ERROR );
+//			}
+		}
+		else if ( isOrderParam( typeName ) ) {
+			final TypeMirror typeArgument = getTypeArgument( parameterType );
+			if ( entity != null ) {
+				if ( typeArgument == null ) {
+					missingTypeArgError( entity.getSimpleName().toString(), parameter, typeName );
+				}
+				else if ( !types.isSameType( typeArgument, entity.asType() ) ) {
+					wrongTypeArgError( entity.getSimpleName().toString(), parameter, typeName );
+				}
+			}
+			else {
+				message( parameter, "repository method does not return entity type", Diagnostic.Kind.ERROR );
 			}
 		}
 	}
@@ -3224,16 +3244,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		if ( returnType != null ) {
 			for ( VariableElement parameter : method.getParameters() ) {
-				final TypeElement entity = implicitEntityType(returnType);
-				if ( entity != null ) {
-					checkFinderParameter(entity, parameter);
-				}
-				// else? what?
+				checkFinderParameter( explicitEntityType(returnType), parameter );
 			}
 		}
 	}
 
-	private @Nullable TypeElement implicitEntityType(@Nullable TypeMirror resultType) {
+	private @Nullable TypeElement explicitEntityType(@Nullable TypeMirror resultType) {
 		if ( resultType != null && resultType.getKind() == TypeKind.DECLARED) {
 			final DeclaredType declaredType = (DeclaredType) resultType;
 			final Element typeElement = declaredType.asElement();
@@ -3241,7 +3257,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return (TypeElement) typeElement;
 			}
 		}
-		return primaryEntity;
+		return null;
 	}
 
 	private static boolean typeNameEquals(TypeMirror parameterType, String typeName) {

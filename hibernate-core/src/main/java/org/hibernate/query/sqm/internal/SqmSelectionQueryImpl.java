@@ -99,6 +99,9 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	private final Class<?> resultType;
 	private final TupleMetadata tupleMetadata;
 
+	/**
+	 * Form used for HQL queries
+	 */
 	public SqmSelectionQueryImpl(
 			String hql,
 			HqlInterpretation<R> hqlInterpretation,
@@ -114,7 +117,6 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
 		this.parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
-
 		this.expectedResultType = expectedResultType;
 		this.resultType = determineResultType( sqm, expectedResultType );
 		this.tupleMetadata = buildTupleMetadata( sqm, expectedResultType );
@@ -123,29 +125,38 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		setComment( hql );
 	}
 
+	/**
+	 * Creates a {@link org.hibernate.query.SelectionQuery}
+	 * instance from a named HQL memento.
+	 * Form used from {@link NamedHqlQueryMementoImpl}.
+	 */
 	public SqmSelectionQueryImpl(
 			NamedHqlQueryMementoImpl<?> memento,
 			Class<R> resultType,
 			SharedSessionContractImplementor session) {
-		this(
-				memento.getHqlString(),
+		this( memento.getHqlString(),
 				interpretation( memento, resultType, session ),
-				resultType,
-				session
-		);
-
+				resultType, session );
 		applySqmOptions( memento );
 	}
 
+	/**
+	 * Creates a {@link org.hibernate.query.SelectionQuery}
+	 * instance from a named criteria query memento.
+	 * Form used from {@link NamedCriteriaQueryMementoImpl}
+	 */
 	public SqmSelectionQueryImpl(
 			NamedCriteriaQueryMementoImpl<?> memento,
+			SqmSelectStatement<R> selectStatement,
 			Class<R> expectedResultType,
 			SharedSessionContractImplementor session) {
-		//noinspection unchecked
-		this( (SqmSelectStatement<R>) memento.getSqmStatement(), expectedResultType, session );
+		this( selectStatement, expectedResultType, session );
 		applySqmOptions( memento );
 	}
 
+	/**
+	 * Form used for criteria queries
+	 */
 	public SqmSelectionQueryImpl(
 			SqmSelectStatement<R> criteria,
 			Class<R> expectedResultType,

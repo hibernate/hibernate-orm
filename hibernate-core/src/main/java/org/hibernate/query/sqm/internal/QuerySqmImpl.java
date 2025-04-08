@@ -8,7 +8,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -93,6 +92,7 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
 import org.hibernate.sql.results.spi.SingleResultConsumer;
 
+import static java.util.Collections.emptyMap;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
@@ -132,27 +132,31 @@ public class QuerySqmImpl<R>
 	private final TupleMetadata tupleMetadata;
 
 	/**
-	 * Creates a Query instance from a named HQL memento
+	 * Creates a {@link org.hibernate.query.Query}
+	 * instance from a named HQL memento.
+	 * Form used from {@link NamedHqlQueryMementoImpl}.
 	 */
 	public QuerySqmImpl(
-			NamedHqlQueryMementoImpl<?> memento,
+			NamedSqmQueryMemento<?> memento,
 			Class<R> expectedResultType,
 			SharedSessionContractImplementor session) {
-		this(
-				memento.getHqlString(),
+		this( memento.getHqlString(),
 				interpretation( memento, expectedResultType, session ),
-				expectedResultType,
-				session
-		);
+				expectedResultType, session );
 		applySqmOptions( memento );
 	}
 
+	/**
+	 * Creates a {@link org.hibernate.query.Query}
+	 * instance from a named criteria query memento.
+	 * Form used from {@link NamedCriteriaQueryMementoImpl}
+	 */
 	public QuerySqmImpl(
-			NamedCriteriaQueryMementoImpl<?> memento,
+			NamedSqmQueryMemento<?> memento,
+			SqmStatement<R> statement,
 			Class<R> resultType,
 			SharedSessionContractImplementor session) {
-		this( (SqmStatement<R>) memento.getSqmStatement(), resultType, session );
-
+		this( statement, resultType, session );
 		applySqmOptions( memento );
 	}
 
@@ -177,10 +181,8 @@ public class QuerySqmImpl<R>
 		if ( sqm instanceof SqmSelectStatement<?> ) {
 			hqlInterpretation.validateResultType( resultType );
 		}
-		else {
-			if ( resultType != null ) {
-				throw new IllegalQueryOperationException( "Result type given for a non-SELECT Query", hql, null );
-			}
+		else if ( resultType != null ) {
+			throw new IllegalQueryOperationException( "Result type given for a non-SELECT Query", hql, null );
 		}
 		setComment( hql );
 
@@ -882,18 +884,12 @@ public class QuerySqmImpl<R>
 	@Override
 	public NamedSqmQueryMemento<R> toMemento(String name) {
 		if ( CRITERIA_HQL_STRING.equals( getQueryString() ) ) {
-			final SqmStatement<R> sqmStatement;
-			if ( !getSession().isCriteriaCopyTreeEnabled() ) {
-				sqmStatement = getSqmStatement().copy( SqmCopyContext.simpleContext() );
-			}
-			else {
-				// the statement has already been copied
-				sqmStatement = getSqmStatement();
-			}
 			return new NamedCriteriaQueryMementoImpl<>(
 					name,
 					getResultType(),
-					sqmStatement,
+					getSession().isCriteriaCopyTreeEnabled()
+							? getSqmStatement() // the statement has already been copied
+							: getSqmStatement().copy( SqmCopyContext.simpleContext() ),
 					getQueryOptions().getLimit().getFirstRow(),
 					getQueryOptions().getLimit().getMaxRows(),
 					isCacheable(),
@@ -905,29 +901,30 @@ public class QuerySqmImpl<R>
 					getTimeout(),
 					getFetchSize(),
 					getComment(),
-					Collections.emptyMap(),
+					emptyMap(),
 					getHints()
 			);
 		}
-
-		return new NamedHqlQueryMementoImpl<>(
-				name,
-				getResultType(),
-				getQueryString(),
-				getQueryOptions().getLimit().getFirstRow(),
-				getQueryOptions().getLimit().getMaxRows(),
-				isCacheable(),
-				getCacheRegion(),
-				getCacheMode(),
-				getQueryOptions().getFlushMode(),
-				isReadOnly(),
-				getLockOptions(),
-				getTimeout(),
-				getFetchSize(),
-				getComment(),
-				Collections.emptyMap(),
-				getHints()
-		);
+		else {
+			return new NamedHqlQueryMementoImpl<>(
+					name,
+					getResultType(),
+					getQueryString(),
+					getQueryOptions().getLimit().getFirstRow(),
+					getQueryOptions().getLimit().getMaxRows(),
+					isCacheable(),
+					getCacheRegion(),
+					getCacheMode(),
+					getQueryOptions().getFlushMode(),
+					isReadOnly(),
+					getLockOptions(),
+					getTimeout(),
+					getFetchSize(),
+					getComment(),
+					emptyMap(),
+					getHints()
+			);
+		}
 	}
 
 

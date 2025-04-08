@@ -22,7 +22,12 @@ public interface BindableType<J> {
 	 */
 	Class<J> getBindableJavaType();
 
-	default boolean isInstance(J value) {
+	/**
+	 * Determine if the given value is an instance of this type.
+	 * @param value any Java object
+	 * @return {@code true} is the given value is an instance of the type
+	 */
+	default boolean isInstance(Object value) {
 		return getBindableJavaType().isInstance( value );
 	}
 

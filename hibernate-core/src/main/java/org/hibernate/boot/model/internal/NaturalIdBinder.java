@@ -34,8 +34,8 @@ class NaturalIdBinder {
 			MetadataBuildingContext context) {
 		// Natural ID columns must reside in one single UniqueKey within the Table.
 		// For now, simply ensure consistent naming.
-		final NaturalId naturalId = property.getDirectAnnotationUsage( NaturalId.class );
-		if ( naturalId != null ) {
+		if ( property.hasDirectAnnotationUsage( NaturalId.class )
+				&& !columns.getPropertyHolder().getPath().endsWith( ".natural_id" ) ) {
 			final AnnotatedColumns annotatedColumns = joinColumns != null ? joinColumns : columns;
 			final Identifier name = uniqueKeyName( context, annotatedColumns );
 			if ( inSecondPass ) {

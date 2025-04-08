@@ -331,6 +331,12 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			}
 		}
 		if ( result == null ) {
+			final String userPropertyName = extractUserPropertyName( "natural_id", propertyName );
+			if ( userPropertyName != null ) {
+				result = super.getOverriddenColumn( userPropertyName );
+			}
+		}
+		if ( result == null ) {
 			final String userPropertyName = extractUserPropertyName( IDENTIFIER_MAPPER_PROPERTY, propertyName );
 			if ( userPropertyName != null ) {
 				result = super.getOverriddenColumn( userPropertyName );
@@ -340,8 +346,8 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	private String extractUserPropertyName(String redundantString, String propertyName) {
-		String className = component.getOwner().getClassName();
-		boolean specialCase = propertyName.startsWith(className)
+		final String className = component.getOwner().getClassName();
+		final boolean specialCase = propertyName.startsWith(className)
 				&& propertyName.length() > className.length() + 2 + redundantString.length() // .id.
 				&& propertyName.substring( className.length() + 1, className.length() + 1 + redundantString.length() )
 						.equals(redundantString);

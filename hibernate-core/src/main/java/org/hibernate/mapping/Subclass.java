@@ -291,4 +291,9 @@ public sealed class Subclass extends PersistentClass
 	public OptimisticLockStyle getOptimisticLockStyle() {
 		return superclass.getOptimisticLockStyle();
 	}
+
+	@Override
+	public Component getNaturalId() {
+		return superclass.getNaturalId();
+	}
 }

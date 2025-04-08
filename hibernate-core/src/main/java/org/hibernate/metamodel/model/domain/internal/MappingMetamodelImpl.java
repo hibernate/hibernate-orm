@@ -203,7 +203,10 @@ public class MappingMetamodelImpl
 				composite -> {
 					final ComponentType compositeType = (ComponentType) composite.getType();
 					final EmbeddableValuedModelPart mappingModelPart = compositeType.getMappingModelPart();
-					embeddableValuedModelPart.put( mappingModelPart.getNavigableRole(), mappingModelPart );
+					if ( mappingModelPart != null ) {
+						embeddableValuedModelPart.put( mappingModelPart.getNavigableRole(), mappingModelPart );
+					}
+					// TODO: consider @NaturalIdClass
 				}
 		);
 	}

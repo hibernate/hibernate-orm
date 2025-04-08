@@ -16,7 +16,6 @@ import org.hibernate.query.QueryLogging;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.JpaSelection;
-import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.spi.AbstractSelectionQuery;
 import org.hibernate.query.spi.HqlInterpretation;
@@ -169,7 +168,7 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		final List<KeyedResult<R>> results =
 				new SqmSelectionQueryImpl<KeyedResult<R>>( this, keyedPage )
 						.getResultList();
-		int pageSize = keyedPage.getPage().getSize();
+		final int pageSize = keyedPage.getPage().getSize();
 		return new KeyedResultList<>(
 				collectResults( results, pageSize, keyedPage.getKeyInterpretation() ),
 				collectKeys( results, pageSize ),
@@ -388,7 +387,7 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	}
 
 	protected static <T> HqlInterpretation<T> interpretation(
-			NamedHqlQueryMementoImpl<?> memento,
+			NamedSqmQueryMemento<?> memento,
 			Class<T> expectedResultType,
 			SharedSessionContractImplementor session) {
 		final QueryEngine queryEngine = session.getFactory().getQueryEngine();

@@ -297,8 +297,9 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 			}
 		}
 		else if ( expectedResultType != null ) {
-			// assume we can repackage the tuple as
-			// the given type (worry about how later)
+			// assume we can repackage the tuple as the given type - worry
+			// about how later (it's handled using a RowTransformer which is
+			// set up in ConcreteSqmSelectQueryPlan.determineRowTransformer)
 			return expectedResultType;
 		}
 		else {

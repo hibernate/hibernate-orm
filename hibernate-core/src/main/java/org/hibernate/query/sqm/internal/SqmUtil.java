@@ -1072,6 +1072,7 @@ public class SqmUtil {
 				verifySelectionType( componentType, jpaCompliance, selection.getSelectableNode() );
 			}
 		}
+		//TODO: else check that the expectedResultClass has an appropriate constructor
 	}
 
 	/**
@@ -1221,9 +1222,10 @@ public class SqmUtil {
 
 	private static void throwQueryTypeMismatchException(Class<?> resultClass, SqmExpressible<?> sqmExpressible) {
 		throw new QueryTypeMismatchException( String.format(
-				"Specified result type [%s] did not match Query selection type [%s] - multiple selections: use Tuple or array",
-				resultClass.getName(),
-				sqmExpressible.getTypeName()
+				Locale.ROOT,
+				"Incorrect query result type: query produces '%s' but type '%s' was given",
+				sqmExpressible.getTypeName(),
+				resultClass.getName()
 		) );
 	}
 }

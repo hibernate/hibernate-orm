@@ -1791,33 +1791,33 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		);
 	}
 
-	private void checkFinderParameter(@Nullable TypeElement entity, VariableElement parameter) {
+	private void checkFinderParameter(@Nullable TypeElement entityType, VariableElement parameter) {
 		final Types types = context.getTypeUtils();
 		final TypeMirror parameterType = parameterType(parameter);
 		final String typeName = parameterType.toString();
-		if ( isRestrictionParam( typeName ) ) {
-			final TypeMirror typeArgument = getTypeArgument( parameterType );
-			final TypeElement implicitEntityType = entity == null ? primaryEntity : entity;
-			if ( implicitEntityType != null ) {
-				if ( typeArgument == null ) {
-					missingTypeArgError( implicitEntityType.getSimpleName().toString(), parameter, typeName );
-				}
-				else if ( !types.isSameType( typeArgument, implicitEntityType.asType() ) ) {
-					wrongTypeArgError( implicitEntityType.getSimpleName().toString(), parameter, typeName );
-				}
-			}
-//			else {
-//				message( parameter, "repository method does have well-defined entity type", Diagnostic.Kind.ERROR );
+		// TODO: we could allow restrictions even when the query returns a projection,
+		//       but this would require some sort of change to Hibernate core, perhaps
+		//       adding <T> SelectionQuery<T> setProjection(Class<T> recordType)
+//		if ( isRestrictionParam( typeName ) ) {
+//			final TypeMirror typeArgument = getTypeArgument( parameterType );
+//			final TypeElement implicitEntityType = entityType == null ? primaryEntity : entityType;
+//			if ( implicitEntityType != null ) {
+//				if ( typeArgument == null ) {
+//					missingTypeArgError( implicitEntityType.getSimpleName().toString(), parameter, typeName );
+//				}
+//				else if ( !types.isSameType( typeArgument, implicitEntityType.asType() ) ) {
+//					wrongTypeArgError( implicitEntityType.getSimpleName().toString(), parameter, typeName );
+//				}
 //			}
-		}
-		else if ( isOrderParam( typeName ) ) {
+//		}
+		if ( isOrderParam( typeName ) || isRestrictionParam( typeName ) ) {
 			final TypeMirror typeArgument = getTypeArgument( parameterType );
-			if ( entity != null ) {
+			if ( entityType != null ) {
 				if ( typeArgument == null ) {
-					missingTypeArgError( entity.getSimpleName().toString(), parameter, typeName );
+					missingTypeArgError( entityType, parameter, typeName );
 				}
-				else if ( !types.isSameType( typeArgument, entity.asType() ) ) {
-					wrongTypeArgError( entity.getSimpleName().toString(), parameter, typeName );
+				else if ( !types.isSameType( typeArgument, entityType.asType() ) ) {
+					wrongTypeArgError( entityType, parameter, typeName );
 				}
 			}
 			else {
@@ -1869,31 +1869,32 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private void wrongTypeArgError(String entity, VariableElement parameter, String parameterType) {
-		message(parameter, "mismatched type of " + message(parameterType, entity),
+	private void wrongTypeArgError(TypeElement entityType, VariableElement parameter, String parameterType) {
+		message(parameter, "mismatched type of " + message(parameterType, entityType),
 				Diagnostic.Kind.ERROR );
 	}
 
-	private void missingTypeArgError(String entity, VariableElement parameter, String parameterType) {
-		message(parameter, "missing type of " + message(parameterType, entity),
+	private void missingTypeArgError(TypeElement entityType, VariableElement parameter, String parameterType) {
+		message(parameter, "missing type of " + message(parameterType, entityType),
 				Diagnostic.Kind.ERROR );
 	}
 
-	private String message(String parameterType, String entity) {
+	private String message(String parameterType, TypeElement entityType) {
+		final String entityTypeName = entityType.getSimpleName().toString();
 		if (parameterType.startsWith(HIB_ORDER) || parameterType.startsWith(JD_ORDER)) {
-			return "order (should be 'Order<? super " + entity + ">')";
+			return "order (should be 'Order<? super " + entityTypeName + ">')";
 		}
 		else if (parameterType.startsWith(LIST + "<" + HIB_ORDER)) {
-			return "order (should be 'List<Order<? super " + entity + ">>')";
+			return "order (should be 'List<Order<? super " + entityTypeName + ">>')";
 		}
 		else if (parameterType.startsWith(HIB_RESTRICTION)) {
-			return "restriction (should be 'Restriction<? super " + entity + ">')";
+			return "restriction (should be 'Restriction<? super " + entityTypeName + ">')";
 		}
 		else if (parameterType.startsWith(LIST + "<" + HIB_RESTRICTION)) {
-			return "restriction (should be 'List<Restriction<? super " + entity + ">>')";
+			return "restriction (should be 'List<Restriction<? super " + entityTypeName + ">>')";
 		}
 		else if (parameterType.startsWith(JD_SORT)) {
-			return "sort (should be 'Sort<? super " + entity + ">')";
+			return "sort (should be 'Sort<? super " + entityTypeName + ">')";
 		}
 		else {
 			return "parameter";

@@ -131,7 +131,7 @@ public class QueryRestrictedCollectionCachingTests {
 		final CollectionReadWriteAccess authorsRegionAccess = (CollectionReadWriteAccess) cache.getCollectionRegionAccess( navigableRole );
 
 		final MapStorageAccessImpl storageAccess = (MapStorageAccessImpl) authorsRegionAccess.getStorageAccess();
-		final BasicCacheKeyImplementation cacheKey = new BasicCacheKeyImplementation( ownerKey, role, ownerKey );
+		final BasicCacheKeyImplementation cacheKey = new BasicCacheKeyImplementation( ownerKey, role, BasicCacheKeyImplementation.hash( ownerKey ) );
 		final AbstractReadWriteAccess.Item cacheItem = (AbstractReadWriteAccess.Item) storageAccess.getFromData( cacheKey );
 		assertThat( cacheItem ).isNotNull();
 

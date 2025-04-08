@@ -21,6 +21,8 @@ import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.spi.NativeQueryConstructorTransformer;
 import org.hibernate.jpa.spi.NativeQueryListTransformer;
 import org.hibernate.jpa.spi.NativeQueryMapTransformer;
@@ -137,6 +139,9 @@ import static org.hibernate.query.sqm.internal.SqmUtil.isResultTypeAlwaysAllowed
 public class NativeQueryImpl<R>
 		extends AbstractQuery<R>
 		implements NativeQueryImplementor<R>, DomainQueryExecutionContext, ResultSetMappingResolutionContext {
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( NativeQueryImpl.class );
+
 	private final String sqlString;
 	private final String originalSqlString;
 	private final ParameterMetadataImplementor parameterMetadata;

@@ -29,6 +29,8 @@ import org.hibernate.query.Page;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.ResultListTransformer;
+import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.SqmSelectionQuery;
@@ -625,5 +627,16 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	@Override
 	public <T> T executeQuery(ResultsConsumer<T, R> resultsConsumer) {
 		return getDelegate().executeQuery( resultsConsumer );
+	}
+
+
+	@Override
+	public <T> SqmSelectionQuery<T> setTupleTransformer(TupleTransformer<T> transformer) {
+		return getDelegate().setTupleTransformer( transformer );
+	}
+
+	@Override
+	public SqmSelectionQuery<R> setResultListTransformer(ResultListTransformer<R> transformer) {
+		return getDelegate().setResultListTransformer( transformer );
 	}
 }

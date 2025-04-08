@@ -647,6 +647,16 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 */
 	SelectionQuery<R> setFollowOnLocking(boolean enable);
 
+	/**
+	 * Set a {@link TupleTransformer}.
+	 */
+	<T> SelectionQuery<T> setTupleTransformer(TupleTransformer<T> transformer);
+
+	/**
+	 * Set a {@link ResultListTransformer}.
+	 */
+	SelectionQuery<R> setResultListTransformer(ResultListTransformer<R> transformer);
+
 	@Override
 	SelectionQuery<R> setParameter(String name, Object value);
 

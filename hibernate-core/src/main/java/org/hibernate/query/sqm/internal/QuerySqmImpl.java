@@ -144,7 +144,7 @@ public class QuerySqmImpl<R>
 				expectedResultType,
 				session
 		);
-		applyOptions( memento );
+		applySqmOptions( memento );
 	}
 
 	public QuerySqmImpl(
@@ -153,7 +153,7 @@ public class QuerySqmImpl<R>
 			SharedSessionContractImplementor session) {
 		this( (SqmStatement<R>) memento.getSqmStatement(), resultType, session );
 
-		applyOptions( memento );
+		applySqmOptions( memento );
 	}
 
 	/**

@@ -34,6 +34,8 @@ import org.hibernate.query.KeyedPage;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.ResultListTransformer;
+import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.criteria.internal.NamedCriteriaQueryMementoImpl;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
@@ -132,7 +134,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 				session
 		);
 
-		applyOptions( memento );
+		applySqmOptions( memento );
 	}
 
 	public SqmSelectionQueryImpl(
@@ -141,7 +143,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 			SharedSessionContractImplementor session) {
 		//noinspection unchecked
 		this( (SqmSelectStatement<R>) memento.getSqmStatement(), expectedResultType, session );
-		applyOptions( memento );
+		applySqmOptions( memento );
 	}
 
 	public SqmSelectionQueryImpl(
@@ -169,8 +171,8 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
 		for ( SqmParameter<?> sqmParameter : domainParameterXref.getParameterResolutions().getSqmParameters() ) {
-			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
-				bindCriteriaParameter( (SqmJpaCriteriaParameterWrapper<?>) sqmParameter );
+			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> wrapper ) {
+				bindCriteriaParameter( wrapper );
 			}
 		}
 
@@ -195,15 +197,17 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		final List<Order<? super E>> keyDefinition = keyedPage.getKeyDefinition();
 		final List<Order<? super E>> appliedKeyDefinition =
 				keyedPage.getKeyInterpretation() == KEY_OF_FIRST_ON_NEXT_PAGE
-						? Order.reverse( keyDefinition ) : keyDefinition;
+						? Order.reverse( keyDefinition )
+						: keyDefinition;
 
 		//noinspection unchecked
 		sqm = (SqmSelectStatement<R>) paginate(
 				appliedKeyDefinition,
 				key,
 				// Change the query source to CRITERIA, because we will change the query and introduce parameters
-				(SqmSelectStatement<KeyedResult<E>>) original.getSqmStatement()
-						.copy( noParamCopyContext( SqmQuerySource.CRITERIA ) ),
+				(SqmSelectStatement<KeyedResult<E>>)
+						original.getSqmStatement()
+								.copy( noParamCopyContext( SqmQuerySource.CRITERIA ) ),
 				original.getSqmStatement().nodeBuilder()
 		);
 		hql = CRITERIA_HQL_STRING;
@@ -241,11 +245,8 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		final TemporalType explicitTemporalPrecision = binding.getExplicitTemporalPrecision();
 		if ( explicitTemporalPrecision != null ) {
 			if ( binding.isMultiValued() ) {
-				parameterBinding.setBindValues(
-						binding.getBindValues(),
-						explicitTemporalPrecision,
-						getSessionFactory().getTypeConfiguration()
-				);
+				parameterBinding.setBindValues( binding.getBindValues(), explicitTemporalPrecision,
+						getSessionFactory().getTypeConfiguration() );
 			}
 			else {
 				parameterBinding.setBindValue( binding.getBindValue(), explicitTemporalPrecision );
@@ -341,6 +342,19 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	@Override
 	public String getQueryString() {
 		return hql;
+	}
+
+	@Override
+	public <T> SqmSelectionQuery<T> setTupleTransformer(TupleTransformer<T> transformer) {
+		getQueryOptions().setTupleTransformer( transformer );
+		//noinspection unchecked
+		return (SqmSelectionQuery<T>) this;
+	}
+
+	@Override
+	public SqmSelectionQuery<R> setResultListTransformer(ResultListTransformer<R> transformer) {
+		getQueryOptions().setResultListTransformer( transformer );
+		return this;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -174,11 +174,11 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 
 	@Override
 	protected void loadEntitiesWithUnresolvedIds(
+			Object[] unresolvableIds,
 			MultiIdLoadOptions loadOptions,
 			LockOptions lockOptions,
-			SharedSessionContractImplementor session,
-			Object[] unresolvableIds,
-			List<T> result) {
+			List<T> result,
+			SharedSessionContractImplementor session) {
 		final int maxBatchSize = maxBatchSize( unresolvableIds, loadOptions );
 		int numberOfIdsLeft = unresolvableIds.length;
 		int idPosition = 0;

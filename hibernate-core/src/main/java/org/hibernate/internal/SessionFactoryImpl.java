@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
+import jakarta.persistence.TypedQuery;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
@@ -96,6 +97,7 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.internal.QueryEngineImpl;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sql.internal.SqlTranslationEngineImpl;
 import org.hibernate.query.sql.spi.SqlTranslationEngine;
@@ -871,10 +873,19 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	}
 
+	private NamedObjectRepository getNamedObjectRepository() {
+		validateNotClosed();
+		return getQueryEngine().getNamedObjectRepository();
+	}
+
 	@Override
 	public void addNamedQuery(String name, Query query) {
-		validateNotClosed();
-		getQueryEngine().getNamedObjectRepository().registerNamedQuery( name, query );
+		getNamedObjectRepository().registerNamedQuery( name, query );
+	}
+
+	@Override
+	public <R> TypedQueryReference<R> addNamedQuery(String name, TypedQuery<R> query) {
+		return getNamedObjectRepository().registerNamedQuery( name, query );
 	}
 
 	@Override

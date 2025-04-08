@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
@@ -121,6 +122,23 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 		}
 
 		throw new PersistenceException( "Could not register named query: " + name );
+	}
+
+	@Override
+	public <R> TypedQueryReference<R> registerNamedQuery(String name, TypedQuery<R> query) {
+		if ( query instanceof NativeQueryImplementor<R> nativeQueryImplementor ) {
+			final NamedNativeQueryMemento<R> memento = nativeQueryImplementor.toMemento( name );
+			registerNativeQueryMemento( name, memento );
+			return memento;
+		}
+		else if ( query instanceof SqmQueryImplementor<R> sqmQueryImplementor ) {
+			final NamedSqmQueryMemento<R> memento = sqmQueryImplementor.toMemento( name );
+			registerSqmQueryMemento( name, memento );
+			return memento;
+		}
+		else {
+			throw new IllegalArgumentException( "unknown implementation of TypedQuery" );
+		}
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

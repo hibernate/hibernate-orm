@@ -523,7 +523,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NamedNativeQueryMemento<?> toMemento(String name) {
+	public NamedNativeQueryMemento<R> toMemento(String name) {
 		return new NamedNativeQueryMementoImpl<>(
 				name,
 				resultType != null ? resultType : extractResultClass( resultSetMapping ),

@@ -9,6 +9,7 @@ import java.util.List;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -44,7 +45,11 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 	}
 
 	@Override
-	public List<E> loadEntitiesWithUnresolvedIds(Object[] naturalIds, SharedSessionContractImplementor session, LockOptions lockOptions) {
+	public List<E> loadEntitiesWithUnresolvedIds(
+			Object[] naturalIds,
+			MultiNaturalIdLoadOptions loadOptions,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
 
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 

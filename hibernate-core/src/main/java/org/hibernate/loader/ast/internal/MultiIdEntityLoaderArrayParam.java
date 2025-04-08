@@ -126,11 +126,11 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 	@Override
 	protected void loadEntitiesWithUnresolvedIds(
+			Object[] unresolvableIds,
 			MultiIdLoadOptions loadOptions,
 			LockOptions lockOptions,
-			SharedSessionContractImplementor session,
-			Object[] unresolvableIds,
-			List<E> result) {
+			List<E> result,
+			SharedSessionContractImplementor session) {
 		final SelectStatement sqlAst = createSelectBySingleArrayParameter(
 				getLoadable(),
 				getIdentifierMapping(),

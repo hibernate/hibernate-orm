@@ -9,6 +9,7 @@ import java.util.List;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.loader.ast.spi.SqlInPredicateMultiKeyLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 
@@ -22,13 +23,17 @@ public class MultiNaturalIdLoaderInPredicate<E> extends AbstractMultiNaturalIdLo
 	}
 
 	@Override
-	public List<E> loadEntitiesWithUnresolvedIds(Object[] naturalIds, SharedSessionContractImplementor session, LockOptions lockOptions) {
+	public List<E> loadEntitiesWithUnresolvedIds(
+			Object[] naturalIds,
+			MultiNaturalIdLoadOptions loadOptions,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
 
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 
 		final int maxBatchSize;
-		if ( options.getBatchSize() != null && options.getBatchSize() > 0 ) {
-			maxBatchSize = options.getBatchSize();
+		if ( loadOptions.getBatchSize() != null && loadOptions.getBatchSize() > 0 ) {
+			maxBatchSize = loadOptions.getBatchSize();
 		}
 		else {
 			maxBatchSize =

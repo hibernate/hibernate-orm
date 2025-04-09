@@ -51,3 +51,8 @@ ObjectStore
 
 # SDKman, used by some module maintainers
 .sdkmanrc
+
+# Our build scripts - necessary for our release jobs
+hibernate-noorm-release-scripts
+hibernate-release-scripts
+jreleaser

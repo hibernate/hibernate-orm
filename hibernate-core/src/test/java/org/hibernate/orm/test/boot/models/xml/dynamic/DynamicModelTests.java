@@ -99,9 +99,7 @@ public class DynamicModelTests {
 		final FieldDetails labels = classDetails.findFieldByName( "labels" );
 		assertThat( labels.getType().determineRawClass().getClassName() ).isEqualTo( Set.class.getName() );
 		final ElementCollection elementCollection = labels.getDirectAnnotationUsage( ElementCollection.class );
-		assertThat( elementCollection.targetClass() ).isEqualTo( void.class );
-		final Target targetUsage = labels.getDirectAnnotationUsage( Target.class );
-		assertThat( targetUsage.value() ).isEqualTo( "string" );
+		assertThat( elementCollection.targetClass() ).isEqualTo( String.class );
 
 		final CollectionClassification collectionClassification = labels.getDirectAnnotationUsage( CollectionClassification.class );
 		assertThat( collectionClassification.value() ).isEqualTo( LimitedCollectionClassification.SET );

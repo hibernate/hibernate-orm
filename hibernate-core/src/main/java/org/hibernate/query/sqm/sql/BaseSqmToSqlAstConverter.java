@@ -5965,8 +5965,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	protected MappingModelExpressible<?> getInferredValueMapping() {
 		final MappingModelExpressible<?> inferredMapping = resolveInferredType();
 		if ( inferredMapping != null ) {
-			if ( inferredMapping instanceof PluralAttributeMapping ) {
-				return ( (PluralAttributeMapping) inferredMapping ).getElementDescriptor();
+			if ( inferredMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
+				return pluralAttributeMapping.getElementDescriptor();
 			}
 			else if ( !( inferredMapping instanceof JavaObjectType ) ) {
 				// Never report back the "object type" as inferred type and instead rely on the value type
@@ -6070,8 +6070,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// Try to infer the value mapping since the other side apparently is a path source
 			final MappingModelExpressible<?> inferredMapping = resolveInferredType();
 			if ( inferredMapping != null ) {
-				if ( inferredMapping instanceof PluralAttributeMapping ) {
-					return resolveInferredValueMappingForParameter( ( (PluralAttributeMapping) inferredMapping ).getElementDescriptor() );
+				if ( inferredMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
+					return resolveInferredValueMappingForParameter( pluralAttributeMapping.getElementDescriptor() );
 				}
 				else if ( !( inferredMapping instanceof JavaObjectType ) ) {
 					// Do not report back the "object type" as inferred type and instead try to rely on the paramSqmType.getExpressibleJavaType()
@@ -6263,23 +6263,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final List<SqmExpression<?>> groupedExpressions = sqmTuple.getGroupedExpressions();
 		final int size = groupedExpressions.size();
 		final List<Expression> expressions = new ArrayList<>( size );
-		final MappingModelExpressible<?> mappingModelExpressible = resolveInferredType();
-		final EmbeddableMappingType embeddableMappingType =
-				mappingModelExpressible instanceof ValueMapping valueMapping
-						? (EmbeddableMappingType) valueMapping.getMappedType()
-						: null;
-		if ( embeddableMappingType == null ) {
-			try {
-				inferrableTypeAccessStack.push( () -> null );
-				for ( int i = 0; i < size; i++ ) {
-					expressions.add( (Expression) groupedExpressions.get( i ).accept( this ) );
-				}
-			}
-			finally {
-				inferrableTypeAccessStack.pop();
-			}
-		}
-		else {
+		if ( resolveInferredType() instanceof ValueMapping valueMapping
+			&& valueMapping.getMappedType() instanceof EmbeddableMappingType embeddableMappingType ) {
 			for ( int i = 0; i < size; i++ ) {
 				final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( i );
 				inferrableTypeAccessStack.push( () -> attributeMapping );
@@ -6291,17 +6276,31 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 			}
 		}
-		final MappingModelExpressible<?> valueMapping;
-		if ( mappingModelExpressible != null ) {
-			valueMapping = mappingModelExpressible;
+		else {
+			try {
+				inferrableTypeAccessStack.push( () -> null );
+				for ( int i = 0; i < size; i++ ) {
+					expressions.add( (Expression) groupedExpressions.get( i ).accept( this ) );
+				}
+			}
+			finally {
+				inferrableTypeAccessStack.pop();
+			}
+		}
+		return new SqlTuple( expressions, tupleValueMapping( sqmTuple ) );
+	}
+
+	private MappingModelExpressible<?> tupleValueMapping(SqmTuple<?> sqmTuple) {
+		final MappingModelExpressible<?> inferredType = resolveInferredType();
+		if ( inferredType != null ) {
+			return inferredType;
+		}
+		else if ( sqmTuple.getExpressible() instanceof MappingModelExpressible<?> modelExpressible ) {
+			return modelExpressible;
 		}
 		else {
-			valueMapping =
-					sqmTuple.getExpressible() instanceof MappingModelExpressible<?> modelExpressible
-							? modelExpressible
-							: null;
+			return null;
 		}
-		return new SqlTuple( expressions, valueMapping );
 	}
 
 	@Override

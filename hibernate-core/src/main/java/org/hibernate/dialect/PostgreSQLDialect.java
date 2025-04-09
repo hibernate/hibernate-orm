@@ -1317,6 +1317,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public String getForUpdateString() {
+		return " for no key update";
+	}
+
+	@Override
 	public String getForUpdateNowaitString() {
 		return supportsNoWait()
 				? " for update nowait"

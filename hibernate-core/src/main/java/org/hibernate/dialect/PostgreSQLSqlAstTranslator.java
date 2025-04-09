@@ -188,7 +188,7 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 
 	@Override
 	protected String getForUpdate() {
-		return " for no key update";
+		return getDialect().getForUpdateString();
 	}
 
 	@Override

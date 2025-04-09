@@ -86,7 +86,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	protected abstract AttributeConversionInfo locateAttributeConversionInfo(String path);
 
 	@Override
-	public ConverterDescriptor resolveAttributeConverterDescriptor(MemberDetails attributeMember) {
+	public ConverterDescriptor resolveAttributeConverterDescriptor(MemberDetails attributeMember, boolean autoApply) {
 		final AttributeConversionInfo info = locateAttributeConversionInfo( attributeMember );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
@@ -102,7 +102,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			}
 		}
 
-		return context.getMetadataCollector()
+		return !autoApply ? null : context.getMetadataCollector()
 				.getConverterRegistry()
 				.getAttributeConverterAutoApplyHandler()
 				.findAutoApplyConverterForAttribute( attributeMember, context );

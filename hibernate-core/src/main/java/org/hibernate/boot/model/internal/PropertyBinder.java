@@ -7,6 +7,7 @@ package org.hibernate.boot.model.internal;
 import jakarta.persistence.Basic;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
@@ -24,6 +25,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Temporal;
 import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -266,7 +268,7 @@ public class PropertyBinder {
 				memberDetails,
 				returnedClass,
 				containerClassName,
-				holder.resolveAttributeConverterDescriptor( memberDetails )
+				holder.resolveAttributeConverterDescriptor( memberDetails, autoApplyConverters() )
 		);
 		basicValueBinder.setReferencedEntityName( referencedEntityName );
 		basicValueBinder.setAccessType( accessType );
@@ -274,6 +276,18 @@ public class PropertyBinder {
 		value = basicValueBinder.make();
 
 		return makeProperty();
+	}
+
+	private boolean autoApplyConverters() {
+		// JPA 3.2 section 3.9 says there are exceptions where to auto-apply converters, citing:
+		// The conversion of all basic types is supported except for the following:
+		// Id attributes (including the attributes of embedded ids and derived identities),
+		// version attributes, relationship attributes,
+		// and attributes explicitly annotated as Enumerated or Temporal
+		return !isId
+			&& !isVersion( memberDetails )
+			&& !memberDetails.hasDirectAnnotationUsage( Enumerated.class )
+			&& !memberDetails.hasDirectAnnotationUsage( Temporal.class );
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})

@@ -55,9 +55,9 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 	/**
 	 * Extract the generated key value from the given result set after execution of {@link #getSelectSQL()}.
 	 */
-	private GeneratedValues extractReturningValues(ResultSet resultSet, SharedSessionContractImplementor session)
+	private GeneratedValues extractReturningValues(ResultSet resultSet, PreparedStatement statement, SharedSessionContractImplementor session)
 			throws SQLException {
-		return getGeneratedValues( resultSet, persister, getTiming(), session );
+		return getGeneratedValues( resultSet, statement, persister, getTiming(), session );
 	}
 
 	@Override
@@ -98,7 +98,7 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 
 			final ResultSet resultSet = session.getJdbcCoordinator().getResultSetReturn().extract( idSelect, idSelectSql );
 			try {
-				return extractReturningValues( resultSet, session );
+				return extractReturningValues( resultSet, idSelect, session );
 			}
 			catch (SQLException e) {
 				throw jdbcServices.getSqlExceptionHelper().convert(
@@ -154,7 +154,7 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 				bindParameters( binder.getEntity(), idSelect, session );
 				final ResultSet resultSet = jdbcCoordinator.getResultSetReturn().extract( idSelect, selectSQL );
 				try {
-					return extractReturningValues( resultSet, session );
+					return extractReturningValues( resultSet, idSelect, session );
 				}
 				finally {
 					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( resultSet, idSelect );

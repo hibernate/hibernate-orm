@@ -120,7 +120,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 
 		final int maxBatchSize = maxBatchSize( ids, loadOptions );
 
-		final List<Object> result = arrayList( ids.length );
+		final List<Object> results = arrayList( ids.length );
 
 		final List<Object> idsInBatch = new ArrayList<>();
 		final List<Integer> elementPositionsLoadedByBatch = new ArrayList<>();
@@ -131,7 +131,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			final Object id = idCoercionEnabled ? idType.coerce( ids[i], session ) : ids[i];
 			final EntityKey entityKey = new EntityKey( id, getLoadable().getEntityPersister() );
 
-			if ( !loadFromEnabledCaches( loadOptions, session, id, lockOptions, entityKey, result, i ) ) {
+			if ( !loadFromEnabledCaches( loadOptions, session, id, lockOptions, entityKey, results, i ) ) {
 				// if we did not hit any of the continues above,
 				// then we need to batch load the entity state.
 				idsInBatch.add( id );
@@ -143,7 +143,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 				}
 
 				// Save the EntityKey instance for use later
-				result.add( i, entityKey );
+				results.add( i, entityKey );
 				elementPositionsLoadedByBatch.add( i );
 			}
 		}
@@ -155,10 +155,10 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		}
 
 		// for each result where we set the EntityKey earlier, replace them
-		handleResults( loadOptions, session, elementPositionsLoadedByBatch, result );
+		handleResults( loadOptions, session, elementPositionsLoadedByBatch, results );
 
 		//noinspection unchecked
-		return (List<T>) result;
+		return (List<T>) results;
 	}
 
 	private static LockOptions lockOptions(MultiIdLoadOptions loadOptions) {
@@ -255,12 +255,12 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			MultiIdLoadOptions loadOptions,
 			SharedSessionContractImplementor session) {
 		final LockOptions lockOptions = lockOptions( loadOptions );
-		final List<T> result = arrayList( ids.length );
+		final List<T> results = arrayList( ids.length );
 		final Object[] unresolvableIds =
 				resolveInCachesIfEnabled( ids, loadOptions, lockOptions, session,
-						(position, entityKey, resolvedRef) -> result.add( (T) resolvedRef ) );
+						(position, entityKey, resolvedRef) -> results.add( (T) resolvedRef ) );
 		if ( !isEmpty( unresolvableIds ) ) {
-			loadEntitiesWithUnresolvedIds( unresolvableIds, loadOptions, lockOptions, result, session );
+			loadEntitiesWithUnresolvedIds( unresolvableIds, loadOptions, lockOptions, results, session );
 			final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
 			final EntityPersister persister = getLoadable().getEntityPersister();
 			for ( Object id : unresolvableIds ) {
@@ -272,7 +272,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 				}
 			}
 		}
-		return result;
+		return results;
 	}
 
 	protected abstract void loadEntitiesWithUnresolvedIds(

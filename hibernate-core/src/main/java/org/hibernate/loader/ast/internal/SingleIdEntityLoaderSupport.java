@@ -33,7 +33,6 @@ public abstract class SingleIdEntityLoaderSupport<T> implements SingleIdEntityLo
 		if ( databaseSnapshotExecutor == null ) {
 			databaseSnapshotExecutor = new DatabaseSnapshotExecutor( entityDescriptor, sessionFactory );
 		}
-
 		return databaseSnapshotExecutor.loadDatabaseSnapshot( id, session );
 	}
 }

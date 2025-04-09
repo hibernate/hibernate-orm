@@ -46,7 +46,7 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 			int idColumnSpan,
 			SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
-		this.idJdbcTypeCount = idColumnSpan;
+		idJdbcTypeCount = idColumnSpan;
 		assert idJdbcTypeCount > 0;
 	}
 
@@ -167,8 +167,8 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 	}
 
 	private List<T> performSingleMultiLoad(Object id, LockOptions lockOptions, SharedSessionContractImplementor session) {
-		@SuppressWarnings("unchecked")
-		T loaded = (T) getLoadable().getEntityPersister().load( id, null, lockOptions, session );
+		final Object entity = getLoadable().getEntityPersister().load( id, null, lockOptions, session );
+		@SuppressWarnings("unchecked") T loaded = (T) entity;
 		return singletonList( loaded );
 	}
 
@@ -177,7 +177,7 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 			Object[] unresolvableIds,
 			MultiIdLoadOptions loadOptions,
 			LockOptions lockOptions,
-			List<T> result,
+			List<T> results,
 			SharedSessionContractImplementor session) {
 		final int maxBatchSize = maxBatchSize( unresolvableIds, loadOptions );
 		int numberOfIdsLeft = unresolvableIds.length;
@@ -186,7 +186,7 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 			final int batchSize =  Math.min( numberOfIdsLeft, maxBatchSize );
 			final Object[] idsInBatch = new Object[batchSize];
 			arraycopy( unresolvableIds, idPosition, idsInBatch, 0, batchSize );
-			result.addAll( listEntitiesById( asList( idsInBatch ), lockOptions, loadOptions, session ) );
+			results.addAll( listEntitiesById( asList( idsInBatch ), lockOptions, loadOptions, session ) );
 			numberOfIdsLeft = numberOfIdsLeft - batchSize;
 			idPosition += batchSize;
 		}

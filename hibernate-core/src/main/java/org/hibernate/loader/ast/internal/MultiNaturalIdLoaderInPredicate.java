@@ -7,7 +7,6 @@ package org.hibernate.loader.ast.internal;
 import java.util.List;
 
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.loader.ast.spi.SqlInPredicateMultiKeyLoader;
@@ -28,39 +27,44 @@ public class MultiNaturalIdLoaderInPredicate<E> extends AbstractMultiNaturalIdLo
 			MultiNaturalIdLoadOptions loadOptions,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) {
+		return getBatcher( naturalIds, loadOptions, lockOptions, session )
+				.multiLoad( naturalIds, session );
+	}
 
-		final SessionFactoryImplementor sessionFactory = session.getFactory();
-
-		final int maxBatchSize;
-		if ( loadOptions.getBatchSize() != null && loadOptions.getBatchSize() > 0 ) {
-			maxBatchSize = loadOptions.getBatchSize();
-		}
-		else {
-			maxBatchSize =
-					session.getJdbcServices().getJdbcEnvironment().getDialect()
-							.getMultiKeyLoadSizingStrategy().determineOptimalBatchLoadSize(
-									getEntityDescriptor().getNaturalIdMapping().getJdbcTypeCount(),
-									naturalIds.length,
-									sessionFactory.getSessionFactoryOptions().inClauseParameterPaddingEnabled()
-							);
-		}
-
-		final int batchSize = Math.min( maxBatchSize, naturalIds.length );
-
-		final MultiNaturalIdLoadingBatcher batcher = new MultiNaturalIdLoadingBatcher(
-				getEntityDescriptor(),
-				getEntityDescriptor().getNaturalIdMapping(),
-				batchSize,
-				(naturalId, s) -> {
-					// `naturalId` here is the one passed in by the API as part of the values array
-					return getEntityDescriptor().getNaturalIdMapping().normalizeInput( naturalId );
-				},
+	private MultiNaturalIdLoadingBatcher getBatcher(
+			Object[] naturalIds,
+			MultiNaturalIdLoadOptions loadOptions,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
+		final EntityMappingType descriptor = getEntityDescriptor();
+		return new MultiNaturalIdLoadingBatcher(
+				descriptor,
+				descriptor.getNaturalIdMapping(),
+				Math.min( naturalIds.length, getMaxBatchSize( naturalIds, loadOptions, session ) ),
+				// naturalId here is the one passed in by the API as part of the values array
+				(naturalId, s) -> descriptor.getNaturalIdMapping().normalizeInput( naturalId ),
 				session.getLoadQueryInfluencers(),
 				lockOptions,
-				sessionFactory
+				session.getFactory()
 		);
+	}
 
-		return batcher.multiLoad( naturalIds, session );
+	private int getMaxBatchSize(
+			Object[] naturalIds,
+			MultiNaturalIdLoadOptions loadOptions,
+			SharedSessionContractImplementor session) {
+		final Integer batchSize = loadOptions.getBatchSize();
+		if ( batchSize != null && batchSize > 0 ) {
+			return batchSize;
+		}
+		else {
+			return session.getJdbcServices().getJdbcEnvironment().getDialect()
+					.getMultiKeyLoadSizingStrategy().determineOptimalBatchLoadSize(
+							getEntityDescriptor().getNaturalIdMapping().getJdbcTypeCount(),
+							naturalIds.length,
+							session.getFactory().getSessionFactoryOptions().inClauseParameterPaddingEnabled()
+					);
+		}
 	}
 
 }

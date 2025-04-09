@@ -14,7 +14,7 @@ import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.internal.util.NullnessHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 import java.util.function.Function;
@@ -30,7 +30,8 @@ public class NamedGraphCreatorJpa implements NamedGraphCreator {
 	private final String jpaEntityName;
 
 	public NamedGraphCreatorJpa(NamedEntityGraph annotation, String jpaEntityName) {
-		this.name = NullnessHelper.coalesceSuppliedValues( annotation::name, () -> jpaEntityName );
+		final String name = StringHelper.nullIfEmpty( annotation.name() );
+		this.name = name == null ? jpaEntityName : name;
 		this.annotation = annotation;
 		this.jpaEntityName = jpaEntityName;
 	}

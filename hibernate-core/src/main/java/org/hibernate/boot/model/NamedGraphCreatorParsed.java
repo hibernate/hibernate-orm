@@ -6,6 +6,7 @@ package org.hibernate.boot.model;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.annotations.NamedEntityGraph;
 import org.hibernate.grammars.graph.GraphLanguageLexer;
@@ -14,6 +15,7 @@ import org.hibernate.graph.InvalidGraphException;
 import org.hibernate.graph.internal.parse.EntityNameResolver;
 import org.hibernate.graph.internal.parse.GraphParsing;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 import java.util.function.Function;
@@ -22,14 +24,16 @@ import java.util.function.Function;
  * @author Steve Ebersole
  */
 public class NamedGraphCreatorParsed implements NamedGraphCreator {
-	private final Class<?> entityType;
+	private final @Nullable String name;
+	private final @Nullable Class<?> entityType;
 	private final NamedEntityGraph annotation;
 
 	public NamedGraphCreatorParsed(NamedEntityGraph annotation) {
 		this( null, annotation );
 	}
 
-	public NamedGraphCreatorParsed(Class<?> entityType, NamedEntityGraph annotation) {
+	public NamedGraphCreatorParsed(@Nullable Class<?> entityType, NamedEntityGraph annotation) {
+		this.name = StringHelper.nullIfEmpty( annotation.name() );
 		this.entityType = entityType;
 		this.annotation = annotation;
 	}
@@ -61,7 +65,8 @@ public class NamedGraphCreatorParsed implements NamedGraphCreator {
 			final String jpaEntityName = graphContext.typeIndicator().TYPE_NAME().toString();
 			//noinspection unchecked
 			final EntityDomainType<T> entityDomainType = (EntityDomainType<T>) entityDomainNameResolver.apply( jpaEntityName );
-			return GraphParsing.parse( entityDomainType, graphContext.attributeList(), entityNameResolver );
+			final String name = this.name == null ? jpaEntityName : this.name;
+			return GraphParsing.parse( name, entityDomainType, graphContext.attributeList(), entityNameResolver );
 		}
 		else {
 			if ( graphContext.typeIndicator() != null ) {
@@ -69,7 +74,8 @@ public class NamedGraphCreatorParsed implements NamedGraphCreator {
 			}
 			//noinspection unchecked
 			final EntityDomainType<T> entityDomainType = (EntityDomainType<T>) entityDomainClassResolver.apply( (Class<T>) entityType );
-			return GraphParsing.parse( entityDomainType, graphContext.attributeList(), entityNameResolver );
+			final String name = this.name == null ? entityDomainType.getName() : this.name;
+			return GraphParsing.parse( name, entityDomainType, graphContext.attributeList(), entityNameResolver );
 		}
 	}
 }

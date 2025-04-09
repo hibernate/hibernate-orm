@@ -55,14 +55,6 @@ tasks.register( 'releasePerform' ) {
 	// See `:release:releasePerform` which does a lot of heavy lifting here
 }
 
-
-nexusPublishing {
-	repositories {
-		sonatype()
-	}
-}
-
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // CI Build Task
 

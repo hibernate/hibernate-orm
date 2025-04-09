@@ -2570,6 +2570,9 @@ public class SessionImpl
 	}
 
 	private void checkTransactionNeededForLock(LockMode lockMode) {
+		// OPTIMISTIC and OPTIMISTIC_FORCE_INCREMENT require a transaction
+		// because they involve a version check at the end of the transaction
+		// All flavors of PESSIMISTIC lock also clearly require a transaction
 		if ( lockMode.greaterThan( LockMode.READ ) ) {
 			checkTransactionNeededForUpdateOperation();
 		}

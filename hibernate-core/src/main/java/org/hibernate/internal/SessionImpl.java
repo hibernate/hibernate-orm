@@ -2570,7 +2570,7 @@ public class SessionImpl
 	}
 
 	private void checkTransactionNeededForLock(LockMode lockMode) {
-		if ( !LockMode.PESSIMISTIC_READ.greaterThan( lockMode ) ) {
+		if ( lockMode.greaterThan( LockMode.READ ) ) {
 			checkTransactionNeededForUpdateOperation();
 		}
 	}

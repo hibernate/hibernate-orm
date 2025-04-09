@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.FailureExpected;
@@ -27,6 +28,7 @@ import static org.hibernate.cfg.BatchSettings.STATEMENT_BATCH_SIZE;
 						StaleOneToManyListTest.StaleListTestChild.class},
 		properties = @Setting(name = STATEMENT_BATCH_SIZE, value = "5"))
 @SkipForDialect(dialectClass = MariaDBDialect.class)
+@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB uses SERIALIZABLE isolation, and does not support this")
 public class StaleOneToManyListTest {
 	@Test void test1(EntityManagerFactoryScope scope) {
 		var entity = new StaleListTestParent();

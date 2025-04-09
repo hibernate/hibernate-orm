@@ -1021,37 +1021,35 @@ public class PostgreSQLDialect extends Dialect {
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
 				final String sqlState = extractSqlState( sqle );
-				if ( sqlState != null ) {
-					return switch ( parseInt( sqlState ) ) {
-						case 23505, 23514, 23503 ->
-							// UNIQUE, CHECK, OR FOREIGN KEY VIOLATION
-								extractUsingTemplate( "constraint \"", "\"", sqle.getMessage() );
-						case 23502 ->
-							// NOT NULL VIOLATION
-								extractUsingTemplate( "column \"", "\"", sqle.getMessage() );
-						default -> null;
-					};
-				}
-				return null;
+				return sqlState == null ? null : switch ( parseInt( sqlState ) ) {
+					case 23505, 23514, 23503 ->
+						// UNIQUE, CHECK, OR FOREIGN KEY VIOLATION
+							extractUsingTemplate( "constraint \"", "\"", sqle.getMessage() );
+					case 23502 ->
+						// NOT NULL VIOLATION
+							extractUsingTemplate( "column \"", "\"", sqle.getMessage() );
+					default -> null;
+				};
 			} );
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final String sqlState = extractSqlState( sqlException );
-			if ( sqlState != null ) {
-				switch ( sqlState ) {
-					case "40P01": // DEADLOCK DETECTED
-						return new LockAcquisitionException( message, sqlException, sql );
-					case "55P03": // LOCK NOT AVAILABLE
-						//TODO: should we check that the message is "canceling statement due to lock timeout"
-						//      and return LockAcquisitionException if it is not?
-						return new LockTimeoutException( message, sqlException, sql );
-					case "57014": // QUERY CANCELLED
-						return new QueryTimeoutException( message, sqlException, sql );
-				}
-			}
-			return null;
+			return sqlState == null ? null : switch ( sqlState ) {
+				case "40P01" ->
+					// DEADLOCK DETECTED
+						new LockAcquisitionException( message, sqlException, sql );
+				case "55P03" ->
+					// LOCK NOT AVAILABLE
+					//TODO: should we check that the message is "canceling statement due to lock timeout"
+					//      and return LockAcquisitionException if it is not?
+						new LockTimeoutException( message, sqlException, sql );
+				case "57014" ->
+					// QUERY CANCELLED
+						new QueryTimeoutException( message, sqlException, sql );
+				default -> null;
+			};
 		};
 	}
 

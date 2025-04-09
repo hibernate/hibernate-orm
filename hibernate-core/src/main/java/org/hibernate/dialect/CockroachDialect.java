@@ -21,7 +21,6 @@ import java.util.regex.Pattern;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -43,6 +42,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
@@ -1063,21 +1063,13 @@ public class CockroachDialect extends Dialect {
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
 				final String sqlState = extractSqlState( sqle );
-				if ( sqlState == null ) {
-					return null;
-				}
-				return switch ( parseInt( sqlState ) ) {
-					// CHECK VIOLATION
-					case 23514 -> extractUsingTemplate( "violates check constraint \"", "\"", sqle.getMessage() );
-					// UNIQUE VIOLATION
-					case 23505 -> extractUsingTemplate(" violates unique constraint \"", "\"", sqle.getMessage() );
-					// FOREIGN KEY VIOLATION
-					case 23503 -> extractUsingTemplate( "violates foreign key constraint \"", "\"", sqle.getMessage() );
-					// NOT NULL VIOLATION
-					case 23502 -> extractUsingTemplate( "null value in column \"", "\" violates not-null constraint", sqle.getMessage() );
-					// TODO: RESTRICT VIOLATION
-					case 23001 -> null;
-					// ALL OTHER
+				return sqlState == null ? null : switch ( parseInt( sqlState ) ) {
+					case 23505, 23514, 23503 ->
+						// UNIQUE, CHECK, OR FOREIGN KEY VIOLATION
+							extractUsingTemplate( "constraint \"", "\"", sqle.getMessage() );
+					case 23502 ->
+						// NOT NULL VIOLATION
+							extractUsingTemplate( "column \"", "\"", sqle.getMessage() );
 					default -> null;
 				};
 			} );
@@ -1086,19 +1078,22 @@ public class CockroachDialect extends Dialect {
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final String sqlState = extractSqlState( sqlException );
-			if ( sqlState == null ) {
-				return null;
-			}
-			return switch (sqlState) {
-				// Serialization Exception
-				case "40001" -> message.contains("WriteTooOldError")
-						? new TransactionSerializationException( message, sqlException, sql )
-						: null;
-				// DEADLOCK DETECTED
-				case "40P01" -> new LockAcquisitionException( message, sqlException, sql );
-				// LOCK NOT AVAILABLE
-				case "55P03" -> new PessimisticLockException( message, sqlException, sql );
-				case "57014" -> new QueryTimeoutException( message, sqlException, sql );
+			return sqlState == null ? null : switch ( sqlState ) {
+				case "40001" ->
+						message.contains( "WriteTooOldError" ) // Serialization Exception
+							? new TransactionSerializationException( message, sqlException, sql )
+							: null;
+				case "40P01" ->
+					// DEADLOCK DETECTED
+						new LockAcquisitionException( message, sqlException, sql );
+				case "55P03" ->
+					// LOCK NOT AVAILABLE
+					//TODO: should we check that the message is "canceling statement due to lock timeout"
+					//      and return LockAcquisitionException if it is not?
+						new LockTimeoutException( message, sqlException, sql );
+				case "57014" ->
+					// QUERY CANCELLED
+						new QueryTimeoutException( message, sqlException, sql );
 				// returning null allows other delegates to operate
 				default -> null;
 			};

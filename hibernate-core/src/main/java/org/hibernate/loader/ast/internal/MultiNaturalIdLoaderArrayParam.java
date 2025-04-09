@@ -22,6 +22,9 @@ import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
+import static org.hibernate.loader.ast.internal.LoaderHelper.loadByArrayParameter;
+import static org.hibernate.loader.ast.internal.LoaderHelper.normalizeKeys;
+
 /**
  * Standard MultiNaturalIdLoader implementation
  */
@@ -30,10 +33,8 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 
 	public MultiNaturalIdLoaderArrayParam(EntityMappingType entityDescriptor) {
 		super(entityDescriptor);
-
 		assert entityDescriptor.getNaturalIdMapping() instanceof SimpleNaturalIdMapping;
-
-		this.keyClass = entityDescriptor.getNaturalIdMapping().getJavaType().getJavaTypeClass();
+		keyClass = entityDescriptor.getNaturalIdMapping().getJavaType().getJavaTypeClass();
 	}
 
 	protected SimpleNaturalIdMapping getNaturalIdMapping()  {
@@ -50,49 +51,43 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 			MultiNaturalIdLoadOptions loadOptions,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) {
-
-		final SessionFactoryImplementor sessionFactory = session.getFactory();
-
-		naturalIds = LoaderHelper.normalizeKeys( naturalIds, getNaturalIdAttribute(), session, sessionFactory );
-
+		final SessionFactoryImplementor factory = session.getFactory();
 		final JdbcMapping arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				getNaturalIdMapping().getSingleJdbcMapping(),
 				keyClass,
-				sessionFactory
+				factory
 		);
 		final JdbcParameter jdbcParameter = new JdbcParameterImpl( arrayJdbcMapping );
-
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
 				getNaturalIdAttribute(),
 				session.getLoadQueryInfluencers(),
 				lockOptions,
 				jdbcParameter,
-				sessionFactory
+				factory
 		);
-		final JdbcOperationQuerySelect jdbcSelectOperation = sessionFactory.getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( sessionFactory, sqlAst )
-				.translate( JdbcParameterBindings.NO_BINDINGS, new QueryOptionsAdapter() {
-					@Override
-					public LockOptions getLockOptions() {
-						return lockOptions;
-					}
-				} );
+		final JdbcOperationQuerySelect jdbcSelectOperation =
+				factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+						.buildSelectTranslator( factory, sqlAst )
+						.translate( JdbcParameterBindings.NO_BINDINGS, new QueryOptionsAdapter() {
+							@Override
+							public LockOptions getLockOptions() {
+								return lockOptions;
+							}
+						} );
 
-		return LoaderHelper.loadByArrayParameter(
-					naturalIds,
-					sqlAst,
-					jdbcSelectOperation,
-					jdbcParameter,
-					arrayJdbcMapping,
-					null,
-					null,
-					null,
-					lockOptions,
-					session.isDefaultReadOnly(),
-					session
+		return loadByArrayParameter(
+				normalizeKeys( naturalIds, getNaturalIdAttribute(), session, factory ),
+				sqlAst,
+				jdbcSelectOperation,
+				jdbcParameter,
+				arrayJdbcMapping,
+				null,
+				null,
+				null,
+				lockOptions,
+				session.isDefaultReadOnly(),
+				session
 		);
 	}
 

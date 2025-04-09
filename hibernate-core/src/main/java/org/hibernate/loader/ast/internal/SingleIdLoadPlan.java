@@ -153,7 +153,9 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 				),
 				getRowTransformer(),
 				null,
-				singleResultExpected ? ListResultsConsumer.UniqueSemantic.ASSERT : ListResultsConsumer.UniqueSemantic.FILTER,
+				singleResultExpected
+						? ListResultsConsumer.UniqueSemantic.ASSERT
+						: ListResultsConsumer.UniqueSemantic.FILTER,
 				1
 		);
 

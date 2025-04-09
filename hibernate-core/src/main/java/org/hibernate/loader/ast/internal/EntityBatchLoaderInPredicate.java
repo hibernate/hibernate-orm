@@ -54,10 +54,10 @@ public class EntityBatchLoaderInPredicate<T>
 			LoadQueryInfluencers loadQueryInfluencers) {
 		super( entityDescriptor, loadQueryInfluencers );
 		this.domainBatchSize = domainBatchSize;
-		int idColumnCount =
+		final int idColumnCount =
 				entityDescriptor.getEntityPersister().getIdentifierType()
 						.getColumnSpan( sessionFactory .getRuntimeMetamodels());
-		this.sqlBatchSize =
+		sqlBatchSize =
 				sessionFactory.getJdbcServices().getDialect().getBatchLoadSizingStrategy()
 						.determineOptimalBatchLoadSize( idColumnCount, domainBatchSize, false );
 
@@ -71,9 +71,8 @@ public class EntityBatchLoaderInPredicate<T>
 		}
 
 		final EntityIdentifierMapping identifierMapping = getLoadable().getIdentifierMapping();
-
 		final int expectedNumberOfParameters = identifierMapping.getJdbcTypeCount() * sqlBatchSize;
-		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder( expectedNumberOfParameters );
+		final JdbcParametersList.Builder builder = JdbcParametersList.newBuilder( expectedNumberOfParameters );
 		sqlAst = LoaderSelectBuilder.createSelect(
 				getLoadable(),
 				// null here means to select everything
@@ -83,17 +82,16 @@ public class EntityBatchLoaderInPredicate<T>
 				sqlBatchSize,
 				loadQueryInfluencers,
 				LockOptions.NONE,
-				jdbcParametersBuilder::add,
+				builder::add,
 				sessionFactory
 		);
-		this.jdbcParameters = jdbcParametersBuilder.build();
+		jdbcParameters = builder.build();
 		assert jdbcParameters.size() == expectedNumberOfParameters;
 
-		jdbcSelectOperation = sessionFactory.getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( sessionFactory, sqlAst )
-				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
+		jdbcSelectOperation =
+				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+						.buildSelectTranslator( sessionFactory, sqlAst )
+						.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 	}
 
 	@Override
@@ -127,58 +125,61 @@ public class EntityBatchLoaderInPredicate<T>
 			MULTI_KEY_LOAD_LOGGER.debugf( "Ids to batch-fetch initialize (`%s#%s`) %s",
 					getLoadable().getEntityName(), pkValue, Arrays.toString(idsToInitialize) );
 		}
-		final EntityIdentifierMapping identifierMapping = getLoadable().getIdentifierMapping();
-		final MultiKeyLoadChunker<Object> chunker = new MultiKeyLoadChunker<>(
+
+		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
+		final EntityPersister persister = getLoadable().getEntityPersister();
+		getChunker( getLoadable().getIdentifierMapping() )
+				.processChunks(
+						idsToInitialize,
+						sqlBatchSize,
+						(jdbcParameterBindings, session1) -> {
+							// Create a RegistrationHandler for handling any
+							// subselect fetches we encounter handling this chunk
+							return new SingleIdExecutionContext(
+									pkValue,
+									entityInstance,
+									getLoadable().getRootEntityDescriptor(),
+									readOnly,
+									lockOptions,
+									SubselectFetch.createRegistrationHandler(
+											batchFetchQueue,
+											sqlAst,
+											jdbcParameters,
+											jdbcParameterBindings
+									),
+									session
+							);
+						},
+						(key, relativePosition, absolutePosition) -> {
+							if ( key != null ) {
+								batchFetchQueue.removeBatchLoadableEntityKey( session.generateEntityKey( key, persister ) );
+							}
+						},
+						(startIndex) -> {
+							if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
+								MULTI_KEY_LOAD_LOGGER.debugf(
+										"Processing entity batch-fetch chunk (`%s#%s`) %s - %s",
+										getLoadable().getEntityName(),
+										pkValue,
+										startIndex,
+										startIndex + ( sqlBatchSize - 1 )
+								);
+							}
+						},
+						(startIndex, nonNullElementCount) -> {
+						},
+						session
+				);
+	}
+
+	private MultiKeyLoadChunker<Object> getChunker(EntityIdentifierMapping identifierMapping) {
+		return new MultiKeyLoadChunker<>(
 				sqlBatchSize,
 				identifierMapping.getJdbcTypeCount(),
 				identifierMapping,
 				jdbcParameters,
 				sqlAst,
 				jdbcSelectOperation
-		);
-
-		final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
-		final EntityPersister persister = getLoadable().getEntityPersister();
-
-		chunker.processChunks(
-				idsToInitialize,
-				sqlBatchSize,
-				(jdbcParameterBindings, session1) -> {
-					// Create a RegistrationHandler for handling any subselect fetches we encounter handling this chunk
-					return new SingleIdExecutionContext(
-							pkValue,
-							entityInstance,
-							getLoadable().getRootEntityDescriptor(),
-							readOnly,
-							lockOptions,
-							SubselectFetch.createRegistrationHandler(
-									batchFetchQueue,
-									sqlAst,
-									jdbcParameters,
-									jdbcParameterBindings
-							),
-							session
-					);
-				},
-				(key, relativePosition, absolutePosition) -> {
-					if ( key != null ) {
-						batchFetchQueue.removeBatchLoadableEntityKey( session.generateEntityKey( key, persister ) );
-					}
-				},
-				(startIndex) -> {
-					if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-						MULTI_KEY_LOAD_LOGGER.debugf(
-								"Processing entity batch-fetch chunk (`%s#%s`) %s - %s",
-								getLoadable().getEntityName(),
-								pkValue,
-								startIndex,
-								startIndex + ( sqlBatchSize - 1 )
-						);
-					}
-				},
-				(startIndex, nonNullElementCount) -> {
-				},
-				session
 		);
 	}
 

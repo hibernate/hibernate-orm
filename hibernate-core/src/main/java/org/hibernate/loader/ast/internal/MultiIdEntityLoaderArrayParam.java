@@ -91,9 +91,8 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				getSessionFactory()
 		);
 
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(1);
-		jdbcParameterBindings.addBinding( jdbcParameter,
-				new JdbcParameterBindingImpl( arrayJdbcMapping, toIdArray( idsInBatch ) ) );
+		final JdbcParameterBindings bindings = new JdbcParameterBindingsImpl(1);
+		bindings.addBinding( jdbcParameter, new JdbcParameterBindingImpl( arrayJdbcMapping, toIdArray( idsInBatch ) ) );
 
 		getJdbcSelectExecutor().executeQuery(
 				getSqlAstTranslatorFactory().buildSelectTranslator( getSessionFactory(), sqlAst )
@@ -103,14 +102,14 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 								return lockOptions;
 							}
 						} ),
-				jdbcParameterBindings,
+				bindings,
 				new ExecutionContextWithSubselectFetchHandler(
 						session,
 						createRegistrationHandler(
 								session.getPersistenceContext().getBatchFetchQueue(),
 								sqlAst,
 								JdbcParametersList.singleton( jdbcParameter ),
-								jdbcParameterBindings
+								bindings
 						),
 						// stateless sessions don't have a read-only mode
 						session instanceof SessionImplementor statefulSession
@@ -129,7 +128,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 			Object[] unresolvableIds,
 			MultiIdLoadOptions loadOptions,
 			LockOptions lockOptions,
-			List<E> result,
+			List<E> results,
 			SharedSessionContractImplementor session) {
 		final SelectStatement sqlAst = createSelectBySingleArrayParameter(
 				getLoadable(),
@@ -157,7 +156,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				session.isDefaultReadOnly(),
 				session
 		);
-		result.addAll( databaseResults );
+		results.addAll( databaseResults );
 	}
 
 	@Override

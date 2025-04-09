@@ -150,11 +150,8 @@ public class LoaderHelper {
 	/**
 	 * Determine if given influencers indicate read-only
 	 */
-	public static Boolean getReadOnlyFromLoadQueryInfluencers(LoadQueryInfluencers loadQueryInfluencers) {
-		if ( loadQueryInfluencers == null ) {
-			return null;
-		}
-		return loadQueryInfluencers.getReadOnly();
+	public static Boolean getReadOnlyFromLoadQueryInfluencers(LoadQueryInfluencers influencers) {
+		return influencers == null ? null : influencers.getReadOnly();
 	}
 
 	/**
@@ -234,29 +231,23 @@ public class LoaderHelper {
 		assert jdbcOperation != null;
 		assert jdbcParameter != null;
 
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( 1);
-		jdbcParameterBindings.addBinding(
-				jdbcParameter,
-				new JdbcParameterBindingImpl( arrayJdbcMapping, idsToInitialize )
-		);
-
-		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
-				session.getPersistenceContext().getBatchFetchQueue(),
-				sqlAst,
-				JdbcParametersList.singleton( jdbcParameter ),
-				jdbcParameterBindings
-		);
-
+		final JdbcParameterBindings bindings = new JdbcParameterBindingsImpl( 1);
+		bindings.addBinding( jdbcParameter, new JdbcParameterBindingImpl( arrayJdbcMapping, idsToInitialize ) );
 		return session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcOperation,
-				jdbcParameterBindings,
+				bindings,
 				new SingleIdExecutionContext(
 						entityId,
 						entityInstance,
 						rootEntityDescriptor,
 						readOnly,
 						lockOptions,
-						subSelectFetchableKeysHandler,
+						SubselectFetch.createRegistrationHandler(
+								session.getPersistenceContext().getBatchFetchQueue(),
+								sqlAst,
+								JdbcParametersList.singleton( jdbcParameter ),
+								bindings
+						),
 						session
 				),
 				RowTransformerStandardImpl.instance(),

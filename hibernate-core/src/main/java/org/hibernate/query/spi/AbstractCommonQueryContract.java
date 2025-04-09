@@ -773,13 +773,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	private <T> void setTypedParameter(String name, TypedParameterValue<T> typedValue) {
-		final BindableType<T> type = typedValue.getType();
-		setParameter( name, typedValue.getValue(), type != null ? type : typedValue.getTypeReference() );
+		setParameter( name, typedValue.value(), typedValue.type() );
 	}
 
 	private <T> void setTypedParameter(int position, TypedParameterValue<T> typedValue) {
-		final BindableType<T> type = typedValue.getType();
-		setParameter( position, typedValue.getValue(), type != null ? type : typedValue.getTypeReference() );
+		setParameter( position, typedValue.value(), typedValue.type() );
 	}
 
 	private boolean isInstance(BindableType<?> parameterType, Object value) {
@@ -889,19 +887,17 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	public <P> CommonQueryContract setParameter(Parameter<P> parameter, P value) {
 		if ( value instanceof TypedParameterValue<?> typedParameterValue ) {
 			final Class<P> parameterType = parameter.getParameterType();
-			final BindableType<?> type = typedParameterValue.getType();
-			final BindableType<?> bindableType = type == null ? typedParameterValue.getTypeReference() : type;
-			if ( bindableType == null ) {
+			final BindableType<?> type = typedParameterValue.type();
+			if ( type == null ) {
 				throw new IllegalArgumentException( "TypedParameterValue has no type" );
 			}
-			if ( !parameterType.isAssignableFrom( bindableType.getBindableJavaType() ) ) {
+			if ( !parameterType.isAssignableFrom( type.getBindableJavaType() ) ) {
 				throw new QueryArgumentException( "Given TypedParameterValue is not assignable to given Parameter type",
-						parameterType, typedParameterValue.getValue() );
+						parameterType, typedParameterValue.value() );
 			}
 			@SuppressWarnings("unchecked") // safe, because we just checked
 			final TypedParameterValue<P> typedValue = (TypedParameterValue<P>) value;
-			setParameter( parameter, typedValue.getValue(),
-					type == null ? typedValue.getTypeReference() : typedValue.getType() );
+			setParameter( parameter, typedValue.value(), typedValue.type() );
 		}
 		else {
 			locateBinding( parameter ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );

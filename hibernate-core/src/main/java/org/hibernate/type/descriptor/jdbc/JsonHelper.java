@@ -408,16 +408,25 @@ public class JsonHelper {
 		return (X) values;
 	}
 
+
 	// This is also used by Hibernate Reactive
 	public static <X> X arrayFromString(
 			JavaType<X> javaType,
 			JdbcType elementJdbcType,
 			String string,
 			WrapperOptions options) throws SQLException {
-
 		if ( string == null ) {
 			return null;
 		}
+		return deserializeArray( javaType, elementJdbcType, new StringJsonDocumentReader( string ), options );
+	}
+
+	public static <X> X deserializeArray(
+			JavaType<X> javaType,
+			JdbcType elementJdbcType,
+			JsonDocumentReader reader,
+			WrapperOptions options) throws SQLException {
+
 
 		final CustomArrayList arrayList = new CustomArrayList();
 		final JavaType<?> elementJavaType = ((BasicPluralJavaType<?>) javaType).getElementJavaType();
@@ -429,7 +438,7 @@ public class JsonHelper {
 		else {
 			jdbcJavaType = options.getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( preferredJavaTypeClass );
 		}
-		JsonDocumentReader reader = new StringJsonDocumentReader(string);
+
 		JsonValueJDBCTypeAdapter adapter = JsonValueJDBCTypeAdapterFactory.getAdapter(reader,false);
 
 		assert reader.hasNext():"Invalid array string";

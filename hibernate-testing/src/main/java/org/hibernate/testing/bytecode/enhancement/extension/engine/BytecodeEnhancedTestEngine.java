@@ -60,7 +60,9 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 
 	@Override
 	public TestDescriptor discover(EngineDiscoveryRequest discoveryRequest, UniqueId uniqueId) {
-		final JupiterEngineDescriptor engineDescriptor = (JupiterEngineDescriptor) new JupiterTestEngine().discover(discoveryRequest, uniqueId);
+		final BytecodeEnhancedEngineDescriptor engineDescriptor = new BytecodeEnhancedEngineDescriptor(
+				(JupiterEngineDescriptor) new JupiterTestEngine().discover( discoveryRequest, uniqueId )
+		);
 
 		for ( TestDescriptor testDescriptor : new HashSet<>( engineDescriptor.getChildren() ) ) {
 			if ( testDescriptor instanceof ClassBasedTestDescriptor ) {

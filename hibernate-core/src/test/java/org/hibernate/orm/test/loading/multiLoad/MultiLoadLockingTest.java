@@ -33,7 +33,6 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -243,9 +242,6 @@ public class MultiLoadLockingTest {
 
 	// (3) simple Id entity w/ pessimistic write lock (one in L1C & some in L2C)
 	@Test
-	@SkipForDialect( dialectClass = PostgreSQLDialect.class, matchSubTypes = true,
-			reason = "Excluding PostgreSQL dialects for now; multiload of natural id entities where one is already "
-					+ "in the session produces more than 1 select, and they have different update lock strings")
 	public void testMultiLoadSimpleIdEntityPessimisticWriteLockSomeInL1CAndSomeInL2C(SessionFactoryScope scope) {
 		final Integer userInL2CId = userIds.get(0);
 		final Integer userInL1CId = userIds.get(1);

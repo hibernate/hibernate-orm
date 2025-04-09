@@ -21,6 +21,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Version;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -301,7 +302,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			MemberDetails value,
 			TypeDetails typeDetails,
 			String declaringClassName,
-			ConverterDescriptor converterDescriptor) {
+			@Nullable ConverterDescriptor converterDescriptor) {
 		this.memberDetails = value;
 		final boolean isArray = value.isArray();
 		if ( typeDetails == null && !isArray ) {
@@ -1187,10 +1188,6 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	void disallowConverter(MemberDetails attribute, Class<? extends Annotation> annotationType, boolean autoApply) {
-		// NOTE: A really faithful reading of the JPA spec is that we should
-		//       just silently ignore any auto-apply converter which matches
-		//       one of the disallowed attribute types, but for now let's be
-		//       a bit more fussy/helpful, and see how many people complain.
 		if ( attribute.hasDirectAnnotationUsage( annotationType ) ) {
 			throw new AnnotationException( "'AttributeConverter' not allowed for attribute '" + attribute.getName()
 											+ "' annotated '@" + annotationType.getName() + "'"

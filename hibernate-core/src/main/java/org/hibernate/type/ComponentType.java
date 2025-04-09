@@ -434,8 +434,8 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			return new Object[propertySpan + discriminatorColumnSpan];
 		}
 		else if ( component instanceof Object[] ) {
-			// A few calls to hashCode pass the property values already in an
-			// Object[] (ex: QueryKey hash codes for cached queries).
+			// A few calls to hashCode pass the property values already in
+			// an Object[] (ex: QueryKey hash codes for cached queries).
 			// It's easiest to just check for the condition here prior to
 			// trying reflection.
 			return (Object[]) component;
@@ -815,11 +815,13 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	protected final EmbeddableInstantiator instantiator(Object compositeInstance) {
-		final EmbeddableRepresentationStrategy representationStrategy = embeddableTypeDescriptor().getRepresentationStrategy();
+		final EmbeddableRepresentationStrategy representationStrategy =
+				embeddableTypeDescriptor().getRepresentationStrategy();
 		if ( embeddableTypeDescriptor().isPolymorphic() ) {
-			final String compositeClassName = compositeInstance != null ?
-					compositeInstance.getClass().getName() :
-					componentClass.getName();
+			final String compositeClassName =
+					compositeInstance != null
+							? compositeInstance.getClass().getName()
+							: componentClass.getName();
 			return representationStrategy.getInstantiatorForClass( compositeClassName );
 		}
 		else {

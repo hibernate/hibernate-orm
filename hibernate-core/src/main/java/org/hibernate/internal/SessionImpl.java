@@ -34,6 +34,7 @@ import org.hibernate.EntityFilterException;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.Interceptor;
 import org.hibernate.JDBCException;
 import org.hibernate.LobHelper;
@@ -108,9 +109,11 @@ import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEvent;
 import org.hibernate.event.spi.ReplicateEventListener;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.loader.internal.CacheLoadHelper;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.query.BindableType;
 import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
@@ -148,6 +151,7 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 import jakarta.persistence.CacheRetrieveMode;
@@ -2442,10 +2446,7 @@ public class SessionImpl
 		try {
 			loadQueryInfluencers.getEffectiveEntityGraph().applyConfiguredGraph( properties );
 			loadQueryInfluencers.setReadOnly( readOnlyHint( properties ) );
-			return byId( entityClass )
-					.with( determineAppropriateLocalCacheMode( properties ) )
-					.with( lockOptions )
-					.load( primaryKey );
+			return findByIdOrNaturalId( entityClass, primaryKey, lockOptions, properties );
 		}
 		catch ( FetchNotFoundException e ) {
 			// This may happen if the entity has an associations mapped with
@@ -2500,6 +2501,44 @@ public class SessionImpl
 		}
 	}
 
+	private <T> T findByIdOrNaturalId(
+			Class<T> entityClass, Object primaryKey, LockOptions lockOptions, Map<String, Object> properties) {
+		final CompositeType naturalIdType =
+				requireEntityPersister( entityClass ).getEntityMetamodel().getNaturalIdType();
+		if ( naturalIdType instanceof BindableType<?> bindableType && bindableType.isInstance( primaryKey ) ) {
+			return byNaturalId( entityClass )
+					.with( lockOptions )
+					.using( deconstructNaturalId( primaryKey, naturalIdType ) )
+					.load();
+		}
+		else {
+			return byId( entityClass )
+					.with( determineAppropriateLocalCacheMode( properties ) )
+					.with( lockOptions )
+					.load( primaryKey );
+		}
+	}
+
+	private Map<String, Object> deconstructNaturalId(Object primaryKey, CompositeType naturalIdType) {
+		final String[] propertyNames = naturalIdType.getPropertyNames();
+//		final Object[] propertyValues = naturalIdType.getPropertyValues( primaryKey );
+		final Map<String, Object> map = new HashMap<>();
+		for ( int i = 0; i < propertyNames.length; i++ ) {
+			map.put( propertyNames[i], getValue( primaryKey, naturalIdType, propertyNames[i] ) );
+//					propertyValues[i] );
+		}
+		return map;
+	}
+
+	private static Object getValue(Object primaryKey, CompositeType naturalIdType, String propertyNames) {
+		try {
+			return ReflectHelper.findField( naturalIdType.getReturnedClass(), propertyNames ).get( primaryKey );
+		}
+		catch (IllegalAccessException e) {
+			throw new RuntimeException( e );
+		}
+	}
+
 	private static <T> void logIgnoringEntityNotFound(Class<T> entityClass, Object primaryKey) {
 		if ( log.isDebugEnabled() ) {
 			log.ignoringEntityNotFound(
@@ -2509,7 +2548,7 @@ public class SessionImpl
 		}
 	}
 
-	private <T> void setLoadAccessOptions(FindOption[] options, IdentifierLoadAccessImpl<T> loadAccess) {
+	private <T> void setLoadAccessOptions(FindOption[] options, IdentifierLoadAccess<T> loadAccess) {
 		CacheStoreMode storeMode = getCacheStoreMode();
 		CacheRetrieveMode retrieveMode = getCacheRetrieveMode();
 		LockOptions lockOptions = copySessionLockOptions();
@@ -2551,7 +2590,7 @@ public class SessionImpl
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey, FindOption... options) {
-		final IdentifierLoadAccessImpl<T> loadAccess = byId( entityClass );
+		final IdentifierLoadAccess<T> loadAccess = byId( entityClass );
 		setLoadAccessOptions( options, loadAccess );
 		return loadAccess.load( primaryKey );
 	}
@@ -2560,7 +2599,7 @@ public class SessionImpl
 	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
 		final RootGraph<T> graph = (RootGraph<T>) entityGraph;
 		final ManagedDomainType<T> type = graph.getGraphedType();
-		final IdentifierLoadAccessImpl<T> loadAccess =
+		final IdentifierLoadAccess<T> loadAccess =
 				switch ( type.getRepresentationMode() ) {
 					case MAP -> byId( type.getTypeName() );
 					case POJO -> byId( type.getJavaType() );

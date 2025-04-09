@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.NaturalIdClass;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -189,6 +191,28 @@ public class InheritanceState {
 			final long count =
 					Stream.concat( classDetails.getFields().stream(), classDetails.getMethods().stream() )
 							.filter( member -> member.hasDirectAnnotationUsage( Id.class ) )
+							.count();
+			if ( count > 1 ) {
+				return classDetails;
+			}
+			else {
+				final InheritanceState state = getSuperclassInheritanceState( classDetails, inheritanceStatePerClass );
+				return state == null ? null : state.getClassWithIdClass( true );
+			}
+		}
+	}
+
+	public ClassDetails getClassWithNaturalIdClass(boolean evenIfSubclass) {
+		if ( !evenIfSubclass && hasParents() ) {
+			return null;
+		}
+		else if ( classDetails.hasDirectAnnotationUsage( NaturalIdClass.class ) ) {
+			return classDetails;
+		}
+		else {
+			final long count =
+					Stream.concat( classDetails.getFields().stream(), classDetails.getMethods().stream() )
+							.filter( member -> member.hasDirectAnnotationUsage( NaturalId.class ) )
 							.count();
 			if ( count > 1 ) {
 				return classDetails;

@@ -87,6 +87,7 @@ public class EntityMetamodel implements Serializable {
 	private final int subclassId;
 	private final IdentifierProperty identifierAttribute;
 	private final boolean versioned;
+	private final CompositeType naturalIdType;
 
 	private final int propertySpan;
 	private final int versionPropertyIndex;
@@ -177,6 +178,9 @@ public class EntityMetamodel implements Serializable {
 		identifierAttribute = PropertyFactory.buildIdentifierAttribute( persistentClass, idgenerator );
 
 		versioned = persistentClass.isVersioned();
+
+		final Component naturalId = persistentClass.getNaturalId();
+		naturalIdType = naturalId == null ? null : naturalId.getType();
 
 		final boolean collectionsInDefaultFetchGroupEnabled =
 				creationContext.getSessionFactoryOptions().isCollectionsInDefaultFetchGroupEnabled();
@@ -582,6 +586,10 @@ public class EntityMetamodel implements Serializable {
 					);
 			}
 		}
+	}
+
+	public CompositeType getNaturalIdType() {
+		return naturalIdType;
 	}
 
 	/**

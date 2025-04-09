@@ -51,6 +51,7 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	private Property declaredVersion;
 	private Column softDeleteColumn;
 	private SoftDeleteType softDeleteStrategy;
+	private Component naturalId;
 
 	public RootClass(MetadataBuildingContext buildingContext) {
 		super( buildingContext );
@@ -222,7 +223,15 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	public void setIdentifierProperty(Property identifierProperty) {
 		this.identifierProperty = identifierProperty;
 		identifierProperty.setPersistentClass( this );
+	}
 
+	@Override
+	public Component getNaturalId() {
+		return naturalId;
+	}
+
+	public void setNaturalId(Component naturalId) {
+		this.naturalId = naturalId;
 	}
 
 	public void setMutable(boolean mutable) {

@@ -1208,4 +1208,6 @@ public abstract sealed class PersistentClass
 	public void setDeleteExpectation(Supplier<? extends Expectation> deleteExpectation) {
 		this.deleteExpectation = deleteExpectation;
 	}
+
+	public abstract Component getNaturalId();
 }

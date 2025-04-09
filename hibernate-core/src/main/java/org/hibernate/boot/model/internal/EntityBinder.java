@@ -365,23 +365,40 @@ public class EntityBinder {
 			PropertyHolder propertyHolder,
 			Map<ClassDetails, InheritanceState> inheritanceStates,
 			InheritanceState inheritanceState) {
-		final ElementsToProcess elementsToProcess = inheritanceState.postProcess( persistentClass, this );
-		final Set<String> idPropertiesIfIdClass = handleIdClass(
-				persistentClass,
-				inheritanceState,
-				context,
-				propertyHolder,
-				elementsToProcess,
-				inheritanceStates
-		);
+		final ElementsToProcess elementsToProcess =
+				inheritanceState.postProcess( persistentClass, this );
+
 		processIdPropertiesIfNotAlready(
 				persistentClass,
 				inheritanceState,
 				context,
 				propertyHolder,
-				idPropertiesIfIdClass,
+				handleIdClass(
+						persistentClass,
+						inheritanceState,
+						context,
+						propertyHolder,
+						elementsToProcess,
+						inheritanceStates
+				),
 				elementsToProcess,
 				inheritanceStates
+		);
+
+		processNaturalIdPropertiesIfNotAlready(
+				persistentClass,
+//				inheritanceState,
+//				context,
+//				propertyHolder,
+				handleNaturalIdClass(
+						persistentClass,
+						inheritanceState,
+						context,
+						propertyHolder,
+						inheritanceStates
+				),
+				elementsToProcess
+//				inheritanceStates
 		);
 	}
 
@@ -416,42 +433,43 @@ public class EntityBinder {
 			ElementsToProcess elementsToProcess,
 			Map<ClassDetails, InheritanceState> inheritanceStates) {
 		final Set<String> idPropertiesIfIdClass = new HashSet<>();
-		final boolean isIdClass = mapAsIdClass(
-				inheritanceStates,
-				inheritanceState,
-				persistentClass,
-				propertyHolder,
-				elementsToProcess,
-				idPropertiesIfIdClass,
-				context
-		);
-		if ( !isIdClass ) {
-			wrapIdsInEmbeddedComponents = elementsToProcess.getIdPropertyCount() > 1;
-		}
-		return idPropertiesIfIdClass;
-	}
-
-	private boolean mapAsIdClass(
-			Map<ClassDetails, InheritanceState> inheritanceStates,
-			InheritanceState inheritanceState,
-			PersistentClass persistentClass,
-			PropertyHolder propertyHolder,
-			ElementsToProcess elementsToProcess,
-			Set<String> idPropertiesIfIdClass,
-			MetadataBuildingContext context) {
+		final boolean isIdClass;
 		// We are looking for @IdClass
 		// In general we map the id class as identifier using the mapping metadata of the main entity's
 		// properties and create an identifier mapper containing the id properties of the main entity
 		final ClassDetails classWithIdClass = inheritanceState.getClassWithIdClass( false );
 		if ( classWithIdClass != null ) {
 			final ClassDetails compositeClass = idClassDetails( inheritanceState, classWithIdClass );
-			return compositeClass != null
-				&& mapAsIdClass( inheritanceStates, persistentClass, propertyHolder, elementsToProcess,
-					idPropertiesIfIdClass, context, compositeClass, classWithIdClass );
+			isIdClass = compositeClass != null
+					&& mapAsIdClass( inheritanceStates, persistentClass, propertyHolder, elementsToProcess,
+							idPropertiesIfIdClass, context, compositeClass, classWithIdClass );
 		}
 		else {
-			return false;
+			isIdClass = false;
 		}
+		if ( !isIdClass ) {
+			wrapIdsInEmbeddedComponents = elementsToProcess.getIdPropertyCount() > 1;
+		}
+		return idPropertiesIfIdClass;
+	}
+
+	private Set<String> handleNaturalIdClass(
+			PersistentClass persistentClass,
+			InheritanceState inheritanceState,
+			MetadataBuildingContext context,
+			PropertyHolder propertyHolder,
+			Map<ClassDetails, InheritanceState> inheritanceStates) {
+		final Set<String> naturalIdPropertiesIfNaturalIdClass = new HashSet<>();
+		// We are looking for @NaturalIdClass
+		final ClassDetails classWithIdClass = inheritanceState.getClassWithNaturalIdClass( false );
+		if ( classWithIdClass != null ) {
+			final ClassDetails compositeClass = naturalIdClassDetails( inheritanceState, classWithIdClass );
+			if ( compositeClass != null ) {
+				mapAsNaturalIdClass( inheritanceStates, persistentClass, propertyHolder,
+						naturalIdPropertiesIfNaturalIdClass, context, compositeClass, classWithIdClass );
+			}
+		}
+		return naturalIdPropertiesIfNaturalIdClass;
 	}
 
 	private boolean mapAsIdClass(
@@ -467,8 +485,10 @@ public class EntityBinder {
 		final TypeDetails classWithIdType = new ClassTypeDetailsImpl( classWithIdClass, TypeDetails.Kind.CLASS );
 
 		final AccessType accessType = getPropertyAccessType();
-		final PropertyData inferredData = new PropertyPreloadedData( accessType, "id", compositeType );
-		final PropertyData baseInferredData = new PropertyPreloadedData( accessType, "id", classWithIdType );
+		final PropertyData inferredData =
+				new PropertyPreloadedData( accessType, "id", compositeType );
+		final PropertyData baseInferredData =
+				new PropertyPreloadedData( accessType, "id", classWithIdType );
 		final AccessType propertyAccessor = getPropertyAccessor( compositeClass );
 
 		// In JPA 2, there is a shortcut if the IdClass is the PK of the associated class pointed to by the id
@@ -506,7 +526,7 @@ public class EntityBinder {
 					compositeType,
 					baseInferredData,
 					propertyAccessor,
-					true
+					NavigablePath.IDENTIFIER_MAPPER_PROPERTY
 			);
 			if ( idClassComponent.isSimpleRecord() ) {
 				mapper.setSimpleRecord( true );
@@ -517,6 +537,55 @@ public class EntityBinder {
 			}
 			return true;
 		}
+	}
+
+	private boolean mapAsNaturalIdClass(
+			Map<ClassDetails, InheritanceState> inheritanceStates,
+			PersistentClass persistentClass,
+			PropertyHolder propertyHolder,
+			Set<String> naturalIdPropertiesIfNaturalIdClass,
+			MetadataBuildingContext context,
+			ClassDetails compositeClass,
+			ClassDetails classWithIdClass) {
+		final TypeDetails compositeType = new ClassTypeDetailsImpl( compositeClass, TypeDetails.Kind.CLASS );
+		final TypeDetails classWithIdType = new ClassTypeDetailsImpl( classWithIdClass, TypeDetails.Kind.CLASS );
+
+		final AccessType accessType = getPropertyAccessType();
+		final PropertyData inferredData =
+				new PropertyPreloadedData( accessType, "natural_id", compositeType );
+		final PropertyData baseInferredData =
+				new PropertyPreloadedData( accessType, "natural_id", classWithIdType );
+		final AccessType propertyAccessor = getPropertyAccessor( compositeClass );
+
+		final boolean ignoreIdAnnotations = isIgnoreIdAnnotations();
+		this.ignoreIdAnnotations = true;
+		final Component idClassComponent = bindNaturalIdClass(
+				inferredData,
+				baseInferredData,
+				propertyHolder,
+				propertyAccessor,
+				context,
+				inheritanceStates
+		);
+		final Component mapper = createMapperProperty(
+				inheritanceStates,
+				persistentClass,
+				propertyHolder,
+				context,
+				classWithIdClass,
+				compositeType,
+				baseInferredData,
+				propertyAccessor,
+				"_naturalIdMapper"
+		);
+		if ( idClassComponent.isSimpleRecord() ) {
+			mapper.setSimpleRecord( true );
+		}
+		this.ignoreIdAnnotations = ignoreIdAnnotations;
+		for ( Property property : mapper.getProperties() ) {
+			naturalIdPropertiesIfNaturalIdClass.add( property.getName() );
+		}
+		return true;
 	}
 
 	private ClassDetails idClassDetails(InheritanceState inheritanceState, ClassDetails classWithIdClass) {
@@ -537,6 +606,24 @@ public class EntityBinder {
 		}
 	}
 
+	private ClassDetails naturalIdClassDetails(InheritanceState inheritanceState, ClassDetails classWithIdClass) {
+		final NaturalIdClass idClassAnn = classWithIdClass.getDirectAnnotationUsage( NaturalIdClass.class );
+		final ClassDetailsRegistry classDetailsRegistry = modelsContext().getClassDetailsRegistry();
+		if ( idClassAnn == null ) {
+			try {
+				// look for a NaturalId class generated by Hibernate Processor as an inner class of static metamodel
+				final String generatedIdClassName = inheritanceState.getClassDetails().getClassName() + "_$NaturalId";
+				return classDetailsRegistry.resolveClassDetails( generatedIdClassName );
+			}
+			catch (RuntimeException e) {
+				return null;
+			}
+		}
+		else {
+			return classDetailsRegistry.resolveClassDetails( idClassAnn.value().getName() );
+		}
+	}
+
 	private Component createMapperProperty(
 			Map<ClassDetails, InheritanceState> inheritanceStates,
 			PersistentClass persistentClass,
@@ -546,7 +633,7 @@ public class EntityBinder {
 			TypeDetails compositeClass,
 			PropertyData baseInferredData,
 			AccessType propertyAccessor,
-			boolean isIdClass) {
+			String propertyName) {
 		final Component mapper = createMapper(
 				inheritanceStates,
 				persistentClass,
@@ -556,10 +643,10 @@ public class EntityBinder {
 				compositeClass,
 				baseInferredData,
 				propertyAccessor,
-				isIdClass
+				propertyName
 		);
 		final Property mapperProperty = new SyntheticProperty();
-		mapperProperty.setName( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
+		mapperProperty.setName( propertyName );
 		mapperProperty.setUpdateable( false );
 		mapperProperty.setInsertable( false );
 		mapperProperty.setPropertyAccessorName( "embedded" );
@@ -577,14 +664,10 @@ public class EntityBinder {
 			TypeDetails compositeClass,
 			PropertyData baseInferredData,
 			AccessType propertyAccessor,
-			boolean isIdClass) {
+			String propertyName) {
 		final Component mapper = fillEmbeddable(
 				propertyHolder,
-				new PropertyPreloadedData(
-						propertyAccessor,
-						NavigablePath.IDENTIFIER_MAPPER_PROPERTY,
-						compositeClass
-				),
+				new PropertyPreloadedData( propertyAccessor, propertyName, compositeClass ),
 				baseInferredData,
 				propertyAccessor,
 				annotatedClass,
@@ -598,12 +681,13 @@ public class EntityBinder {
 				null,
 				context,
 				inheritanceStates,
-				isIdClass
+				true
 		);
 		persistentClass.setIdentifierMapper( mapper );
 
 		// If id definition is on a mapped superclass, update the mapping
-		final MappedSuperclass superclass = getMappedSuperclassOrNull( classWithIdClass, inheritanceStates, context );
+		final MappedSuperclass superclass =
+				getMappedSuperclassOrNull( classWithIdClass, inheritanceStates, context );
 		if ( superclass != null ) {
 			superclass.setDeclaredIdentifierMapper( mapper );
 		}
@@ -711,6 +795,52 @@ public class EntityBinder {
 		rootClass.setEmbeddedIdentifier( inferredData.getPropertyType() == null );
 		propertyHolder.setInIdClass( null );
 		return id;
+	}
+
+	private Component bindNaturalIdClass(
+			PropertyData inferredData,
+			PropertyData baseInferredData,
+			PropertyHolder propertyHolder,
+			AccessType propertyAccessor,
+			MetadataBuildingContext buildingContext,
+			Map<ClassDetails, InheritanceState> inheritanceStates) {
+		propertyHolder.setInIdClass( true );
+
+		// Fill simple value and property since and NaturalId is a property
+		final PersistentClass persistentClass = propertyHolder.getPersistentClass();
+		if ( !( persistentClass instanceof RootClass rootClass ) ) {
+			throw new AnnotationException( "Entity '" + persistentClass.getEntityName()
+										+ "' is a subclass in an entity inheritance hierarchy and may not redefine the natural id of the root entity" );
+		}
+		final Component naturalId = fillEmbeddable(
+				propertyHolder,
+				inferredData,
+				baseInferredData,
+				propertyAccessor,
+				annotatedClass,
+				false,
+				this,
+				true,
+				false,
+				false,
+				null,
+				null,
+				null,
+				buildingContext,
+				inheritanceStates,
+				true
+		);
+//		naturalId.setKey( true );
+		if ( naturalId.getPropertySpan() == 0 ) {
+			throw new AnnotationException( "Class '" + naturalId.getComponentClassName()
+										+ " is the '@NaturalIdClass' for the entity '" + persistentClass.getEntityName()
+										+ "' but has no persistent properties" );
+		}
+
+		rootClass.setNaturalId( naturalId );
+		rootClass.setEmbeddedIdentifier( inferredData.getPropertyType() == null );
+		propertyHolder.setInIdClass( null );
+		return naturalId;
 	}
 
 	private void handleSecondaryTables() {
@@ -1078,6 +1208,43 @@ public class EntityBinder {
 			throw new AnnotationException( "Entity '" + persistentClass.getEntityName()
 					+ "' has '@Id' annotated properties " + getMissingPropertiesString( missingEntityProperties )
 					+ " which do not match properties of the specified '@IdClass'" );
+		}
+	}
+
+	private void processNaturalIdPropertiesIfNotAlready(
+			PersistentClass persistentClass,
+//			InheritanceState inheritanceState,
+//			MetadataBuildingContext context,
+//			PropertyHolder propertyHolder,
+			Set<String> naturalIdPropertiesIfNaturalIdClass,
+			ElementsToProcess elementsToProcess) {
+//			Map<ClassDetails, InheritanceState> inheritanceStates) {
+		final Set<String> missingIdProperties = new HashSet<>( naturalIdPropertiesIfNaturalIdClass );
+		final Set<String> missingEntityProperties = new HashSet<>();
+		for ( PropertyData propertyAnnotatedElement : elementsToProcess.getElements() ) {
+			final String propertyName = propertyAnnotatedElement.getPropertyName();
+			if ( !naturalIdPropertiesIfNaturalIdClass.contains( propertyName ) ) {
+				final MemberDetails property = propertyAnnotatedElement.getAttributeMember();
+				final boolean hasNaturalIdAnnotation = property.hasDirectAnnotationUsage( NaturalId.class );
+				if ( !naturalIdPropertiesIfNaturalIdClass.isEmpty() && !isIgnoreIdAnnotations() && hasNaturalIdAnnotation ) {
+					missingEntityProperties.add( propertyName );
+				}
+				// TODO: any work to do here?
+			}
+			else {
+				missingIdProperties.remove( propertyName );
+			}
+		}
+
+		if ( !missingIdProperties.isEmpty() ) {
+			throw new AnnotationException( "Entity '" + persistentClass.getEntityName()
+										+ "' has an '@NaturalIdClass' with properties " + getMissingPropertiesString( missingIdProperties )
+										+ " which do not match properties of the entity class" );
+		}
+		else if ( !missingEntityProperties.isEmpty() ) {
+			throw new AnnotationException( "Entity '" + persistentClass.getEntityName()
+										+ "' has '@NaturalId' annotated properties " + getMissingPropertiesString( missingEntityProperties )
+										+ " which do not match properties of the specified '@IdClass'" );
 		}
 	}
 

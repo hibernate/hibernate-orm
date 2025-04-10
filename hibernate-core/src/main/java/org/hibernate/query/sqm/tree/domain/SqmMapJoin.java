@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
+import org.hibernate.metamodel.model.domain.PathSource;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaMapJoin;
@@ -34,7 +34,7 @@ public class SqmMapJoin<L, K, V>
 		implements JpaMapJoin<L, K, V> {
 	public SqmMapJoin(
 			SqmFrom<?, L> lhs,
-			MapPersistentAttribute<L, K, V> pluralValuedNavigable,
+			SqmMapPersistentAttribute<? super L, K, V> pluralValuedNavigable,
 			String alias,
 			SqmJoinType sqmJoinType,
 			boolean fetched,
@@ -45,7 +45,7 @@ public class SqmMapJoin<L, K, V>
 	protected SqmMapJoin(
 			SqmFrom<?, L> lhs,
 			NavigablePath navigablePath,
-			MapPersistentAttribute<L, K, V> pluralValuedNavigable,
+			SqmMapPersistentAttribute<L, K, V> pluralValuedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
@@ -77,8 +77,8 @@ public class SqmMapJoin<L, K, V>
 	}
 
 	@Override
-	public MapPersistentAttribute<L, K, V> getModel() {
-		return (MapPersistentAttribute<L, K, V>) super.getModel();
+	public SqmMapPersistentAttribute<L, K, V> getModel() {
+		return (SqmMapPersistentAttribute<L, K, V>) super.getModel();
 	}
 
 	@Override
@@ -87,7 +87,7 @@ public class SqmMapJoin<L, K, V>
 	}
 
 	@Override
-	public MapPersistentAttribute<L, K, V> getAttribute() {
+	public SqmMapPersistentAttribute<L, K, V> getAttribute() {
 		return getModel();
 	}
 
@@ -96,14 +96,14 @@ public class SqmMapJoin<L, K, V>
 
 	@Override
 	public SqmPath<K> key() {
-		final SqmPathSource<K> keyPathSource = getAttribute().getKeyPathSource();
-		return resolvePath( keyPathSource.getPathName(), keyPathSource );
+		final PathSource<K> keyPathSource = getAttribute().getKeyPathSource();
+		return resolvePath( keyPathSource.getPathName(), (SqmPathSource<K>) keyPathSource );
 	}
 
 	@Override
 	public SqmPath<V> value() {
-		final SqmPathSource<V> elementPathSource = getAttribute().getElementPathSource();
-		return resolvePath( elementPathSource.getPathName(), elementPathSource );
+		final PathSource<V> elementPathSource = getAttribute().getElementPathSource();
+		return resolvePath( elementPathSource.getPathName(), (SqmPathSource<V>) elementPathSource );
 	}
 
 	@Override

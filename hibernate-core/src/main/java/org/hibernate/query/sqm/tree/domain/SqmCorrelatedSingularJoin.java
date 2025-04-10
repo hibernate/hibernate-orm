@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -36,7 +35,7 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 
 	private SqmCorrelatedSingularJoin(
 			SqmFrom<?, O> lhs,
-			SingularPersistentAttribute<O, T> joinedNavigable,
+			SqmSingularPersistentAttribute<O, T> joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,

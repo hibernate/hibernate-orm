@@ -45,7 +45,6 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
@@ -106,6 +105,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedSingularJoin;
 import org.hibernate.query.sqm.tree.expression.*;
@@ -2134,9 +2134,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	private static SqmExpressible<?> getNodeType(SqmExpression<?> expression) {
 		if ( expression instanceof SqmPath<?> ) {
 			final SqmPathSource<?> pathSource = ( (SqmPath<?>) expression ).getResolvedModel();
-			return pathSource instanceof SingularPersistentAttribute<?, ?> ?
-					( (SingularPersistentAttribute<?, ?>) pathSource ).getPathSource() :
-					pathSource;
+			return pathSource instanceof SqmSingularPersistentAttribute<?,?>
+					? ( (SqmSingularPersistentAttribute<?, ?>) pathSource ).getPathSource()
+					: pathSource;
 		}
 		else {
 			return expression.getNodeType();

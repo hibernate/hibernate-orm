@@ -7,7 +7,6 @@ package org.hibernate.metamodel.model.domain;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.query.sqm.SqmJoinable;
-import org.hibernate.query.sqm.SqmPathSource;
 
 /**
  * Extension of the JPA-defined {@link SingularAttribute} interface.
@@ -15,7 +14,7 @@ import org.hibernate.query.sqm.SqmPathSource;
  * @author Steve Ebersole
  */
 public interface SingularPersistentAttribute<D,J>
-		extends SingularAttribute<D,J>, PersistentAttribute<D,J>, SqmPathSource<J>, SqmJoinable<D,J> {
+		extends SingularAttribute<D,J>, PersistentAttribute<D,J>, PathSource<J>, SqmJoinable<D,J> {
 	@Override
 	SimpleDomainType<J> getType();
 
@@ -25,7 +24,7 @@ public interface SingularPersistentAttribute<D,J>
 	@Override
 	DomainType<J> getSqmPathType();
 
-	SqmPathSource<J> getPathSource();
+	PathSource<J> getPathSource();
 
 	/**
 	 * For a singular attribute, the value type is defined as the

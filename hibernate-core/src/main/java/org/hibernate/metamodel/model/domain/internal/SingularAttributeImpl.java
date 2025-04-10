@@ -17,7 +17,6 @@ import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -26,6 +25,7 @@ import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
 import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
@@ -45,7 +45,7 @@ import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildSubNavigablePat
  */
 public class SingularAttributeImpl<D,J>
 		extends AbstractAttribute<D,J,J>
-		implements SingularPersistentAttribute<D,J>, Serializable {
+		implements SqmSingularPersistentAttribute<D,J>, Serializable {
 	private final boolean isIdentifier;
 	private final boolean isVersion;
 	private final boolean isOptional;

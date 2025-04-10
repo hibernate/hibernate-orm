@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -36,7 +35,7 @@ public class SqmCorrelatedListJoin<O, T> extends SqmListJoin<O, T> implements Sq
 
 	private SqmCorrelatedListJoin(
 			SqmFrom<?, O> lhs,
-			ListPersistentAttribute<O, T> attribute,
+			SqmListPersistentAttribute<O, T> attribute,
 			String alias,
 			SqmJoinType sqmJoinType,
 			boolean fetched,

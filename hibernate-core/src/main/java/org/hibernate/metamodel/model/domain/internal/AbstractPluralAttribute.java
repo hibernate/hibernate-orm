@@ -14,6 +14,7 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmPluralPersistentAttribute;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
@@ -34,7 +35,7 @@ import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildSubNavigablePat
  */
 public abstract class AbstractPluralAttribute<D, C, E>
 		extends AbstractAttribute<D, C, E>
-		implements PluralPersistentAttribute<D, C, E>, Serializable {
+		implements SqmPluralPersistentAttribute<D, C, E>, Serializable {
 
 	private final CollectionClassification classification;
 	private final SqmPathSource<E> elementPathSource;

@@ -26,7 +26,8 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 		//noinspection unchecked
 		super(
 				navigablePath,
-				( (PluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource() ).getElementPathSource(),
+				( (SqmPluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource() )
+						.getElementPathSource(),
 				pluralDomainPath,
 				pluralDomainPath.nodeBuilder()
 		);

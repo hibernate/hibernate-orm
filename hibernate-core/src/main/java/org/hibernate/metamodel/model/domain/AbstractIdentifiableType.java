@@ -23,6 +23,7 @@ import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.NonAggregatedCompositeSqmPathSource;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 
@@ -408,7 +409,7 @@ public abstract class AbstractIdentifiableType<J>
 
 		if ( id != null ) {
 			// simple id or aggregate composite id
-			return pathSource( id );
+			return pathSource( (SqmSingularPersistentAttribute<J,?>) id );
 		}
 		else if ( nonAggregatedIdAttributes != null && !nonAggregatedIdAttributes.isEmpty() ) {
 			return compositePathSource();
@@ -444,7 +445,7 @@ public abstract class AbstractIdentifiableType<J>
 		}
 	}
 
-	private <T> AbstractSqmPathSource<T> pathSource(SingularPersistentAttribute<J,T> attribute) {
+	private <T> AbstractSqmPathSource<T> pathSource(SqmSingularPersistentAttribute<J,T> attribute) {
 		final DomainType<T> type = attribute.getType();
 		if ( type instanceof BasicDomainType<T> basicDomainType ) {
 			return new BasicSqmPathSource<>(
@@ -453,7 +454,7 @@ public abstract class AbstractIdentifiableType<J>
 					basicDomainType,
 					type.getExpressibleJavaType(),
 					Bindable.BindableType.SINGULAR_ATTRIBUTE,
-					id.isGeneric()
+					attribute.isGeneric()
 			);
 		}
 		else if ( type instanceof EmbeddableDomainType<T> embeddableDomainType ) {
@@ -462,7 +463,7 @@ public abstract class AbstractIdentifiableType<J>
 					attribute,
 					embeddableDomainType,
 					Bindable.BindableType.SINGULAR_ATTRIBUTE,
-					id.isGeneric()
+					attribute.isGeneric()
 			);
 		}
 		else {

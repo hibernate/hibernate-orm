@@ -260,10 +260,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		final EntityDataAccess cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
 			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf(
-						"Evicting second-level cache: %s",
-						infoString( persister, identifier, sessionFactory )
-				);
+				LOG.debug( "Evicting entity second-level cache: "
+							+ infoString( persister, identifier, sessionFactory ) );
 			}
 
 			final Object cacheKey =
@@ -308,7 +306,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	private void evictEntityData(NavigableRole navigableRole, EntityDataAccess cacheAccess) {
 		if ( cacheAccess != null ) {
 			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( "Evicting entity cache: %s", navigableRole.getFullPath() );
+				LOG.debug( "Evicting entity second-level cache: " + navigableRole.getFullPath() );
 			}
 			cacheAccess.evictAll();
 		}
@@ -347,7 +345,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	private void evictNaturalIdData(NavigableRole rootEntityRole, NaturalIdDataAccess cacheAccess) {
 		if ( cacheAccess != null ) {
 			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( "Evicting natural-id cache: %s", rootEntityRole.getFullPath() );
+				LOG.debug( "Evicting natural-id cache: " + rootEntityRole.getFullPath() );
 			}
 			cacheAccess.evictAll();
 		}
@@ -378,10 +376,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		final CollectionDataAccess cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
 			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf(
-						"Evicting second-level cache: %s",
-						collectionInfoString( persister, ownerIdentifier, sessionFactory )
-				);
+				LOG.debug( "Evicting collection second-level cache: "
+							+ collectionInfoString( persister, ownerIdentifier, sessionFactory ) );
 			}
 
 			final Object cacheKey =
@@ -403,7 +399,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	private void evictCollectionData(NavigableRole navigableRole, CollectionDataAccess cacheAccess) {
 		if ( cacheAccess != null ) {
 			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( "Evicting second-level cache: %s", navigableRole.getFullPath() );
+				LOG.debug( "Evicting collection second-level cache: " + navigableRole.getFullPath() );
 			}
 			cacheAccess.evictAll();
 		}
@@ -440,7 +436,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	private void evictQueryResultRegion(QueryResultsCache cache) {
 		if ( cache != null ) {
 			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( "Evicting query cache, region: %s", cache.getRegion().getName() );
+				LOG.debug( "Evicting query cache region: " + cache.getRegion().getName() );
 			}
 			cache.clear();
 		}
@@ -449,7 +445,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	@Override
 	public void evictQueryRegions() {
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( "Evicting cache of all query regions." );
+			LOG.debug( "Evicting cache of all query regions" );
 		}
 
 		evictQueryResultRegion( defaultQueryResultsCache );
@@ -507,20 +503,10 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	}
 
 	private QueryResultsRegion getQueryResultsRegion(String regionName) {
-		final Region region = regionsByName.computeIfAbsent(
-				regionName,
-				this::makeQueryResultsRegion
-		);
-		if ( region instanceof QueryResultsRegion queryResultsRegion ) {
-			return queryResultsRegion;
-		}
-		else {
-			// There was already a different type of Region with the same name.
-			return queryResultsRegionsByDuplicateName.computeIfAbsent(
-					regionName,
-					this::makeQueryResultsRegion
-			);
-		}
+		final Region region = regionsByName.computeIfAbsent( regionName, this::makeQueryResultsRegion );
+		return region instanceof QueryResultsRegion queryResultsRegion
+				? queryResultsRegion // There was already a different type of Region with the same name.
+				: queryResultsRegionsByDuplicateName.computeIfAbsent( regionName, this::makeQueryResultsRegion );
 	}
 
 	protected QueryResultsRegion makeQueryResultsRegion(String regionName) {
@@ -544,16 +530,19 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T unwrap(Class<T> cls) {
-		if ( org.hibernate.Cache.class.isAssignableFrom( cls ) ) {
+	public <T> T unwrap(Class<T> type) {
+		if ( org.hibernate.Cache.class.isAssignableFrom( type ) ) {
+			return (T) this;
+		}
+		if ( org.hibernate.cache.spi.CacheImplementor.class.isAssignableFrom( type ) ) {
 			return (T) this;
 		}
 
-		if ( RegionFactory.class.isAssignableFrom( cls ) ) {
+		if ( RegionFactory.class.isAssignableFrom( type ) ) {
 			return (T) regionFactory;
 		}
 
-		throw new PersistenceException( "Hibernate cannot unwrap Cache as " + cls.getName() );
+		throw new PersistenceException( "Hibernate cannot unwrap Cache as '" + type.getName() + "'" );
 	}
 
 	@Override

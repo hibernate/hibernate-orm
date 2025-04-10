@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -45,7 +44,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 				wrappedPath.getNavigablePath()
 						.append( CollectionPart.Nature.ELEMENT.getName() )
 						.treatAs( treatTarget.getTypeName(), alias ),
-				(ListPersistentAttribute<O, S>) wrappedPath.getAttribute(),
+				(SqmListPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				fetched,
@@ -65,7 +64,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 		super(
 				wrappedPath.getLhs(),
 				navigablePath,
-				(ListPersistentAttribute<O, S>) wrappedPath.getAttribute(),
+				(SqmListPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				fetched,

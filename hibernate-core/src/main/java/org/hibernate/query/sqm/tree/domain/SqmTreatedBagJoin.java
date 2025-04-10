@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -43,7 +42,7 @@ public class SqmTreatedBagJoin<L, R, R1 extends R> extends SqmBagJoin<L, R1> imp
 				wrappedPath.getNavigablePath()
 						.append( CollectionPart.Nature.ELEMENT.getName() )
 						.treatAs( treatTarget.getTypeName(), alias ),
-				(BagPersistentAttribute<L, R1>) wrappedPath.getAttribute(),
+				(SqmBagPersistentAttribute<L, R1>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				fetched,
@@ -63,7 +62,7 @@ public class SqmTreatedBagJoin<L, R, R1 extends R> extends SqmBagJoin<L, R1> imp
 		super(
 				wrappedPath.getLhs(),
 				navigablePath,
-				(BagPersistentAttribute<L, R1>) wrappedPath.getAttribute(),
+				(SqmBagPersistentAttribute<L, R1>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				wrappedPath.isFetched(),

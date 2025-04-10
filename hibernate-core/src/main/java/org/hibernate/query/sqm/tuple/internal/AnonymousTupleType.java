@@ -17,7 +17,6 @@ import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.TupleType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
@@ -25,6 +24,7 @@ import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralPersistentAttribute;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
@@ -197,21 +197,20 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
 		final Integer index = componentIndexMap.get( name );
-		if ( index == null ) {
-			return null;
-		}
-		final SqmExpressible<?> expressible = expressibles[index];
-		final DomainType<?> sqmType = expressible.getSqmType();
-		if ( expressible instanceof PluralPersistentAttribute<?, ?, ?> pluralAttribute ) {
-			//noinspection unchecked,rawtypes
-			return new AnonymousTupleSqmAssociationPathSourceNew(
+		return index == null ? null : subpathSource( name, expressibles[index] );
+	}
+
+	private static <T> SqmPathSource<T> subpathSource(String name, SqmExpressible<T> expressible) {
+		final DomainType<T> sqmType = expressible.getSqmType();
+		if ( expressible instanceof SqmPluralPersistentAttribute<?, ?, T> pluralAttribute ) {
+			return new AnonymousTupleSqmAssociationPathSourceNew<>(
 					name,
 					pluralAttribute,
 					sqmType,
 					pluralAttribute.getElementType()
 			);
 		}
-		else if ( sqmType instanceof BasicType<?> ) {
+		else if ( sqmType instanceof BasicType<T> ) {
 			return new AnonymousTupleSimpleSqmPathSource<>(
 					name,
 					sqmType,
@@ -219,12 +218,11 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 			);
 		}
 		else {
-			//noinspection unchecked,rawtypes
-			return new AnonymousTupleSqmAssociationPathSourceNew(
+			return new AnonymousTupleSqmAssociationPathSourceNew<>(
 					name,
-					(SqmPathSource) expressible,
+					(SqmPathSource<T>) expressible,
 					sqmType,
-					(SimpleDomainType) sqmType
+					(SimpleDomainType<T>) sqmType
 			);
 		}
 	}

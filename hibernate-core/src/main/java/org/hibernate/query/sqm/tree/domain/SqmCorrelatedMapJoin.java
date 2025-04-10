@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -36,7 +35,7 @@ public class SqmCorrelatedMapJoin<L,K,V> extends SqmMapJoin<L,K,V> implements Sq
 
 	private SqmCorrelatedMapJoin(
 			SqmFrom<?, L> lhs,
-			MapPersistentAttribute<L,K,V> attribute,
+			SqmMapPersistentAttribute<L,K,V> attribute,
 			String alias,
 			SqmJoinType sqmJoinType,
 			boolean fetched,

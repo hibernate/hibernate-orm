@@ -7,8 +7,8 @@ package org.hibernate.query.sqm.tree.domain;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PathSource;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
@@ -34,7 +34,7 @@ public class SqmListJoin<O,E>
 		implements JpaListJoin<O, E> {
 	public SqmListJoin(
 			SqmFrom<?,O> lhs,
-			ListPersistentAttribute<O, E> listAttribute,
+			SqmListPersistentAttribute<? super O, E> listAttribute,
 			String alias,
 			SqmJoinType sqmJoinType,
 			boolean fetched,
@@ -45,7 +45,7 @@ public class SqmListJoin<O,E>
 	protected SqmListJoin(
 			SqmFrom<?, O> lhs,
 			NavigablePath navigablePath,
-			ListPersistentAttribute<O, E> listAttribute,
+			SqmListPersistentAttribute<O, E> listAttribute,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
@@ -77,8 +77,8 @@ public class SqmListJoin<O,E>
 	}
 
 	@Override
-	public ListPersistentAttribute<O, E> getModel() {
-		return (ListPersistentAttribute<O, E>) super.getModel();
+	public SqmListPersistentAttribute<O, E> getModel() {
+		return (SqmListPersistentAttribute<O, E>) super.getModel();
 	}
 
 	@Override
@@ -87,14 +87,14 @@ public class SqmListJoin<O,E>
 	}
 
 	@Override
-	public ListPersistentAttribute<O,E> getAttribute() {
+	public SqmListPersistentAttribute<O,E> getAttribute() {
 		return getModel();
 	}
 
 	@Override
 	public SqmPath<Integer> index() {
-		final SqmPathSource<Integer> indexPathSource = getAttribute().getIndexPathSource();
-		return resolvePath( indexPathSource.getPathName(), indexPathSource );
+		final PathSource<Integer> indexPathSource = getAttribute().getIndexPathSource();
+		return resolvePath( indexPathSource.getPathName(), (SqmPathSource<Integer>) indexPathSource );
 	}
 
 	@Override

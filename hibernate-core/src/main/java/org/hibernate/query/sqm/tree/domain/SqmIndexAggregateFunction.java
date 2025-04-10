@@ -7,7 +7,6 @@ package org.hibernate.query.sqm.tree.domain;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -27,10 +26,14 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 	public SqmIndexAggregateFunction(SqmPath<?> pluralDomainPath, String functionName) {
 		//noinspection unchecked
 		super(
-				pluralDomainPath.getNavigablePath().getParent().append( pluralDomainPath.getNavigablePath().getLocalName(), "{" + functionName + "-index}" ),
+				pluralDomainPath.getNavigablePath().getParent()
+						.append( pluralDomainPath.getNavigablePath().getLocalName(), "{" + functionName + "-index}" ),
 				pluralDomainPath,
-				(PluralPersistentAttribute<?, ?, ?>) pluralDomainPath.getReferencedPathSource(),
-				(SqmPathSource<T>) ( (PluralPersistentAttribute<?, ?, ?>) pluralDomainPath.getReferencedPathSource() ).getIndexPathSource()
+				(SqmPluralPersistentAttribute<?, ?, ?>)
+						pluralDomainPath.getReferencedPathSource(),
+				(SqmPathSource<T>)
+						( (SqmPluralPersistentAttribute<?, ?, ?>) pluralDomainPath.getReferencedPathSource() )
+								.getIndexPathSource()
 		);
 		this.functionName = functionName;
 		switch ( functionName ) {

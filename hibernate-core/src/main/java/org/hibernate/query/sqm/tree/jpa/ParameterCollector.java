@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -256,7 +257,8 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	@Override
 	public Object visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath<?> path) {
 		path.getLhs().accept( this );
-		withTypeInference( path.getPluralAttribute().getIndexPathSource(), path.getSelectorExpression() );
+		withTypeInference( (SqmPathSource<?>) path.getPluralAttribute().getIndexPathSource(),
+				path.getSelectorExpression() );
 		return path;
 	}
 
@@ -321,9 +323,9 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 
 	@Override
 	public Object visitInListPredicate(SqmInListPredicate<?> predicate) {
-		final SqmExpression<?> firstListElement = predicate.getListExpressions().isEmpty()
-				? null
-				: predicate.getListExpressions().get( 0 );
+		final SqmExpression<?> firstListElement =
+				predicate.getListExpressions().isEmpty() ? null
+						: predicate.getListExpressions().get( 0 );
 		withTypeInference( firstListElement, predicate.getTestExpression() );
 		for ( SqmExpression<?> expression : predicate.getListExpressions() ) {
 			withTypeInference( predicate.getTestExpression(), expression );

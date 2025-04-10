@@ -50,8 +50,8 @@ public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implem
 	@Override
 	public SqmPathSource<T> getReferencedPathSource() {
 		final SqmPathSource<T> pathSource = super.getNodeType();
-		if ( pathSource instanceof SingularPersistentAttribute ) {
-			return ( (SingularPersistentAttribute<?, T>) pathSource ).getPathSource();
+		if ( pathSource instanceof SingularPersistentAttribute<?,?> singularPersistentAttribute ) {
+			return (SqmPathSource<T>) singularPersistentAttribute.getPathSource();
 		}
 		return pathSource;
 	}

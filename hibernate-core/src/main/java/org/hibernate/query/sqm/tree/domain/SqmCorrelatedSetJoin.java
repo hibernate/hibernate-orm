@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -36,7 +35,7 @@ public class SqmCorrelatedSetJoin<O, T> extends SqmSetJoin<O, T> implements SqmC
 
 	private SqmCorrelatedSetJoin(
 			SqmFrom<?, O> lhs,
-			SetPersistentAttribute<O, T> attribute,
+			SqmSetPersistentAttribute<O, T> attribute,
 			String alias,
 			SqmJoinType sqmJoinType,
 			boolean fetched,

@@ -28,7 +28,8 @@ public class SqmElementAggregateFunction<T> extends AbstractSqmSpecificPluralPar
 				pluralDomainPath.getNavigablePath().getParent().append( pluralDomainPath.getNavigablePath().getLocalName(), "{" + functionName + "-element}" ),
 				pluralDomainPath,
 				(PluralPersistentAttribute<?, ?, ?>) pluralDomainPath.getReferencedPathSource(),
-				( (PluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource() ).getElementPathSource()
+				( (SqmPluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource() )
+						.getElementPathSource()
 		);
 		this.functionName = functionName;
 		switch ( functionName ) {

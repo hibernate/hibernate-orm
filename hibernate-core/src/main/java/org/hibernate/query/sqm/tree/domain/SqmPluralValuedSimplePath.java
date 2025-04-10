@@ -34,7 +34,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 	public SqmPluralValuedSimplePath(
 			NavigablePath navigablePath,
-			PluralPersistentAttribute<?, C, ?> referencedNavigable,
+			SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
 			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
 		this( navigablePath, referencedNavigable, lhs, null, nodeBuilder );
@@ -42,7 +42,7 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 
 	public SqmPluralValuedSimplePath(
 			NavigablePath navigablePath,
-			PluralPersistentAttribute<?, C, ?> referencedNavigable,
+			SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
 			SqmPath<?> lhs,
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
@@ -64,7 +64,7 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 				this,
 				new SqmPluralValuedSimplePath<>(
 						getNavigablePathCopy( lhsCopy ),
-						(PluralPersistentAttribute<?,C,?>) getModel(),
+						(SqmPluralPersistentAttribute<?,C,?>) getModel(),
 						lhsCopy,
 						getExplicitAlias(),
 						nodeBuilder()
@@ -75,7 +75,7 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 	}
 
 	public PluralPersistentAttribute<?, C, ?> getPluralAttribute() {
-		return (PluralPersistentAttribute<?, C, ?>) getModel();
+		return (SqmPluralPersistentAttribute<?, C, ?>) getModel();
 	}
 
 	@Override
@@ -112,10 +112,10 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 			SqmCreationState creationState) {
 		final SqmPathRegistry pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
 		final String alias = selector.toHqlString();
-		final NavigablePath navigablePath = getNavigablePath().getParent().append(
-				getNavigablePath().getLocalName(),
-				alias
-		).append( CollectionPart.Nature.ELEMENT.getName() );
+		final NavigablePath navigablePath =
+				getNavigablePath().getParent()
+						.append( getNavigablePath().getLocalName(), alias )
+						.append( CollectionPart.Nature.ELEMENT.getName() );
 		final SqmFrom<?, ?> indexedPath = pathRegistry.findFromByPath( navigablePath );
 		if ( indexedPath != null ) {
 			return indexedPath;
@@ -129,7 +129,7 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 			if ( referencedPathSource instanceof ListPersistentAttribute<?, ?> ) {
 				join = new SqmListJoin<>(
 						parent,
-						(ListPersistentAttribute<Object, ?>) referencedPathSource,
+						(SqmListPersistentAttribute<Object, ?>) referencedPathSource,
 						alias,
 						SqmJoinType.INNER,
 						false,
@@ -140,7 +140,7 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 			else if ( referencedPathSource instanceof MapPersistentAttribute<?, ?, ?> ) {
 				join = new SqmMapJoin<>(
 						parent,
-						(MapPersistentAttribute<Object, ?, ?>) referencedPathSource,
+						(SqmMapPersistentAttribute<Object, ?, ?>) referencedPathSource,
 						alias,
 						SqmJoinType.INNER,
 						false,

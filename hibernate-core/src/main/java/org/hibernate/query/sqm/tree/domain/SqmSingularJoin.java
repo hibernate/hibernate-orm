@@ -8,10 +8,10 @@ import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
+import org.hibernate.query.sqm.tree.from.SqmTreatableDomainType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -26,7 +26,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 
 	public SqmSingularJoin(
 			SqmFrom<?,O> lhs,
-			SingularPersistentAttribute<O, T> joinedNavigable,
+			SqmSingularPersistentAttribute<? super O, T> joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
@@ -50,7 +50,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	protected SqmSingularJoin(
 			SqmFrom<?, O> lhs,
 			NavigablePath navigablePath,
-			SingularPersistentAttribute<O, T> joinedNavigable,
+			SqmSingularPersistentAttribute<O, T> joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
@@ -92,12 +92,12 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	}
 
 	@Override
-	public SingularPersistentAttribute<O, T> getModel() {
-		return (SingularPersistentAttribute<O, T>) super.getNodeType();
+	public SqmSingularPersistentAttribute<O, T> getModel() {
+		return (SqmSingularPersistentAttribute<O, T>) super.getNodeType();
 	}
 
 	@Override
-	public SingularPersistentAttribute<O, T> getAttribute() {
+	public SqmSingularPersistentAttribute<O, T> getAttribute() {
 		return getModel();
 	}
 
@@ -126,7 +126,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
 		final SqmTreatedSingularJoin<O, T, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			if ( treatTarget instanceof TreatableDomainType<S> treatableDomainType ) {
+			if ( treatTarget instanceof SqmTreatableDomainType<S> treatableDomainType ) {
 				return addTreat( new SqmTreatedSingularJoin<>( this, treatableDomainType, alias, fetch ) );
 			}
 			else {
@@ -140,7 +140,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
 		final SqmTreatedSingularJoin<O, T, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedSingularJoin<>( this, treatTarget, alias, fetch ) );
+			return addTreat( new SqmTreatedSingularJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias, fetch ) );
 		}
 		return treat;
 	}

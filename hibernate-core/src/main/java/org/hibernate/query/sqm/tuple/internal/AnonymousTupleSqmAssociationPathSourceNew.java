@@ -11,11 +11,11 @@ import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -24,8 +24,9 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Christian Beikov
  */
 @Incubating
-public class AnonymousTupleSqmAssociationPathSourceNew<O, J> extends AnonymousTupleSqmPathSourceNew<J> implements
-		SingularPersistentAttribute<O, J> {
+public class AnonymousTupleSqmAssociationPathSourceNew<O, J>
+		extends AnonymousTupleSqmPathSourceNew<J>
+		implements SqmSingularPersistentAttribute<O, J> {
 
 	private final SimpleDomainType<J> domainType;
 

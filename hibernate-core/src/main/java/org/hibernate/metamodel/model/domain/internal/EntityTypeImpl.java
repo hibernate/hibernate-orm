@@ -29,6 +29,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
 import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -153,6 +154,11 @@ public class EntityTypeImpl<J>
 		else {
 			return null;
 		}
+	}
+
+	@Override
+	public SqmSingularPersistentAttribute<? super J, ?> findIdAttribute() {
+		return (SqmSingularPersistentAttribute<? super J, ?>) super.findIdAttribute();
 	}
 
 	@Override

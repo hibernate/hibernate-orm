@@ -5,12 +5,12 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.from.SqmTreatableDomainType;
 import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
 
@@ -24,29 +24,27 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 		extends SqmSingularJoin<O,S>
 		implements SqmTreatedAttributeJoin<O,T,S> {
 	private final SqmSingularJoin<O,T> wrappedPath;
-	private final TreatableDomainType<S> treatTarget;
-	private final SqmPathSource<S> pathSource;
+	private final SqmTreatableDomainType<S> treatTarget;
 
 	public SqmTreatedSingularJoin(
 			SqmSingularJoin<O,T> wrappedPath,
-			TreatableDomainType<S> treatTarget,
+			SqmTreatableDomainType<S> treatTarget,
 			String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
 	public SqmTreatedSingularJoin(
 			SqmSingularJoin<O,T> wrappedPath,
-			TreatableDomainType<S> treatTarget,
+			SqmTreatableDomainType<S> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
-				wrappedPath.getNavigablePath().treatAs(
-						treatTarget.getTypeName(),
-						alias
-				),
-				(SingularPersistentAttribute<O, S>) wrappedPath.getAttribute(),
+				wrappedPath.getNavigablePath()
+						.treatAs( treatTarget.getTypeName(), alias ),
+				(SqmSingularPersistentAttribute<O, S>)
+						wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				fetched,
@@ -54,20 +52,20 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 		);
 		this.treatTarget = treatTarget;
 		this.wrappedPath = wrappedPath;
-		this.pathSource = (SqmPathSource<S>) treatTarget;
 	}
 
 	private SqmTreatedSingularJoin(
 			NavigablePath navigablePath,
 			SqmSingularJoin<O,T> wrappedPath,
-			TreatableDomainType<S> treatTarget,
+			SqmTreatableDomainType<S> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
 				navigablePath,
-				(SingularPersistentAttribute<O, S>) wrappedPath.getAttribute(),
+				(SqmSingularPersistentAttribute<O, S>)
+						wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				fetched,
@@ -75,7 +73,6 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 		);
 		this.treatTarget = treatTarget;
 		this.wrappedPath = wrappedPath;
-		this.pathSource = (SqmPathSource<S>) treatTarget;
 	}
 
 	@Override
@@ -110,17 +107,17 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 
 	@Override
 	public SqmPathSource<S> getNodeType() {
-		return pathSource;
+		return treatTarget;
 	}
 
 	@Override
 	public SqmPathSource<S> getReferencedPathSource() {
-		return pathSource;
+		return treatTarget;
 	}
 
 	@Override
 	public SqmPathSource<?> getResolvedModel() {
-		return pathSource;
+		return treatTarget;
 	}
 
 	@Override

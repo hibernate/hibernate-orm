@@ -62,7 +62,6 @@ import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AbstractAttribute;
 import org.hibernate.metamodel.model.domain.internal.AbstractPluralAttribute;
 import org.hibernate.metamodel.model.domain.internal.BagAttributeImpl;
@@ -102,6 +101,7 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
+import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
 import org.hibernate.stat.internal.StatisticsImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BagType;
@@ -927,7 +927,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public SingularPersistentAttribute<? super X, ?> findVersionAttribute() {
+		public SqmSingularPersistentAttribute<? super X, ?> findVersionAttribute() {
 			final BasicType<?> type = getVersionType(getHibernateEntityName());
 			if (type == null) {
 				return null;

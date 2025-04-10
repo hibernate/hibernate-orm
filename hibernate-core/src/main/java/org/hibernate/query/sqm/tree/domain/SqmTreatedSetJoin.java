@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
-import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -43,7 +42,7 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 				wrappedPath.getNavigablePath()
 						.append( CollectionPart.Nature.ELEMENT.getName() )
 						.treatAs( treatTarget.getTypeName(), alias ),
-				(SetPersistentAttribute<O, S>) wrappedPath.getAttribute(),
+				(SqmSetPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				fetched,
@@ -63,7 +62,7 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 		super(
 				wrappedPath.getLhs(),
 				navigablePath,
-				(SetPersistentAttribute<O, S>) wrappedPath.getAttribute(),
+				(SqmSetPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				fetched,

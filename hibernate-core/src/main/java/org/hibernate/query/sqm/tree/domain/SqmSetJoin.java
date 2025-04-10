@@ -8,7 +8,6 @@ import java.util.Set;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
@@ -33,7 +32,7 @@ public class SqmSetJoin<O, E>
 		implements JpaSetJoin<O, E> {
 	public SqmSetJoin(
 			SqmFrom<?,O> lhs,
-			SetPersistentAttribute<O, E> pluralValuedNavigable,
+			SqmSetPersistentAttribute<? super O, E> pluralValuedNavigable,
 			String alias,
 			SqmJoinType sqmJoinType,
 			boolean fetched,
@@ -44,7 +43,7 @@ public class SqmSetJoin<O, E>
 	protected SqmSetJoin(
 			SqmFrom<?, O> lhs,
 			NavigablePath navigablePath,
-			SetPersistentAttribute<O, E> pluralValuedNavigable,
+			SqmSetPersistentAttribute<O, E> pluralValuedNavigable,
 			String alias, SqmJoinType joinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
@@ -75,8 +74,8 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
-	public SetPersistentAttribute<O, E> getModel() {
-		return (SetPersistentAttribute<O, E>) super.getNodeType();
+	public SqmSetPersistentAttribute<O, E> getModel() {
+		return (SqmSetPersistentAttribute<O, E>) super.getNodeType();
 	}
 
 	@Override
@@ -85,7 +84,7 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
-	public SetPersistentAttribute<O, E> getAttribute() {
+	public SqmSetPersistentAttribute<O, E> getAttribute() {
 		return getModel();
 	}
 

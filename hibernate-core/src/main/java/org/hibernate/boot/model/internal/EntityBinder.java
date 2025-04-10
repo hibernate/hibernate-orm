@@ -1520,15 +1520,34 @@ public class EntityBinder {
 	private void processNamedEntityGraph(NamedEntityGraph annotation) {
 		if ( annotation != null ) {
 			getMetadataCollector()
-					.addNamedEntityGraph( new NamedEntityGraphDefinition( annotation, name, persistentClass.getEntityName() ) );
+					.addNamedEntityGraph( namedEntityGraphDefinition( annotation ) );
 		}
+	}
+
+	private NamedEntityGraphDefinition namedEntityGraphDefinition(NamedEntityGraph annotation) {
+		final String explicitName = annotation.name();
+		return new NamedEntityGraphDefinition(
+				StringHelper.isNotEmpty( explicitName ) ? explicitName : name,
+				persistentClass.getEntityName(),
+				NamedEntityGraphDefinition.Source.JPA,
+				new NamedGraphCreatorJpa( annotation, name ) );
 	}
 
 	private void processParsedNamedEntityGraph(org.hibernate.annotations.NamedEntityGraph annotation) {
 		if ( annotation != null ) {
 			getMetadataCollector()
-					.addNamedEntityGraph( new NamedEntityGraphDefinition( annotation, persistentClass ) );
+					.addNamedEntityGraph( namedEntityGraphDefinition( annotation ) );
 		}
+	}
+
+	private NamedEntityGraphDefinition namedEntityGraphDefinition(org.hibernate.annotations.NamedEntityGraph annotation) {
+		final String explicitName = annotation.name();
+		return new NamedEntityGraphDefinition(
+				StringHelper.isNotEmpty( explicitName ) ? explicitName : persistentClass.getJpaEntityName(),
+				persistentClass.getEntityName(),
+				NamedEntityGraphDefinition.Source.PARSED,
+				new NamedGraphCreatorParsed( persistentClass.getMappedClass(), annotation )
+		);
 	}
 
 	private void bindDiscriminatorValue() {

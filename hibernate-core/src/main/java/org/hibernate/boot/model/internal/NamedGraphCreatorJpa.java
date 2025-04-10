@@ -2,35 +2,35 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.model;
+package org.hibernate.boot.model.internal;
 
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.NamedSubgraph;
-import jakarta.persistence.metamodel.Attribute;
 import org.hibernate.AnnotationException;
+import org.hibernate.boot.model.NamedGraphCreator;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 import java.util.function.Function;
 
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
  * @author Steve Ebersole
  */
-public class NamedGraphCreatorJpa implements NamedGraphCreator {
+class NamedGraphCreatorJpa implements NamedGraphCreator {
 	private final String name;
 	private final NamedEntityGraph annotation;
 	private final String jpaEntityName;
 
-	public NamedGraphCreatorJpa(NamedEntityGraph annotation, String jpaEntityName) {
-		final String name = StringHelper.nullIfEmpty( annotation.name() );
+	NamedGraphCreatorJpa(NamedEntityGraph annotation, String jpaEntityName) {
+		final String name = nullIfEmpty( annotation.name() );
 		this.name = name == null ? jpaEntityName : name;
 		this.annotation = annotation;
 		this.jpaEntityName = jpaEntityName;
@@ -41,8 +41,10 @@ public class NamedGraphCreatorJpa implements NamedGraphCreator {
 			Function<Class<T>, EntityDomainType<?>> entityDomainClassResolver,
 			Function<String, EntityDomainType<?>> entityDomainNameResolver) {
 		//noinspection unchecked
-		final EntityDomainType<T> rootEntityType = (EntityDomainType<T>) entityDomainNameResolver.apply( jpaEntityName );
-		final RootGraphImplementor<T> entityGraph = createRootGraph( name, rootEntityType, annotation.includeAllAttributes() );
+		final EntityDomainType<T> rootEntityType =
+				(EntityDomainType<T>) entityDomainNameResolver.apply( jpaEntityName );
+		final RootGraphImplementor<T> entityGraph =
+				createRootGraph( name, rootEntityType, annotation.includeAllAttributes() );
 
 		if ( annotation.subclassSubgraphs() != null ) {
 			for ( NamedSubgraph subclassSubgraph : annotation.subclassSubgraphs() ) {
@@ -72,36 +74,28 @@ public class NamedGraphCreatorJpa implements NamedGraphCreator {
 			boolean includeAllAttributes) {
 		final RootGraphImpl<T> entityGraph = new RootGraphImpl<>( name, rootEntityType );
 		if ( includeAllAttributes ) {
-			for ( Attribute<? super T, ?> attribute : rootEntityType.getAttributes() ) {
+			for ( var attribute : rootEntityType.getAttributes() ) {
 				entityGraph.addAttributeNodes( attribute );
 			}
 		}
 		return entityGraph;
 	}
-	private <T> void applyNamedAttributeNodes(
+
+	private void applyNamedAttributeNodes(
 			NamedAttributeNode[] namedAttributeNodes,
 			NamedEntityGraph namedEntityGraph,
 			GraphImplementor<?> graphNode) {
 		for ( NamedAttributeNode namedAttributeNode : namedAttributeNodes ) {
-			final String value = namedAttributeNode.value();
-			final AttributeNodeImplementor<?,?,?> attributeNode =
-					(AttributeNodeImplementor<?,?,?>) graphNode.addAttributeNode( value );
-
-			if ( isNotEmpty( namedAttributeNode.subgraph() ) ) {
-				applyNamedSubgraphs(
-						namedEntityGraph,
-						namedAttributeNode.subgraph(),
-						attributeNode,
-						false
-				);
+			final var attributeNode =
+					(AttributeNodeImplementor<?,?,?>)
+							graphNode.addAttributeNode( namedAttributeNode.value() );
+			final String subgraph = namedAttributeNode.subgraph();
+			if ( isNotEmpty( subgraph ) ) {
+				applyNamedSubgraphs( namedEntityGraph, subgraph, attributeNode, false );
 			}
-			if ( isNotEmpty( namedAttributeNode.keySubgraph() ) ) {
-				applyNamedSubgraphs(
-						namedEntityGraph,
-						namedAttributeNode.keySubgraph(),
-						attributeNode,
-						true
-				);
+			final String keySubgraph = namedAttributeNode.keySubgraph();
+			if ( isNotEmpty( keySubgraph ) ) {
+				applyNamedSubgraphs( namedEntityGraph, keySubgraph, attributeNode, true );
 			}
 		}
 	}
@@ -113,18 +107,22 @@ public class NamedGraphCreatorJpa implements NamedGraphCreator {
 			boolean isKeySubGraph) {
 		for ( NamedSubgraph namedSubgraph : namedEntityGraph.subgraphs() ) {
 			if ( subgraphName.equals( namedSubgraph.name() ) ) {
-				final Class<?> subgraphType = namedSubgraph.type();
-				final SubGraphImplementor<?> subgraph;
-				if ( subgraphType.equals( void.class ) ) { // unspecified
-					subgraph = attributeNode.addValueSubgraph();
-				}
-				else {
-					subgraph = isKeySubGraph
-							? makeAttributeNodeKeySubgraph( attributeNode, subgraphType )
-							: makeAttributeNodeValueSubgraph( attributeNode, subgraphType );
-				}
-				applyNamedAttributeNodes( namedSubgraph.attributeNodes(), namedEntityGraph, subgraph );
+				applyNamedAttributeNodes( namedSubgraph.attributeNodes(), namedEntityGraph,
+						createSubgraph( attributeNode, isKeySubGraph, namedSubgraph.type() ) );
 			}
+		}
+	}
+
+	private static SubGraphImplementor<?> createSubgraph(
+			AttributeNodeImplementor<?, ?, ?> attributeNode,
+			boolean isKeySubGraph, Class<?> subgraphType) {
+		if ( void.class.equals( subgraphType ) ) { // unspecified
+			return attributeNode.addValueSubgraph();
+		}
+		else {
+			return isKeySubGraph
+					? makeAttributeNodeKeySubgraph( attributeNode, subgraphType )
+					: makeAttributeNodeValueSubgraph( attributeNode, subgraphType );
 		}
 	}
 

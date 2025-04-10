@@ -6,8 +6,6 @@ package org.hibernate.metamodel.model.domain;
 
 import java.util.Collection;
 
-import org.hibernate.query.sqm.SqmExpressible;
-
 import jakarta.persistence.metamodel.EmbeddableType;
 
 /**
@@ -19,7 +17,7 @@ import jakarta.persistence.metamodel.EmbeddableType;
  * @author Steve Ebersole
  */
 public interface EmbeddableDomainType<J>
-		extends TreatableDomainType<J>, EmbeddableType<J>, SqmExpressible<J> {
+		extends TreatableDomainType<J>, EmbeddableType<J> {
 	@Override
 	default EmbeddableDomainType<J> getSqmType() {
 		return this;

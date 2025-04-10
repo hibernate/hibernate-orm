@@ -2,9 +2,10 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.metamodel.model.domain;
+package org.hibernate.query.sqm;
 
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.domain.SqmPath;

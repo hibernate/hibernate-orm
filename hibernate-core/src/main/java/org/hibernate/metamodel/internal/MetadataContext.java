@@ -23,7 +23,7 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
+import org.hibernate.metamodel.model.domain.internal.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;

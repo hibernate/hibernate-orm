@@ -7,7 +7,6 @@ package org.hibernate.metamodel.model.domain.internal;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;

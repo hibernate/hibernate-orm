@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.internal;
 
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.model.domain.DiscriminatorSqmPath;
+import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;

@@ -11,7 +11,7 @@ import org.hibernate.Internal;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.model.domain.TupleType;
+import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;

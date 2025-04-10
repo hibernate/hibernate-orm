@@ -9,7 +9,6 @@ import java.util.Collection;
 
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
-import org.hibernate.metamodel.model.domain.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.metamodel.model.domain;
+package org.hibernate.query.sqm.tuple;
 
 import java.util.List;
 

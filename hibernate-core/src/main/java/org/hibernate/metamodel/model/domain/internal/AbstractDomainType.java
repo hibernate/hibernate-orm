@@ -2,8 +2,9 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.metamodel.model.domain;
+package org.hibernate.metamodel.model.domain.internal;
 
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**

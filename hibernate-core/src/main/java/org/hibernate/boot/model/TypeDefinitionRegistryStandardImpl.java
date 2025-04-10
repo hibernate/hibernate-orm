@@ -8,10 +8,11 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * Basic implementation of {@link TypeDefinitionRegistry}.
@@ -38,24 +39,20 @@ public class TypeDefinitionRegistryStandardImpl implements TypeDefinitionRegistr
 		if ( localDefinition != null ) {
 			return localDefinition;
 		}
-
-		if ( parent != null ) {
+		else if ( parent != null ) {
 			return parent.resolve( typeName );
 		}
-
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	@Override
 	public TypeDefinition resolveAutoApplied(BasicJavaType<?> jtd) {
-		// For now, check the definition map for a entry keyed by the JTD name.
-		// Ultimately should maybe have TypeDefinition or the registry keep explicit track of
-		// auto-applied defs
-		if ( jtd.getJavaType() == null ) {
-			return null;
-		}
-
-		return typeDefinitionMap.get( jtd.getTypeName() );
+		// For now, check the definition map for an entry keyed by the JTD name.
+		// Ultimately should maybe have TypeDefinition or the registry keep explicit
+		// track of auto-applied definitions.
+		return jtd.getJavaType() == null ? null : typeDefinitionMap.get( jtd.getTypeName() );
 	}
 
 	@Override
@@ -73,7 +70,7 @@ public class TypeDefinitionRegistryStandardImpl implements TypeDefinitionRegistr
 			throw new IllegalArgumentException( "TypeDefinition to register cannot define null #typeImplementorClass" );
 		}
 
-		if ( !StringHelper.isEmpty( typeDefinition.getName() ) ) {
+		if ( !isEmpty( typeDefinition.getName() ) ) {
 			register( typeDefinition.getName(), typeDefinition, duplicationStrategy );
 		}
 

@@ -22,7 +22,6 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
-import org.hibernate.boot.model.TypeDefinitionRegistryStandardImpl;
 import org.hibernate.boot.model.convert.internal.AttributeConverterManager;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
@@ -710,7 +709,7 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public void addNamedEntityGraph(NamedEntityGraphDefinition definition) {
-		final String name = definition.getRegisteredName();
+		final String name = definition.name();
 		final NamedEntityGraphDefinition previous = namedEntityGraphMap.put( name, definition );
 		if ( previous != null ) {
 			throw new DuplicateMappingException( DuplicateMappingException.Type.NAMED_ENTITY_GRAPH, name );

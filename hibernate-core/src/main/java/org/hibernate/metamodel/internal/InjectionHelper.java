@@ -27,8 +27,8 @@ public class InjectionHelper {
 			try {
 				injectField(
 						metamodelClass,
-						'_' + javaIdentifier( definition.getRegisteredName() ),
-						jpaMetamodel.findEntityGraphByName( definition.getRegisteredName() ),
+						'_' + javaIdentifier( definition.name() ),
+						jpaMetamodel.findEntityGraphByName( definition.name() ),
 						false
 				);
 			}

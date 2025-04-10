@@ -2,38 +2,40 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.model;
+package org.hibernate.boot.model.internal;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.annotations.NamedEntityGraph;
+import org.hibernate.boot.model.NamedGraphCreator;
 import org.hibernate.grammars.graph.GraphLanguageLexer;
 import org.hibernate.grammars.graph.GraphLanguageParser;
 import org.hibernate.graph.InvalidGraphException;
 import org.hibernate.graph.internal.parse.EntityNameResolver;
 import org.hibernate.graph.internal.parse.GraphParsing;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 import java.util.function.Function;
 
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+
 /**
  * @author Steve Ebersole
  */
-public class NamedGraphCreatorParsed implements NamedGraphCreator {
+class NamedGraphCreatorParsed implements NamedGraphCreator {
 	private final @Nullable String name;
 	private final @Nullable Class<?> entityType;
 	private final NamedEntityGraph annotation;
 
-	public NamedGraphCreatorParsed(NamedEntityGraph annotation) {
+	NamedGraphCreatorParsed(NamedEntityGraph annotation) {
 		this( null, annotation );
 	}
 
-	public NamedGraphCreatorParsed(@Nullable Class<?> entityType, NamedEntityGraph annotation) {
-		this.name = StringHelper.nullIfEmpty( annotation.name() );
+	NamedGraphCreatorParsed(@Nullable Class<?> entityType, NamedEntityGraph annotation) {
+		this.name = nullIfEmpty( annotation.name() );
 		this.entityType = entityType;
 		this.annotation = annotation;
 	}

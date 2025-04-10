@@ -26,7 +26,6 @@ import org.jboss.logging.Logger;
 public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	private static final Logger log = Logger.getLogger( HbmMetadataSourceProcessorImpl.class );
 
-	private final MetadataBuildingContext rootBuildingContext;
 	private final Collection<MappingDocument> mappingDocuments;
 
 	private final ModelBinder modelBinder;
@@ -40,26 +39,23 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	}
 
 	public HbmMetadataSourceProcessorImpl(
-			Collection<Binding<JaxbBindableMappingDescriptor>> xmlBindings,
+			Collection<Binding<? extends JaxbBindableMappingDescriptor>> xmlBindings,
 			MetadataBuildingContext rootBuildingContext) {
-		this.rootBuildingContext = rootBuildingContext;
 		final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
 
-		this.mappingDocuments = new ArrayList<>();
+		mappingDocuments = new ArrayList<>();
 
-		for ( Binding<JaxbBindableMappingDescriptor> xmlBinding : xmlBindings ) {
-			if ( !(xmlBinding.getRoot() instanceof JaxbHbmHibernateMapping) ) {
-				continue;
+		for ( var xmlBinding : xmlBindings ) {
+			if ( xmlBinding.getRoot() instanceof JaxbHbmHibernateMapping hibernateMapping ) {
+				final MappingDocument mappingDocument = new MappingDocument(
+						"orm",
+						hibernateMapping,
+						xmlBinding.getOrigin(),
+						rootBuildingContext
+				);
+				mappingDocuments.add( mappingDocument );
+				hierarchyBuilder.indexMappingDocument( mappingDocument );
 			}
-
-			final MappingDocument mappingDocument = new MappingDocument(
-					"orm",
-					(JaxbHbmHibernateMapping) xmlBinding.getRoot(),
-					xmlBinding.getOrigin(),
-					rootBuildingContext
-			);
-			mappingDocuments.add( mappingDocument );
-			hierarchyBuilder.indexMappingDocument( mappingDocument );
 		}
 
 		entityHierarchies = hierarchyBuilder.buildHierarchies();

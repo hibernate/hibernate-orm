@@ -204,8 +204,8 @@ public class SequenceStructure implements DatabaseStructure {
 					logicalQualifiedSequenceName.getObjectName(),
 					(physicalName) -> new Sequence(
 							contributor,
-							namespace.getPhysicalName().getCatalog(),
-							namespace.getPhysicalName().getSchema(),
+							namespace.getPhysicalName().catalog(),
+							namespace.getPhysicalName().schema(),
 							physicalName,
 							initialValue,
 							sourceIncrementSize,

@@ -63,7 +63,7 @@ public interface ManagedResources {
 	 *
 	 * @return The list of bindings for all known XML mapping files.
 	 */
-	Collection<Binding<JaxbBindableMappingDescriptor>> getXmlMappingBindings();
+	Collection<Binding<? extends JaxbBindableMappingDescriptor>> getXmlMappingBindings();
 
 	Map<String,Class<?>> getExtraQueryImports();
 }

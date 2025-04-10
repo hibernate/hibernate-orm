@@ -25,12 +25,12 @@ public class GeneratorSettingsImpl implements GeneratorSettings {
 		final Namespace defaultNamespace = database.getDefaultNamespace();
 		final Namespace.Name defaultNamespaceName = defaultNamespace.getName();
 
-		defaultCatalog = defaultNamespaceName.getCatalog() == null
+		defaultCatalog = defaultNamespaceName.catalog() == null
 				? ""
-				: defaultNamespaceName.getCatalog().render( database.getDialect() );
-		defaultSchema = defaultNamespaceName.getSchema() == null
+				: defaultNamespaceName.catalog().render( database.getDialect() );
+		defaultSchema = defaultNamespaceName.schema() == null
 				? ""
-				: defaultNamespaceName.getSchema().render( database.getDialect() );
+				: defaultNamespaceName.schema().render( database.getDialect() );
 
 		sqlStringGenerationContext = fromExplicit(
 				database.getJdbcEnvironment(),

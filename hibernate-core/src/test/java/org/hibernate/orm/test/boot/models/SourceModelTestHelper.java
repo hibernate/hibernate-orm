@@ -9,10 +9,8 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.BootstrapContextImpl;
@@ -23,11 +21,9 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmJoinedSubclassEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmUnionSubclassEntityType;
 import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
-import org.hibernate.boot.jaxb.hbm.transform.TransformationHelper;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
@@ -35,7 +31,6 @@ import org.hibernate.boot.models.internal.ClassLoaderServiceLoading;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.internal.ModelsHelper;
-import org.hibernate.boot.models.internal.OrmAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.PersistenceUnitMetadataImpl;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
@@ -47,15 +42,11 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.models.internal.BaseLineJavaTypes;
 import org.hibernate.models.internal.BasicModelBuildingContextImpl;
 import org.hibernate.models.internal.jdk.JdkBuilders;
 import org.hibernate.models.jandex.internal.JandexIndexerHelper;
 import org.hibernate.models.jandex.internal.JandexModelBuildingContextImpl;
-import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.ClassLoading;
 import org.hibernate.models.spi.SourceModelBuildingContext;
@@ -65,8 +56,13 @@ import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.Indexer;
 
+import static org.hibernate.boot.jaxb.hbm.transform.TransformationHelper.determineEntityName;
+import static org.hibernate.boot.models.internal.OrmAnnotationHelper.forEachOrmAnnotation;
+import static org.hibernate.cfg.MappingSettings.TRANSFORM_HBM_XML;
+import static org.hibernate.cfg.MappingSettings.TRANSFORM_HBM_XML_FEATURE_HANDLING;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
+import static org.hibernate.models.internal.BaseLineJavaTypes.forEachJavaType;
 import static org.hibernate.models.internal.SimpleClassLoading.SIMPLE_CLASS_LOADING;
 
 /**
@@ -96,14 +92,14 @@ public class SourceModelTestHelper {
 		if ( jandexIndex == null ) {
 			ctx = new BasicModelBuildingContextImpl(
 					classLoadingAccess,
-					(contributions, buildingContext1) -> OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation )
+					(contributions, buildingContext1) -> forEachOrmAnnotation( contributions::registerAnnotation )
 			);
 		}
 		else {
 			ctx = new JandexModelBuildingContextImpl(
 					jandexIndex,
 					classLoadingAccess,
-					(contributions, buildingContext1) -> OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation )
+					(contributions, buildingContext1) -> forEachOrmAnnotation( contributions::registerAnnotation )
 			);
 
 			for ( ClassInfo knownClass : jandexIndex.getKnownClasses() ) {
@@ -122,8 +118,8 @@ public class SourceModelTestHelper {
 			}
 		}
 
-		for ( int i = 0; i < modelClasses.length; i++ ) {
-			ctx.getClassDetailsRegistry().resolveClassDetails( modelClasses[i].getName() );
+		for ( Class<?> modelClass : modelClasses ) {
+			ctx.getClassDetailsRegistry().resolveClassDetails( modelClass.getName() );
 		}
 
 		return ctx;
@@ -135,8 +131,8 @@ public class SourceModelTestHelper {
 
 	public static Index buildJandexIndex(ClassLoading classLoadingAccess, Class<?>... modelClasses) {
 		final Indexer indexer = new Indexer();
-		BaseLineJavaTypes.forEachJavaType( (javaType) -> JandexIndexerHelper.apply( javaType, indexer, classLoadingAccess ) );
-		OrmAnnotationHelper.forEachOrmAnnotation( (descriptor) -> JandexIndexerHelper.apply( descriptor.getAnnotationType(), indexer, classLoadingAccess ) );
+		forEachJavaType( (javaType) -> JandexIndexerHelper.apply( javaType, indexer, classLoadingAccess ) );
+		forEachOrmAnnotation( (descriptor) -> JandexIndexerHelper.apply( descriptor.getAnnotationType(), indexer, classLoadingAccess ) );
 
 		for ( Class<?> modelClass : modelClasses ) {
 			try {
@@ -170,8 +166,10 @@ public class SourceModelTestHelper {
 			ManagedResources managedResources,
 			Index jandexIndex,
 			StandardServiceRegistry serviceRegistry) {
-		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
-		final BootstrapContextTesting bootstrapContext = new BootstrapContextTesting( jandexIndex, serviceRegistry, metadataBuildingOptions );
+		final MetadataBuilderImpl.MetadataBuildingOptionsImpl metadataBuildingOptions =
+				new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
+		final BootstrapContextTesting bootstrapContext =
+				new BootstrapContextTesting( jandexIndex, serviceRegistry, metadataBuildingOptions );
 		metadataBuildingOptions.setBootstrapContext( bootstrapContext );
 		return createBuildingContext(
 				managedResources,
@@ -193,21 +191,22 @@ public class SourceModelTestHelper {
 		);
 
 		final ConfigurationService configurationService = bootstrapContext.getConfigurationService();
-		final boolean doTransformation = configurationService.getSetting( MappingSettings.TRANSFORM_HBM_XML, BOOLEAN, false );
+		final boolean doTransformation =
+				configurationService.getSetting( TRANSFORM_HBM_XML, BOOLEAN, false );
 		if ( doTransformation ) {
-			final Collection<Binding<JaxbBindableMappingDescriptor>> xmlMappingBindings = managedResources.getXmlMappingBindings();
+			final var xmlMappingBindings = managedResources.getXmlMappingBindings();
 
 			final List<Binding<JaxbEntityMappingsImpl>> mappingXmlBindings = new ArrayList<>();
 			final List<Binding<JaxbHbmHibernateMapping>> hbmXmlBindings = new ArrayList<>();
 
 			xmlMappingBindings.forEach( (binding) -> {
 				if ( binding.getRoot() instanceof JaxbEntityMappingsImpl ) {
-					//noinspection unchecked,rawtypes
-					mappingXmlBindings.add( (Binding) binding );
+					//noinspection unchecked
+					mappingXmlBindings.add( (Binding<JaxbEntityMappingsImpl>) binding );
 				}
 				else {
-					//noinspection unchecked,rawtypes
-					hbmXmlBindings.add( (Binding) binding );
+					//noinspection unchecked
+					hbmXmlBindings.add( (Binding<JaxbHbmHibernateMapping>) binding );
 				}
 			} );
 
@@ -215,7 +214,7 @@ public class SourceModelTestHelper {
 					hbmXmlBindings,
 					domainModel,
 					UnsupportedFeatureHandling.fromSetting(
-							configurationService.getSettings().get( AvailableSettings.TRANSFORM_HBM_XML_FEATURE_HANDLING ),
+							configurationService.getSettings().get( TRANSFORM_HBM_XML_FEATURE_HANDLING ),
 							UnsupportedFeatureHandling.ERROR
 					)
 			);
@@ -241,19 +240,17 @@ public class SourceModelTestHelper {
 			managedResources = ManagedResourcesImpl.baseline( newSources, bootstrapContext );
 		}
 
-		final ClassLoaderService classLoaderService = bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService =
+				bootstrapContext.getServiceRegistry().getService( ClassLoaderService.class );
 		final ClassLoaderServiceLoading classLoading = new ClassLoaderServiceLoading( classLoaderService );
 
 		final PersistenceUnitMetadataImpl persistenceUnitMetadata = new PersistenceUnitMetadataImpl();
 
-		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources(
-				managedResources,
-				persistenceUnitMetadata
-		);
+		final XmlPreProcessingResult xmlPreProcessingResult =
+				XmlPreProcessor.preProcessXmlResources( managedResources, persistenceUnitMetadata );
 
-		//noinspection unchecked
 		final List<String> allKnownClassNames = mutableJoin(
-				managedResources.getAnnotatedClassReferences().stream().map( Class::getName ).collect( Collectors.toList() ),
+				managedResources.getAnnotatedClassReferences().stream().map( Class::getName ).toList(),
 				managedResources.getAnnotatedClassNames(),
 				xmlPreProcessingResult.getMappedClasses()
 		);
@@ -273,28 +270,14 @@ public class SourceModelTestHelper {
 				? buildJandexIndex( classLoading, allKnownClassNames )
 				: null;
 
-		final SourceModelBuildingContext sourceModelBuildingContext;
+		final SourceModelBuildingContext sourceModelBuildingContext =
+				createSourceModelBuildingContext( jandexIndex, classLoading );
 
-		if ( jandexIndex == null ) {
-			sourceModelBuildingContext = new BasicModelBuildingContextImpl(
-					classLoading,
-					ModelsHelper::preFillRegistries
-			);
-		}
-		else {
-			sourceModelBuildingContext = new JandexModelBuildingContextImpl(
-					jandexIndex,
-					classLoading,
-					ModelsHelper::preFillRegistries
-			);
-		}
+		final RootMappingDefaults rootMappingDefaults =
+				new RootMappingDefaults( metadataBuildingOptions.getMappingDefaults(), persistenceUnitMetadata );
 
-		final RootMappingDefaults rootMappingDefaults = new RootMappingDefaults(
-				metadataBuildingOptions.getMappingDefaults(),
-				persistenceUnitMetadata
-		);
-
-		final GlobalRegistrationsImpl globalRegistrations = new GlobalRegistrationsImpl( sourceModelBuildingContext, bootstrapContext );
+		final GlobalRegistrationsImpl globalRegistrations =
+				new GlobalRegistrationsImpl( sourceModelBuildingContext, bootstrapContext );
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
 				true,
 				globalRegistrations,
@@ -310,20 +293,15 @@ public class SourceModelTestHelper {
 		);
 
 		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
-		allKnownClassNames.forEach( (className) -> {
-			final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( className );
-			modelCategorizationCollector.apply( classDetails );
-		} );
-		xmlPreProcessingResult.getMappedNames().forEach( (className) -> {
-			final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( className );
-			modelCategorizationCollector.apply( classDetails );
-		} );
+		allKnownClassNames.forEach( (className) ->
+				modelCategorizationCollector.apply( classDetailsRegistry.resolveClassDetails( className ) ) );
+		xmlPreProcessingResult.getMappedNames().forEach( (className) ->
+				modelCategorizationCollector.apply( classDetailsRegistry.resolveClassDetails( className ) ) );
 
 		// `XmlPreProcessor#preProcessXmlResources` skips hbm.xml files.
 		// we want to look at them here to collect known managed-types
 		managedResources.getXmlMappingBindings().forEach( (binding) -> {
-			final JaxbBindableMappingDescriptor root = binding.getRoot();
-			if ( root instanceof JaxbHbmHibernateMapping hbmRoot ) {
+			if ( binding.getRoot() instanceof JaxbHbmHibernateMapping hbmRoot ) {
 				collectHbmClasses( hbmRoot, classDetailsRegistry::resolveClassDetails );
 			}
 		} );
@@ -333,11 +311,18 @@ public class SourceModelTestHelper {
 		return sourceModelBuildingContext;
 	}
 
+	private static SourceModelBuildingContext createSourceModelBuildingContext(
+			IndexView jandexIndex, ClassLoaderServiceLoading classLoading) {
+		return jandexIndex == null
+				? new BasicModelBuildingContextImpl( classLoading, ModelsHelper::preFillRegistries )
+				: new JandexModelBuildingContextImpl( jandexIndex, classLoading, ModelsHelper::preFillRegistries );
+	}
+
 	private static void collectHbmClasses(JaxbHbmHibernateMapping hbmRoot, Consumer<String> classNameConsumer) {
 		// NOTE : at the moment does not collect embeddable names...
 
 		hbmRoot.getClazz().forEach( (hbmRootEntity) -> {
-			final String entityName = TransformationHelper.determineEntityName( hbmRootEntity, hbmRoot );
+			final String entityName = determineEntityName( hbmRootEntity, hbmRoot );
 			classNameConsumer.accept( entityName );
 
 			hbmRootEntity.getSubclass().forEach( (hbmSubclass) -> visitDiscriminatedSubclass(
@@ -382,9 +367,7 @@ public class SourceModelTestHelper {
 			JaxbHbmHibernateMapping hbmRoot,
 			JaxbHbmDiscriminatorSubclassEntityType hbmEntity,
 			Consumer<String> classNameConsumer) {
-		final String entityName = TransformationHelper.determineEntityName( hbmEntity, hbmRoot );
-		classNameConsumer.accept( entityName );
-
+		classNameConsumer.accept( determineEntityName( hbmEntity, hbmRoot ) );
 		hbmEntity.getSubclass().forEach( (hbmSubclass) -> visitDiscriminatedSubclass(
 				hbmRoot,
 				hbmSubclass,
@@ -396,9 +379,7 @@ public class SourceModelTestHelper {
 			JaxbHbmHibernateMapping hbmRoot,
 			JaxbHbmJoinedSubclassEntityType hbmEntity,
 			Consumer<String> classNameConsumer) {
-		final String entityName = TransformationHelper.determineEntityName( hbmEntity, hbmRoot );
-		classNameConsumer.accept( entityName );
-
+		classNameConsumer.accept( determineEntityName( hbmEntity, hbmRoot ) );
 		hbmEntity.getJoinedSubclass().forEach( (hbmSubclass) -> visitJoinedSubclass(
 				hbmRoot,
 				hbmSubclass,
@@ -410,9 +391,7 @@ public class SourceModelTestHelper {
 			JaxbHbmHibernateMapping hbmRoot,
 			JaxbHbmUnionSubclassEntityType hbmEntity,
 			Consumer<String> classNameConsumer) {
-		final String entityName = TransformationHelper.determineEntityName( hbmEntity, hbmRoot );
-		classNameConsumer.accept( entityName );
-
+		classNameConsumer.accept( determineEntityName( hbmEntity, hbmRoot ) );
 		hbmEntity.getUnionSubclass().forEach( (hbmSubclass) -> visitUnionSubclass(
 				hbmRoot,
 				hbmSubclass,
@@ -422,8 +401,8 @@ public class SourceModelTestHelper {
 
 	private static IndexView buildJandexIndex(ClassLoaderServiceLoading classLoading, List<String> classNames) {
 		final Indexer indexer = new Indexer();
-		BaseLineJavaTypes.forEachJavaType( (javaType) -> JandexIndexerHelper.apply( javaType, indexer, classLoading ) );
-		OrmAnnotationHelper.forEachOrmAnnotation( (descriptor) -> JandexIndexerHelper.apply( descriptor.getAnnotationType(), indexer, classLoading ) );
+		forEachJavaType( (javaType) -> JandexIndexerHelper.apply( javaType, indexer, classLoading ) );
+		forEachOrmAnnotation( (descriptor) -> JandexIndexerHelper.apply( descriptor.getAnnotationType(), indexer, classLoading ) );
 
 		classNames.forEach( (className) -> {
 			final URL classUrl = classLoading.locateResource( className.replace( '.', '/' ) + ".class" );

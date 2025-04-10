@@ -50,8 +50,8 @@ public class CustomSequenceGenerator implements IdentifierGenerator {
 					identifier,
 					(physicalName) -> new org.hibernate.boot.model.relational.Sequence(
 							null,
-							defaultNamespace.getPhysicalName().getCatalog(),
-							defaultNamespace.getPhysicalName().getSchema(),
+							defaultNamespace.getPhysicalName().catalog(),
+							defaultNamespace.getPhysicalName().schema(),
 							physicalName,
 							1,
 							50

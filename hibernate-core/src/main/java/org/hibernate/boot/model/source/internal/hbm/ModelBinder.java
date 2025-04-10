@@ -1389,30 +1389,30 @@ public class ModelBinder {
 		binding.setLoaderName( source.getCustomLoaderName() );
 		if ( source.getCustomSqlInsert() != null ) {
 			binding.setCustomSQLInsert(
-					source.getCustomSqlInsert().getSql(),
-					source.getCustomSqlInsert().isCallable(),
-					source.getCustomSqlInsert().getCheckStyle()
+					source.getCustomSqlInsert().sql(),
+					source.getCustomSqlInsert().callable(),
+					source.getCustomSqlInsert().checkStyle()
 			);
 		}
 		if ( source.getCustomSqlUpdate() != null ) {
 			binding.setCustomSQLUpdate(
-					source.getCustomSqlUpdate().getSql(),
-					source.getCustomSqlUpdate().isCallable(),
-					source.getCustomSqlUpdate().getCheckStyle()
+					source.getCustomSqlUpdate().sql(),
+					source.getCustomSqlUpdate().callable(),
+					source.getCustomSqlUpdate().checkStyle()
 			);
 		}
 		if ( source.getCustomSqlDelete() != null ) {
 			binding.setCustomSQLDelete(
-					source.getCustomSqlDelete().getSql(),
-					source.getCustomSqlDelete().isCallable(),
-					source.getCustomSqlDelete().getCheckStyle()
+					source.getCustomSqlDelete().sql(),
+					source.getCustomSqlDelete().callable(),
+					source.getCustomSqlDelete().checkStyle()
 			);
 		}
 		if ( source.getCustomSqlDeleteAll() != null ) {
 			binding.setCustomSQLDeleteAll(
-					source.getCustomSqlDeleteAll().getSql(),
-					source.getCustomSqlDeleteAll().isCallable(),
-					source.getCustomSqlDeleteAll().getCheckStyle()
+					source.getCustomSqlDeleteAll().sql(),
+					source.getCustomSqlDeleteAll().callable(),
+					source.getCustomSqlDeleteAll().checkStyle()
 			);
 		}
 
@@ -2868,25 +2868,25 @@ public class ModelBinder {
 			PersistentClass entityDescriptor) {
 		if ( entitySource.getCustomSqlInsert() != null ) {
 			entityDescriptor.setCustomSQLInsert(
-					entitySource.getCustomSqlInsert().getSql(),
-					entitySource.getCustomSqlInsert().isCallable(),
-					entitySource.getCustomSqlInsert().getCheckStyle()
+					entitySource.getCustomSqlInsert().sql(),
+					entitySource.getCustomSqlInsert().callable(),
+					entitySource.getCustomSqlInsert().checkStyle()
 			);
 		}
 
 		if ( entitySource.getCustomSqlUpdate() != null ) {
 			entityDescriptor.setCustomSQLUpdate(
-					entitySource.getCustomSqlUpdate().getSql(),
-					entitySource.getCustomSqlUpdate().isCallable(),
-					entitySource.getCustomSqlUpdate().getCheckStyle()
+					entitySource.getCustomSqlUpdate().sql(),
+					entitySource.getCustomSqlUpdate().callable(),
+					entitySource.getCustomSqlUpdate().checkStyle()
 			);
 		}
 
 		if ( entitySource.getCustomSqlDelete() != null ) {
 			entityDescriptor.setCustomSQLDelete(
-					entitySource.getCustomSqlDelete().getSql(),
-					entitySource.getCustomSqlDelete().isCallable(),
-					entitySource.getCustomSqlDelete().getCheckStyle()
+					entitySource.getCustomSqlDelete().sql(),
+					entitySource.getCustomSqlDelete().callable(),
+					entitySource.getCustomSqlDelete().checkStyle()
 			);
 		}
 
@@ -2898,25 +2898,25 @@ public class ModelBinder {
 			Join secondaryTable) {
 		if ( secondaryTableSource.getCustomSqlInsert() != null ) {
 			secondaryTable.setCustomSQLInsert(
-					secondaryTableSource.getCustomSqlInsert().getSql(),
-					secondaryTableSource.getCustomSqlInsert().isCallable(),
-					secondaryTableSource.getCustomSqlInsert().getCheckStyle()
+					secondaryTableSource.getCustomSqlInsert().sql(),
+					secondaryTableSource.getCustomSqlInsert().callable(),
+					secondaryTableSource.getCustomSqlInsert().checkStyle()
 			);
 		}
 
 		if ( secondaryTableSource.getCustomSqlUpdate() != null ) {
 			secondaryTable.setCustomSQLUpdate(
-					secondaryTableSource.getCustomSqlUpdate().getSql(),
-					secondaryTableSource.getCustomSqlUpdate().isCallable(),
-					secondaryTableSource.getCustomSqlUpdate().getCheckStyle()
+					secondaryTableSource.getCustomSqlUpdate().sql(),
+					secondaryTableSource.getCustomSqlUpdate().callable(),
+					secondaryTableSource.getCustomSqlUpdate().checkStyle()
 			);
 		}
 
 		if ( secondaryTableSource.getCustomSqlDelete() != null ) {
 			secondaryTable.setCustomSQLDelete(
-					secondaryTableSource.getCustomSqlDelete().getSql(),
-					secondaryTableSource.getCustomSqlDelete().isCallable(),
-					secondaryTableSource.getCustomSqlDelete().getCheckStyle()
+					secondaryTableSource.getCustomSqlDelete().sql(),
+					secondaryTableSource.getCustomSqlDelete().callable(),
+					secondaryTableSource.getCustomSqlDelete().checkStyle()
 			);
 		}
 	}

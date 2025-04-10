@@ -175,7 +175,7 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 		return "QueryResultsCache(" + cacheRegion.getName() + ')';
 	}
 
-	public static class CacheItem implements Serializable {
+	static class CacheItem implements Serializable {
 		private final Long timestamp;
 		private final List<?> results;
 

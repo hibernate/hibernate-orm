@@ -24,8 +24,8 @@ public class AbstractUserDefinedType implements UserDefinedType {
 			Namespace namespace,
 			Identifier physicalTypeName) {
 		this.contributor = contributor;
-		this.catalog = namespace.getPhysicalName().getCatalog();
-		this.schema = namespace.getPhysicalName().getSchema();
+		this.catalog = namespace.getPhysicalName().catalog();
+		this.schema = namespace.getPhysicalName().schema();
 		this.name = physicalTypeName;
 	}
 

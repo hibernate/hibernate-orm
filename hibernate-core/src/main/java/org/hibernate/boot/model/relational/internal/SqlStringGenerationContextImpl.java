@@ -82,7 +82,7 @@ public class SqlStringGenerationContextImpl
 		if ( nameQualifierSupport.supportsCatalogs() ) {
 			actualDefaultCatalog = identifierHelper.toIdentifier( defaultCatalog );
 			if ( actualDefaultCatalog == null ) {
-				actualDefaultCatalog = implicitNamespaceName.getCatalog();
+				actualDefaultCatalog = implicitNamespaceName.catalog();
 			}
 		}
 
@@ -90,7 +90,7 @@ public class SqlStringGenerationContextImpl
 		if ( nameQualifierSupport.supportsSchemas() ) {
 			actualDefaultSchema = identifierHelper.toIdentifier( defaultSchema );
 			if ( defaultSchema == null ) {
-				actualDefaultSchema = implicitNamespaceName.getSchema();
+				actualDefaultSchema = implicitNamespaceName.schema();
 			}
 		}
 

@@ -168,7 +168,7 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	protected void applyInitCommands(Table table, List<String> sqlStrings, SqlStringGenerationContext context) {
 		for ( InitCommand initCommand : table.getInitCommands( context ) ) {
-			addAll( sqlStrings, initCommand.getInitCommands() );
+			addAll( sqlStrings, initCommand.initCommands() );
 		}
 	}
 

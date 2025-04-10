@@ -119,8 +119,8 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 			addExportIdentifier(
 					new Sequence(
 							"orm",
-							namespace.getName().getCatalog(),
-							namespace.getName().getSchema(),
+							namespace.getName().catalog(),
+							namespace.getName().schema(),
 							Identifier.toIdentifier( name )
 					),
 					exportIdentifierList,

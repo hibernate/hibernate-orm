@@ -247,7 +247,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 	private static void executeInitCommands(Metadata metadata, ExecutionOptions options, Formatter formatter, GenerationTarget[] targets) {
 		for ( InitCommand initCommand : metadata.getDatabase().getInitCommands() ) {
 			// todo: this should alo probably use the DML formatter...
-			applySqlStrings( initCommand.getInitCommands(), formatter, options, targets);
+			applySqlStrings( initCommand.initCommands(), formatter, options, targets);
 		}
 	}
 
@@ -528,8 +528,8 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 					Namespace.Name physicalName = namespace.getPhysicalName();
 
 					if ( tryToCreateCatalogs ) {
-						final Identifier catalogLogicalName = logicalName.getCatalog();
-						final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.getCatalog() );
+						final Identifier catalogLogicalName = logicalName.catalog();
+						final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.catalog() );
 						if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
 							applySqlStrings(
 									dialect.getCreateCatalogCommand( catalogPhysicalName.render( dialect ) ),
@@ -542,7 +542,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 					}
 
 					if ( tryToCreateSchemas ) {
-						final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.getSchema() );
+						final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.schema() );
 						if ( schemaPhysicalName != null ) {
 							applySqlStrings(
 									dialect.getCreateSchemaCommand( schemaPhysicalName.render( dialect ) ),

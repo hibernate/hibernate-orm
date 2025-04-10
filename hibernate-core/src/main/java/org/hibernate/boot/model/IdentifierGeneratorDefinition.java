@@ -164,10 +164,7 @@ public class IdentifierGeneratorDefinition implements Serializable {
 
 	@Override
 	public int hashCode() {
-		int result = name != null ? name.hashCode() : 0;
-		result = 31 * result + ( strategy != null ? strategy.hashCode() : 0 );
-		result = 31 * result + ( parameters != null ? parameters.hashCode() : 0 );
-		return result;
+		return Objects.hash( name, strategy, parameters );
 	}
 
 	@Override

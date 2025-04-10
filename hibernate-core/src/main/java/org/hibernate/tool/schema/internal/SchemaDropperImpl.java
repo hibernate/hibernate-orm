@@ -434,7 +434,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 					Namespace.Name physicalName = namespace.getPhysicalName();
 
 					if ( tryToDropSchemas ) {
-						final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.getSchema() );
+						final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.schema() );
 						if ( schemaPhysicalName != null ) {
 							final String schemaName = schemaPhysicalName.render( dialect );
 							applySqlStrings( dialect.getDropSchemaCommand( schemaName ), formatter, options, targets);
@@ -442,8 +442,8 @@ public class SchemaDropperImpl implements SchemaDropper {
 					}
 
 					if (tryToDropCatalogs) {
-						final Identifier catalogLogicalName = logicalName.getCatalog();
-						final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.getCatalog() );
+						final Identifier catalogLogicalName = logicalName.catalog();
+						final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.catalog() );
 						if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
 							final String catalogName = catalogPhysicalName.render( dialect );
 							applySqlStrings( dialect.getDropCatalogCommand( catalogName ), formatter, options, targets );

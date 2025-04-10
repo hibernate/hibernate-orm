@@ -2016,32 +2016,32 @@ public class InFlightMetadataCollectorImpl
 		}
 
 		for ( CacheRegionDefinition cacheRegionDefinition : bootstrapContext.getCacheRegionDefinitions() ) {
-			if ( cacheRegionDefinition.getRegionType() == CacheRegionDefinition.CacheRegionType.ENTITY ) {
-				final PersistentClass entityBinding = getEntityBinding( cacheRegionDefinition.getRole() );
+			if ( cacheRegionDefinition.regionType() == CacheRegionDefinition.CacheRegionType.ENTITY ) {
+				final PersistentClass entityBinding = getEntityBinding( cacheRegionDefinition.role() );
 				if ( entityBinding == null ) {
 					throw new HibernateException(
-							"Cache override referenced an unknown entity : " + cacheRegionDefinition.getRole()
+							"Cache override referenced an unknown entity : " + cacheRegionDefinition.role()
 					);
 				}
 				if ( !( entityBinding instanceof RootClass rootClass ) ) {
 					throw new HibernateException(
-							"Cache override referenced a non-root entity : " + cacheRegionDefinition.getRole()
+							"Cache override referenced a non-root entity : " + cacheRegionDefinition.role()
 					);
 				}
 				entityBinding.setCached( true );
-				rootClass.setCacheRegionName( cacheRegionDefinition.getRegion() );
-				rootClass.setCacheConcurrencyStrategy( cacheRegionDefinition.getUsage() );
-				rootClass.setLazyPropertiesCacheable( cacheRegionDefinition.isCacheLazy() );
+				rootClass.setCacheRegionName( cacheRegionDefinition.region() );
+				rootClass.setCacheConcurrencyStrategy( cacheRegionDefinition.usage() );
+				rootClass.setLazyPropertiesCacheable( cacheRegionDefinition.cacheLazy() );
 			}
-			else if ( cacheRegionDefinition.getRegionType() == CacheRegionDefinition.CacheRegionType.COLLECTION ) {
-				final Collection collectionBinding = getCollectionBinding( cacheRegionDefinition.getRole() );
+			else if ( cacheRegionDefinition.regionType() == CacheRegionDefinition.CacheRegionType.COLLECTION ) {
+				final Collection collectionBinding = getCollectionBinding( cacheRegionDefinition.role() );
 				if ( collectionBinding == null ) {
 					throw new HibernateException(
-							"Cache override referenced an unknown collection role : " + cacheRegionDefinition.getRole()
+							"Cache override referenced an unknown collection role : " + cacheRegionDefinition.role()
 					);
 				}
-				collectionBinding.setCacheRegionName( cacheRegionDefinition.getRegion() );
-				collectionBinding.setCacheConcurrencyStrategy( cacheRegionDefinition.getUsage() );
+				collectionBinding.setCacheRegionName( cacheRegionDefinition.region() );
+				collectionBinding.setCacheConcurrencyStrategy( cacheRegionDefinition.usage() );
 			}
 		}
 	}

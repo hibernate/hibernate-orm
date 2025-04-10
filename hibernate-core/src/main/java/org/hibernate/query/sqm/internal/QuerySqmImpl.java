@@ -931,33 +931,36 @@ public class QuerySqmImpl<R>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// unwrap
 
-	@SuppressWarnings("unchecked")
-	public <T> T unwrap(Class<T> cls) {
-		if ( cls.isInstance( this ) ) {
-			return (T) this;
+	public <T> T unwrap(Class<T> type) {
+		if ( type.isInstance( this ) ) {
+			return type.cast( this );
 		}
 
-		if ( cls.isInstance( parameterMetadata ) ) {
-			return (T) parameterMetadata;
+		if ( type.isInstance( parameterMetadata ) ) {
+			return type.cast( parameterMetadata );
 		}
 
-		if ( cls.isInstance( parameterBindings ) ) {
-			return (T) parameterBindings;
+		if ( type.isInstance( parameterBindings ) ) {
+			return type.cast( parameterBindings );
 		}
 
-		if ( cls.isInstance( sqm ) ) {
-			return (T) sqm;
+		if ( type.isInstance( sqm ) ) {
+			return type.cast( sqm );
 		}
 
-		if ( cls.isInstance( getQueryOptions() ) ) {
-			return (T) getQueryOptions();
+		if ( type.isInstance( getQueryOptions() ) ) {
+			return type.cast( getQueryOptions() );
 		}
 
-		if ( cls.isInstance( getQueryOptions().getAppliedGraph() ) ) {
-			return (T) getQueryOptions().getAppliedGraph();
+		if ( type.isInstance( getQueryOptions().getAppliedGraph() ) ) {
+			return type.cast( getQueryOptions().getAppliedGraph() );
 		}
 
-		throw new PersistenceException( "Unrecognized unwrap type [" + cls.getName() + "]" );
+		if ( type.isInstance( getSession() ) ) {
+			return type.cast( getSession() );
+		}
+
+		throw new PersistenceException( "Unrecognized unwrap type [" + type.getName() + "]" );
 	}
 
 

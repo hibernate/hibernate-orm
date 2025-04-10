@@ -114,7 +114,7 @@ public class ProcedureCallImpl<R>
 	private FunctionReturnImpl<R> functionReturn;
 
 	private final ProcedureParameterMetadataImpl parameterMetadata;
-	private final ProcedureParamBindings paramBindings;
+	private final ProcedureParamBindings parameterBindings;
 
 	private final ResultSetMapping resultSetMapping;
 
@@ -136,7 +136,7 @@ public class ProcedureCallImpl<R>
 		this.procedureName = procedureName;
 
 		this.parameterMetadata = new ProcedureParameterMetadataImpl();
-		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
+		this.parameterBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
 		this.resultSetMapping = resolveResultSetMapping( procedureName, true, session.getSessionFactory() );
 
@@ -158,7 +158,7 @@ public class ProcedureCallImpl<R>
 		this.procedureName = procedureName;
 
 		this.parameterMetadata = new ProcedureParameterMetadataImpl();
-		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
+		this.parameterBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
 		this.synchronizedQuerySpaces = new HashSet<>();
 
@@ -192,7 +192,7 @@ public class ProcedureCallImpl<R>
 		this.procedureName = procedureName;
 
 		this.parameterMetadata = new ProcedureParameterMetadataImpl();
-		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
+		this.parameterBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
 		this.synchronizedQuerySpaces = new HashSet<>();
 
@@ -219,7 +219,7 @@ public class ProcedureCallImpl<R>
 		this.procedureName = memento.getCallableName();
 
 		this.parameterMetadata = new ProcedureParameterMetadataImpl( memento, session );
-		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
+		this.parameterBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
 		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
 
@@ -251,7 +251,7 @@ public class ProcedureCallImpl<R>
 		this.procedureName = memento.getCallableName();
 
 		this.parameterMetadata = new ProcedureParameterMetadataImpl( memento, session );
-		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
+		this.parameterBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
 		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
 
@@ -278,7 +278,7 @@ public class ProcedureCallImpl<R>
 		this.procedureName = memento.getCallableName();
 
 		this.parameterMetadata = new ProcedureParameterMetadataImpl( memento, session );
-		this.paramBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
+		this.parameterBindings = new ProcedureParamBindings( parameterMetadata, getSessionFactory() );
 
 		this.synchronizedQuerySpaces = CollectionHelper.makeCopy( memento.getQuerySpaces() );
 
@@ -344,7 +344,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public QueryParameterBindings getQueryParameterBindings() {
-		return paramBindings;
+		return parameterBindings;
 	}
 
 	public ParameterStrategy getParameterStrategy() {
@@ -408,7 +408,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public QueryParameterBindings getParameterBindings() {
-		return paramBindings;
+		return parameterBindings;
 	}
 
 	@Override
@@ -1007,33 +1007,36 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> T unwrap(Class<T> cls) {
-		if ( cls.isInstance( this ) ) {
-			return (T) this;
+	public <T> T unwrap(Class<T> type) {
+		if ( type.isInstance( this ) ) {
+			return type.cast( this );
 		}
 
-		if ( cls.isInstance( parameterMetadata ) ) {
-			return (T) parameterMetadata;
+		if ( type.isInstance( parameterMetadata ) ) {
+			return type.cast( parameterMetadata );
 		}
 
-		if ( cls.isInstance( paramBindings ) ) {
-			return (T) paramBindings;
+		if ( type.isInstance( parameterBindings ) ) {
+			return type.cast( parameterBindings );
 		}
 
-		if ( cls.isInstance( queryOptions ) ) {
-			return (T) queryOptions;
+		if ( type.isInstance( getQueryOptions() ) ) {
+			return type.cast( getQueryOptions() );
 		}
 
-		if ( cls.isInstance( getSession() ) ) {
-			return (T) getSession();
+		if ( type.isInstance( getQueryOptions().getAppliedGraph() ) ) {
+			return type.cast( getQueryOptions().getAppliedGraph() );
 		}
 
-		if ( ProcedureOutputs.class.isAssignableFrom( cls ) ) {
-			return (T) getOutputs();
+		if ( type.isInstance( getSession() ) ) {
+			return type.cast( getSession() );
 		}
 
-		throw new PersistenceException( "Unrecognized unwrap type : " + cls.getName() );
+		if ( type.isInstance( getOutputs() ) ) {
+			return type.cast( getOutputs() );
+		}
+
+		throw new PersistenceException( "Unrecognized unwrap type [" + type.getName() + "]" );
 	}
 
 	@Override

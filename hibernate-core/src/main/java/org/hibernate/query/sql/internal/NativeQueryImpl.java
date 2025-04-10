@@ -52,7 +52,6 @@ import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Order;
-import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.PathException;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
@@ -107,8 +106,6 @@ import org.hibernate.type.BasicTypeReference;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
@@ -1334,29 +1331,32 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> T unwrap(Class<T> javaType) {
-		if ( javaType.isAssignableFrom( getClass() ) ) {
-			return (T) this;
+	public <T> T unwrap(Class<T> type) {
+		if ( type.isInstance( this ) ) {
+			return type.cast( this );
 		}
 
-		if ( javaType.isAssignableFrom( ParameterMetadata.class ) ) {
-			return (T) parameterMetadata;
+		if ( type.isInstance( parameterMetadata ) ) {
+			return type.cast( parameterMetadata );
 		}
 
-		if ( javaType.isAssignableFrom( QueryParameterBindings.class ) ) {
-			return (T) parameterBindings;
+		if ( type.isInstance( parameterBindings ) ) {
+			return type.cast( parameterBindings );
 		}
 
-		if ( javaType.isAssignableFrom( EntityManager.class ) ) {
-			return (T) getSession();
+		if ( type.isInstance( getQueryOptions() ) ) {
+			return type.cast( getQueryOptions() );
 		}
 
-		if ( javaType.isAssignableFrom( EntityManagerFactory.class ) ) {
-			return (T) getSession().getFactory();
+		if ( type.isInstance( getQueryOptions().getAppliedGraph() ) ) {
+			return type.cast( getQueryOptions().getAppliedGraph() );
 		}
 
-		throw new PersistenceException( "Unrecognized unwrap type [" + javaType.getName() + "]" );
+		if ( type.isInstance( getSession() ) ) {
+			return type.cast( getSession() );
+		}
+
+		throw new PersistenceException( "Unrecognized unwrap type [" + type.getName() + "]" );
 	}
 
 	@Override

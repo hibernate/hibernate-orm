@@ -153,7 +153,6 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.FindOption;
 import jakarta.persistence.FlushModeType;
@@ -2949,27 +2948,18 @@ public class SessionImpl
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> T unwrap(Class<T> clazz) {
+	public <T> T unwrap(Class<T> type) {
 		checkOpen();
 
-		if ( Session.class.isAssignableFrom( clazz ) ) {
-			return (T) this;
-		}
-		if ( SessionImplementor.class.isAssignableFrom( clazz ) ) {
-			return (T) this;
-		}
-		if ( SharedSessionContractImplementor.class.isAssignableFrom( clazz ) ) {
-			return (T) this;
-		}
-		if ( EntityManager.class.isAssignableFrom( clazz ) ) {
-			return (T) this;
-		}
-		if ( PersistenceContext.class.isAssignableFrom( clazz ) ) {
-			return (T) this;
+		if ( type.isInstance( this ) ) {
+			return type.cast( this );
 		}
 
-		throw new PersistenceException( "Hibernate cannot unwrap " + clazz );
+		if ( type.isInstance( persistenceContext ) ) {
+			return type.cast( persistenceContext );
+		}
+
+		throw new PersistenceException( "Hibernate cannot unwrap EntityManager as '" + type.getName() + "'" );
 	}
 
 	@Override

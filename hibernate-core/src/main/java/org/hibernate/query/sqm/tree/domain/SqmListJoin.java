@@ -11,6 +11,8 @@ import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
+import org.hibernate.query.sqm.tree.from.SqmTreatableDomainType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaListJoin;
@@ -145,8 +147,8 @@ public class SqmListJoin<O,E>
 		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
 		final SqmTreatedListJoin<O, E, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			if ( treatTarget instanceof TreatableDomainType<?> ) {
-				return addTreat( new SqmTreatedListJoin<>( this, (TreatableDomainType<S>) treatTarget, alias, fetch ) );
+			if ( treatTarget instanceof TreatableDomainType<S> ) {
+				return addTreat( new SqmTreatedListJoin<>( this, (SqmTreatableDomainType<S>) treatTarget, alias, fetch ) );
 			}
 			else {
 				throw new IllegalArgumentException( "Not a treatable type: " + treatJavaType.getName() );
@@ -159,7 +161,7 @@ public class SqmListJoin<O,E>
 	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
 		final SqmTreatedListJoin<O,E,S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedListJoin<>( this, treatTarget, alias, fetch ) );
+			return addTreat( new SqmTreatedListJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias, fetch ) );
 		}
 		return treat;
 	}

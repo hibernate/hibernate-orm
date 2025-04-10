@@ -47,7 +47,7 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	private final SqmPredicateCollection sqmJoinPredicates;
 
 	public SqmCrossJoin(
-			EntityDomainType<T> joinedEntityDescriptor,
+			SqmEntityDomainType<T> joinedEntityDescriptor,
 			String alias,
 			SqmRoot<?> sqmRoot) {
 		this(
@@ -60,7 +60,7 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 
 	protected SqmCrossJoin(
 			NavigablePath navigablePath,
-			EntityDomainType<T> joinedEntityDescriptor,
+			SqmEntityDomainType<T> joinedEntityDescriptor,
 			String alias,
 			SqmRoot<?> sqmRoot) {
 		super(
@@ -119,8 +119,8 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	}
 
 	@Override
-	public EntityDomainType<T> getReferencedPathSource() {
-		return (EntityDomainType<T>) super.getReferencedPathSource();
+	public SqmEntityDomainType<T> getReferencedPathSource() {
+		return (SqmEntityDomainType<T>) super.getReferencedPathSource();
 	}
 
 	public String getEntityName() {

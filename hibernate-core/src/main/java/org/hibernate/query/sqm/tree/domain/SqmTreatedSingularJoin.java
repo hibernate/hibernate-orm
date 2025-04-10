@@ -20,9 +20,12 @@ import jakarta.persistence.criteria.Predicate;
 /**
  * @author Steve Ebersole
  */
-public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,S> implements SqmTreatedAttributeJoin<O,T,S> {
+public class SqmTreatedSingularJoin<O,T, S extends T>
+		extends SqmSingularJoin<O,S>
+		implements SqmTreatedAttributeJoin<O,T,S> {
 	private final SqmSingularJoin<O,T> wrappedPath;
 	private final TreatableDomainType<S> treatTarget;
+	private final SqmPathSource<S> pathSource;
 
 	public SqmTreatedSingularJoin(
 			SqmSingularJoin<O,T> wrappedPath,
@@ -51,6 +54,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 		);
 		this.treatTarget = treatTarget;
 		this.wrappedPath = wrappedPath;
+		this.pathSource = (SqmPathSource<S>) treatTarget;
 	}
 
 	private SqmTreatedSingularJoin(
@@ -71,6 +75,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 		);
 		this.treatTarget = treatTarget;
 		this.wrappedPath = wrappedPath;
+		this.pathSource = (SqmPathSource<S>) treatTarget;
 	}
 
 	@Override
@@ -105,17 +110,17 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 
 	@Override
 	public SqmPathSource<S> getNodeType() {
-		return treatTarget;
+		return pathSource;
 	}
 
 	@Override
-	public TreatableDomainType<S> getReferencedPathSource() {
-		return treatTarget;
+	public SqmPathSource<S> getReferencedPathSource() {
+		return pathSource;
 	}
 
 	@Override
 	public SqmPathSource<?> getResolvedModel() {
-		return treatTarget;
+		return pathSource;
 	}
 
 	@Override

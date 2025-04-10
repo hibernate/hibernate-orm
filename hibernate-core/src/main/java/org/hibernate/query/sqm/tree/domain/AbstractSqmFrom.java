@@ -43,6 +43,7 @@ import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
@@ -99,7 +100,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			NodeBuilder nodeBuilder) {
 		super(
 				SqmCreationHelper.buildRootNavigablePath( entityType.getHibernateEntityName(), alias ),
-				entityType,
+				(SqmEntityDomainType<T>) entityType,
 				null,
 				nodeBuilder
 		);
@@ -717,7 +718,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public <X> JpaCrossJoin<X> crossJoin(EntityDomainType<X> entity) {
-		final SqmCrossJoin<X> crossJoin = new SqmCrossJoin<>( entity, null, findRoot() );
+		final SqmCrossJoin<X> crossJoin = new SqmCrossJoin<>( (SqmEntityDomainType<X>) entity, null, findRoot() );
 		// noinspection unchecked
 		addSqmJoin( (SqmJoin<T, ?>) crossJoin );
 		return crossJoin;

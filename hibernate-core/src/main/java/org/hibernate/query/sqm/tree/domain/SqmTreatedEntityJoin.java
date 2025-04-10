@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.spi.NavigablePath;
 
@@ -15,11 +16,11 @@ import org.hibernate.spi.NavigablePath;
  */
 public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> implements SqmTreatedJoin<L,R,S> {
 	private final SqmEntityJoin<L,R> wrappedPath;
-	private final EntityDomainType<S> treatTarget;
+	private final SqmEntityDomainType<S> treatTarget;
 
 	public SqmTreatedEntityJoin(
 			SqmEntityJoin<L,R> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			SqmEntityDomainType<S> treatTarget,
 			String alias) {
 		super(
 				wrappedPath.getNavigablePath().treatAs(
@@ -38,7 +39,7 @@ public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> im
 	private SqmTreatedEntityJoin(
 			NavigablePath navigablePath,
 			SqmEntityJoin<L,R> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			SqmEntityDomainType<S> treatTarget,
 			String alias) {
 		super(
 				navigablePath,
@@ -76,8 +77,8 @@ public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> im
 	}
 
 	@Override
-	public EntityDomainType<S> getModel() {
-		return getTreatTarget();
+	public SqmEntityDomainType<S> getModel() {
+		return treatTarget;
 	}
 
 	@Override
@@ -91,7 +92,7 @@ public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> im
 	}
 
 	@Override
-	public EntityDomainType<S> getReferencedPathSource() {
+	public SqmEntityDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 

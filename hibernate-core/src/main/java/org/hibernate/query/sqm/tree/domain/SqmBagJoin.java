@@ -11,6 +11,8 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
+import org.hibernate.query.sqm.tree.from.SqmTreatableDomainType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaCollectionJoin;
 import org.hibernate.query.criteria.JpaExpression;
@@ -139,7 +141,7 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 		final SqmTreatedBagJoin<O, E, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			if ( treatTarget instanceof TreatableDomainType<?> ) {
-				return addTreat( new SqmTreatedBagJoin<>( this, (TreatableDomainType<S>) treatTarget, alias, fetch ) );
+				return addTreat( new SqmTreatedBagJoin<>( this, (SqmTreatableDomainType<S>) treatTarget, alias, fetch ) );
 			}
 			else {
 				throw new IllegalArgumentException( "Not a treatable type: " + treatJavaType.getName() );
@@ -152,7 +154,7 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
 		final SqmTreatedBagJoin<O,E,S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedBagJoin<>( this, treatTarget, alias, fetch ) );
+			return addTreat( new SqmTreatedBagJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias, fetch ) );
 		}
 		return treat;
 	}

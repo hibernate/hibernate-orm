@@ -8,6 +8,7 @@ import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaDerivedRoot;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -84,7 +85,7 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 	// JPA
 
 	@Override
-	public EntityDomainType<T> getModel() {
+	public SqmEntityDomainType<T> getModel() {
 		// Or should we throw an exception instead?
 		return null;
 	}

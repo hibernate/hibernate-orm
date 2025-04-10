@@ -15,13 +15,14 @@ import jakarta.persistence.metamodel.Bindable;
 import jakarta.persistence.metamodel.IdentifiableType;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.model.domain.internal.AbstractSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.NonAggregatedCompositeSqmPathSource;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 
@@ -52,8 +53,7 @@ public abstract class AbstractIdentifiableType<J>
 	private Set<SingularPersistentAttribute<? super J,?>> nonAggregatedIdAttributes;
 	private EmbeddableDomainType<?> idClassType;
 
-	private SqmPathSource<?> identifierDescriptor;
-
+	private PathSource<?> identifierDescriptor;
 
 	private final boolean isVersioned;
 	private SingularPersistentAttribute<J, ?> versionAttribute;
@@ -79,7 +79,7 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	public SqmPathSource<?> getIdentifierDescriptor() {
+	public PathSource<?> getIdentifierDescriptor() {
 		return identifierDescriptor;
 	}
 
@@ -395,61 +395,78 @@ public abstract class AbstractIdentifiableType<J>
 
 	private static final Logger log = Logger.getLogger( AbstractIdentifiableType.class );
 
-	private SqmPathSource<?> interpretIdDescriptor() {
+	private PathSource<?> interpretIdDescriptor() {
 		log.tracef( "Interpreting domain-model identifier descriptor" );
 
-		if ( getSuperType() != null && getSuperType().getIdentifierDescriptor() != null ) {
-			return getSuperType().getIdentifierDescriptor();
+		final IdentifiableDomainType<? super J> superType = getSuperType();
+		if ( superType != null ) {
+			final PathSource<?> idDescriptor = superType.getIdentifierDescriptor();
+			if ( idDescriptor != null ) {
+				return idDescriptor;
+			}
 		}
-		else if ( id != null ) {
+
+		if ( id != null ) {
 			// simple id or aggregate composite id
-			final SimpleDomainType<?> type = id.getType();
-			if ( type instanceof BasicDomainType ) {
-				return new BasicSqmPathSource<>(
-						EntityIdentifierMapping.ID_ROLE_NAME,
-						(SqmPathSource) id,
-						(BasicDomainType<?>) type,
-						type.getExpressibleJavaType(),
-						Bindable.BindableType.SINGULAR_ATTRIBUTE,
-						id.isGeneric()
-				);
-			}
-			else {
-				assert type instanceof EmbeddableDomainType;
-				return new EmbeddedSqmPathSource<>(
-						EntityIdentifierMapping.ID_ROLE_NAME,
-						(SqmPathSource) id,
-						(EmbeddableDomainType<?>) type,
-						Bindable.BindableType.SINGULAR_ATTRIBUTE,
-						id.isGeneric()
-				);
-			}
+			return pathSource( id );
 		}
-		else if ( nonAggregatedIdAttributes != null && ! nonAggregatedIdAttributes.isEmpty() ) {
-			// non-aggregate composite id
-			if ( idClassType == null ) {
-				return new NonAggregatedCompositeSqmPathSource<>(
-						EntityIdentifierMapping.ID_ROLE_NAME,
-						null,
-						Bindable.BindableType.SINGULAR_ATTRIBUTE,
-						this
-				);
-			}
-			else {
-				return new EmbeddedSqmPathSource<>(
-						EntityIdentifierMapping.ID_ROLE_NAME,
-						null,
-						idClassType,
-						Bindable.BindableType.SINGULAR_ATTRIBUTE,
-						false
-				);
-			}
+		else if ( nonAggregatedIdAttributes != null && !nonAggregatedIdAttributes.isEmpty() ) {
+			return compositePathSource();
 		}
 		else {
 			if ( isIdMappingRequired() ) {
-				throw new UnsupportedMappingException( "Could not build SqmPathSource for entity identifier : " + getTypeName() );
+				throw new UnsupportedMappingException(
+						"Could not build SqmPathSource for entity identifier : " + getTypeName() );
 			}
 			return null;
+		}
+
+	}
+
+	private AbstractSqmPathSource<?> compositePathSource() {
+		// non-aggregate composite id
+		if ( idClassType == null ) {
+			return new NonAggregatedCompositeSqmPathSource<>(
+					EntityIdentifierMapping.ID_ROLE_NAME,
+					null,
+					Bindable.BindableType.SINGULAR_ATTRIBUTE,
+					this
+			);
+		}
+		else {
+			return new EmbeddedSqmPathSource<>(
+					EntityIdentifierMapping.ID_ROLE_NAME,
+					null,
+					idClassType,
+					Bindable.BindableType.SINGULAR_ATTRIBUTE,
+					false
+			);
+		}
+	}
+
+	private <T> AbstractSqmPathSource<T> pathSource(SingularPersistentAttribute<J,T> attribute) {
+		final DomainType<T> type = attribute.getType();
+		if ( type instanceof BasicDomainType<T> basicDomainType ) {
+			return new BasicSqmPathSource<>(
+					EntityIdentifierMapping.ID_ROLE_NAME,
+					attribute,
+					basicDomainType,
+					type.getExpressibleJavaType(),
+					Bindable.BindableType.SINGULAR_ATTRIBUTE,
+					id.isGeneric()
+			);
+		}
+		else if ( type instanceof EmbeddableDomainType<T> embeddableDomainType ) {
+			return new EmbeddedSqmPathSource<>(
+					EntityIdentifierMapping.ID_ROLE_NAME,
+					attribute,
+					embeddableDomainType,
+					Bindable.BindableType.SINGULAR_ATTRIBUTE,
+					id.isGeneric()
+			);
+		}
+		else {
+			throw new AssertionFailure( "Unrecognized type: " + type );
 		}
 	}
 

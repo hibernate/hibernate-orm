@@ -5,13 +5,13 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
 
@@ -81,7 +81,7 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 	// JPA
 
 	@Override
-	public EntityDomainType<T> getModel() {
+	public SqmEntityDomainType<T> getModel() {
 		// Or should we throw an exception instead?
 		return null;
 	}

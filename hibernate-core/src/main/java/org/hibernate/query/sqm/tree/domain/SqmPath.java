@@ -28,10 +28,6 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import jakarta.persistence.metamodel.MapAttribute;
-import jakarta.persistence.metamodel.PluralAttribute;
-import jakarta.persistence.metamodel.SingularAttribute;
-
 /**
  * Models a reference to a part of the application's domain model as part of an SQM tree.
  *

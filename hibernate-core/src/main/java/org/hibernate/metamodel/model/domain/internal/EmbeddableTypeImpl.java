@@ -13,13 +13,11 @@ import org.hibernate.metamodel.model.domain.AbstractManagedType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.from.SqmEmbeddableDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
-
-import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
  * Implementation of {@link jakarta.persistence.metamodel.EmbeddableType}.
@@ -29,7 +27,7 @@ import jakarta.persistence.metamodel.SingularAttribute;
  */
 public class EmbeddableTypeImpl<J>
 		extends AbstractManagedType<J>
-		implements EmbeddableDomainType<J>, Serializable {
+		implements SqmEmbeddableDomainType<J>, Serializable {
 	private final boolean isDynamic;
 	private final EmbeddedDiscriminatorSqmPathSource<?> discriminatorPathSource;
 
@@ -41,12 +39,9 @@ public class EmbeddableTypeImpl<J>
 			JpaMetamodelImplementor domainMetamodel) {
 		super( javaType.getTypeName(), javaType, superType, domainMetamodel );
 		this.isDynamic = isDynamic;
-		if ( discriminatorType == null ) {
-			this.discriminatorPathSource = null;
-		}
-		else {
-			this.discriminatorPathSource = new EmbeddedDiscriminatorSqmPathSource<>( discriminatorType, this );
-		}
+		discriminatorPathSource =
+				discriminatorType == null ? null
+						: new EmbeddedDiscriminatorSqmPathSource<>( discriminatorType, this );
 	}
 
 	@Override
@@ -56,7 +51,7 @@ public class EmbeddableTypeImpl<J>
 
 	public int getTupleLength() {
 		int count = 0;
-		for ( SingularAttribute<? super J, ?> attribute : getSingularAttributes() ) {
+		for ( var attribute : getSingularAttributes() ) {
 			count += ( (DomainType<?>) attribute.getType() ).getTupleLength();
 		}
 		return count;
@@ -80,12 +75,12 @@ public class EmbeddableTypeImpl<J>
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		final PersistentAttribute<? super J, ?> attribute = getSqmPathType().findAttribute( name );
+		final var attribute = getSqmPathType().findAttribute( name );
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
 		}
 
-		final PersistentAttribute<?, ?> subtypeAttribute = findSubTypesAttribute( name );
+		final var subtypeAttribute = findSubTypesAttribute( name );
 		if ( subtypeAttribute != null ) {
 			return (SqmPathSource<?>) subtypeAttribute;
 		}

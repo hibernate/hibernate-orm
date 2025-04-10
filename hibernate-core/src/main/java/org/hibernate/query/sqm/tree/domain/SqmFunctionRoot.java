@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
 
@@ -90,7 +91,7 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 	// JPA
 
 	@Override
-	public EntityDomainType<E> getModel() {
+	public SqmEntityDomainType<E> getModel() {
 		// Or should we throw an exception instead?
 		return null;
 	}

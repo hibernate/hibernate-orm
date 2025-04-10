@@ -35,8 +35,7 @@ public class EmbeddedSqmPathSource<J>
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		final SqmPathSource<?> subPathSource = getSqmPathType().findSubPathSource( name );
-		return subPathSource;
+		return (SqmPathSource<?>) getSqmPathType().findSubPathSource( name );
 	}
 
 	@Override
@@ -47,8 +46,8 @@ public class EmbeddedSqmPathSource<J>
 	@Override
 	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
 		return new SqmEmbeddedValuedSimplePath<>(
-				pathModel instanceof SqmJoinable<?, ?>
-						? ( (SqmJoinable<?, ?>) pathModel ).createNavigablePath( lhs, null )
+				pathModel instanceof SqmJoinable<?, ?> sqmJoinable
+						? sqmJoinable.createNavigablePath( lhs, null )
 						: PathHelper.append( lhs, this, intermediatePathSource ),
 				pathModel,
 				lhs,

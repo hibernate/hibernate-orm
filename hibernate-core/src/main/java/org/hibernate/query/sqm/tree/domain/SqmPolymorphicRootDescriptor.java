@@ -22,6 +22,7 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.ArrayList;
@@ -43,7 +44,8 @@ import static java.util.Comparator.comparing;
  *
  * @author Steve Ebersole
  */
-public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
+public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
+
 	private final Set<EntityDomainType<? extends T>> implementors;
 	private final Map<String, PersistentAttribute<? super T,?>> commonAttributes;
 
@@ -75,9 +77,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 		final ArrayList<EntityDomainType<?>> implementorsList = new ArrayList<>(implementors);
 		final EntityDomainType<?> firstImplementor = implementorsList.get( 0 );
 		if ( implementorsList.size() == 1 ) {
-			firstImplementor.visitAttributes(
-					attribute -> workMap.put( attribute.getName(), promote( attribute ) )
-			);
+			firstImplementor.visitAttributes( attribute -> workMap.put( attribute.getName(), promote( attribute ) ) );
 		}
 		else {
 			// we want to "expose" only the attributes that all the implementors expose

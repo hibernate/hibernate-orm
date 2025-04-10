@@ -87,7 +87,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 			int selectionIndex,
 			String selectionExpression,
 			Set<String> compatibleTableExpressions,
-			Set<Attribute<?, ?>> attributes,
+			Set<? extends Attribute<?, ?>> attributes,
 			DomainType<?> domainType,
 			String componentName,
 			EmbeddableValuedModelPart existingModelPartContainer,
@@ -114,7 +114,7 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 			int selectionIndex,
 			String selectionExpression,
 			Set<String> compatibleTableExpressions,
-			Set<Attribute<?, ?>> attributes,
+			Set<? extends Attribute<?, ?>> attributes,
 			EmbeddableValuedModelPart modelPartContainer) {
 		final Map<String, ModelPart> modelParts = CollectionHelper.linkedMapOfSize( attributes.size() );
 		int index = 0;

@@ -10,6 +10,7 @@ import jakarta.persistence.metamodel.Bindable;
 
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.PathSource;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -24,7 +25,8 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
  *
  * @author Steve Ebersole
  */
-public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExpressibleAccessor<J> {
+public interface SqmPathSource<J>
+		extends SqmExpressible<J>, Bindable<J>, SqmExpressibleAccessor<J>, PathSource<J> {
 	/**
 	 * The name of this thing.
 	 *

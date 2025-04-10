@@ -8,6 +8,7 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -22,7 +23,9 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public class MappedSuperclassTypeImpl<J> extends AbstractIdentifiableType<J> implements MappedSuperclassDomainType<J> {
+public class MappedSuperclassTypeImpl<J>
+		extends AbstractIdentifiableType<J>
+		implements MappedSuperclassDomainType<J>, SqmPathSource<J> {
 
 	public MappedSuperclassTypeImpl(
 			String name,
@@ -61,6 +64,11 @@ public class MappedSuperclassTypeImpl<J> extends AbstractIdentifiableType<J> imp
 	}
 
 	@Override
+	public DomainType<J> getSqmType() {
+		return MappedSuperclassDomainType.super.getSqmType();
+	}
+
+	@Override
 	public String getPathName() {
 		return getTypeName();
 	}
@@ -76,14 +84,17 @@ public class MappedSuperclassTypeImpl<J> extends AbstractIdentifiableType<J> imp
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
 		}
-
-		if ( "id".equalsIgnoreCase( name ) ) {
-			if ( hasIdClass() ) {
-				return getIdentifierDescriptor();
-			}
+		else if ( "id".equalsIgnoreCase( name ) ) {
+			return hasIdClass() ? getIdentifierDescriptor() : null;
 		}
+		else {
+			return null;
+		}
+	}
 
-		return null;
+	@Override
+	public SqmPathSource<?> getIdentifierDescriptor() {
+		return (SqmPathSource<?>) super.getIdentifierDescriptor();
 	}
 
 	@Override
@@ -92,12 +103,12 @@ public class MappedSuperclassTypeImpl<J> extends AbstractIdentifiableType<J> imp
 		if ( attribute != null ) {
 			return attribute;
 		}
-
-		if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
+		else if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
 			return findIdAttribute();
 		}
-
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	@Override

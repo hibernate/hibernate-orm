@@ -5,7 +5,7 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.model.domain.DiscriminatorSqmPath;
+import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;

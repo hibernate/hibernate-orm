@@ -13,7 +13,7 @@ import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.model.domain.TupleType;
+import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;

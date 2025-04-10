@@ -18,7 +18,7 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
-import org.hibernate.metamodel.model.domain.TupleType;
+import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmExpressible;

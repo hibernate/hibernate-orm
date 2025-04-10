@@ -31,7 +31,6 @@ public interface PathSource<J> {
 	 */
 	PathSource<?> findSubPathSource(String name);
 
-
 	/**
 	 * Find a {@link PathSource} by name relative to this source. If {@code includeSubtypes} is set
 	 * to {@code true} and this path source is polymorphic, also try finding subtype attributes.
@@ -41,7 +40,5 @@ public interface PathSource<J> {
 	 * @return null if the subPathSource is not found
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 */
-	default PathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
-		return findSubPathSource( name );
-	}
+	PathSource<?> findSubPathSource(String name, boolean includeSubtypes);
 }

@@ -9,7 +9,6 @@ import jakarta.persistence.metamodel.BasicType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.query.OutputableType;
-import org.hibernate.query.sqm.SqmExpressible;
 
 /**
  * Hibernate extension to the JPA {@link BasicType} contract.
@@ -17,7 +16,7 @@ import org.hibernate.query.sqm.SqmExpressible;
  * @author Steve Ebersole
  */
 public interface BasicDomainType<J>
-		extends ReturnableType<J>, BasicType<J>, SqmExpressible<J>, OutputableType<J> {
+		extends ReturnableType<J>, BasicType<J>, OutputableType<J> {
 	@Override
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;

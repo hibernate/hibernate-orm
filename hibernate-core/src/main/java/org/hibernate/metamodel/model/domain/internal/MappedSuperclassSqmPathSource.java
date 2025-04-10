@@ -37,8 +37,7 @@ public class MappedSuperclassSqmPathSource<J> extends AbstractSqmPathSource<J> i
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		final MappedSuperclassDomainType<J> sqmPathType = getSqmPathType();
-		return sqmPathType.findSubPathSource( name );
+		return (SqmPathSource<?>) getSqmPathType().findSubPathSource( name );
 	}
 
 	@Override

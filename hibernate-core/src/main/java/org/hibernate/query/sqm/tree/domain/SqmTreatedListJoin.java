@@ -13,6 +13,7 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.from.SqmTreatableDomainType;
 import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
 
@@ -24,18 +25,18 @@ import jakarta.persistence.criteria.Predicate;
  */
 public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> implements SqmTreatedAttributeJoin<O,T,S> {
 	private final SqmListJoin<O,T> wrappedPath;
-	private final TreatableDomainType<S> treatTarget;
+	private final SqmTreatableDomainType<S> treatTarget;
 
 	public SqmTreatedListJoin(
 			SqmListJoin<O, T> wrappedPath,
-			TreatableDomainType<S> treatTarget,
+			SqmTreatableDomainType<S> treatTarget,
 			String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
 	public SqmTreatedListJoin(
 			SqmListJoin<O, T> wrappedPath,
-			TreatableDomainType<S> treatTarget,
+			SqmTreatableDomainType<S> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -57,7 +58,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	private SqmTreatedListJoin(
 			NavigablePath navigablePath,
 			SqmListJoin<O, T> wrappedPath,
-			TreatableDomainType<S> treatTarget,
+			SqmTreatableDomainType<S> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -110,7 +111,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	}
 
 	@Override
-	public TreatableDomainType<S> getReferencedPathSource() {
+	public SqmTreatableDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 

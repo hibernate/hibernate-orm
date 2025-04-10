@@ -11,6 +11,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.from.SqmTreatableDomainType;
 import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
 
@@ -22,18 +23,18 @@ import jakarta.persistence.criteria.Predicate;
  */
 public class SqmTreatedBagJoin<L, R, R1 extends R> extends SqmBagJoin<L, R1> implements SqmTreatedAttributeJoin<L, R, R1> {
 	private final SqmBagJoin<L, R> wrappedPath;
-	private final TreatableDomainType<R1> treatTarget;
+	private final SqmTreatableDomainType<R1> treatTarget;
 
 	public SqmTreatedBagJoin(
 			SqmBagJoin<L, R> wrappedPath,
-			TreatableDomainType<R1> treatTarget,
+			SqmTreatableDomainType<R1> treatTarget,
 			String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
 	public SqmTreatedBagJoin(
 			SqmBagJoin<L, R> wrappedPath,
-			TreatableDomainType<R1> treatTarget,
+			SqmTreatableDomainType<R1> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -55,7 +56,7 @@ public class SqmTreatedBagJoin<L, R, R1 extends R> extends SqmBagJoin<L, R1> imp
 	private SqmTreatedBagJoin(
 			NavigablePath navigablePath,
 			SqmBagJoin<L, R> wrappedPath,
-			TreatableDomainType<R1> treatTarget,
+			SqmTreatableDomainType<R1> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -108,7 +109,7 @@ public class SqmTreatedBagJoin<L, R, R1 extends R> extends SqmBagJoin<L, R1> imp
 	}
 
 	@Override
-	public TreatableDomainType<R1> getReferencedPathSource() {
+	public SqmTreatableDomainType<R1> getReferencedPathSource() {
 		return treatTarget;
 	}
 

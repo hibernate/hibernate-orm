@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.spi.NavigablePath;
@@ -121,7 +122,7 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 	public <S extends T> SqmTreatedPluralPartJoin treatAs(EntityDomainType<S> treatTarget, String alias) {
 		final SqmTreatedPluralPartJoin treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedPluralPartJoin( this, treatTarget, alias ) );
+			return addTreat( new SqmTreatedPluralPartJoin( this, (SqmEntityDomainType<?>) treatTarget, alias ) );
 		}
 		return treat;
 	}
@@ -137,7 +138,7 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 	public <S extends T> SqmTreatedPluralPartJoin treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
 		final SqmTreatedPluralPartJoin treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedPluralPartJoin( this, treatTarget, alias ) );
+			return addTreat( new SqmTreatedPluralPartJoin( this, (SqmEntityDomainType<?>) treatTarget, alias ) );
 		}
 		return treat;
 	}

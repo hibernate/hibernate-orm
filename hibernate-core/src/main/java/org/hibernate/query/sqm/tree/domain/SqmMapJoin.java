@@ -18,7 +18,9 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmTreatableDomainType;
 import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.Expression;
@@ -149,8 +151,8 @@ public class SqmMapJoin<L, K, V>
 		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
 		final SqmTreatedMapJoin<L, K, V, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			if ( treatTarget instanceof TreatableDomainType<?> ) {
-				return addTreat( new SqmTreatedMapJoin<>( this, (TreatableDomainType<S>) treatTarget, alias, fetch ) );
+			if ( treatTarget instanceof TreatableDomainType<S> ) {
+				return addTreat( new SqmTreatedMapJoin<>( this, (SqmTreatableDomainType<S>) treatTarget, alias, fetch ) );
 			}
 			else {
 				throw new IllegalArgumentException( "Not a treatable type: " + treatJavaType.getName() );
@@ -168,7 +170,7 @@ public class SqmMapJoin<L, K, V>
 	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
 		final SqmTreatedMapJoin<L, K, V, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedMapJoin<>( this, treatTarget, alias, fetch ) );
+			return addTreat( new SqmTreatedMapJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias, fetch ) );
 		}
 		return treat;
 	}
@@ -177,7 +179,7 @@ public class SqmMapJoin<L, K, V>
 	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
 		final SqmTreatedMapJoin<L, K, V, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedMapJoin<>( this, treatTarget, alias ) );
+			return addTreat( new SqmTreatedMapJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias ) );
 		}
 		return treat;
 	}

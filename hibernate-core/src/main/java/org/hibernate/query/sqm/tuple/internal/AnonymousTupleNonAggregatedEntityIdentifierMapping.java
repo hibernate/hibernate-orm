@@ -38,7 +38,7 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 			int selectionIndex,
 			String selectionExpression,
 			Set<String> compatibleTableExpressions,
-			Set<Attribute<?, ?>> attributes,
+			Set<? extends Attribute<?, ?>> attributes,
 			DomainType<?> domainType,
 			String componentName,
 			NonAggregatedIdentifierMapping delegate) {

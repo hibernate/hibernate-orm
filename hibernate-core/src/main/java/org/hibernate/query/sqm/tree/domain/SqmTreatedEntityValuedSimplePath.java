@@ -4,12 +4,12 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.spi.NavigablePath;
 
 /**
@@ -19,12 +19,12 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 		extends SqmEntityValuedSimplePath<S>
 		implements SqmSimplePath<S>, SqmTreatedPath<T,S> {
 
-	private final EntityDomainType<S> treatTarget;
+	private final SqmEntityDomainType<S> treatTarget;
 	private final SqmPath<T> wrappedPath;
 
 	public SqmTreatedEntityValuedSimplePath(
 			SqmPluralValuedSimplePath<T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			SqmEntityDomainType<S> treatTarget,
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
@@ -41,7 +41,7 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 
 	public SqmTreatedEntityValuedSimplePath(
 			SqmPath<T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			SqmEntityDomainType<S> treatTarget,
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
@@ -59,7 +59,7 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 	private SqmTreatedEntityValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPath<T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			SqmEntityDomainType<S> treatTarget,
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
@@ -93,7 +93,7 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public EntityDomainType<S> getTreatTarget() {
+	public SqmEntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
@@ -103,7 +103,7 @@ public class SqmTreatedEntityValuedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public EntityDomainType<S> getNodeType() {
+	public SqmEntityDomainType<S> getNodeType() {
 		return treatTarget;
 	}
 

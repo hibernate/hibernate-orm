@@ -29,6 +29,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -42,7 +43,7 @@ import static org.hibernate.metamodel.model.domain.internal.DomainModelHelper.is
  */
 public class EntityTypeImpl<J>
 		extends AbstractIdentifiableType<J>
-		implements EntityDomainType<J>, Serializable {
+		implements SqmEntityDomainType<J>, Serializable {
 
 	private final String jpaEntityName;
 	private final JpaMetamodelImplementor metamodel;
@@ -152,6 +153,11 @@ public class EntityTypeImpl<J>
 		else {
 			return null;
 		}
+	}
+
+	@Override
+	public SqmPathSource<?> getIdentifierDescriptor() {
+		return (SqmPathSource<?>) super.getIdentifierDescriptor();
 	}
 
 	@Override

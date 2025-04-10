@@ -9,6 +9,7 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
 
@@ -18,12 +19,12 @@ import org.hibernate.spi.NavigablePath;
 @SuppressWarnings("rawtypes")
 public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 	private final SqmRoot wrappedPath;
-	private final EntityDomainType treatTarget;
+	private final SqmEntityDomainType treatTarget;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public SqmTreatedRoot(
 			SqmRoot wrappedPath,
-			EntityDomainType treatTarget) {
+			SqmEntityDomainType treatTarget) {
 		super(
 				wrappedPath.getNavigablePath().treatAs(
 						treatTarget.getHibernateEntityName()
@@ -40,7 +41,7 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 	private SqmTreatedRoot(
 			NavigablePath navigablePath,
 			SqmRoot wrappedPath,
-			EntityDomainType treatTarget) {
+			SqmEntityDomainType treatTarget) {
 		super(
 				navigablePath,
 				(EntityDomainType) wrappedPath.getReferencedPathSource(),
@@ -90,8 +91,8 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 	}
 
 	@Override
-	public EntityDomainType getReferencedPathSource() {
-		return getTreatTarget();
+	public SqmEntityDomainType getReferencedPathSource() {
+		return treatTarget;
 	}
 
 	@Override

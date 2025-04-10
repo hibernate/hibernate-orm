@@ -12,11 +12,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
-import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -27,6 +26,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.query.sqm.tree.from.SqmEmbeddableDomainType;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.spi.TreatedNavigablePath;
@@ -71,7 +72,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		final SqmPath<?> lhs = getLhs() != null ? getLhs() : findRoot();
 		final SqmPath<?> targetLhs = target.getLhs() != null ? target.getLhs() : target.findRoot();
 		return lhs == null || lhs.getNavigablePath() == targetLhs.getNavigablePath()
-				|| getRoot( lhs ).getNodeType() instanceof SqmPolymorphicRootDescriptor;
+			|| getRoot( lhs ).getNodeType() instanceof SqmPolymorphicRootDescriptor;
 	}
 
 	private SqmPath<?> getRoot(SqmPath<?> lhs) {
@@ -155,12 +156,11 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	@Override
 	public SqmPathSource<?> getResolvedModel() {
-		final DomainType<?> lhsType;
 		final SqmPathSource<T> pathSource = getReferencedPathSource();
-		if ( pathSource.isGeneric() && ( lhsType = getLhs().getResolvedModel().getSqmPathType() ) instanceof ManagedDomainType ) {
-			final PersistentAttribute<?, ?> concreteAttribute = ( (ManagedDomainType<?>) lhsType ).findConcreteGenericAttribute(
-					pathSource.getPathName()
-			);
+		if ( pathSource.isGeneric()
+				&& getLhs().getResolvedModel().getSqmPathType() instanceof ManagedDomainType<?> lhsType ) {
+			final PersistentAttribute<?, ?> concreteAttribute =
+					lhsType.findConcreteGenericAttribute( pathSource.getPathName() );
 			if ( concreteAttribute != null ) {
 				return (SqmPathSource<?>) concreteAttribute;
 			}
@@ -231,11 +231,14 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		//noinspection unchecked
 		SqmTreatedPath<T, S> path = (SqmTreatedPath<T, S>) getLhs().getReusablePath( treat.getLocalName() );
 		if ( path == null ) {
-			if ( treatTarget instanceof EntityDomainType<?> ) {
-				path = new SqmTreatedEntityValuedSimplePath<>( this, (EntityDomainType<S>) treatTarget, nodeBuilder() );
+			if ( treatTarget instanceof SqmEntityDomainType<S> entityDomainType ) {
+				path = new SqmTreatedEntityValuedSimplePath<>( this, entityDomainType, nodeBuilder() );
+			}
+			else if ( treatTarget instanceof SqmEmbeddableDomainType<S> embeddableDomainType ) {
+				path = new SqmTreatedEmbeddedValuedSimplePath<>( this, embeddableDomainType );
 			}
 			else {
-				path = new SqmTreatedEmbeddedValuedSimplePath<>( this, (EmbeddableDomainType<S>) treatTarget );
+				throw new AssertionFailure( "Unrecognized treat target type: " + treatTarget.getTypeName() );
 			}
 			getLhs().registerReusablePath( path );
 		}

@@ -50,6 +50,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PathSource;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
@@ -71,6 +72,7 @@ import org.hibernate.query.criteria.JpaJsonValueNode;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.criteria.JpaXmlTableColumnNode;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
@@ -1932,9 +1934,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public EntityDomainType<?> visitEntityName(HqlParser.EntityNameContext parserEntityName) {
 		final String entityName = getEntityName( parserEntityName );
-		final EntityDomainType<?> entityReference = getCreationContext()
-				.getJpaMetamodel()
-				.getHqlEntityReference( entityName );
+		final EntityDomainType<?> entityReference = getJpaMetamodel().getHqlEntityReference( entityName );
 		if ( entityReference == null ) {
 			throw new UnknownEntityException( "Could not resolve target entity '" + entityName + "'", entityName );
 		}
@@ -2153,15 +2153,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		SqmTreeCreationLogger.LOGGER.debugf( "Handling root path - %s", name );
 
-		final EntityDomainType<T> entityDescriptor = getCreationContext().getJpaMetamodel()
-				.resolveHqlEntityReference( name );
+		final EntityDomainType<T> entityDescriptor = getJpaMetamodel().resolveHqlEntityReference( name );
 
 		if ( entityDescriptor instanceof SqmPolymorphicRootDescriptor ) {
 			throw new SemanticException( "Unmapped polymorphic reference cannot be used as a target of 'cross join'",
 					query );
 		}
 		final SqmCrossJoin<T> join = new SqmCrossJoin<>(
-				entityDescriptor,
+				(SqmEntityDomainType<T>) entityDescriptor,
 				extractAlias( parserJoin.variable() ),
 				sqmRoot
 		);
@@ -2170,6 +2169,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		// CROSS joins are always added to the root
 		sqmRoot.addSqmJoin( join );
+	}
+
+	private JpaMetamodel getJpaMetamodel() {
+		return getCreationContext().getJpaMetamodel();
 	}
 
 	@Override
@@ -3476,7 +3479,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmPath<?> sqmPath = consumeDomainPath( ctx.path() );
 		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getSqmPathType();
 		if ( sqmPathType instanceof IdentifiableDomainType<?> identifiableType ) {
-			final SqmPathSource<?> identifierDescriptor = identifiableType.getIdentifierDescriptor();
+			final PathSource<?> identifierDescriptor = identifiableType.getIdentifierDescriptor();
 			if ( identifierDescriptor == null ) {
 				// mainly for benefit of Hibernate Processor
 				throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
@@ -5914,7 +5917,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		consumeManagedTypeReference( ctx.path() );
 
 		final String treatTargetName = ctx.simplePath().getText();
-		final String importableName = getCreationContext().getJpaMetamodel().qualifyImportableName( treatTargetName );
+		final String importableName = getJpaMetamodel().qualifyImportableName( treatTargetName );
 		if ( importableName == null ) {
 			throw new SemanticException( "Could not resolve treat target type '" + treatTargetName + "'", query );
 		}

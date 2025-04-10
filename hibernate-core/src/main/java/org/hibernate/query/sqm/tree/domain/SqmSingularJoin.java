@@ -126,8 +126,8 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
 		final SqmTreatedSingularJoin<O, T, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			if ( treatTarget instanceof TreatableDomainType<?> ) {
-				return addTreat( new SqmTreatedSingularJoin<>( this, (TreatableDomainType<S>) treatTarget, alias, fetch ) );
+			if ( treatTarget instanceof TreatableDomainType<S> treatableDomainType ) {
+				return addTreat( new SqmTreatedSingularJoin<>( this, treatableDomainType, alias, fetch ) );
 			}
 			else {
 				throw new IllegalArgumentException( "Not a treatable type: " + treatJavaType.getName() );

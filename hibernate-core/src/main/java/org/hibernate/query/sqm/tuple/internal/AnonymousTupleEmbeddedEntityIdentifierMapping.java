@@ -35,7 +35,7 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 			int selectionIndex,
 			String selectionExpression,
 			Set<String> compatibleTableExpressions,
-			Set<Attribute<?, ?>> attributes,
+			Set<? extends Attribute<?, ?>> attributes,
 			DomainType<?> domainType,
 			CompositeIdentifierMapping delegate) {
 		super(

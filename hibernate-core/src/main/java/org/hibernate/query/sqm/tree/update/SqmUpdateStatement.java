@@ -24,6 +24,7 @@ import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmRestrictedDmlStatement;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
@@ -274,19 +275,19 @@ public class SqmUpdateStatement<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		appendHqlCteString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		appendHqlCteString( hql, context );
 		hql.append( "update " );
 		if ( versioned ) {
 			hql.append( "versioned " );
 		}
 		final SqmRoot<T> root = getTarget();
 		hql.append( root.getEntityName() );
-		hql.append( ' ' ).append( root.resolveAlias() );
-		SqmFromClause.appendJoins( root, hql );
-		SqmFromClause.appendTreatJoins( root, hql );
-		setClause.appendHqlString( hql );
+		hql.append( ' ' ).append( root.resolveAlias( context ) );
+		SqmFromClause.appendJoins( root, hql, context );
+		SqmFromClause.appendTreatJoins( root, hql, context );
+		setClause.appendHqlString( hql, context );
 
-		super.appendHqlString( hql );
+		super.appendHqlString( hql, context );
 	}
 }

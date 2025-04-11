@@ -244,6 +244,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public boolean isCriteriaPlanCacheEnabled() {
+		return delegate.isCriteriaPlanCacheEnabled();
+	}
+
+	@Override
+	public void setCriteriaPlanCacheEnabled(boolean jpaCriteriaCacheEnabled) {
+		delegate.setCriteriaPlanCacheEnabled( jpaCriteriaCacheEnabled );
+	}
+
+	@Override
 	public boolean getNativeJdbcParametersIgnored() {
 		return delegate.getNativeJdbcParametersIgnored();
 	}

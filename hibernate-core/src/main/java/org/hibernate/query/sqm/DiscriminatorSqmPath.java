@@ -8,6 +8,7 @@ import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 
@@ -18,9 +19,9 @@ import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
  */
 public interface DiscriminatorSqmPath<T> extends SqmPath<T> {
 	@Override
-	default void appendHqlString(StringBuilder hql) {
+	default void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( "type(" );
-		getLhs().appendHqlString( hql );
+		getLhs().appendHqlString( hql, context );
 		hql.append( ')' );
 	}
 

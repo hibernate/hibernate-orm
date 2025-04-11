@@ -9,6 +9,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
@@ -84,15 +85,15 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		expression.appendHqlString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		expression.appendHqlString( hql, context );
 		if ( isNegated() ) {
 			hql.append( " not" );
 		}
 		hql.append( " between " );
-		lowerBound.appendHqlString( hql );
+		lowerBound.appendHqlString( hql, context );
 		hql.append( " and " );
-		upperBound.appendHqlString( hql );
+		upperBound.appendHqlString( hql, context );
 	}
 
 	@Override

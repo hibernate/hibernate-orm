@@ -167,6 +167,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private Integer jdbcBatchSize;
 
 	private boolean criteriaCopyTreeEnabled;
+	private boolean criteriaPlanCacheEnabled;
 
 	private boolean nativeJdbcParametersIgnored;
 
@@ -194,6 +195,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 
 		setCriteriaCopyTreeEnabled( factoryOptions.isCriteriaCopyTreeEnabled() );
+		setCriteriaPlanCacheEnabled( factoryOptions.isCriteriaPlanCacheEnabled() );
 		setNativeJdbcParametersIgnored( factoryOptions.getNativeJdbcParametersIgnored() );
 		setCacheMode( factoryOptions.getInitialSessionCacheMode() );
 
@@ -796,6 +798,16 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public boolean isCriteriaCopyTreeEnabled() {
 		return criteriaCopyTreeEnabled;
+	}
+
+	@Override
+	public boolean isCriteriaPlanCacheEnabled() {
+		return criteriaPlanCacheEnabled;
+	}
+
+	@Override
+	public void setCriteriaPlanCacheEnabled(boolean criteriaPlanCacheEnabled) {
+		this.criteriaPlanCacheEnabled = criteriaPlanCacheEnabled;
 	}
 
 	@Override

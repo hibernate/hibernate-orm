@@ -19,6 +19,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -264,13 +265,13 @@ public class SqmJsonQueryExpression extends AbstractSqmJsonPathExpression<String
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( "json_query(" );
-		getArguments().get( 0 ).appendHqlString( hql );
+		getArguments().get( 0 ).appendHqlString( hql, context );
 		hql.append( ',' );
-		getArguments().get( 1 ).appendHqlString( hql );
+		getArguments().get( 1 ).appendHqlString( hql, context );
 
-		appendPassingExpressionHqlString( hql );
+		appendPassingExpressionHqlString( hql, context );
 		switch ( wrapMode ) {
 			case WITH_WRAPPER -> hql.append( " with wrapper" );
 			case WITHOUT_WRAPPER -> hql.append( " without wrapper" );

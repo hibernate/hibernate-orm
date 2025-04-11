@@ -8,6 +8,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * Represents an individual selection within a select clause.
@@ -61,8 +62,8 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		selectableNode.appendHqlString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		selectableNode.appendHqlString( hql, context );
 		if ( alias != null ) {
 			hql.append( " as " ).append( alias );
 		}

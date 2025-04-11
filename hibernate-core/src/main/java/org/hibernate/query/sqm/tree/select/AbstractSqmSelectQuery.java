@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
@@ -403,16 +404,16 @@ public abstract class AbstractSqmSelectQuery<T>
 		return this;
 	}
 
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		if ( !cteStatements.isEmpty() ) {
 			hql.append( "with " );
 			for ( SqmCteStatement<?> value : cteStatements.values() ) {
-				value.appendHqlString( hql );
+				value.appendHqlString( hql, context );
 				hql.append( ", " );
 			}
 			hql.setLength( hql.length() - 2 );
 		}
-		sqmQueryPart.appendHqlString( hql );
+		sqmQueryPart.appendHqlString( hql, context );
 	}
 
 	@SuppressWarnings("unchecked")

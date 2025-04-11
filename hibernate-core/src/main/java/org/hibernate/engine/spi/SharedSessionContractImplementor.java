@@ -374,6 +374,10 @@ public interface SharedSessionContractImplementor
 
 	boolean isCriteriaCopyTreeEnabled();
 
+	void setCriteriaPlanCacheEnabled(boolean jpaCriteriaCacheEnabled);
+
+	boolean isCriteriaPlanCacheEnabled();
+
 	boolean getNativeJdbcParametersIgnored();
 
 	void setNativeJdbcParametersIgnored(boolean nativeJdbcParametersIgnored);

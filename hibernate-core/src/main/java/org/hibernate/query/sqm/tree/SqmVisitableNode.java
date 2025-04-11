@@ -18,11 +18,11 @@ public interface SqmVisitableNode extends SqmNode {
 	 */
 	<X> X accept(SemanticQueryWalker<X> walker);
 
-	void appendHqlString(StringBuilder hql);
+	void appendHqlString(StringBuilder hql, SqmRenderContext context);
 
 	default String toHqlString() {
 		final StringBuilder hql = new StringBuilder();
-		appendHqlString( hql );
+		appendHqlString( hql, SqmRenderContext.simpleContext() );
 		return hql.toString();
 	}
 }

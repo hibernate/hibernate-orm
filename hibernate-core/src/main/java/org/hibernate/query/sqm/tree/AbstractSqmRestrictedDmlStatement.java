@@ -131,10 +131,10 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		if ( whereClause != null && whereClause.getPredicate() != null ) {
 			hql.append( " where " );
-			whereClause.getPredicate().appendHqlString( hql );
+			whereClause.getPredicate().appendHqlString( hql, context );
 		}
 	}
 }

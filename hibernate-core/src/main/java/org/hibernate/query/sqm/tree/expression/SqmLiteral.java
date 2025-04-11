@@ -8,6 +8,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -71,21 +72,29 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		appendHqlString( hql, getJavaTypeDescriptor(), getLiteralValue() );
 	}
 
-	public static <T> void appendHqlString(StringBuilder sb, JavaType<T> javaType, @Nullable T value) {
+	public static <T> void appendHqlString(StringBuilder sb, @Nullable JavaType<T> javaType, @Nullable T value) {
 		if ( value == null ) {
 			sb.append( "null" );
 		}
 		else {
-			final String string = javaType.toString( value );
-			if ( javaType.getJavaTypeClass() == String.class ) {
-				appendSingleQuoteEscapedString( sb, string );
+			if ( javaType == null ) {
+				throw new IllegalArgumentException( "Can't render value because java type is null" );
+			}
+			if ( value instanceof Number || value instanceof Boolean ) {
+				// We know these are safe to render
+				sb.append( value );
+			}
+			else if ( value instanceof Enum<?> enumValue ) {
+				sb.append( enumValue.getDeclaringClass().getTypeName() ).append( "." ).append( enumValue.name() );
 			}
 			else {
-				sb.append( string );
+				// Even if this is not 100% correct, our goal with this implementation is to provide
+				// a cache key or insight into the query structure, not necessarily produce an executable query
+				appendSingleQuoteEscapedString( sb, javaType.toString( value ) );
 			}
 		}
 	}

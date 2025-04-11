@@ -11,6 +11,7 @@ import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import jakarta.persistence.criteria.Nulls;
@@ -115,8 +116,8 @@ public class SqmSortSpecification implements JpaOrder {
 		return sortOrder == SortDirection.ASCENDING;
 	}
 
-	public void appendHqlString(StringBuilder sb) {
-		sortExpression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder sb, SqmRenderContext context) {
+		sortExpression.appendHqlString( sb, context );
 		if ( sortOrder == SortDirection.DESCENDING ) {
 			sb.append( " desc" );
 			if ( nullPrecedence != null ) {

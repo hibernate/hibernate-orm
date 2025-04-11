@@ -115,7 +115,9 @@ public class ArrayPrependTest {
 			cq.multiselect(
 					root.get( "id" ),
 					cb.collectionPrepend( cb.literal( "xyz" ), root.<Collection<String>>get( "theCollection" ) ),
-					cb.collectionPrepend( "xyz", root.get( "theCollection" ) )
+					cb.collectionPrepend( "xyz", root.get( "theCollection" ) ),
+					cb.collectionPrepend( cb.literal( Label.A ), root.<Collection<Label>>get( "theLabels" ) ),
+					cb.collectionPrepend( "xyz", root.get( "theLabels" ) )
 			);
 			em.createQuery( cq ).getResultList();
 

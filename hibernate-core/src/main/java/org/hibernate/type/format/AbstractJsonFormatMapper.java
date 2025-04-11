@@ -36,4 +36,5 @@ public abstract class AbstractJsonFormatMapper implements FormatMapper {
 	protected abstract <T> T fromString(CharSequence charSequence, Type type);
 
 	protected abstract <T> String toString(T value, Type type);
+
 }

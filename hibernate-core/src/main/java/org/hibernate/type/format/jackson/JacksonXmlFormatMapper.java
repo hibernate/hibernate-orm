@@ -40,6 +40,7 @@ import org.hibernate.type.internal.ParameterizedTypeImpl;
 
 /**
  * @author Christian Beikov
+ * @author Emmanuel Jannetti
  */
 public final class JacksonXmlFormatMapper implements FormatMapper {
 

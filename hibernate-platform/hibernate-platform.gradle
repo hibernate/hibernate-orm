@@ -65,11 +65,3 @@ var publishingExtension = project.getExtensions().getByType(PublishingExtension)
 publishingExtension.publications.named("publishedArtifacts", MavenPublication) {
     from components.javaPlatform
 }
-
-tasks.register("releasePerform") {
-    group "release"
-    description "See :release:releasePerform for details.  Here we hook in publishing to Sonatype"
-
-    dependsOn tasks.publishToSonatype
-}
-

@@ -53,9 +53,3 @@ tasks.register("preVerifyRelease") {
     dependsOn releasePrepareTask
 }
 
-tasks.register( 'releasePerform' ) {
-    group "release-perform"
-    description "See :release:releasePerform for details.  Here we hook in publishing to Sonatype"
-
-    dependsOn tasks.publishToSonatype
-}

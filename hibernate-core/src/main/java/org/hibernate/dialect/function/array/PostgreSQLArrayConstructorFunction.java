@@ -6,7 +6,6 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -32,16 +31,13 @@ public class PostgreSQLArrayConstructorFunction extends ArrayConstructorFunction
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		String arrayTypeName = null;
-		if ( returnType != null ) {
-			final DomainType<?> type = returnType.getSqmType();
-			if ( type instanceof BasicPluralType<?, ?> pluralType ) {
-				if ( needsArrayCasting( pluralType.getElementType() ) ) {
-					arrayTypeName = DdlTypeHelper.getCastTypeName(
-							returnType,
-							walker.getSessionFactory().getTypeConfiguration()
-					);
-					sqlAppender.append( "cast(" );
-				}
+		if ( returnType instanceof BasicPluralType<?, ?> pluralType ) {
+			if ( needsArrayCasting( pluralType.getElementType() ) ) {
+				arrayTypeName = DdlTypeHelper.getCastTypeName(
+						returnType,
+						walker.getSessionFactory().getTypeConfiguration()
+				);
+				sqlAppender.append( "cast(" );
 			}
 		}
 		super.render( sqlAppender, sqlAstArguments, returnType, walker );

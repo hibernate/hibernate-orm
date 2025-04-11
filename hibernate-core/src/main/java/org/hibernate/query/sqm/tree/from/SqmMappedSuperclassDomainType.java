@@ -9,9 +9,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 
 public interface SqmMappedSuperclassDomainType<T> extends MappedSuperclassDomainType<T>, SqmPathSource<T>, SqmDomainType<T> {
 	@Override
-	default SqmMappedSuperclassDomainType<T> getSqmType() {
-		return this;
-	}
+	SqmMappedSuperclassDomainType<T> getSqmType();
 
 	@Override
 	default String getTypeName() {

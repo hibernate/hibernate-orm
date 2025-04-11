@@ -18,10 +18,6 @@ import jakarta.persistence.metamodel.EmbeddableType;
  */
 public interface EmbeddableDomainType<J>
 		extends TreatableDomainType<J>, EmbeddableType<J> {
-	@Override
-	default EmbeddableDomainType<J> getSqmType() {
-		return this;
-	}
 
 	@Override
 	Collection<? extends EmbeddableDomainType<? extends J>> getSubTypes();

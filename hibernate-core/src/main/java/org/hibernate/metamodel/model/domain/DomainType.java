@@ -24,10 +24,6 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public interface DomainType<J> extends BindableType<J> {
-//	@Override
-	default DomainType<J> getSqmType() {
-		return this;
-	}
 
 	JavaType<J> getExpressibleJavaType();
 

@@ -128,12 +128,6 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 		return false;
 	}
 
-	@Override
-	public boolean containsTableReference(String tableExpression) {
-		return getAssociatedEntityMappingType().containsTableReference( tableExpression );
-	}
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TableGroupJoinProducer
 

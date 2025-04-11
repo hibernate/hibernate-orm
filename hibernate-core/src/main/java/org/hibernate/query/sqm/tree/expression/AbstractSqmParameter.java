@@ -31,7 +31,7 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 	public void applyInferableType(@Nullable SqmExpressible<?> type) {
 		if ( type != null ) {
 			if ( type instanceof PluralPersistentAttribute<?, ?, ?> pluralPersistentAttribute ) {
-				internalApplyInferableType( pluralPersistentAttribute.getElementType() );
+				internalApplyInferableType( (SqmExpressible<?>) pluralPersistentAttribute.getElementType() );
 			}
 			else {
 				internalApplyInferableType( type );

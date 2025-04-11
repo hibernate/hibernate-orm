@@ -13,7 +13,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
-import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver;
@@ -45,7 +45,7 @@ public class GenerateSeriesSetReturningFunctionTypeResolver implements SetReturn
 		final SqmTypedNode<?> stop = arguments.get( 1 );
 		final SqmExpressible<?> startExpressible = start.getExpressible();
 		final SqmExpressible<?> stopExpressible = stop.getExpressible();
-		final DomainType<?> type = NullnessHelper.coalesce(
+		final SqmDomainType<?> type = NullnessHelper.coalesce(
 				startExpressible == null ? null : startExpressible.getSqmType(),
 				stopExpressible == null ? null : stopExpressible.getSqmType()
 		);

@@ -4,8 +4,6 @@
  */
 package org.hibernate.query.hql.internal;
 
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.query.SemanticException;
@@ -23,6 +21,8 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEmbeddableType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
+import org.hibernate.query.sqm.tree.from.SqmEmbeddableDomainType;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -174,10 +174,10 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 			final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
 			if ( importableName != null ) {
 				final ManagedDomainType<?> managedType = jpaMetamodel.managedType( importableName );
-				if ( managedType instanceof EntityDomainType<?> entityDomainType ) {
+				if ( managedType instanceof SqmEntityDomainType<?> entityDomainType ) {
 					return new SqmLiteralEntityType<>( entityDomainType, nodeBuilder );
 				}
-				else if ( managedType instanceof EmbeddableDomainType<?> embeddableDomainType ) {
+				else if ( managedType instanceof SqmEmbeddableDomainType<?> embeddableDomainType ) {
 					return new SqmLiteralEmbeddableType<>( embeddableDomainType, nodeBuilder );
 				}
 			}

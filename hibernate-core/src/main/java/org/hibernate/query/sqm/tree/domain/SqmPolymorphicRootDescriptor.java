@@ -12,7 +12,6 @@ import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -22,6 +21,7 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -145,7 +145,7 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	}
 
 	@Override
-	public DomainType<T> getSqmPathType() {
+	public SqmDomainType<T> getSqmPathType() {
 		return this;
 	}
 

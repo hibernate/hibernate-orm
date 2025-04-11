@@ -45,7 +45,6 @@ import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyMappingDomainTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.EmbeddableTypeImpl;
@@ -58,6 +57,7 @@ import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
@@ -132,17 +132,13 @@ public class AttributeFactory {
 		}
 
 		final ValueContext valueContext = ( (SingularAttributeMetadata<X, Y>) attributeMetadata ).getValueContext();
-		final DomainType<Y> metaModelType = determineSimpleType( valueContext, metadataContext );
-		final JavaType<?> relationalJavaType = determineRelationalJavaType(
-				valueContext,
-				metaModelType,
-				metadataContext
-		);
+		final DomainType<Y> domainType = determineSimpleType( valueContext, metadataContext );
+		final JavaType<?> relationalJavaType = determineRelationalJavaType( valueContext, domainType, metadataContext );
 		return new SingularAttributeImpl<>(
 				ownerType,
 				attributeMetadata.getName(),
 				attributeMetadata.getAttributeClassification(),
-				metaModelType,
+				(SqmDomainType<Y>) domainType,
 				relationalJavaType,
 				attributeMetadata.getMember(),
 				false,
@@ -188,7 +184,7 @@ public class AttributeFactory {
 		return new SingularAttributeImpl.Identifier<>(
 				ownerType,
 				property.getName(),
-				(SimpleDomainType<Y>) domainType,
+				(SqmDomainType<Y>) domainType,
 				attributeMetadata.getMember(),
 				attributeMetadata.getAttributeClassification(),
 				property.isGeneric(),
@@ -220,7 +216,7 @@ public class AttributeFactory {
 				ownerType,
 				property.getName(),
 				attributeMetadata.getAttributeClassification(),
-				(SimpleDomainType<Y>) domainType,
+				(SqmDomainType<Y>) domainType,
 				attributeMetadata.getMember(),
 				context
 		);

@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.sql;
 
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.metamodel.SingularAttribute;
-import jakarta.persistence.metamodel.Type;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -5497,7 +5496,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				return new QueryLiteral<>(
 						literal.getLiteralValue(),
 						creationContext.getTypeConfiguration().getBasicTypeRegistry()
-								.getRegisteredType( nodeType.getSqmPathType().getJavaType().getName() )
+								.getRegisteredType( nodeType.getSqmPathType().getTypeName() )
 				);
 			}
 		}
@@ -5902,8 +5901,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		if ( sqmExpression instanceof SelfRenderingSqmFunction<?> selfRenderingSqmFunction ) {
+			final ReturnableType<?> returnableType = selfRenderingSqmFunction.resolveResultType( this );
 			return domainModel.resolveMappingExpressible(
-					selfRenderingSqmFunction.resolveResultType( this ),
+					returnableType == null ? null : returnableType.resolveExpressible( getCreationContext() ),
 					this::findTableGroupByPath
 			);
 		}

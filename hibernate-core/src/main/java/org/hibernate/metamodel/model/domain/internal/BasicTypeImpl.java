@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -19,7 +20,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 /**
  * @author Emmanuel Bernard
  */
-public class BasicTypeImpl<J> implements BasicDomainType<J>, JdbcMapping, Serializable {
+public class BasicTypeImpl<J> implements BasicDomainType<J>, SqmDomainType<J>, JdbcMapping, Serializable {
 	private final JavaType<J> javaType;
 	private final JdbcType jdbcType;
 
@@ -28,8 +29,14 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, JdbcMapping, Serial
 		this.jdbcType = jdbcType;
 	}
 
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
+	@Override
+	public String getTypeName() {
+		return javaType.getTypeName();
+	}
+
+	@Override
+	public SqmDomainType<J> getSqmType() {
+		return this;
 	}
 
 	@Override

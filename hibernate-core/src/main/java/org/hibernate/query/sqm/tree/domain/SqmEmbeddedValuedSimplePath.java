@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
@@ -15,6 +14,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.TreatException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -74,9 +74,9 @@ public class SqmEmbeddedValuedSimplePath<T>
 	}
 
 	@Override
-	public DomainType<T> getSqmType() {
+	public SqmDomainType<T> getSqmType() {
 		//noinspection unchecked
-		return (DomainType<T>) getResolvedModel().getSqmType();
+		return (SqmDomainType<T>) getResolvedModel().getSqmType();
 	}
 
 	@Override

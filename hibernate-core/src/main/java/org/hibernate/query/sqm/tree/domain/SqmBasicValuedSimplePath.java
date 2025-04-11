@@ -12,6 +12,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
@@ -120,7 +121,7 @@ public class SqmBasicValuedSimplePath<T>
 							queryEngine
 					);
 		}
-		else if ( sqmPathType.getRelationalJavaType().getJavaTypeClass() == String.class ) {
+		else if ( sqmPathType.resolveExpressible( nodeBuilder() ).getRelationalJavaType().getJavaTypeClass() == String.class ) {
 			result = queryEngine.getSqmFunctionRegistry()
 					.findFunctionDescriptor( "substring" )
 					.generateSqmExpression(
@@ -182,9 +183,9 @@ public class SqmBasicValuedSimplePath<T>
 	}
 
 	@Override
-	public DomainType<T> getSqmType() {
+	public SqmDomainType<T> getSqmType() {
 		//noinspection unchecked
-		return (DomainType<T>) getResolvedModel().getSqmType();
+		return (SqmDomainType<T>) getResolvedModel().getSqmType();
 	}
 
 

@@ -28,6 +28,7 @@ import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
+import org.hibernate.query.sqm.tree.from.SqmEmbeddableDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 
@@ -56,7 +57,7 @@ public abstract class AbstractIdentifiableType<J>
 
 	private SingularPersistentAttribute<J,?> id;
 	private Set<SingularPersistentAttribute<? super J,?>> nonAggregatedIdAttributes;
-	private EmbeddableDomainType<?> idClassType;
+	private SqmEmbeddableDomainType<?> idClassType;
 
 	private SqmPathSource<?> identifierDescriptor;
 
@@ -359,7 +360,7 @@ public abstract class AbstractIdentifiableType<J>
 
 				AbstractIdentifiableType.this.nonAggregatedIdAttributes = idAttributes;
 			}
-			AbstractIdentifiableType.this.idClassType = idClassType;
+			AbstractIdentifiableType.this.idClassType = (SqmEmbeddableDomainType<?>) idClassType;
 		}
 
 		@Override
@@ -456,7 +457,7 @@ public abstract class AbstractIdentifiableType<J>
 					attribute.isGeneric()
 			);
 		}
-		else if ( type instanceof EmbeddableDomainType<T> embeddableDomainType ) {
+		else if ( type instanceof SqmEmbeddableDomainType<T> embeddableDomainType ) {
 			return new EmbeddedSqmPathSource<>(
 					EntityIdentifierMapping.ID_ROLE_NAME,
 					attribute,

@@ -27,6 +27,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
 import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
@@ -56,7 +57,7 @@ public class SingularAttributeImpl<D,J>
 			ManagedDomainType<D> declaringType,
 			String name,
 			AttributeClassification attributeClassification,
-			DomainType<J> attributeType,
+			SqmDomainType<J> attributeType,
 			JavaType<?> relationalJavaType,
 			Member member,
 			boolean isIdentifier,
@@ -70,13 +71,11 @@ public class SingularAttributeImpl<D,J>
 				attributeType.getExpressibleJavaType(),
 				attributeClassification,
 				attributeType,
-				member,
-				metadataContext
+				member
 		);
 		this.isIdentifier = isIdentifier;
 		this.isVersion = isVersion;
 		this.isOptional = isOptional;
-
 
 		this.sqmPathSource = SqmMappingModelHelper.resolveSqmPathSource(
 				name,
@@ -98,26 +97,26 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public SimpleDomainType<J> getSqmPathType() {
-		return (SimpleDomainType<J>) sqmPathSource.getSqmPathType();
+	public SqmDomainType<J> getSqmPathType() {
+		return sqmPathSource.getSqmPathType();
 	}
 
 	@Override
-	public SimpleDomainType<J> getValueGraphType() {
+	public DomainType<J> getValueGraphType() {
 		return getSqmPathType();
 	}
 
 	@Override
 	public SimpleDomainType<?> getKeyGraphType() {
-		final SimpleDomainType<?> attributeType = getType();
-		return attributeType instanceof IdentifiableDomainType
-				? ( (IdentifiableDomainType<?>) attributeType ).getIdType()
+		return getType() instanceof IdentifiableDomainType<?> identifiableDomainType
+				? identifiableDomainType.getIdType()
 				: null;
 	}
 
 	@Override
 	public SimpleDomainType<J> getType() {
-		return getSqmPathType();
+		// TODO: VERY UGLY, FIX THIS
+		return (SimpleDomainType<J>) getSqmPathType();
 	}
 
 	@Override
@@ -212,7 +211,7 @@ public class SingularAttributeImpl<D,J>
 		public Identifier(
 				ManagedDomainType<D> declaringType,
 				String name,
-				SimpleDomainType<J> attributeType,
+				SqmDomainType<J> attributeType,
 				Member member,
 				AttributeClassification attributeClassification,
 				boolean isGeneric,
@@ -262,7 +261,7 @@ public class SingularAttributeImpl<D,J>
 				ManagedDomainType<X> declaringType,
 				String name,
 				AttributeClassification attributeClassification,
-				SimpleDomainType<Y> attributeType,
+				SqmDomainType<Y> attributeType,
 				Member member,
 				MetadataContext metadataContext) {
 			super(

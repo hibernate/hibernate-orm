@@ -8,7 +8,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 public interface SqmEntityDomainType<E> extends EntityDomainType<E>, SqmTreatableDomainType<E> {
 	@Override
-	default EntityDomainType<E> getSqmType() {
-		return EntityDomainType.super.getSqmType();
+	default SqmEntityDomainType<E> getSqmType() {
+		return this;
 	}
 }

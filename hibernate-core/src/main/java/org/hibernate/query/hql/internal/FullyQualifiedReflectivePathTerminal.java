@@ -25,6 +25,7 @@ import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -70,9 +71,13 @@ public class FullyQualifiedReflectivePathTerminal<E>
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// See if it is an entity-type literal
 
-			final EntityDomainType<?> entityDescriptor = creationContext.getJpaMetamodel().findEntityType( fullPath );
+			final EntityDomainType<?> entityDescriptor =
+					creationContext.getJpaMetamodel().findEntityType( fullPath );
 			if ( entityDescriptor != null ) {
-				return new SqmLiteralEntityType<>( entityDescriptor, creationContext.getNodeBuilder() );
+				return new SqmLiteralEntityType<>(
+						(SqmEntityDomainType<?>) entityDescriptor,
+						creationContext.getNodeBuilder()
+				);
 			}
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

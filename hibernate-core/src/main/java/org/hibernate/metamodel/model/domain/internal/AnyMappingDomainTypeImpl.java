@@ -10,6 +10,7 @@ import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.MetaType;
@@ -23,7 +24,7 @@ import static org.hibernate.metamodel.mapping.internal.AnyDiscriminatorPart.dete
 /**
  * @author Steve Ebersole
  */
-public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T> {
+public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T>, SqmDomainType<T> {
 	private final AnyType anyType;
 	private final JavaType<T> baseJtd;
 	private final BasicType<Class<?>> anyDiscriminatorType;
@@ -52,6 +53,16 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T> {
 						mappingMetamodel
 				)
 		);
+	}
+
+	@Override
+	public SqmDomainType<T> getSqmType() {
+		return this;
+	}
+
+	@Override
+	public String getTypeName() {
+		return baseJtd.getTypeName();
 	}
 
 	private NavigableRole resolveNavigableRole(Any bootAnyMapping) {

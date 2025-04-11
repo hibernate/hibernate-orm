@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -17,6 +16,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 
 /**
@@ -67,7 +67,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 	}
 
 	@Override
-	public DomainType<E> getSqmType() {
+	public SqmDomainType<E> getSqmType() {
 		return null;
 	}
 

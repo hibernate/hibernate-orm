@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.QueryException;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -22,6 +21,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -302,7 +302,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 	}
 
 	@Override
-	public DomainType<T> getSqmType() {
+	public SqmDomainType<T> getSqmType() {
 		return null;
 	}
 

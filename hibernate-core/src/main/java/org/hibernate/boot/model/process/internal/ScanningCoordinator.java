@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.boot.archive.internal.UrlInputStreamAccess;
@@ -235,11 +236,10 @@ public class ScanningCoordinator {
 			if ( classDescriptor.getCategorization() == ClassDescriptor.Categorization.CONVERTER ) {
 				// converter classes are safe to load because we never enhance them,
 				// and notice we use the ClassLoaderService specifically, not the temp ClassLoader (if any)
+				final Class<? extends AttributeConverter<?, ?>> converterClass =
+						classLoaderService.classForName( classDescriptor.getName() );
 				managedResources.addAttributeConverterDefinition(
-						new ClassBasedConverterDescriptor(
-								classLoaderService.classForName( classDescriptor.getName() ),
-								bootstrapContext.getClassmateContext()
-						)
+						new ClassBasedConverterDescriptor<>( converterClass, bootstrapContext.getClassmateContext() )
 				);
 			}
 			else if ( classDescriptor.getCategorization() == ClassDescriptor.Categorization.MODEL ) {

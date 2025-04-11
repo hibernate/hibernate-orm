@@ -79,11 +79,13 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build()) {
-			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			MetadataBuildingContextTestingImpl buildingContext1 = new MetadataBuildingContextTestingImpl(
+					serviceRegistry );
 			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
-					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
+					() -> buildingContext1.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
 			);
+			MetadataBuildingContext buildingContext = buildingContext1;
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
 			generator.configure(
@@ -123,11 +125,13 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, TableDialect.class.getName() )
 				.build()) {
-			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			MetadataBuildingContextTestingImpl buildingContext1 = new MetadataBuildingContextTestingImpl(
+					serviceRegistry );
 			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
-					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
+					() -> buildingContext1.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
 			);
+			MetadataBuildingContext buildingContext = buildingContext1;
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
 			generator.configure(
@@ -161,7 +165,7 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
 				.build()) {
-			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
 					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
@@ -189,7 +193,7 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build()) {
-			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
 					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
@@ -223,7 +227,7 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, TableDialect.class.getName() )
 				.build()) {
-			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
 					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
@@ -255,7 +259,7 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
 				.build()) {
-			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
 					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
@@ -292,7 +296,7 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
 				.build()) {
-			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
 					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
@@ -351,7 +355,7 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build()) {
-			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
 					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry

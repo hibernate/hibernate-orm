@@ -72,10 +72,9 @@ public class SoftDeleteHelper {
 			softDeleteIndicatorValue.setImplicitJavaTypeAccess( (typeConfiguration) -> Instant.class );
 		}
 		else {
-			final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
-					softDeleteConfig.converter(),
-					context.getBootstrapContext().getClassmateContext()
-			);
+			final ClassBasedConverterDescriptor<Boolean,?> converterDescriptor =
+					new ClassBasedConverterDescriptor<>( softDeleteConfig.converter(),
+							context.getBootstrapContext().getClassmateContext() );
 			softDeleteIndicatorValue.setJpaAttributeConverterDescriptor( converterDescriptor );
 			softDeleteIndicatorValue.setImplicitJavaTypeAccess(
 					(typeConfiguration) -> converterDescriptor.getRelationalValueResolvedType().getErasedType()

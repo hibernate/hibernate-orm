@@ -67,6 +67,7 @@ public interface TypeContributions {
 	 */
 	@Incubating
 	default void contributeType(CompositeUserType<?> type) {
+		// default implementation for backward compatibility
 		throw new UnsupportedOperationException();
 	}
 
@@ -76,7 +77,7 @@ public interface TypeContributions {
 	 * @since 6.2
 	 */
 	@Incubating
-	default void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
+	default void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass)  {
 		// default implementation for backward compatibility
 		throw new UnsupportedOperationException();
 	}

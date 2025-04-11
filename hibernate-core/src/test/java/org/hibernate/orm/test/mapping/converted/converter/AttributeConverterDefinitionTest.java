@@ -26,11 +26,9 @@ class AttributeConverterDefinitionTest {
 	@ParameterizedTest
 	void test(Class<? extends AttributeConverter<?, ?>> attributeConverterClass, Class<?> expectedType) {
 		try (BootstrapContextImpl bootstrapContext = new BootstrapContextImpl()) {
-			final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
-					attributeConverterClass,
-					bootstrapContext.getClassmateContext()
-			);
-
+			final ClassBasedConverterDescriptor<?,?> converterDescriptor =
+					new ClassBasedConverterDescriptor<>( attributeConverterClass,
+							bootstrapContext.getClassmateContext() );
 			assertThat( converterDescriptor.getDomainValueResolvedType().getErasedType() )
 					.isEqualTo( expectedType );
 		}

@@ -115,7 +115,7 @@ public class FilterDefBinder {
 			return resolveUserType( (Class<UserType<?>>) type, context );
 		}
 		else if ( AttributeConverter.class.isAssignableFrom( type ) ) {
-			return resolveAttributeConverter( (Class<AttributeConverter<?,?>>) type, context );
+			return resolveAttributeConverter( (Class<? extends AttributeConverter<?,?>>) type, context );
 		}
 		else if ( JavaType.class.isAssignableFrom( type ) ) {
 			return resolveJavaType( (Class<JavaType<?>>) type, context );

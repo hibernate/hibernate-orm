@@ -384,7 +384,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		}
 	}
 
-	public ConverterDescriptor resolveElementAttributeConverterDescriptor(
+	public ConverterDescriptor<?,?> resolveElementAttributeConverterDescriptor(
 			MemberDetails memberDetails,
 			ClassDetails classDetails) {
 		final AttributeConversionInfo info = locateAttributeConversionInfo( "element" );
@@ -405,7 +405,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 				.findAutoApplyConverterForCollectionElement( memberDetails, getContext() );
 	}
 
-	public ConverterDescriptor mapKeyAttributeConverterDescriptor(
+	public ConverterDescriptor<?,?> mapKeyAttributeConverterDescriptor(
 			MemberDetails memberDetails,
 			TypeDetails keyTypeDetails) {
 		final AttributeConversionInfo info = locateAttributeConversionInfo( "key" );

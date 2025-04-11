@@ -1092,6 +1092,10 @@ abstract public class DialectFeatureChecks {
 	public static class FakeTypeContributions implements TypeContributions {
 		private final TypeConfiguration typeConfiguration;
 
+		@Override
+		public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
+		}
+
 		public FakeTypeContributions(TypeConfiguration typeConfiguration) {
 			this.typeConfiguration = typeConfiguration;
 		}

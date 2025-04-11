@@ -23,6 +23,7 @@ import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyGetterImpl;
 import org.hibernate.property.access.spi.Getter;
@@ -942,6 +943,7 @@ public final class ReflectHelper {
 		return (Class<T>) value.getClass();
 	}
 
+	@AllowReflection
 	public static <T> Class<T[]> arrayClass(Class<T> clazz) {
 		final Object instance = Array.newInstance( clazz, 0 );
 		@SuppressWarnings("unchecked")

@@ -9,18 +9,20 @@ import org.hibernate.query.BindableType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Describes any type that occurs in the application's domain model.
+ * Describes any type forming part of the application domain model.
  * <p>
- * The base for Hibernate's extension of the JPA type system.
+ * This is the base type for Hibernate's extension of the standard metamodel
+ * of the {@linkplain jakarta.persistence.metamodel.Type JPA type system}.
  * <p>
- * Encapsulates a {@link JavaType} describing the more rudimentary
- * aspects of the Java type.  The DomainType is a higher-level construct
- * incorporating information such as bean properties, constructors, etc
+ * Encapsulates a {@link JavaType} describing the more rudimentary aspects
+ * of the Java type. The {@code DomainType} is a higher-level construct
+ * incorporating information such as bean properties, constructors, etc.
  *
  * @implNote The actual JPA type system is more akin to {@link SimpleDomainType}.
- * This contract represents a "higher level" than JPA
- * including descriptors for collections (which JPA does not define) as well as
- * Hibernate-specific features (like dynamic models or ANY mappings).
+ *           This contract represents a "higher level" abstraction, allowing
+ *           descriptors for collections (which JPA does not define) as well
+ *           as Hibernate-specific features (like dynamic models and
+ *           {@link org.hibernate.annotations.Any @Any}).
  *
  * @author Steve Ebersole
  */

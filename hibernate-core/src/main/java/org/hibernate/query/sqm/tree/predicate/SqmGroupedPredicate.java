@@ -12,6 +12,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * @author Steve Ebersole
@@ -67,9 +68,9 @@ public class SqmGroupedPredicate extends AbstractSqmPredicate {
 		return new SqmNegatedPredicate( this, nodeBuilder() );
 	}
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( '(' );
-		subPredicate.appendHqlString( hql );
+		subPredicate.appendHqlString( hql, context );
 		hql.append( ')' );
 	}
 }

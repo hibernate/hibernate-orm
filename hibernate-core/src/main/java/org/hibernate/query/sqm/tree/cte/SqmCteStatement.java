@@ -14,6 +14,7 @@ import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.SortDirection;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
@@ -320,7 +321,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		if ( cteTable.getName() == null ) {
 			hql.append( "generated_" );
 		}
@@ -339,11 +340,11 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 			hql.append( getMaterialization() ).append( ' ' );
 		}
 		if ( getCteDefinition() instanceof SqmSubQuery<?> ) {
-			( (SqmSubQuery<?>) getCteDefinition() ).appendHqlString( hql );
+			( (SqmSubQuery<?>) getCteDefinition() ).appendHqlString( hql, context );
 		}
 		else {
 			hql.append( '(' );
-			( (SqmSelectStatement<?>) getCteDefinition() ).appendHqlString( hql );
+			( (SqmSelectStatement<?>) getCteDefinition() ).appendHqlString( hql, context );
 			hql.append( ')' );
 		}
 		String separator;
@@ -394,9 +395,9 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 			hql.append( " set " );
 			hql.append( getCycleMarkAttributeName() );
 			hql.append( " to " );
-			getCycleLiteral().appendHqlString( hql );
+			getCycleLiteral().appendHqlString( hql, context );
 			hql.append( " default " );
-			getNoCycleLiteral().appendHqlString( hql );
+			getNoCycleLiteral().appendHqlString( hql, context );
 			if ( getCyclePathAttributeName() != null ) {
 				hql.append( " using " );
 				hql.append( getCyclePathAttributeName() );

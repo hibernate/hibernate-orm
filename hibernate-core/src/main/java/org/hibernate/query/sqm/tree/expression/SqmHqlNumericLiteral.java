@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -74,7 +75,7 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( literalValue );
 
 		switch ( typeCategory ) {
@@ -103,7 +104,7 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 	@Override
 	public String asLoggableText() {
 		final StringBuilder stringBuilder = new StringBuilder();
-		appendHqlString( stringBuilder );
+		appendHqlString( stringBuilder, SqmRenderContext.simpleContext() );
 		return stringBuilder.toString();
 	}
 

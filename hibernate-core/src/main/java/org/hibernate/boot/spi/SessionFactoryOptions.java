@@ -393,6 +393,12 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	default boolean isCriteriaCopyTreeEnabled() {
 		return false;
 	}
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#CRITERIA_PLAN_CACHE_ENABLED
+	 */
+	default boolean isCriteriaPlanCacheEnabled() {
+		return false;
+	}
 
 	/**
 	 * @see org.hibernate.cfg.AvailableSettings#NATIVE_IGNORE_JDBC_PARAMETERS

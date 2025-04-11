@@ -19,6 +19,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -172,13 +173,13 @@ public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boole
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( "json_exists(" );
-		getArguments().get( 0 ).appendHqlString( hql );
+		getArguments().get( 0 ).appendHqlString( hql, context );
 		hql.append( ',' );
-		getArguments().get( 1 ).appendHqlString( hql );
+		getArguments().get( 1 ).appendHqlString( hql, context );
 
-		appendPassingExpressionHqlString( hql );
+		appendPassingExpressionHqlString( hql, context );
 		switch ( errorBehavior ) {
 			case ERROR -> hql.append( " error on error" );
 			case TRUE -> hql.append( " true on error" );

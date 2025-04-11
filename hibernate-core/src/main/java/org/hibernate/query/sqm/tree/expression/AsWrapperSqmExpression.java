@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.type.BasicType;
 
 public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
@@ -23,9 +24,9 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( "wrap(" );
-		expression.appendHqlString( hql );
+		expression.appendHqlString( hql, context );
 		hql.append( " as " );
 		hql.append( getNodeType().getReturnedClassName() );
 		hql.append( ")" );

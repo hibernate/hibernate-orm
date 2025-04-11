@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * @author Steve Ebersole
@@ -153,19 +154,19 @@ public class SqmCaseSimple<T, R>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( "case " );
-		fixture.appendHqlString( hql );
+		fixture.appendHqlString( hql, context );
 		for ( WhenFragment<? extends T, ? extends R> whenFragment : whenFragments ) {
 			hql.append( " when " );
-			whenFragment.checkValue.appendHqlString( hql );
+			whenFragment.checkValue.appendHqlString( hql, context );
 			hql.append( " then " );
-			whenFragment.result.appendHqlString( hql );
+			whenFragment.result.appendHqlString( hql, context );
 		}
 
 		if ( otherwise != null ) {
 			hql.append( " else " );
-			otherwise.appendHqlString( hql );
+			otherwise.appendHqlString( hql, context );
 		}
 		hql.append( " end" );
 	}

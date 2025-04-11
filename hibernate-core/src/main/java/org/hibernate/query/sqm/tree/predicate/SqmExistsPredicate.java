@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.predicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -59,14 +60,14 @@ public class SqmExistsPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		if ( isNegated() ) {
 			hql.append( "not exists " );
 		}
 		else {
 			hql.append( "exists " );
 		}
-		expression.appendHqlString( hql );
+		expression.appendHqlString( hql, context );
 	}
 
 	@Override

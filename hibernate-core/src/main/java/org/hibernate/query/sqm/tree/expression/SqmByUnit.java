@@ -8,6 +8,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * @author Gavin King
@@ -58,8 +59,8 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 		return walker.visitByUnit( this );
 	}
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		duration.appendHqlString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		duration.appendHqlString( hql, context );
 		hql.append( " by " );
 		hql.append( unit.getUnit() );
 	}

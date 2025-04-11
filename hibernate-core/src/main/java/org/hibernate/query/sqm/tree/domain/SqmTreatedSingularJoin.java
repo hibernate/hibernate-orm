@@ -10,6 +10,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
 
@@ -120,9 +121,9 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( "treat(" );
-		wrappedPath.appendHqlString( hql );
+		wrappedPath.appendHqlString( hql, context );
 		hql.append( " as " );
 		hql.append( treatTarget.getTypeName() );
 		hql.append( ')' );

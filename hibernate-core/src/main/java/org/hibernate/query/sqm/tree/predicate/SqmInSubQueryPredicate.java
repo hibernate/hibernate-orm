@@ -10,6 +10,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
@@ -105,13 +106,13 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		testExpression.appendHqlString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		testExpression.appendHqlString( hql, context );
 		if ( isNegated() ) {
 			hql.append( " not" );
 		}
 		hql.append( " in " );
-		subQueryExpression.appendHqlString( hql );
+		subQueryExpression.appendHqlString( hql, context );
 	}
 
 	@Override

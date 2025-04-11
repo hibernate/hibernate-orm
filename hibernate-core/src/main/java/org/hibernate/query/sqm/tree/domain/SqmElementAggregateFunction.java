@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -112,9 +113,9 @@ public class SqmElementAggregateFunction<T> extends AbstractSqmSpecificPluralPar
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append(functionName).append( "(" );
-		getLhs().appendHqlString( hql );
+		getLhs().appendHqlString( hql, context );
 		hql.append( ')' );
 	}
 }

@@ -10,6 +10,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
@@ -134,12 +135,12 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		lhsOperand.appendHqlString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		lhsOperand.appendHqlString( hql, context );
 		hql.append( ' ' );
 		hql.append( operator.getOperatorSqlText() );
 		hql.append( ' ' );
-		rhsOperand.appendHqlString( hql );
+		rhsOperand.appendHqlString( hql, context );
 	}
 
 }

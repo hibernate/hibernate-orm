@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
 import jakarta.persistence.criteria.Expression;
@@ -140,18 +141,18 @@ public class SqmCaseSearched<R>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( "case" );
 		for ( WhenFragment<? extends R> whenFragment : whenFragments ) {
 			hql.append( " when " );
-			whenFragment.predicate.appendHqlString( hql );
+			whenFragment.predicate.appendHqlString( hql, context );
 			hql.append( " then " );
-			whenFragment.result.appendHqlString( hql );
+			whenFragment.result.appendHqlString( hql, context );
 		}
 
 		if ( otherwise != null ) {
 			hql.append( " else " );
-			otherwise.appendHqlString( hql );
+			otherwise.appendHqlString( hql, context );
 		}
 		hql.append( " end" );
 	}

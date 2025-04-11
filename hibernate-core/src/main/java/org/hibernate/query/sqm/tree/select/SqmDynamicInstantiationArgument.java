@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.select;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * Represents an individual argument to a dynamic instantiation.
@@ -56,8 +57,8 @@ public class SqmDynamicInstantiationArgument<T> implements SqmAliasedNode<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		selectableNode.appendHqlString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		selectableNode.appendHqlString( hql, context );
 		if ( alias != null ) {
 			hql.append( " as " ).append( alias );
 		}

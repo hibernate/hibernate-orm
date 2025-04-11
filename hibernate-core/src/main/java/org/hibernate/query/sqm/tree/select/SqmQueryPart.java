@@ -12,6 +12,7 @@ import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaQueryPart;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
@@ -173,26 +174,26 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 
 	public abstract void validateQueryStructureAndFetchOwners();
 
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		if ( orderByClause == null || orderByClause.getSortSpecifications().isEmpty() ) {
 			return;
 		}
 		hql.append( " order by " );
 		final List<SqmSortSpecification> sortSpecifications = orderByClause.getSortSpecifications();
-		sortSpecifications.get( 0 ).appendHqlString( hql );
+		sortSpecifications.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < sortSpecifications.size(); i++ ) {
 			hql.append( ", " );
-			sortSpecifications.get( i ).appendHqlString( hql );
+			sortSpecifications.get( i ).appendHqlString( hql, context );
 		}
 
 		if ( offsetExpression != null ) {
 			hql.append( " offset " );
-			offsetExpression.appendHqlString( hql );
+			offsetExpression.appendHqlString( hql, context );
 			hql.append( " rows " );
 		}
 		if ( fetchExpression != null ) {
 			hql.append( " fetch first " );
-			fetchExpression.appendHqlString( hql );
+			fetchExpression.appendHqlString( hql, context );
 			switch ( fetchClauseType ) {
 				case ROWS_ONLY:
 					hql.append( " rows only" );

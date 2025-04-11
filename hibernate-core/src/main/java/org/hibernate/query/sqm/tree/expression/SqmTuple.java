@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 
 /**
@@ -83,12 +84,12 @@ public class SqmTuple<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( '(' );
-		groupedExpressions.get( 0 ).appendHqlString( hql );
+		groupedExpressions.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < groupedExpressions.size(); i++ ) {
 			hql.append(", ");
-			groupedExpressions.get( i ).appendHqlString( hql );
+			groupedExpressions.get( i ).appendHqlString( hql, context );
 		}
 		hql.append( ')' );
 	}

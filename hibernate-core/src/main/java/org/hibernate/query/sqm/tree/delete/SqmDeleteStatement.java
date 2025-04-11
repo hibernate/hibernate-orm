@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.AbstractSqmRestrictedDmlStatement;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
@@ -101,15 +102,15 @@ public class SqmDeleteStatement<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		appendHqlCteString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		appendHqlCteString( hql, context );
 		hql.append( "delete from " );
 		final SqmRoot<T> root = getTarget();
 		hql.append( root.getEntityName() );
-		hql.append( ' ' ).append( root.resolveAlias() );
-		SqmFromClause.appendJoins( root, hql );
-		SqmFromClause.appendTreatJoins( root, hql );
-		super.appendHqlString( hql );
+		hql.append( ' ' ).append( root.resolveAlias( context ) );
+		SqmFromClause.appendJoins( root, hql, context );
+		SqmFromClause.appendTreatJoins( root, hql, context );
+		super.appendHqlString( hql, context );
 	}
 
 	@Override

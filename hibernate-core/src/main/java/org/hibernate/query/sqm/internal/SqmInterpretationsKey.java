@@ -19,7 +19,6 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
 import static java.lang.Boolean.TRUE;
-import static org.hibernate.query.spi.AbstractSelectionQuery.CRITERIA_HQL_STRING;
 
 /**
  * @author Steve Ebersole
@@ -28,6 +27,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 	public interface CacheabilityInfluencers {
 		boolean isQueryPlanCacheable();
 		String getQueryString();
+		Object getQueryStringCacheKey();
 		SqmStatement<?> getSqmStatement();
 		QueryOptions getQueryOptions();
 		LoadQueryInfluencers getLoadQueryInfluencers();
@@ -40,9 +40,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 
 	public static SqmInterpretationsKey createInterpretationsKey(InterpretationsKeySource keySource) {
 		if ( isCacheable ( keySource ) ) {
-			final Object query = CRITERIA_HQL_STRING.equals( keySource.getQueryString() )
-					? keySource.getSqmStatement()
-					: keySource.getQueryString();
+			final Object query = keySource.getQueryStringCacheKey();
 			return new SqmInterpretationsKey(
 					query,
 					query.hashCode(),

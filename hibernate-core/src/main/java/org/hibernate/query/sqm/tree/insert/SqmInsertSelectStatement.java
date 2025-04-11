@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -171,13 +172,13 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		super.appendHqlString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		super.appendHqlString( hql, context );
 		hql.append( ' ' );
-		selectQueryPart.appendHqlString( hql );
-		final SqmConflictClause conflictClause = getConflictClause();
+		selectQueryPart.appendHqlString( hql, context );
+		final SqmConflictClause<?> conflictClause = getConflictClause();
 		if ( conflictClause != null ) {
-			conflictClause.appendHqlString( hql );
+			conflictClause.appendHqlString( hql, context );
 		}
 	}
 }

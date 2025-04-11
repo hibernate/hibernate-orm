@@ -19,6 +19,7 @@ import org.hibernate.query.criteria.JpaQueryGroup;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -221,23 +222,23 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		appendQueryPart( queryParts.get( 0 ), hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		appendQueryPart( queryParts.get( 0 ), hql, context );
 		for ( int i = 1; i < queryParts.size(); i++ ) {
 			hql.append( ' ' );
 			hql.append( setOperator.sqlString() );
 			hql.append( ' ' );
-			appendQueryPart( queryParts.get( i ), hql );
+			appendQueryPart( queryParts.get( i ), hql, context );
 		}
-		super.appendHqlString( hql );
+		super.appendHqlString( hql, context );
 	}
 
-	private static void appendQueryPart(SqmQueryPart<?> queryPart, StringBuilder sb) {
+	private static void appendQueryPart(SqmQueryPart<?> queryPart, StringBuilder sb, SqmRenderContext context) {
 		final boolean needsParenthesis = !queryPart.isSimpleQueryPart();
 		if ( needsParenthesis ) {
 			sb.append( '(' );
 		}
-		queryPart.appendHqlString( sb );
+		queryPart.appendHqlString( sb, context );
 		if ( needsParenthesis ) {
 			sb.append( ')' );
 		}

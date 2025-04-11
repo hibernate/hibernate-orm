@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * {@link JpaParameterExpression} created via JPA {@link jakarta.persistence.criteria.CriteriaBuilder}.
@@ -138,8 +139,13 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		hql.append( ':' ).append( getName() );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		if ( getName() == null ) {
+			hql.append( ':' ).append( context.resolveParameterName( this ) );
+		}
+		else {
+			hql.append( ':' ).append( getName() );
+		}
 	}
 
 	@Override

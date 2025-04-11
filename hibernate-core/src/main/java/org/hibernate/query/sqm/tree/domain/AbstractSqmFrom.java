@@ -35,6 +35,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -937,14 +938,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		if ( alias == null ) {
-			// If we don't have an alias, this is the best we can do to at least ensure uniqueness
-			hql.append( "alias_" ).append( System.identityHashCode( this ) );
-		}
-		else {
-			hql.append( alias );
-		}
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( resolveAlias( context ) );
 	}
 
 	@Override

@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * @author Steve Ebersole
@@ -86,12 +87,12 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( "coalesce(" );
-		arguments.get( 0 ).appendHqlString( hql );
+		arguments.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < arguments.size(); i++ ) {
 			hql.append(", ");
-			arguments.get( i ).appendHqlString( hql );
+			arguments.get( i ).appendHqlString( hql, context );
 		}
 		hql.append( ')' );
 	}

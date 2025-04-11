@@ -8,6 +8,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 /**
@@ -81,10 +82,10 @@ public class SqmModifiedSubQueryExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( modifier );
 		hql.append( " (" );
-		subQuery.appendHqlString( hql );
+		subQuery.appendHqlString( hql, context );
 		hql.append( ')' );
 	}
 }

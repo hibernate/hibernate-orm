@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.SqmFunctionPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -68,44 +69,44 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		// Special case a few functions with special syntax for rendering...
 		// Unless we introduce dedicated SqmXXX classes that override this method, we have to render it this way
 		switch ( functionName ) {
 			case "cast": {
 				hql.append( "cast(" );
-				arguments.get( 0 ).appendHqlString( hql );
+				arguments.get( 0 ).appendHqlString( hql, context );
 				hql.append( " as " );
-				arguments.get( 1 ).appendHqlString( hql );
+				arguments.get( 1 ).appendHqlString( hql, context );
 				hql.append( ')' );
 				break;
 			}
 			case "extract": {
 				hql.append( "extract(" );
-				arguments.get( 0 ).appendHqlString( hql );
+				arguments.get( 0 ).appendHqlString( hql, context );
 				hql.append( " from " );
-				arguments.get( 1 ).appendHqlString( hql );
+				arguments.get( 1 ).appendHqlString( hql, context );
 				hql.append( ')' );
 				break;
 			}
 			case "format": {
 				hql.append( "format(" );
-				arguments.get( 0 ).appendHqlString( hql );
+				arguments.get( 0 ).appendHqlString( hql, context );
 				hql.append( " as " );
-				arguments.get( 1 ).appendHqlString( hql );
+				arguments.get( 1 ).appendHqlString( hql, context );
 				hql.append( ')' );
 				break;
 			}
 			case "overlay": {
 				hql.append( "overlay(" );
-				arguments.get( 0 ).appendHqlString( hql );
+				arguments.get( 0 ).appendHqlString( hql, context );
 				hql.append( " placing " );
-				arguments.get( 1 ).appendHqlString( hql );
+				arguments.get( 1 ).appendHqlString( hql, context );
 				hql.append( " from " );
-				arguments.get( 2 ).appendHqlString( hql );
+				arguments.get( 2 ).appendHqlString( hql, context );
 				if ( arguments.size() == 4 ) {
 					hql.append( " for " );
-					arguments.get( 3 ).appendHqlString( hql );
+					arguments.get( 3 ).appendHqlString( hql, context );
 				}
 				hql.append( ')' );
 				break;
@@ -114,19 +115,19 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 				hql.append( "trim(" );
 				switch ( arguments.size() ) {
 					case 1:
-						arguments.get( 0 ).appendHqlString( hql );
+						arguments.get( 0 ).appendHqlString( hql, context );
 						break;
 					case 2:
-						arguments.get( 0 ).appendHqlString( hql );
+						arguments.get( 0 ).appendHqlString( hql, context );
 						hql.append( " from " );
-						arguments.get( 1 ).appendHqlString( hql );
+						arguments.get( 1 ).appendHqlString( hql, context );
 						break;
 					case 3:
-						arguments.get( 0 ).appendHqlString( hql );
+						arguments.get( 0 ).appendHqlString( hql, context );
 						hql.append( ' ' );
-						arguments.get( 1 ).appendHqlString( hql );
+						arguments.get( 1 ).appendHqlString( hql, context );
 						hql.append( " from " );
-						arguments.get( 3 ).appendHqlString( hql );
+						arguments.get( 3 ).appendHqlString( hql, context );
 						break;
 				}
 				hql.append( ')' );
@@ -134,20 +135,20 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 			}
 			case "pad": {
 				hql.append( "pad(" );
-				arguments.get( 0 ).appendHqlString( hql );
+				arguments.get( 0 ).appendHqlString( hql, context );
 				hql.append( " with" );
 				for ( int i = 1; i < arguments.size(); i++ ) {
 					hql.append( ' ' );
-					arguments.get( i ).appendHqlString( hql );
+					arguments.get( i ).appendHqlString( hql, context );
 				}
 				hql.append( ')' );
 				break;
 			}
 			case "position": {
 				hql.append( "position(" );
-				arguments.get( 0 ).appendHqlString( hql );
+				arguments.get( 0 ).appendHqlString( hql, context );
 				hql.append( " in " );
-				arguments.get( 1 ).appendHqlString( hql );
+				arguments.get( 1 ).appendHqlString( hql, context );
 				hql.append( ')' );
 				break;
 			}
@@ -160,10 +161,10 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 					return;
 				}
 				hql.append( '(' );
-				arguments.get( 0 ).appendHqlString( hql );
+				arguments.get( 0 ).appendHqlString( hql, context );
 				for ( int i = 1; i < arguments.size(); i++ ) {
 					hql.append( ", " );
-					arguments.get( i ).appendHqlString( hql );
+					arguments.get( i ).appendHqlString( hql, context );
 				}
 
 				hql.append( ')' );

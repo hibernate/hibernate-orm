@@ -12,6 +12,7 @@ import org.hibernate.query.common.FrameMode;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -96,10 +97,10 @@ public class SqmOver<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		expression.appendHqlString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		expression.appendHqlString( hql, context );
 		hql.append( " over (" );
-		window.appendHqlString( hql );
+		window.appendHqlString( hql, context );
 		hql.append( ')' );
 	}
 }

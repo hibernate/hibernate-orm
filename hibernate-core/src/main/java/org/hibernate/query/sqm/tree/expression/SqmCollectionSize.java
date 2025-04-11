@@ -8,6 +8,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**
@@ -61,9 +62,9 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( "size(" );
-		pluralPath.appendHqlString( hql );
+		pluralPath.appendHqlString( hql, context );
 		hql.append( ')' );
 	}
 

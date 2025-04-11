@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * @author Steve Ebersole
@@ -103,32 +104,32 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		final String separator = booleanOperator == BooleanOperator.AND
 				? " and "
 				: " or ";
-		appendJunctionHqlString( predicates.get( 0 ), hql );
+		appendJunctionHqlString( predicates.get( 0 ), hql, context );
 		for ( int i = 1; i < predicates.size(); i++ ) {
 			hql.append( separator );
-			appendJunctionHqlString( predicates.get( i ), hql );
+			appendJunctionHqlString( predicates.get( i ), hql, context );
 		}
 	}
 
-	private void appendJunctionHqlString(SqmPredicate p, StringBuilder sb) {
+	private void appendJunctionHqlString(SqmPredicate p, StringBuilder sb, SqmRenderContext context) {
 		if ( p instanceof SqmJunctionPredicate junction ) {
 			// If we have the same nature, or if this is a disjunction and the operand is a conjunction,
 			// then we don't need parenthesis, because the AND operator binds stronger
 			if ( booleanOperator == junction.getOperator() || booleanOperator == BooleanOperator.OR ) {
-				junction.appendHqlString( sb );
+				junction.appendHqlString( sb, context );
 			}
 			else {
 				sb.append( '(' );
-				junction.appendHqlString( sb );
+				junction.appendHqlString( sb, context );
 				sb.append( ')' );
 			}
 		}
 		else {
-			p.appendHqlString( sb );
+			p.appendHqlString( sb, context );
 		}
 	}
 }

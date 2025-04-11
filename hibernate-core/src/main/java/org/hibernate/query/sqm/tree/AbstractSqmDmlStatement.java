@@ -195,11 +195,11 @@ public abstract class AbstractSqmDmlStatement<E>
 		return new SqmSubQuery<>( this, type, nodeBuilder() );
 	}
 
-	protected void appendHqlCteString(StringBuilder sb) {
+	protected void appendHqlCteString(StringBuilder sb, SqmRenderContext context) {
 		if ( !cteStatements.isEmpty() ) {
 			sb.append( "with " );
 			for ( SqmCteStatement<?> value : cteStatements.values() ) {
-				value.appendHqlString( sb );
+				value.appendHqlString( sb, context );
 				sb.append( ", " );
 			}
 			sb.setLength( sb.length() - 2 );

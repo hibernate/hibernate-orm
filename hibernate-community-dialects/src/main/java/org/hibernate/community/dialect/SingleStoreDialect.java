@@ -24,6 +24,18 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.community.dialect.function.json.SingleStoreJsonArrayAggFunction;
+import org.hibernate.community.dialect.function.json.SingleStoreJsonArrayAppendFunction;
+import org.hibernate.community.dialect.function.json.SingleStoreJsonArrayFunction;
+import org.hibernate.community.dialect.function.json.SingleStoreJsonArrayInsertFunction;
+import org.hibernate.community.dialect.function.json.SingleStoreJsonExistsFunction;
+import org.hibernate.community.dialect.function.json.SingleStoreJsonMergepatchFunction;
+import org.hibernate.community.dialect.function.json.SingleStoreJsonObjectAggFunction;
+import org.hibernate.community.dialect.function.json.SingleStoreJsonObjectFunction;
+import org.hibernate.community.dialect.function.json.SingleStoreJsonQueryFunction;
+import org.hibernate.community.dialect.function.json.SingleStoreJsonRemoveFunction;
+import org.hibernate.community.dialect.function.json.SingleStoreJsonSetFunction;
+import org.hibernate.community.dialect.function.json.SingleStoreJsonValueFunction;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
@@ -64,14 +76,14 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
@@ -83,7 +95,6 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.spi.Exporter;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
@@ -99,13 +110,12 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
-import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BIT;
@@ -503,10 +513,10 @@ public class SingleStoreDialect extends Dialect {
 						castType( BINARY ),
 						this
 				)
-				.withTypeCapacity( maxTinyLobLen, "tinyblob" )
-				.withTypeCapacity( maxMediumLobLen, "mediumblob" )
-				.withTypeCapacity( maxLobLen, "blob" )
-				.build() );
+											   .withTypeCapacity( maxTinyLobLen, "tinyblob" )
+											   .withTypeCapacity( maxMediumLobLen, "mediumblob" )
+											   .withTypeCapacity( maxLobLen, "blob" )
+											   .build() );
 
 		ddlTypeRegistry.addDescriptor( CapacityDependentDdlType.builder(
 						CLOB,
@@ -514,20 +524,24 @@ public class SingleStoreDialect extends Dialect {
 						castType( CHAR ),
 						this
 				)
-				.withTypeCapacity( maxTinyLobLen, "tinytext" )
-				.withTypeCapacity( maxMediumLobLen, "mediumtext" )
-				.withTypeCapacity( maxLobLen, "text" )
-				.build() );
+											   .withTypeCapacity( maxTinyLobLen, "tinytext" )
+											   .withTypeCapacity( maxMediumLobLen, "mediumtext" )
+											   .withTypeCapacity( maxLobLen, "text" )
+											   .build() );
 
 		ddlTypeRegistry.addDescriptor( CapacityDependentDdlType.builder(
-				NCLOB,
-				columnType( NCLOB ),
-				castType( NCHAR ),
-				this
-		).withTypeCapacity( maxTinyLobLen, "tinytext character set utf8" ).withTypeCapacity(
-				maxMediumLobLen,
-				"mediumtext character set utf8"
-		).withTypeCapacity( maxLobLen, "text character set utf8" ).build() );
+						NCLOB,
+						columnType( NCLOB ),
+						castType( NCHAR ),
+						this
+				)
+											   .withTypeCapacity(
+													   maxTinyLobLen,
+													   "tinytext character set utf8"
+											   )
+											   .withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8" )
+											   .withTypeCapacity( maxLobLen, "text character set utf8" )
+											   .build() );
 
 		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
 		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
@@ -585,14 +599,13 @@ public class SingleStoreDialect extends Dialect {
 		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 		commonFunctionFactory.listagg_groupConcat();
 		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
+		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
 		BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
-		functionRegistry
-				.namedDescriptorBuilder( "time" )
+		functionRegistry.namedDescriptorBuilder( "time" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.STRING ) )
 				.register();
-		functionRegistry
-				.patternDescriptorBuilder( "median", "median(?1) over ()" )
+		functionRegistry.patternDescriptorBuilder( "median", "median(?1) over ()" )
 				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )
 				.setExactArgumentCount( 1 )
 				.setParameterTypes( NUMERIC )
@@ -609,45 +622,18 @@ public class SingleStoreDialect extends Dialect {
 				.setParameterTypes( FunctionParameterType.INTEGER )
 				.register();
 		functionRegistry.registerAlternateKey( "char", "chr" );
-		BasicType<Boolean> booleanType = basicTypeRegistry.resolve( StandardBasicTypes.BOOLEAN );
-		functionRegistry.namedDescriptorBuilder( "json_array_contains_string" )
-				.setInvariantType( booleanType )
-				.setExactArgumentCount( 2 )
-				.setParameterTypes( ANY, STRING )
-				.register();
-		functionRegistry.registerAlternateKey( "json_array_contains", "json_array_contains_string" );
-		functionRegistry.namedDescriptorBuilder( "json_array_contains_json" )
-				.setInvariantType( booleanType )
-				.setExactArgumentCount( 2 )
-				.setParameterTypes( ANY, ANY )
-				.register();
-		functionRegistry.namedDescriptorBuilder( "json_array_contains_double" )
-				.setInvariantType( booleanType )
-				.setExactArgumentCount( 2 )
-				.setParameterTypes( ANY, NUMERIC )
-				.register();
-		functionRegistry.namedDescriptorBuilder( "json_match_any_exists" )
-				.setInvariantType( booleanType )
-				.setMinArgumentCount( 1 )
-				.register();
-		functionRegistry.namedDescriptorBuilder( "json_match_any" )
-				.setInvariantType( booleanType )
-				.setMinArgumentCount( 1 )
-				.register();
-		functionRegistry.namedDescriptorBuilder( "json_extract_string" )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.STRING ) )
-				.setMinArgumentCount( 1 )
-				.register();
-		functionRegistry.namedDescriptorBuilder( "json_extract_double" )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )
-				.setMinArgumentCount( 1 )
-				.register();
-		functionRegistry.namedDescriptorBuilder( "json_extract_bigint" )
-				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.BIG_INTEGER ) )
-				.setMinArgumentCount( 1 )
-				.register();
-		functionRegistry.registerAlternateKey( "json_extract", "json_extract_string" );
-		functionRegistry.registerAlternateKey( "json_extract_json", "json_extract_string" );
+		functionRegistry.register( "json_object", new SingleStoreJsonObjectFunction( typeConfiguration ) );
+		functionRegistry.register( "json_array", new SingleStoreJsonArrayFunction( typeConfiguration ) );
+		functionRegistry.register( "json_value", new SingleStoreJsonValueFunction( typeConfiguration ) );
+		functionRegistry.register( "json_exists", new SingleStoreJsonExistsFunction( typeConfiguration ) );
+		functionRegistry.register( "json_query", new SingleStoreJsonQueryFunction( typeConfiguration ) );
+		functionRegistry.register( "json_arrayagg", new SingleStoreJsonArrayAggFunction( typeConfiguration ) );
+		functionRegistry.register( "json_objectagg", new SingleStoreJsonObjectAggFunction( typeConfiguration ) );
+		functionRegistry.register( "json_set", new SingleStoreJsonSetFunction( typeConfiguration ) );
+		functionRegistry.register( "json_remove", new SingleStoreJsonRemoveFunction( typeConfiguration ) );
+		functionRegistry.register( "json_mergepatch", new SingleStoreJsonMergepatchFunction( typeConfiguration ) );
+		functionRegistry.register( "json_array_append", new SingleStoreJsonArrayAppendFunction( typeConfiguration ) );
+		functionRegistry.register( "json_array_insert", new SingleStoreJsonArrayInsertFunction( typeConfiguration ) );
 	}
 
 
@@ -1252,8 +1238,7 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
-	public String getAddForeignKeyConstraintString(
-			String constraintName, String foreignKeyDefinition) {
+	public String getAddForeignKeyConstraintString(String constraintName, String foreignKeyDefinition) {
 		throw new UnsupportedOperationException( "SingleStore does not support foreign keys and referential integrity." );
 	}
 

@@ -273,7 +273,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		assert fromSide == Nature.TARGET
-				? targetTableGroup.getTableReference( navigablePath, associationKey.getTable(), false ) != null
+				? targetTableGroup.getTableReference( navigablePath, associationKey.table(), false ) != null
 				: isTargetTableGroup( targetTableGroup );
 		return createDomainResult(
 				navigablePath.append( ForeignKeyDescriptor.PART_NAME ),

@@ -18,9 +18,4 @@ public interface EntityDomainType<J> extends IdentifiableDomainType<J>, EntityTy
 
 	@Override
 	Collection<? extends EntityDomainType<? extends J>> getSubTypes();
-
-	@Override
-	default EntityDomainType<J> getSqmType() {
-		return this;
-	}
 }

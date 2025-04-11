@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.spi.QueryEngine;
@@ -124,7 +123,7 @@ public class SqmBasicValuedSimplePath<T>
 	}
 
 	private SelfRenderingSqmFunction<?> getIndexFunction(
-			SqmExpression<?> selector, DomainType<T> sqmPathType, QueryEngine queryEngine) {
+			SqmExpression<?> selector, SqmDomainType<T> sqmPathType, QueryEngine queryEngine) {
 		final SqmFunctionRegistry registry = queryEngine.getSqmFunctionRegistry();
 		if ( sqmPathType instanceof BasicPluralType<?, ?> ) {
 			return registry.findFunctionDescriptor( "array_get" )
@@ -147,7 +146,7 @@ public class SqmBasicValuedSimplePath<T>
 		}
 	}
 
-	private Class<?> getJavaTypeClass(DomainType<T> sqmPathType) {
+	private Class<?> getJavaTypeClass(SqmDomainType<T> sqmPathType) {
 		return sqmPathType.resolveExpressible( nodeBuilder() )
 				.getRelationalJavaType()
 				.getJavaTypeClass();

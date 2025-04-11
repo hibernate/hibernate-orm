@@ -5,9 +5,11 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 
-public interface SqmDomainType<T> extends DomainType<T>, SqmExpressible<T> {
+public interface SqmDomainType<T>
+		extends DomainType<T>, SqmExpressible<T>, BindableType<T> {
 	@Override
 	SqmDomainType<T> getSqmType();
 

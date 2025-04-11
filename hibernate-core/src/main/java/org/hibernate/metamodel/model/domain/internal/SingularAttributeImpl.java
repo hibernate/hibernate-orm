@@ -103,7 +103,7 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public DomainType<J> getValueGraphType() {
+	public SqmDomainType<J> getValueGraphType() {
 		return getPathType();
 	}
 

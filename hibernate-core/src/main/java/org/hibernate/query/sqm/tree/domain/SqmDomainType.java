@@ -17,4 +17,8 @@ public interface SqmDomainType<T>
 	default String getTypeName() {
 		return SqmExpressible.super.getTypeName();
 	}
+
+	default int getTupleLength() {
+		return 1;
+	}
 }

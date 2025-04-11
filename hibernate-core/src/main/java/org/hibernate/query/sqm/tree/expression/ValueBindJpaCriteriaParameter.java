@@ -7,13 +7,14 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * It is a JpaCriteriaParameter created from a value when ValueHandlingMode is equal to BIND
  *
  * @see org.hibernate.query.criteria.ValueHandlingMode
  */
-public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
+public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 	private final T value;
 
 	public ValueBindJpaCriteriaParameter(BindableType<? super T> type, T value, NodeBuilder nodeBuilder) {
@@ -40,8 +41,8 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		hql.append( value );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		SqmLiteral.appendHqlString( hql, getJavaTypeDescriptor(), value );
 	}
 
 	@Override

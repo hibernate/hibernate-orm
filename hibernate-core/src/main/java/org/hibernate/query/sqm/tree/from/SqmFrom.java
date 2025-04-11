@@ -19,6 +19,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaFrom;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
@@ -47,6 +48,13 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 	 */
 	@Override
 	SqmPathSource<R> getReferencedPathSource();
+
+	/**
+	 * Retrieve the explicit alias, if one, otherwise return a generated one.
+	 */
+	default String resolveAlias(SqmRenderContext context) {
+		return context.resolveAlias( this );
+	}
 
 	boolean hasJoins();
 

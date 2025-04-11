@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 
 import static java.util.Collections.emptyList;
@@ -91,32 +92,32 @@ public class SqmFromClause implements Serializable {
 		}
 	}
 
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder sb, SqmRenderContext context) {
 		String separator = " ";
 		for ( SqmRoot<?> root : getRoots() ) {
 			sb.append( separator );
 			if ( root.isCorrelated() ) {
 				if ( root.containsOnlyInnerJoins() ) {
-					appendJoins( root, root.getCorrelationParent().resolveAlias(), sb );
+					appendJoins( root, root.getCorrelationParent().resolveAlias( context ), sb, context );
 				}
 				else {
-					sb.append( root.getCorrelationParent().resolveAlias() );
-					sb.append( ' ' ).append( root.resolveAlias() );
-					appendJoins( root, sb );
-					appendTreatJoins( root, sb );
+					sb.append( root.getCorrelationParent().resolveAlias( context ) );
+					sb.append( ' ' ).append( root.resolveAlias( context ) );
+					appendJoins( root, sb, context );
+					appendTreatJoins( root, sb, context );
 				}
 			}
 			else {
 				sb.append( root.getEntityName() );
-				sb.append( ' ' ).append( root.resolveAlias() );
-				appendJoins( root, sb );
-				appendTreatJoins( root, sb );
+				sb.append( ' ' ).append( root.resolveAlias( context ) );
+				appendJoins( root, sb, context );
+				appendTreatJoins( root, sb, context );
 			}
 			separator = ", ";
 		}
 	}
 
-	public static void appendJoins(SqmFrom<?, ?> sqmFrom, StringBuilder sb) {
+	public static void appendJoins(SqmFrom<?, ?> sqmFrom, StringBuilder sb, SqmRenderContext context) {
 		for ( SqmJoin<?, ?> sqmJoin : sqmFrom.getSqmJoins() ) {
 			switch ( sqmJoin.getSqmJoinType() ) {
 				case LEFT:
@@ -138,33 +139,34 @@ public class SqmFromClause implements Serializable {
 			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> attributeJoin ) {
 				if ( sqmFrom instanceof SqmTreatedPath<?, ?> treatedPath ) {
 					sb.append( "treat(" );
-					sb.append( treatedPath.getWrappedPath().resolveAlias() );
+					treatedPath.getWrappedPath().appendHqlString( sb, context );
+//					sb.append( treatedPath.getWrappedPath().resolveAlias( context ) );
 					sb.append( " as " ).append( treatedPath.getTreatTarget().getTypeName() ).append( ')' );
 				}
 				else {
-					sb.append( sqmFrom.resolveAlias() );
+					sb.append( sqmFrom.resolveAlias( context ) );
 				}
 				sb.append( '.' ).append( ( attributeJoin ).getAttribute().getName() );
-				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
+				sb.append( ' ' ).append( sqmJoin.resolveAlias( context ) );
 				if ( attributeJoin.getJoinPredicate() != null ) {
 					sb.append( " on " );
-					attributeJoin.getJoinPredicate().appendHqlString( sb );
+					attributeJoin.getJoinPredicate().appendHqlString( sb, context );
 				}
-				appendJoins( sqmJoin, sb );
+				appendJoins( sqmJoin, sb, context );
 			}
 			else if ( sqmJoin instanceof SqmCrossJoin<?> sqmCrossJoin ) {
 				sb.append( sqmCrossJoin.getEntityName() );
-				sb.append( ' ' ).append( sqmCrossJoin.resolveAlias() );
-				appendJoins( sqmJoin, sb );
+				sb.append( ' ' ).append( sqmCrossJoin.resolveAlias( context ) );
+				appendJoins( sqmJoin, sb, context );
 			}
 			else if ( sqmJoin instanceof SqmEntityJoin<?, ?> sqmEntityJoin ) {
 				sb.append( ( sqmEntityJoin ).getEntityName() );
-				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
+				sb.append( ' ' ).append( sqmJoin.resolveAlias( context ) );
 				if ( sqmEntityJoin.getJoinPredicate() != null ) {
 					sb.append( " on " );
-					sqmEntityJoin.getJoinPredicate().appendHqlString( sb );
+					sqmEntityJoin.getJoinPredicate().appendHqlString( sb, context );
 				}
-				appendJoins( sqmJoin, sb );
+				appendJoins( sqmJoin, sb, context );
 			}
 			else {
 				throw new UnsupportedOperationException( "Unsupported join: " + sqmJoin );
@@ -172,22 +174,22 @@ public class SqmFromClause implements Serializable {
 		}
 	}
 
-	private void appendJoins(SqmFrom<?, ?> sqmFrom, String correlationPrefix, StringBuilder sb) {
+	private void appendJoins(SqmFrom<?, ?> sqmFrom, String correlationPrefix, StringBuilder sb, SqmRenderContext context) {
 		String separator = "";
 		for ( SqmJoin<?, ?> sqmJoin : sqmFrom.getSqmJoins() ) {
 			assert sqmJoin instanceof SqmAttributeJoin<?, ?>;
 			sb.append( separator );
 			sb.append( correlationPrefix ).append( '.' );
 			sb.append( ( (SqmAttributeJoin<?, ?>) sqmJoin ).getAttribute().getName() );
-			sb.append( ' ' ).append( sqmJoin.resolveAlias() );
-			appendJoins( sqmJoin, sb );
+			sb.append( ' ' ).append( sqmJoin.resolveAlias( context ) );
+			appendJoins( sqmJoin, sb, context );
 			separator = ", ";
 		}
 	}
 
-	public static void appendTreatJoins(SqmFrom<?, ?> sqmFrom, StringBuilder sb) {
+	public static void appendTreatJoins(SqmFrom<?, ?> sqmFrom, StringBuilder sb, SqmRenderContext context) {
 		for ( SqmFrom<?, ?> sqmTreat : sqmFrom.getSqmTreats() ) {
-			appendJoins( sqmTreat, sb );
+			appendJoins( sqmTreat, sb, context );
 		}
 	}
 }

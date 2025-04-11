@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -190,29 +191,29 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		assert valuesList != null;
-		super.appendHqlString( hql );
+		super.appendHqlString( hql, context );
 		hql.append( " values (" );
-		appendValues( valuesList.get( 0 ), hql );
+		appendValues( valuesList.get( 0 ), hql, context );
 		for ( int i = 1; i < valuesList.size(); i++ ) {
 			hql.append( ", " );
-			appendValues( valuesList.get( i ), hql );
+			appendValues( valuesList.get( i ), hql, context );
 		}
 		hql.append( ')' );
 		final SqmConflictClause conflictClause = getConflictClause();
 		if ( conflictClause != null ) {
-			conflictClause.appendHqlString( hql );
+			conflictClause.appendHqlString( hql, context );
 		}
 	}
 
-	private static void appendValues(SqmValues sqmValues, StringBuilder sb) {
+	private static void appendValues(SqmValues sqmValues, StringBuilder sb, SqmRenderContext context) {
 		final List<SqmExpression<?>> expressions = sqmValues.getExpressions();
 		sb.append( '(' );
-		expressions.get( 0 ).appendHqlString( sb );
+		expressions.get( 0 ).appendHqlString( sb, context );
 		for ( int i = 1; i < expressions.size(); i++ ) {
 			sb.append( ", " );
-			expressions.get( i ).appendHqlString( sb );
+			expressions.get( i ).appendHqlString( sb, context );
 		}
 		sb.append( ')' );
 	}

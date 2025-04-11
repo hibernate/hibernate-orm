@@ -9,6 +9,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertString;
@@ -126,16 +127,16 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		matchExpression.appendHqlString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		matchExpression.appendHqlString( hql, context );
 		if ( isNegated() ) {
 			hql.append( " not" );
 		}
 		hql.append( " like " );
-		pattern.appendHqlString( hql );
+		pattern.appendHqlString( hql, context );
 		if ( escapeCharacter != null ) {
 			hql.append( " escape " );
-			escapeCharacter.appendHqlString( hql );
+			escapeCharacter.appendHqlString( hql, context );
 		}
 	}
 

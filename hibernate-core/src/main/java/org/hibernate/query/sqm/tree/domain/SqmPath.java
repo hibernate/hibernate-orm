@@ -61,19 +61,6 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	void setExplicitAlias(String explicitAlias);
 
 	/**
-	 * Retrieve the explicit alias, if one, otherwise return a generated one and set that as explicit alias.
-	 */
-	default String resolveAlias() {
-		final String explicitAlias = getExplicitAlias();
-		if ( explicitAlias != null ) {
-			return explicitAlias;
-		}
-		final String generatedAlias = "alias_" + System.identityHashCode( this );
-		setExplicitAlias( generatedAlias );
-		return generatedAlias;
-	}
-
-	/**
 	 * Get the left-hand side of this path - may be null, indicating a
 	 * root, cross-join or entity-join
 	 */

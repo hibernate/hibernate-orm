@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
 
 /**
@@ -136,9 +137,9 @@ public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTr
 
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( "treat(" );
-		wrappedPath.appendHqlString( hql );
+		wrappedPath.appendHqlString( hql, context );
 		hql.append( " as " );
 		hql.append( treatTarget.getName() );
 		hql.append( ')' );

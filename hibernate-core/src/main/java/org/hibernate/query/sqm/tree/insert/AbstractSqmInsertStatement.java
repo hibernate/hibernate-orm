@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -178,16 +179,16 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		appendHqlCteString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		appendHqlCteString( hql, context );
 		hql.append( "insert into " );
 		hql.append( getTarget().getEntityName() );
 		if ( insertionTargetPaths != null && !insertionTargetPaths.isEmpty() ) {
 			hql.append( '(' );
-			insertionTargetPaths.get( 0 ).appendHqlString( hql );
+			insertionTargetPaths.get( 0 ).appendHqlString( hql, context );
 			for ( int i = 1; i < insertionTargetPaths.size(); i++ ) {
 				hql.append( ", " );
-				insertionTargetPaths.get( i ).appendHqlString( hql );
+				insertionTargetPaths.get( i ).appendHqlString( hql, context );
 			}
 			hql.append( ')' );
 		}

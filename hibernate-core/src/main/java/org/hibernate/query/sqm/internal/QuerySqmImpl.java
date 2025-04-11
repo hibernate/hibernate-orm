@@ -121,6 +121,7 @@ public class QuerySqmImpl<R>
 		implements SqmQueryImplementor<R>, InterpretationsKeySource, DomainQueryExecutionContext {
 
 	private final String hql;
+	private final Object queryStringCacheKey;
 	private SqmStatement<R> sqm;
 
 	private final ParameterMetadataImplementor parameterMetadata;
@@ -170,6 +171,7 @@ public class QuerySqmImpl<R>
 			SharedSessionContractImplementor session) {
 		super( session );
 		this.hql = hql;
+		this.queryStringCacheKey = hql;
 		this.resultType = resultType;
 
 		sqm = hqlInterpretation.getSqmStatement();
@@ -200,9 +202,22 @@ public class QuerySqmImpl<R>
 		hql = CRITERIA_HQL_STRING;
 		if ( producer.isCriteriaCopyTreeEnabled() ) {
 			sqm = criteria.copy( SqmCopyContext.simpleContext() );
+			if ( producer.isCriteriaPlanCacheEnabled() ) {
+				queryStringCacheKey = sqm.toHqlString();
+				setQueryPlanCacheable( true );
+			}
+			else {
+				queryStringCacheKey = sqm;
+			}
 		}
 		else {
 			sqm = criteria;
+			if ( producer.isCriteriaPlanCacheEnabled() ) {
+				queryStringCacheKey = sqm.toHqlString();
+			}
+			else {
+				queryStringCacheKey = sqm;
+			}
 			// Cache immutable query plans by default
 			setQueryPlanCacheable( true );
 		}
@@ -259,6 +274,11 @@ public class QuerySqmImpl<R>
 	@Override
 	public String getQueryString() {
 		return hql;
+	}
+
+	@Override
+	public Object getQueryStringCacheKey() {
+		return queryStringCacheKey;
 	}
 
 	@Override

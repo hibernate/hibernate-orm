@@ -157,6 +157,21 @@ public interface QuerySettings {
 	String CRITERIA_COPY_TREE = "hibernate.criteria.copy_tree";
 
 	/**
+	 * When enabled, specifies that {@linkplain org.hibernate.query.Query queries}
+	 * created via {@link jakarta.persistence.EntityManager#createQuery(CriteriaQuery)},
+	 * {@link jakarta.persistence.EntityManager#createQuery(CriteriaUpdate)} or
+	 * {@link jakarta.persistence.EntityManager#createQuery(CriteriaDelete)} cache
+	 * their interpretations in the query plan cache.
+	 * <p>
+	 * If disabled, queries are interpreted on first access without caching.
+	 *
+	 * @settingDefault {@code false} (disabled) - criteria queries do not use query plan caching.
+	 *
+	 * @since 7.0
+	 */
+	String CRITERIA_PLAN_CACHE_ENABLED = "hibernate.criteria.plan_cache_enabled";
+
+	/**
 	 * When enabled, ordinal parameters (represented by the {@code ?} placeholder) in
 	 * native queries will be ignored.
 	 *

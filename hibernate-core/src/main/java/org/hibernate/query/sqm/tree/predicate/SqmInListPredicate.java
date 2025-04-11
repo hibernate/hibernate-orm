@@ -14,6 +14,7 @@ import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import jakarta.persistence.criteria.Expression;
@@ -146,16 +147,16 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		testExpression.appendHqlString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		testExpression.appendHqlString( hql, context );
 		if ( isNegated() ) {
 			hql.append( " not" );
 		}
 		hql.append( " in (" );
-		listExpressions.get( 0 ).appendHqlString( hql );
+		listExpressions.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < listExpressions.size(); i++ ) {
 			hql.append( ", " );
-			listExpressions.get( i ).appendHqlString( hql );
+			listExpressions.get( i ).appendHqlString( hql, context );
 		}
 		hql.append( ')' );
 	}

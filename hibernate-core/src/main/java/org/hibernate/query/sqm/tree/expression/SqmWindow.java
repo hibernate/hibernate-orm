@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 
@@ -198,15 +199,15 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		boolean needsWhitespace = false;
 		if ( !this.partitions.isEmpty() ) {
 			needsWhitespace = true;
 			hql.append( "partition by " );
-			this.partitions.get( 0 ).appendHqlString( hql );
+			this.partitions.get( 0 ).appendHqlString( hql, context );
 			for ( int i = 1; i < this.partitions.size(); i++ ) {
 				hql.append( ',' );
-				this.partitions.get( i ).appendHqlString( hql );
+				this.partitions.get( i ).appendHqlString( hql, context );
 			}
 		}
 		if ( !orderList.isEmpty() ) {
@@ -215,10 +216,10 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 			}
 			needsWhitespace = true;
 			hql.append( "order by " );
-			orderList.get( 0 ).appendHqlString( hql );
+			orderList.get( 0 ).appendHqlString( hql, context );
 			for ( int i = 1; i < orderList.size(); i++ ) {
 				hql.append( ',' );
-				orderList.get( i ).appendHqlString( hql );
+				orderList.get( i ).appendHqlString( hql, context );
 			}
 		}
 		if ( mode == RANGE && startKind == UNBOUNDED_PRECEDING && endKind == CURRENT_ROW && exclusion == NO_OTHERS ) {
@@ -240,13 +241,13 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 					break;
 			}
 			if ( endKind == CURRENT_ROW ) {
-				renderFrameKind( hql, startKind, startExpression );
+				renderFrameKind( hql, startKind, startExpression, context );
 			}
 			else {
 				hql.append( "between " );
-				renderFrameKind( hql, startKind, startExpression );
+				renderFrameKind( hql, startKind, startExpression, context );
 				hql.append( " and " );
-				renderFrameKind( hql, endKind, endExpression );
+				renderFrameKind( hql, endKind, endExpression, context );
 			}
 			switch ( exclusion ) {
 				case TIES:
@@ -262,7 +263,7 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 		}
 	}
 
-	private static void renderFrameKind(StringBuilder sb, FrameKind kind, SqmExpression<?> expression) {
+	private static void renderFrameKind(StringBuilder sb, FrameKind kind, SqmExpression<?> expression, SqmRenderContext context) {
 		switch ( kind ) {
 			case CURRENT_ROW:
 				sb.append( "current row" );
@@ -274,11 +275,11 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 				sb.append( "unbounded following" );
 				break;
 			case OFFSET_PRECEDING:
-				expression.appendHqlString( sb );
+				expression.appendHqlString( sb, context );
 				sb.append( " preceding" );
 				break;
 			case OFFSET_FOLLOWING:
-				expression.appendHqlString( sb );
+				expression.appendHqlString( sb, context );
 				sb.append( " following" );
 				break;
 			default:

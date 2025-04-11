@@ -89,6 +89,7 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		implements SqmSelectionQueryImplementor<R>, InterpretationsKeySource {
 	private final String hql;
+	private final Object queryStringCacheKey;
 	private SqmSelectStatement<R> sqm;
 
 	private final ParameterMetadataImplementor parameterMetadata;
@@ -109,6 +110,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 			SharedSessionContractImplementor session) {
 		super( session );
 		this.hql = hql;
+		this.queryStringCacheKey = hql;
 
 		SqmUtil.verifyIsSelectStatement( hqlInterpretation.getSqmStatement(), hql );
 		this.sqm = (SqmSelectStatement<R>) hqlInterpretation.getSqmStatement();
@@ -166,9 +168,22 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		hql = CRITERIA_HQL_STRING;
 		if ( session.isCriteriaCopyTreeEnabled() ) {
 			sqm = criteria.copy( SqmCopyContext.simpleContext() );
+			if ( session.isCriteriaPlanCacheEnabled() ) {
+				queryStringCacheKey = sqm.toHqlString();
+				setQueryPlanCacheable( true );
+			}
+			else {
+				queryStringCacheKey = sqm;
+			}
 		}
 		else {
 			sqm = criteria;
+			if ( session.isCriteriaPlanCacheEnabled() ) {
+				queryStringCacheKey = sqm.toHqlString();
+			}
+			else {
+				queryStringCacheKey = sqm;
+			}
 			// Cache immutable query plans by default
 			setQueryPlanCacheable( true );
 		}
@@ -221,6 +236,13 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 								.copy( noParamCopyContext( SqmQuerySource.CRITERIA ) ),
 				original.getSqmStatement().nodeBuilder()
 		);
+		if ( getSession().isCriteriaPlanCacheEnabled() ) {
+			queryStringCacheKey = sqm.toHqlString();
+			setQueryPlanCacheable( true );
+		}
+		else {
+			queryStringCacheKey = sqm;
+		}
 		hql = CRITERIA_HQL_STRING;
 
 		domainParameterXref = DomainParameterXref.from( sqm );
@@ -354,6 +376,11 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	@Override
 	public String getQueryString() {
 		return hql;
+	}
+
+	@Override
+	public Object getQueryStringCacheKey() {
+		return queryStringCacheKey;
 	}
 
 	@Override

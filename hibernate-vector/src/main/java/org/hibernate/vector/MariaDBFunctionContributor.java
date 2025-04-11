@@ -17,35 +17,35 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 public class MariaDBFunctionContributor implements FunctionContributor {
-
 	@Override
 	public void contributeFunctions(FunctionContributions functionContributions) {
-		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
-		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
-		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final Dialect dialect = functionContributions.getDialect();
-		if ( dialect instanceof MariaDBDialect ) {
-			final BasicType<Double> doubleType = basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE );
+		if (dialect instanceof MariaDBDialect) {
+			final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
+			final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
+			final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+			final BasicType<Double> doubleType = basicTypeRegistry.resolve(StandardBasicTypes.DOUBLE);
 
-			functionRegistry.patternDescriptorBuilder( "cosine_distance", "vec_distance_cosine(?1,?2)" )
-					.setArgumentsValidator( StandardArgumentsValidators.composite(
-							StandardArgumentsValidators.exactly( 2 ),
-							VectorArgumentValidator.INSTANCE
-					) )
-					.setArgumentTypeResolver( VectorArgumentTypeResolver.INSTANCE )
-					.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( doubleType ) )
-					.register();
-			functionRegistry.patternDescriptorBuilder( "euclidean_distance", "vec_distance_euclidean(?1,?2)" )
-					.setArgumentsValidator( StandardArgumentsValidators.composite(
-							StandardArgumentsValidators.exactly( 2 ),
-							VectorArgumentValidator.INSTANCE
-					) )
-					.setArgumentTypeResolver( VectorArgumentTypeResolver.INSTANCE )
-					.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( doubleType ) )
-					.register();
-			functionRegistry.registerAlternateKey( "l2_distance", "euclidean_distance" );
-
+			registerVectorDistanceFunction(functionRegistry, "cosine_distance", "vec_distance_cosine", doubleType);
+			registerVectorDistanceFunction(functionRegistry, "euclidean_distance", "vec_distance_euclidean", doubleType);
+			functionRegistry.registerAlternateKey("l2_distance", "euclidean_distance");
 		}
+	}
+
+	private void registerVectorDistanceFunction(
+			SqmFunctionRegistry functionRegistry,
+			String functionName,
+			String templatePattern,
+			BasicType<Double> returnType) {
+
+		functionRegistry.patternDescriptorBuilder(functionName, templatePattern + "(?1,?2)")
+				.setArgumentsValidator(StandardArgumentsValidators.composite(
+						StandardArgumentsValidators.exactly(2),
+						VectorArgumentValidator.INSTANCE
+				))
+				.setArgumentTypeResolver(VectorArgumentTypeResolver.INSTANCE)
+				.setReturnTypeResolver(StandardFunctionReturnTypeResolvers.invariant(returnType))
+				.register();
 	}
 
 	@Override

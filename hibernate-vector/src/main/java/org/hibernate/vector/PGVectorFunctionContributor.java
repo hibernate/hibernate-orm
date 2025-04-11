@@ -21,74 +21,59 @@ public class PGVectorFunctionContributor implements FunctionContributor {
 
 	@Override
 	public void contributeFunctions(FunctionContributions functionContributions) {
-		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
-		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
-		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final Dialect dialect = functionContributions.getDialect();
-		if ( dialect instanceof PostgreSQLDialect ||
-			dialect instanceof CockroachDialect ) {
-			final BasicType<Double> doubleType = basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE );
-			final BasicType<Integer> integerType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
-			functionRegistry.patternDescriptorBuilder( "cosine_distance", "?1<=>?2" )
-					.setArgumentsValidator( StandardArgumentsValidators.composite(
-							StandardArgumentsValidators.exactly( 2 ),
-							VectorArgumentValidator.INSTANCE
-					) )
-					.setArgumentTypeResolver( VectorArgumentTypeResolver.INSTANCE )
-					.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( doubleType ) )
-					.register();
-			functionRegistry.patternDescriptorBuilder( "euclidean_distance", "?1<->?2" )
-					.setArgumentsValidator( StandardArgumentsValidators.composite(
-							StandardArgumentsValidators.exactly( 2 ),
-							VectorArgumentValidator.INSTANCE
-					) )
-					.setArgumentTypeResolver( VectorArgumentTypeResolver.INSTANCE )
-					.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( doubleType ) )
-					.register();
-			functionRegistry.registerAlternateKey( "l2_distance", "euclidean_distance" );
-			functionRegistry.namedDescriptorBuilder( "l1_distance" )
-					.setArgumentsValidator( StandardArgumentsValidators.composite(
-							StandardArgumentsValidators.exactly( 2 ),
-							VectorArgumentValidator.INSTANCE
-					) )
-					.setArgumentTypeResolver( VectorArgumentTypeResolver.INSTANCE )
-					.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( doubleType ) )
-					.register();
-			functionRegistry.registerAlternateKey( "taxicab_distance",  "l1_distance" );
+		if (dialect instanceof PostgreSQLDialect || dialect instanceof CockroachDialect) {
+			final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
+			final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
+			final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+			final BasicType<Double> doubleType = basicTypeRegistry.resolve(StandardBasicTypes.DOUBLE);
+			final BasicType<Integer> integerType = basicTypeRegistry.resolve(StandardBasicTypes.INTEGER);
 
-			functionRegistry.patternDescriptorBuilder( "negative_inner_product", "?1<#>?2" )
-					.setArgumentsValidator( StandardArgumentsValidators.composite(
-							StandardArgumentsValidators.exactly( 2 ),
-							VectorArgumentValidator.INSTANCE
-					) )
-					.setArgumentTypeResolver( VectorArgumentTypeResolver.INSTANCE )
-					.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( doubleType ) )
-					.register();
-			functionRegistry.patternDescriptorBuilder( "inner_product", "(?1<#>?2)*-1" )
-					.setArgumentsValidator( StandardArgumentsValidators.composite(
-							StandardArgumentsValidators.exactly( 2 ),
-							VectorArgumentValidator.INSTANCE
-					) )
-					.setArgumentTypeResolver( VectorArgumentTypeResolver.INSTANCE )
-					.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( doubleType ) )
-					.register();
-			functionRegistry.namedDescriptorBuilder( "vector_dims" )
-					.setArgumentsValidator( StandardArgumentsValidators.composite(
-							StandardArgumentsValidators.exactly( 1 ),
-							VectorArgumentValidator.INSTANCE
-					) )
-					.setArgumentTypeResolver( VectorArgumentTypeResolver.INSTANCE )
-					.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( integerType ) )
-					.register();
-			functionRegistry.namedDescriptorBuilder( "vector_norm" )
-					.setArgumentsValidator( StandardArgumentsValidators.composite(
-							StandardArgumentsValidators.exactly( 1 ),
-							VectorArgumentValidator.INSTANCE
-					) )
-					.setArgumentTypeResolver( VectorArgumentTypeResolver.INSTANCE )
-					.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( doubleType ) )
-					.register();
+			registerVectorDistanceFunction(functionRegistry, "cosine_distance", "?1<=>?2", doubleType);
+			registerVectorDistanceFunction(functionRegistry, "euclidean_distance", "?1<->?2", doubleType);
+			functionRegistry.registerAlternateKey("l2_distance", "euclidean_distance");
+
+			registerNamedVectorFunction(functionRegistry, "l1_distance", doubleType, 2);
+			functionRegistry.registerAlternateKey("taxicab_distance", "l1_distance");
+
+			registerVectorDistanceFunction(functionRegistry, "negative_inner_product", "?1<#>?2", doubleType);
+			registerVectorDistanceFunction(functionRegistry, "inner_product", "(?1<#>?2)*-1", doubleType);
+
+			registerNamedVectorFunction(functionRegistry, "vector_dims", integerType, 1);
+			registerNamedVectorFunction(functionRegistry, "vector_norm", doubleType, 1);
 		}
+	}
+
+	private void registerVectorDistanceFunction(
+			SqmFunctionRegistry functionRegistry,
+			String functionName,
+			String pattern,
+			BasicType<?> returnType) {
+
+		functionRegistry.patternDescriptorBuilder(functionName, pattern)
+				.setArgumentsValidator(StandardArgumentsValidators.composite(
+						StandardArgumentsValidators.exactly(2),
+						VectorArgumentValidator.INSTANCE
+				))
+				.setArgumentTypeResolver(VectorArgumentTypeResolver.INSTANCE)
+				.setReturnTypeResolver(StandardFunctionReturnTypeResolvers.invariant(returnType))
+				.register();
+	}
+
+	private void registerNamedVectorFunction(
+			SqmFunctionRegistry functionRegistry,
+			String functionName,
+			BasicType<?> returnType,
+			int argumentCount) {
+
+		functionRegistry.namedDescriptorBuilder(functionName)
+				.setArgumentsValidator(StandardArgumentsValidators.composite(
+						StandardArgumentsValidators.exactly(argumentCount),
+						VectorArgumentValidator.INSTANCE
+				))
+				.setArgumentTypeResolver(VectorArgumentTypeResolver.INSTANCE)
+				.setReturnTypeResolver(StandardFunctionReturnTypeResolvers.invariant(returnType))
+				.register();
 	}
 
 	@Override

@@ -2,8 +2,15 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.metamodel.mapping;
+package org.hibernate.metamodel.mapping.internal;
 
+import org.hibernate.metamodel.mapping.Association;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;

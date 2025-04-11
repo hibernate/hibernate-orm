@@ -340,7 +340,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				creationContext.getSessionFactory()
 		);
 		// Make sure the association key's table is resolved in the table group
-		tableGroup.getTableReference( null, resolveFetchAssociationKey().getTable(), true );
+		tableGroup.getTableReference( null, resolveFetchAssociationKey().table(), true );
 		return tableGroup;
 	}
 

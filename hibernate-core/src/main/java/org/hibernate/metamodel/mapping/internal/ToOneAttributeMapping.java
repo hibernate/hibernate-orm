@@ -838,8 +838,8 @@ public class ToOneAttributeMapping
 			this.sideNature = ForeignKeyDescriptor.Nature.TARGET;
 		}
 		else {
-			this.sideNature = foreignKeyDescriptor.getAssociationKey().getTable().equals(
-					identifyingColumnsTableExpression )
+			this.sideNature = foreignKeyDescriptor.getAssociationKey().table()
+				.equals( identifyingColumnsTableExpression )
 					? ForeignKeyDescriptor.Nature.KEY
 					: ForeignKeyDescriptor.Nature.TARGET;
 		}

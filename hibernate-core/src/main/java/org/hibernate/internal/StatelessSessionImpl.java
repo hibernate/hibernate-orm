@@ -501,7 +501,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 	}
 
-	private Object versionToUpsert(Object entity, EntityPersister persister, Object[] state) {
+	// Hibernate Reactive calls this
+	protected Object versionToUpsert(Object entity, EntityPersister persister, Object[] state) {
 		if ( persister.isVersioned() ) {
 			final Object oldVersion = persister.getVersion( entity );
 			final Boolean knownTransient =
@@ -528,7 +529,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 	}
 
-	private Object idToUpsert(Object entity, EntityPersister persister) {
+	// Hibernate Reactive calls this
+	protected Object idToUpsert(Object entity, EntityPersister persister) {
 		final Object id = persister.getIdentifier( entity, this );
 		final Boolean unsaved =
 				persister.getIdentifierMapping()
@@ -543,7 +545,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	// event processing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private boolean firePreInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+	// Hibernate Reactive may need to call this
+	protected boolean firePreInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
 		if ( eventListenerGroups.eventListenerGroup_PRE_INSERT.isEmpty() ) {
 			return false;
 		}
@@ -557,7 +560,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 	}
 
-	private boolean firePreUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
+	// Hibernate Reactive may need to call this
+	protected boolean firePreUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
 		if ( eventListenerGroups.eventListenerGroup_PRE_UPDATE.isEmpty() ) {
 			return false;
 		}
@@ -571,7 +575,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 	}
 
-	private boolean firePreUpsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+	// Hibernate Reactive may need to call this
+	protected boolean firePreUpsert(Object entity, Object id, Object[] state, EntityPersister persister) {
 		if ( eventListenerGroups.eventListenerGroup_PRE_UPSERT.isEmpty() ) {
 			return false;
 		}
@@ -585,7 +590,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 	}
 
-	private boolean firePreDelete(Object entity, Object id, EntityPersister persister) {
+	// Hibernate Reactive may need to call this
+	protected boolean firePreDelete(Object entity, Object id, EntityPersister persister) {
 		if ( eventListenerGroups.eventListenerGroup_PRE_DELETE.isEmpty() ) {
 			return false;
 		}
@@ -599,61 +605,71 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 	}
 
-	private void firePostInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+	// Hibernate Reactive may need to call this
+	protected void firePostInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
 		eventListenerGroups.eventListenerGroup_POST_INSERT.fireLazyEventOnEachListener(
 				() -> new PostInsertEvent( entity, id, state, persister, null ),
 				PostInsertEventListener::onPostInsert );
 	}
 
-	private void firePostUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
+	// Hibernate Reactive may need to call this
+	protected void firePostUpdate(Object entity, Object id, Object[] state, EntityPersister persister) {
 		eventListenerGroups.eventListenerGroup_POST_UPDATE.fireLazyEventOnEachListener(
 				() -> new PostUpdateEvent( entity, id, state, null, null, persister, null ),
 				PostUpdateEventListener::onPostUpdate );
 	}
 
-	private void firePostUpsert(Object entity, Object id, Object[] state, EntityPersister persister) {
+	// Hibernate Reactive may need to call this
+	protected void firePostUpsert(Object entity, Object id, Object[] state, EntityPersister persister) {
 		eventListenerGroups.eventListenerGroup_POST_UPSERT.fireLazyEventOnEachListener(
 				() -> new PostUpsertEvent( entity, id, state, null, persister, null ),
 				PostUpsertEventListener::onPostUpsert );
 	}
 
-	private void firePostDelete(Object entity, Object id, EntityPersister persister) {
+	// Hibernate Reactive may need to call this
+	protected void firePostDelete(Object entity, Object id, EntityPersister persister) {
 		eventListenerGroups.eventListenerGroup_POST_DELETE.fireLazyEventOnEachListener(
 				() -> new PostDeleteEvent( entity, id, null, persister, null ),
 				PostDeleteEventListener::onPostDelete );
 	}
 
-	private void firePreRecreate(PersistentCollection<?> collection, CollectionPersister persister) {
+	// Hibernate Reactive may need to call this
+	protected void firePreRecreate(PersistentCollection<?> collection, CollectionPersister persister) {
 		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_RECREATE.fireLazyEventOnEachListener(
 				() -> new PreCollectionRecreateEvent(  persister, collection, null ),
 				PreCollectionRecreateEventListener::onPreRecreateCollection );
 	}
 
-	private void firePreUpdate(PersistentCollection<?> collection, CollectionPersister persister) {
+	// Hibernate Reactive may need to call this
+	protected void firePreUpdate(PersistentCollection<?> collection, CollectionPersister persister) {
 		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_UPDATE.fireLazyEventOnEachListener(
 				() -> new PreCollectionUpdateEvent(  persister, collection, null ),
 				PreCollectionUpdateEventListener::onPreUpdateCollection );
 	}
 
-	private void firePreRemove(PersistentCollection<?> collection, Object owner, CollectionPersister persister) {
+	// Hibernate Reactive may need to call this
+	protected void firePreRemove(PersistentCollection<?> collection, Object owner, CollectionPersister persister) {
 		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_REMOVE.fireLazyEventOnEachListener(
 				() -> new PreCollectionRemoveEvent(  persister, collection, null, owner ),
 				PreCollectionRemoveEventListener::onPreRemoveCollection );
 	}
 
-	private void firePostRecreate(PersistentCollection<?> collection, CollectionPersister persister) {
+	// Hibernate Reactive may need to call this
+	protected void firePostRecreate(PersistentCollection<?> collection, CollectionPersister persister) {
 		eventListenerGroups.eventListenerGroup_POST_COLLECTION_RECREATE.fireLazyEventOnEachListener(
 				() -> new PostCollectionRecreateEvent(  persister, collection, null ),
 				PostCollectionRecreateEventListener::onPostRecreateCollection );
 	}
 
-	private void firePostUpdate(PersistentCollection<?> collection, CollectionPersister persister) {
+	// Hibernate Reactive may need to call this
+	protected void firePostUpdate(PersistentCollection<?> collection, CollectionPersister persister) {
 		eventListenerGroups.eventListenerGroup_POST_COLLECTION_UPDATE.fireLazyEventOnEachListener(
 				() -> new PostCollectionUpdateEvent(  persister, collection, null ),
 				PostCollectionUpdateEventListener::onPostUpdateCollection );
 	}
 
-	private void firePostRemove(PersistentCollection<?> collection, Object owner, CollectionPersister persister) {
+	// Hibernate Reactive may need to call this
+	protected void firePostRemove(PersistentCollection<?> collection, Object owner, CollectionPersister persister) {
 		eventListenerGroups.eventListenerGroup_POST_COLLECTION_REMOVE.fireLazyEventOnEachListener(
 				() -> new PostCollectionRemoveEvent(  persister, collection, null, owner ),
 				PostCollectionRemoveEventListener::onPostRemoveCollection );
@@ -661,7 +677,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	// collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private void forEachOwnedCollection(
+	// Hibernate Reactive overrides this
+	protected void forEachOwnedCollection(
 			Object entity, Object key,
 			EntityPersister persister, BiConsumer<CollectionPersister, PersistentCollection<?>> action) {
 		persister.visitAttributeMappings( attribute -> {
@@ -691,13 +708,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		} );
 	}
 
-	private PersistentCollection<?> instantiateEmpty(Object key, CollectionPersister descriptor) {
+	// Hibernate Reactive calls this
+	protected PersistentCollection<?> instantiateEmpty(Object key, CollectionPersister descriptor) {
 		return descriptor.getCollectionSemantics().instantiateWrapper(key, descriptor, this);
 	}
 
 	//TODO: is this the right way to do this?
+	// Hibernate Reactive calls this
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	private PersistentCollection<?> wrap(CollectionPersister descriptor, Object collection) {
+	protected PersistentCollection<?> wrap(CollectionPersister descriptor, Object collection) {
 		final CollectionSemantics collectionSemantics = descriptor.getCollectionSemantics();
 		return collectionSemantics.wrap(collection, descriptor, this);
 	}
@@ -969,7 +988,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 			final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
 			if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
-
 				// if the entity defines a HibernateProxy factory, see if there is an
 				// existing proxy associated with the PC - and if so, use it
 				if ( persister.getRepresentationStrategy().getProxyFactory() != null ) {
@@ -1015,7 +1033,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 
 		// otherwise immediately materialize it
+		return internalLoadGet( entityName, id, persistenceContext );
+	}
 
+	// For Hibernate Reactive
+	protected Object internalLoadGet(String entityName, Object id, PersistenceContext persistenceContext) {
 		// IMPLEMENTATION NOTE: increment/decrement the load count before/after getting the value
 		//                      to ensure that #get does not clear the PersistenceContext.
 		persistenceContext.beforeLoad();

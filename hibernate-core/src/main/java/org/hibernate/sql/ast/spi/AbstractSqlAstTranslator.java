@@ -190,7 +190,6 @@ import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
-import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -6678,17 +6677,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private boolean isFetchFirstRowOnly(QueryPart queryPart) {
 		return queryPart.getFetchClauseType() == FetchClauseType.ROWS_ONLY
-			&& queryPart.getFetchClauseExpression() != null
-			&& Integer.valueOf( 1 ).equals( getLiteralValue( queryPart.getFetchClauseExpression() ) );
-	}
-
-	private boolean isParameterValueEqualToOne(SqmParameterInterpretation sqmParameterInterpretation) {
-		if ( sqmParameterInterpretation.getResolvedExpression() instanceof JdbcParameterImpl jdbcParameter ) {
-			assert jdbcParameterBindings != null;
-			final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( jdbcParameter );
-			return binding != null && Integer.valueOf( 1 ).equals( binding.getBindValue() );
-		}
-		return false;
+				&& queryPart.getFetchClauseExpression() instanceof QueryLiteral<?>
+				&& Integer.valueOf( 1 )
+				.equals( ( (QueryLiteral<?>) queryPart.getFetchClauseExpression() ).getLiteralValue() );
 	}
 
 	private SelectStatement stripToSelectClause(SelectStatement statement) {

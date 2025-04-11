@@ -32,6 +32,8 @@ public class NullLiteralExpression<T> extends ExpressionImpl<T> implements Seria
 	}
 
 	public String renderProjection(RenderingContext renderingContext) {
-		return CastFunction.CAST_NAME + "( 	null  as " + renderingContext.getCastType( getJavaType() ) + ')';
+		final String alias = getAlias();
+		final String projectionExtension = alias == null ? "" : " as " + alias;
+		return CastFunction.CAST_NAME + "( 	null  as " + renderingContext.getCastType( getJavaType() ) + ')' + projectionExtension;
 	}
 }

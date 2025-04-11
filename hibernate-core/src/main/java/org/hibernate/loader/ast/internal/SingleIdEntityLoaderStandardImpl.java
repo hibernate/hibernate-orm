@@ -77,7 +77,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 				.load( key, entityInstance, readOnly, false, session );
 	}
 
-	@Internal // public for tests
+	@Internal // public for tests, also called by Hibernate Reactive
 	public SingleIdLoadPlan<T> resolveLoadPlan(LockOptions lockOptions, LoadQueryInfluencers influencers) {
 		if ( getLoadable().isAffectedByEnabledFilters( influencers, true ) ) {
 			// This case is special because the filters need to be applied in order to

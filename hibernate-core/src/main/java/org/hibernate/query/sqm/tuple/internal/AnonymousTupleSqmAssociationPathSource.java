@@ -57,7 +57,7 @@ public class AnonymousTupleSqmAssociationPathSource<O, J>
 	}
 
 	@Override
-	public SqmDomainType<J> getSqmPathType() {
+	public SqmDomainType<J> getPathType() {
 		return (SqmDomainType<J>) domainType;
 	}
 
@@ -72,7 +72,7 @@ public class AnonymousTupleSqmAssociationPathSource<O, J>
 	}
 
 	@Override
-	public SqmPathSource<J> getPathSource() {
+	public SqmPathSource<J> getSqmPathSource() {
 		return this;
 	}
 

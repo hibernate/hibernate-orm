@@ -35,7 +35,7 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 
 	private SqmCorrelatedSingularJoin(
 			SqmFrom<?, O> lhs,
-			SqmSingularPersistentAttribute<O, T> joinedNavigable,
+			SqmSingularPersistentAttribute<? super O, T> joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,

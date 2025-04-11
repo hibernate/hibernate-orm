@@ -18,6 +18,7 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
@@ -97,13 +98,13 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public SqmDomainType<J> getSqmPathType() {
-		return sqmPathSource.getSqmPathType();
+	public SqmDomainType<J> getPathType() {
+		return sqmPathSource.getPathType();
 	}
 
 	@Override
 	public DomainType<J> getValueGraphType() {
-		return getSqmPathType();
+		return getPathType();
 	}
 
 	@Override
@@ -115,8 +116,8 @@ public class SingularAttributeImpl<D,J>
 
 	@Override
 	public SimpleDomainType<J> getType() {
-		// TODO: VERY UGLY, FIX THIS
-		return (SimpleDomainType<J>) getSqmPathType();
+		// TODO: very ugly and fragile, fix this
+		return (SimpleDomainType<J>) sqmPathSource.getPathType();
 	}
 
 	@Override
@@ -135,8 +136,8 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public SqmPathSource<J> getPathSource() {
-		return this.sqmPathSource;
+	public SqmPathSource<J> getSqmPathSource() {
+		return sqmPathSource;
 	}
 
 	@Override
@@ -151,15 +152,15 @@ public class SingularAttributeImpl<D,J>
 			String alias,
 			boolean fetched,
 			SqmCreationState creationState) {
+		final NodeBuilder nodeBuilder = creationState.getCreationContext().getNodeBuilder();
 		if ( getType() instanceof AnyMappingDomainType ) {
 			throw new SemanticException( "An @Any attribute cannot be join fetched" );
 		}
-		else if ( sqmPathSource.getSqmPathType() instanceof BasicPluralType<?,?> ) {
-			final SqmSetReturningFunction<J> setReturningFunction = creationState.getCreationContext()
-					.getNodeBuilder()
-					.unnestArray( lhs.get( getName() ) );
+		else if ( sqmPathSource.getPathType() instanceof BasicPluralType<?,?> ) {
+			final SqmSetReturningFunction<J> setReturningFunction =
+					nodeBuilder.unnestArray( lhs.get( getName() ) );
 			//noinspection unchecked
-			return (SqmJoin<D, J>) new SqmFunctionJoin<>(
+			final SqmFunctionJoin<J> join = new SqmFunctionJoin<>(
 					createNavigablePath( lhs, alias ),
 					setReturningFunction,
 					true,
@@ -168,6 +169,7 @@ public class SingularAttributeImpl<D,J>
 					joinType,
 					(SqmRoot<Object>) lhs
 			);
+			return (SqmJoin<D, J>) join;
 		}
 		else {
 			return new SqmSingularJoin<>(
@@ -176,7 +178,7 @@ public class SingularAttributeImpl<D,J>
 					alias,
 					joinType,
 					fetched,
-					creationState.getCreationContext().getNodeBuilder()
+					nodeBuilder
 			);
 		}
 	}
@@ -193,7 +195,7 @@ public class SingularAttributeImpl<D,J>
 		if ( parentPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) {
 			navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
 		}
-		final DomainType<?> parentType = parentPathSource.getSqmPathType();
+		final DomainType<?> parentType = parentPathSource.getPathType();
 		if ( parentType != getDeclaringType() && parentType instanceof EntityDomainType &&
 				( (EntityDomainType<?>) parentType ).findSingularAttribute( getName() ) == null ) {
 			// If the parent path is an entity type which does not contain the joined attribute

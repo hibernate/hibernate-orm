@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -50,10 +49,9 @@ public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implem
 	@Override
 	public SqmPathSource<T> getReferencedPathSource() {
 		final SqmPathSource<T> pathSource = super.getNodeType();
-		if ( pathSource instanceof SingularPersistentAttribute<?,?> singularPersistentAttribute ) {
-			return (SqmPathSource<T>) singularPersistentAttribute.getPathSource();
-		}
-		return pathSource;
+		return pathSource instanceof SqmSingularPersistentAttribute<?, T> attribute
+				? attribute.getSqmPathSource()
+				: pathSource;
 	}
 
 	@Override

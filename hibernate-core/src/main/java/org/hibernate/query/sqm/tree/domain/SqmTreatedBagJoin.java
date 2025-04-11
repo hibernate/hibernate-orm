@@ -20,20 +20,20 @@ import jakarta.persistence.criteria.Predicate;
 /**
  * @author Steve Ebersole
  */
-public class SqmTreatedBagJoin<L, R, R1 extends R> extends SqmBagJoin<L, R1> implements SqmTreatedAttributeJoin<L, R, R1> {
+public class SqmTreatedBagJoin<L, R, S extends R> extends SqmBagJoin<L, S> implements SqmTreatedAttributeJoin<L, R, S> {
 	private final SqmBagJoin<L, R> wrappedPath;
-	private final SqmTreatableDomainType<R1> treatTarget;
+	private final SqmTreatableDomainType<S> treatTarget;
 
 	public SqmTreatedBagJoin(
 			SqmBagJoin<L, R> wrappedPath,
-			SqmTreatableDomainType<R1> treatTarget,
+			SqmTreatableDomainType<S> treatTarget,
 			String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
 	public SqmTreatedBagJoin(
 			SqmBagJoin<L, R> wrappedPath,
-			SqmTreatableDomainType<R1> treatTarget,
+			SqmTreatableDomainType<S> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -42,7 +42,7 @@ public class SqmTreatedBagJoin<L, R, R1 extends R> extends SqmBagJoin<L, R1> imp
 				wrappedPath.getNavigablePath()
 						.append( CollectionPart.Nature.ELEMENT.getName() )
 						.treatAs( treatTarget.getTypeName(), alias ),
-				(SqmBagPersistentAttribute<L, R1>) wrappedPath.getAttribute(),
+				(SqmBagPersistentAttribute<L, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				fetched,
@@ -55,14 +55,14 @@ public class SqmTreatedBagJoin<L, R, R1 extends R> extends SqmBagJoin<L, R1> imp
 	private SqmTreatedBagJoin(
 			NavigablePath navigablePath,
 			SqmBagJoin<L, R> wrappedPath,
-			SqmTreatableDomainType<R1> treatTarget,
+			SqmTreatableDomainType<S> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
 				navigablePath,
-				(SqmBagPersistentAttribute<L, R1>) wrappedPath.getAttribute(),
+				(SqmBagPersistentAttribute<L, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				wrappedPath.isFetched(),
@@ -73,12 +73,12 @@ public class SqmTreatedBagJoin<L, R, R1 extends R> extends SqmBagJoin<L, R1> imp
 	}
 
 	@Override
-	public SqmTreatedBagJoin<L, R, R1> copy(SqmCopyContext context) {
-		final SqmTreatedBagJoin<L, R, R1> existing = context.getCopy( this );
+	public SqmTreatedBagJoin<L, R, S> copy(SqmCopyContext context) {
+		final SqmTreatedBagJoin<L, R, S> existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmTreatedBagJoin<L, R, R1> path = context.registerCopy(
+		final SqmTreatedBagJoin<L, R, S> path = context.registerCopy(
 				this,
 				new SqmTreatedBagJoin<>(
 						getNavigablePath(),
@@ -98,22 +98,22 @@ public class SqmTreatedBagJoin<L, R, R1 extends R> extends SqmBagJoin<L, R1> imp
 	}
 
 	@Override
-	public TreatableDomainType<R1> getTreatTarget() {
+	public TreatableDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
 	@Override
-	public SqmPathSource<R1> getNodeType() {
+	public SqmPathSource<S> getNodeType() {
 		return treatTarget;
 	}
 
 	@Override
-	public SqmTreatableDomainType<R1> getReferencedPathSource() {
+	public SqmTreatableDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
+	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
 	}
 
@@ -127,22 +127,22 @@ public class SqmTreatedBagJoin<L, R, R1 extends R> extends SqmBagJoin<L, R1> imp
 	}
 
 	@Override
-	public SqmTreatedBagJoin<L,R,R1> on(JpaExpression<Boolean> restriction) {
-		return (SqmTreatedBagJoin<L, R, R1>) super.on( restriction );
+	public SqmTreatedBagJoin<L,R, S> on(JpaExpression<Boolean> restriction) {
+		return (SqmTreatedBagJoin<L, R, S>) super.on( restriction );
 	}
 
 	@Override
-	public SqmTreatedBagJoin<L,R,R1> on(Expression<Boolean> restriction) {
-		return (SqmTreatedBagJoin<L, R, R1>) super.on( restriction );
+	public SqmTreatedBagJoin<L,R, S> on(Expression<Boolean> restriction) {
+		return (SqmTreatedBagJoin<L, R, S>) super.on( restriction );
 	}
 
 	@Override
-	public SqmTreatedBagJoin<L,R,R1> on(JpaPredicate... restrictions) {
-		return (SqmTreatedBagJoin<L, R, R1>) super.on( restrictions );
+	public SqmTreatedBagJoin<L,R, S> on(JpaPredicate... restrictions) {
+		return (SqmTreatedBagJoin<L, R, S>) super.on( restrictions );
 	}
 
 	@Override
-	public SqmTreatedBagJoin<L,R,R1> on(Predicate... restrictions) {
-		return (SqmTreatedBagJoin<L, R, R1>) super.on( restrictions );
+	public SqmTreatedBagJoin<L,R, S> on(Predicate... restrictions) {
+		return (SqmTreatedBagJoin<L, R, S>) super.on( restrictions );
 	}
 }

@@ -39,7 +39,7 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 	}
 
 	private static IdentifiableDomainType<?> pathDomainType(SqmPath<?> toOnePath) {
-		final DomainType<?> domainType = toOnePath.getReferencedPathSource().getSqmPathType();
+		final DomainType<?> domainType = toOnePath.getReferencedPathSource().getPathType();
 		if ( domainType instanceof IdentifiableDomainType<?> identifiableDomainType ) {
 			return identifiableDomainType;
 		}

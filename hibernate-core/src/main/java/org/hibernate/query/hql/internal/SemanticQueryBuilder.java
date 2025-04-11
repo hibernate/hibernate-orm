@@ -2553,7 +2553,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmAnyDiscriminatorValue<>(
 				anyDiscriminatorTypeSqmPath.getNodeType().getPathName(),
 				creationContext.getJpaMetamodel().resolveHqlEntityReference( valueExpressionContext.getText() ),
-				anyDiscriminatorTypeSqmPath.getExpressible().getSqmPathType(),
+				anyDiscriminatorTypeSqmPath.getExpressible().getPathType(),
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -3477,7 +3477,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		final SqmPath<?> sqmPath = consumeDomainPath( ctx.path() );
-		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getSqmPathType();
+		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getPathType();
 		if ( sqmPathType instanceof IdentifiableDomainType<?> identifiableType ) {
 			final PathSource<?> identifierDescriptor = identifiableType.getIdentifierDescriptor();
 			if ( identifierDescriptor == null ) {
@@ -3505,7 +3505,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmPath<?> visitEntityVersionReference(HqlParser.EntityVersionReferenceContext ctx) {
 		final SqmPath<?> sqmPath = consumeDomainPath( ctx.path() );
-		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getSqmPathType();
+		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getPathType();
 		if ( sqmPathType instanceof IdentifiableDomainType<?> identifiableType ) {
 			if ( !identifiableType.hasVersionAttribute() ) {
 				throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
@@ -3536,7 +3536,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		final SqmPath<?> sqmPath = consumeDomainPath( ctx.path() );
 
-		if ( sqmPath.getReferencedPathSource().getSqmPathType() instanceof IdentifiableDomainType<?> identifiableType ) {
+		if ( sqmPath.getReferencedPathSource().getPathType() instanceof IdentifiableDomainType<?> identifiableType ) {
 			final List<? extends PersistentAttribute<?, ?>> attributes = identifiableType.findNaturalIdAttributes();
 			if ( attributes == null ) {
 				throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
@@ -6165,12 +6165,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private SqmPath<?> consumeManagedTypeReference(HqlParser.PathContext parserPath) {
 		final SqmPath<?> sqmPath = consumeDomainPath( parserPath );
 		final SqmPathSource<?> pathSource = sqmPath.getReferencedPathSource();
-		if ( pathSource.getSqmPathType() instanceof ManagedDomainType<?> ) {
+		if ( pathSource.getPathType() instanceof ManagedDomainType<?> ) {
 			return sqmPath;
 		}
 		else {
 			throw new PathException( "Expecting ManagedType valued path [" + sqmPath.getNavigablePath()
-					+ "], but found: " + pathSource.getSqmPathType() );
+					+ "], but found: " + pathSource.getPathType() );
 		}
 	}
 
@@ -6181,7 +6181,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		else {
 			throw new PathException( "Expecting plural attribute valued path [" + sqmPath.getNavigablePath()
-					+ "], but found: " + sqmPath.getReferencedPathSource().getSqmPathType() );
+					+ "], but found: " + sqmPath.getReferencedPathSource().getPathType() );
 		}
 	}
 

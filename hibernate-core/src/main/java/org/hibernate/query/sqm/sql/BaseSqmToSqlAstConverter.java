@@ -2857,7 +2857,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				);
 			}
 		}
-		else if ( projectedPath.getNodeType().getSqmPathType() instanceof EntityDomainType<?> entityDomainType ) {
+		else if ( projectedPath.getNodeType().getPathType() instanceof EntityDomainType<?> entityDomainType ) {
 			treatedType = entityDomainType;
 			registerEntityNameUsage( tableGroup, EntityNameUse.PROJECTION, treatedType.getTypeName(), true );
 			if ( projectedPath instanceof SqmFrom<?, ?> sqmFrom ) {
@@ -3277,7 +3277,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		registerPathAttributeEntityNameUsage( sqmJoin, ownerTableGroup );
 		if ( !sqmJoin.hasTreats()
-				&& sqmJoin.getNodeType().getSqmPathType() instanceof EntityDomainType<?> entityDomainType ) {
+				&& sqmJoin.getNodeType().getPathType() instanceof EntityDomainType<?> entityDomainType ) {
 			final TableGroup elementTableGroup =
 					joinedTableGroup instanceof PluralTableGroup pluralTableGroup
 							? pluralTableGroup.getElementTableGroup()
@@ -5496,7 +5496,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				return new QueryLiteral<>(
 						literal.getLiteralValue(),
 						creationContext.getTypeConfiguration().getBasicTypeRegistry()
-								.getRegisteredType( nodeType.getSqmPathType().getTypeName() )
+								.getRegisteredType( nodeType.getPathType().getTypeName() )
 				);
 			}
 		}
@@ -6064,7 +6064,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 		else if ( paramSqmType instanceof AnyDiscriminatorSqmPathSource<?> anyDiscriminatorSqmPathSource ) {
-			return (MappingModelExpressible<?>) anyDiscriminatorSqmPathSource.getSqmPathType();
+			return (MappingModelExpressible<?>) anyDiscriminatorSqmPathSource.getPathType();
 		}
 		else if ( paramSqmType instanceof SqmPathSource<?> || paramSqmType instanceof BasicDomainType<?> ) {
 			// Try to infer the value mapping since the other side apparently is a path source

@@ -2155,8 +2155,8 @@ public class ASTParserLoadingTest {
 		assertThat( selectedPath.getReferencedPathSource() ).isInstanceOf( EntitySqmPathSource.class );
 		final EntitySqmPathSource selectedAttr = (EntitySqmPathSource) selectedPath.getReferencedPathSource();
 		assertThat( selectedAttr.getPathName() ).isEqualTo( "zoo" );
-		assertThat( selectedAttr.getSqmPathType() ).isInstanceOf( EntityDomainType.class );
-		final EntityDomainType<?> zooType = (EntityDomainType<?>) selectedAttr.getSqmPathType();
+		assertThat( selectedAttr.getPathType() ).isInstanceOf( EntityDomainType.class );
+		final EntityDomainType<?> zooType = (EntityDomainType<?>) selectedAttr.getPathType();
 		assertThat( zooType.getHibernateEntityName() ).isEqualTo( Zoo.class.getName() );
 	}
 

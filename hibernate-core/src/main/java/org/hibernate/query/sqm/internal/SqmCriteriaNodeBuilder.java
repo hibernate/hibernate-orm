@@ -2134,11 +2134,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	private static SqmExpressible<?> getNodeType(SqmExpression<?> expression) {
-		if ( expression instanceof SqmPath<?> ) {
-			final SqmPathSource<?> pathSource = ( (SqmPath<?>) expression ).getResolvedModel();
-			return pathSource instanceof SqmSingularPersistentAttribute<?,?>
-					? ( (SqmSingularPersistentAttribute<?, ?>) pathSource ).getPathSource()
-					: pathSource;
+		if ( expression instanceof SqmPath<?> sqmPath ) {
+			return sqmPath.getResolvedModel() instanceof SqmSingularPersistentAttribute<?,?> attribute
+					? attribute.getSqmPathSource()
+					: sqmPath.getResolvedModel();
 		}
 		else {
 			return expression.getNodeType();

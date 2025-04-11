@@ -115,7 +115,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
+	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
 	}
 

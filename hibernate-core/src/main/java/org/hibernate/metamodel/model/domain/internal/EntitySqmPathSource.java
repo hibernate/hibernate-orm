@@ -33,18 +33,18 @@ public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> implements 
 	}
 
 	@Override
-	public SqmEntityDomainType<J> getSqmPathType() {
+	public SqmEntityDomainType<J> getPathType() {
 		return domainType;
 	}
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		return getSqmPathType().findSubPathSource( name );
+		return getPathType().findSubPathSource( name );
 	}
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
-		return getSqmPathType().findSubPathSource( name, includeSubtypes );
+		return getPathType().findSubPathSource( name, includeSubtypes );
 	}
 
 	@Override

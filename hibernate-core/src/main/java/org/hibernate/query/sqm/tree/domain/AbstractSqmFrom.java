@@ -837,7 +837,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			SqmSingularPersistentAttribute<? super T, A> attribute,
 			SqmJoinType joinType,
 			boolean fetched) {
-		if ( attribute.getSqmPathType() instanceof ManagedDomainType ) {
+		if ( attribute.getPathType() instanceof ManagedDomainType ) {
 			return new SqmSingularJoin<>(
 					this,
 					attribute,

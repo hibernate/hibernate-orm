@@ -113,7 +113,7 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
+	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
 	}
 

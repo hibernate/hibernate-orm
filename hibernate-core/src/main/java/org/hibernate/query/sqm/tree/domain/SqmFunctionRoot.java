@@ -102,7 +102,7 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
+	public SqmPathSource<E> getResolvedModel() {
 		return getReferencedPathSource();
 	}
 

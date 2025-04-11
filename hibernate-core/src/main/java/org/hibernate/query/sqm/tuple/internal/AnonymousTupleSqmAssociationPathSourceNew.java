@@ -67,7 +67,7 @@ public class AnonymousTupleSqmAssociationPathSourceNew<O, J>
 	}
 
 	@Override
-	public SqmPathSource<J> getPathSource() {
+	public SqmPathSource<J> getSqmPathSource() {
 		return this;
 	}
 

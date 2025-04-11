@@ -139,7 +139,7 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public SqmEntityDomainType<J> getSqmPathType() {
+	public SqmEntityDomainType<J> getPathType() {
 		return this;
 	}
 

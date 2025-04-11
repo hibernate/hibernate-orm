@@ -113,7 +113,7 @@ public class SqmTreatedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
+	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
 	}
 

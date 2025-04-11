@@ -24,14 +24,14 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class SqmEmbeddedValuedSimplePath<T>
 		extends AbstractSqmSimplePath<T>
 		implements SqmExpressible<T> {
+
 	public SqmEmbeddedValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
 			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
-
-		assert referencedPathSource.getSqmPathType() instanceof EmbeddableDomainType;
+		assert referencedPathSource.getPathType() instanceof EmbeddableDomainType;
 	}
 
 	@SuppressWarnings("unused")
@@ -42,8 +42,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
-
-		assert referencedPathSource.getSqmPathType() instanceof EmbeddableDomainType;
+		assert referencedPathSource.getPathType() instanceof EmbeddableDomainType;
 	}
 
 	@Override
@@ -75,7 +74,6 @@ public class SqmEmbeddedValuedSimplePath<T>
 
 	@Override
 	public SqmDomainType<T> getSqmType() {
-		//noinspection unchecked
 		return (SqmDomainType<T>) getResolvedModel().getSqmType();
 	}
 

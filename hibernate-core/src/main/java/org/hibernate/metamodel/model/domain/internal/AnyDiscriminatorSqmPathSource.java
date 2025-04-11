@@ -57,11 +57,11 @@ public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 
 	@Override
 	public BasicType<D> getSqmType() {
-		return getSqmPathType();
+		return getPathType();
 	}
 
 	@Override
-	public BasicType<D> getSqmPathType() {
+	public BasicType<D> getPathType() {
 		return domainType;
 	}
 
@@ -72,6 +72,6 @@ public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 
 	@Override
 	public JavaType<D> getExpressibleJavaType() {
-		return getSqmPathType().getExpressibleJavaType();
+		return getPathType().getExpressibleJavaType();
 	}
 }

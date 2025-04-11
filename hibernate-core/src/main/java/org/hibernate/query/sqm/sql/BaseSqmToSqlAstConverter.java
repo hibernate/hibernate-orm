@@ -5978,13 +5978,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	protected MappingModelExpressible<?> determineValueMapping(SqmParameter<?> sqmParameter) {
 		log.debugf( "Determining mapping-model type for SqmParameter : %s", sqmParameter );
-
 		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
 		final QueryParameterBinding<?> binding = domainParameterBindings.getBinding( queryParameter );
-
+		final boolean bindingTypeExplicit = binding.getExplicitTemporalPrecision() != null;
 		BindableType<?> paramType = binding.getBindType();
-		final boolean bindingTypeExplicit;
-		bindingTypeExplicit = binding.getExplicitTemporalPrecision() != null;
 		if ( paramType == null ) {
 			paramType = queryParameter.getHibernateType();
 			if ( paramType == null ) {
@@ -5995,14 +5992,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else {
 //			bindingTypeExplicit = binding.getExplicitTemporalPrecision() != null;
 		}
+		return determineValueMapping( sqmParameter, paramType, bindingTypeExplicit );
+	}
 
+	private MappingModelExpressible<?> determineValueMapping
+			(SqmParameter<?> sqmParameter, BindableType<?> paramType, boolean bindingTypeExplicit) {
 		if ( paramType == null ) {
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
-			if ( inferredValueMapping != null ) {
-				return resolveInferredValueMappingForParameter( inferredValueMapping );
-			}
-			// Default to the Object type
-			return basicType( Object.class );
+			return inferredValueMapping != null
+					? resolveInferredValueMappingForParameter( inferredValueMapping )
+					: basicType( Object.class ); // Default to the Object type
 		}
 		else if ( paramType instanceof MappingModelExpressible<?> paramModelType ) {
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
@@ -6039,8 +6038,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 
-		final SqmExpressible<?> paramSqmType = paramType.resolveExpressible( creationContext );
+		return determineValueMapping( sqmParameter, paramType );
+	}
 
+	private MappingModelExpressible<?> determineValueMapping(SqmParameter<?> sqmParameter, BindableType<?> paramType) {
+		final SqmExpressible<?> paramSqmType = paramType.resolveExpressible( creationContext );
 		if ( paramSqmType instanceof SqmPath<?> sqmPath ) {
 			final MappingModelExpressible<?> modelPart = determineValueMapping( sqmPath );
 			if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
@@ -6048,61 +6050,57 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			return modelPart;
 		}
-
-		if ( paramSqmType instanceof BasicValuedMapping basicValuedMapping ) {
+		else if ( paramSqmType instanceof BasicValuedMapping basicValuedMapping ) {
 			return basicValuedMapping;
 		}
-
-		if ( paramSqmType instanceof CompositeSqmPathSource || paramSqmType instanceof EmbeddableDomainType<?> ) {
+		else if ( paramSqmType instanceof CompositeSqmPathSource || paramSqmType instanceof EmbeddableDomainType<?> ) {
 			// Try to infer the value mapping since the other side apparently is a path source
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
 			if ( inferredValueMapping != null ) {
 				return resolveInferredValueMappingForParameter( inferredValueMapping );
 			}
-			throw new UnsupportedOperationException( "Support for embedded-valued parameters not yet implemented" );
+			else {
+				throw new UnsupportedOperationException( "Support for embedded-valued parameters not yet implemented" );
+			}
 		}
-
-		if ( paramSqmType instanceof AnyDiscriminatorSqmPathSource ) {
-			return (MappingModelExpressible<?>) ((AnyDiscriminatorSqmPathSource<?>) paramSqmType).getSqmPathType();
+		else if ( paramSqmType instanceof AnyDiscriminatorSqmPathSource<?> anyDiscriminatorSqmPathSource ) {
+			return (MappingModelExpressible<?>) anyDiscriminatorSqmPathSource.getSqmPathType();
 		}
-
-		if ( paramSqmType instanceof SqmPathSource<?> || paramSqmType instanceof BasicDomainType<?> ) {
+		else if ( paramSqmType instanceof SqmPathSource<?> || paramSqmType instanceof BasicDomainType<?> ) {
 			// Try to infer the value mapping since the other side apparently is a path source
 			final MappingModelExpressible<?> inferredMapping = resolveInferredType();
-			if ( inferredMapping != null ) {
-				if ( inferredMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
-					return resolveInferredValueMappingForParameter( pluralAttributeMapping.getElementDescriptor() );
-				}
-				else if ( !( inferredMapping instanceof JavaObjectType ) ) {
-					// Do not report back the "object type" as inferred type and instead try to rely on the paramSqmType.getExpressibleJavaType()
-					return resolveInferredValueMappingForParameter( inferredMapping );
-				}
+			if ( inferredMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
+				return resolveInferredValueMappingForParameter( pluralAttributeMapping.getElementDescriptor() );
 			}
-
-			final Class<?> parameterJavaType = paramSqmType.getExpressibleJavaType().getJavaTypeClass();
-
-			final BasicType<?> basicTypeForJavaType = getTypeConfiguration().getBasicTypeForJavaType(
-					parameterJavaType
-			);
-
-			if ( basicTypeForJavaType == null ) {
-				if ( paramSqmType instanceof EntityDomainType ) {
-					return resolveEntityPersister( (EntityDomainType<?>) paramSqmType );
+			else if ( inferredMapping != null && !( inferredMapping instanceof JavaObjectType ) ) {
+				// Do not report back the "object type" as inferred type and instead try to rely on the paramSqmType.getExpressibleJavaType()
+				return resolveInferredValueMappingForParameter( inferredMapping );
+			}
+			else {
+				final Class<?> parameterJavaType = paramSqmType.getExpressibleJavaType().getJavaTypeClass();
+				final BasicType<?> basicTypeForJavaType =
+						getTypeConfiguration()
+								.getBasicTypeForJavaType( parameterJavaType );
+				if ( basicTypeForJavaType != null ) {
+					return basicTypeForJavaType;
 				}
-				else if ( paramSqmType instanceof SingularAttribute ) {
-					final Type<?> type = ( (SingularAttribute<?, ?>) paramSqmType ).getType();
-					if ( type instanceof EntityDomainType ) {
-						return resolveEntityPersister( (EntityDomainType<?>) type );
+				else {
+					if ( paramSqmType instanceof EntityDomainType<?> entityDomainType ) {
+						return resolveEntityPersister( entityDomainType );
 					}
-				}
-				if ( inferredMapping != null ) {
-					// inferredMapping is JavaObjectType and we cannot deduct the type
+					else if ( paramSqmType instanceof SingularAttribute<?, ?> singularAttribute ) {
+						if ( singularAttribute.getType() instanceof EntityDomainType<?> entityDomainType ) {
+							return resolveEntityPersister( entityDomainType );
+						}
+					}
+					// inferredMapping is null or JavaObjectType and we cannot deduct the type
 					return inferredMapping;
 				}
 			}
-			return basicTypeForJavaType;
 		}
-		throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );
+		else {
+			throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );
+		}
 	}
 
 	private static boolean canUseInferredType(JdbcMapping bindJdbcMapping, JdbcMapping inferredJdbcMapping) {
@@ -6110,18 +6108,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final JdbcType inferredJdbcType = inferredJdbcMapping.getJdbcType();
 		// If the bind type has a different JDBC type, we prefer that over the inferred type.
 		return bindJdbcType == inferredJdbcType
-				|| bindJdbcType instanceof ArrayJdbcType && inferredJdbcType instanceof ArrayJdbcType
-				&& ( (ArrayJdbcType) bindJdbcType ).getElementJdbcType() == ( (ArrayJdbcType) inferredJdbcType ).getElementJdbcType();
+			|| bindJdbcType instanceof ArrayJdbcType bindArrayType && inferredJdbcType instanceof ArrayJdbcType inferredArrayType
+				&& bindArrayType.getElementJdbcType() == inferredArrayType.getElementJdbcType();
 	}
 
 	private MappingModelExpressible<?> resolveInferredValueMappingForParameter(MappingModelExpressible<?> inferredValueMapping) {
-		if ( inferredValueMapping instanceof PluralAttributeMapping ) {
+		if ( inferredValueMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			// For parameters, we resolve to the element descriptor
-			inferredValueMapping = ( (PluralAttributeMapping) inferredValueMapping ).getElementDescriptor();
+			inferredValueMapping = pluralAttributeMapping.getElementDescriptor();
 		}
-		if ( inferredValueMapping instanceof EntityCollectionPart ) {
+		if ( inferredValueMapping instanceof EntityCollectionPart entityCollectionPart ) {
 			// For parameters, we resolve to the entity mapping type to bind the primary key
-			return ( (EntityCollectionPart) inferredValueMapping ).getAssociatedEntityMappingType();
+			return entityCollectionPart.getAssociatedEntityMappingType();
 		}
 		return inferredValueMapping;
 	}

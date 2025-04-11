@@ -1169,8 +1169,8 @@ public class Configuration {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass) {
-		addAttributeConverter( new ClassBasedConverterDescriptor( attributeConverterClass, classmateContext ) );
+	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?, ?>> attributeConverterClass) {
+		addAttributeConverter( new ClassBasedConverterDescriptor<>( attributeConverterClass, classmateContext ) );
 		return this;
 	}
 

@@ -119,7 +119,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private MemberDetails memberDetails;
 	private AccessType accessType;
 
-	private ConverterDescriptor converterDescriptor;
+	private ConverterDescriptor<?,?> converterDescriptor;
 
 	private boolean isNationalized;
 	private boolean isLob;
@@ -1158,7 +1158,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		return getMetadataCollector().getDatabase().getDialect();
 	}
 
-	private void applyJpaConverter(MemberDetails attribute, ConverterDescriptor attributeConverterDescriptor) {
+	private void applyJpaConverter(MemberDetails attribute, ConverterDescriptor<?,?> attributeConverterDescriptor) {
 		final boolean autoApply = attributeConverterDescriptor.getAutoApplyDescriptor().isAutoApplicable();
 		disallowConverter( attribute, Id.class, autoApply );
 		disallowConverter( attribute, Version.class, autoApply );

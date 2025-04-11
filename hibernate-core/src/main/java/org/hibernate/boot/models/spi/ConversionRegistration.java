@@ -19,7 +19,6 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -56,17 +55,16 @@ public class ConversionRegistration {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if ( !(object instanceof ConversionRegistration that) ) {
 			return false;
 		}
-		ConversionRegistration that = (ConversionRegistration) o;
 		return autoApply == that.autoApply
-				&& Objects.equals( explicitDomainType, that.explicitDomainType )
-				&& converterType.equals( that.converterType );
+			&& Objects.equals( explicitDomainType, that.explicitDomainType )
+			&& converterType.equals( that.converterType );
 	}
 
 	@Override
@@ -95,25 +93,19 @@ public class ConversionRegistration {
 		return "ConversionRegistration( " + converterType.getName() + ", " + source.getAnnotationType().getSimpleName() + ", " + autoApply + ")";
 	}
 
-	public ConverterDescriptor makeConverterDescriptor(ClassmateContext classmateContext) {
-		final List<ResolvedType> resolvedParamTypes = ConverterHelper.resolveConverterClassParamTypes(
-				converterType,
-				classmateContext
-		);
+	public ConverterDescriptor<?,?> makeConverterDescriptor(ClassmateContext classmateContext) {
+		final List<ResolvedType> resolvedParamTypes =
+				ConverterHelper.resolveConverterClassParamTypes( converterType, classmateContext );
 		final ResolvedType relationalType = resolvedParamTypes.get( 1 );
-		final ResolvedType domainTypeToMatch;
-		if ( !void.class.equals( explicitDomainType ) ) {
-			domainTypeToMatch = classmateContext.getTypeResolver().resolve( explicitDomainType );
-		}
-		else {
-			domainTypeToMatch = resolvedParamTypes.get( 0 );
-		}
-
-		return new ConverterDescriptorImpl( converterType, domainTypeToMatch, relationalType, autoApply );
+		final ResolvedType domainTypeToMatch =
+				void.class.equals( explicitDomainType )
+						? resolvedParamTypes.get( 0 )
+						: classmateContext.getTypeResolver().resolve( explicitDomainType );
+		return new ConverterDescriptorImpl<>( converterType, domainTypeToMatch, relationalType, autoApply );
 	}
 
-	private static class ConverterDescriptorImpl implements ConverterDescriptor {
-		private final Class<? extends AttributeConverter<?, ?>> converterType;
+	private static class ConverterDescriptorImpl<X,Y> implements ConverterDescriptor<X,Y> {
+		private final Class<? extends AttributeConverter<? extends X, ? extends Y>> converterType;
 		private final ResolvedType domainTypeToMatch;
 		private final ResolvedType relationalType;
 		private final boolean autoApply;
@@ -121,7 +113,7 @@ public class ConversionRegistration {
 		private final AutoApplicableConverterDescriptor autoApplyDescriptor;
 
 		public ConverterDescriptorImpl(
-				Class<? extends AttributeConverter<?, ?>> converterType,
+				Class<? extends AttributeConverter<? extends X, ? extends Y>> converterType,
 				ResolvedType domainTypeToMatch,
 				ResolvedType relationalType,
 				boolean autoApply) {
@@ -136,7 +128,7 @@ public class ConversionRegistration {
 		}
 
 		@Override
-		public Class<? extends AttributeConverter<?, ?>> getAttributeConverterClass() {
+		public Class<? extends AttributeConverter<? extends X, ? extends Y>> getAttributeConverterClass() {
 			return converterType;
 		}
 
@@ -155,21 +147,16 @@ public class ConversionRegistration {
 			return autoApplyDescriptor;
 		}
 
-		@SuppressWarnings("unchecked")
 		@Override
-		public JpaAttributeConverter<?, ?> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
-			final ManagedBean<? extends AttributeConverter<?, ?>> converterBean = context
-					.getManagedBeanRegistry()
-					.getBean( converterType );
+		public JpaAttributeConverter<X, Y> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
+			final var converterBean = context.getManagedBeanRegistry().getBean( converterType );
 
-			final TypeConfiguration typeConfiguration = context.getTypeConfiguration();
-			final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+			final JavaTypeRegistry javaTypeRegistry = context.getTypeConfiguration().getJavaTypeRegistry();
 			javaTypeRegistry.resolveDescriptor( domainTypeToMatch.getErasedType() );
 
-			//noinspection rawtypes
-			return new JpaAttributeConverterImpl(
-					converterBean,
-					javaTypeRegistry.getDescriptor(  converterBean.getBeanClass() ),
+			return new JpaAttributeConverterImpl<>(
+					(ManagedBean<? extends AttributeConverter<X, Y>>) converterBean,
+					javaTypeRegistry.getDescriptor( converterBean.getBeanClass() ),
 					javaTypeRegistry.resolveDescriptor( domainTypeToMatch.getErasedType() ),
 					javaTypeRegistry.resolveDescriptor( relationalType.getErasedType() )
 			);

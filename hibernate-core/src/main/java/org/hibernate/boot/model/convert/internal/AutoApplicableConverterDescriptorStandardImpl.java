@@ -27,9 +27,9 @@ import static org.hibernate.boot.model.convert.internal.ConverterHelper.typesMat
  * @author Steve Ebersole
  */
 public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplicableConverterDescriptor {
-	private final ConverterDescriptor linkedConverterDescriptor;
+	private final ConverterDescriptor<?,?> linkedConverterDescriptor;
 
-	public AutoApplicableConverterDescriptorStandardImpl(ConverterDescriptor linkedConverterDescriptor) {
+	public AutoApplicableConverterDescriptorStandardImpl(ConverterDescriptor<?,?> linkedConverterDescriptor) {
 		this.linkedConverterDescriptor = linkedConverterDescriptor;
 	}
 
@@ -39,7 +39,7 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 	}
 
 	@Override
-	public ConverterDescriptor getAutoAppliedConverterDescriptorForAttribute(
+	public ConverterDescriptor<?,?> getAutoAppliedConverterDescriptorForAttribute(
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
 		final ResolvedType attributeType = resolveAttributeType( memberDetails, context );
@@ -50,29 +50,30 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 	}
 
 	@Override
-	public ConverterDescriptor getAutoAppliedConverterDescriptorForCollectionElement(
+	public ConverterDescriptor<?,?> getAutoAppliedConverterDescriptorForCollectionElement(
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
 		final ResolvedMember<?> collectionMember = resolveMember( memberDetails, context );
 
 		final ResolvedType elementType;
-		final Class<?> erasedType = collectionMember.getType().getErasedType();
+		final ResolvedType type = collectionMember.getType();
+		final Class<?> erasedType = type.getErasedType();
 		if ( Map.class.isAssignableFrom( erasedType ) ) {
-			final List<ResolvedType> typeArguments = collectionMember.getType().typeParametersFor(Map.class);
+			final List<ResolvedType> typeArguments = type.typeParametersFor(Map.class);
 			if ( typeArguments.size() < 2 ) {
 				return null;
 			}
 			elementType = typeArguments.get( 1 );
 		}
 		else if ( Collection.class.isAssignableFrom( erasedType ) ) {
-			final List<ResolvedType> typeArguments = collectionMember.getType().typeParametersFor(Collection.class);
+			final List<ResolvedType> typeArguments = type.typeParametersFor(Collection.class);
 			if ( typeArguments.isEmpty() ) {
 				return null;
 			}
 			elementType = typeArguments.get( 0 );
 		}
 		else if ( erasedType.isArray() ) {
-			elementType = collectionMember.getType().getArrayElementType();
+			elementType = type.getArrayElementType();
 		}
 		else {
 			throw new HibernateException( "Attribute was neither a Collection nor a Map : " + erasedType);
@@ -84,22 +85,22 @@ public class AutoApplicableConverterDescriptorStandardImpl implements AutoApplic
 	}
 
 	@Override
-	public ConverterDescriptor getAutoAppliedConverterDescriptorForMapKey(
+	public ConverterDescriptor<?,?> getAutoAppliedConverterDescriptorForMapKey(
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
 
 		final ResolvedMember<?> collectionMember = resolveMember( memberDetails, context );
 		final ResolvedType keyType;
-
-		if ( Map.class.isAssignableFrom( collectionMember.getType().getErasedType() ) ) {
-			final List<ResolvedType> typeArguments = collectionMember.getType().typeParametersFor(Map.class);
+		final ResolvedType type = collectionMember.getType();
+		if ( Map.class.isAssignableFrom( type.getErasedType() ) ) {
+			final List<ResolvedType> typeArguments = type.typeParametersFor(Map.class);
 			if ( typeArguments.isEmpty() ) {
 				return null;
 			}
 			keyType = typeArguments.get(0);
 		}
 		else {
-			throw new HibernateException( "Attribute was not a Map : " + collectionMember.getType().getErasedType() );
+			throw new HibernateException( "Attribute was not a Map : " + type.getErasedType() );
 		}
 
 		return typesMatch( linkedConverterDescriptor.getDomainValueResolvedType(), keyType )

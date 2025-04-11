@@ -14,13 +14,13 @@ import jakarta.persistence.AttributeConverter;
  *
  * @author Steve Ebersole
  */
-public interface ConverterDescriptor {
+public interface ConverterDescriptor<X,Y> {
 	String TYPE_NAME_PREFIX = "converted::";
 
 	/**
 	 * The AttributeConverter class
 	 */
-	Class<? extends AttributeConverter<?,?>> getAttributeConverterClass();
+	Class<? extends AttributeConverter<? extends X,? extends Y>> getAttributeConverterClass();
 
 	/**
 	 * The resolved Classmate type descriptor for the conversion's domain type
@@ -42,7 +42,7 @@ public interface ConverterDescriptor {
 	/**
 	 * Factory for the runtime representation of the converter
 	 */
-	JpaAttributeConverter<?,?> createJpaAttributeConverter(JpaAttributeConverterCreationContext context);
+	JpaAttributeConverter<X,Y> createJpaAttributeConverter(JpaAttributeConverterCreationContext context);
 
 	/**
 	 * Can this converter be overridden by other competing converters?

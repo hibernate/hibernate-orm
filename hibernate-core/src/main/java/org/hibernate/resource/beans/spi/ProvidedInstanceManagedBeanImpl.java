@@ -4,6 +4,8 @@
  */
 package org.hibernate.resource.beans.spi;
 
+import org.hibernate.internal.util.ReflectHelper;
+
 /**
  * {@link ManagedBean} implementation for cases where we have been handed an actual
  * instance to use.
@@ -17,14 +19,12 @@ public class ProvidedInstanceManagedBeanImpl<T> implements ManagedBean<T> {
 		if ( instance == null ) {
 			throw new IllegalArgumentException( "Bean instance cannot be null" );
 		}
-
 		this.instance = instance;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Class<T> getBeanClass() {
-		return (Class<T>) instance.getClass();
+		return ReflectHelper.getClass( instance );
 	}
 
 	@Override

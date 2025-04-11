@@ -18,7 +18,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.EnumJavaType;
@@ -33,6 +32,7 @@ import org.hibernate.usertype.LoggableUserType;
 
 import static jakarta.persistence.EnumType.ORDINAL;
 import static jakarta.persistence.EnumType.STRING;
+import static org.hibernate.internal.util.ReflectHelper.classForName;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
@@ -108,18 +108,7 @@ public class EnumType<T extends Enum<T>>
 		//		2) we are not passed a ParameterType - generally this indicates a hbm.xml binding case.
 		final ParameterType reader = (ParameterType) parameters.get( PARAMETER_TYPE );
 
-		if ( parameters.containsKey( ENUM ) ) {
-			final String enumClassName = (String) parameters.get( ENUM );
-			try {
-				enumClass = (Class<T>) ReflectHelper.classForName( enumClassName, this.getClass() ).asSubclass( Enum.class );
-			}
-			catch ( ClassNotFoundException exception ) {
-				throw new HibernateException("Enum class not found: " + enumClassName, exception);
-			}
-		}
-		else if ( reader != null ) {
-			enumClass = (Class<T>) reader.getReturnedClass().asSubclass( Enum.class );
-		}
+		enumClass = getEnumClass( parameters, reader );
 
 		final JavaType<T> descriptor = typeConfiguration.getJavaTypeRegistry().getDescriptor( enumClass );
 		enumJavaType = (EnumJavaType<T>) descriptor;
@@ -152,6 +141,24 @@ public class EnumType<T extends Enum<T>>
 			}
 			jdbcType = descriptor.getRecommendedJdbcType( indicators );
 			isOrdinal = indicators.getEnumeratedType() != STRING;
+		}
+	}
+
+	private Class<T> getEnumClass(Properties parameters, ParameterType reader) {
+		if ( parameters.containsKey( ENUM ) ) {
+			final String enumClassName = (String) parameters.get( ENUM );
+			try {
+				return (Class<T>) classForName( enumClassName, this.getClass() ).asSubclass( Enum.class );
+			}
+			catch ( ClassNotFoundException exception ) {
+				throw new HibernateException("Enum class not found: " + enumClassName, exception);
+			}
+		}
+		else if ( reader != null ) {
+			return (Class<T>) reader.getReturnedClass().asSubclass( Enum.class );
+		}
+		else {
+			return null;
 		}
 	}
 

@@ -77,7 +77,7 @@ public class BootstrapContextTesting implements BootstrapContext {
 
 	private HashMap<String, SqmFunctionDescriptor> sqlFunctionMap;
 	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-	private HashMap<Class<?>, ConverterDescriptor> attributeConverterDescriptorMap;
+	private HashMap<Class<?>, ConverterDescriptor<?,?>> attributeConverterDescriptorMap;
 	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
 	private final ManagedTypeRepresentationResolver representationStrategySelector;
 	private SourceModelBuildingContext modelsContext;
@@ -232,7 +232,7 @@ public class BootstrapContextTesting implements BootstrapContext {
 	}
 
 	@Override
-	public Collection<ConverterDescriptor> getAttributeConverters() {
+	public Collection<ConverterDescriptor<?, ?>> getAttributeConverters() {
 		return attributeConverterDescriptorMap != null
 				? attributeConverterDescriptorMap.values()
 				: Collections.emptyList();

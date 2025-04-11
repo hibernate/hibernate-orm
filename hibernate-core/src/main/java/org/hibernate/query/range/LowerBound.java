@@ -8,6 +8,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
+import org.hibernate.internal.util.ReflectHelper;
 
 import java.util.Objects;
 
@@ -33,8 +34,8 @@ record LowerBound<U extends Comparable<U>>(U bound, boolean open) implements Ran
 				: builder.greaterThanOrEqualTo( path, literal );
 	}
 
-	@Override @SuppressWarnings("unchecked")
+	@Override
 	public Class<? extends U> getType() {
-		return (Class<? extends U>) bound.getClass();
+		return ReflectHelper.getClass( bound );
 	}
 }

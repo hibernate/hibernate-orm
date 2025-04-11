@@ -31,7 +31,7 @@ public interface ManagedResources {
 	 *
 	 * @return The AttributeConverter definitions.
 	 */
-	Collection<ConverterDescriptor> getAttributeConverterDescriptors();
+	Collection<ConverterDescriptor<?,?>> getAttributeConverterDescriptors();
 
 	/**
 	 * Informational access to any entity and component classes in the user domain model known by Class

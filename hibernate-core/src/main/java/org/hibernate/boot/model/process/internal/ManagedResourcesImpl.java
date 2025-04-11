@@ -33,7 +33,7 @@ import static java.util.Collections.unmodifiableSet;
  * @author Steve Ebersole
  */
 public class ManagedResourcesImpl implements ManagedResources {
-	private final Map<Class<? extends AttributeConverter<?,?>>, ConverterDescriptor> attributeConverterDescriptorMap = new HashMap<>();
+	private final Map<Class<? extends AttributeConverter<?,?>>, ConverterDescriptor<?,?>> attributeConverterDescriptorMap = new HashMap<>();
 	private final Set<Class<?>> annotatedClassReferences = new LinkedHashSet<>();
 	private final Set<String> annotatedClassNames = new LinkedHashSet<>();
 	private final Set<String> annotatedPackageNames = new LinkedHashSet<>();
@@ -70,7 +70,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 	}
 
 	@Override
-	public Collection<ConverterDescriptor> getAttributeConverterDescriptors() {
+	public Collection<ConverterDescriptor<?,?>> getAttributeConverterDescriptors() {
 		return unmodifiableCollection( attributeConverterDescriptorMap.values() );
 	}
 
@@ -104,7 +104,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 	// @Internal
 
 	@Internal
-	public void addAttributeConverterDefinition(ConverterDescriptor descriptor) {
+	public void addAttributeConverterDefinition(ConverterDescriptor<?,?> descriptor) {
 		attributeConverterDescriptorMap.put( descriptor.getAttributeConverterClass(), descriptor );
 	}
 

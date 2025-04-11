@@ -32,7 +32,7 @@ public record RegisteredConversion(
 		Class<?> explicitDomainType,
 		Class<? extends AttributeConverter<?,?>> converterType,
 		boolean autoApply,
-		ConverterDescriptor converterDescriptor) {
+		ConverterDescriptor<?,?> converterDescriptor) {
 
 	public RegisteredConversion {
 		assert converterType != null;
@@ -65,7 +65,7 @@ public record RegisteredConversion(
 		return Objects.hash( explicitDomainType, converterType );
 	}
 
-	private static ConverterDescriptor determineConverterDescriptor(
+	private static ConverterDescriptor<?,?> determineConverterDescriptor(
 			Class<?> explicitDomainType,
 			Class<? extends AttributeConverter<?, ?>> converterType,
 			boolean autoApply,
@@ -77,7 +77,7 @@ public record RegisteredConversion(
 				void.class.equals( explicitDomainType )
 						? resolvedParamTypes.get( 0 )
 						: classmateContext.getTypeResolver().resolve( explicitDomainType );
-		return new ConverterDescriptorImpl( converterType, domainTypeToMatch, relationalType, autoApply );
+		return new ConverterDescriptorImpl<>( converterType, domainTypeToMatch, relationalType, autoApply );
 	}
 
 	public Class<?> getExplicitDomainType() {
@@ -92,18 +92,18 @@ public record RegisteredConversion(
 		return autoApply;
 	}
 
-	public ConverterDescriptor getConverterDescriptor() {
+	public ConverterDescriptor<?,?> getConverterDescriptor() {
 		return converterDescriptor;
 	}
 
-	private static class ConverterDescriptorImpl implements ConverterDescriptor {
-		private final Class<? extends AttributeConverter<?, ?>> converterType;
+	private static class ConverterDescriptorImpl<X,Y> implements ConverterDescriptor<X,Y> {
+		private final Class<? extends AttributeConverter<? extends X, ? extends Y>> converterType;
 		private final ResolvedType domainTypeToMatch;
 		private final ResolvedType relationalType;
 		private final AutoApplicableConverterDescriptor autoApplyDescriptor;
 
 		public ConverterDescriptorImpl(
-				Class<? extends AttributeConverter<?, ?>> converterType,
+				Class<? extends AttributeConverter<? extends X, ? extends Y>> converterType,
 				ResolvedType domainTypeToMatch,
 				ResolvedType relationalType,
 				boolean autoApply) {
@@ -116,7 +116,7 @@ public record RegisteredConversion(
 		}
 
 		@Override
-		public Class<? extends AttributeConverter<?, ?>> getAttributeConverterClass() {
+		public Class<? extends AttributeConverter<? extends X, ? extends Y>> getAttributeConverterClass() {
 			return converterType;
 		}
 
@@ -136,17 +136,15 @@ public record RegisteredConversion(
 		}
 
 		@Override
-		public JpaAttributeConverter<?, ?> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
-			final ManagedBean<? extends AttributeConverter<?, ?>> converterBean =
-					context.getManagedBeanRegistry().getBean( converterType );
+		public JpaAttributeConverter<X, Y> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
+			final var converterBean = context.getManagedBeanRegistry().getBean( converterType );
 
 			final JavaTypeRegistry javaTypeRegistry = context.getTypeConfiguration().getJavaTypeRegistry();
 			javaTypeRegistry.resolveDescriptor( domainTypeToMatch.getErasedType() );
 
-			//noinspection rawtypes, unchecked
-			return new JpaAttributeConverterImpl(
-					converterBean,
-					javaTypeRegistry.getDescriptor(  converterBean.getBeanClass() ),
+			return new JpaAttributeConverterImpl<>(
+					(ManagedBean<? extends AttributeConverter<X, Y>>) converterBean,
+					javaTypeRegistry.getDescriptor( converterBean.getBeanClass() ),
 					javaTypeRegistry.resolveDescriptor( domainTypeToMatch.getErasedType() ),
 					javaTypeRegistry.resolveDescriptor( relationalType.getErasedType() )
 			);

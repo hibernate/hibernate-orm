@@ -79,7 +79,7 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	}
 
 	public void addDescriptor(JavaType<?> descriptor) {
-		JavaType<?> old = descriptorsByTypeName.put( descriptor.getJavaType().getTypeName(), descriptor );
+		final JavaType<?> old = descriptorsByTypeName.put( descriptor.getJavaType().getTypeName(), descriptor );
 		if ( old != null ) {
 			log.debugf(
 					"JavaTypeRegistry entry replaced : %s -> %s (was %s)",

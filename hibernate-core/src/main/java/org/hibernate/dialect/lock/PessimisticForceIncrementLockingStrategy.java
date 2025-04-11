@@ -8,6 +8,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.OptimisticLockHelper;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -44,9 +45,7 @@ public class PessimisticForceIncrementLockingStrategy implements LockingStrategy
 			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
 		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( object );
-		final EntityPersister persister = entry.getPersister();
-		final Object nextVersion = persister.forceVersionIncrement( entry.getId(), entry.getVersion(), false, session );
-		entry.forceLocked( object, nextVersion );
+		OptimisticLockHelper.forceVersionIncrement( object, entry, session );
 	}
 
 	/**

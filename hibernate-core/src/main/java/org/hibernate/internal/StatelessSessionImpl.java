@@ -18,6 +18,7 @@ import org.hibernate.SessionException;
 import org.hibernate.StatelessSession;
 import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.CacheException;
@@ -34,7 +35,6 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.monitor.spi.EventMonitor;
@@ -133,7 +133,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	private final LoadQueryInfluencers influencers;
 	private final PersistenceContext temporaryPersistenceContext;
 	private final boolean connectionProvided;
-	private final List<Runnable> afterCompletions = new ArrayList<>();
+	private final List<AfterTransactionCompletionProcess> afterCompletions = new ArrayList<>();
 
 	private final EventListenerGroups eventListenerGroups;
 
@@ -1260,17 +1260,17 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
-		processAfterCompletions();
+		processAfterCompletions( successful );
 		afterTransactionCompletionEvents( successful );
 		if ( shouldAutoClose() && !isClosed() ) {
 			managedClose();
 		}
 	}
 
-	private void processAfterCompletions() {
-		for ( Runnable completion: afterCompletions ) {
+	private void processAfterCompletions(boolean successful) {
+		for ( AfterTransactionCompletionProcess completion: afterCompletions ) {
 			try {
-				completion.run();
+				completion.doAfterTransactionCompletion( successful, this );
 			}
 			catch (CacheException ce) {
 				LOG.unableToReleaseCacheLock( ce );
@@ -1324,16 +1324,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	protected Object lockCacheItem(Object id, Object previousVersion, EntityPersister persister) {
 		if ( persister.canWriteToCache() ) {
-			final SharedSessionContractImplementor session = getSession();
 			final EntityDataAccess cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
 					id,
 					persister,
-					session.getFactory(),
-					session.getTenantIdentifier()
+					getFactory(),
+					getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( session, ck, previousVersion );
-			afterCompletions.add( () -> cache.unlockItem( this, ck, lock ) );
+			final SoftLock lock = cache.lockItem( this, ck, previousVersion );
+			afterCompletions.add( (success, session) -> cache.unlockItem( session, ck, lock ) );
 			return ck;
 		}
 		else {
@@ -1349,16 +1348,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	protected Object lockCacheItem(Object key, CollectionPersister persister) {
 		if ( persister.hasCache() ) {
-			final SharedSessionContractImplementor session = getSession();
 			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
 			final Object ck = cache.generateCacheKey(
 					key,
 					persister,
-					session.getFactory(),
-					session.getTenantIdentifier()
+					getFactory(),
+					getTenantIdentifier()
 			);
-			final SoftLock lock = cache.lockItem( session, ck, null );
-			afterCompletions.add( () -> cache.unlockItem( this, ck, lock ) );
+			final SoftLock lock = cache.lockItem( this, ck, null );
+			afterCompletions.add( (success, session) -> cache.unlockItem( this, ck, lock ) );
 			return ck;
 		}
 		else {
@@ -1370,6 +1368,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( persister.hasCache() ) {
 			persister.getCacheAccessStrategy().remove( this, ck );
 		}
+	}
+
+	@Override
+	public void registerProcess(AfterTransactionCompletionProcess process) {
+		afterCompletions.add( process );
 	}
 
 	@Override

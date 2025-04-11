@@ -30,6 +30,7 @@ import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownProfileException;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -1150,6 +1151,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public ActionQueue getActionQueue() {
 		return delegate.getActionQueue();
+	}
+
+	@Override
+	public void registerProcess(AfterTransactionCompletionProcess process) {
+		delegate.registerProcess( process );
 	}
 
 	@Override

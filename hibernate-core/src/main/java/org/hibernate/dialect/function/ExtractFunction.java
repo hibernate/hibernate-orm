@@ -85,8 +85,7 @@ public class ExtractFunction extends AbstractSqmFunctionDescriptor implements Fu
 		final boolean compositeTemporal = SqmExpressionHelper.isCompositeTemporal( originalExpression );
 		final SqmExpression<?> expression = SqmExpressionHelper.getOffsetAdjustedExpression( originalExpression );
 
-		TemporalUnit unit = field.getUnit();
-		switch ( unit ) {
+		switch ( field.getUnit() ) {
 			case NANOSECOND:
 				return extractNanoseconds( expression, queryEngine );
 			case NATIVE:

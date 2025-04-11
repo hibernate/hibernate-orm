@@ -927,7 +927,6 @@ public class SessionImpl
 	}
 
 	private void fireDelete(final DeleteEvent event) {
-		checkEntityManagedIfJpa( event.getEntityName(), event.getObject() );
 		try {
 			pulseTransactionCoordinator();
 			eventListenerGroups.eventListenerGroup_DELETE
@@ -949,7 +948,6 @@ public class SessionImpl
 	}
 
 	private void fireDelete(final DeleteEvent event, final DeleteContext transientEntities) {
-		checkEntityManagedIfJpa( event.getEntityName(), event.getObject() );
 		try {
 			pulseTransactionCoordinator();
 			eventListenerGroups.eventListenerGroup_DELETE
@@ -1375,16 +1373,6 @@ public class SessionImpl
 	private void checkEntityManaged(String entityName, Object entity) {
 		if ( !managed( entityName, entity ) ) {
 			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
-		}
-	}
-
-	private void checkEntityManagedIfJpa(String entityName, Object entity) {
-		if ( getSessionFactoryOptions().isJpaBootstrap() ) {
-			if ( !managed( entityName, entity )
-					// just in case it was already deleted
-					&& !persistenceContext.isEntryFor( entity ) ) {
-				throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
-			}
 		}
 	}
 

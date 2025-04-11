@@ -72,6 +72,10 @@ public class CompoundSelectionImpl<X>
 		}
 	}
 
+	public String renderProjection(RenderingContext renderingContext) {
+		return render( renderingContext );
+	}
+
 	public String render(RenderingContext renderingContext) {
 		StringBuilder buff = new StringBuilder();
 		if ( isConstructor ) {

@@ -7,6 +7,8 @@
 package org.hibernate.query.criteria.internal;
 
 
+import javax.persistence.criteria.Selection;
+
 import org.hibernate.query.criteria.internal.compile.RenderingContext;
 
 /**
@@ -31,7 +33,15 @@ public interface Renderable {
 	 * @return rendered expression
 	 */
 	default String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
+		final String expression = render( renderingContext );
+		if ( this instanceof Selection<?> ) {
+			final Selection<?> selection = (Selection<?>) this;
+			final String alias = selection.getAlias();
+			if ( alias != null ) {
+				return expression + " as " + alias;
+			}
+		}
+		return expression;
 	}
 
 	/**

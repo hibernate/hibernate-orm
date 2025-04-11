@@ -641,7 +641,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	public SqmExpressible<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
 		final SqmExpressible<?>[] components = new SqmExpressible<?>[typedNodes.size()];
 		for ( int i = 0; i < typedNodes.size(); i++ ) {
-			SqmTypedNode<?> tupleElement = typedNodes.get(i);
+			final SqmTypedNode<?> tupleElement = typedNodes.get(i);
 			final SqmExpressible<?> sqmExpressible = tupleElement.getNodeType();
 			// keep null value for Named Parameters
 			if ( tupleElement instanceof SqmParameter<?> && sqmExpressible == null ) {
@@ -653,10 +653,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 						: getBasicTypeForJavaType( Object.class );
 			}
 		}
-		return arrayTuples.computeIfAbsent(
-				new ArrayCacheKey( components ),
-				key -> new ArrayTupleType( key.components )
-		);
+		return arrayTuples.computeIfAbsent( new ArrayCacheKey( components ),
+				key -> new ArrayTupleType( key.components ) );
 	}
 
 	private static class ArrayCacheKey {
@@ -667,8 +665,8 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 
 		@Override
-		public boolean equals(Object o) {
-			return o instanceof ArrayCacheKey key
+		public boolean equals(Object object) {
+			return object instanceof ArrayCacheKey key
 				&& Arrays.equals( components, key.components );
 		}
 
@@ -738,8 +736,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		if ( isNumberArray( expressible ) ) {
 			return (BasicType<?>) expressible.getSqmType();
 		}
-		// Use the relational java type to account for possible converters
-		return getBasicTypeForJavaType( expressible.getRelationalJavaType().getJavaTypeClass() );
+		else {
+			// Use the relational java type to account for possible converters
+			return getBasicTypeForJavaType( expressible.getRelationalJavaType().getJavaTypeClass() );
+		}
 	}
 
 	private static boolean matchesJavaType(SqmExpressible<?> type, Class<?> javaType) {
@@ -837,10 +837,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	@SuppressWarnings("deprecation")
 	public TemporalType getSqlTemporalType(SqmExpressible<?> type) {
-		if ( type == null ) {
-			return null;
-		}
-		return getSqlTemporalType( type.getRelationalJavaType().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
+		return type == null ? null
+			: getSqlTemporalType( type.getRelationalJavaType()
+					.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
+
 	}
 
 	@SuppressWarnings("deprecation")

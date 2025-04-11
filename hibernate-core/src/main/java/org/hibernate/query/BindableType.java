@@ -5,6 +5,7 @@
 package org.hibernate.query;
 
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.query.sqm.SqmExpressible;
 
 /**
@@ -28,6 +29,9 @@ public interface BindableType<J> {
 
 	/**
 	 * Resolve this parameter type to the corresponding {@link SqmExpressible}
+	 *
+	 * @apiNote This internal operation is a layer-breaker, exposing an SQM-specific type
 	 */
+	@Internal
 	SqmExpressible<J> resolveExpressible(BindingContext bindingContext);
 }

@@ -74,14 +74,11 @@ public class SqmEmbeddedValuedSimplePath<T>
 
 	@Override
 	public SqmDomainType<T> getSqmType() {
-		return (SqmDomainType<T>) getResolvedModel().getSqmType();
+		return getResolvedModel().getSqmType();
 	}
 
 	@Override
-	public SqmPath<?> resolvePathPart(
-			String name,
-			boolean isTerminal,
-			SqmCreationState creationState) {
+	public SqmPath<?> resolvePathPart(String name, boolean isTerminal, SqmCreationState creationState) {
 		final SqmPath<?> sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;

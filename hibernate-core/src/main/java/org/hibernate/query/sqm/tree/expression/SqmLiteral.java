@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -12,6 +11,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.QuotingHelper.appendSingleQuoteEscapedString;
 
 /**
  * Represents a literal value in the sqm, e.g.<ul>
@@ -29,7 +30,9 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 
 	public SqmLiteral(T value, SqmExpressible<? super T> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
-		assert value != null && ( inherentType == null || inherentType.getExpressibleJavaType().isInstance( value ) );
+		assert value != null;
+		assert inherentType == null
+			|| inherentType.getExpressibleJavaType().isInstance( value );
 		this.value = value;
 	}
 
@@ -44,16 +47,13 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmLiteral<T> expression = context.registerCopy(
-				this,
-				new SqmLiteral<>(
-						getLiteralValue(),
-						getNodeType(),
-						nodeBuilder()
-				)
-		);
-		copyTo( expression, context );
-		return expression;
+		else {
+			final SqmLiteral<T> expression =
+					context.registerCopy( this,
+							new SqmLiteral<>( getLiteralValue(), getNodeType(), nodeBuilder() ) );
+			copyTo( expression, context );
+			return expression;
+		}
 	}
 
 	public T getLiteralValue() {
@@ -82,7 +82,7 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 		else {
 			final String string = javaType.toString( value );
 			if ( javaType.getJavaTypeClass() == String.class ) {
-				QuotingHelper.appendSingleQuoteEscapedString( sb, string );
+				appendSingleQuoteEscapedString( sb, string );
 			}
 			else {
 				sb.append( string );

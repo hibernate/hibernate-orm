@@ -184,8 +184,7 @@ public class SqmBasicValuedSimplePath<T>
 
 	@Override
 	public SqmDomainType<T> getSqmType() {
-		//noinspection unchecked
-		return (SqmDomainType<T>) getResolvedModel().getSqmType();
+		return getResolvedModel().getSqmType();
 	}
 
 

@@ -163,14 +163,16 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 	public @Nullable SqmExpressible<T> getNodeType() {
 		final SqmExpressible<T> nodeType = super.getNodeType();
 		if ( nodeType == null ) {
+			final NodeBuilder nodeBuilder = nodeBuilder();
 			final ReturnableType<?> resultType =
-					determineResultType( null, nodeBuilder().getTypeConfiguration() );
+					determineResultType( null, nodeBuilder.getTypeConfiguration() );
 			if ( resultType == null ) {
 				return null;
 			}
 			else {
-				setExpressibleType( resultType.resolveExpressible( nodeBuilder() ) );
-				return (SqmExpressible<T>) resultType;
+				final SqmExpressible<?> expressibleType = resultType.resolveExpressible( nodeBuilder );
+				setExpressibleType( expressibleType );
+				return super.getNodeType();
 			}
 		}
 		else {
@@ -180,11 +182,10 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 
 	public @Nullable ReturnableType<?> resolveResultType(SqmToSqlAstConverter walker) {
 		if ( resultType == null ) {
-			resultType = determineResultType(
-					walker,
-					walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
-			);
-			setExpressibleType( (SqmExpressible<?>) resultType );
+			resultType = determineResultType( walker, walker.getCreationContext().getTypeConfiguration() );
+			if ( resultType != null ) {
+				setExpressibleType( resultType.resolveExpressible( nodeBuilder() ) );
+			}
 		}
 		return resultType;
 	}
@@ -204,25 +205,25 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 			SqmToSqlAstConverter walker,
 			ReturnableType<?> resultType,
 			List<SqlAstNode> arguments) {
-		final MappingModelExpressible<?> mapping;
-		if ( resultType instanceof MappingModelExpressible ) {
+
+		if ( resultType instanceof MappingModelExpressible<?> mappingModelExpressible ) {
 			// here we have a BasicType, which can be cast
 			// directly to BasicValuedMapping
-			mapping = (MappingModelExpressible<?>) resultType;
+			return mappingModelExpressible;
 		}
 		else {
 			// here we have something that is not a BasicType,
 			// and we have no way to get a BasicValuedMapping
 			// from it directly
-			mapping = returnTypeResolver.resolveFunctionReturnType(
+			final MappingMetamodelImplementor mappingMetamodel =
+					walker.getCreationContext().getMappingMetamodel();
+			return returnTypeResolver.resolveFunctionReturnType(
 					() -> {
 						try {
-							final MappingMetamodelImplementor domainModel =
-									walker.getCreationContext().getMappingMetamodel();
-							return (BasicValuedMapping) domainModel.resolveMappingExpressible(
-									getNodeType(),
-									walker.getFromClauseAccess()::getTableGroup
-							);
+							final MappingModelExpressible<?> expressible =
+									mappingMetamodel.resolveMappingExpressible( getNodeType(),
+											walker.getFromClauseAccess()::getTableGroup );
+							return (BasicValuedMapping) expressible;
 						}
 						catch (Exception e) {
 							return null; // this works at least approximately
@@ -231,7 +232,6 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 					arguments
 			);
 		}
-		return mapping;
 	}
 
 	private static class FunctionArgumentTypeResolverTypeAccess implements Supplier<MappingModelExpressible<?>> {

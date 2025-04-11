@@ -8,8 +8,8 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.from.SqmDomainType;
-import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 
 /**
  * SqmPathSource implementation for entity discriminator

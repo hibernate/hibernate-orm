@@ -8,8 +8,6 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.from.SqmEmbeddableDomainType;
-import org.hibernate.query.sqm.tree.from.SqmTreatableDomainType;
 import org.hibernate.spi.NavigablePath;
 
 /**

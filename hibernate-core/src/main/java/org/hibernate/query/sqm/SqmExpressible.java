@@ -7,7 +7,7 @@ package org.hibernate.query.sqm;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.from.SqmDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**

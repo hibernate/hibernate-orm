@@ -28,8 +28,8 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
-import org.hibernate.query.sqm.tree.from.SqmDomainType;
-import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 

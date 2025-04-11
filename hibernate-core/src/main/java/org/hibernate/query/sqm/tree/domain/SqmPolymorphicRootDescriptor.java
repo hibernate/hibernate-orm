@@ -21,8 +21,6 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.query.sqm.tree.from.SqmDomainType;
-import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.ArrayList;

@@ -8,7 +8,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
-import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.spi.NavigablePath;
 
 /**

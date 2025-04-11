@@ -1593,7 +1593,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						query );
 			}
 
-			return new SqmAliasedNodeRef( position, integerDomainType, nodeBuilder);
+			return new SqmAliasedNodeRef( position, integerDomainType.resolveExpressible( nodeBuilder ), nodeBuilder);
 		}
 		else if ( child instanceof HqlParser.IdentifierContext identifierContext ) {
 			final String identifierText = visitIdentifier( identifierContext );
@@ -1657,7 +1657,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						// This is syntactically disallowed
 						throw new SyntaxException( "'collate' is not allowed for alias-based 'order by' or 'group by' items" );
 					}
-					return new SqmAliasedNodeRef( correspondingPosition, integerDomainType, nodeBuilder );
+					return new SqmAliasedNodeRef( correspondingPosition, integerDomainType.resolveExpressible( nodeBuilder ), nodeBuilder );
 				}
 
 				final SqmFrom<?, ?> sqmFrom =
@@ -4379,11 +4379,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			text = Integer.toString( intValue );
 		}
 
-		return new SqmHqlNumericLiteral<>(
-				text,
-				integerDomainType,
-				creationContext.getNodeBuilder()
-		);
+		return new SqmHqlNumericLiteral<>( text, integerDomainType, creationContext.getNodeBuilder() );
 	}
 
 	@SuppressWarnings("RedundantIfStatement")

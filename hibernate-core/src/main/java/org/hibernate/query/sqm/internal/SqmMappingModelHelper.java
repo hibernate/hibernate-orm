@@ -16,10 +16,8 @@ import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.internal.AnyMappingSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
@@ -34,6 +32,9 @@ import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmSpecificPluralPartPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.from.SqmEmbeddableDomainType;
+import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
+import org.hibernate.query.sqm.tree.from.SqmMappedSuperclassDomainType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicType;
@@ -98,7 +99,6 @@ public class SqmMappingModelHelper {
 			JavaType<?> relationalJavaType,
 			Bindable.BindableType jpaBindableType,
 			boolean isGeneric) {
-
 		if ( valueDomainType instanceof BasicDomainType<?> ) {
 			return new BasicSqmPathSource<>(
 					name,
@@ -109,8 +109,7 @@ public class SqmMappingModelHelper {
 					isGeneric
 			);
 		}
-
-		if ( valueDomainType instanceof AnyMappingDomainType<?> ) {
+		else if ( valueDomainType instanceof AnyMappingDomainType<?> ) {
 			return new AnyMappingSqmPathSource<>(
 					name,
 					pathModel,
@@ -118,40 +117,38 @@ public class SqmMappingModelHelper {
 					jpaBindableType
 			);
 		}
-
-		if ( valueDomainType instanceof EmbeddableDomainType<?> ) {
+		else if ( valueDomainType instanceof SqmEmbeddableDomainType<J> embeddableDomainType ) {
 			return new EmbeddedSqmPathSource<>(
 					name,
 					pathModel,
-					(EmbeddableDomainType<J>) valueDomainType,
+					embeddableDomainType,
 					jpaBindableType,
 					isGeneric
 			);
 		}
-
-		if ( valueDomainType instanceof EntityDomainType<?> ) {
+		else if ( valueDomainType instanceof SqmEntityDomainType<J> entityDomainType ) {
 			return new EntitySqmPathSource<>(
 					name,
 					pathModel,
-					(EntityDomainType<J>) valueDomainType,
+					entityDomainType,
 					jpaBindableType,
 					isGeneric
 			);
 		}
-
-		if ( valueDomainType instanceof MappedSuperclassDomainType<?> ) {
+		else if ( valueDomainType instanceof SqmMappedSuperclassDomainType<J> mappedSuperclassDomainType ) {
 			return new MappedSuperclassSqmPathSource<>(
 					name,
 					pathModel,
-					(MappedSuperclassDomainType<J>) valueDomainType,
+					mappedSuperclassDomainType,
 					jpaBindableType,
 					isGeneric
 			);
 		}
-
-		throw new IllegalArgumentException(
-				"Unrecognized value type Java-type [" + valueDomainType.getTypeName() + "] for plural attribute value"
-		);
+		else {
+			throw new IllegalArgumentException(
+					"Unrecognized value type Java-type [" + valueDomainType.getTypeName() + "] for plural attribute value"
+			);
+		}
 	}
 
 	public static MappingModelExpressible<?> resolveMappingModelExpressible(

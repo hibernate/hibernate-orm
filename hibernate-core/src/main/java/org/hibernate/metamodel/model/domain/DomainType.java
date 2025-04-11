@@ -4,7 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.BindableType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -23,11 +23,22 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public interface DomainType<J> extends SqmExpressible<J> {
-	@Override
+public interface DomainType<J> extends BindableType<J> {
+//	@Override
 	default DomainType<J> getSqmType() {
 		return this;
 	}
+
+	JavaType<J> getExpressibleJavaType();
+
+	/**
+	 * The name of the type.
+	 *
+	 * @apiNote This is the Hibernate notion of the type name. For most
+	 *          types this is just the Java type ({@link Class}) name.
+	 *          However, using the string allows for dynamic models.
+	 */
+	String getTypeName();
 
 	default int getTupleLength() {
 		return 1;

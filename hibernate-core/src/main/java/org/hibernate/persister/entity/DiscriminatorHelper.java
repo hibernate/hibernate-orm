@@ -10,9 +10,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.model.domain.PathSource;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.sql.InFragment;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
@@ -118,8 +118,8 @@ public class DiscriminatorHelper {
 	 * domain types, or to {@link StandardBasicTypes#CLASS Class} for non-inherited ones.
 	 */
 	public static <T> SqmExpressible<? super T> getDiscriminatorType(
-			PathSource<T> domainType, NodeBuilder nodeBuilder) {
-		final PathSource<?> subPathSource = domainType.findSubPathSource( DISCRIMINATOR_ROLE_NAME );
+			SqmPathSource<T> domainType, NodeBuilder nodeBuilder) {
+		final SqmPathSource<?> subPathSource = domainType.findSubPathSource( DISCRIMINATOR_ROLE_NAME );
 		final SqmExpressible<?> type = subPathSource != null
 				? subPathSource.getSqmPathType()
 				: nodeBuilder.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.CLASS );

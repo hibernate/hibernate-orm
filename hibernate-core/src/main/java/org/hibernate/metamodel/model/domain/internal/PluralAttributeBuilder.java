@@ -20,6 +20,7 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.metamodel.internal.AttributeFactory.determineSimpleType;
@@ -34,7 +35,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 	private final AttributeClassification attributeClassification;
 	private final CollectionClassification collectionClassification;
 
-	private final DomainType<E> elementType;
+	private final SqmDomainType<E> elementType;
 	private final DomainType<K> listIndexOrMapKeyType;
 
 	private final ManagedDomainType<D> declaringType;
@@ -47,7 +48,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 			boolean isGeneric,
 			AttributeClassification attributeClassification,
 			CollectionClassification collectionClassification,
-			DomainType<E> elementType,
+			SqmDomainType<E> elementType,
 			DomainType<K> listIndexOrMapKeyType,
 			ManagedDomainType<D> declaringType,
 			Property property,
@@ -69,16 +70,16 @@ public class PluralAttributeBuilder<D, C, E, K> {
 			boolean isGeneric,
 			MetadataContext metadataContext) {
 
-		final JavaType<Y> attributeJtd = metadataContext.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( attributeMetadata.getJavaType() );
+		final JavaType<Y> attributeJtd =
+				metadataContext.getTypeConfiguration().getJavaTypeRegistry()
+						.getDescriptor( attributeMetadata.getJavaType() );
 
-		final PluralAttributeBuilder builder = new PluralAttributeBuilder(
+		final PluralAttributeBuilder builder = new PluralAttributeBuilder<>(
 				attributeJtd,
 				isGeneric,
 				attributeMetadata.getAttributeClassification(),
 				attributeMetadata.getCollectionClassification(),
-				determineSimpleType(
+				(SqmDomainType<?>) determineSimpleType(
 						attributeMetadata.getElementValueContext(),
 						metadataContext
 				),
@@ -161,7 +162,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 		return isGeneric;
 	}
 
-	public DomainType<E> getValueType() {
+	public SqmDomainType<E> getValueType() {
 		return elementType;
 	}
 

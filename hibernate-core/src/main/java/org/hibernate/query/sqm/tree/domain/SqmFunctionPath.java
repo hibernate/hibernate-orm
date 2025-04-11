@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
@@ -20,6 +19,7 @@ import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.from.SqmEmbeddableDomainType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.BasicPluralType;
@@ -71,7 +71,7 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 			return new EmbeddedSqmPathSource<>(
 					navigablePath.getFullPath(),
 					null,
-					(EmbeddableDomainType<X>) managedType,
+					(SqmEmbeddableDomainType<X>) managedType,
 					Bindable.BindableType.SINGULAR_ATTRIBUTE,
 					false
 			);

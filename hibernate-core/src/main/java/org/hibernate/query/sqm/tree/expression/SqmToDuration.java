@@ -21,7 +21,7 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 			SqmDurationUnit<?> unit,
 			ReturnableType<T> type,
 			NodeBuilder nodeBuilder) {
-		super( type, nodeBuilder );
+		super( type.resolveExpressible( nodeBuilder ), nodeBuilder );
 		this.magnitude = magnitude;
 		this.unit = unit;
 	}

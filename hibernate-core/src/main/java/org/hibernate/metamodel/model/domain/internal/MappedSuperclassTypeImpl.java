@@ -7,13 +7,12 @@ package org.hibernate.metamodel.model.domain.internal;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
-import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.from.SqmMappedSuperclassDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -24,7 +23,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class MappedSuperclassTypeImpl<J>
 		extends AbstractIdentifiableType<J>
-		implements MappedSuperclassDomainType<J>, SqmPathSource<J> {
+		implements SqmMappedSuperclassDomainType<J>, SqmPathSource<J> {
 
 	public MappedSuperclassTypeImpl(
 			String name,
@@ -63,8 +62,8 @@ public class MappedSuperclassTypeImpl<J>
 	}
 
 	@Override
-	public DomainType<J> getSqmType() {
-		return MappedSuperclassDomainType.super.getSqmType();
+	public SqmMappedSuperclassDomainType<J> getSqmType() {
+		return this;
 	}
 
 	@Override
@@ -73,7 +72,7 @@ public class MappedSuperclassTypeImpl<J>
 	}
 
 	@Override
-	public MappedSuperclassDomainType<J> getSqmPathType() {
+	public SqmMappedSuperclassDomainType<J> getSqmPathType() {
 		return this;
 	}
 

@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.tuple.internal;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.internal.PathHelper;
@@ -15,6 +14,7 @@ import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -24,9 +24,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class AnonymousTupleSqmPathSourceNew<J> implements SqmPathSource<J> {
 	private final String localPathName;
 	private final SqmPathSource<J> pathSource;
-	private final DomainType<J> sqmPathType;
+	private final SqmDomainType<J> sqmPathType;
 
-	public AnonymousTupleSqmPathSourceNew(String localPathName, SqmPathSource<J> pathSource, DomainType<J> sqmPathType) {
+	public AnonymousTupleSqmPathSourceNew(String localPathName, SqmPathSource<J> pathSource, SqmDomainType<J> sqmPathType) {
 		this.localPathName = localPathName;
 		this.pathSource = pathSource;
 		this.sqmPathType = sqmPathType;
@@ -43,7 +43,7 @@ public class AnonymousTupleSqmPathSourceNew<J> implements SqmPathSource<J> {
 	}
 
 	@Override
-	public DomainType<J> getSqmPathType() {
+	public SqmDomainType<J> getSqmPathType() {
 		return sqmPathType;
 	}
 

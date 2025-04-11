@@ -8,9 +8,9 @@ import java.util.Locale;
 
 import jakarta.persistence.metamodel.Bindable;
 
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PathSource;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -39,7 +39,7 @@ public interface SqmPathSource<J>
 	 *
 	 * @apiNote Analogous to {@link Bindable#getBindableJavaType()}.
 	 */
-	DomainType<J> getSqmPathType();
+	SqmDomainType<J> getSqmPathType();
 
 	/**
 	 * Find a {@link SqmPathSource} by name relative to this source.
@@ -163,7 +163,7 @@ public interface SqmPathSource<J>
 	}
 
 	@Override
-	default DomainType<J> getSqmType() {
+	default SqmDomainType<J> getSqmType() {
 		return getSqmPathType();
 	}
 

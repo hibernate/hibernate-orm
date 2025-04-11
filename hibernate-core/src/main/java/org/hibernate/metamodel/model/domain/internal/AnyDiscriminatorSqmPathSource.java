@@ -4,7 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -14,11 +14,13 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * {@link SqmPathSource} implementation for {@link org.hibernate.annotations.AnyDiscriminator}
+ * {@link SqmPathSource} implementation for {@link AnyDiscriminator}
  *
  */
 public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 		implements ReturnableType<D> {
+
+	private final BasicType<D> domainType;
 
 	public AnyDiscriminatorSqmPathSource(
 			String localPathName,
@@ -26,17 +28,15 @@ public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 			SimpleDomainType<D> domainType,
 			BindableType jpaBindableType) {
 		super( localPathName, pathModel, domainType, jpaBindableType );
+		this.domainType = (BasicType<D>) domainType; // TODO: don't like this cast!
 	}
 
 	@Override
 	public SqmPath<D> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
-		final NavigablePath navigablePath;
-		if ( intermediatePathSource == null ) {
-			navigablePath = lhs.getNavigablePath();
-		}
-		else {
-			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() );
-		}
+		final NavigablePath navigablePath =
+				intermediatePathSource == null
+						? lhs.getNavigablePath()
+						: lhs.getNavigablePath().append( intermediatePathSource.getPathName() );
 		return new AnyDiscriminatorSqmPath<>( navigablePath, pathModel, lhs, lhs.nodeBuilder() );
 	}
 
@@ -56,13 +56,18 @@ public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 	}
 
 	@Override
-	public BasicType<D> getSqmPathType() {
-		return (BasicType<D>) super.getSqmPathType();
+	public BasicType<D> getSqmType() {
+		return getSqmPathType();
 	}
 
 	@Override
-	public DomainType<D> getSqmType() {
-		return getSqmPathType();
+	public BasicType<D> getSqmPathType() {
+		return domainType;
+	}
+
+	@Override
+	public String getTypeName() {
+		return super.getTypeName();
 	}
 
 	@Override

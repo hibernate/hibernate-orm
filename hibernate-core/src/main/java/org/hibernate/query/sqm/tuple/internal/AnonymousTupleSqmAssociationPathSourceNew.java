@@ -8,7 +8,6 @@ import java.lang.reflect.Member;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.AttributeClassification;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -16,6 +15,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -33,7 +33,7 @@ public class AnonymousTupleSqmAssociationPathSourceNew<O, J>
 	public AnonymousTupleSqmAssociationPathSourceNew(
 			String localPathName,
 			SqmPathSource<J> pathSource,
-			DomainType<J> sqmPathType,
+			SqmDomainType<J> sqmPathType,
 			SimpleDomainType<J> domainType) {
 		super( localPathName, pathSource, sqmPathType );
 		this.domainType = domainType;

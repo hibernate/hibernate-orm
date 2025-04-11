@@ -58,7 +58,6 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -102,6 +101,8 @@ import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
+import org.hibernate.query.sqm.tree.from.SqmEmbeddableDomainType;
 import org.hibernate.stat.internal.StatisticsImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BagType;
@@ -957,10 +958,7 @@ public abstract class MockSessionFactory
 		@Override
 		public SqmPathSource<?> getIdentifierDescriptor() {
 			final Type type = getIdentifierType(getHibernateEntityName());
-			if (type == null) {
-				return null;
-			}
-			else if (type instanceof BasicDomainType<?> basicDomainType) {
+			if (type instanceof BasicDomainType<?> basicDomainType) {
 				return new BasicSqmPathSource<>(
 						EntityIdentifierMapping.ID_ROLE_NAME,
 						null,
@@ -970,7 +968,7 @@ public abstract class MockSessionFactory
 						false
 				);
 			}
-			else if (type instanceof EmbeddableDomainType<?> embeddableDomainType) {
+			else if (type instanceof SqmEmbeddableDomainType<?> embeddableDomainType) {
 				return new EmbeddedSqmPathSource<>(
 						EntityIdentifierMapping.ID_ROLE_NAME,
 						null,
@@ -1086,7 +1084,7 @@ public abstract class MockSessionFactory
 					owner,
 					name,
 					AttributeClassification.BASIC,
-					(DomainType<?>) type,
+					(SqmDomainType<?>) type,
 					type instanceof JdbcMapping jdbcMapping
 							? jdbcMapping.getJavaTypeDescriptor()
 							: null,
@@ -1100,7 +1098,7 @@ public abstract class MockSessionFactory
 		}
 	}
 
-	private DomainType<?> getElementDomainType(String entityName, CollectionType collectionType, ManagedDomainType<?> owner) {
+	private SqmDomainType<?> getElementDomainType(String entityName, CollectionType collectionType, ManagedDomainType<?> owner) {
 		final Type elementType = collectionType.getElementType(MockSessionFactory.this);
 		return getDomainType(entityName, collectionType, owner, elementType);
 	}
@@ -1110,7 +1108,7 @@ public abstract class MockSessionFactory
 		return getDomainType(entityName, collectionType, owner, keyType);
 	}
 
-	private DomainType<?> getDomainType(
+	private SqmDomainType<?> getDomainType(
 			String entityName, CollectionType collectionType, ManagedDomainType<?> owner, Type elementType) {
 		if ( elementType.isEntityType() ) {
 			final String associatedEntityName = collectionType.getAssociatedEntityName(this);
@@ -1120,7 +1118,7 @@ public abstract class MockSessionFactory
 			final CompositeType compositeType = (CompositeType) elementType;
 			return createEmbeddableDomainType(entityName, compositeType, owner);
 		}
-		else if ( elementType instanceof DomainType<?> domainType ) {
+		else if ( elementType instanceof SqmDomainType<?> domainType ) {
 			return domainType;
 		}
 		else {
@@ -1138,7 +1136,7 @@ public abstract class MockSessionFactory
 		final JavaType<?> collectionJavaType =
 				typeConfiguration.getJavaTypeRegistry()
 						.getDescriptor(collectionType.getReturnedClass());
-		final DomainType<?> elementDomainType = getElementDomainType(entityName, collectionType, owner);
+		final SqmDomainType<?> elementDomainType = getElementDomainType(entityName, collectionType, owner);
 		final CollectionClassification classification = collectionType.getCollectionClassification();
 		return switch ( classification ) {
 			case LIST -> new ListAttributeImpl(

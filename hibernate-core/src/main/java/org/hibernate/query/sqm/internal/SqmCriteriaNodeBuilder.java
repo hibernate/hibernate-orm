@@ -109,6 +109,8 @@ import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedSingularJoin;
 import org.hibernate.query.sqm.tree.expression.*;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
+import org.hibernate.query.sqm.tree.from.SqmEmbeddableDomainType;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -916,8 +918,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	public <R> SqmTuple<R> tuple(Class<R> tupleType, List<? extends SqmExpression<?>> expressions) {
 		final SqmExpressible<R> expressibleType =
 				tupleType == null || tupleType == Object[].class
-						? (DomainType<R>) getTypeConfiguration().resolveTupleType( expressions )
-						: getDomainModel().embeddable( tupleType );
+						? (SqmDomainType<R>) getTypeConfiguration().resolveTupleType( expressions )
+						: (SqmEmbeddableDomainType<R>) getDomainModel().embeddable( tupleType );
 		return tuple( expressibleType, expressions );
 	}
 
@@ -925,7 +927,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	public <R> SqmTuple<R> tuple(SqmExpressible<R> tupleType, List<? extends SqmExpression<?>> sqmExpressions) {
 		if ( tupleType == null ) {
 			//noinspection unchecked
-			tupleType = (DomainType<R>) getTypeConfiguration().resolveTupleType( sqmExpressions );
+			tupleType = (SqmDomainType<R>) getTypeConfiguration().resolveTupleType( sqmExpressions );
 		}
 		return new SqmTuple<>( new ArrayList<>( sqmExpressions ), tupleType, this );
 	}
@@ -1623,7 +1625,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			// if there's no basic type, it might be an entity type
 			final SqmExpressible<T> sqmExpressible =
 					basicTypeForJavaType == null
-							? getDomainModel().managedType( resultClass )
+							? getDomainModel().managedType( resultClass ).resolveExpressible( this )
 							: basicTypeForJavaType;
 			return new SqmLiteralNull<>( sqmExpressible, this );
 		}
@@ -1647,7 +1649,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 
 		@Override
-		public DomainType<T> getSqmType() {
+		public SqmDomainType<T> getSqmType() {
 			return null;
 		}
 	}

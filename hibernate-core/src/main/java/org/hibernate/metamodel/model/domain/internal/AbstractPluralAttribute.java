@@ -49,8 +49,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 				builder.getCollectionJavaType(),
 				builder.getAttributeClassification(),
 				builder.getValueType(),
-				builder.getMember(),
-				metadataContext
+				builder.getMember()
 		);
 
 		this.classification = builder.getCollectionClassification();

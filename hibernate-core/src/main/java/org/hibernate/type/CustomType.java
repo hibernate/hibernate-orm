@@ -101,7 +101,7 @@ public class CustomType<J>
 	}
 
 	private JavaType<J> getMappedJavaType(UserType<J> userType) {
-		if ( userType instanceof JavaType<?> ) {
+		if ( userType instanceof JavaType<?> javaType ) {
 			//noinspection unchecked
 			return (JavaType<J>) userType;
 		}

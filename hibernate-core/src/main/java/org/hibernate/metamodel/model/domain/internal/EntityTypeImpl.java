@@ -16,7 +16,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -29,6 +28,7 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.query.sqm.tree.from.SqmEntityDomainType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -75,12 +75,12 @@ public class EntityTypeImpl<J>
 				metamodel.getMappingMetamodel()
 						.getEntityDescriptor( getHibernateEntityName() );
 		final DiscriminatorMetadata discriminatorMetadata = entityDescriptor.getTypeDiscriminatorMetadata();
-		final DomainType<?> discriminatorType =
+		final SqmDomainType<?> discriminatorType =
 				discriminatorMetadata != null
-						? (DomainType<?>) discriminatorMetadata.getResolutionType()
-						: metamodel.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
+						? (SqmDomainType<?>) discriminatorMetadata.getResolutionType()
+						: (SqmDomainType<?>) metamodel.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
 
-		this.discriminatorPathSource = discriminatorType == null ? null
+		discriminatorPathSource = discriminatorType == null ? null
 				: new EntityDiscriminatorSqmPathSource<>( discriminatorType, this, entityDescriptor );
 	}
 
@@ -129,12 +129,17 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
+	public SqmEntityDomainType<J> getSqmType() {
+		return this;
+	}
+
+	@Override
 	public String getPathName() {
 		return getHibernateEntityName();
 	}
 
 	@Override
-	public EntityDomainType<J> getSqmPathType() {
+	public SqmEntityDomainType<J> getSqmPathType() {
 		return this;
 	}
 
@@ -162,7 +167,7 @@ public class EntityTypeImpl<J>
 
 	@Override
 	public SqmPathSource<?> getIdentifierDescriptor() {
-		return (SqmPathSource<?>) super.getIdentifierDescriptor();
+		return super.getIdentifierDescriptor();
 	}
 
 	@Override

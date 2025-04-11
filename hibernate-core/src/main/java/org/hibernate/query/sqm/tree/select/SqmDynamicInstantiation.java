@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -17,6 +16,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -329,7 +329,7 @@ public class SqmDynamicInstantiation<T>
 		}
 
 		@Override
-		public DomainType<T> getSqmType() {
+		public SqmDomainType<T> getSqmType() {
 			return null;
 		}
 	}

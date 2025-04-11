@@ -46,7 +46,7 @@ public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T
 
 	@Override
 	public SqmExpressible<T> getNodeType() {
-		return type;
+		return type.resolveExpressible( nodeBuilder() );
 	}
 
 	@Override

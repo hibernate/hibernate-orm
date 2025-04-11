@@ -7,8 +7,7 @@ package org.hibernate.orm.test.annotations.type.dynamicparameterized;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
+import org.hibernate.metamodel.model.domain.PathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
@@ -124,7 +123,7 @@ public class DynamicParameterizedTypeTest {
 								List<? extends SqmTypedNode<?>> arguments,
 								TypeConfiguration typeConfiguration) {
 							SqmTypedNode<?> sqmTypedNode = arguments.get(0);
-							BasicDomainType sqmPathType = ((BasicSqmPathSource) sqmTypedNode.getNodeType()).getSqmPathType();
+							var sqmPathType = ((PathSource<?>) sqmTypedNode.getNodeType()).getSqmPathType();
 							assertInstanceOf(CustomType.class, sqmPathType);
 							return null;
 						}

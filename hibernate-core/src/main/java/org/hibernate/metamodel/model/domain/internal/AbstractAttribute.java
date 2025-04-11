@@ -11,10 +11,10 @@ import java.lang.reflect.Member;
 import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.metamodel.AttributeClassification;
-import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -32,7 +32,7 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 
 	private final AttributeClassification attributeClassification;
 
-	private final DomainType<B> valueType;
+	private final SqmDomainType<B> valueType;
 	private final transient Member member;
 
 	protected AbstractAttribute(
@@ -40,9 +40,8 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 			String name,
 			JavaType<J> attributeJtd,
 			AttributeClassification attributeClassification,
-			DomainType<B> valueType,
-			Member member,
-			MetadataContext metadataContext) {
+			SqmDomainType<B> valueType,
+			Member member) {
 		this.declaringType = declaringType;
 		this.name = name;
 		this.attributeJtd = attributeJtd;
@@ -58,13 +57,12 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 
 	@Override
 	public Class<J> getJavaType() {
-		if ( valueType instanceof BasicTypeImpl ) {
-			return ( (BasicTypeImpl) valueType ).getJavaType();
-		}
-		return attributeJtd.getJavaTypeClass();
+		return valueType instanceof BasicTypeImpl basicType
+				? basicType.getJavaType()
+				: attributeJtd.getJavaTypeClass();
 	}
 
-	public DomainType<B> getSqmPathType() {
+	public SqmDomainType<B> getSqmPathType() {
 		return valueType;
 	}
 

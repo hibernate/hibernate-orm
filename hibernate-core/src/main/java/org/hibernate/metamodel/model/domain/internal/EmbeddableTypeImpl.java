@@ -14,6 +14,7 @@ import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -48,10 +49,11 @@ public class EmbeddableTypeImpl<J>
 		return PersistenceType.EMBEDDABLE;
 	}
 
+	@Override
 	public int getTupleLength() {
 		int count = 0;
 		for ( var attribute : getSingularAttributes() ) {
-			count += ( (DomainType<?>) attribute.getType() ).getTupleLength();
+			count += ( (SqmDomainType<?>) attribute.getType() ).getTupleLength();
 		}
 		return count;
 	}

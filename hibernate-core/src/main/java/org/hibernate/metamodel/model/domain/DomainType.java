@@ -4,7 +4,6 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import org.hibernate.Internal;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -47,9 +46,4 @@ public interface DomainType<J> {
 	 *          However, using the string allows for dynamic models.
 	 */
 	String getTypeName();
-
-	@Internal
-	default int getTupleLength() {
-		return 1;
-	}
 }

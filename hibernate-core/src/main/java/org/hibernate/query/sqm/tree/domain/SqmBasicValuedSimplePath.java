@@ -11,6 +11,7 @@ import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
@@ -98,31 +99,43 @@ public class SqmBasicValuedSimplePath<T>
 			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPathRegistry pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
+		final SqmPathRegistry pathRegistry =
+				creationState.getCurrentProcessingState().getPathRegistry();
 		final String alias = selector.toHqlString();
-		final NavigablePath navigablePath = getNavigablePath().getParent().append(
-				CollectionPart.Nature.ELEMENT.getName(),
-				alias
-		);
+		final NavigablePath navigablePath =
+				getNavigablePath().getParent()
+						.append( CollectionPart.Nature.ELEMENT.getName(), alias );
 		final SqmFrom<?, ?> indexedPath = pathRegistry.findFromByPath( navigablePath );
 		if ( indexedPath != null ) {
 			return indexedPath;
 		}
-		final DomainType<T> sqmPathType = getNodeType().getPathType();
-		final QueryEngine queryEngine = creationState.getCreationContext().getQueryEngine();
-		final SelfRenderingSqmFunction<?> result;
+		else {
+			final SqmFunctionPath<Object> path =
+					new SqmFunctionPath<>(
+							getIndexFunction(
+									selector,
+									getNodeType().getPathType(),
+									creationState.getCreationContext().getQueryEngine()
+							)
+					);
+			pathRegistry.register( path );
+			return path;
+		}
+	}
+
+	private SelfRenderingSqmFunction<?> getIndexFunction(
+			SqmExpression<?> selector, DomainType<T> sqmPathType, QueryEngine queryEngine) {
+		final SqmFunctionRegistry registry = queryEngine.getSqmFunctionRegistry();
 		if ( sqmPathType instanceof BasicPluralType<?, ?> ) {
-			result = queryEngine.getSqmFunctionRegistry()
-					.findFunctionDescriptor( "array_get" )
+			return registry.findFunctionDescriptor( "array_get" )
 					.generateSqmExpression(
 							asList( this, selector ),
 							null,
 							queryEngine
 					);
 		}
-		else if ( sqmPathType.resolveExpressible( nodeBuilder() ).getRelationalJavaType().getJavaTypeClass() == String.class ) {
-			result = queryEngine.getSqmFunctionRegistry()
-					.findFunctionDescriptor( "substring" )
+		else if ( getJavaTypeClass( sqmPathType ) == String.class ) {
+			return registry.findFunctionDescriptor( "substring" )
 					.generateSqmExpression(
 							asList( this, selector, nodeBuilder().literal( 1 ) ),
 							nodeBuilder().getCharacterType(),
@@ -132,9 +145,12 @@ public class SqmBasicValuedSimplePath<T>
 		else {
 			throw new UnsupportedOperationException( "Index access is only supported for basic plural and string types, but got: " + sqmPathType );
 		}
-		final SqmFunctionPath<Object> path = new SqmFunctionPath<>( result );
-		pathRegistry.register( path );
-		return path;
+	}
+
+	private Class<?> getJavaTypeClass(DomainType<T> sqmPathType) {
+		return sqmPathType.resolveExpressible( nodeBuilder() )
+				.getRelationalJavaType()
+				.getJavaTypeClass();
 	}
 
 

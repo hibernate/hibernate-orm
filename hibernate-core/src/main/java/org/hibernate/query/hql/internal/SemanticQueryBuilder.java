@@ -44,7 +44,6 @@ import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.internal.AnyKeyPart;
-import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
@@ -315,7 +314,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private final Stack<ParameterDeclarationContext> parameterDeclarationContextStack = new StandardStack<>();
 	private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>();
 
-	private final BasicDomainType<Integer> integerDomainType;
+	private final BasicType<Integer> integerDomainType;
 	private final JavaType<List<?>> listJavaType;
 	private final JavaType<Map<?,?>> mapJavaType;
 
@@ -631,8 +630,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			for ( HqlParser.AssignmentContext assignmentContext : setClauseContext.assignment() ) {
 				updateAction.addAssignment( visitAssignment( assignmentContext ) );
 			}
-			final SqmPredicate sqmPredicate = visitWhereClause( conflictActionContext.whereClause() );
-			updateAction.where( sqmPredicate );
+			updateAction.where( visitWhereClause( conflictActionContext.whereClause() ) );
 		}
 		return conflictClause;
 	}
@@ -918,13 +916,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private void applySearchClause(JpaCteCriteria<?> cteDefinition, HqlParser.SearchClauseContext ctx) {
-		final CteSearchClauseKind kind;
-		if ( ( (TerminalNode) ctx.getChild( 1 ) ).getSymbol().getType() == HqlParser.BREADTH ) {
-			kind = CteSearchClauseKind.BREADTH_FIRST;
-		}
-		else {
-			kind = CteSearchClauseKind.DEPTH_FIRST;
-		}
 		final String searchAttributeName = visitIdentifier( ctx.identifier() );
 		final HqlParser.SearchSpecificationsContext searchCtx = ctx.searchSpecifications();
 		final List<JpaSearchOrder> searchOrders = new ArrayList<>( ( searchCtx.getChildCount() + 1 ) >> 1 );
@@ -972,7 +963,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 			searchOrders.add( creationContext.getNodeBuilder().search( attribute, sortOrder, nullPrecedence ) );
 		}
-		cteDefinition.search( kind, searchAttributeName, searchOrders );
+		cteDefinition.search( getCteSearchClauseKind( ctx ), searchAttributeName, searchOrders );
+	}
+
+	private static CteSearchClauseKind getCteSearchClauseKind(HqlParser.SearchClauseContext ctx) {
+		return ctx.BREADTH() != null ? CteSearchClauseKind.BREADTH_FIRST : CteSearchClauseKind.DEPTH_FIRST;
 	}
 
 	@Override

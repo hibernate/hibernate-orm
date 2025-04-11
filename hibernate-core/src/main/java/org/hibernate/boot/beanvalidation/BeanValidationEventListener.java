@@ -55,13 +55,17 @@ public class BeanValidationEventListener
 			BeanValidationEventListener.class.getName()
 	);
 
-	private HibernateTraversableResolver traversableResolver;
-	private Validator validator;
-	private GroupsPerOperation groupsPerOperation;
+	private final HibernateTraversableResolver traversableResolver;
+	private final Validator validator;
+	private final GroupsPerOperation groupsPerOperation;
 
 	public BeanValidationEventListener(
-			ValidatorFactory factory, Map<String, Object> settings, ClassLoaderService classLoaderService) {
-		traversableResolver = new HibernateTraversableResolver();
+			ValidatorFactory factory,
+			Map<String, Object> settings,
+			ClassLoaderService classLoaderService,
+			SessionFactoryImplementor sessionFactory) {
+
+		traversableResolver = new HibernateTraversableResolver( sessionFactory.getPersistenceUnitUtil() );
 		validator = factory.usingContext()
 				.traversableResolver( traversableResolver )
 				.getValidator();
@@ -80,7 +84,6 @@ public class BeanValidationEventListener
 		validate(
 				event.getEntity(),
 				event.getPersister(),
-				event.getFactory(),
 				GroupsPerOperation.Operation.INSERT
 		);
 		return false;
@@ -90,7 +93,6 @@ public class BeanValidationEventListener
 		validate(
 				event.getEntity(),
 				event.getPersister(),
-				event.getFactory(),
 				GroupsPerOperation.Operation.UPDATE
 		);
 		return false;
@@ -100,7 +102,6 @@ public class BeanValidationEventListener
 		validate(
 				event.getEntity(),
 				event.getPersister(),
-				event.getFactory(),
 				GroupsPerOperation.Operation.DELETE
 		);
 		return false;
@@ -111,7 +112,6 @@ public class BeanValidationEventListener
 		validate(
 				event.getEntity(),
 				event.getPersister(),
-				event.getFactory(),
 				GroupsPerOperation.Operation.UPSERT
 		);
 		return false;
@@ -123,7 +123,6 @@ public class BeanValidationEventListener
 		validate(
 				entity,
 				event.getSession().getEntityPersister( event.getAffectedOwnerEntityName(), entity ),
-				event.getFactory(),
 				GroupsPerOperation.Operation.UPDATE
 		);
 	}
@@ -131,7 +130,6 @@ public class BeanValidationEventListener
 	private <T> void validate(
 			T object,
 			EntityPersister persister,
-			SessionFactoryImplementor sessionFactory,
 			GroupsPerOperation.Operation operation) {
 		if ( object == null || persister.getRepresentationStrategy().getMode() != RepresentationMode.POJO ) {
 			return;

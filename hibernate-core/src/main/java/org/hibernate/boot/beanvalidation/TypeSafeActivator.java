@@ -157,7 +157,12 @@ class TypeSafeActivator {
 		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
 		final BeanValidationEventListener listener =
-				new BeanValidationEventListener( validatorFactory, cfgService.getSettings(), classLoaderService );
+				new BeanValidationEventListener(
+						validatorFactory,
+						cfgService.getSettings(),
+						classLoaderService,
+						sessionFactory
+				);
 		final EventListenerRegistry listenerRegistry = serviceRegistry.requireService( EventListenerRegistry.class );
 		listenerRegistry.addDuplicationStrategy( DuplicationStrategyImpl.INSTANCE );
 		listenerRegistry.appendListeners( EventType.PRE_INSERT, listener );

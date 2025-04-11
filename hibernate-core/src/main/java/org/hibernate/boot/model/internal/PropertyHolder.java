@@ -108,5 +108,5 @@ public interface PropertyHolder {
 	 *
 	 * @return The ConverterDescriptor
 	 */
-	ConverterDescriptor resolveAttributeConverterDescriptor(MemberDetails property, boolean autoApply);
+	ConverterDescriptor<?,?> resolveAttributeConverterDescriptor(MemberDetails property, boolean autoApply);
 }

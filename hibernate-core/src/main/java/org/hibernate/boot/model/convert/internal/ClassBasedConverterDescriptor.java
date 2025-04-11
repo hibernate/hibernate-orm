@@ -16,22 +16,24 @@ import jakarta.persistence.AttributeConverter;
  *
  * @author Steve Ebersole
  */
-public class ClassBasedConverterDescriptor extends AbstractConverterDescriptor {
+public class ClassBasedConverterDescriptor<X,Y> extends AbstractConverterDescriptor<X,Y> {
+
 	public ClassBasedConverterDescriptor(
-			Class<? extends AttributeConverter<?,?>> converterClass,
+			Class<? extends AttributeConverter<? extends X,? extends Y>> converterClass,
 			ClassmateContext classmateContext) {
 		super( converterClass, null, classmateContext );
 	}
 
 	public ClassBasedConverterDescriptor(
-			Class<? extends AttributeConverter<?,?>> converterClass,
+			Class<? extends AttributeConverter<? extends X,? extends Y>> converterClass,
 			Boolean forceAutoApply,
 			ClassmateContext classmateContext) {
 		super( converterClass, forceAutoApply, classmateContext );
 	}
 
 	@Override
-	protected ManagedBean<? extends AttributeConverter<?, ?>> createManagedBean(JpaAttributeConverterCreationContext context) {
+	protected ManagedBean<? extends AttributeConverter<? extends X, ? extends Y>>
+	createManagedBean(JpaAttributeConverterCreationContext context) {
 		return context.getManagedBeanRegistry().getBean( getAttributeConverterClass() );
 	}
 }

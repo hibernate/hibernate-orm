@@ -46,31 +46,36 @@ public class AnnotationHelper {
 
 	public static JdbcMapping resolveUserType(Class<UserType<?>> userTypeClass, MetadataBuildingContext context) {
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
-		final UserType<?> userType = !context.getBuildingOptions().isAllowExtensionsInCdi()
-				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass )
-				: bootstrapContext.getManagedBeanRegistry().getBean( userTypeClass ).getBeanInstance();
+		final UserType<?> userType =
+				context.getBuildingOptions().isAllowExtensionsInCdi()
+						? bootstrapContext.getManagedBeanRegistry().getBean( userTypeClass ).getBeanInstance()
+						: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
 		return new CustomType<>( userType, bootstrapContext.getTypeConfiguration() );
 	}
 
-	public static JdbcMapping resolveAttributeConverter(Class<AttributeConverter<?, ?>> type, MetadataBuildingContext context) {
+	public static <X,Y> JdbcMapping resolveAttributeConverter(
+			Class<? extends AttributeConverter<? extends X,? extends Y>> type,
+			MetadataBuildingContext context) {
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
-		final ManagedBean<AttributeConverter<?, ?>> bean = bootstrapContext.getManagedBeanRegistry().getBean( type );
-
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
-		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
+
+		final var bean = bootstrapContext.getManagedBeanRegistry().getBean( type );
 
 		final ParameterizedType converterParameterizedType = extractParameterizedType( bean.getBeanClass() );
 		final Class<?> domainJavaClass = extractClass( converterParameterizedType.getActualTypeArguments()[0] );
 		final Class<?> relationalJavaClass = extractClass( converterParameterizedType.getActualTypeArguments()[1] );
 
-		final JavaType<?> domainJtd = jtdRegistry.resolveDescriptor( domainJavaClass );
-		final JavaType<?> relationalJtd = jtdRegistry.resolveDescriptor( relationalJavaClass );
+		final JavaTypeRegistry registry = typeConfiguration.getJavaTypeRegistry();
+		final JavaType<X> domainJtd = registry.resolveDescriptor( domainJavaClass );
+		final JavaType<Y> relationalJtd = registry.resolveDescriptor( relationalJavaClass );
 
-		final JavaType<? extends AttributeConverter<?,?>> converterJtd =
-				jtdRegistry.resolveDescriptor( bean.getBeanClass() );
-		@SuppressWarnings({"rawtypes", "unchecked"})
-		final JpaAttributeConverterImpl<?,?> valueConverter =
-				new JpaAttributeConverterImpl( bean, converterJtd, domainJtd, relationalJtd );
+		final JpaAttributeConverterImpl<X,Y> valueConverter =
+				new JpaAttributeConverterImpl<>(
+						(ManagedBean<? extends AttributeConverter<X,Y>>) bean,
+						registry.resolveDescriptor( bean.getBeanClass() ),
+						domainJtd,
+						relationalJtd
+				);
 		return new ConvertedBasicTypeImpl<>(
 				ConverterDescriptor.TYPE_NAME_PREFIX
 						+ valueConverter.getConverterJavaType().getTypeName(),

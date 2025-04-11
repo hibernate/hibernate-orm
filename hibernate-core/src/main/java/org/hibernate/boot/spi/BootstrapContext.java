@@ -210,7 +210,7 @@ public interface BootstrapContext {
 	 *
 	 * @return The {@link ConverterDescriptor}s registered via {@code MetadataBuilder}
 	 */
-	Collection<ConverterDescriptor> getAttributeConverters();
+	Collection<ConverterDescriptor<?, ?>> getAttributeConverters();
 
 	/**
 	 * Access to all explicit cache region mappings.

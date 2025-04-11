@@ -283,8 +283,8 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 			final StringBuilderSqlAppender appender = new StringBuilderSqlAppender();
 			if ( Map.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
 				final JAXBContext context;
-				final Class<Object> keyClass;
-				final Class<Object> valueClass;
+				final Class<?> keyClass;
+				final Class<?> valueClass;
 				final Map<?, ?> map = (Map<?, ?>) value;
 				if ( javaType.getJavaType() instanceof ParameterizedType ) {
 					final Type[] typeArguments = ( (ParameterizedType) javaType.getJavaType() ).getActualTypeArguments();
@@ -301,25 +301,17 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					if ( map.isEmpty() ) {
 						keyClass = Object.class;
 						valueClass = Object.class;
-						if ( legacyFormat ) {
-							context = JAXBContext.newInstance( LegacyMapWrapper.class );
-						}
-						else {
-							context = JAXBContext.newInstance( MapWrapper.class, EntryWrapper.class );
-						}
+						context = legacyFormat
+								? JAXBContext.newInstance( LegacyMapWrapper.class )
+								: JAXBContext.newInstance( MapWrapper.class, EntryWrapper.class );
 					}
 					else {
 						final Map.Entry<?, ?> firstEntry = map.entrySet().iterator().next();
-						//noinspection unchecked
-						keyClass = (Class<Object>) firstEntry.getKey().getClass();
-						//noinspection unchecked
-						valueClass = (Class<Object>) firstEntry.getValue().getClass();
-						if ( legacyFormat ) {
-							context = JAXBContext.newInstance( LegacyMapWrapper.class, keyClass, valueClass );
-						}
-						else {
-							context = JAXBContext.newInstance( MapWrapper.class, EntryWrapper.class, keyClass, valueClass );
-						}
+						keyClass = firstEntry.getKey().getClass();
+						valueClass = firstEntry.getValue().getClass();
+						context = legacyFormat
+								? JAXBContext.newInstance( LegacyMapWrapper.class, keyClass, valueClass )
+								: JAXBContext.newInstance( MapWrapper.class, EntryWrapper.class, keyClass, valueClass );
 					}
 				}
 				final ManagedMapWrapper managedMapWrapper = legacyFormat ? new LegacyMapWrapper() : new MapWrapper();
@@ -393,8 +385,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 						context = JAXBContext.newInstance( CollectionWrapper.class );
 					}
 					else {
-						//noinspection unchecked
-						valueClass = (Class<Object>) collection.iterator().next().getClass();
+						valueClass = ReflectHelper.getClass( collection.iterator().next() );
 						context = JAXBContext.newInstance( CollectionWrapper.class, valueClass );
 					}
 				}

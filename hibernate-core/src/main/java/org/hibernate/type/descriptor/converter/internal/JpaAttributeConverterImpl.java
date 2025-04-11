@@ -57,17 +57,14 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 				() -> RegistryHelper.INSTANCE.createTypeDescriptor(
 						domainJavaType,
 						() -> {
-							final Class<? extends AttributeConverter<O, R>> converterClass = attributeConverterBean.getBeanClass();
-							final MutabilityPlan<Object> mutabilityPlan = RegistryHelper.INSTANCE.determineMutabilityPlan(
-									converterClass,
-									context.getTypeConfiguration()
-							);
-
-							if ( mutabilityPlan != null ) {
-								return mutabilityPlan;
-							}
-
-							return new AttributeConverterMutabilityPlanImpl<>( this, true );
+							final MutabilityPlan<Object> mutabilityPlan =
+									RegistryHelper.INSTANCE.determineMutabilityPlan(
+											attributeConverterBean.getBeanClass(),
+											context.getTypeConfiguration()
+									);
+							return mutabilityPlan != null
+									? mutabilityPlan
+									: new AttributeConverterMutabilityPlanImpl<>( this, true );
 						},
 						context.getTypeConfiguration()
 				)

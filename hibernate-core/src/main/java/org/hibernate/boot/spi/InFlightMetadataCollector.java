@@ -267,7 +267,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	 * @deprecated use {@link #getConverterRegistry()}
 	 */
 	@Deprecated(since = "6.2")
-	void addAttributeConverter(ConverterDescriptor descriptor);
+	void addAttributeConverter(ConverterDescriptor<?,?> descriptor);
 
 	/**
 	 * Apply an {@link AttributeConverter}
@@ -275,7 +275,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	 * @deprecated use {@link #getConverterRegistry()}
 	 */
 	@Deprecated(since = "6.2")
-	void addAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass);
+	void addAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass);
 
 	/**
 	 * @deprecated use {@link #getConverterRegistry()}

@@ -159,7 +159,7 @@ public class BootstrapContextImpl implements BootstrapContext, AutoCloseable {
 	}
 
 	@Override
-	public Collection<ConverterDescriptor> getAttributeConverters() {
+	public Collection<ConverterDescriptor<?, ?>> getAttributeConverters() {
 		return delegate.getAttributeConverters();
 	}
 

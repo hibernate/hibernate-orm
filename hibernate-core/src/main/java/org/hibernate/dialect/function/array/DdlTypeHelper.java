@@ -29,7 +29,7 @@ public class DdlTypeHelper {
 	public static BasicType<?> resolveArrayType(DomainType<?> elementType, TypeConfiguration typeConfiguration) {
 		@SuppressWarnings("unchecked") final BasicPluralJavaType<Object> arrayJavaType = (BasicPluralJavaType<Object>) typeConfiguration.getJavaTypeRegistry()
 				.getDescriptor(
-						Array.newInstance( elementType.getBindableJavaType(), 0 ).getClass()
+						Array.newInstance( elementType.getJavaType(), 0 ).getClass()
 				);
 		final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
 		return arrayJavaType.resolveType(
@@ -46,7 +46,7 @@ public class DdlTypeHelper {
 		@SuppressWarnings("unchecked") final BasicPluralJavaType<Object> arrayJavaType = (BasicPluralJavaType<Object>) typeConfiguration.getJavaTypeRegistry()
 				.getDescriptor( List.class )
 				.createJavaType(
-						new ParameterizedTypeImpl( List.class, new Type[]{ elementType.getBindableJavaType() }, null ),
+						new ParameterizedTypeImpl( List.class, new Type[]{ elementType.getJavaType() }, null ),
 						typeConfiguration
 				);
 		final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();

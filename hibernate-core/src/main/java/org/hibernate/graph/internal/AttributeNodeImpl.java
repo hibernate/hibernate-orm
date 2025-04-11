@@ -352,7 +352,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 		}
 		else {
 			final HashMap<Class<?>, SubGraphImplementor<?>> map = new HashMap<>( valueSubgraph.getTreatedSubgraphs() );
-			map.put( attribute.getValueGraphType().getBindableJavaType(), valueSubgraph );
+			map.put( attribute.getValueGraphType().getJavaType(), valueSubgraph );
 			return map;
 		}
 	}

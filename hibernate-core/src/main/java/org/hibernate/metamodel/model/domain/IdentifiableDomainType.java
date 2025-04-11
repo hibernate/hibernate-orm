@@ -15,7 +15,9 @@ import jakarta.persistence.metamodel.SingularAttribute;
  *
  * @author Steve Ebersole
  */
-public interface IdentifiableDomainType<J> extends ManagedDomainType<J>, IdentifiableType<J> {
+public interface IdentifiableDomainType<J>
+		extends ManagedDomainType<J>, IdentifiableType<J> {
+
 	PathSource<?> getIdentifierDescriptor();
 
 	@Override

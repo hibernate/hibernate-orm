@@ -19,4 +19,9 @@ public interface BasicDomainType<J>
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;
 	}
+
+	@Override
+	default Class<J> getJavaType() {
+		return ReturnableType.super.getJavaType();
+	}
 }

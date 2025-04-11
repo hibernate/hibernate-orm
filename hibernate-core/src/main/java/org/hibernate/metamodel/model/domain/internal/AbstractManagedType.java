@@ -94,6 +94,16 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
+	public Class<J> getJavaType() {
+		return super.getJavaType();
+	}
+
+	@Override
+	public Class<J> getBindableJavaType() {
+		return super.getBindableJavaType();
+	}
+
+	@Override
 	public ManagedDomainType<? super J> getSuperType() {
 		return supertype;
 	}

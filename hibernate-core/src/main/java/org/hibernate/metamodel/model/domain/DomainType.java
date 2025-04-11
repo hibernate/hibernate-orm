@@ -5,7 +5,6 @@
 package org.hibernate.metamodel.model.domain;
 
 import org.hibernate.Internal;
-import org.hibernate.query.BindableType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -26,9 +25,19 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public interface DomainType<J> extends BindableType<J> {
+public interface DomainType<J> {
 
+	/**
+	 * The {@link JavaType} representing this domain type.
+	 */
 	JavaType<J> getExpressibleJavaType();
+
+	/**
+	 * The Java class which represents by this domain type.
+	 *
+	 * @see jakarta.persistence.metamodel.Type#getJavaType
+	 */
+	Class<J> getJavaType();
 
 	/**
 	 * The name of the type.

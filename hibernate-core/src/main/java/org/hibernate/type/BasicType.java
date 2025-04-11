@@ -25,7 +25,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
  *
  * @author Steve Ebersole
  */
-public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, BasicValuedMapping, JdbcMapping, SqmDomainType<T> {
+public interface BasicType<T>
+		extends Type, BasicDomainType<T>, MappingType, BasicValuedMapping, JdbcMapping, SqmDomainType<T> {
 	/**
 	 * Get the names under which this type should be registered in the type registry.
 	 *

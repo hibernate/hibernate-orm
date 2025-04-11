@@ -39,7 +39,17 @@ public interface SqmPathSource<J>
 	 *
 	 * @apiNote Analogous to {@link Bindable#getBindableJavaType()}.
 	 */
-	SqmDomainType<J> getSqmPathType();
+	SqmDomainType<J> getPathType();
+
+	/**
+	 * The type of {@linkplain SqmPath path} this source creates.
+	 *
+	 * @deprecated Use {@link #getPathType()}.
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
+	default SqmDomainType<J> getSqmPathType() {
+		return getPathType();
+	}
 
 	/**
 	 * Find a {@link SqmPathSource} by name relative to this source.
@@ -159,12 +169,12 @@ public interface SqmPathSource<J>
 
 	@Override
 	default SqmExpressible<J> getExpressible() {
-		return getSqmPathType();
+		return getPathType();
 	}
 
 	@Override
 	default SqmDomainType<J> getSqmType() {
-		return getSqmPathType();
+		return getPathType();
 	}
 
 	/**

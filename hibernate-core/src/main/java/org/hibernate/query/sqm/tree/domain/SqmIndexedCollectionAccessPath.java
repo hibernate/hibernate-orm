@@ -84,7 +84,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		if ( getReferencedPathSource().getSqmPathType() instanceof EntityDomainType ) {
+		if ( getReferencedPathSource().getPathType() instanceof EntityDomainType ) {
 			return getTreatedPath( treatTarget );
 		}
 

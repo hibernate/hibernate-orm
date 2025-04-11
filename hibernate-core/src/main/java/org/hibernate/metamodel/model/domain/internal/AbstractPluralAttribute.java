@@ -175,7 +175,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 		if ( parentPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) {
 			navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
 		}
-		final DomainType<?> parentType = parentPathSource.getSqmPathType();
+		final DomainType<?> parentType = parentPathSource.getPathType();
 		if ( parentType != getDeclaringType() && parentType instanceof EntityDomainType &&
 				( (EntityDomainType<?>) parentType ).findPluralAttribute( getName() ) == null ) {
 			// If the parent path is an entity type which does not contain the joined attribute

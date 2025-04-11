@@ -96,7 +96,7 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
+	public SqmPathSource<T> getResolvedModel() {
 		return getReferencedPathSource();
 	}
 

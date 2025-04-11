@@ -125,7 +125,7 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 		if ( indexedPath != null ) {
 			return indexedPath;
 		}
-		if ( !( getNodeType().getSqmPathType() instanceof BasicPluralType<?, ?> ) ) {
+		if ( !( getNodeType().getPathType() instanceof BasicPluralType<?, ?> ) ) {
 			throw new UnsupportedOperationException( "Index access is only supported for basic plural types." );
 		}
 		final QueryEngine queryEngine = creationState.getCreationContext().getQueryEngine();

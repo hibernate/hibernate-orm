@@ -677,14 +677,14 @@ public abstract class AbstractManagedType<J>
 	protected class InFlightAccessImpl implements InFlightAccess<J> {
 		@Override
 		public void addAttribute(PersistentAttribute<J,?> attribute) {
-			if ( attribute instanceof SingularPersistentAttribute ) {
-				declaredSingularAttributes.put( attribute.getName(), (SingularPersistentAttribute<J, ?>) attribute );
+			if ( attribute instanceof SingularPersistentAttribute<J, ?> singularAttribute ) {
+				declaredSingularAttributes.put( attribute.getName(), singularAttribute );
 			}
-			else if ( attribute instanceof PluralPersistentAttribute ) {
-				if ( AbstractManagedType.this.declaredPluralAttributes == null ) {
-					AbstractManagedType.this.declaredPluralAttributes = new HashMap<>();
+			else if ( attribute instanceof PluralPersistentAttribute<J,?,?> pluralAttribute ) {
+				if ( declaredPluralAttributes == null ) {
+					declaredPluralAttributes = new HashMap<>();
 				}
-				AbstractManagedType.this.declaredPluralAttributes.put( attribute.getName(), (PluralPersistentAttribute<J,?,?>) attribute );
+				declaredPluralAttributes.put( attribute.getName(), pluralAttribute );
 			}
 			else {
 				throw new IllegalArgumentException(

@@ -20,7 +20,7 @@ public interface PathSource<J> {
 	 *
 	 * @apiNote Analogous to {@link Bindable#getBindableJavaType()}.
 	 */
-	DomainType<J> getSqmPathType();
+	DomainType<J> getPathType();
 
 	/**
 	 * Find a {@link PathSource} by name relative to this source.

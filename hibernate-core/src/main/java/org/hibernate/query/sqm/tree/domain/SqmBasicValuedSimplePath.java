@@ -109,7 +109,7 @@ public class SqmBasicValuedSimplePath<T>
 		if ( indexedPath != null ) {
 			return indexedPath;
 		}
-		final DomainType<T> sqmPathType = getNodeType().getSqmPathType();
+		final DomainType<T> sqmPathType = getNodeType().getPathType();
 		final QueryEngine queryEngine = creationState.getCreationContext().getQueryEngine();
 		final SelfRenderingSqmFunction<?> result;
 		if ( sqmPathType instanceof BasicPluralType<?, ?> ) {

@@ -116,7 +116,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
+	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
 	}
 

@@ -84,7 +84,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		assertThat( selection.getSelectableNode(), instanceOf( SqmEntityValuedSimplePath.class ) );
 
 		final SqmPath selectExpression = (SqmPath) selection.getSelectableNode();
-		assertThat( selectExpression.getReferencedPathSource().getSqmPathType(), instanceOf( EntityDomainType.class ) );
+		assertThat( selectExpression.getReferencedPathSource().getPathType(), instanceOf( EntityDomainType.class ) );
 
 		final SqmComparisonPredicate predicate = (SqmComparisonPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
 		final SqmPath predicateLhs = (SqmPath) predicate.getLeftHandExpression();

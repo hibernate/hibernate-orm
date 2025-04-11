@@ -29,7 +29,7 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 		//noinspection unchecked
 		super(
 				navigablePath,
-				(SqmEntityDomainType) wrappedPath.getReferencedPathSource().getSqmPathType(),
+				(SqmEntityDomainType) wrappedPath.getReferencedPathSource().getPathType(),
 				alias,
 				wrappedPath.getRoot()
 		);

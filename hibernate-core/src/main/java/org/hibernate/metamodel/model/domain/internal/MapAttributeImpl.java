@@ -28,8 +28,7 @@ public class MapAttributeImpl<X, K, V>
 
 	public MapAttributeImpl(PluralAttributeBuilder<X, Map<K, V>, V, K> xceBuilder, MetadataContext metadataContext) {
 		super( xceBuilder, metadataContext );
-
-		this.keyPathSource = SqmMappingModelHelper.resolveSqmKeyPathSource(
+		keyPathSource = SqmMappingModelHelper.resolveSqmKeyPathSource(
 				xceBuilder.getListIndexOrMapKeyType(),
 				BindableType.PLURAL_ATTRIBUTE,
 				xceBuilder.isGeneric()
@@ -88,12 +87,12 @@ public class MapAttributeImpl<X, K, V>
 	public SqmPathSource<?> getIntermediatePathSource(SqmPathSource<?> pathSource) {
 		final String pathName = pathSource.getPathName();
 		return pathName.equals( getElementPathSource().getPathName() )
-				|| pathName.equals( keyPathSource.getPathName() ) ? null : getElementPathSource();
+			|| pathName.equals( keyPathSource.getPathName() ) ? null : getElementPathSource();
 	}
 
 	@Override
 	public SimpleDomainType<K> getKeyType() {
-		return (SimpleDomainType<K>) keyPathSource.getSqmPathType();
+		return (SimpleDomainType<K>) keyPathSource.getPathType();
 	}
 
 	@Override

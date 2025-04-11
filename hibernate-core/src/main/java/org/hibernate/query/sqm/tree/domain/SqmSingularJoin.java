@@ -24,6 +24,8 @@ import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
  */
 public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implements SqmSingularValuedJoin<O,T> {
 
+	private final SqmSingularPersistentAttribute<? super O, T> attribute;
+
 	public SqmSingularJoin(
 			SqmFrom<?,O> lhs,
 			SqmSingularPersistentAttribute<? super O, T> joinedNavigable,
@@ -40,6 +42,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 				fetched,
 				nodeBuilder
 		);
+		attribute = joinedNavigable;
 	}
 
 	@Override
@@ -50,12 +53,13 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	protected SqmSingularJoin(
 			SqmFrom<?, O> lhs,
 			NavigablePath navigablePath,
-			SqmSingularPersistentAttribute<O, T> joinedNavigable,
+			SqmSingularPersistentAttribute<? super O, T> joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
 		super( lhs, navigablePath, joinedNavigable, alias, joinType, fetched, nodeBuilder );
+		attribute = joinedNavigable;
 	}
 
 	@Override
@@ -88,16 +92,16 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 
 	@Override
 	public SqmPathSource<T> getReferencedPathSource() {
-		return getModel().getPathSource();
+		return getModel().getSqmPathSource();
 	}
 
 	@Override
-	public SqmSingularPersistentAttribute<O, T> getModel() {
-		return (SqmSingularPersistentAttribute<O, T>) super.getNodeType();
+	public SqmSingularPersistentAttribute<? super O, T> getModel() {
+		return attribute;
 	}
 
 	@Override
-	public SqmSingularPersistentAttribute<O, T> getAttribute() {
+	public SqmSingularPersistentAttribute<? super O, T> getAttribute() {
 		return getModel();
 	}
 

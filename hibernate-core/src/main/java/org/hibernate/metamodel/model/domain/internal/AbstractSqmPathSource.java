@@ -40,7 +40,7 @@ public abstract class AbstractSqmPathSource<J> implements SqmPathSource<J> {
 	}
 
 	@Override
-	public SqmDomainType<J> getSqmPathType() {
+	public SqmDomainType<J> getPathType() {
 		return domainType;
 	}
 

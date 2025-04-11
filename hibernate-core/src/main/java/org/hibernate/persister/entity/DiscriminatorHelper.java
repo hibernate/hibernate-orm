@@ -121,7 +121,7 @@ public class DiscriminatorHelper {
 			SqmPathSource<T> domainType, NodeBuilder nodeBuilder) {
 		final SqmPathSource<?> subPathSource = domainType.findSubPathSource( DISCRIMINATOR_ROLE_NAME );
 		final SqmExpressible<?> type = subPathSource != null
-				? subPathSource.getSqmPathType()
+				? subPathSource.getPathType()
 				: nodeBuilder.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.CLASS );
 		//noinspection unchecked
 		return (SqmExpressible<? super T>) type;

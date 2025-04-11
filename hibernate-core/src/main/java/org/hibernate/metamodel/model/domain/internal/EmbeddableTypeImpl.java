@@ -68,7 +68,7 @@ public class EmbeddableTypeImpl<J>
 	}
 
 	@Override
-	public SqmEmbeddableDomainType<J> getSqmPathType() {
+	public SqmEmbeddableDomainType<J> getPathType() {
 		return this;
 	}
 
@@ -79,7 +79,7 @@ public class EmbeddableTypeImpl<J>
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		final var attribute = getSqmPathType().findAttribute( name );
+		final var attribute = getPathType().findAttribute( name );
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
 		}

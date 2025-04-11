@@ -10,6 +10,5 @@ import org.hibernate.query.sqm.SqmPathSource;
 
 public interface SqmSingularPersistentAttribute<D, J>
 		extends SingularPersistentAttribute<D, J>, SqmJoinable<D,J>, SqmPathSource<J> {
-	@Override
-	SqmPathSource<J> getPathSource();
+	SqmPathSource<J> getSqmPathSource();
 }

@@ -159,7 +159,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 				if ( identifierMapping.getPartMappingType() instanceof ManagedMappingType ) {
 					final ManagedDomainType<?> sqmPathType =
 							(ManagedDomainType<?>)
-									entityDomainType.getIdentifierDescriptor().getSqmPathType();
+									entityDomainType.getIdentifierDescriptor().getPathType();
 					newIdentifierMapping = new AnonymousTupleEmbeddedEntityIdentifierMapping(
 							sqmExpressible,
 							sqlTypedMappings,
@@ -193,7 +193,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 			else {
 				final ManagedDomainType<?> sqmPathType =
 						(ManagedDomainType<?>)
-								entityDomainType.getIdentifierDescriptor().getSqmPathType();
+								entityDomainType.getIdentifierDescriptor().getPathType();
 				newIdentifierMapping = new AnonymousTupleNonAggregatedEntityIdentifierMapping(
 						sqmExpressible,
 						sqlTypedMappings,

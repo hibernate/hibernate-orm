@@ -123,7 +123,7 @@ public class DynamicParameterizedTypeTest {
 								List<? extends SqmTypedNode<?>> arguments,
 								TypeConfiguration typeConfiguration) {
 							SqmTypedNode<?> sqmTypedNode = arguments.get(0);
-							var sqmPathType = ((PathSource<?>) sqmTypedNode.getNodeType()).getSqmPathType();
+							var sqmPathType = ((PathSource<?>) sqmTypedNode.getNodeType()).getPathType();
 							assertInstanceOf(CustomType.class, sqmPathType);
 							return null;
 						}

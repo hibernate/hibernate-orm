@@ -639,7 +639,7 @@ public class MappingMetamodelImpl
 			SqmExpressible<?> sqmExpressible,
 			Function<NavigablePath, TableGroup> tableGroupLocator) {
 		if ( sqmExpressible instanceof SqmPath<?> sqmPath ) {
-			final DomainType<?> sqmPathType = sqmPath.getResolvedModel().getSqmPathType();
+			final DomainType<?> sqmPathType = sqmPath.getResolvedModel().getPathType();
 			if ( sqmPathType instanceof MappingModelExpressible<?> mappingExpressible ) {
 				return mappingExpressible;
 			}
@@ -674,7 +674,7 @@ public class MappingMetamodelImpl
 
 		else if ( sqmExpressible instanceof AnonymousTupleSqmPathSource<?> anonymousTupleSqmPathSource ) {
 			return resolveMappingExpressible(
-					anonymousTupleSqmPathSource.getSqmPathType().resolveExpressible( this ),
+					anonymousTupleSqmPathSource.getPathType().resolveExpressible( this ),
 					tableGroupLocator
 			);
 		}

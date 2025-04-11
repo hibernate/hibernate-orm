@@ -20,11 +20,6 @@ public interface SingularPersistentAttribute<D,J>
 	@Override
 	ManagedDomainType<D> getDeclaringType();
 
-	@Override
-	DomainType<J> getSqmPathType();
-
-	PathSource<J> getPathSource();
-
 	/**
 	 * For a singular attribute, the value type is defined as the
 	 * attribute type

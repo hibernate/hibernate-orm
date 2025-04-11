@@ -301,7 +301,7 @@ public class SqmUtil {
 
 	private static @Nullable EntityAssociationMapping resolveAssociationMapping(SqmJoin<?, ?> sqmJoin) {
 		return sqmJoin instanceof SqmSingularJoin<?, ?> singularJoin
-			&& singularJoin.getAttribute().getSqmPathType() instanceof EntityDomainType<?>
+			&& singularJoin.getAttribute().getPathType() instanceof EntityDomainType<?>
 				? resolveAssociationMapping( singularJoin )
 				: null;
 	}
@@ -1177,7 +1177,7 @@ public class SqmUtil {
 			return resultClass.isAssignableFrom( identifiableDomainType.getIdType().getBindableJavaType() );
 		}
 		else if ( selectionExpressible instanceof EntitySqmPathSource<?> entityPath ) {
-			return resultClass.isAssignableFrom( entityPath.getSqmPathType().getIdType().getBindableJavaType() );
+			return resultClass.isAssignableFrom( entityPath.getPathType().getIdType().getBindableJavaType() );
 		}
 		else {
 			return false;
@@ -1199,7 +1199,7 @@ public class SqmUtil {
 			return basicDomainType.getJdbcType();
 		}
 		else if ( sqmExpressible instanceof SqmPathSource<?> pathSource ) {
-			if ( pathSource.getSqmPathType() instanceof BasicDomainType<?> basicDomainType ) {
+			if ( pathSource.getPathType() instanceof BasicDomainType<?> basicDomainType ) {
 				return basicDomainType.getJdbcType();
 			}
 		}

@@ -6,7 +6,6 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,6 +33,8 @@ import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 
 import org.jboss.logging.Logger;
 
+import static java.util.Collections.emptySet;
+
 /**
  * Functionality common to all implementations of {@link IdentifiableType}.
  * <p>
@@ -55,7 +56,7 @@ public abstract class AbstractIdentifiableType<J>
 	private final boolean hasIdentifierProperty;
 	private final boolean hasIdClass;
 
-	private SingularPersistentAttribute<J,?> id;
+	private SqmSingularPersistentAttribute<J,?> id;
 	private Set<SingularPersistentAttribute<? super J,?>> nonAggregatedIdAttributes;
 	private SqmEmbeddableDomainType<?> idClassType;
 
@@ -331,16 +332,15 @@ public abstract class AbstractIdentifiableType<J>
 
 		@Override
 		public void applyIdAttribute(SingularPersistentAttribute<J, ?> idAttribute) {
-			AbstractIdentifiableType.this.id = idAttribute;
+			id = (SqmSingularPersistentAttribute<J, ?>) idAttribute;
 			managedTypeAccess.addAttribute( idAttribute );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public void applyNonAggregatedIdAttributes(
 				Set<SingularPersistentAttribute<? super J, ?>> idAttributes,
 				EmbeddableDomainType<?> idClassType) {
-			if ( AbstractIdentifiableType.this.id != null ) {
+			if ( id != null ) {
 				throw new IllegalArgumentException( "`AbstractIdentifiableType#id` already set on call to `#applyNonAggregatedIdAttribute`" );
 			}
 
@@ -349,16 +349,20 @@ public abstract class AbstractIdentifiableType<J>
 			}
 
 			if ( idAttributes.isEmpty() ) {
-				AbstractIdentifiableType.this.nonAggregatedIdAttributes = Collections.EMPTY_SET;
+				nonAggregatedIdAttributes = emptySet();
 			}
 			else {
 				for ( var idAttribute : idAttributes ) {
 					if ( AbstractIdentifiableType.this == idAttribute.getDeclaringType() ) {
-						addAttribute( (PersistentAttribute<J, ?>) idAttribute );
+						@SuppressWarnings("unchecked")
+						// Safe, because we know it's declared  by this type
+						final PersistentAttribute<J, ?> declaredAttribute =
+								(PersistentAttribute<J, ?>) idAttribute;
+						addAttribute( declaredAttribute );
 					}
 				}
 
-				AbstractIdentifiableType.this.nonAggregatedIdAttributes = idAttributes;
+				nonAggregatedIdAttributes = idAttributes;
 			}
 			AbstractIdentifiableType.this.idClassType = (SqmEmbeddableDomainType<?>) idClassType;
 		}
@@ -376,10 +380,10 @@ public abstract class AbstractIdentifiableType<J>
 
 		@Override
 		public void applyNaturalIdAttribute(PersistentAttribute<J, ?> naturalIdAttribute) {
-			if ( AbstractIdentifiableType.this.naturalIdAttributes == null ) {
-				AbstractIdentifiableType.this.naturalIdAttributes = new ArrayList<>();
+			if ( naturalIdAttributes == null ) {
+				naturalIdAttributes = new ArrayList<>();
 			}
-			AbstractIdentifiableType.this.naturalIdAttributes.add( naturalIdAttribute );
+			naturalIdAttributes.add( naturalIdAttribute );
 		}
 
 		@Override
@@ -409,7 +413,7 @@ public abstract class AbstractIdentifiableType<J>
 
 		if ( id != null ) {
 			// simple id or aggregate composite id
-			return pathSource( (SqmSingularPersistentAttribute<J,?>) id );
+			return pathSource( id );
 		}
 		else if ( nonAggregatedIdAttributes != null && !nonAggregatedIdAttributes.isEmpty() ) {
 			return compositePathSource();
@@ -465,6 +469,9 @@ public abstract class AbstractIdentifiableType<J>
 					Bindable.BindableType.SINGULAR_ATTRIBUTE,
 					attribute.isGeneric()
 			);
+		}
+		else if (type instanceof BasicSqmPathSource<T> pathSource) {
+			return pathSource;
 		}
 		else {
 			throw new AssertionFailure( "Unrecognized type: " + type );

@@ -41,7 +41,7 @@ public class BasicSqmPathSource<J>
 
 	@Override
 	public SqmDomainType<J> getSqmType() {
-		return getSqmPathType();
+		return getPathType();
 	}
 
 	@Override

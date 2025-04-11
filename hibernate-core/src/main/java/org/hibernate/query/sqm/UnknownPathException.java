@@ -41,7 +41,7 @@ public class UnknownPathException extends PathException {
 						Locale.ROOT,
 						"Could not resolve path element '%s' relative to '%s' (%s)",
 						name,
-						base.getReferencedPathSource().getSqmPathType().getTypeName(),
+						base.getReferencedPathSource().getPathType().getTypeName(),
 						base.getNavigablePath()
 				)
 		);

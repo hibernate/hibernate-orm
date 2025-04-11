@@ -151,7 +151,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	/**
 	 * Get this path's actual resolved model, i.e. the concrete type for generic attributes.
 	 */
-	SqmPathSource<?> getResolvedModel();
+	SqmPathSource<T> getResolvedModel();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

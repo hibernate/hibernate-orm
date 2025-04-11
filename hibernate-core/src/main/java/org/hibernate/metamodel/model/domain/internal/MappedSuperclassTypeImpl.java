@@ -72,7 +72,7 @@ public class MappedSuperclassTypeImpl<J>
 	}
 
 	@Override
-	public SqmMappedSuperclassDomainType<J> getSqmPathType() {
+	public SqmMappedSuperclassDomainType<J> getPathType() {
 		return this;
 	}
 

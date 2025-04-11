@@ -527,7 +527,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	private void collectSelectedFromSet(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> sqmFrom) {
 		selectedFromSet.add( sqmFrom );
 		for ( SqmJoin<?, ?> sqmJoin : sqmFrom.getSqmJoins() ) {
-			if ( sqmJoin.getReferencedPathSource().getSqmPathType() instanceof EmbeddableDomainType<?> ) {
+			if ( sqmJoin.getReferencedPathSource().getPathType() instanceof EmbeddableDomainType<?> ) {
 				collectSelectedFromSet( selectedFromSet, sqmJoin );
 			}
 		}

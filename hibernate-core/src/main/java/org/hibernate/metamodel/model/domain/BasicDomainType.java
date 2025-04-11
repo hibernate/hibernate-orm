@@ -4,10 +4,8 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import java.util.Objects;
 import jakarta.persistence.metamodel.BasicType;
 
-import org.hibernate.HibernateException;
 import org.hibernate.query.OutputableType;
 
 /**
@@ -20,9 +18,5 @@ public interface BasicDomainType<J>
 	@Override
 	default PersistenceType getPersistenceType() {
 		return PersistenceType.BASIC;
-	}
-
-	default boolean areEqual(J x, J y) throws HibernateException {
-		return Objects.equals( x, y );
 	}
 }

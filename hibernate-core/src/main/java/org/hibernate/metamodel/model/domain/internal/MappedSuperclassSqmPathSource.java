@@ -12,7 +12,7 @@ import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmMappedSuperclassDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmMappedSuperclassDomainType;
 
 /**
  * @author Steve Ebersole

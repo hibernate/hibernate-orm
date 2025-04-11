@@ -12,7 +12,6 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;

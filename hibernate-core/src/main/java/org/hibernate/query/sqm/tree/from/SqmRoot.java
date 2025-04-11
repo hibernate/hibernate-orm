@@ -10,6 +10,7 @@ import java.util.List;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.TreatException;
+import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;

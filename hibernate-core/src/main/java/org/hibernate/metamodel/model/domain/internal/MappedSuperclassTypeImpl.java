@@ -12,7 +12,7 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.from.SqmMappedSuperclassDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmMappedSuperclassDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**

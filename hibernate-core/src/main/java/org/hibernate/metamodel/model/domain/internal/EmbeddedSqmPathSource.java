@@ -8,7 +8,7 @@ import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.from.SqmEmbeddableDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
 
 /**
  * @author Steve Ebersole

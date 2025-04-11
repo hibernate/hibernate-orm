@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.from.SqmEmbeddableDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 import static org.hibernate.persister.entity.DiscriminatorHelper.getDiscriminatorType;

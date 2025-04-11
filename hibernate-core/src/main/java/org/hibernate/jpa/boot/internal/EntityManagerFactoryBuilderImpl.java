@@ -26,7 +26,6 @@ import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
-import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.spi.Binding;
@@ -1247,8 +1246,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return new PersistenceException( message.toString() );
 	}
 
-	@SuppressWarnings("unchecked")
-	private List<ConverterDescriptor> applyMappingResources(MetadataSources metadataSources) {
+	private List<ConverterDescriptor<?,?>> applyMappingResources(MetadataSources metadataSources) {
 		// todo : where in the heck are `org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor.getManagedClassNames` handled?!?
 
 //		final ClassLoaderService classLoaderService = ssr.getService( ClassLoaderService.class );
@@ -1292,24 +1290,23 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 //			}
 //		}
 
-		List<ConverterDescriptor> converterDescriptors = null;
+		List<ConverterDescriptor<?,?>> converterDescriptors = null;
 
 		// add any explicit Class references passed in
 		final List<Class<? extends AttributeConverter<?,?>>> loadedAnnotatedClasses =
 				(List<Class<? extends AttributeConverter<?,?>>>)
 						configurationValues.remove( AvailableSettings.LOADED_CLASSES );
 		if ( loadedAnnotatedClasses != null ) {
-			for ( Class<? extends AttributeConverter<?,?>> cls : loadedAnnotatedClasses ) {
-				if ( AttributeConverter.class.isAssignableFrom( cls ) ) {
+			for ( var converterClass : loadedAnnotatedClasses ) {
+				if ( AttributeConverter.class.isAssignableFrom( converterClass ) ) {
 					if ( converterDescriptors == null ) {
 						converterDescriptors = new ArrayList<>();
 					}
-					final ClassmateContext classmateContext =
-							metamodelBuilder.getBootstrapContext().getClassmateContext();
-					converterDescriptors.add( new ClassBasedConverterDescriptor( cls, classmateContext ) );
+					converterDescriptors.add( new ClassBasedConverterDescriptor<>( converterClass,
+							metamodelBuilder.getBootstrapContext().getClassmateContext() ) );
 				}
 				else {
-					metadataSources.addAnnotatedClass( cls );
+					metadataSources.addAnnotatedClass( converterClass );
 				}
 			}
 		}
@@ -1335,7 +1332,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	private void applyMetamodelBuilderSettings(
 			MergedSettings mergedSettings,
-			List<ConverterDescriptor> converterDescriptors) {
+			List<ConverterDescriptor<?,?>> converterDescriptors) {
 		metamodelBuilder.getBootstrapContext().markAsJpaBootstrap();
 
 		if ( persistenceUnit.getTempClassLoader() != null ) {

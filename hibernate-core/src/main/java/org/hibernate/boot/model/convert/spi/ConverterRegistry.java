@@ -20,7 +20,7 @@ public interface ConverterRegistry {
 	/**
 	 * Apply the descriptor for an {@link AttributeConverter}
 	 */
-	void addAttributeConverter(ConverterDescriptor descriptor);
+	void addAttributeConverter(ConverterDescriptor<?,?> descriptor);
 
 	/**
 	 * Apply an {@link AttributeConverter}

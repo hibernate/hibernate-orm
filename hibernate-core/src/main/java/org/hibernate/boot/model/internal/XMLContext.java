@@ -237,10 +237,10 @@ public class XMLContext implements Serializable {
 		return hasContext;
 	}
 
-	private final List<ConverterDescriptor> converterDescriptors = new ArrayList<>();
+	private final List<ConverterDescriptor<?,?>> converterDescriptors = new ArrayList<>();
 
 	public void applyDiscoveredAttributeConverters(ConverterRegistry converterRegistry) {
-		for ( ConverterDescriptor descriptor : converterDescriptors ) {
+		for ( ConverterDescriptor<?,?> descriptor : converterDescriptors ) {
 			converterRegistry.addAttributeConverter( descriptor );
 		}
 		converterDescriptors.clear();

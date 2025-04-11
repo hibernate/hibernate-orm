@@ -30,21 +30,21 @@ public class AutoApplicableConverterDescriptorBypassedImpl implements AutoApplic
 	}
 
 	@Override
-	public ConverterDescriptor getAutoAppliedConverterDescriptorForAttribute(
+	public ConverterDescriptor<?,?> getAutoAppliedConverterDescriptorForAttribute(
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
 		return null;
 	}
 
 	@Override
-	public ConverterDescriptor getAutoAppliedConverterDescriptorForCollectionElement(
+	public ConverterDescriptor<?,?> getAutoAppliedConverterDescriptorForCollectionElement(
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
 		return null;
 	}
 
 	@Override
-	public ConverterDescriptor getAutoAppliedConverterDescriptorForMapKey(
+	public ConverterDescriptor<?,?> getAutoAppliedConverterDescriptorForMapKey(
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
 		return null;

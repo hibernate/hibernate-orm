@@ -46,10 +46,9 @@ public class ParameterizedAttributeConverterParameterTypeTest {
 	public void testGenericTypeParameters() {
 		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl();
 		try {
-			final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
-					CustomAttributeConverter.class,
-					bootstrapContext.getClassmateContext()
-			);
+			final ClassBasedConverterDescriptor<?,?> converterDescriptor =
+					new ClassBasedConverterDescriptor<>( CustomAttributeConverter.class,
+							bootstrapContext.getClassmateContext() );
 			assertEquals( List.class, converterDescriptor.getDomainValueResolvedType().getErasedType() );
 		} finally {
 			bootstrapContext.close();

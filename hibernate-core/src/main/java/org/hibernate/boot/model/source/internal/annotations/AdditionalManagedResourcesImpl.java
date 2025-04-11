@@ -49,7 +49,7 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 	}
 
 	@Override
-	public Collection<ConverterDescriptor> getAttributeConverterDescriptors() {
+	public Collection<ConverterDescriptor<?,?>> getAttributeConverterDescriptors() {
 		return emptyList();
 	}
 

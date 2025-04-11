@@ -86,7 +86,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	protected abstract AttributeConversionInfo locateAttributeConversionInfo(String path);
 
 	@Override
-	public ConverterDescriptor resolveAttributeConverterDescriptor(MemberDetails attributeMember, boolean autoApply) {
+	public ConverterDescriptor<?,?> resolveAttributeConverterDescriptor(MemberDetails attributeMember, boolean autoApply) {
 		final AttributeConversionInfo info = locateAttributeConversionInfo( attributeMember );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
@@ -129,9 +129,9 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		}
 	}
 
-	protected ConverterDescriptor makeAttributeConverterDescriptor(AttributeConversionInfo conversion) {
+	protected ConverterDescriptor<?,?> makeAttributeConverterDescriptor(AttributeConversionInfo conversion) {
 		try {
-			return new ClassBasedConverterDescriptor(
+			return new ClassBasedConverterDescriptor<>(
 					conversion.getConverterClass(),
 					false,
 					context.getBootstrapContext().getClassmateContext()

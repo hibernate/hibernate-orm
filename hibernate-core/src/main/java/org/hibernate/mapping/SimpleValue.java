@@ -101,7 +101,7 @@ public abstract class SimpleValue implements KeyValue {
 	private OnDeleteAction onDeleteAction;
 	private boolean foreignKeyEnabled = true;
 
-	private ConverterDescriptor attributeConverterDescriptor;
+	private ConverterDescriptor<?,?> attributeConverterDescriptor;
 	private Type type;
 
 	private GeneratorCreator customIdGeneratorCreator = ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
@@ -588,7 +588,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.attributeConverterDescriptor = descriptor;
 	}
 
-	protected ConverterDescriptor getAttributeConverterDescriptor() {
+	protected ConverterDescriptor<?,?> getAttributeConverterDescriptor() {
 		return attributeConverterDescriptor;
 	}
 
@@ -908,11 +908,11 @@ public abstract class SimpleValue implements KeyValue {
 		return array;
 	}
 
-	public ConverterDescriptor getJpaAttributeConverterDescriptor() {
+	public ConverterDescriptor<?,?> getJpaAttributeConverterDescriptor() {
 		return attributeConverterDescriptor;
 	}
 
-	public void setJpaAttributeConverterDescriptor(ConverterDescriptor descriptor) {
+	public void setJpaAttributeConverterDescriptor(ConverterDescriptor<?,?> descriptor) {
 		this.attributeConverterDescriptor = descriptor;
 	}
 

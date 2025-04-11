@@ -56,6 +56,7 @@ import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -561,17 +562,21 @@ public class InFlightMetadataCollectorImpl
 		return attributeConverterManager;
 	}
 
+	private ClassmateContext getClassmateContext() {
+		return getBootstrapContext().getClassmateContext();
+	}
+
 	@Override
-	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
+	public void addAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
 		attributeConverterManager.addConverter(
-				new ClassBasedConverterDescriptor( converterClass, getBootstrapContext().getClassmateContext() )
+				new ClassBasedConverterDescriptor<>( converterClass, getClassmateContext() )
 		);
 	}
 
 	@Override
-	public void addOverridableConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
+	public void addOverridableConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
 		attributeConverterManager.addConverter(
-				new ClassBasedConverterDescriptor( converterClass, getBootstrapContext().getClassmateContext() ) {
+				new ClassBasedConverterDescriptor<>( converterClass, getClassmateContext() ) {
 					@Override
 					public boolean overrideable() {
 						return true;
@@ -581,7 +586,7 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
-	public void addAttributeConverter(ConverterDescriptor descriptor) {
+	public void addAttributeConverter(ConverterDescriptor<?,?> descriptor) {
 		attributeConverterManager.addConverter( descriptor );
 	}
 

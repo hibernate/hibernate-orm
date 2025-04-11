@@ -40,6 +40,7 @@ import org.hibernate.dialect.function.array.DdlTypeHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -1558,13 +1559,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			return null;
 		}
 		else {
-			return resolveInferredType( value, value.getClass() );
+			return resolveInferredType( value );
 		}
 	}
 
-	private <T> BasicType<T> resolveInferredType(T value, Class<?> type) {
+	private <T> BasicType<T> resolveInferredType(T value) {
 		final TypeConfiguration typeConfiguration = getTypeConfiguration();
-		final BasicType<T> result = typeConfiguration.getBasicTypeForJavaType( (Class<T>) type );
+		final Class<T> type = ReflectHelper.getClass( value );
+		final BasicType<T> result = typeConfiguration.getBasicTypeForJavaType( type );
 		if ( result == null && value instanceof Enum<?> enumValue ) {
 			return (BasicType<T>) resolveEnumType( typeConfiguration, enumValue );
 		}
@@ -1573,13 +1575,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
-	private static <E extends Enum<E>> BasicType<E> resolveEnumType(TypeConfiguration typeConfiguration, Enum<E> enumValue) {
-		@SuppressWarnings("unchecked") // Completely safe
-		final Class<E> enumClass = (Class<E>) enumValue.getClass();
-		final EnumJavaType<E> javaType = new EnumJavaType<>( enumClass );
-		final JdbcType jdbcType =
-				javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
-		return typeConfiguration.getBasicTypeRegistry().resolve( javaType, jdbcType );
+	private static <E extends Enum<E>> BasicType<E> resolveEnumType(TypeConfiguration configuration, Enum<E> enumValue) {
+		final EnumJavaType<E> javaType = new EnumJavaType<>( ReflectHelper.getClass( enumValue ) );
+		final JdbcType jdbcType = javaType.getRecommendedJdbcType( configuration.getCurrentBaseSqlTypeIndicators() );
+		return configuration.getBasicTypeRegistry().resolve( javaType, jdbcType );
 	}
 
 	@Override

@@ -13,7 +13,6 @@ import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext
 import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.type.descriptor.java.JavaType;
 
 import com.fasterxml.classmate.ResolvedType;
 import jakarta.persistence.AttributeConverter;
@@ -24,8 +23,8 @@ import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveC
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractConverterDescriptor implements ConverterDescriptor {
-	private final Class<? extends AttributeConverter<?,?>> converterClass;
+public abstract class AbstractConverterDescriptor<X,Y> implements ConverterDescriptor<X,Y> {
+	private final Class<? extends AttributeConverter<? extends X,? extends Y>> converterClass;
 
 	private final ResolvedType domainType;
 	private final ResolvedType jdbcType;
@@ -33,40 +32,41 @@ public abstract class AbstractConverterDescriptor implements ConverterDescriptor
 	private final AutoApplicableConverterDescriptor autoApplicableDescriptor;
 
 	public AbstractConverterDescriptor(
-			Class<? extends AttributeConverter<?,?>> converterClass,
+			Class<? extends AttributeConverter<? extends X, ? extends Y>> converterClass,
 			Boolean forceAutoApply,
 			ClassmateContext classmateContext) {
 		this.converterClass = converterClass;
 
-		final List<ResolvedType> converterParamTypes = resolveConverterClassParamTypes( converterClass, classmateContext );
+		final List<ResolvedType> converterParamTypes =
+				resolveConverterClassParamTypes( converterClass, classmateContext );
+		domainType = converterParamTypes.get( 0 );
+		jdbcType = converterParamTypes.get( 1 );
 
-		this.domainType = converterParamTypes.get( 0 );
-		this.jdbcType = converterParamTypes.get( 1 );
-
-		this.autoApplicableDescriptor = resolveAutoApplicableDescriptor( converterClass, forceAutoApply );
+		autoApplicableDescriptor = resolveAutoApplicableDescriptor( converterClass, forceAutoApply );
 	}
 
 	private AutoApplicableConverterDescriptor resolveAutoApplicableDescriptor(
 			Class<? extends AttributeConverter<?,?>> converterClass,
 			Boolean forceAutoApply) {
-		final boolean autoApply;
-		if ( forceAutoApply != null ) {
-			// if the caller explicitly specified whether to auto-apply, honor that
-			autoApply = forceAutoApply;
-		}
-		else {
-			// otherwise, look at the converter's @Converter annotation
-			final Converter annotation = converterClass.getAnnotation( Converter.class );
-			autoApply = annotation != null && annotation.autoApply();
-		}
-
-		return autoApply
+		return isAutoApply( converterClass, forceAutoApply )
 				? new AutoApplicableConverterDescriptorStandardImpl( this )
 				: AutoApplicableConverterDescriptorBypassedImpl.INSTANCE;
 	}
 
+	private static boolean isAutoApply(Class<? extends AttributeConverter<?, ?>> converterClass, Boolean forceAutoApply) {
+		if ( forceAutoApply != null ) {
+			// if the caller explicitly specified whether to auto-apply, honor that
+			return forceAutoApply;
+		}
+		else {
+			// otherwise, look at the converter's @Converter annotation
+			final Converter annotation = converterClass.getAnnotation( Converter.class );
+			return annotation != null && annotation.autoApply();
+		}
+	}
+
 	@Override
-	public Class<? extends AttributeConverter<?,?>> getAttributeConverterClass() {
+	public Class<? extends AttributeConverter<? extends X,? extends Y>> getAttributeConverterClass() {
 		return converterClass;
 	}
 
@@ -86,22 +86,27 @@ public abstract class AbstractConverterDescriptor implements ConverterDescriptor
 	}
 
 	@Override
-	public JpaAttributeConverter<?,?> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
-		final JavaType<?> converterJtd = context
-				.getJavaTypeRegistry()
-				.getDescriptor( getAttributeConverterClass() );
-
-		final Class<?> domainJavaType = getDomainValueResolvedType().getErasedType();
-		final Class<?> jdbcJavaType = getRelationalValueResolvedType().getErasedType();
-
-		return new JpaAttributeConverterImpl(
-				createManagedBean( context ),
-				converterJtd,
-				domainJavaType,
-				jdbcJavaType,
+	public JpaAttributeConverter<X,Y> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
+		return new JpaAttributeConverterImpl<>(
+				(ManagedBean<? extends AttributeConverter<X,Y>>)
+						createManagedBean( context ),
+				context.getJavaTypeRegistry().getDescriptor( converterClass ),
+				getDomainClass(),
+				getRelationalClass(),
 				context
 		);
 	}
 
-	protected abstract ManagedBean<? extends AttributeConverter<?, ?>> createManagedBean(JpaAttributeConverterCreationContext context);
+	@SuppressWarnings("unchecked")
+	private Class<Y> getRelationalClass() {
+		return (Class<Y>) getRelationalValueResolvedType().getErasedType();
+	}
+
+	@SuppressWarnings("unchecked")
+	private Class<X> getDomainClass() {
+		return (Class<X>) getDomainValueResolvedType().getErasedType();
+	}
+
+	protected abstract ManagedBean<? extends AttributeConverter<? extends X,? extends Y>>
+	createManagedBean(JpaAttributeConverterCreationContext context);
 }

@@ -67,6 +67,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ClassDetails;
@@ -697,7 +698,7 @@ public class MetadataBuildingProcess {
 			}
 
 			@Override
-			public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
+			public void contributeAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
 				metadataCollector.getConverterRegistry().addAttributeConverter( converterClass );
 			}
 
@@ -719,7 +720,7 @@ public class MetadataBuildingProcess {
 			basicTypeRegistry.addTypeReferenceRegistrationKey(
 					StandardBasicTypes.BINARY_WRAPPER.getName(),
 					Byte[].class.getName(), "Byte[]"
-					);
+			);
 		}
 
 		// add Dialect contributed types
@@ -816,11 +817,8 @@ public class MetadataBuildingProcess {
 		// add explicit application registered types
 		typeConfiguration.addBasicTypeRegistrationContributions( options.getBasicTypeRegistrations() );
 		for ( CompositeUserType<?> compositeUserType : options.getCompositeUserTypes() ) {
-			//noinspection unchecked
-			metadataCollector.registerCompositeUserType(
-					compositeUserType.returnedClass(),
-					(Class<? extends CompositeUserType<?>>) compositeUserType.getClass()
-			);
+			metadataCollector.registerCompositeUserType( compositeUserType.returnedClass(),
+					ReflectHelper.getClass( compositeUserType.getClass() ) );
 		}
 
 		final JdbcType timestampWithTimeZoneOverride = getTimestampWithTimeZoneOverride( options, jdbcTypeRegistry );

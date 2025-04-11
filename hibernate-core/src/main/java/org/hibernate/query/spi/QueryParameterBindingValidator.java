@@ -40,40 +40,33 @@ public class QueryParameterBindingValidator {
 			return;
 		}
 
-		final Class<?> parameterJavaType;
 		final SqmExpressible<?> sqmExpressible = paramType.resolveExpressible(bindingContext);
-		if ( paramType.getBindableJavaType() != null ) {
-			parameterJavaType = paramType.getBindableJavaType();
-		}
-		else {
-			parameterJavaType = sqmExpressible.getBindableJavaType();
-		}
+		final Class<?> parameterJavaType =
+				paramType.getBindableJavaType() != null
+						? paramType.getBindableJavaType()
+						: sqmExpressible.getBindableJavaType();
 
-		if ( parameterJavaType == null ) {
-			// nothing we can check
-			return;
-		}
-
-		if ( bind instanceof Collection && !Collection.class.isAssignableFrom( parameterJavaType ) ) {
-			// we have a collection passed in where we are expecting a non-collection.
-			// 		NOTE : this can happen in Hibernate's notion of "parameter list" binding
-			// 		NOTE2 : the case of a collection value and an expected collection (if that can even happen)
-			//			will fall through to the main check.
-			validateCollectionValuedParameterBinding(
-					parameterJavaType,
-					(Collection<?>) bind,
-					temporalPrecision
-			);
-		}
-		else if ( bind.getClass().isArray() ) {
-			validateArrayValuedParameterBinding(
-					parameterJavaType,
-					bind,
-					temporalPrecision
-			);
-		}
-		else {
-			if ( !isValidBindValue(
+		if ( parameterJavaType != null ) {
+			if ( bind instanceof Collection<?> collection
+					&& !Collection.class.isAssignableFrom( parameterJavaType ) ) {
+				// we have a collection passed in where we are expecting a non-collection.
+				// 		NOTE : this can happen in Hibernate's notion of "parameter list" binding
+				// 		NOTE2 : the case of a collection value and an expected collection (if that can even happen)
+				//			will fall through to the main check.
+				validateCollectionValuedParameterBinding(
+						parameterJavaType,
+						collection,
+						temporalPrecision
+				);
+			}
+			else if ( bind.getClass().isArray() ) {
+				validateArrayValuedParameterBinding(
+						parameterJavaType,
+						bind,
+						temporalPrecision
+				);
+			}
+			else if ( !isValidBindValue(
 					sqmExpressible.getExpressibleJavaType(),
 					parameterJavaType,
 					bind,
@@ -92,6 +85,7 @@ public class QueryParameterBindingValidator {
 				);
 			}
 		}
+		// else nothing we can check
 	}
 
 	private String extractName(TemporalType temporalType) {

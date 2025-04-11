@@ -149,7 +149,7 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	private SqmExpressibleAccessor<?> inferenceBasis;
 
 	private <T> void withTypeInference(SqmExpressibleAccessor<T> inferenceBasis, SqmVisitableNode sqmVisitableNode) {
-		SqmExpressibleAccessor<?> original = this.inferenceBasis;
+		var original = this.inferenceBasis;
 		this.inferenceBasis = inferenceBasis;
 		try {
 			sqmVisitableNode.accept( this );
@@ -161,21 +161,23 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 
 	@Override
 	public Object visitSimpleCaseExpression(SqmCaseSimple<?, ?> expression) {
-		final SqmExpressibleAccessor<?> inferenceSupplier = this.inferenceBasis;
+		final var inferenceSupplier = inferenceBasis;
 		withTypeInference(
 				() -> {
-					for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
+					for ( var whenFragment : expression.getWhenFragments() ) {
 						final SqmExpressible<?> resolved = whenFragment.getCheckValue().getExpressible();
 						if ( resolved != null ) {
-							return (SqmExpressible<?>) resolved;
+							return resolved;
 						}
 					}
 					return null;
 				},
 				expression.getFixture()
 		);
-		SqmExpressibleAccessor<?> resolved = toExpressibleAccessor( expression );
-		for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
+
+		var resolved = toExpressibleAccessor( expression );
+
+		for ( var whenFragment : expression.getWhenFragments() ) {
 			withTypeInference(
 					expression.getFixture(),
 					whenFragment.getCheckValue()
@@ -199,10 +201,10 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 
 	@Override
 	public Object visitSearchedCaseExpression(SqmCaseSearched<?> expression) {
-		final SqmExpressibleAccessor<?> inferenceSupplier = this.inferenceBasis;
-		SqmExpressibleAccessor<?> resolved = toExpressibleAccessor( expression );
+		final var inferenceSupplier = inferenceBasis;
+		var resolved = toExpressibleAccessor( expression );
 
-		for ( SqmCaseSearched.WhenFragment<?> whenFragment : expression.getWhenFragments() ) {
+		for ( var whenFragment : expression.getWhenFragments() ) {
 			withTypeInference(
 					null,
 					whenFragment.getPredicate()

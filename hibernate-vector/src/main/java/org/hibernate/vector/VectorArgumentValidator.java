@@ -6,12 +6,12 @@ package org.hibernate.vector;
 
 import java.util.List;
 
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.from.SqmDomainType;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.SqlTypes;
 
@@ -29,16 +29,18 @@ public class VectorArgumentValidator implements ArgumentsValidator {
 			BindingContext bindingContext) {
 		for ( int i = 0; i < arguments.size(); i++ ) {
 			final SqmExpressible<?> expressible = arguments.get( i ).getExpressible();
-			final DomainType<?> type;
-			if ( expressible != null && ( type = expressible.getSqmType() ) != null && !isVectorType( type ) ) {
-				throw new FunctionArgumentException(
-						String.format(
-								"Parameter %d of function '%s()' requires a vector type, but argument is of type '%s'",
-								i,
-								functionName,
-								type.getTypeName()
-						)
-				);
+			if ( expressible != null ) {
+				final SqmDomainType<?> type = expressible.getSqmType();
+				if ( type != null && !isVectorType( type ) ) {
+					throw new FunctionArgumentException(
+							String.format(
+									"Parameter %d of function '%s()' requires a vector type, but argument is of type '%s'",
+									i,
+									functionName,
+									type.getTypeName()
+							)
+					);
+				}
 			}
 		}
 	}

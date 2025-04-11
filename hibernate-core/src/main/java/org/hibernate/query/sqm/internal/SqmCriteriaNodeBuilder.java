@@ -914,8 +914,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return tuple( tupleType, asList( expressions ) );
 	}
 
-	@Override @Deprecated(since = "7", forRemoval = true) @SuppressWarnings("unchecked")
+	@Override @Deprecated(since = "7", forRemoval = true)
 	public <R> SqmTuple<R> tuple(Class<R> tupleType, List<? extends SqmExpression<?>> expressions) {
+		@SuppressWarnings("unchecked")
 		final SqmExpressible<R> expressibleType =
 				tupleType == null || tupleType == Object[].class
 						? (SqmDomainType<R>) getTypeConfiguration().resolveTupleType( expressions )
@@ -1337,16 +1338,21 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			BinaryArithmeticOperator operator,
 			SqmExpression<?> leftHandExpression,
 			SqmExpression<?> rightHandExpression) {
+		final SqmExpressible<?> arithmeticType =
+				getTypeConfiguration()
+						.resolveArithmeticType(
+								leftHandExpression.getNodeType(),
+								rightHandExpression.getNodeType(),
+								operator
+						);
 		//noinspection unchecked
+		final SqmExpressible<N> castType =
+				(SqmExpressible<N>) arithmeticType;
 		return new SqmBinaryArithmetic<>(
 				operator,
 				leftHandExpression,
 				rightHandExpression,
-				(SqmExpressible<N>) getTypeConfiguration().resolveArithmeticType(
-						leftHandExpression.getNodeType(),
-						rightHandExpression.getNodeType(),
-						operator
-				),
+				castType,
 				this
 		);
 	}
@@ -1522,49 +1528,58 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	public <T> SqmLiteral<T> literal(T value, SqmExpression<? extends T> typeInferenceSource) {
-		if ( value == null ) {
-			return new SqmLiteralNull<>( this );
-		}
+		return value == null
+				? new SqmLiteralNull<T>( this )
+				: createLiteral( value, resolveInferredType( value, typeInferenceSource ) );
+	}
 
-		final SqmExpressible<T> expressible = resolveInferredType( value, typeInferenceSource, getTypeConfiguration() );
+	private <T> SqmLiteral<T> createLiteral(T value, SqmExpressible<T> expressible) {
 		if ( expressible.getExpressibleJavaType().isInstance( value ) ) {
 			return new SqmLiteral<>( value, expressible, this );
 		}
-		// Just like in HQL, we allow coercion of literal values to the inferred type
-		final T coercedValue = expressible.getExpressibleJavaType().coerce( value, this::getTypeConfiguration );
-		if ( expressible.getExpressibleJavaType().isInstance( coercedValue ) ) {
-			return new SqmLiteral<>( coercedValue, expressible, this );
-		}
 		else {
+			// Just like in HQL, we allow coercion of literal values to the inferred type
+			final T coercedValue =
+					expressible.getExpressibleJavaType()
+							.coerce( value, this::getTypeConfiguration );
 			// ignore typeInferenceSource and fallback the value type
-			return literal( value );
+			return expressible.getExpressibleJavaType().isInstance( coercedValue )
+					? new SqmLiteral<>( coercedValue, expressible, this )
+					: literal( value );
 		}
 	}
 
-	@SuppressWarnings({"rawtypes","unchecked"})
-	private static <T> SqmExpressible<T> resolveInferredType(
-			T value,
-			SqmExpression<? extends T> typeInferenceSource,
-			TypeConfiguration typeConfiguration) {
+	private <T> SqmExpressible<? extends T> resolveInferredType(
+			T value, SqmExpression<? extends T> typeInferenceSource) {
 		if ( typeInferenceSource != null ) {
-			return (SqmExpressible<T>) typeInferenceSource.getNodeType();
+			return typeInferenceSource.getNodeType();
 		}
 		else if ( value == null ) {
 			return null;
 		}
 		else {
-			final Class type = value.getClass();
-			final BasicType<T> result = typeConfiguration.getBasicTypeForJavaType( type );
-			if ( result == null && value instanceof Enum ) {
-				final EnumJavaType javaType = new EnumJavaType<>( type );
-				final JdbcType jdbcType =
-						javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
-				return typeConfiguration.getBasicTypeRegistry().resolve( javaType, jdbcType );
-			}
-			else {
-				return result;
-			}
+			return resolveInferredType( value, value.getClass() );
 		}
+	}
+
+	private <T> BasicType<T> resolveInferredType(T value, Class<?> type) {
+		final TypeConfiguration typeConfiguration = getTypeConfiguration();
+		final BasicType<T> result = typeConfiguration.getBasicTypeForJavaType( (Class<T>) type );
+		if ( result == null && value instanceof Enum<?> enumValue ) {
+			return (BasicType<T>) resolveEnumType( typeConfiguration, enumValue );
+		}
+		else {
+			return result;
+		}
+	}
+
+	private static <E extends Enum<E>> BasicType<E> resolveEnumType(TypeConfiguration typeConfiguration, Enum<E> enumValue) {
+		@SuppressWarnings("unchecked") // Completely safe
+		final Class<E> enumClass = (Class<E>) enumValue.getClass();
+		final EnumJavaType<E> javaType = new EnumJavaType<>( enumClass );
+		final JdbcType jdbcType =
+				javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+		return typeConfiguration.getBasicTypeRegistry().resolve( javaType, jdbcType );
 	}
 
 	@Override

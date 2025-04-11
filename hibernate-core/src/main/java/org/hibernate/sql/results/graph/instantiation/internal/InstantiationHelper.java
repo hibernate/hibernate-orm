@@ -80,9 +80,11 @@ public class InstantiationHelper {
 			for (int i = 0; i < argumentTypes.size(); i++ ) {
 				final Type parameterType = genericParameterTypes[i];
 				final Class<?> argumentType = argumentTypes.get( i );
-				final Class<?> type = parameterType instanceof Class<?>
-						? (Class<?>) parameterType
-						: typeConfiguration.getJavaTypeRegistry().resolveDescriptor( parameterType ).getJavaTypeClass();
+				final Class<?> type =
+						parameterType instanceof Class<?> classParameter
+								? classParameter
+								: typeConfiguration.getJavaTypeRegistry().resolveDescriptor( parameterType )
+										.getJavaTypeClass();
 
 				if ( !areAssignmentCompatible( type, argumentType ) ) {
 					if ( log.isDebugEnabled() ) {

@@ -79,10 +79,8 @@ public class PluralAttributeBuilder<D, C, E, K> {
 				isGeneric,
 				attributeMetadata.getAttributeClassification(),
 				attributeMetadata.getCollectionClassification(),
-				(SqmDomainType<?>) determineSimpleType(
-						attributeMetadata.getElementValueContext(),
-						metadataContext
-				),
+				(SqmDomainType<?>) // TODO: this typecast is very ugly and fragile
+						determineSimpleType( attributeMetadata.getElementValueContext(), metadataContext ),
 				determineListIndexOrMapKeyType( attributeMetadata, metadataContext ),
 				attributeMetadata.getOwnerType(),
 				attributeMetadata.getPropertyMapping(),

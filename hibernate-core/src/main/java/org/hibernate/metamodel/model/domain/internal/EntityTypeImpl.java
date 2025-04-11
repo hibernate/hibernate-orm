@@ -78,7 +78,7 @@ public class EntityTypeImpl<J>
 		final SqmDomainType<?> discriminatorType =
 				discriminatorMetadata != null
 						? (SqmDomainType<?>) discriminatorMetadata.getResolutionType()
-						: (SqmDomainType<?>) metamodel.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
+						: metamodel.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
 
 		discriminatorPathSource = discriminatorType == null ? null
 				: new EntityDiscriminatorSqmPathSource<>( discriminatorType, this, entityDescriptor );

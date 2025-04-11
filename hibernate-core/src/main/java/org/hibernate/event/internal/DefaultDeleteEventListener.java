@@ -21,6 +21,7 @@ import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Nullability.NullabilityCheckType;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Status;
@@ -101,8 +102,12 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 				final Object id = lazyInitializer.getIdentifier();
 				final EntityKey key = source.generateEntityKey( id, persister );
 				final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-				if ( !persistenceContext.containsEntity( key )
+				final EntityHolder entityHolder = persistenceContext.getEntityHolder( key );
+				if ( (entityHolder == null || entityHolder.getEntity() == null || !entityHolder.isInitialized())
 						&& canBeDeletedWithoutLoading( source, persister ) ) {
+					if ( event.getFactory().getSessionFactoryOptions().isJpaBootstrap() && entityHolder == null ) {
+						throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
+					}
 					// optimization for deleting certain entities without loading them
 					persistenceContext.reassociateProxy( object, id );
 					if ( !persistenceContext.containsDeletedUnloadedEntityKey( key ) ) {
@@ -166,6 +171,9 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 
 	private void deleteDetachedEntity(
 			DeleteEvent event, DeleteContext transientEntities, Object entity, EntityPersister persister, EventSource source) {
+		if ( source.getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
+			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
+		}
 		final Object id = persister.getIdentifier( entity, source );
 		if ( id == null ) {
 			throw new TransientObjectException( "Cannot delete instance of entity '"

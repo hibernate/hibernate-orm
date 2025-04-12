@@ -15,12 +15,16 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 
 /**
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.query.spi.QueryEngineOptions
  */
 public interface QuerySettings {
 	/**
 	 * Boolean setting to control if the use of tech preview JSON functions in HQL is enabled.
 	 *
 	 * @settingDefault {@code false} (disabled) since the functions are still incubating.
+	 *
+	 * @see org.hibernate.query.spi.QueryEngineOptions#isJsonFunctionsEnabled
 	 *
 	 * @since 7.0
 	 */
@@ -31,6 +35,8 @@ public interface QuerySettings {
 	 * Boolean setting to control if the use of tech preview XML functions in HQL is enabled.
 	 *
 	 * @settingDefault {@code false} (disabled) since the functions are still incubating.
+	 *
+	 * @see org.hibernate.query.spi.QueryEngineOptions#isXmlFunctionsEnabled
 	 *
 	 * @since 7.0
 	 */
@@ -44,6 +50,8 @@ public interface QuerySettings {
 	 *
 	 * @settingDefault {@code false}
 	 *
+	 * @see org.hibernate.query.spi.QueryEngineOptions#isPortableIntegerDivisionEnabled
+	 *
 	 * @since 6.5
 	 */
 	String PORTABLE_INTEGER_DIVISION = "hibernate.query.hql.portable_integer_division";
@@ -51,24 +59,32 @@ public interface QuerySettings {
 	/**
 	 * Specifies a {@link org.hibernate.query.hql.HqlTranslator} to use for HQL query
 	 * translation.
+	 *
+	 * @see org.hibernate.query.spi.QueryEngineOptions#getCustomHqlTranslator
 	 */
 	String SEMANTIC_QUERY_PRODUCER = "hibernate.query.hql.translator";
 
 	/**
 	 * Specifies a {@link org.hibernate.query.sqm.sql.SqmTranslatorFactory} to use for
 	 * HQL query translation.
+	 *
+	 * @see org.hibernate.query.spi.QueryEngineOptions#getCustomSqmTranslatorFactory
 	 */
 	String SEMANTIC_QUERY_TRANSLATOR = "hibernate.query.sqm.translator";
 
 	/**
 	 * Defines the "global" strategy to use for handling HQL and Criteria mutation queries.
-	 * Specifies a {@link org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy}..
+	 * Specifies a {@link org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy}.
+	 *
+	 * @see org.hibernate.query.spi.QueryEngineOptions#getCustomSqmMultiTableMutationStrategy
 	 */
 	String QUERY_MULTI_TABLE_MUTATION_STRATEGY = "hibernate.query.mutation_strategy";
 
 	/**
 	 * Defines the "global" strategy to use for handling HQL and Criteria insert queries.
 	 * Specifies a {@link org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy}.
+	 *
+	 * @see org.hibernate.query.spi.QueryEngineOptions#getCustomSqmMultiTableInsertStrategy
 	 */
 	String QUERY_MULTI_TABLE_INSERT_STRATEGY = "hibernate.query.insert_strategy";
 
@@ -116,6 +132,7 @@ public interface QuerySettings {
 	 * @see jakarta.persistence.criteria.CriteriaBuilder#literal(Object)
 	 * @see jakarta.persistence.criteria.CriteriaBuilder#parameter(Class)
 	 * @see org.hibernate.query.criteria.HibernateCriteriaBuilder#value(Object)
+	 * @see org.hibernate.query.spi.QueryEngineOptions#getCriteriaValueHandlingMode
 	 */
 	String CRITERIA_VALUE_HANDLING_MODE = "hibernate.criteria.value_handling_mode";
 
@@ -216,6 +233,7 @@ public interface QuerySettings {
 	 * @since 5.2
 	 *
 	 * @see ImmutableEntityUpdateQueryHandlingMode
+	 * @see org.hibernate.query.spi.QueryEngineOptions#getImmutableEntityUpdateQueryHandlingMode
 	 */
 	String IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE = "hibernate.query.immutable_entity_update_query_handling_mode";
 

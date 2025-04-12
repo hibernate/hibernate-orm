@@ -49,7 +49,7 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.BindingContext;
 import org.hibernate.metamodel.model.domain.ReturnableType;

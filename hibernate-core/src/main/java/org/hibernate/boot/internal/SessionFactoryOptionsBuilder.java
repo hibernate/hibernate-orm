@@ -63,7 +63,7 @@ import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;

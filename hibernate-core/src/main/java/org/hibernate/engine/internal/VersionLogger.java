@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.internal;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -22,6 +23,7 @@ import static org.jboss.logging.Logger.Level.TRACE;
 		name = VersionLogger.LOGGER_NAME,
 		description = "Logging related to versioning"
 )
+@Internal
 public interface VersionLogger extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".versioning";
 	VersionLogger INSTANCE = Logger.getMessageLogger( MethodHandles.lookup(), VersionLogger.class, LOGGER_NAME );

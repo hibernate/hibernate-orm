@@ -4,6 +4,7 @@
  */
 package org.hibernate.loader;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.Logger;
@@ -20,6 +21,7 @@ import org.jboss.logging.Logger;
 		description = "Logging related to loaders of domain model references (`org.hibernate.loader.ast.spi.Loader`); " +
 				"see also `" + SubSystemLogging.BASE + ".results`"
 )
+@Internal
 public interface LoaderLogging {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".loader";
 

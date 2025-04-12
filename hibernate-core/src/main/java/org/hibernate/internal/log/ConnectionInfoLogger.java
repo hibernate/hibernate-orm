@@ -7,6 +7,7 @@ package org.hibernate.internal.log;
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 
+import org.hibernate.Internal;
 import org.hibernate.cfg.JdbcSettings;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -29,6 +30,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 		name = ConnectionInfoLogger.LOGGER_NAME,
 		description = "Logging related to connection pooling"
 )
+@Internal
 public interface ConnectionInfoLogger extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".connections.pooling";
 

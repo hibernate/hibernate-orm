@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.jdbc;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.BasicLogger;
@@ -28,6 +29,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 )
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange(min = 100001, max = 100500)
+@Internal
 public interface JdbcLogging extends BasicLogger {
 	String NAME = "org.hibernate.orm.jdbc";
 

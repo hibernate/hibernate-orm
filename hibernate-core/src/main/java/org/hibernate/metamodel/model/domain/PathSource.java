@@ -4,9 +4,18 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import jakarta.persistence.metamodel.Bindable;
 import org.hibernate.spi.NavigablePath;
 
+/**
+ * Any element of the domain model which can be used to create an
+ * element of a path expression in a query.
+ *
+ * @param <J> The type of path element this source creates.
+ *
+ * @since 7.0
+ *
+ * @author Gavin King
+ */
 public interface PathSource<J> {
 	/**
 	 * The name of this thing.
@@ -17,8 +26,6 @@ public interface PathSource<J> {
 
 	/**
 	 * The type of path this source creates.
-	 *
-	 * @apiNote Analogous to {@link Bindable#getBindableJavaType()}.
 	 */
 	DomainType<J> getPathType();
 

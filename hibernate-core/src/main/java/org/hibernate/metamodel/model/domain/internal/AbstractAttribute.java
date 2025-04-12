@@ -11,10 +11,15 @@ import java.lang.reflect.Member;
 import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.metamodel.AttributeClassification;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -25,7 +30,8 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,J>, Serializable {
+public abstract class AbstractAttribute<D,J,B>
+		implements SqmPersistentAttribute<D,J>, Serializable {
 	private final ManagedDomainType<D> declaringType;
 	private final String name;
 	private final JavaType<J> attributeJtd;
@@ -94,6 +100,26 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 	@Override
 	public DomainType<?> getValueGraphType() {
 		return valueType;
+	}
+
+	NavigablePath getParentNavigablePath(SqmPath<?> parent) {
+		final var parentPathSource = parent.getResolvedModel();
+		final var parentType = parentPathSource.getPathType();
+		final NavigablePath parentNavigablePath =
+				parentPathSource instanceof PluralPersistentAttribute<?, ?, ?>
+						// for collections, implicitly navigate to the element
+						? parent.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() )
+						: parent.getNavigablePath();
+		if ( parentType != declaringType
+				&& parentType instanceof EntityDomainType<?> entityDomainType
+				&& entityDomainType.findAttribute( name ) == null ) {
+			// If the parent path is an entity type which does not contain the
+			// joined attribute add an implicit treat to the parent's navigable path
+			return parentNavigablePath.treatAs( declaringType.getTypeName() );
+		}
+		else {
+			return parentNavigablePath;
+		}
 	}
 
 	@Override

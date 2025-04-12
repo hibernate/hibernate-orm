@@ -4,10 +4,13 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
 
-public interface SqmTreatableDomainType<T> extends TreatableDomainType<T>, SqmPathSource<T>, SqmDomainType<T> {
+@Incubating
+public interface SqmTreatableDomainType<T>
+		extends TreatableDomainType<T>, SqmPathSource<T>, SqmManagedDomainType<T> {
 	@Override
 	SqmDomainType<T> getSqmType();
 

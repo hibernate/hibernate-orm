@@ -45,7 +45,7 @@ import static java.util.Comparator.comparing;
 public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 
 	private final Set<EntityDomainType<? extends T>> implementors;
-	private final Map<String, PersistentAttribute<? super T,?>> commonAttributes;
+	private final Map<String, SqmPersistentAttribute<? super T,?>> commonAttributes;
 
 	private final JavaType<T> polymorphicJavaType;
 	private final JpaMetamodel jpaMetamodel;
@@ -70,8 +70,8 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	 * The attributes of a "polymorphic" root are the attributes which are
 	 * common to all subtypes of the root type.
 	 */
-	private Map<String, PersistentAttribute<? super T, ?>> inferCommonAttributes(Set<EntityDomainType<? extends T>> implementors) {
-		final Map<String, PersistentAttribute<? super T,?>> workMap = new HashMap<>();
+	private Map<String, SqmPersistentAttribute<? super T, ?>> inferCommonAttributes(Set<EntityDomainType<? extends T>> implementors) {
+		final Map<String, SqmPersistentAttribute<? super T,?>> workMap = new HashMap<>();
 		final ArrayList<EntityDomainType<?>> implementorsList = new ArrayList<>(implementors);
 		final EntityDomainType<?> firstImplementor = implementorsList.get( 0 );
 		if ( implementorsList.size() == 1 ) {
@@ -102,8 +102,8 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	 * type cast is actually perfectly correct.
 	 */
 	@SuppressWarnings("unchecked")
-	private PersistentAttribute<? super T, ?> promote(PersistentAttribute<?, ?> attribute) {
-		return (PersistentAttribute<? super T, ?>) attribute;
+	private SqmPersistentAttribute<? super T, ?> promote(PersistentAttribute<?, ?> attribute) {
+		return (SqmPersistentAttribute<? super T, ?>) attribute;
 	}
 
 	private static boolean isACommonAttribute(List<EntityDomainType<?>> subList, PersistentAttribute<?, ?> attribute) {
@@ -176,12 +176,12 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	// Attribute handling
 
 	@Override
-	public PersistentAttribute<? super T, ?> findAttribute(String name) {
+	public SqmPersistentAttribute<? super T, ?> findAttribute(String name) {
 		return commonAttributes.get( name );
 	}
 
 	@Override
-	public PersistentAttribute<?, ?> findSubTypesAttribute(String name) {
+	public SqmPersistentAttribute<?, ?> findSubTypesAttribute(String name) {
 		return commonAttributes.get( name );
 	}
 
@@ -195,8 +195,8 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	}
 
 	@Override
-	public PersistentAttribute<? super T, ?> getAttribute(String name) {
-		final PersistentAttribute<? super T, ?> attribute = findAttribute( name );
+	public SqmPersistentAttribute<? super T, ?> getAttribute(String name) {
+		final var attribute = findAttribute( name );
 		if ( attribute == null ) {
 			// per-JPA
 			throw new IllegalArgumentException();
@@ -205,42 +205,42 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	}
 
 	@Override
-	public PersistentAttribute<T, ?> getDeclaredAttribute(String name) {
+	public SqmPersistentAttribute<T, ?> getDeclaredAttribute(String name) {
 		throw new IllegalArgumentException();
 	}
 
 	@Override
-	public SingularPersistentAttribute<? super T, ?> findSingularAttribute(String name) {
-		return (SingularPersistentAttribute<? super T, ?>) findAttribute( name );
+	public SqmSingularPersistentAttribute<? super T, ?> findSingularAttribute(String name) {
+		return (SqmSingularPersistentAttribute<? super T, ?>) findAttribute( name );
 	}
 
 	@Override
-	public PluralPersistentAttribute<? super T, ?, ?> findPluralAttribute(String name) {
-		return (PluralPersistentAttribute<? super T, ?, ?>) findAttribute( name );
+	public SqmPluralPersistentAttribute<? super T, ?, ?> findPluralAttribute(String name) {
+		return (SqmPluralPersistentAttribute<? super T, ?, ?>) findAttribute( name );
 	}
 
 	@Override
-	public PersistentAttribute<? super T, ?> findConcreteGenericAttribute(String name) {
+	public SqmPersistentAttribute<? super T, ?> findConcreteGenericAttribute(String name) {
 		return null;
 	}
 
 	@Override
-	public PersistentAttribute<T, ?> findDeclaredAttribute(String name) {
+	public SqmPersistentAttribute<T, ?> findDeclaredAttribute(String name) {
 		return null;
 	}
 
 	@Override
-	public SingularPersistentAttribute<T, ?> findDeclaredSingularAttribute(String name) {
+	public SqmSingularPersistentAttribute<T, ?> findDeclaredSingularAttribute(String name) {
 		return null;
 	}
 
 	@Override
-	public PluralPersistentAttribute<T, ?, ?> findDeclaredPluralAttribute(String name) {
+	public SqmPluralPersistentAttribute<T, ?, ?> findDeclaredPluralAttribute(String name) {
 		return null;
 	}
 
 	@Override
-	public PersistentAttribute<T, ?> findDeclaredConcreteGenericAttribute(String name) {
+	public SqmPersistentAttribute<T, ?> findDeclaredConcreteGenericAttribute(String name) {
 		return null;
 	}
 
@@ -344,7 +344,7 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 
 	@Override
 	public SingularAttribute<? super T, ?> getSingularAttribute(String name) {
-		return (SingularPersistentAttribute<? super T, ?>) getAttribute( name );
+		return (SqmSingularPersistentAttribute<? super T, ?>) getAttribute( name );
 	}
 
 	@Override

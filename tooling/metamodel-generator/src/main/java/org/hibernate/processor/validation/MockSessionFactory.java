@@ -61,7 +61,6 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.metamodel.model.domain.internal.AbstractAttribute;
 import org.hibernate.metamodel.model.domain.internal.AbstractPluralAttribute;
 import org.hibernate.metamodel.model.domain.internal.BagAttributeImpl;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
@@ -100,6 +99,7 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
+import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
 import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
@@ -907,7 +907,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public PersistentAttribute<X,?> findDeclaredAttribute(String name) {
+		public SqmPersistentAttribute<X,?> findDeclaredAttribute(String name) {
 			final String typeName = getTypeName();
 			return isFieldDefined(typeName, name)
 					? createAttribute(name, typeName, propertyType(typeName, name), this)
@@ -1018,8 +1018,8 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public PersistentAttribute<? super X, ?> findAttribute(String name) {
-			final PersistentAttribute<? super X, ?> attribute = super.findAttribute(name);
+		public SqmPersistentAttribute<? super X, ?> findAttribute(String name) {
+			final var attribute = super.findAttribute(name);
 			if (attribute != null) {
 				return attribute;
 			}
@@ -1030,7 +1030,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public PersistentAttribute<X,?> findDeclaredAttribute(String name) {
+		public SqmPersistentAttribute<X,?> findDeclaredAttribute(String name) {
 			final String entityName = getHibernateEntityName();
 			return isAttributeDefined(entityName, name)
 					? createAttribute(name, entityName, getReferencedPropertyType(entityName, name), this)
@@ -1040,7 +1040,7 @@ public abstract class MockSessionFactory
 
 	protected abstract String getJpaEntityName(String typeName);
 
-	private <T> AbstractAttribute<T,?,?> createAttribute(String name, String entityName, Type type, ManagedDomainType<T> owner) {
+	private <T> SqmPersistentAttribute<T,?> createAttribute(String name, String entityName, Type type, ManagedDomainType<T> owner) {
 		if (type==null) {
 			throw new UnsupportedOperationException(entityName + "." + name);
 		}
@@ -1204,7 +1204,7 @@ public abstract class MockSessionFactory
 		final JavaType<T> javaType = new UnknownBasicJavaType<>(null, compositeType.getReturnedClassName());
 		return new EmbeddableTypeImpl<>( javaType, null, null, true, metamodel.getJpaMetamodel() ) {
 			@Override
-			public PersistentAttribute<T, ?> findAttribute(String name) {
+			public SqmPersistentAttribute<T, ?> findAttribute(String name) {
 				return createAttribute(
 						name,
 						entityName,

@@ -10,7 +10,6 @@ import java.util.Collection;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -59,9 +58,9 @@ public class EmbeddableTypeImpl<J>
 	}
 
 	@Override
-	public Collection<? extends EmbeddableDomainType<? extends J>> getSubTypes() {
+	public Collection<? extends SqmEmbeddableDomainType<? extends J>> getSubTypes() {
 		//noinspection unchecked
-		return (Collection<? extends EmbeddableDomainType<? extends J>>) super.getSubTypes();
+		return (Collection<? extends SqmEmbeddableDomainType<? extends J>>) super.getSubTypes();
 	}
 
 	@Override

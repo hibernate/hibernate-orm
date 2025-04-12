@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+
 import jakarta.persistence.metamodel.Bindable;
 import jakarta.persistence.metamodel.IdentifiableType;
 import jakarta.persistence.metamodel.SingularAttribute;
@@ -26,6 +27,7 @@ import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
 import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -33,7 +35,7 @@ import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 
 import org.jboss.logging.Logger;
 
-import static java.util.Collections.emptySet;
+import static java.util.Collections.emptyList;
 
 /**
  * Functionality common to all implementations of {@link IdentifiableType}.
@@ -57,14 +59,14 @@ public abstract class AbstractIdentifiableType<J>
 	private final boolean hasIdClass;
 
 	private SqmSingularPersistentAttribute<J,?> id;
-	private Set<SingularPersistentAttribute<? super J,?>> nonAggregatedIdAttributes;
+	private List<SqmSingularPersistentAttribute<? super J,?>> nonAggregatedIdAttributes;
 	private SqmEmbeddableDomainType<?> idClassType;
 
 	private SqmPathSource<?> identifierDescriptor;
 
 	private final boolean isVersioned;
-	private SingularPersistentAttribute<J, ?> versionAttribute;
-	private List<PersistentAttribute<J,?>> naturalIdAttributes;
+	private SqmSingularPersistentAttribute<J, ?> versionAttribute;
+	private List<SqmPersistentAttribute<J,?>> naturalIdAttributes;
 
 	public AbstractIdentifiableType(
 			String typeName,
@@ -112,13 +114,13 @@ public abstract class AbstractIdentifiableType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <Y> SingularPersistentAttribute<? super J, Y> getId(Class<Y> javaType) {
+	public <Y> SqmSingularPersistentAttribute<? super J, Y> getId(Class<Y> javaType) {
 		ensureNoIdClass();
 		final var id = findIdAttribute();
 		if ( id != null ) {
 			checkType( id, javaType );
 		}
-		return (SingularPersistentAttribute<? super J, Y>) id;
+		return (SqmSingularPersistentAttribute<? super J, Y>) id;
 	}
 
 	private void ensureNoIdClass() {
@@ -131,7 +133,7 @@ public abstract class AbstractIdentifiableType<J>
 
 
 	@Override
-	public SingularPersistentAttribute<? super J, ?> findIdAttribute() {
+	public SqmSingularPersistentAttribute<? super J, ?> findIdAttribute() {
 		if ( id != null ) {
 			return id;
 		}
@@ -163,13 +165,13 @@ public abstract class AbstractIdentifiableType<J>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <Y> SingularPersistentAttribute<J, Y> getDeclaredId(Class<Y> javaType) {
+	public <Y> SqmSingularPersistentAttribute<J, Y> getDeclaredId(Class<Y> javaType) {
 		ensureNoIdClass();
 		if ( id == null ) {
 			throw new IllegalArgumentException( "The id attribute is not declared on this type [" + getTypeName() + "]" );
 		}
 		checkType( id, javaType );
-		return (SingularPersistentAttribute<J, Y>) id;
+		return (SqmSingularPersistentAttribute<J, Y>) id;
 	}
 
 	@Override
@@ -318,7 +320,7 @@ public abstract class AbstractIdentifiableType<J>
 	 *
 	 * @return The declared
 	 */
-	public SingularAttribute<J, ?> getDeclaredVersion() {
+	public SqmSingularPersistentAttribute<J, ?> getDeclaredVersion() {
 		checkDeclaredVersion();
 		return versionAttribute;
 	}
@@ -349,10 +351,12 @@ public abstract class AbstractIdentifiableType<J>
 			}
 
 			if ( idAttributes.isEmpty() ) {
-				nonAggregatedIdAttributes = emptySet();
+				nonAggregatedIdAttributes = emptyList();
 			}
 			else {
+				nonAggregatedIdAttributes = new ArrayList<>(idAttributes.size());
 				for ( var idAttribute : idAttributes ) {
+					nonAggregatedIdAttributes.add( (SqmSingularPersistentAttribute<? super J, ?>) idAttribute );
 					if ( AbstractIdentifiableType.this == idAttribute.getDeclaringType() ) {
 						@SuppressWarnings("unchecked")
 						// Safe, because we know it's declared  by this type
@@ -361,8 +365,6 @@ public abstract class AbstractIdentifiableType<J>
 						addAttribute( declaredAttribute );
 					}
 				}
-
-				nonAggregatedIdAttributes = idAttributes;
 			}
 			AbstractIdentifiableType.this.idClassType = (SqmEmbeddableDomainType<?>) idClassType;
 		}
@@ -374,7 +376,8 @@ public abstract class AbstractIdentifiableType<J>
 
 		@Override
 		public void applyVersionAttribute(SingularPersistentAttribute<J, ?> versionAttribute) {
-			AbstractIdentifiableType.this.versionAttribute = versionAttribute;
+			AbstractIdentifiableType.this.versionAttribute =
+					(SqmSingularPersistentAttribute<J, ?>) versionAttribute;
 			managedTypeAccess.addAttribute( versionAttribute );
 		}
 
@@ -383,7 +386,7 @@ public abstract class AbstractIdentifiableType<J>
 			if ( naturalIdAttributes == null ) {
 				naturalIdAttributes = new ArrayList<>();
 			}
-			naturalIdAttributes.add( naturalIdAttribute );
+			naturalIdAttributes.add( (SqmPersistentAttribute<J, ?>) naturalIdAttribute );
 		}
 
 		@Override

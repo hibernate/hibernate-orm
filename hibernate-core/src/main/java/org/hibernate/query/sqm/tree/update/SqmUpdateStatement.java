@@ -9,11 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCriteriaUpdate;
 import org.hibernate.query.criteria.JpaRoot;
@@ -133,17 +133,15 @@ public class SqmUpdateStatement<T>
 		final EntityPersister persister =
 				nodeBuilder().getMappingMetamodel().getEntityDescriptor( getTarget().getEntityName() );
 		if ( !persister.isMutable() ) {
-			final ImmutableEntityUpdateQueryHandlingMode mode =
-					nodeBuilder().getImmutableEntityUpdateQueryHandlingMode();
 			final String querySpaces = Arrays.toString( persister.getQuerySpaces() );
-			switch ( mode ) {
+			switch ( nodeBuilder().getImmutableEntityUpdateQueryHandlingMode() ) {
 				case WARNING:
 					LOG.immutableEntityUpdateQuery( hql, querySpaces );
 					break;
 				case EXCEPTION:
 					throw new HibernateException( "The query attempts to update an immutable entity: " + querySpaces );
 				default:
-					throw new UnsupportedOperationException( "The " + mode + " is not supported" );
+					throw new AssertionFailure( "Unrecognized mode" );
 			}
 		}
 	}

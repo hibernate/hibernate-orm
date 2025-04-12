@@ -6,6 +6,7 @@ package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.spi.QueryPlan;
 
 import jakarta.persistence.criteria.CriteriaDelete;
@@ -200,21 +201,21 @@ public interface QuerySettings {
 	/**
 	 * This setting defines how {@link org.hibernate.annotations.Immutable} entities
 	 * are handled when executing a bulk update query. Valid options are enumerated
-	 * by {@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode}:
+	 * by {@link ImmutableEntityUpdateQueryHandlingMode}:
 	 * <ul>
-	 *     <li>{@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#WARNING "warning"}
+	 *     <li>{@link ImmutableEntityUpdateQueryHandlingMode#WARNING "warning"}
 	 *     specifies that a warning log message is issued when an
 	 *     {@linkplain org.hibernate.annotations.Immutable immutable} entity is to be
 	 *     updated via a bulk update statement, and
-	 *     <li>{@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#EXCEPTION "exception"}
+	 *     <li>{@link ImmutableEntityUpdateQueryHandlingMode#EXCEPTION "exception"}
 	 *     specifies that a {@link org.hibernate.HibernateException} should be thrown.
 	 * </ul>
 	 *
-	 * @settingDefault {@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#WARNING "warning"}
+	 * @settingDefault {@link ImmutableEntityUpdateQueryHandlingMode#WARNING "warning"}
 	 *
-	 * @since 5.2.17
+	 * @since 5.2
 	 *
-	 * @see org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode
+	 * @see ImmutableEntityUpdateQueryHandlingMode
 	 */
 	String IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE = "hibernate.query.immutable_entity_update_query_handling_mode";
 

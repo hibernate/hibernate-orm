@@ -7,7 +7,6 @@ package org.hibernate.query.spi;
 import java.util.Map;
 
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;

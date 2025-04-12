@@ -10,17 +10,23 @@ import com.fasterxml.classmate.ResolvedType;
 import jakarta.persistence.AttributeConverter;
 
 /**
- * Boot-time descriptor of a JPA AttributeConverter
+ * Boot-time descriptor of a JPA {@linkplain AttributeConverter converter}.
  *
  * @author Steve Ebersole
+ *
+ * @param <X> The entity attribute type
+ * @param <Y> The converted type
+ *
+ * @see AttributeConverter
+ * @see ConverterRegistry
  */
 public interface ConverterDescriptor<X,Y> {
 	String TYPE_NAME_PREFIX = "converted::";
 
 	/**
-	 * The AttributeConverter class
+	 * The class of the JPA {@link AttributeConverter}.
 	 */
-	Class<? extends AttributeConverter<? extends X,? extends Y>> getAttributeConverterClass();
+	Class<? extends AttributeConverter<X,Y>> getAttributeConverterClass();
 
 	/**
 	 * The resolved Classmate type descriptor for the conversion's domain type
@@ -33,7 +39,9 @@ public interface ConverterDescriptor<X,Y> {
 	ResolvedType getRelationalValueResolvedType();
 
 	/**
-	 * Get the auto-apply checker for this converter.  Should never return `null` - prefer
+	 * Get the auto-apply checker for this converter.
+	 * <p>
+	 * Should never return {@code null}. If the converter is not auto-applied, return
 	 * {@link org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorBypassedImpl#INSTANCE}
 	 * instead.
 	 */

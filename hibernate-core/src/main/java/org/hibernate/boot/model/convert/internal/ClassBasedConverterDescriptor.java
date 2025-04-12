@@ -16,23 +16,26 @@ import jakarta.persistence.AttributeConverter;
  *
  * @author Steve Ebersole
  */
-public class ClassBasedConverterDescriptor<X,Y> extends AbstractConverterDescriptor<X,Y> {
+class ClassBasedConverterDescriptor<X,Y> extends AbstractConverterDescriptor<X,Y> {
 
-	public ClassBasedConverterDescriptor(
-			Class<? extends AttributeConverter<? extends X,? extends Y>> converterClass,
-			ClassmateContext classmateContext) {
-		super( converterClass, null, classmateContext );
-	}
+	private final boolean overrideable;
 
-	public ClassBasedConverterDescriptor(
-			Class<? extends AttributeConverter<? extends X,? extends Y>> converterClass,
+	ClassBasedConverterDescriptor(
+			Class<? extends AttributeConverter<X,Y>> converterClass,
 			Boolean forceAutoApply,
-			ClassmateContext classmateContext) {
+			ClassmateContext classmateContext,
+			boolean overrideable) {
 		super( converterClass, forceAutoApply, classmateContext );
+		this.overrideable = overrideable;
 	}
 
 	@Override
-	protected ManagedBean<? extends AttributeConverter<? extends X, ? extends Y>>
+	public boolean overrideable() {
+		return overrideable;
+	}
+
+	@Override
+	protected ManagedBean<? extends AttributeConverter<X,Y>>
 	createManagedBean(JpaAttributeConverterCreationContext context) {
 		return context.getManagedBeanRegistry().getBean( getAttributeConverterClass() );
 	}

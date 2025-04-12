@@ -29,7 +29,7 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -239,7 +239,7 @@ public class ScanningCoordinator {
 				final Class<? extends AttributeConverter<?, ?>> converterClass =
 						classLoaderService.classForName( classDescriptor.getName() );
 				managedResources.addAttributeConverterDefinition(
-						new ClassBasedConverterDescriptor<>( converterClass, bootstrapContext.getClassmateContext() )
+						ConverterDescriptors.of( converterClass, bootstrapContext.getClassmateContext() )
 				);
 			}
 			else if ( classDescriptor.getCategorization() == ClassDescriptor.Categorization.MODEL ) {

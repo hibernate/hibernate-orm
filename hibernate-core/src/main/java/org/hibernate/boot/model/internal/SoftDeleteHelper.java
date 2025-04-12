@@ -6,7 +6,8 @@ package org.hibernate.boot.model.internal;
 
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
@@ -72,8 +73,8 @@ public class SoftDeleteHelper {
 			softDeleteIndicatorValue.setImplicitJavaTypeAccess( (typeConfiguration) -> Instant.class );
 		}
 		else {
-			final ClassBasedConverterDescriptor<Boolean,?> converterDescriptor =
-					new ClassBasedConverterDescriptor<>( softDeleteConfig.converter(),
+			final ConverterDescriptor<Boolean,?> converterDescriptor =
+					ConverterDescriptors.of( softDeleteConfig.converter(),
 							context.getBootstrapContext().getClassmateContext() );
 			softDeleteIndicatorValue.setJpaAttributeConverterDescriptor( converterDescriptor );
 			softDeleteIndicatorValue.setImplicitJavaTypeAccess(

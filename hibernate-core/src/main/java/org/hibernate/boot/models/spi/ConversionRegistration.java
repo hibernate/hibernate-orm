@@ -101,11 +101,20 @@ public class ConversionRegistration {
 				void.class.equals( explicitDomainType )
 						? resolvedParamTypes.get( 0 )
 						: classmateContext.getTypeResolver().resolve( explicitDomainType );
-		return new ConverterDescriptorImpl<>( converterType, domainTypeToMatch, relationalType, autoApply );
+		return converterDescriptor( converterType, domainTypeToMatch, relationalType, autoApply );
+	}
+
+	static <X,Y> ConverterDescriptor<X,Y> converterDescriptor(
+			Class<? extends AttributeConverter<? extends X, ? extends Y>> converterType,
+			ResolvedType domainTypeToMatch, ResolvedType relationalType, boolean autoApply) {
+		@SuppressWarnings("unchecked") // work around weird fussiness in wildcard capture
+		final Class<? extends AttributeConverter<X, Y>> converterClass =
+				(Class<? extends AttributeConverter<X, Y>>) converterType;
+		return new ConverterDescriptorImpl<>( converterClass, domainTypeToMatch, relationalType, autoApply );
 	}
 
 	private static class ConverterDescriptorImpl<X,Y> implements ConverterDescriptor<X,Y> {
-		private final Class<? extends AttributeConverter<? extends X, ? extends Y>> converterType;
+		private final Class<? extends AttributeConverter<X, Y>> converterType;
 		private final ResolvedType domainTypeToMatch;
 		private final ResolvedType relationalType;
 		private final boolean autoApply;
@@ -113,7 +122,7 @@ public class ConversionRegistration {
 		private final AutoApplicableConverterDescriptor autoApplyDescriptor;
 
 		public ConverterDescriptorImpl(
-				Class<? extends AttributeConverter<? extends X, ? extends Y>> converterType,
+				Class<? extends AttributeConverter<X, Y>> converterType,
 				ResolvedType domainTypeToMatch,
 				ResolvedType relationalType,
 				boolean autoApply) {
@@ -128,7 +137,7 @@ public class ConversionRegistration {
 		}
 
 		@Override
-		public Class<? extends AttributeConverter<? extends X, ? extends Y>> getAttributeConverterClass() {
+		public Class<? extends AttributeConverter<X,Y>> getAttributeConverterClass() {
 			return converterType;
 		}
 

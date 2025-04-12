@@ -636,9 +636,14 @@ public interface CoreMessageLogger extends BasicLogger {
 	void attemptToAssociateProxyWithTwoOpenSessions(String entityName, Object id);
 
 	@LogMessage(level = WARN)
-	@Message(value = "The query: [%s] attempts to update an immutable entity: %s",
+	@Message(value = "The query [%s] updates an immutable entity: %s",
 			id = 487)
 	void immutableEntityUpdateQuery(String sourceQuery, String querySpaces);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "The query [%s] updates an immutable entity: %s",
+			id = 488)
+	void immutableEntityUpdateQueryAllowed(String sourceQuery, String querySpaces);
 
 	@LogMessage(level = INFO)
 	@Message(value = "No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)", id = 489)

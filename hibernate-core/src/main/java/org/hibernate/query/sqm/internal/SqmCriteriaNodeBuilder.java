@@ -190,7 +190,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	private final transient JpaCompliance jpaCompliance;
 	private final transient QueryEngine queryEngine;
 	private final transient ValueHandlingMode criteriaValueHandlingMode;
-	private final transient boolean disallowImmutableEntityUpdate;
+	private final transient ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 	private final transient BindingContext bindingContext;
 	private transient BasicType<Boolean> booleanType;
 	private transient BasicType<Integer> integerType;
@@ -211,7 +211,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		this.name = name;
 		this.jpaCompliance = options.getJpaCompliance();
 		this.criteriaValueHandlingMode = options.getCriteriaValueHandlingMode();
-		this.disallowImmutableEntityUpdate = options.disallowImmutableEntityUpdate();
+		this.immutableEntityUpdateQueryHandlingMode = options.getImmutableEntityUpdateQueryHandlingMode();
 		this.bindingContext = bindingContext;
 		this.extensions = loadExtensions();
 	}
@@ -245,16 +245,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return jpaCompliance;
 	}
 
-	@Override
+	@Override @Deprecated
 	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
-		return disallowImmutableEntityUpdate
-				? ImmutableEntityUpdateQueryHandlingMode.EXCEPTION
-				: ImmutableEntityUpdateQueryHandlingMode.WARNING;
+		return immutableEntityUpdateQueryHandlingMode;
 	}
 
 	@Override
-	public boolean disallowImmutableEntityUpdate() {
-		return disallowImmutableEntityUpdate;
+	public boolean allowImmutableEntityUpdate() {
+		return immutableEntityUpdateQueryHandlingMode != ImmutableEntityUpdateQueryHandlingMode.EXCEPTION;
 	}
 
 	@Override

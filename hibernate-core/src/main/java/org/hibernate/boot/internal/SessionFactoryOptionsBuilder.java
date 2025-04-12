@@ -1139,8 +1139,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public boolean disallowImmutableEntityUpdate() {
-		return immutableEntityUpdateQueryHandlingMode == ImmutableEntityUpdateQueryHandlingMode.EXCEPTION;
+	public boolean allowImmutableEntityUpdate() {
+		return immutableEntityUpdateQueryHandlingMode != ImmutableEntityUpdateQueryHandlingMode.EXCEPTION;
 	}
 
 	@Override

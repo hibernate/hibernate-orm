@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
@@ -133,11 +134,19 @@ public class SqmUpdateStatement<T>
 				nodeBuilder().getMappingMetamodel().getEntityDescriptor( getTarget().getEntityName() );
 		if ( !persister.isMutable() ) {
 			final String querySpaces = Arrays.toString( persister.getQuerySpaces() );
-			if ( nodeBuilder().disallowImmutableEntityUpdate() ) {
-				throw new HibernateException( "The query attempts to update an immutable entity: " + querySpaces );
-			}
-			else {
-				LOG.immutableEntityUpdateQuery( hql, querySpaces );
+			switch ( nodeBuilder().getImmutableEntityUpdateQueryHandlingMode() ) {
+				case ALLOW :
+					LOG.immutableEntityUpdateQueryAllowed( hql, querySpaces );
+					break;
+				case WARNING:
+					LOG.immutableEntityUpdateQuery( hql, querySpaces );
+					break;
+				case EXCEPTION:
+					throw new HibernateException( "The query attempts to update an immutable entity: "
+												+ querySpaces
+												+ " (set '"
+												+ AvailableSettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE
+												+ "' to suppress)");
 			}
 		}
 	}

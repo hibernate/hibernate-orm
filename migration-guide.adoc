@@ -623,6 +623,16 @@ In Hibernate 7, these SQL `UPDATE` statements only occur if the `@OrderColumn` i
 
 Starting in 7.0, when `ValidationMode#AUTO` is specified and a Bean Validation provider is available but creating the `ValidatorFactory` results in an exception, that exception is now propagated (re-thrown).
 
+[[update-immutable-entity]]
+=== Update queries affecting immutable entities
+
+Previously, `hibernate.query.immutable_entity_update_query_handling_mode` defaulted to `warning`, and update and delete queries affecting immutable entities were allowed.
+Now, by default, such update and delete queries result in an exception.
+Set:
+
+    hibernate.query.immutable_entity_update_query_handling_mode=allow
+
+to suppress this error and re-allow bulk update for immutable entities.
 
 
 

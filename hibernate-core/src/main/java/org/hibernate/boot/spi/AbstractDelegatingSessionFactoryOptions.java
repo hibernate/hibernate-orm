@@ -414,8 +414,8 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public boolean disallowImmutableEntityUpdate() {
-		return delegate.disallowImmutableEntityUpdate();
+	public boolean allowImmutableEntityUpdate() {
+		return delegate.allowImmutableEntityUpdate();
 	}
 
 	@Override

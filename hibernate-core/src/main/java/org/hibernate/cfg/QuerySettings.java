@@ -216,19 +216,19 @@ public interface QuerySettings {
 	String FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH = "hibernate.query.fail_on_pagination_over_collection_fetch";
 
 	/**
-	 * This setting defines how {@link org.hibernate.annotations.Immutable} entities
-	 * are handled when executing a bulk update query. Valid options are enumerated
-	 * by {@link ImmutableEntityUpdateQueryHandlingMode}:
+	 * Controls how {@linkplain org.hibernate.annotations.Immutable immutable}
+	 * entities are handled when executing a bulk update or delete query. Valid
+	 * options are enumerated by {@link ImmutableEntityUpdateQueryHandlingMode}:
 	 * <ul>
-	 *     <li>{@link ImmutableEntityUpdateQueryHandlingMode#WARNING "warning"}
-	 *     specifies that a warning log message is issued when an
-	 *     {@linkplain org.hibernate.annotations.Immutable immutable} entity is to be
-	 *     updated via a bulk update statement, and
+	 *     <li>{@link ImmutableEntityUpdateQueryHandlingMode#ALLOW "allow"} specifies
+	 *     that bulk updates and deletes of immutable entities are allowed, and
 	 *     <li>{@link ImmutableEntityUpdateQueryHandlingMode#EXCEPTION "exception"}
-	 *     specifies that a {@link org.hibernate.HibernateException} should be thrown.
+	 *     specifies that a {@link org.hibernate.HibernateException} is thrown.
 	 * </ul>
 	 *
-	 * @settingDefault {@link ImmutableEntityUpdateQueryHandlingMode#WARNING "warning"}
+	 * @settingDefault {@link ImmutableEntityUpdateQueryHandlingMode#EXCEPTION "exception"}
+	 *
+	 * @apiNote The default for this setting was inverted in Hibernate 7.
 	 *
 	 * @since 5.2
 	 *

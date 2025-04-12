@@ -13,6 +13,7 @@ import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmMappedSuperclassDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -96,8 +97,8 @@ public class MappedSuperclassTypeImpl<J>
 	}
 
 	@Override
-	public PersistentAttribute<? super J, ?> findAttribute(String name) {
-		final PersistentAttribute<? super J, ?> attribute = super.findAttribute( name );
+	public SqmPersistentAttribute<? super J, ?> findAttribute(String name) {
+		final var attribute = super.findAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
 		}

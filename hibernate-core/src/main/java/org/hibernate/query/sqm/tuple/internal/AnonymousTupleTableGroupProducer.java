@@ -206,9 +206,9 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 						(NonAggregatedIdentifierMapping) identifierMapping
 				);
 			}
-			if ( existingModelPartContainer instanceof ToOneAttributeMapping ) {
+			if ( existingModelPart instanceof ToOneAttributeMapping toOneAttributeMapping ) {
 				// We take "ownership" of FK columns by reporting the derived table group is compatible
-				compatibleTableExpressions.add( ( (ToOneAttributeMapping) existingModelPart ).getIdentifyingColumnsTableExpression() );
+				compatibleTableExpressions.add( toOneAttributeMapping.getIdentifyingColumnsTableExpression() );
 			}
 			return new AnonymousTupleEntityValuedModelPart(
 					newIdentifierMapping,

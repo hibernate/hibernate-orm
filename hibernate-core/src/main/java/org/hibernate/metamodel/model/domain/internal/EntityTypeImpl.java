@@ -16,17 +16,17 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.domain.SqmManagedDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
 import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
@@ -162,7 +162,7 @@ public class EntityTypeImpl<J>
 
 	@Override
 	public SqmSingularPersistentAttribute<? super J, ?> findIdAttribute() {
-		return (SqmSingularPersistentAttribute<? super J, ?>) super.findIdAttribute();
+		return super.findIdAttribute();
 	}
 
 	@Override
@@ -195,10 +195,10 @@ public class EntityTypeImpl<J>
 		}
 	}
 
-	private PersistentAttribute<?, ?> findSubtypeAttribute(String name) {
-		PersistentAttribute<?,?> subtypeAttribute = null;
-		for ( ManagedDomainType<?> subtype : getSubTypes() ) {
-			final PersistentAttribute<?,?> candidate = subtype.findSubTypesAttribute( name );
+	private SqmPersistentAttribute<?, ?> findSubtypeAttribute(String name) {
+		SqmPersistentAttribute<?,?> subtypeAttribute = null;
+		for ( SqmManagedDomainType<?> subtype : getSubTypes() ) {
+			final SqmPersistentAttribute<?,?> candidate = subtype.findSubTypesAttribute( name );
 			if ( candidate != null ) {
 				if ( subtypeAttribute != null
 						&& !isCompatible( subtypeAttribute, candidate, metamodel.getMappingMetamodel() ) ) {
@@ -220,8 +220,8 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public PersistentAttribute<? super J, ?> findAttribute(String name) {
-		final PersistentAttribute<? super J, ?> attribute = super.findAttribute( name );
+	public SqmPersistentAttribute<? super J, ?> findAttribute(String name) {
+		final var attribute = super.findAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
 		}
@@ -244,9 +244,9 @@ public class EntityTypeImpl<J>
 	}
 
 	@Override
-	public Collection<? extends EntityDomainType<? extends J>> getSubTypes() {
+	public Collection<? extends SqmEntityDomainType<? extends J>> getSubTypes() {
 		//noinspection unchecked
-		return (Collection<? extends EntityDomainType<? extends J>>) super.getSubTypes();
+		return (Collection<? extends SqmEntityDomainType<? extends J>>) super.getSubTypes();
 	}
 
 	@Override

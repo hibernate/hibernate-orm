@@ -11,7 +11,6 @@ import jakarta.persistence.metamodel.Bindable;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PathSource;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
@@ -27,18 +26,13 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
  */
 public interface SqmPathSource<J>
 		extends SqmExpressible<J>, Bindable<J>, SqmExpressibleAccessor<J>, PathSource<J> {
-	/**
-	 * The name of this thing.
-	 *
-	 * @apiNote Mainly used in logging and when creating a {@link NavigablePath}.
-	 */
-	String getPathName();
 
 	/**
 	 * The type of {@linkplain SqmPath path} this source creates.
 	 *
 	 * @apiNote Analogous to {@link Bindable#getBindableJavaType()}.
 	 */
+	@Override
 	SqmDomainType<J> getPathType();
 
 	/**

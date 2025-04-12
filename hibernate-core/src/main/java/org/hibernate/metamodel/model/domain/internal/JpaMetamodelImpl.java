@@ -377,6 +377,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	public <T> T getJavaConstant(String className, String fieldName) {
 		try {
 			final Field referencedField = getJavaField( className, fieldName );
+			//noinspection unchecked
 			return (T) referencedField.get( null );
 		}
 		catch (NoSuchFieldException | IllegalAccessException e) {

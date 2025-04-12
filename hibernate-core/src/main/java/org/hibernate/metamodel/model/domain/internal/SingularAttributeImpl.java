@@ -11,8 +11,6 @@ import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
-import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
@@ -22,7 +20,6 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
-import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
@@ -40,6 +37,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBUTE;
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildSubNavigablePath;
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.determineAlias;
 
 /**
  * @author Emmanuel Bernard
@@ -190,19 +188,8 @@ public class SingularAttributeImpl<D,J>
 					"LHS cannot be null for a sub-navigable reference - " + getName()
 			);
 		}
-		final SqmPathSource<?> parentPathSource = parent.getResolvedModel();
-		NavigablePath navigablePath = parent.getNavigablePath();
-		if ( parentPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) {
-			navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
-		}
-		final DomainType<?> parentType = parentPathSource.getPathType();
-		if ( parentType != getDeclaringType() && parentType instanceof EntityDomainType &&
-				( (EntityDomainType<?>) parentType ).findSingularAttribute( getName() ) == null ) {
-			// If the parent path is an entity type which does not contain the joined attribute
-			// add an implicit treat to the parent's navigable path
-			navigablePath = navigablePath.treatAs( getDeclaringType().getTypeName() );
-		}
-		return buildSubNavigablePath( navigablePath, getName(), alias );
+
+		return buildSubNavigablePath( getParentNavigablePath( parent ), getName(), alias );
 	}
 
 	/**
@@ -240,17 +227,19 @@ public class SingularAttributeImpl<D,J>
 						"LHS cannot be null for a sub-navigable reference - " + getName()
 				);
 			}
-			NavigablePath navigablePath = parent.getNavigablePath();
-			if ( parent.getResolvedModel() instanceof PluralPersistentAttribute<?, ?, ?> ) {
-				navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
+			final SqmPathSource<?> parentPathSource = parent.getResolvedModel();
+			final NavigablePath parentNavigablePath =
+					parentPathSource instanceof PluralPersistentAttribute<?, ?, ?>
+							? parent.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() )
+							: parent.getNavigablePath();
+			if ( getDeclaringType() instanceof IdentifiableDomainType<?> declaringType
+					&& !declaringType.hasSingleIdAttribute() ) {
+				return new EntityIdentifierNavigablePath( parentNavigablePath, null )
+						.append( getName(), determineAlias( alias ) );
 			}
-			if ( getDeclaringType() instanceof IdentifiableDomainType<?> declaringType ) {
-				if ( !declaringType.hasSingleIdAttribute() ) {
-					return new EntityIdentifierNavigablePath( navigablePath, null )
-							.append( getName(), SqmCreationHelper.determineAlias( alias ) );
-				}
+			else {
+				return new EntityIdentifierNavigablePath( parentNavigablePath, determineAlias( alias ), getName() );
 			}
-			return new EntityIdentifierNavigablePath( navigablePath, SqmCreationHelper.determineAlias( alias ), getName() );
 		}
 	}
 

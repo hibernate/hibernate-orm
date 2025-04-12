@@ -225,6 +225,14 @@ All such cases though are already controllable by the application.
 
 The effect can also often be mitigated using Hibernate's bytecode-based laziness (possibly combined with `@ConcreteProxy`).
 
+[[domain-metamodel-layering]]
+=== Metamodel API layering
+
+The following changes were made to the package `org.hibernate.metamodel.model.domain` to remove layer-breakers.
+
+- Domain metamodel types no longer inherit `SqmExpressible` or `SqmPathSource`, and `PathSource` was introduced to compensate.
+- `DomainType` no longer extends `BiindableType`.
+
 [[jdbc-exceptions]]
 === JDBC exception interpretation
 

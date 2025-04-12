@@ -89,7 +89,7 @@ public interface QueryEngineOptions {
 	 * @see org.hibernate.cfg.QuerySettings#IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE
 	 *
 	 * @deprecated Since {@link ImmutableEntityUpdateQueryHandlingMode} is deprecated.
-	 *             Use {@link #disallowImmutableEntityUpdate} instead.
+	 *             Use {@link #allowImmutableEntityUpdate} instead.
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
 	ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode();
@@ -97,7 +97,7 @@ public interface QueryEngineOptions {
 	/**
 	 * @see org.hibernate.cfg.QuerySettings#IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE
 	 */
-	boolean disallowImmutableEntityUpdate();
+	boolean allowImmutableEntityUpdate();
 
 	/**
 	 * @see org.hibernate.cfg.AvailableSettings#JSON_FUNCTIONS_ENABLED

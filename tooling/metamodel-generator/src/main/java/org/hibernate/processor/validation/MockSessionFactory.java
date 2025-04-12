@@ -89,6 +89,7 @@ import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.named.NamedObjectRepository;
+import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.sql.internal.SqlTranslationEngineImpl;
@@ -578,6 +579,16 @@ public abstract class MockSessionFactory
 	@Override
 	public Integer getMaximumFetchDepth() {
 		return null;
+	}
+
+	@Override
+	public boolean allowImmutableEntityUpdate() {
+		return true;
+	}
+
+	@Override
+	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
+		return ImmutableEntityUpdateQueryHandlingMode.ALLOW;
 	}
 
 	@Override

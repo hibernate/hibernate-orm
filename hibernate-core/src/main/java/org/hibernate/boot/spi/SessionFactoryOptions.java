@@ -641,6 +641,10 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 */
 	CacheRetrieveMode getCacheRetrieveMode(Map<String, Object> properties);
 
+	/**
+	 * @see org.hibernate.cfg.CacheSettings#JAKARTA_SHARED_CACHE_RETRIEVE_MODE
+	 * @see org.hibernate.cfg.CacheSettings#JAKARTA_SHARED_CACHE_STORE_MODE
+	 */
 	CacheMode getInitialSessionCacheMode();
 
 	FlushMode getInitialSessionFlushMode();

@@ -190,6 +190,10 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 */
 	boolean isInitializeLazyStateOutsideTransactionsEnabled();
 
+	/**
+	 * This is unused and will be removed.
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	TempTableDdlTransactionHandling getTempTableDdlTransactionHandling();
 
 	/**
@@ -290,6 +294,12 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 */
 	boolean isAutoEvictCollectionCache();
 
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_AUTO
+	 *
+	 * @deprecated This is unused and will be removed.
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	SchemaAutoTooling getSchemaAutoTooling();
 
 	/**

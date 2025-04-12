@@ -263,7 +263,10 @@ public interface SessionFactoryBuilder {
 	 * to transaction handling.
 	 *
 	 * @see TempTableDdlTransactionHandling
+	 *
+	 * @deprecated This has no effect and will be removed.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
 
 	/**

@@ -443,6 +443,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			autoEvictCollectionCache = false;
 		}
 
+		// deprecated
 		try {
 			schemaAutoTooling = SchemaAutoTooling.interpret( (String) settings.get( AvailableSettings.HBM2DDL_AUTO ) );
 		}
@@ -450,6 +451,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			log.warn( e.getMessage() + "  Ignoring" );
 		}
 
+		// deprecated
 		final ExtractedDatabaseMetaData meta = jdbcServices.getExtractedMetaDataSupport();
 		if ( meta.doesDataDefinitionCauseTransactionCommit() ) {
 			tempTableDdlTransactionHandling =
@@ -936,7 +938,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return initializeLazyStateOutsideTransactions;
 	}
 
-	@Override
+	@Override @Deprecated
 	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
 		return tempTableDdlTransactionHandling;
 	}
@@ -1041,7 +1043,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return autoEvictCollectionCache;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SchemaAutoTooling getSchemaAutoTooling() {
 		return schemaAutoTooling;
 	}
@@ -1381,6 +1383,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.initializeLazyStateOutsideTransactions = enabled;
 	}
 
+	@Deprecated(forRemoval = true)
 	public void applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
 		this.tempTableDdlTransactionHandling = handling;
 	}

@@ -12,8 +12,11 @@ import java.util.Locale;
 /**
  * Defines the possible values for {@value AvailableSettings#HBM2DDL_AUTO}.
  *
+ * @deprecated This enumeration is currently unused and will be removed.
+ *
  * @author Steve Ebersole
  */
+@Deprecated(since = "7.0", forRemoval = true)
 public enum SchemaAutoTooling {
 	/**
 	 * Drop the schema and recreate it on {@code SessionFactory} startup.

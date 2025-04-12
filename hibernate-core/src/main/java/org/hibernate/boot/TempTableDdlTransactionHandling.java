@@ -9,7 +9,12 @@ package org.hibernate.boot;
  * transaction handling.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.dialect.Dialect#getTemporaryTableDdlTransactionHandling
+ *
+ * @deprecated All dialects currently use {@link #NONE}, so it's obsolete.
  */
+@Deprecated(since = "7.0")
 public enum TempTableDdlTransactionHandling {
 	/**
 	 * No handling of transactions is needed

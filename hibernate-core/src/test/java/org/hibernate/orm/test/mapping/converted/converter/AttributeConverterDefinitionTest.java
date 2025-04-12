@@ -5,7 +5,8 @@
 package org.hibernate.orm.test.mapping.converted.converter;
 
 import jakarta.persistence.AttributeConverter;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,8 +27,8 @@ class AttributeConverterDefinitionTest {
 	@ParameterizedTest
 	void test(Class<? extends AttributeConverter<?, ?>> attributeConverterClass, Class<?> expectedType) {
 		try (BootstrapContextImpl bootstrapContext = new BootstrapContextImpl()) {
-			final ClassBasedConverterDescriptor<?,?> converterDescriptor =
-					new ClassBasedConverterDescriptor<>( attributeConverterClass,
+			final ConverterDescriptor<?,?> converterDescriptor =
+					ConverterDescriptors.of( attributeConverterClass,
 							bootstrapContext.getClassmateContext() );
 			assertThat( converterDescriptor.getDomainValueResolvedType().getErasedType() )
 					.isEqualTo( expectedType );

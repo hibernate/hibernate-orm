@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -71,8 +71,8 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
 		final Class<? extends AttributeConverter<T, ?>> converterClass =
 				bootstrapContext.getClassLoaderService().classForName( converterClassName );
-		final ClassBasedConverterDescriptor<T,?> converterDescriptor =
-				new ClassBasedConverterDescriptor<>( converterClass, bootstrapContext.getClassmateContext() );
+		final ConverterDescriptor<T,?> converterDescriptor =
+				ConverterDescriptors.of( converterClass, bootstrapContext.getClassmateContext() );
 
 		return fromInternal(
 				explicitJtdAccess,

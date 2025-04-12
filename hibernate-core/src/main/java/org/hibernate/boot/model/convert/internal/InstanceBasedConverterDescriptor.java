@@ -18,16 +18,10 @@ import jakarta.persistence.AttributeConverter;
  *
  * @author Steve Ebersole
  */
-public class InstanceBasedConverterDescriptor<X,Y> extends AbstractConverterDescriptor<X,Y> {
+class InstanceBasedConverterDescriptor<X,Y> extends AbstractConverterDescriptor<X,Y> {
 	private final AttributeConverter<X,Y> converterInstance;
 
-	public InstanceBasedConverterDescriptor(
-			AttributeConverter<X,Y> converterInstance,
-			ClassmateContext classmateContext) {
-		this( converterInstance, null, classmateContext );
-	}
-
-	public InstanceBasedConverterDescriptor(
+	InstanceBasedConverterDescriptor(
 			AttributeConverter<X,Y> converterInstance,
 			Boolean forceAutoApply,
 			ClassmateContext classmateContext) {

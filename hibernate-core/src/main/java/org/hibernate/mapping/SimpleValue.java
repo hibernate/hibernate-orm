@@ -21,7 +21,7 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
@@ -287,13 +287,13 @@ public abstract class SimpleValue implements KeyValue {
 	void setAttributeConverterDescriptor(String typeName) {
 		final String converterClassName = typeName.substring( TYPE_NAME_PREFIX.length() );
 		final MetadataBuildingContext context = getBuildingContext();
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings("unchecked") // Completely safe
 		final Class<? extends AttributeConverter<?,?>> clazz =
 				(Class<? extends AttributeConverter<?,?>>)
 						classForName( AttributeConverter.class, converterClassName,
 								context.getBootstrapContext() );
 		attributeConverterDescriptor =
-				new ClassBasedConverterDescriptor( clazz, false,
+				ConverterDescriptors.of( clazz, null, false,
 						context.getBootstrapContext().getClassmateContext() );
 	}
 

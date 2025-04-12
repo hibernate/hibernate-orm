@@ -4,8 +4,6 @@
  */
 package org.hibernate.boot.model.convert.internal;
 
-import java.util.List;
-
 import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -23,25 +21,22 @@ import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveC
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractConverterDescriptor<X,Y> implements ConverterDescriptor<X,Y> {
-	private final Class<? extends AttributeConverter<? extends X,? extends Y>> converterClass;
+abstract class AbstractConverterDescriptor<X,Y> implements ConverterDescriptor<X,Y> {
+	private final Class<? extends AttributeConverter<X,Y>> converterClass;
 
 	private final ResolvedType domainType;
 	private final ResolvedType jdbcType;
 
 	private final AutoApplicableConverterDescriptor autoApplicableDescriptor;
 
-	public AbstractConverterDescriptor(
-			Class<? extends AttributeConverter<? extends X, ? extends Y>> converterClass,
+	AbstractConverterDescriptor(
+			Class<? extends AttributeConverter<X, Y>> converterClass,
 			Boolean forceAutoApply,
 			ClassmateContext classmateContext) {
 		this.converterClass = converterClass;
-
-		final List<ResolvedType> converterParamTypes =
-				resolveConverterClassParamTypes( converterClass, classmateContext );
+		final var converterParamTypes = resolveConverterClassParamTypes( converterClass, classmateContext );
 		domainType = converterParamTypes.get( 0 );
 		jdbcType = converterParamTypes.get( 1 );
-
 		autoApplicableDescriptor = resolveAutoApplicableDescriptor( converterClass, forceAutoApply );
 	}
 
@@ -66,7 +61,7 @@ public abstract class AbstractConverterDescriptor<X,Y> implements ConverterDescr
 	}
 
 	@Override
-	public Class<? extends AttributeConverter<? extends X,? extends Y>> getAttributeConverterClass() {
+	public Class<? extends AttributeConverter<X,Y>> getAttributeConverterClass() {
 		return converterClass;
 	}
 
@@ -88,8 +83,7 @@ public abstract class AbstractConverterDescriptor<X,Y> implements ConverterDescr
 	@Override
 	public JpaAttributeConverter<X,Y> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
 		return new JpaAttributeConverterImpl<>(
-				(ManagedBean<? extends AttributeConverter<X,Y>>)
-						createManagedBean( context ),
+				createManagedBean( context ),
 				context.getJavaTypeRegistry().getDescriptor( converterClass ),
 				getDomainClass(),
 				getRelationalClass(),
@@ -107,6 +101,6 @@ public abstract class AbstractConverterDescriptor<X,Y> implements ConverterDescr
 		return (Class<X>) getDomainValueResolvedType().getErasedType();
 	}
 
-	protected abstract ManagedBean<? extends AttributeConverter<? extends X,? extends Y>>
+	protected abstract ManagedBean<? extends AttributeConverter<X,Y>>
 	createManagedBean(JpaAttributeConverterCreationContext context);
 }

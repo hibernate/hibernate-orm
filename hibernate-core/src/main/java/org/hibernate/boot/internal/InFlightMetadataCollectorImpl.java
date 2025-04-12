@@ -23,7 +23,7 @@ import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.convert.internal.AttributeConverterManager;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterRegistry;
@@ -569,20 +569,13 @@ public class InFlightMetadataCollectorImpl
 	@Override
 	public void addAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
 		attributeConverterManager.addConverter(
-				new ClassBasedConverterDescriptor<>( converterClass, getClassmateContext() )
-		);
+				ConverterDescriptors.of( converterClass, null, false, getClassmateContext() ) );
 	}
 
 	@Override
 	public void addOverridableConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
 		attributeConverterManager.addConverter(
-				new ClassBasedConverterDescriptor<>( converterClass, getClassmateContext() ) {
-					@Override
-					public boolean overrideable() {
-						return true;
-					}
-				}
-		);
+				ConverterDescriptors.of( converterClass, null, true, getClassmateContext() ) );
 	}
 
 	@Override

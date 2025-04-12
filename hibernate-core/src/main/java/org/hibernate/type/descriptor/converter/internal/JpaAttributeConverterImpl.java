@@ -49,26 +49,33 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 		this.converterJtd = converterJtd;
 
 		final JavaTypeRegistry jtdRegistry = context.getJavaTypeRegistry();
-
 		jdbcJtd = jtdRegistry.getDescriptor( jdbcJavaType );
-		//noinspection unchecked
-		domainJtd = (JavaType<O>) jtdRegistry.resolveDescriptor(
+		domainJtd = jtdRegistry.resolveDescriptor( domainJavaType,
+				() -> getTypeDescriptor( attributeConverterBean, domainJavaType, context ) );
+	}
+
+	private JavaType<O> getTypeDescriptor(
+			ManagedBean<? extends AttributeConverter<O, R>> attributeConverterBean,
+			Class<O> domainJavaType,
+			JpaAttributeConverterCreationContext context) {
+		return RegistryHelper.INSTANCE.createTypeDescriptor(
 				domainJavaType,
-				() -> RegistryHelper.INSTANCE.createTypeDescriptor(
-						domainJavaType,
-						() -> {
-							final MutabilityPlan<Object> mutabilityPlan =
-									RegistryHelper.INSTANCE.determineMutabilityPlan(
-											attributeConverterBean.getBeanClass(),
-											context.getTypeConfiguration()
-									);
-							return mutabilityPlan != null
-									? mutabilityPlan
-									: new AttributeConverterMutabilityPlanImpl<>( this, true );
-						},
-						context.getTypeConfiguration()
-				)
+				() -> getMutabilityPlan( attributeConverterBean, context ),
+				context.getTypeConfiguration()
 		);
+	}
+
+	private MutabilityPlan<O> getMutabilityPlan(
+			ManagedBean<? extends AttributeConverter<O,R>> attributeConverterBean,
+			JpaAttributeConverterCreationContext context) {
+		final MutabilityPlan<O> mutabilityPlan =
+				RegistryHelper.INSTANCE.determineMutabilityPlan(
+						attributeConverterBean.getBeanClass(),
+						context.getTypeConfiguration()
+				);
+		return mutabilityPlan == null
+				? new AttributeConverterMutabilityPlanImpl<>( this, true )
+				: mutabilityPlan;
 	}
 
 	@Override

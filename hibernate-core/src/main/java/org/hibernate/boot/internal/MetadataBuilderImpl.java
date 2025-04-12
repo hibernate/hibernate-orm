@@ -33,8 +33,7 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
-import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
@@ -326,7 +325,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public void contributeAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
 		bootstrapContext.addAttributeConverterDescriptor(
-				new ClassBasedConverterDescriptor<>( converterClass, bootstrapContext.getClassmateContext() )
+				ConverterDescriptors.of( converterClass, bootstrapContext.getClassmateContext() )
 		);
 	}
 
@@ -389,7 +388,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public <O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass) {
 		bootstrapContext.addAttributeConverterDescriptor(
-				new ClassBasedConverterDescriptor<>( attributeConverterClass, bootstrapContext.getClassmateContext() )
+				ConverterDescriptors.of( attributeConverterClass, bootstrapContext.getClassmateContext() )
 		);
 		return this;
 	}
@@ -397,11 +396,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public <O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass, boolean autoApply) {
 		bootstrapContext.addAttributeConverterDescriptor(
-				new ClassBasedConverterDescriptor<>(
-						attributeConverterClass,
-						autoApply,
-						bootstrapContext.getClassmateContext()
-				)
+				ConverterDescriptors.of( attributeConverterClass, autoApply, false,
+						bootstrapContext.getClassmateContext() )
 		);
 		return this;
 	}
@@ -409,7 +405,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public <O,R> MetadataBuilder applyAttributeConverter(AttributeConverter<O,R> attributeConverter) {
 		bootstrapContext.addAttributeConverterDescriptor(
-				new InstanceBasedConverterDescriptor( attributeConverter, bootstrapContext.getClassmateContext() )
+				ConverterDescriptors.of( attributeConverter, bootstrapContext.getClassmateContext() )
 		);
 		return this;
 	}
@@ -417,7 +413,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Override
 	public MetadataBuilder applyAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply) {
 		bootstrapContext.addAttributeConverterDescriptor(
-				new InstanceBasedConverterDescriptor( attributeConverter, autoApply, bootstrapContext.getClassmateContext() )
+				ConverterDescriptors.of( attributeConverter, autoApply, bootstrapContext.getClassmateContext() )
 		);
 		return this;
 	}

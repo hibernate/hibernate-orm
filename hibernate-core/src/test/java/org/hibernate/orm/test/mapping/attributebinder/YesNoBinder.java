@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.mapping.attributebinder;
 
-import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -24,7 +24,7 @@ public class YesNoBinder implements AttributeBinder<YesNo> {
 			PersistentClass persistentClass,
 			Property property) {
 		( (SimpleValue) property.getValue() ).setJpaAttributeConverterDescriptor(
-				new InstanceBasedConverterDescriptor(
+				ConverterDescriptors.of(
 						YesNoConverter.INSTANCE,
 						buildingContext.getBootstrapContext().getClassmateContext()
 				)

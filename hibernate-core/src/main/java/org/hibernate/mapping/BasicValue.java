@@ -17,11 +17,11 @@ import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.annotations.TimeZoneStorageType;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorBypassedImpl;
-import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
@@ -87,7 +87,8 @@ import static org.hibernate.mapping.MappingHelper.injectParameters;
 /**
  * @author Steve Ebersole
  */
-public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resolvable, JpaAttributeConverterCreationContext {
+public class BasicValue extends SimpleValue
+		implements JdbcTypeIndicators, Resolvable, JpaAttributeConverterCreationContext {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( BasicValue.class );
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -479,16 +480,16 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			final JdbcType jdbcType = BooleanJdbcType.INSTANCE.resolveIndicatedType( this, javaType );
 			final ClassmateContext classmateContext = getBuildingContext().getBootstrapContext().getClassmateContext();
 			if ( jdbcType.isNumber() ) {
-				return new InstanceBasedConverterDescriptor<>( NumericBooleanConverter.INSTANCE, classmateContext );
+				return ConverterDescriptors.of( NumericBooleanConverter.INSTANCE, classmateContext );
 			}
 			else if ( jdbcType.isString() ) {
 				// here we pick 'T' / 'F' storage, though 'Y' / 'N' is equally valid - its 50/50
-				return new InstanceBasedConverterDescriptor<>( TrueFalseConverter.INSTANCE, classmateContext );
+				return ConverterDescriptors.of( TrueFalseConverter.INSTANCE, classmateContext );
 			}
 			else {
 				// should indicate BIT or BOOLEAN == no conversion needed
 				//		- we still create the converter to properly set up JDBC type, etc
-				return new InstanceBasedConverterDescriptor<>( PassThruSoftDeleteConverter.INSTANCE, classmateContext );
+				return ConverterDescriptors.of( PassThruSoftDeleteConverter.INSTANCE, classmateContext );
 			}
 		}
 		else {
@@ -547,12 +548,13 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 		@Override
 		public Boolean toDomainValue(R relationalValue) {
-			return !underlyingJpaConverter.toDomainValue( relationalValue );
+			final Boolean domainValue = underlyingJpaConverter.toDomainValue( relationalValue );
+			return domainValue==null ? null : !domainValue;
 		}
 
 		@Override
 		public R toRelationalValue(Boolean domainValue) {
-			return underlyingJpaConverter.toRelationalValue( domainValue != null ? !domainValue : null );
+			return underlyingJpaConverter.toRelationalValue( domainValue == null ? null : !domainValue );
 		}
 
 		@Override

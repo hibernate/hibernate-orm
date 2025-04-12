@@ -6,7 +6,6 @@ package org.hibernate.boot.model.convert.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -27,6 +26,7 @@ import org.jboss.logging.Logger;
 
 import com.fasterxml.classmate.ResolvedType;
 
+import static java.util.Collections.emptyList;
 import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveAttributeType;
 import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveConverterClassParamTypes;
 import static org.hibernate.internal.util.StringHelper.join;
@@ -91,16 +91,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 			registeredConversionsByDomainType = new ConcurrentHashMap<>();
 		}
 
-		final Class<?> domainType;
-		if ( conversion.getExplicitDomainType().equals( void.class ) ) {
-			// the registration did not define an explicit domain-type, so inspect the converter
-			final List<ResolvedType> converterParamTypes =
-					resolveConverterClassParamTypes( conversion.getConverterType(), context.getClassmateContext() );
-			domainType = converterParamTypes.get( 0 ).getErasedType();
-		}
-		else {
-			domainType = conversion.getExplicitDomainType();
-		}
+		final Class<?> domainType = getDomainType( conversion, context );
 
 		// make sure we are not overriding a previous conversion registration
 		final RegisteredConversion existingRegistration =
@@ -132,26 +123,35 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		registeredConversionsByDomainType.put( domainType, conversion );
 	}
 
-	private Collection<ConverterDescriptor<?,?>> converterDescriptors() {
-		if ( attributeConverterDescriptorsByClass == null ) {
-			return Collections.emptyList();
+	private static Class<?> getDomainType(RegisteredConversion conversion, BootstrapContext context) {
+		if ( conversion.getExplicitDomainType().equals( void.class ) ) {
+			// the registration did not define an explicit domain-type, so inspect the converter
+			final List<ResolvedType> converterParamTypes =
+					resolveConverterClassParamTypes( conversion.getConverterType(), context.getClassmateContext() );
+			return converterParamTypes.get( 0 ).getErasedType();
 		}
-		return attributeConverterDescriptorsByClass.values();
+		else {
+			return conversion.getExplicitDomainType();
+		}
+	}
+
+	private Collection<ConverterDescriptor<?,?>> converterDescriptors() {
+		return attributeConverterDescriptorsByClass == null
+				? emptyList()
+				: attributeConverterDescriptorsByClass.values();
 	}
 
 	enum ConversionSite {
-		ATTRIBUTE( "basic attribute" ),
-		COLLECTION_ELEMENT( "collection attribute's element" ),
-		MAP_KEY( "map attribute's key" );
-
-		private final String siteDescriptor;
-
-		ConversionSite(String siteDescriptor) {
-			this.siteDescriptor = siteDescriptor;
-		}
+		ATTRIBUTE,
+		COLLECTION_ELEMENT,
+		MAP_KEY;
 
 		public String getSiteDescriptor() {
-			return siteDescriptor;
+			return switch ( this ) {
+				case ATTRIBUTE -> "basic attribute";
+				case COLLECTION_ELEMENT -> "collection attribute's element";
+				case MAP_KEY -> "map attribute's key";
+			};
 		}
 	}
 
@@ -193,18 +193,16 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 			MemberDetails memberDetails,
 			ConversionSite conversionSite,
 			List<ConverterDescriptor<?,?>> matches) {
-		switch ( matches.size() ) {
-			case 0:
-				return null;
-			case 1:
-				return matches.get( 0 );
-			default:
-				final List<ConverterDescriptor<?,?>> filtered =
+		return switch ( matches.size() ) {
+			case 0 -> null;
+			case 1 -> matches.get( 0 );
+			default -> {
+				final var filtered =
 						matches.stream()
 								.filter( match -> !match.overrideable() )
 								.toList();
 				if ( filtered.size() == 1 ) {
-					return filtered.get( 0 );
+					yield filtered.get( 0 );
 				}
 				else {
 					// otherwise, we had multiple matches
@@ -219,7 +217,8 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 							)
 					);
 				}
-		}
+			}
+		};
 	}
 
 	private List<ConverterDescriptor<?,?>> getMatches(

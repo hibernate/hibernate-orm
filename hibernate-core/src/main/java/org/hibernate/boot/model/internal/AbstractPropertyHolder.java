@@ -13,7 +13,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.TimeZoneColumn;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
@@ -131,11 +131,9 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	protected ConverterDescriptor<?,?> makeAttributeConverterDescriptor(AttributeConversionInfo conversion) {
 		try {
-			return new ClassBasedConverterDescriptor<>(
-					conversion.getConverterClass(),
-					false,
-					context.getBootstrapContext().getClassmateContext()
-			);
+			return ConverterDescriptors.of( conversion.getConverterClass(),
+					null, false,
+					context.getBootstrapContext().getClassmateContext() );
 		}
 		catch (Exception e) {
 			throw new AnnotationException( "Unable to create AttributeConverter instance", e );

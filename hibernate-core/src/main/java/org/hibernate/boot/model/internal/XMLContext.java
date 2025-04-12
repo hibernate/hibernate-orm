@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConverterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
@@ -21,7 +22,6 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbManagedType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -179,11 +179,10 @@ public class XMLContext implements Serializable {
 			final boolean autoApply = Boolean.TRUE.equals( converterElement.isAutoApply() );
 
 			try {
-				final Class<? extends AttributeConverter<?,?>> attributeConverterClass = classLoaderAccess.classForName(
-						buildSafeClassName( className, packageName )
-				);
+				final Class<? extends AttributeConverter<?,?>> attributeConverterClass =
+						classLoaderAccess.classForName( buildSafeClassName( className, packageName ) );
 				converterDescriptors.add(
-						new ClassBasedConverterDescriptor( attributeConverterClass, autoApply, classmateContext )
+						ConverterDescriptors.of( attributeConverterClass, autoApply, false, classmateContext )
 				);
 			}
 			catch (ClassLoadingException e) {

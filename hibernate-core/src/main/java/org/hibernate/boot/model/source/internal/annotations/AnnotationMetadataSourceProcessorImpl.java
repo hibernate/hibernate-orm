@@ -13,7 +13,7 @@ import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.internal.AnnotationBinder;
@@ -81,9 +81,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			) );
 		} );
 		domainModelSource.getConverterRegistrations().forEach( (registration) -> {
-			converterRegistry.addAttributeConverter( new ClassBasedConverterDescriptor(
+			converterRegistry.addAttributeConverter( ConverterDescriptors.of(
 					classLoaderService.classForName( registration.converterClass().getClassName() ),
-					registration.autoApply(),
+					registration.autoApply(), false,
 					bootstrapContext.getClassmateContext()
 			) );
 		} );

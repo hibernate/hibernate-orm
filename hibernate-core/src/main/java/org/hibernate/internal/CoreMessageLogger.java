@@ -15,6 +15,7 @@ import java.util.ServiceConfigurationError;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.cache.CacheException;
@@ -49,6 +50,7 @@ import static org.jboss.logging.Logger.Level.WARN;
  */
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange(min=2,max = 20000)
+@Internal
 public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)

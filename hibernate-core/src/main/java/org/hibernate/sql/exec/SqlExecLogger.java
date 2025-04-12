@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.exec;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.BasicLogger;
@@ -22,6 +23,7 @@ import java.lang.invoke.MethodHandles;
 		name = SqlExecLogger.LOGGER_NAME,
 		description = "Logging related to the execution of SQL statements"
 )
+@Internal
 public interface SqlExecLogger extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".sql.exec";
 

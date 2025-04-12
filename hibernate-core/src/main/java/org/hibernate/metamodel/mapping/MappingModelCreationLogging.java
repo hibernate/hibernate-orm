@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.BasicLogger;
@@ -24,6 +25,7 @@ import java.lang.invoke.MethodHandles;
 		name = MappingModelCreationLogging.LOGGER_NAME,
 		description = "Logging related to building of Hibernate's runtime metamodel descriptors of the domain model"
 )
+@Internal
 public interface MappingModelCreationLogging extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".model.mapping.creation";
 

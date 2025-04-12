@@ -4,6 +4,7 @@
  */
 package org.hibernate.resource.beans.internal;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 
@@ -27,6 +28,7 @@ import static org.jboss.logging.Logger.Level.INFO;
 		name = BeansMessageLogger.LOGGER_NAME,
 		description = "Logging related to managed beans and the BeanContainer (CDI, etc)"
 )
+@Internal
 public interface BeansMessageLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".beans";
 

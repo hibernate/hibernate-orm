@@ -7,6 +7,7 @@ package org.hibernate.sql.results.graph;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -26,6 +27,7 @@ public class DomainResultGraphPrinter {
 			name = Logging.LOGGER_NAME,
 			description = "Logging of `DomainResult` graphs"
 	)
+	@Internal
 	interface Logging {
 		String LOGGER_NAME = ResultsLogger.LOGGER_NAME + ".graph.AST";
 		Logger AST_LOGGER = Logger.getLogger( LOGGER_NAME );

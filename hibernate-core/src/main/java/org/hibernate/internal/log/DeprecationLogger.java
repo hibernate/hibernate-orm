@@ -7,6 +7,7 @@ package org.hibernate.internal.log;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.cfg.AvailableSettings;
 
@@ -30,6 +31,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 		name = DeprecationLogger.CATEGORY,
 		description = "Logging related to uses of deprecated features"
 )
+@Internal
 public interface DeprecationLogger extends BasicLogger {
 	String CATEGORY = SubSystemLogging.BASE + ".deprecation";
 

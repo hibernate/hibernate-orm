@@ -148,7 +148,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 		return getThis();
 	}
 
-	@Override
+	@Override @Deprecated
 	public T applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
 		delegate.applyTempTableDdlTransactionHandling( handling );
 		return getThis();

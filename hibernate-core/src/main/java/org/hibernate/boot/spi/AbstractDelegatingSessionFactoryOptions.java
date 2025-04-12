@@ -174,7 +174,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		return delegate.isInitializeLazyStateOutsideTransactionsEnabled();
 	}
 
-	@Override
+	@Override @Deprecated
 	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
 		return delegate.getTempTableDdlTransactionHandling();
 	}
@@ -294,7 +294,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		return delegate.isAutoEvictCollectionCache();
 	}
 
-	@Override
+	@Override @Deprecated
 	public SchemaAutoTooling getSchemaAutoTooling() {
 		return delegate.getSchemaAutoTooling();
 	}

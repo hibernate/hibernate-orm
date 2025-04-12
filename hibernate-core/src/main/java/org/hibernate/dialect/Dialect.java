@@ -3562,7 +3562,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * The sort of {@linkplain TempTableDdlTransactionHandling transaction handling}
 	 * to use when creating or dropping temporary tables.
+	 *
+	 * @deprecated No dialect currently overrides this, so it's obsolete
 	 */
+	@Deprecated(since = "7.0")
 	public TempTableDdlTransactionHandling getTemporaryTableDdlTransactionHandling() {
 		return TempTableDdlTransactionHandling.NONE;
 	}

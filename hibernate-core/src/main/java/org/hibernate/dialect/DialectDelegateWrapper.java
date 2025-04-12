@@ -924,7 +924,7 @@ public class DialectDelegateWrapper extends Dialect {
 		return wrapped.getCreateTemporaryTableColumnAnnotation( sqlTypeCode );
 	}
 
-	@Override
+	@Override @Deprecated
 	public TempTableDdlTransactionHandling getTemporaryTableDdlTransactionHandling() {
 		return wrapped.getTemporaryTableDdlTransactionHandling();
 	}

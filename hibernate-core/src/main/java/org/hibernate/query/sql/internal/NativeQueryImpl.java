@@ -804,111 +804,114 @@ public class NativeQueryImpl<R>
 		}
 		// HHH-1123
 		// Some DBs limit number of IN expressions.  For now, warn...
-		final SessionFactoryImplementor sessionFactory = getSessionFactory();
-		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
-		final boolean paddingEnabled = sessionFactory.getSessionFactoryOptions().inClauseParameterPaddingEnabled();
+		final SessionFactoryImplementor factory = getSessionFactory();
+		final Dialect dialect = factory.getJdbcServices().getDialect();
+		final boolean paddingEnabled = factory.getSessionFactoryOptions().inClauseParameterPaddingEnabled();
 		final int inExprLimit = dialect.getInExpressionCountLimit();
 
-		StringBuilder sb = null;
+		StringBuilder sql = null;
 
 		// Handle parameter lists
 		int offset = 0;
 		for ( ParameterOccurrence occurrence : parameterOccurrences ) {
-			final QueryParameterImplementor<?> queryParameter = occurrence.getParameter();
+			final QueryParameterImplementor<?> queryParameter = occurrence.parameter();
 			final QueryParameterBinding<?> binding = parameterBindings.getBinding( queryParameter );
-			if ( !binding.isMultiValued() ) {
-				continue;
+			if ( binding.isMultiValued() ) {
+				final int bindValueCount = binding.getBindValues().size();
+				logTooManyExpressions( inExprLimit, bindValueCount, dialect, queryParameter );
+				final int sourcePosition = occurrence.sourcePosition();
+				if ( sourcePosition >= 0 ) {
+					// check if placeholder is already immediately enclosed in parentheses
+					// (ignoring whitespace)
+					final boolean isEnclosedInParens = isEnclosedInParens( sourcePosition );
+					// short-circuit for performance when only 1 value and the
+					// placeholder is already enclosed in parentheses...
+					if ( bindValueCount != 1 || !isEnclosedInParens ) {
+						if ( sql == null ) {
+							sql = new StringBuilder( sqlString.length() + 20 );
+							sql.append( sqlString );
+						}
+						final int bindValueMaxCount =
+								determineBindValueMaxCount( paddingEnabled, inExprLimit, bindValueCount );
+						final String expansionListAsString =
+								expandList( bindValueMaxCount, isEnclosedInParens );
+						final int start = sourcePosition + offset;
+						final int end = start + 1;
+						sql.replace( start, end, expansionListAsString );
+						offset += expansionListAsString.length() - 1;
+					}
+				}
 			}
-			final Collection<?> bindValues = binding.getBindValues();
+		}
+		return sql == null ? sqlString : sql.toString();
+	}
 
-			final int bindValueCount = bindValues.size();
-			final int bindValueMaxCount = determineBindValueMaxCount( paddingEnabled, inExprLimit, bindValueCount );
+	private static void logTooManyExpressions(
+			int inExprLimit, int bindValueCount,
+			Dialect dialect, QueryParameterImplementor<?> queryParameter) {
+		if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
+			log.tooManyInExpressions(
+					dialect.getClass().getName(),
+					inExprLimit,
+					queryParameter.getName() == null
+							? queryParameter.getPosition().toString()
+							: queryParameter.getName(),
+					bindValueCount
+			);
+		}
+	}
 
-			if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
-				log.tooManyInExpressions(
-						dialect.getClass().getName(),
-						inExprLimit,
-						queryParameter.getName() == null
-								? queryParameter.getPosition().toString()
-								: queryParameter.getName(),
-						bindValueCount
-				);
+	private static String expandList(int bindValueMaxCount, boolean isEnclosedInParens) {
+		// HHH-8901
+		if ( bindValueMaxCount == 0 ) {
+			return isEnclosedInParens ? "null" : "(null)";
+		}
+		else {
+			// Shift 1 bit instead of multiplication by 2
+			final char[] chars;
+			if ( isEnclosedInParens ) {
+				chars = new char[(bindValueMaxCount << 1) - 1];
+				chars[0] = '?';
+				for ( int i = 1; i < bindValueMaxCount; i++ ) {
+					final int index = i << 1;
+					chars[index - 1] = ',';
+					chars[index] = '?';
+				}
 			}
-
-			final int sourcePosition = occurrence.getSourcePosition();
-			if ( sourcePosition < 0 ) {
-				continue;
+			else {
+				chars = new char[(bindValueMaxCount << 1) + 1];
+				chars[0] = '(';
+				chars[1] = '?';
+				for ( int i = 1; i < bindValueMaxCount; i++ ) {
+					final int index = i << 1;
+					chars[index] = ',';
+					chars[index + 1] = '?';
+				}
+				chars[chars.length - 1] = ')';
 			}
+			return new String( chars );
+		}
+	}
 
-			// check if placeholder is already immediately enclosed in parentheses
-			// (ignoring whitespace)
-			boolean isEnclosedInParens = true;
-			for ( int i = sourcePosition - 1; i >= 0; i-- ) {
+	private boolean isEnclosedInParens(int sourcePosition) {
+		boolean isEnclosedInParens = true;
+		for ( int i = sourcePosition - 1; i >= 0; i-- ) {
+			final char ch = sqlString.charAt( i );
+			if ( !isWhitespace( ch ) ) {
+				isEnclosedInParens = ch == '(';
+				break;
+			}
+		}
+		if ( isEnclosedInParens ) {
+			for ( int i = sourcePosition + 1; i < sqlString.length(); i++ ) {
 				final char ch = sqlString.charAt( i );
 				if ( !isWhitespace( ch ) ) {
-					isEnclosedInParens = ch == '(';
+					isEnclosedInParens = ch == ')';
 					break;
 				}
 			}
-			if ( isEnclosedInParens ) {
-				for ( int i = sourcePosition + 1; i < sqlString.length(); i++ ) {
-					final char ch = sqlString.charAt( i );
-					if ( !isWhitespace( ch ) ) {
-						isEnclosedInParens = ch == ')';
-						break;
-					}
-				}
-			}
-
-			if ( bindValueCount == 1 && isEnclosedInParens ) {
-				// short-circuit for performance when only 1 value and the
-				// placeholder is already enclosed in parentheses...
-				continue;
-			}
-
-			if ( sb == null ) {
-				sb = new StringBuilder( sqlString.length() + 20 );
-				sb.append( sqlString );
-			}
-
-			final String expansionListAsString;
-			// HHH-8901
-			if ( bindValueMaxCount == 0 ) {
-				expansionListAsString = isEnclosedInParens ? "null" : "(null)";
-			}
-			else {
-				// Shift 1 bit instead of multiplication by 2
-				final char[] chars;
-				if ( isEnclosedInParens ) {
-					chars = new char[( bindValueMaxCount << 1 ) - 1];
-					chars[0] = '?';
-					for ( int i = 1; i < bindValueMaxCount; i++ ) {
-						final int index = i << 1;
-						chars[index - 1] = ',';
-						chars[index] = '?';
-					}
-				}
-				else {
-					chars = new char[( bindValueMaxCount << 1 ) + 1];
-					chars[0] = '(';
-					chars[1] = '?';
-					for ( int i = 1; i < bindValueMaxCount; i++ ) {
-						final int index = i << 1;
-						chars[index] = ',';
-						chars[index + 1] = '?';
-					}
-					chars[chars.length - 1] = ')';
-				}
-
-				expansionListAsString = new String(chars);
-			}
-
-			final int start = sourcePosition + offset;
-			final int end = start + 1;
-			sb.replace( start, end, expansionListAsString );
-			offset += expansionListAsString.length() - 1;
 		}
-		return sb == null ? sqlString : sb.toString();
+		return isEnclosedInParens;
 	}
 
 	public static int determineBindValueMaxCount(boolean paddingEnabled, int inExprLimit, int bindValueCount) {

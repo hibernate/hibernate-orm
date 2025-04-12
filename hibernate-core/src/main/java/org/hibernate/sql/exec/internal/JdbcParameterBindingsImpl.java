@@ -55,7 +55,7 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 			final int inExprLimit = dialect.getParameterCountLimit();
 
 			for ( ParameterOccurrence occurrence : parameterOccurrences ) {
-				final QueryParameterImplementor<?> param = occurrence.getParameter();
+				final QueryParameterImplementor<?> param = occurrence.parameter();
 				final QueryParameterBinding<?> binding = queryParameterBindings.getBinding( param );
 
 				final JdbcMapping jdbcMapping;

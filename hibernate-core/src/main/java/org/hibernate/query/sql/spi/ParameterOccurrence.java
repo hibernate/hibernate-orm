@@ -9,21 +9,5 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 /**
  * @author Christian Beikov
  */
-public final class ParameterOccurrence {
-
-	private final QueryParameterImplementor<?> parameter;
-	private final int sourcePosition;
-
-	public ParameterOccurrence(QueryParameterImplementor<?> parameter, int sourcePosition) {
-		this.parameter = parameter;
-		this.sourcePosition = sourcePosition;
-	}
-
-	public QueryParameterImplementor<?> getParameter() {
-		return parameter;
-	}
-
-	public int getSourcePosition() {
-		return sourcePosition;
-	}
+public record ParameterOccurrence(QueryParameterImplementor<?> parameter, int sourcePosition) {
 }

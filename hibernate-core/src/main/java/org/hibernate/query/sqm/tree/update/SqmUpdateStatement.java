@@ -134,14 +134,11 @@ public class SqmUpdateStatement<T>
 				nodeBuilder().getMappingMetamodel().getEntityDescriptor( getTarget().getEntityName() );
 		if ( !persister.isMutable() ) {
 			final String querySpaces = Arrays.toString( persister.getQuerySpaces() );
-			switch ( nodeBuilder().getImmutableEntityUpdateQueryHandlingMode() ) {
-				case WARNING:
-					LOG.immutableEntityUpdateQuery( hql, querySpaces );
-					break;
-				case EXCEPTION:
-					throw new HibernateException( "The query attempts to update an immutable entity: " + querySpaces );
-				default:
-					throw new AssertionFailure( "Unrecognized mode" );
+			if ( nodeBuilder().disallowImmutableEntityUpdate() ) {
+				throw new HibernateException( "The query attempts to update an immutable entity: " + querySpaces );
+			}
+			else {
+				LOG.immutableEntityUpdateQuery( hql, querySpaces );
 			}
 		}
 	}

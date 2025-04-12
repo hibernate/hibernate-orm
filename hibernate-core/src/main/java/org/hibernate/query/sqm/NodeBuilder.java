@@ -1499,5 +1499,8 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	JpaCompliance getJpaCompliance();
 
+	@Deprecated(since = "7.0", forRemoval = true)
 	ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode();
+
+	boolean disallowImmutableEntityUpdate();
 }

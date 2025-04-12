@@ -190,7 +190,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	private final transient JpaCompliance jpaCompliance;
 	private final transient QueryEngine queryEngine;
 	private final transient ValueHandlingMode criteriaValueHandlingMode;
-	private final transient ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
+	private final transient boolean disallowImmutableEntityUpdate;
 	private final transient BindingContext bindingContext;
 	private transient BasicType<Boolean> booleanType;
 	private transient BasicType<Integer> integerType;
@@ -211,7 +211,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		this.name = name;
 		this.jpaCompliance = options.getJpaCompliance();
 		this.criteriaValueHandlingMode = options.getCriteriaValueHandlingMode();
-		this.immutableEntityUpdateQueryHandlingMode = options.getImmutableEntityUpdateQueryHandlingMode();
+		this.disallowImmutableEntityUpdate = options.disallowImmutableEntityUpdate();
 		this.bindingContext = bindingContext;
 		this.extensions = loadExtensions();
 	}
@@ -247,7 +247,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
-		return immutableEntityUpdateQueryHandlingMode;
+		return disallowImmutableEntityUpdate
+				? ImmutableEntityUpdateQueryHandlingMode.EXCEPTION
+				: ImmutableEntityUpdateQueryHandlingMode.WARNING;
+	}
+
+	@Override
+	public boolean disallowImmutableEntityUpdate() {
+		return disallowImmutableEntityUpdate;
 	}
 
 	@Override

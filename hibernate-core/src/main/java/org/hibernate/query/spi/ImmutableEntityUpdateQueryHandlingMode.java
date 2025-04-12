@@ -17,10 +17,13 @@ import org.hibernate.cfg.AvailableSettings;
  *     thrown instead.
  * </ul>
  *
+ * @deprecated This enumeration is isomorphic to {@code boolean}. It will be removed.
+ *
  * @see org.hibernate.cfg.AvailableSettings#IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE
  *
  * @author Vlad Mihalcea
  */
+@Deprecated(since = "7.0", forRemoval = true)
 public enum ImmutableEntityUpdateQueryHandlingMode {
 
 	WARNING,

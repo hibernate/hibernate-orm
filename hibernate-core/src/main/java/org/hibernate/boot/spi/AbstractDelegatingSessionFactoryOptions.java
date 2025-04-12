@@ -414,6 +414,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean disallowImmutableEntityUpdate() {
+		return delegate.disallowImmutableEntityUpdate();
+	}
+
+	@Override
 	public String getDefaultCatalog() {
 		return delegate.getDefaultCatalog();
 	}

@@ -1137,6 +1137,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	public boolean disallowImmutableEntityUpdate() {
+		return immutableEntityUpdateQueryHandlingMode == ImmutableEntityUpdateQueryHandlingMode.EXCEPTION;
+	}
+
+	@Override
 	public String getDefaultCatalog() {
 		return defaultCatalog;
 	}

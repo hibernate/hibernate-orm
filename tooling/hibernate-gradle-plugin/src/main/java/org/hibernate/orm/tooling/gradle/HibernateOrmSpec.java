@@ -7,12 +7,16 @@ package org.hibernate.orm.tooling.gradle;
 import java.util.Arrays;
 
 import org.gradle.api.Action;
+import org.gradle.api.internal.file.FileOperations;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.SetProperty;
-import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.SourceSet;
 
 import org.hibernate.orm.tooling.gradle.enhance.EnhancementSpec;
+
+import javax.inject.Inject;
 
 /**
  * Main DSL extension for Hibernate ORM.  Available as `project.hibernate`
@@ -20,20 +24,25 @@ import org.hibernate.orm.tooling.gradle.enhance.EnhancementSpec;
 public abstract class HibernateOrmSpec {
 	public static final String DSL_NAME = "hibernate";
 
-	private boolean enhancementConfigured = false;
-
 	public HibernateOrmSpec() {
 		getUseSameVersion().convention( true );
 		getSourceSet().convention( SourceSet.MAIN_SOURCE_SET_NAME );
 		getLanguages().convention( Arrays.asList( "java", "kotlin" ) );
 	}
 
+	@Inject
+	abstract public FileOperations getFileOperations();
+
+	@Inject
+	abstract protected ObjectFactory getObjectFactory();
+
+
 	/**
 	 * DSL extension for configuring bytecode enhancement.  Also acts as the trigger for
 	 * opting into bytecode enhancement
 	 */
-	@Nested
-	abstract public EnhancementSpec getEnhancement();
+	@Optional
+	abstract public Property<EnhancementSpec> getEnhancement();
 
 	/**
 	 * Should the plugin inject a dependency on the same version of `hibernate-core`
@@ -61,12 +70,8 @@ public abstract class HibernateOrmSpec {
 	 */
 	@SuppressWarnings("unused")
 	public void enhancement(Action<EnhancementSpec> action) {
-		enhancementConfigured = true;
-		action.execute( getEnhancement() );
-	}
-
-
-	public boolean isEnhancementEnabled() {
-		return enhancementConfigured;
+		EnhancementSpec spec = getObjectFactory().newInstance( EnhancementSpec.class );
+		action.execute( spec );
+		getEnhancement().set( spec );
 	}
 }

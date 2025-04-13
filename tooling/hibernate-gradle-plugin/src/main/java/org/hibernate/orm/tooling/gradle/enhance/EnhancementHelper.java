@@ -16,6 +16,7 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.internal.file.FileOperations;
 import org.gradle.api.logging.Logger;
 
+import org.gradle.api.logging.Logging;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
@@ -30,15 +31,16 @@ import static org.hibernate.orm.tooling.gradle.Helper.determineClassName;
  * @author Steve Ebersole
  */
 public class EnhancementHelper {
+	private static final Logger logger = Logging.getLogger( EnhancementHelper.class);
+
 	public static void enhance(
 			DirectoryProperty classesDirectoryProperty,
 			ClassLoader classLoader,
-			HibernateOrmSpec ormDsl,
-			Logger logger, FileOperations fileOperations) {
+			HibernateOrmSpec ormDsl) {
 		final Directory classesDirectory = classesDirectoryProperty.get();
 		final File classesDir = classesDirectory.getAsFile();
 
-		final EnhancementSpec enhancementDsl = ormDsl.getEnhancement();
+		final EnhancementSpec enhancementDsl = ormDsl.getEnhancement().get();
 
 		List<String> classesToEnhance = enhancementDsl.getClassNames().get();
 
@@ -48,10 +50,10 @@ public class EnhancementHelper {
 		if ( !enhancementDsl.getEnableDirtyTracking().get() ) {
 			logger.warn( "The 'enableDirtyTracking' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
 		}
-		final Enhancer enhancer = generateEnhancer( classLoader, ormDsl );
+		final Enhancer enhancer = generateEnhancer( classLoader, enhancementDsl );
 
-		discoverTypes( classesDir, classesDir, enhancer, logger, fileOperations );
-		doEnhancement( classesDir, classesDir, enhancer, logger, fileOperations, classesToEnhance );
+		discoverTypes( classesDir, classesDir, enhancer, logger, ormDsl.getFileOperations() );
+		doEnhancement( classesDir, classesDir, enhancer, logger, ormDsl.getFileOperations(), classesToEnhance );
 	}
 
 	private static void discoverTypes(File classesDir, File dir, Enhancer enhancer, Logger logger, FileOperations fileOperations) {
@@ -136,8 +138,7 @@ public class EnhancementHelper {
 		}
 	}
 
-	public static Enhancer generateEnhancer(ClassLoader classLoader, HibernateOrmSpec ormDsl) {
-		final EnhancementSpec enhancementDsl = ormDsl.getEnhancement();
+	public static Enhancer generateEnhancer(ClassLoader classLoader, EnhancementSpec enhancementDsl) {
 
 		final EnhancementContext enhancementContext = new DefaultEnhancementContext() {
 			@Override

@@ -18,6 +18,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.Internal;
 import org.hibernate.LockOptions;
+import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
@@ -165,7 +166,22 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 */
 	SessionFactoryObserver[] getSessionFactoryObservers();
 
+	/**
+	 * @deprecated This operation is a layer-breaker, exposing an
+	 *             internal type. It will be removed. Use
+	 *             {@link #buildSessionEventListeners()} instead.
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	BaselineSessionEventsListenerBuilder getBaselineSessionEventsListenerBuilder();
+
+	/**
+	 * Build an array of baseline {@link SessionEventListener}s.
+	 *
+	 * @since 7.0
+	 */
+	default SessionEventListener[] buildSessionEventListeners() {
+		return getBaselineSessionEventsListenerBuilder().buildBaseline();
+	}
 
 	/**
 	 * Should generated identifiers be reset after entity removal?
@@ -647,12 +663,19 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 */
 	CacheMode getInitialSessionCacheMode();
 
+	/**
+	 * @see org.hibernate.jpa.HibernateHints#HINT_FLUSH_MODE
+	 */
 	FlushMode getInitialSessionFlushMode();
 
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#JAKARTA_LOCK_TIMEOUT
+	 * @see org.hibernate.cfg.AvailableSettings#JAKARTA_LOCK_SCOPE
+	 */
 	LockOptions getDefaultLockOptions();
 
 	/**
-	 * Default session properties
+	 * Default properties for brand-new sessions
 	 */
 	Map<String, Object> getDefaultSessionProperties();
 }

@@ -296,14 +296,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private static SessionEventListenerManager createSessionEventsManager(
 			SessionFactoryOptions factoryOptions, SessionCreationOptions options) {
 		final List<SessionEventListener> customListeners = options.getCustomSessionEventListener();
-		if ( customListeners == null ) {
-			final SessionEventListener[] baseline =
-					factoryOptions.getBaselineSessionEventsListenerBuilder().buildBaseline();
-			return new SessionEventListenerManagerImpl( baseline );
-		}
-		else {
-			return new SessionEventListenerManagerImpl( customListeners );
-		}
+		return customListeners == null
+				? new SessionEventListenerManagerImpl( factoryOptions.buildSessionEventListeners() )
+				: new SessionEventListenerManagerImpl( customListeners );
 	}
 
 	/**
@@ -1641,9 +1636,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		jdbcServices = factory.getJdbcServices();
 
 		//TODO: this isn't quite right, see createSessionEventsManager()
-		final SessionEventListener[] baseline =
-				factoryOptions.getBaselineSessionEventsListenerBuilder()
-						.buildBaseline();
+		final SessionEventListener[] baseline = factoryOptions.buildSessionEventListeners();
 		sessionEventsManager = new SessionEventListenerManagerImpl( baseline );
 
 		jdbcSessionContext = createJdbcSessionContext( (StatementInspector) ois.readObject() );

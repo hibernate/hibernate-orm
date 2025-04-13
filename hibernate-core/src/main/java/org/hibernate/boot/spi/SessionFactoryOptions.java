@@ -25,13 +25,13 @@ import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.spi.QueryEngineOptions;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -111,10 +111,10 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	}
 
 	/**
-	 * The name to be used for the SessionFactory.  This is used during in-VM serialization; see
-	 * {@link org.hibernate.internal.SessionFactoryRegistry}.
-	 * May also be used as a JNDI name depending on {@value org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_JNDI_NAME}
-	 * and {@value org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_NAME_IS_JNDI}.
+	 * The name to be used for the {@code SessionFactory}. This is used during in-VM serialization;
+	 * see {@link org.hibernate.internal.SessionFactoryRegistry}. May also be used as a JNDI name,
+	 * depending on {@value org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_JNDI_NAME} and
+	 * {@value org.hibernate.cfg.PersistenceSettings#SESSION_FACTORY_NAME_IS_JNDI}.
 	 *
 	 * @return The session factory name
 	 *
@@ -124,8 +124,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	String getSessionFactoryName();
 
 	/**
-	 * Is the {@linkplain #getSessionFactoryName session factory name} also a JNDI name, indicating we
-	 * should bind it into JNDI?
+	 * Is the {@linkplain #getSessionFactoryName session factory name} also a JNDI name, indicating
+	 * we should bind it into JNDI?
 	 *
 	 * @return {@code true} if the SessionFactory name is also a JNDI name; {@code false} otherwise.
 	 *
@@ -134,34 +134,53 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	Boolean isSessionFactoryNameAlsoJndiName();
 
 	/**
+	 * Is collection of {@linkplain org.hibernate.stat.Statistics statistics}
+	 * enabled by default for this factory?
+	 *
 	 * @see org.hibernate.cfg.StatisticsSettings#GENERATE_STATISTICS
+	 *
+	 * @see org.hibernate.stat.Statistics#setStatisticsEnabled(boolean)
 	 */
 	boolean isStatisticsEnabled();
 
 	/**
-	 * Get the interceptor to use by default for all sessions opened from this factory.
+	 * An {@linkplain Interceptor interceptor} instance shared between all sessions
+	 * created by this factory. Such an interceptor must be thread-safe and may not
+	 * hold state associated with any given session.
 	 *
-	 * @return The interceptor to use factory wide.  May be {@code null}
+	 * @return The interceptor instance to use factory-wide by default. May be {@code null}.
 	 *
 	 * @see org.hibernate.cfg.SessionEventSettings#INTERCEPTOR
+	 *
+	 * @see org.hibernate.SessionBuilder#interceptor(Interceptor)
 	 */
 	Interceptor getInterceptor();
 
 	/**
-	 * Get the interceptor to use by default for all sessions opened from this factory.
+	 * A stateless {@link Supplier} for {@linkplain Interceptor interceptor} instances
+	 * which are not shared between sessions created by this factory. This allows each
+	 * {@code Interceptor} instances itself to hold state associated with its session.
 	 *
-	 * @return The interceptor to use factory wide.  May be {@code null}
+	 * @return The interceptor supplier to use by default. May be {@code null}.
 	 *
 	 * @see org.hibernate.cfg.SessionEventSettings#SESSION_SCOPED_INTERCEPTOR
+	 *
+	 * @see org.hibernate.SessionBuilder#interceptor(Interceptor)
 	 */
 	Supplier<? extends Interceptor> getStatelessInterceptorImplementorSupplier();
 
 	/**
+	 * The default {@link StatementInspector} for this factory.
+	 *
 	 * @see org.hibernate.cfg.JdbcSettings#STATEMENT_INSPECTOR
+	 *
+	 * @see org.hibernate.SessionBuilder#statementInspector(StatementInspector)
 	 */
 	StatementInspector getStatementInspector();
 
 	/**
+	 * {@linkplain SessionFactoryObserver Observers} for events raised by the factory.
+	 *
 	 * @see org.hibernate.cfg.AvailableSettings#SESSION_FACTORY_OBSERVER
 	 */
 	SessionFactoryObserver[] getSessionFactoryObservers();
@@ -178,6 +197,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * Build an array of baseline {@link SessionEventListener}s.
 	 *
 	 * @since 7.0
+	 *
+	 * @see org.hibernate.SessionBuilder#eventListeners(SessionEventListener...)
 	 */
 	default SessionEventListener[] buildSessionEventListeners() {
 		return getBaselineSessionEventsListenerBuilder().buildBaseline();
@@ -187,21 +208,35 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * Should generated identifiers be reset after entity removal?
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#USE_IDENTIFIER_ROLLBACK
+	 *
+	 * @see org.hibernate.SessionBuilder#identifierRollback(boolean)
 	 */
 	boolean isIdentifierRollbackEnabled();
 
 	/**
+	 * Should Hibernate validate that non-optional attributes have non-null values?
+	 *
 	 * @see org.hibernate.cfg.ValidationSettings#CHECK_NULLABILITY
 	 */
 	boolean isCheckNullability();
 
 	/**
-	 * Allows use of Bean Validation to disable null checking.
+	 * Allows Bean Validation to disable null checking.
+	 *
+	 * @apiNote It's quite ugly to have a setter method on this SPI.
+	 *          This operation is for internal use by Bean Validation
+	 *          integration logic.
 	 */
 	@Internal
 	void setCheckNullability(boolean enabled);
 
 	/**
+	 * Are detached proxies and collections fetched in a temporary
+	 * persistence context?
+	 *
+	 * @apiNote The naming here is very misleading. This behavior has
+	 *          little to do with transactions.
+	 *
 	 * @see org.hibernate.cfg.AvailableSettings#ENABLE_LAZY_LOAD_NO_TRANS
 	 */
 	boolean isInitializeLazyStateOutsideTransactionsEnabled();
@@ -214,11 +249,18 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	/**
 	 * @see org.hibernate.cfg.AvailableSettings#DELAY_ENTITY_LOADER_CREATIONS
+	 *
+	 * @deprecated This is no longer used
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	boolean isDelayBatchFetchLoaderCreationsEnabled();
 
 	/**
+	 * The default batch size for batch fetching in new sessions.
+	 *
 	 * @see org.hibernate.cfg.FetchSettings#DEFAULT_BATCH_FETCH_SIZE
+	 *
+	 * @see org.hibernate.Session#setFetchBatchSize(int)
 	 */
 	int getDefaultBatchFetchSize();
 
@@ -228,11 +270,17 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	Integer getMaximumFetchDepth();
 
 	/**
+	 * Is subselect fetching enabled by default in new sessions?
+	 *
 	 * @see org.hibernate.cfg.FetchSettings#USE_SUBSELECT_FETCH
+	 *
+	 * @see org.hibernate.Session#setSubselectFetchingEnabled(boolean)
 	 */
 	boolean isSubselectFetchEnabled();
 
 	/**
+	 * The default {@linkplain Nulls precedence of null values} in sorted query results.
+	 *
 	 * @see org.hibernate.cfg.QuerySettings#DEFAULT_NULL_ORDERING
 	 */
 	Nulls getDefaultNullPrecedence();
@@ -248,54 +296,87 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isOrderInsertsEnabled();
 
 	/**
+	 * Is there a
+	 * {@linkplain org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider
+	 * multi-tenant connection provider} configured?
+	 *
 	 * @see org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_CONNECTION_PROVIDER
 	 */
 	boolean isMultiTenancyEnabled();
 
 	/**
+	 * Obtain a reference to the
+	 * {@linkplain CurrentTenantIdentifierResolver current tenant identifier resolver},
+	 * if any, or return {@code null} is there is no resolver configured.
+	 *
 	 * @see org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_IDENTIFIER_RESOLVER
 	 */
 	CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver();
 
+	/**
+	 * @see org.hibernate.cfg.TransactionSettings#JTA_TRACK_BY_THREAD
+	 */
 	boolean isJtaTrackByThread();
 
 	/**
+	 * Are named queries validated when the factory is created?
+	 *
 	 * @see org.hibernate.cfg.QuerySettings#QUERY_STARTUP_CHECKING
 	 */
 	boolean isNamedQueryStartupCheckingEnabled();
 
 	/**
+	 * Is the {@linkplain org.hibernate.Cache second-level cache} enabled?
+	 *
 	 * @see org.hibernate.cfg.CacheSettings#USE_SECOND_LEVEL_CACHE
 	 */
 	boolean isSecondLevelCacheEnabled();
 
 	/**
+	 * Is the {@linkplain org.hibernate.cache.spi.QueryResultsCache query cache} enabled?
+	 *
 	 * @see org.hibernate.cfg.CacheSettings#USE_QUERY_CACHE
 	 */
 	boolean isQueryCacheEnabled();
 
 	/**
+	 * The {@linkplain CacheLayout layout} of entries in the query cache.
+	 *
 	 * @see org.hibernate.cfg.CacheSettings#QUERY_CACHE_LAYOUT
 	 */
 	@Incubating
 	CacheLayout getQueryCacheLayout();
 
 	/**
+	 * A factory for the {@link TimestampsCache} used to track invalidation
+	 * of cached query result sets.
+	 *
 	 * @see org.hibernate.cfg.CacheSettings#QUERY_CACHE_FACTORY
 	 */
 	TimestampsCacheFactory getTimestampsCacheFactory();
 
 	/**
+	 * A factory-specific prefix to be applied to all cache region names.
+	 *
 	 * @see org.hibernate.cfg.CacheSettings#CACHE_REGION_PREFIX
 	 */
 	String getCacheRegionPrefix();
 
 	/**
+	 * Should we avoid overwriting cache entries with identical entries?
+	 * <p>
+	 * This is useful if cache writes are much more expensive than cache
+	 * reads.
+	 *
+	 * @apiNote This is currently unused.
+	 *
 	 * @see org.hibernate.cfg.CacheSettings#USE_MINIMAL_PUTS
 	 */
 	boolean isMinimalPutsEnabled();
 
 	/**
+	 * Are second-level cache entries stored in a human-readable format.
+	 *
 	 * @see org.hibernate.cfg.CacheSettings#USE_STRUCTURED_CACHE
 	 */
 	boolean isStructuredCacheEntriesEnabled();
@@ -319,7 +400,11 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	SchemaAutoTooling getSchemaAutoTooling();
 
 	/**
+	 * The default JDBC statement batch size for new sessions.
+	 *
 	 * @see org.hibernate.cfg.BatchSettings#STATEMENT_BATCH_SIZE
+	 *
+	 * @see org.hibernate.Session#setJdbcBatchSize(Integer)
 	 */
 	int getJdbcBatchSize();
 
@@ -340,24 +425,39 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	/**
 	 * @see org.hibernate.cfg.JdbcSettings#CONNECTION_HANDLING
+	 *
+	 * @see org.hibernate.SessionBuilder#connectionHandlingMode(PhysicalConnectionHandlingMode)
 	 */
 	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
 
 	/**
+	 * Do newly-obtained JDBC connections come with
+	 * {@linkplain java.sql.Connection#getAutoCommit autocommit} already disabled?
+	 *
 	 * @see org.hibernate.cfg.JdbcSettings#CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT
 	 */
 	boolean doesConnectionProviderDisableAutoCommit();
 
 	/**
+	 * Should explanatory comment text be added to the generated SQL?
+	 *
 	 * @see org.hibernate.cfg.JdbcSettings#USE_SQL_COMMENTS
 	 */
 	boolean isCommentsEnabled();
 
 	/**
+	 * A {@linkplain CustomEntityDirtinessStrategy custom strategy} for determining
+	 * if an entity instance is dirty.
+	 *
 	 * @see org.hibernate.cfg.AvailableSettings#CUSTOM_ENTITY_DIRTINESS_STRATEGY
 	 */
 	CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
 
+	/**
+	 * An array of custom {@linkplain EntityNameResolver entity name resolvers}.
+	 *
+	 * @see org.hibernate.cfg.Configuration#addEntityNameResolver(EntityNameResolver)
+	 */
 	EntityNameResolver[] getEntityNameResolvers();
 
 	/**
@@ -366,7 +466,9 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * Returns {@link org.hibernate.boot.internal.StandardEntityNotFoundDelegate}
 	 * by default.
 	 *
-	 * @return The specific {@link EntityNotFoundDelegate} to use,  May be {@code null}
+	 * @return The specific {@link EntityNotFoundDelegate} to use, may be {@code null}
+	 *
+	 * @see org.hibernate.cfg.Configuration#setEntityNotFoundDelegate
 	 */
 	EntityNotFoundDelegate getEntityNotFoundDelegate();
 
@@ -401,17 +503,13 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isReleaseResourcesOnCloseEnabled();
 
 	/**
+	 * The timezone to use when interacting with JDBC.
+	 *
 	 * @see org.hibernate.cfg.JdbcSettings#JDBC_TIME_ZONE
+	 *
+	 * @see org.hibernate.SessionBuilder#jdbcTimeZone(TimeZone)
 	 */
 	TimeZone getJdbcTimeZone();
-
-	/**
-	 * @see org.hibernate.cfg.AvailableSettings#CRITERIA_VALUE_HANDLING_MODE
-	 */
-	@Override
-	default ValueHandlingMode getCriteriaValueHandlingMode() {
-		return ValueHandlingMode.BIND;
-	}
 
 	/**
 	 * @see org.hibernate.cfg.AvailableSettings#CRITERIA_COPY_TREE
@@ -460,34 +558,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.cfg.AvailableSettings#IN_CLAUSE_PARAMETER_PADDING
 	 */
 	default boolean inClauseParameterPaddingEnabled() {
-		return false;
-	}
-
-	/**
-	 * @see org.hibernate.cfg.AvailableSettings#JSON_FUNCTIONS_ENABLED
-	 */
-	@Override
-	default boolean isJsonFunctionsEnabled() {
-		return false;
-	}
-
-	/**
-	 * @see org.hibernate.cfg.AvailableSettings#XML_FUNCTIONS_ENABLED
-	 */
-	@Override
-	default boolean isXmlFunctionsEnabled() {
-		return false;
-	}
-
-	/**
-	 * Should HQL integer division HQL should produce an integer on
-	 * Oracle, MySQL, and MariaDB, where the {@code /} operator produces
-	 * a non-integer.
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#PORTABLE_INTEGER_DIVISION
-	 */
-	@Override
-	default boolean isPortableIntegerDivisionEnabled() {
 		return false;
 	}
 
@@ -644,38 +714,57 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isPreferJdbcDatetimeTypesInNativeQueriesEnabled();
 
 	/**
+	 * Determine the default {@link CacheStoreMode}, given the current
+	 * {@linkplain org.hibernate.Session#getProperties session properties}.
+	 *
 	 * @param properties the Session properties
-	 * @return either the CacheStoreMode as defined in the Session specific properties,
+	 * @return either the {@link CacheStoreMode} as defined in the session-specific properties,
 	 *         or as defined in the properties shared across all sessions (the defaults).
 	 */
 	CacheStoreMode getCacheStoreMode(Map<String, Object> properties);
 
 	/**
+	 * Determine the default {@link CacheRetrieveMode}, given the current
+	 * {@linkplain org.hibernate.Session#getProperties session properties}.
+	 *
 	 * @param properties the Session properties
-	 * @return either the CacheRetrieveMode as defined in the Session specific properties,
+	 * @return either the {@link CacheRetrieveMode} as defined in the session-specific properties,
 	 *         or as defined in the properties shared across all sessions (the defaults).
 	 */
 	CacheRetrieveMode getCacheRetrieveMode(Map<String, Object> properties);
 
 	/**
+	 * The default initial {@link CacheMode} for new sessions.
+	 *
 	 * @see org.hibernate.cfg.CacheSettings#JAKARTA_SHARED_CACHE_RETRIEVE_MODE
 	 * @see org.hibernate.cfg.CacheSettings#JAKARTA_SHARED_CACHE_STORE_MODE
+	 *
+	 * @see org.hibernate.Session#setCacheMode(CacheMode)
 	 */
 	CacheMode getInitialSessionCacheMode();
 
 	/**
+	 * The default initial {@link FlushMode} for new sessions.
+	 *
 	 * @see org.hibernate.jpa.HibernateHints#HINT_FLUSH_MODE
+	 *
+	 * @see org.hibernate.SessionBuilder#flushMode(FlushMode)
+	 * @see org.hibernate.Session#setHibernateFlushMode(FlushMode)
 	 */
 	FlushMode getInitialSessionFlushMode();
 
 	/**
+	 * The default lock scope and lock timeout.
+	 *
 	 * @see org.hibernate.cfg.AvailableSettings#JAKARTA_LOCK_TIMEOUT
 	 * @see org.hibernate.cfg.AvailableSettings#JAKARTA_LOCK_SCOPE
 	 */
 	LockOptions getDefaultLockOptions();
 
 	/**
-	 * Default properties for brand-new sessions
+	 * Default properties for brand-new sessions.
+	 *
+	 * @see org.hibernate.Session#setProperty(String, Object)
 	 */
 	Map<String, Object> getDefaultSessionProperties();
 }

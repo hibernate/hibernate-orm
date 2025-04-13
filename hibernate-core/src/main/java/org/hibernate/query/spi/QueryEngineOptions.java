@@ -110,6 +110,10 @@ public interface QueryEngineOptions {
 	boolean isXmlFunctionsEnabled();
 
 	/**
+	 * Should HQL integer division HQL should produce an integer on
+	 * Oracle, MySQL, and MariaDB, where the {@code /} operator produces
+	 * a non-integer.
+	 *
 	 * @see org.hibernate.cfg.AvailableSettings#PORTABLE_INTEGER_DIVISION
 	 */
 	boolean isPortableIntegerDivisionEnabled();

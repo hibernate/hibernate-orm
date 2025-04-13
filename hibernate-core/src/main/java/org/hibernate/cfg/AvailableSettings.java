@@ -99,25 +99,13 @@ public interface AvailableSettings
 	String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
 
 	/**
-	 * Controls how {@linkplain org.hibernate.loader.ast.spi.Loader entity loaders}
-	 * are created.
-	 * <p>
-	 * When {@code true}, the default, the loaders are only created on first
-	 * access; this ensures that all access patterns which are not useful
-	 * to the application are never instantiated, possibly saving a
-	 * substantial amount of memory for applications having many entities.
-	 * The only exception is the loader for {@link org.hibernate.LockMode#NONE},
-	 * which will always be eagerly initialized; this is necessary to
-	 * detect mapping errors.
-	 * <p>
-	 * {@code false} indicates that all loaders should be created up front;
-	 * this will consume more memory but ensures all necessary memory is
-	 * allocated right away.
-	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDelayedEntityLoaderCreations(boolean)
+	 *
+	 * @deprecated This setting no longer has any effect.
 	 *
 	 * @since 5.3
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	String DELAY_ENTITY_LOADER_CREATIONS = "hibernate.loader.delay_entity_loader_creations";
 
 	/**

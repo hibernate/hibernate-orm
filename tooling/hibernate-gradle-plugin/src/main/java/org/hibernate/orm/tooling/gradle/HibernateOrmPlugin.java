@@ -15,7 +15,6 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.logging.Logger;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
 
@@ -52,11 +51,10 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 
 	private void prepareEnhancement(HibernateOrmSpec ormDsl, Project project) {
 		project.getGradle().getTaskGraph().whenReady( (graph) -> {
-			if ( !ormDsl.isEnhancementEnabled() ) {
+			if ( !ormDsl.getEnhancement().isPresent() ) {
 				return;
 			}
 
-			Injected injected = project.getObjects().newInstance(Injected.class);
 			SourceSet sourceSet = resolveSourceSet( ormDsl.getSourceSet().get(), project );
 			final Set<String> languages = ormDsl.getLanguages().getOrNull();
 			if ( languages == null ) {
@@ -75,7 +73,6 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 						.getConfigurations()
 						.getByName( sourceSet.getCompileClasspathConfigurationName() );
 				Set<File> dependencyFiles = compileConfig.getFiles();
-				Logger logger = project.getLogger();
 				//noinspection Convert2Lambda
 				languageCompileTask.doLast(new Action<>() {
 					@Override
@@ -84,7 +81,7 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 							final Method getDestinationDirectory = languageCompileTask.getClass().getMethod("getDestinationDirectory");
 							final DirectoryProperty classesDirectory = (DirectoryProperty) getDestinationDirectory.invoke(languageCompileTask);
 							final ClassLoader classLoader = Helper.toClassLoader(classesDirs, dependencyFiles);
-							EnhancementHelper.enhance(classesDirectory, classLoader, ormDsl, logger, injected.getFileOperations());
+							EnhancementHelper.enhance(classesDirectory, classLoader, ormDsl);
 						}
 						catch (Exception e) {
 							throw new RuntimeException(e);

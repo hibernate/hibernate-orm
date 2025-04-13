@@ -159,11 +159,13 @@ public interface AvailableSettings
 	String MERGE_ENTITY_COPY_OBSERVER = "hibernate.event.merge.entity_copy_observer";
 
 	/**
-	 * When enabled, specifies that the persistent context should be discarded when either
-	 * {@link org.hibernate.Session#close()} or {@link jakarta.persistence.EntityManager#close()}
-	 * is called.
+	 * When enabled, specifies that all transactional resources should be immediately
+	 * released when {@link org.hibernate.Session#close()} is called.
 	 *
-	 * @settingDefault {@code false} (not discarded) per the JPA specification.
+	 * @settingDefault {@code false} (not released), as per the JPA specification.
+	 *
+	 * @apiNote The legacy name of this setting is extremely misleading;
+	 *          it has little to do with persistence contexts.
 	 */
 	String DISCARD_PC_ON_CLOSE = "hibernate.discard_pc_on_close";
 

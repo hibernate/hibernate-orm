@@ -168,4 +168,10 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 		delegate.jdbcTimeZone( timeZone );
 		return this;
 	}
+
+	@Override
+	public SharedSessionBuilder identifierRollback(boolean identifierRollback) {
+		delegate.identifierRollback( identifierRollback );
+		return this;
+	}
 }

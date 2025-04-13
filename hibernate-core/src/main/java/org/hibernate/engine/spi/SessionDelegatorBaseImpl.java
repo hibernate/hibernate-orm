@@ -1241,4 +1241,9 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	public Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode) {
 		return delegate.loadFromSecondLevelCache( persister, entityKey, instanceToLoad, lockMode );
 	}
+
+	@Override
+	public boolean isIdentifierRollbackEnabled() {
+		return delegate.isIdentifierRollbackEnabled();
+	}
 }

@@ -250,6 +250,8 @@ public class SessionImpl
 	private boolean autoClear;
 	private final boolean autoClose;
 
+	private final boolean identifierRollbackEnabled;
+
 	private transient LoadEvent loadEvent; //cached LoadEvent instance
 	private transient PostLoadEvent postLoadEvent; //cached PostLoadEvent instance
 
@@ -266,6 +268,8 @@ public class SessionImpl
 
 			autoClear = options.shouldAutoClear();
 			autoClose = options.shouldAutoClose();
+
+			identifierRollbackEnabled = options.isIdentifierRollbackEnabled();
 
 			setUpTransactionCompletionProcesses( options );
 
@@ -503,6 +507,11 @@ public class SessionImpl
 	@Override
 	public boolean isAutoCloseSessionEnabled() {
 		return autoClose;
+	}
+
+	@Override
+	public boolean isIdentifierRollbackEnabled() {
+		return identifierRollbackEnabled;
 	}
 
 	@Override
@@ -2115,6 +2124,7 @@ public class SessionImpl
 			super( (SessionFactoryImpl) session.getFactory() );
 			this.session = session;
 			super.tenantIdentifier( session.getTenantIdentifierValue() );
+			super.identifierRollback( session.isIdentifierRollbackEnabled() );
 		}
 
 		@Override
@@ -2219,6 +2229,12 @@ public class SessionImpl
 		@Override
 		public SharedSessionBuilderImpl autoClose() {
 			autoClose( session.autoClose );
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilderImpl identifierRollback(boolean identifierRollback) {
+			super.identifierRollback( identifierRollback );
 			return this;
 		}
 

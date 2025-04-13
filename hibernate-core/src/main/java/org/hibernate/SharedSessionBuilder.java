@@ -112,4 +112,7 @@ public interface SharedSessionBuilder extends SessionBuilder {
 
 	@Override
 	SharedSessionBuilder autoClose(boolean autoClose);
+
+	@Override
+	SharedSessionBuilder identifierRollback(boolean identifierRollback);
 }

@@ -1204,13 +1204,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return false;
 	}
 
-	public void setDefaultReadOnly(boolean readOnly) {
-		if ( readOnly ) {
-			throw new UnsupportedOperationException();
-		}
+	@Override
+	public boolean isIdentifierRollbackEnabled() {
+		// not yet implemented
+		return false;
 	}
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//TODO: COPY/PASTE FROM SessionImpl, pull up!
 

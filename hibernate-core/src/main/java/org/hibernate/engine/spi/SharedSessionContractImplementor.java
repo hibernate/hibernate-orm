@@ -377,6 +377,8 @@ public interface SharedSessionContractImplementor
 	 */
 	boolean isDefaultReadOnly();
 
+	boolean isIdentifierRollbackEnabled();
+
 	void setCriteriaCopyTreeEnabled(boolean jpaCriteriaCopyComplianceEnabled);
 
 	boolean isCriteriaCopyTreeEnabled();

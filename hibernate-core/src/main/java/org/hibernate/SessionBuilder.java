@@ -96,9 +96,9 @@ public interface SessionBuilder {
 	SessionBuilder autoClear(boolean autoClear);
 
 	/**
-	 * Specify the initial FlushMode to use for the opened Session
+	 * Specify the initial {@link FlushMode} to use for the opened Session
 	 *
-	 * @param flushMode The initial FlushMode to use for the opened Session
+	 * @param flushMode The initial {@code FlushMode} to use for the opened Session
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -145,6 +145,12 @@ public interface SessionBuilder {
 	 */
 	SessionBuilder clearEventListeners();
 
+	/**
+	 * Specify the {@linkplain org.hibernate.cfg.JdbcSettings#JDBC_TIME_ZONE
+	 * JDBC time zone} for the session.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	SessionBuilder jdbcTimeZone(TimeZone timeZone);
 
 	/**
@@ -157,4 +163,13 @@ public interface SessionBuilder {
 	 * @see jakarta.persistence.PersistenceContextType
 	 */
 	SessionBuilder autoClose(boolean autoClose);
+
+	/**
+	 * Enable identifier rollback after entity removal for the session.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#USE_IDENTIFIER_ROLLBACK
+	 */
+	SessionBuilder identifierRollback(boolean identifierRollback);
 }

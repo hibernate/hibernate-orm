@@ -126,4 +126,10 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 		delegate.flushMode( flushMode );
 		return this;
 	}
+
+	@Override
+	public SessionBuilder identifierRollback(boolean identifierRollback) {
+		delegate.identifierRollback( identifierRollback );
+		return this;
+	}
 }

@@ -11,7 +11,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serial;
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +31,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -78,7 +78,6 @@ import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.Collection;
@@ -567,12 +566,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public StatelessSession openStatelessSession() {
-		if ( defaultStatelessOptions != null ) {
-			return defaultStatelessOptions.openStatelessSession();
-		}
-		else {
-			return withStatelessOptions().openStatelessSession();
-		}
+		return defaultStatelessOptions != null
+				? defaultStatelessOptions.openStatelessSession()
+				: withStatelessOptions().openStatelessSession();
 	}
 
 	@Override
@@ -1129,6 +1125,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private boolean autoClose;
 		private boolean autoClear;
 		private Object tenantIdentifier;
+		private boolean identifierRollback;
 		private TimeZone jdbcTimeZone;
 		private boolean explicitNoInterceptor;
 		private final int defaultBatchFetchSize;
@@ -1152,6 +1149,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			autoClose = sessionFactoryOptions.isAutoCloseSessionEnabled();
 			defaultBatchFetchSize = sessionFactoryOptions.getDefaultBatchFetchSize();
 			subselectFetchEnabled = sessionFactoryOptions.isSubselectFetchEnabled();
+			identifierRollback = sessionFactoryOptions.isIdentifierRollbackEnabled();
 
 			final CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver =
 					sessionFactory.getCurrentTenantIdentifierResolver();
@@ -1233,6 +1231,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public Object getTenantIdentifierValue() {
 			return tenantIdentifier;
+		}
+
+		@Override
+		public boolean isIdentifierRollbackEnabled() {
+			return identifierRollback;
 		}
 
 		@Override
@@ -1319,6 +1322,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public SessionBuilderImpl tenantIdentifier(Object tenantIdentifier) {
 			this.tenantIdentifier = tenantIdentifier;
+			return this;
+		}
+
+		@Override
+		public SessionBuilder identifierRollback(boolean identifierRollback) {
+			this.identifierRollback = identifierRollback;
 			return this;
 		}
 
@@ -1435,8 +1444,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public Interceptor getInterceptor() {
-			return configuredInterceptor( EmptyInterceptor.INSTANCE, false, sessionFactory.getSessionFactoryOptions() );
+			return configuredInterceptor( EmptyInterceptor.INSTANCE, false,
+					sessionFactory.getSessionFactoryOptions() );
+		}
 
+		@Override
+		public boolean isIdentifierRollbackEnabled() {
+			// identifier rollback not yet implemented for StatelessSessions
+			return false;
 		}
 
 		@Override
@@ -1451,10 +1466,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public String getTenantIdentifier() {
-			if ( tenantIdentifier == null ) {
-				return null;
-			}
-			return sessionFactory.getTenantIdentifierJavaType().toString( tenantIdentifier );
+			return tenantIdentifier == null ? null
+					: sessionFactory.getTenantIdentifierJavaType().toString( tenantIdentifier );
 		}
 
 		@Override

@@ -46,6 +46,8 @@ public interface SessionCreationOptions {
 
 	Object getTenantIdentifierValue();
 
+	boolean isIdentifierRollbackEnabled();
+
 	TimeZone getJdbcTimeZone();
 
 	/**

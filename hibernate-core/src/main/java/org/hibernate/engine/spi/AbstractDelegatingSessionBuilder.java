@@ -6,7 +6,10 @@ package org.hibernate.engine.spi;
 
 import java.sql.Connection;
 import java.util.TimeZone;
+import java.util.function.Function;
 
+import org.hibernate.ConnectionAcquisitionMode;
+import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
@@ -55,8 +58,14 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SessionBuilder statementInspector(StatementInspector statementInspector) {
+		delegate.statementInspector( statementInspector );
+		return this;
+	}
+
+	@Override
+	public SessionBuilder statementInspector(Function<String, String> statementInspector) {
 		delegate.statementInspector( statementInspector );
 		return this;
 	}
@@ -109,9 +118,15 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode) {
 		delegate.connectionHandlingMode( mode );
+		return this;
+	}
+
+	@Override
+	public SessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
+		delegate.connectionHandling( acquisitionMode, releaseMode );
 		return this;
 	}
 

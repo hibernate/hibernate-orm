@@ -25,6 +25,8 @@ import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
 import jakarta.persistence.TypedQuery;
+import org.hibernate.ConnectionAcquisitionMode;
+import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
@@ -1271,9 +1273,15 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return this;
 		}
 
-		@Override
+		@Override @Deprecated
 		public SessionBuilderImpl statementInspector(StatementInspector statementInspector) {
 			this.statementInspector = statementInspector;
+			return this;
+		}
+
+		@Override
+		public SessionBuilder statementInspector(Function<String, String> statementInspector) {
+			this.statementInspector = statementInspector::apply;
 			return this;
 		}
 
@@ -1283,9 +1291,15 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return this;
 		}
 
-		@Override
+		@Override @Deprecated
 		public SessionBuilderImpl connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
 			this.connectionHandlingMode = connectionHandlingMode;
+			return this;
+		}
+
+		@Override
+		public SessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
+			this.connectionHandlingMode = PhysicalConnectionHandlingMode.interpret( acquisitionMode, releaseMode);
 			return this;
 		}
 
@@ -1401,9 +1415,15 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			return this;
 		}
 
-		@Override
+		@Override @Deprecated
 		public StatelessSessionBuilder statementInspector(StatementInspector statementInspector) {
 			this.statementInspector = statementInspector;
+			return this;
+		}
+
+		@Override
+		public StatelessSessionBuilder statementInspector(Function<String, String> statementInspector) {
+			this.statementInspector = statementInspector::apply;
 			return this;
 		}
 

@@ -6,6 +6,7 @@ package org.hibernate;
 
 import java.sql.Connection;
 import java.util.TimeZone;
+import java.util.function.Function;
 
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -48,12 +49,31 @@ public interface SessionBuilder {
 	SessionBuilder noInterceptor();
 
 	/**
-	 * Applies the given {@link StatementInspector} to the session.
+	 * Applies the given statement inspection function to the session.
 	 *
-	 * @param statementInspector The StatementInspector to use.
+	 * @param statementInspector A function which accepts a SQL string,
+	 *                           returning a possibly-processed SQL string
+	 *                           to be used by Hibernate instead of the
+	 *                           given SQL.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @since 7.0
 	 */
+	SessionBuilder statementInspector(Function<String,String> statementInspector);
+
+	/**
+	 * Applies the given {@link StatementInspector} to the session.
+	 *
+	 * @param statementInspector The {@code StatementInspector} to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated This operation exposes the SPI type {@link StatementInspector}
+	 * and is therefore a layer-breaker. Use {@link #statementInspector(Function)}
+	 * instead.
+	 */
+	@Deprecated(since = "7.0")
 	SessionBuilder statementInspector(StatementInspector statementInspector);
 
 	/**
@@ -66,13 +86,27 @@ public interface SessionBuilder {
 	SessionBuilder connection(Connection connection);
 
 	/**
-	 * Signifies that the connection release mode from the original session
-	 * should be used to create the new session.
+	 * Specifies the connection handling modes for the session.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @since 7.0
+	 */
+	SessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
+
+	/**
+	 * Specifies the {@linkplain PhysicalConnectionHandlingMode connection handling mode}.
 	 *
 	 * @param mode The connection handling mode to use.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated This operation exposes the SPI type
+	 * {@link PhysicalConnectionHandlingMode} and is therefore a layer-breaker.
+	 * Use {@link #connectionHandling(ConnectionAcquisitionMode, ConnectionReleaseMode)}
+	 * instead.
 	 */
+	@Deprecated(since = "7.0")
 	SessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode);
 
 	/**

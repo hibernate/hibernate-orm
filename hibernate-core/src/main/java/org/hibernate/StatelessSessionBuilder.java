@@ -5,6 +5,7 @@
 package org.hibernate;
 
 import java.sql.Connection;
+import java.util.function.Function;
 
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
@@ -54,11 +55,32 @@ public interface StatelessSessionBuilder {
 	StatelessSessionBuilder tenantIdentifier(Object tenantIdentifier);
 
 	/**
-	 * Applies the given {@link StatementInspector} to the stateless session.
+	 * Applies the given statement inspection function to the session.
 	 *
-	 * @param statementInspector The StatementInspector to use.
+	 * @param statementInspector A function which accepts a SQL string,
+	 *                           returning a possibly-processed SQL string
+	 *                           to be used by Hibernate instead of the
+	 *                           given SQL.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @apiNote This operation exposes the SPI type
+	 *          {@link StatementInspector}
+	 *          and is therefore a layer-breaker.
 	 */
+	StatelessSessionBuilder statementInspector(Function<String,String> statementInspector);
+
+	/**
+	 * Applies the given {@link StatementInspector} to the session.
+	 *
+	 * @param statementInspector The {@code StatementInspector} to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated This operation exposes the SPI type{@link StatementInspector}
+	 * and is therefore a layer-breaker. Use {@link #statementInspector(Function)}
+	 * instead.
+	 */
+	@Deprecated(since = "7.0")
 	StatelessSessionBuilder statementInspector(StatementInspector statementInspector);
 }

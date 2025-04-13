@@ -22,40 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.function.Function;
 
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.EntityType;
-import org.hibernate.BatchSize;
-import org.hibernate.CacheMode;
-import org.hibernate.ConnectionAcquisitionMode;
-import org.hibernate.EnabledFetchProfile;
-import org.hibernate.EntityFilterException;
-import org.hibernate.FetchNotFoundException;
-import org.hibernate.FlushMode;
-import org.hibernate.HibernateException;
-import org.hibernate.Interceptor;
-import org.hibernate.JDBCException;
-import org.hibernate.LobHelper;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.MappingException;
-import org.hibernate.MultiIdentifierLoadAccess;
-import org.hibernate.NaturalIdLoadAccess;
-import org.hibernate.NaturalIdMultiLoadAccess;
-import org.hibernate.ObjectDeletedException;
-import org.hibernate.ObjectNotFoundException;
-import org.hibernate.ReadOnlyMode;
-import org.hibernate.ReplicationMode;
-import org.hibernate.Session;
-import org.hibernate.SessionEventListener;
-import org.hibernate.SessionException;
-import org.hibernate.SharedSessionBuilder;
-import org.hibernate.SimpleNaturalIdLoadAccess;
-import org.hibernate.Transaction;
-import org.hibernate.TypeMismatchException;
-import org.hibernate.UnknownProfileException;
-import org.hibernate.UnresolvableObjectException;
+import org.hibernate.*;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.PersistenceContexts;
@@ -2254,15 +2226,27 @@ public class SessionImpl
 			return this;
 		}
 
-		@Override
+		@Override @Deprecated
 		public SharedSessionBuilderImpl statementInspector(StatementInspector statementInspector) {
 			super.statementInspector(statementInspector);
 			return this;
 		}
 
 		@Override
+		public SessionBuilder statementInspector(Function<String, String> statementInspector) {
+			super.statementInspector(statementInspector);
+			return this;
+		}
+
+		@Override @Deprecated
 		public SharedSessionBuilderImpl connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
 			super.connectionHandlingMode(connectionHandlingMode);
+			return this;
+		}
+
+		@Override @Deprecated
+		public SharedSessionBuilderImpl connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
+			super.connectionHandling(acquisitionMode, releaseMode);
 			return this;
 		}
 

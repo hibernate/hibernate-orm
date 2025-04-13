@@ -76,8 +76,8 @@ public enum PhysicalConnectionHandlingMode {
 			return null;
 		}
 
-		if ( setting instanceof PhysicalConnectionHandlingMode ) {
-			return (PhysicalConnectionHandlingMode) setting;
+		if ( setting instanceof PhysicalConnectionHandlingMode physicalConnectionHandlingMode ) {
+			return physicalConnectionHandlingMode;
 		}
 
 		final String value = setting.toString().trim();
@@ -85,7 +85,7 @@ public enum PhysicalConnectionHandlingMode {
 			return null;
 		}
 
-		return PhysicalConnectionHandlingMode.valueOf( value.toUpperCase( Locale.ROOT ) );
+		return valueOf( value.toUpperCase( Locale.ROOT ) );
 	}
 
 	public static PhysicalConnectionHandlingMode interpret(
@@ -94,28 +94,20 @@ public enum PhysicalConnectionHandlingMode {
 		if ( acquisitionMode == IMMEDIATELY ) {
 			if ( releaseMode != null && releaseMode != ON_CLOSE ) {
 				throw new IllegalArgumentException(
-						"Only ConnectionReleaseMode.ON_CLOSE can be used in combination with " +
-								"ConnectionAcquisitionMode.IMMEDIATELY; but ConnectionReleaseMode." +
-								releaseMode.name() + " was specified."
+						"Only ConnectionReleaseMode.ON_CLOSE can be used in combination with "
+						+ "ConnectionAcquisitionMode.IMMEDIATELY; but ConnectionReleaseMode."
+						+ releaseMode.name() + " was specified."
 				);
 			}
 			return IMMEDIATE_ACQUISITION_AND_HOLD;
 		}
 		else {
-			switch ( releaseMode ) {
-				case AFTER_STATEMENT: {
-					return DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
-				}
-				case BEFORE_TRANSACTION_COMPLETION: {
-					return DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION;
-				}
-				case AFTER_TRANSACTION: {
-					return DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
-				}
-				default: {
-					return DELAYED_ACQUISITION_AND_HOLD;
-				}
-			}
+			return switch ( releaseMode ) {
+				case AFTER_STATEMENT -> DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
+				case BEFORE_TRANSACTION_COMPLETION -> DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION;
+				case AFTER_TRANSACTION -> DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
+				default -> DELAYED_ACQUISITION_AND_HOLD;
+			};
 		}
 	}
 }

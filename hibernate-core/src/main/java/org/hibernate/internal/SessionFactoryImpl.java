@@ -78,6 +78,7 @@ import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
 import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.Collection;
@@ -133,6 +134,7 @@ import jakarta.persistence.SynchronizationType;
 import jakarta.persistence.TypedQueryReference;
 
 import static jakarta.persistence.SynchronizationType.SYNCHRONIZED;
+import static java.util.Collections.addAll;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
@@ -1323,11 +1325,12 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public SessionBuilderImpl eventListeners(SessionEventListener... listeners) {
 			if ( this.listeners == null ) {
-				this.listeners = sessionFactory.getSessionFactoryOptions()
-						.getBaselineSessionEventsListenerBuilder()
-						.buildBaselineList();
+				final var baselineListeners =
+						sessionFactory.getSessionFactoryOptions().buildSessionEventListeners();
+				this.listeners = new ArrayList<>( baselineListeners.length + listeners.length );
+				addAll( this.listeners, baselineListeners );
 			}
-			Collections.addAll( this.listeners, listeners );
+			addAll( this.listeners, listeners );
 			return this;
 		}
 
@@ -1360,8 +1363,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.sessionFactory = sessionFactory;
 			this.statementInspector = sessionFactory.getSessionFactoryOptions().getStatementInspector();
 
-			final CurrentTenantIdentifierResolver<Object> tenantIdentifierResolver =
-					sessionFactory.getCurrentTenantIdentifierResolver();
+			final var tenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( tenantIdentifierResolver != null ) {
 				tenantIdentifier = tenantIdentifierResolver.resolveCurrentTenantIdentifier();
 			}

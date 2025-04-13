@@ -345,14 +345,18 @@ public class SessionImpl
 			query.setLockMode( getLockMode( lockOptionsForRead.getLockMode() ) );
 		}
 
-		final Object specQueryTimeout = LegacySpecHelper.getInteger(
+		final Object specQueryTimeout = getHintedQueryTimeout();
+		if ( specQueryTimeout != null ) {
+			query.setHint( HINT_SPEC_QUERY_TIMEOUT, specQueryTimeout );
+		}
+	}
+
+	private Object getHintedQueryTimeout() {
+		return LegacySpecHelper.getInteger(
 				HINT_SPEC_QUERY_TIMEOUT,
 				HINT_JAVAEE_QUERY_TIMEOUT,
 				this::getSessionProperty
 		);
-		if ( specQueryTimeout != null ) {
-			query.setHint( HINT_SPEC_QUERY_TIMEOUT, specQueryTimeout );
-		}
 	}
 
 	protected void applyQuerySettingsAndHints(Query<?> query) {
@@ -361,16 +365,20 @@ public class SessionImpl
 	}
 
 	private void applyLockTimeoutHint(Query<?> query) {
-		final Integer specLockTimeout = LegacySpecHelper.getInteger(
+		final Integer specLockTimeout = getHintedLockTimeout();
+		if ( specLockTimeout != null ) {
+			query.setHint( HINT_SPEC_LOCK_TIMEOUT, specLockTimeout );
+		}
+	}
+
+	private Integer getHintedLockTimeout() {
+		return LegacySpecHelper.getInteger(
 				HINT_SPEC_LOCK_TIMEOUT,
 				HINT_JAVAEE_LOCK_TIMEOUT,
 				this::getSessionProperty,
 				// treat WAIT_FOREVER the same as null
 				value -> !Integer.valueOf( LockOptions.WAIT_FOREVER ).equals( value )
 		);
-		if ( specLockTimeout != null ) {
-			query.setHint( HINT_SPEC_LOCK_TIMEOUT, specLockTimeout );
-		}
 	}
 
 	private Object getSessionProperty(String propertyName) {

@@ -271,15 +271,6 @@ public interface SharedSessionContractImplementor
 	Interceptor getInterceptor();
 
 	/**
-	 * Enable or disable automatic cache clearing from after transaction
-	 * completion.
-	 *
-	 * @deprecated there's no good reason to expose this here
-	 */
-	@Deprecated(since = "6")
-	void setAutoClear(boolean enabled);
-
-	/**
 	 * Initialize the given collection (if not already initialized).
 	 */
 	void initializeCollection(PersistentCollection<?> collection, boolean writing)

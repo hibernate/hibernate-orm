@@ -139,11 +139,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void setAutoClear(boolean enabled) {
-		delegate.setAutoClear( enabled );
-	}
-
-	@Override
 	public boolean isTransactionInProgress() {
 		return delegate.isTransactionInProgress();
 	}

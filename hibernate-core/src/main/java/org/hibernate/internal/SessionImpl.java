@@ -247,7 +247,7 @@ public class SessionImpl
 
 	private LockOptions lockOptions;
 
-	private boolean autoClear;
+	private final boolean autoClear;
 	private final boolean autoClose;
 
 	private final boolean identifierRollbackEnabled;
@@ -562,12 +562,6 @@ public class SessionImpl
 	private void managedClose() {
 		log.trace( "Automatically closing session" );
 		closeWithoutOpenChecks();
-	}
-
-	@Override
-	public void setAutoClear(boolean enabled) {
-		checkOpenOrWaitingForAutoClose();
-		autoClear = enabled;
 	}
 
 	@Override
@@ -2054,10 +2048,10 @@ public class SessionImpl
 			log.tracef( "SessionImpl#afterTransactionCompletion(successful=%s, delayed=%s)", successful, delayed );
 		}
 
-		if ( !isClosed() || waitingForAutoClose ) {
-			if ( autoClear ||!successful ) {
-				internalClear();
-			}
+		final boolean notClosed = !isClosed() || waitingForAutoClose;
+
+		if ( notClosed && (!successful || autoClear) ) {
+			internalClear();
 		}
 
 		persistenceContext.afterTransactionCompletion();
@@ -2065,10 +2059,8 @@ public class SessionImpl
 
 		afterTransactionCompletionEvents( successful );
 
-		if ( !delayed ) {
-			if ( shouldAutoClose() && (!isClosed() || waitingForAutoClose) ) {
-				managedClose();
-			}
+		if ( !delayed && notClosed && shouldAutoClose() ) {
+			managedClose();
 		}
 
 		super.afterTransactionCompletion( successful, delayed );

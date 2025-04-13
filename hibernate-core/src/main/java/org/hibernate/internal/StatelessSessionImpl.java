@@ -1195,11 +1195,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return temporaryPersistenceContext;
 	}
 
-	@Override
-	public void setAutoClear(boolean enabled) {
-		throw new UnsupportedOperationException();
-	}
-
 	public boolean isDefaultReadOnly() {
 		return false;
 	}

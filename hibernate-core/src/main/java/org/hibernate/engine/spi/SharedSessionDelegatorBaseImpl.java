@@ -419,11 +419,6 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public void setAutoClear(boolean enabled) {
-		delegate.setAutoClear( enabled );
-	}
-
-	@Override
 	public void initializeCollection(PersistentCollection<?> collection, boolean writing) throws HibernateException {
 		delegate.initializeCollection( collection, writing );
 	}

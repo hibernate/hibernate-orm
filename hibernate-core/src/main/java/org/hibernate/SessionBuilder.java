@@ -170,6 +170,8 @@ public interface SessionBuilder {
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#USE_IDENTIFIER_ROLLBACK
+	 *
+	 * @since 7.0
 	 */
 	SessionBuilder identifierRollback(boolean identifierRollback);
 }

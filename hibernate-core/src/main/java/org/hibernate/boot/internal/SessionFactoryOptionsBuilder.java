@@ -159,7 +159,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private Supplier<? extends Interceptor> statelessInterceptorSupplier;
 	private StatementInspector statementInspector;
 	private final List<SessionFactoryObserver> sessionFactoryObserverList = new ArrayList<>();
-	private final BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;	// not exposed on builder atm
 
 	// persistence behavior
 	private CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
@@ -168,8 +167,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean identifierRollbackEnabled;
 	private boolean checkNullability;
 	private boolean initializeLazyStateOutsideTransactions;
-	private TempTableDdlTransactionHandling tempTableDdlTransactionHandling;
-	private boolean delayBatchFetchLoaderCreations;
 	private int defaultBatchFetchSize;
 	private Integer maximumFetchDepth;
 	private boolean subselectFetchEnabled;
@@ -216,9 +213,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean directReferenceCacheEntriesEnabled;
 	private boolean autoEvictCollectionCache;
 
-	// Schema tooling
-	private SchemaAutoTooling schemaAutoTooling;
-
 	// JDBC Handling
 	private boolean getGeneratedKeysEnabled;
 	private int jdbcBatchSize;
@@ -227,7 +221,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean commentsEnabled;
 	private PhysicalConnectionHandlingMode connectionHandlingMode;
 	private boolean connectionProviderDisablesAutoCommit;
-	private TimeZone jdbcTimeZone;
+	private final TimeZone jdbcTimeZone;
 	private final ValueHandlingMode criteriaValueHandlingMode;
 	private final boolean criteriaCopyTreeEnabled;
 	private final boolean nativeJdbcParametersIgnored;
@@ -258,6 +252,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final CacheMode initialSessionCacheMode;
 	private final FlushMode initialSessionFlushMode;
 	private final LockOptions defaultLockOptions;
+
+	// deprecated stuff
+	@Deprecated
+	private TempTableDdlTransactionHandling tempTableDdlTransactionHandling;
+	@Deprecated(forRemoval = true)
+	private final BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;
+	@Deprecated(forRemoval = true)
+	private SchemaAutoTooling schemaAutoTooling;
+	@Deprecated(forRemoval = true)
+	private boolean delayBatchFetchLoaderCreations;
 
 	@SuppressWarnings( "unchecked" )
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
@@ -943,7 +947,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return tempTableDdlTransactionHandling;
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public boolean isDelayBatchFetchLoaderCreationsEnabled() {
 		return delayBatchFetchLoaderCreations;
 	}

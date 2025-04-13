@@ -83,6 +83,7 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
@@ -443,6 +444,11 @@ public abstract class MockSessionFactory
 	@Override
 	public boolean isXmlFormatMapperLegacyFormatEnabled() {
 		return false;
+	}
+
+	@Override
+	public ValueHandlingMode getCriteriaValueHandlingMode() {
+		return ValueHandlingMode.BIND;
 	}
 
 	@Override

@@ -6,7 +6,6 @@ package org.hibernate.engine.spi;
 
 import java.util.Set;
 import java.util.UUID;
-import jakarta.persistence.FlushModeType;
 import jakarta.persistence.TransactionRequiredException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -72,14 +71,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 public interface SharedSessionContractImplementor
 		extends SharedSessionContract, JdbcSessionOwner, Options, LobCreationContext, WrapperOptions,
 					QueryProducerImplementor, JavaType.CoercionContext {
-
-	// todo : this is the shared contract between Session and StatelessSession,
-	//        but it defines methods that StatelessSession does not implement
-	//	      To me it seems like it is better to properly isolate those methods
-	//	      into just the Session hierarchy. They include (at least):
-	//		  1) get/set CacheMode
-	//		  2) get/set FlushMode
-	//		  3) get/set (default) read-only
 
 	/**
 	 * Obtain the {@linkplain SessionFactoryImplementor factory} which created this session.
@@ -384,36 +375,6 @@ public interface SharedSessionContractImplementor
 	void setNativeJdbcParametersIgnored(boolean nativeJdbcParametersIgnored);
 
 	/**
-	 * Get the current {@link FlushModeType} for this session.
-	 * <p>
-	 * For users of the Hibernate native APIs, we've had to rename this method
-	 * as defined by Hibernate historically because the JPA contract defines a method of the same
-	 * name, but returning the JPA {@link FlushModeType} rather than Hibernate's {@link FlushMode}.
-	 * For the former behavior, use {@link #getHibernateFlushMode()} instead.
-	 *
-	 * @return The {@link FlushModeType} in effect for this Session.
-	 *
-	 * @deprecated there's no good reason to expose this here
-	 */
-	@Deprecated(since = "6")
-	FlushModeType getFlushMode();
-
-	/**
-	 * Set the current {@link FlushMode} for this session.
-	 * <p>
-	 * The flush mode determines the points at which the session is flushed.
-	 * <em>Flushing</em> is the process of synchronizing the underlying persistent
-	 * store with persistable state held in memory.
-	 * <p>
-	 * For a logically "read-only" session, it's reasonable to set the session
-	 * flush mode to {@link FlushMode#MANUAL} at the start of the session
-	 * (in order skip some work and gain some extra performance).
-	 *
-	 * @param flushMode the new flush mode
-	 */
-	void setHibernateFlushMode(FlushMode flushMode);
-
-	/**
 	 * Get the current {@link FlushMode} for this session.
 	 *
 	 * @return The flush mode
@@ -533,15 +494,22 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @return true if flush is required, false otherwise.
 	 */
-	boolean autoFlushIfRequired(Set<String> querySpaces) throws HibernateException;
-
-	default boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush)
-			throws HibernateException {
-		return autoFlushIfRequired( querySpaces );
+	default boolean autoFlushIfRequired(Set<String> querySpaces) {
+		return autoFlushIfRequired( querySpaces, false );
 	}
 
-	default void autoPreFlush(){
-	}
+	/**
+	 * detect in-memory changes, determine if the changes are to tables
+	 * named in the query and, if so, complete execution the flush
+	 *
+	 * @param querySpaces the tables named in the query.
+	 * @param skipPreFlush see {@link org.hibernate.event.spi.AutoFlushEvent#isSkipPreFlush}
+	 *
+	 * @return true if flush is required, false otherwise.
+	 */
+	boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush);
+
+	void autoPreFlush();
 
 	/**
 	 * Check if there is a Hibernate or JTA transaction in progress and,
@@ -557,32 +525,44 @@ public interface SharedSessionContractImplementor
 	 * Cast this object to {@link SessionImplementor}, if possible.
 	 *
 	 * @throws ClassCastException if the cast is not possible
+	 *
+	 * @deprecated No longer useful, since Java made downcasting safer
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	default SessionImplementor asSessionImplementor() {
 		throw new ClassCastException( "session is not a SessionImplementor" );
 	}
 
 	/**
 	 * Does this object implement {@link SessionImplementor}?
+	 *
+	 * @deprecated No longer useful, since Java made downcasting safer
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	default boolean isSessionImplementor() {
-		return false;
+		return this instanceof SessionImplementor;
 	}
 
 	/**
 	 * Cast this object to {@link StatelessSession}, if possible.
 	 *
 	 * @throws ClassCastException if the cast is not possible
+	 *
+	 * @deprecated No longer useful, since Java made downcasting safer
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	default StatelessSession asStatelessSession() {
-		throw new ClassCastException( "session is not a StatelessSession" );
+		return (StatelessSession) this;
 	}
 
 	/**
 	 * Does this object implement {@link StatelessSession}?
+	 *
+	 * @deprecated No longer useful, since Java made downcasting safer
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	default boolean isStatelessSession() {
-		return false;
+		return this instanceof StatelessSession;
 	}
 
 	/**

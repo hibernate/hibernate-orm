@@ -37,7 +37,7 @@ public class TransactionJoinHandlingChecker {
 			assertFalse( transactionCoordinator.isJtaTransactionCurrentlyActive() );
 			assertFalse( transactionCoordinator.isJoined() );
 
-			session.getFlushMode();
+			session.checkOpen();
 			assertFalse( transactionCoordinator.isSynchronizationRegistered() );
 			assertFalse( transactionCoordinator.isJtaTransactionCurrentlyActive() );
 			assertFalse( transactionCoordinator.isJoined() );
@@ -48,7 +48,7 @@ public class TransactionJoinHandlingChecker {
 			assertFalse( transactionCoordinator.isJoined() );
 			assertFalse( transactionCoordinator.isSynchronizationRegistered() );
 
-			session.getFlushMode();
+			session.checkOpen();
 			assertTrue( JtaStatusHelper.isActive( transactionManager ) );
 			assertTrue( transactionCoordinator.isJtaTransactionCurrentlyActive() );
 			assertFalse( transactionCoordinator.isJoined() );

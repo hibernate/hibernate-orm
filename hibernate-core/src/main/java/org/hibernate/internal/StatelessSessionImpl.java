@@ -154,6 +154,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return true;
 	}
 
+	@Override
+	public FlushMode getHibernateFlushMode() {
+		return FlushMode.MANUAL;
+	}
+
 	// inserts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -1147,11 +1152,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public void setHibernateFlushMode(FlushMode flushMode) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public Object getContextEntityIdentifier(Object object) {
 		checkOpen();
 		return null;
@@ -1223,6 +1223,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
+	public void autoPreFlush() {
+	}
+
+	@Override
 	public void flush() {
 	}
 
@@ -1238,7 +1242,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public boolean autoFlushIfRequired(Set<String> querySpaces) {
+	public boolean autoFlushIfRequired(Set<String> querySpaces, boolean skipPreFlush) {
 		return false;
 	}
 
@@ -1305,16 +1309,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	private LockMode getNullSafeLockMode(LockMode lockMode) {
 		return lockMode == null ? LockMode.NONE : lockMode;
-	}
-
-	@Override
-	public StatelessSession asStatelessSession() {
-		return this;
-	}
-
-	@Override
-	public boolean isStatelessSession() {
-		return true;
 	}
 
 	protected Object lockCacheItem(Object id, Object previousVersion, EntityPersister persister) {

@@ -103,7 +103,7 @@ public class SynchronizationTypeTest {
 			assertTrue( transactionCoordinator.isActive(), "EM was auto joined on creation" );
 			assertFalse( transactionCoordinator.isJoined(), "EM was auto joined on creation" );
 
-			session.getFlushMode();
+			session.checkOpen();
 			assertFalse( transactionCoordinator.isSynchronizationRegistered() );
 			assertTrue( transactionCoordinator.isActive() );
 			assertFalse( transactionCoordinator.isJoined() );

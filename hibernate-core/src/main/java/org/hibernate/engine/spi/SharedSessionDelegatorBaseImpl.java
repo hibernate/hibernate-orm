@@ -5,7 +5,6 @@
 package org.hibernate.engine.spi;
 
 import jakarta.persistence.EntityGraph;
-import jakarta.persistence.FlushModeType;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -512,16 +511,6 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public void setNativeJdbcParametersIgnored(boolean nativeJdbcParametersIgnored) {
 		delegate.setNativeJdbcParametersIgnored( nativeJdbcParametersIgnored );
-	}
-
-	@Override
-	public FlushModeType getFlushMode() {
-		return delegate.getFlushMode();
-	}
-
-	@Override
-	public void setHibernateFlushMode(FlushMode flushMode) {
-		delegate.setHibernateFlushMode( flushMode );
 	}
 
 	@Override

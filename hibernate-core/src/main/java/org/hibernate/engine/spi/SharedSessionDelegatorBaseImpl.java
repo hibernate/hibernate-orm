@@ -529,16 +529,6 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public boolean shouldAutoClose() {
-		return delegate.shouldAutoClose();
-	}
-
-	@Override
-	public boolean isAutoCloseSessionEnabled() {
-		return delegate.isAutoCloseSessionEnabled();
-	}
-
-	@Override
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return delegate.getLoadQueryInfluencers();
 	}

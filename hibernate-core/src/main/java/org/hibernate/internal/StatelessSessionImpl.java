@@ -1116,12 +1116,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return getFactory().getPersistenceUnitUtil().getIdentifier(entity);
 	}
 
-	@Override
 	public boolean isAutoCloseSessionEnabled() {
 		return getSessionFactoryOptions().isAutoCloseSessionEnabled();
 	}
 
-	@Override
 	public boolean shouldAutoClose() {
 		return isAutoCloseSessionEnabled() && !isClosed();
 	}

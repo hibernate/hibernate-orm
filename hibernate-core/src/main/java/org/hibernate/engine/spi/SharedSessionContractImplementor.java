@@ -17,7 +17,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.StatelessSession;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.query.Query;
@@ -415,26 +414,6 @@ public interface SharedSessionContractImplementor
 	 * does nothing.
 	 */
 	void afterScrollOperation();
-
-	/**
-	 * Should this session be automatically closed after the current
-	 * transaction completes?
-	 *
-	 * @deprecated there's no reason to expose this here
-	 */
-	@Deprecated(since = "6")
-	boolean shouldAutoClose();
-
-	/**
-	 * Is auto-close at transaction completion enabled?
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#AUTO_CLOSE_SESSION
-	 * @see SessionFactoryOptions#isAutoCloseSessionEnabled()
-	 *
-	 * @deprecated there's no reason to expose this here
-	 */
-	@Deprecated(since = "6")
-	boolean isAutoCloseSessionEnabled();
 
 	/**
 	 * Get the {@link LoadQueryInfluencers} associated with this session.

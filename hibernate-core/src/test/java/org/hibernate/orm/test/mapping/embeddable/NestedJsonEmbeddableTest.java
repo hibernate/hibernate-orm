@@ -21,7 +21,6 @@ import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.dialect.GaussDBDialect;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -30,6 +29,7 @@ import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,7 +49,7 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-			JsonHolder.class
+				JsonHolder.class
 		};
 	}
 
@@ -57,8 +57,20 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	public void setUp() {
 		inTransaction(
 				session -> {
-					session.persist( new JsonHolder( 1L, "XYZ", 10, "String \"<abc>A&B</abc>\"", EmbeddableAggregate.createAggregate1() ) );
-					session.persist( new JsonHolder( 2L, null, 20, "String 'abc'", EmbeddableAggregate.createAggregate2() ) );
+					session.persist( new JsonHolder(
+							1L,
+							"XYZ",
+							10,
+							"String \"<abc>A&B</abc>\"",
+							EmbeddableAggregate.createAggregate1()
+					) );
+					session.persist( new JsonHolder(
+							2L,
+							null,
+							20,
+							"String 'abc'",
+							EmbeddableAggregate.createAggregate2()
+					) );
 				}
 		);
 	}
@@ -73,6 +85,7 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testUpdate() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
@@ -89,26 +102,37 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testFetch() {
 		sessionFactoryScope().inSession(
 				entityManager -> {
-					List<JsonHolder> jsonHolders = entityManager.createQuery( "from JsonHolder b where b.id = 1", JsonHolder.class ).getResultList();
+					List<JsonHolder> jsonHolders = entityManager.createQuery(
+							"from JsonHolder b where b.id = 1",
+							JsonHolder.class
+					).getResultList();
 					assertEquals( 1, jsonHolders.size() );
 					JsonHolder jsonHolder = jsonHolders.get( 0 );
 					assertEquals( 1L, jsonHolder.getId() );
 					assertEquals( "XYZ", jsonHolder.theJson.stringField );
 					assertEquals( 10, jsonHolder.theJson.simpleEmbeddable.integerField );
-					assertEquals( "String \"<abc>A&B</abc>\"", jsonHolder.theJson.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
+					assertEquals(
+							"String \"<abc>A&B</abc>\"",
+							jsonHolder.theJson.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField
+					);
 					assertStructEquals( EmbeddableAggregate.createAggregate1(), jsonHolder.getAggregate() );
 				}
 		);
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testFetchNull() {
 		sessionFactoryScope().inSession(
 				entityManager -> {
-					List<JsonHolder> jsonHolders = entityManager.createQuery( "from JsonHolder b where b.id = 2", JsonHolder.class ).getResultList();
+					List<JsonHolder> jsonHolders = entityManager.createQuery(
+							"from JsonHolder b where b.id = 2",
+							JsonHolder.class
+					).getResultList();
 					assertEquals( 1, jsonHolders.size() );
 					JsonHolder jsonHolder = jsonHolders.get( 0 );
 					assertEquals( 2L, jsonHolder.getId() );
@@ -120,15 +144,22 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testDomainResult() {
 		sessionFactoryScope().inSession(
 				entityManager -> {
-					List<TheJson> structs = entityManager.createQuery( "select b.theJson from JsonHolder b where b.id = 1", TheJson.class ).getResultList();
+					List<TheJson> structs = entityManager.createQuery(
+							"select b.theJson from JsonHolder b where b.id = 1",
+							TheJson.class
+					).getResultList();
 					assertEquals( 1, structs.size() );
 					TheJson theJson = structs.get( 0 );
 					assertEquals( "XYZ", theJson.stringField );
 					assertEquals( 10, theJson.simpleEmbeddable.integerField );
-					assertEquals( "String \"<abc>A&B</abc>\"", theJson.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
+					assertEquals(
+							"String \"<abc>A&B</abc>\"",
+							theJson.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField
+					);
 					assertStructEquals( EmbeddableAggregate.createAggregate1(), theJson.nested );
 				}
 		);
@@ -207,16 +238,21 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( simpleEmbeddable.doubleNested.theNested, tuple.get( 27, Nested.class ) );
 					assertEquals( simpleEmbeddable.doubleNested.theNested.theLeaf, tuple.get( 28, Leaf.class ) );
 					assertEquals( 10, simpleEmbeddable.integerField );
-					assertEquals( "String \"<abc>A&B</abc>\"", simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
+					assertEquals(
+							"String \"<abc>A&B</abc>\"",
+							simpleEmbeddable.doubleNested.theNested.theLeaf.stringField
+					);
 				}
 		);
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testDeleteWhere() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					entityManager.createMutationQuery( "delete JsonHolder b where b.theJson is not null" ).executeUpdate();
+					entityManager.createMutationQuery( "delete JsonHolder b where b.theJson is not null" )
+							.executeUpdate();
 					assertNull( entityManager.find( JsonHolder.class, 1L ) );
 
 				}
@@ -224,6 +260,7 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testUpdateAggregate() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
@@ -234,31 +271,39 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@Jira( "https://hibernate.atlassian.net/browse/HHH-17695" )
+	@Jira("https://hibernate.atlassian.net/browse/HHH-17695")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testNullNestedAggregate() {
 		sessionFactoryScope().inTransaction(
-			entityManager -> {
-				JsonHolder jsonHolder = new JsonHolder(3L, "abc", 30, "String 'xyz'", null );
-				entityManager.persist( jsonHolder );
-			}
+				entityManager -> {
+					JsonHolder jsonHolder = new JsonHolder( 3L, "abc", 30, "String 'xyz'", null );
+					entityManager.persist( jsonHolder );
+				}
 		);
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					JsonHolder jsonHolder = entityManager.createQuery( "from JsonHolder b where b.id = 3", JsonHolder.class ).getSingleResult();
+					JsonHolder jsonHolder = entityManager.createQuery(
+							"from JsonHolder b where b.id = 3",
+							JsonHolder.class
+					).getSingleResult();
 					assertEquals( "abc", jsonHolder.theJson.stringField );
 					assertEquals( 30, jsonHolder.theJson.simpleEmbeddable.integerField );
-					assertEquals( "String 'xyz'", jsonHolder.theJson.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
+					assertEquals(
+							"String 'xyz'",
+							jsonHolder.theJson.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField
+					);
 					assertNull( jsonHolder.getAggregate() );
 				}
 		);
 	}
 
 	@Test
-	@Jira( "https://hibernate.atlassian.net/browse/HHH-17695" )
+	@Jira("https://hibernate.atlassian.net/browse/HHH-17695")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testNullNestedEmbeddable() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					JsonHolder jsonHolder = new JsonHolder( );
+					JsonHolder jsonHolder = new JsonHolder();
 					jsonHolder.setId( 3L );
 					jsonHolder.setTheJson( new TheJson( "abc", null, EmbeddableAggregate.createAggregate1() ) );
 					entityManager.persist( jsonHolder );
@@ -266,7 +311,10 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		);
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					JsonHolder jsonHolder = entityManager.createQuery( "from JsonHolder b where b.id = 3", JsonHolder.class ).getSingleResult();
+					JsonHolder jsonHolder = entityManager.createQuery(
+							"from JsonHolder b where b.id = 3",
+							JsonHolder.class
+					).getSingleResult();
 					assertEquals( "abc", jsonHolder.theJson.stringField );
 					assertNull( jsonHolder.theJson.simpleEmbeddable );
 					assertStructEquals( EmbeddableAggregate.createAggregate1(), jsonHolder.getAggregate() );
@@ -275,11 +323,12 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@Jira( "https://hibernate.atlassian.net/browse/HHH-17695" )
+	@Jira("https://hibernate.atlassian.net/browse/HHH-17695")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testNullNestedEmbeddableAndAggregate() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					JsonHolder jsonHolder = new JsonHolder( );
+					JsonHolder jsonHolder = new JsonHolder();
 					jsonHolder.setId( 3L );
 					jsonHolder.setTheJson( new TheJson( "abc", null, null ) );
 					entityManager.persist( jsonHolder );
@@ -287,7 +336,10 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		);
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					JsonHolder jsonHolder = entityManager.createQuery( "from JsonHolder b where b.id = 3", JsonHolder.class ).getSingleResult();
+					JsonHolder jsonHolder = entityManager.createQuery(
+							"from JsonHolder b where b.id = 3",
+							JsonHolder.class
+					).getSingleResult();
 					assertEquals( "abc", jsonHolder.theJson.stringField );
 					assertNull( jsonHolder.theJson.simpleEmbeddable );
 					assertNull( jsonHolder.getAggregate() );
@@ -297,11 +349,12 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not suppported")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not suppported")
 	public void testUpdateAggregateMember() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					entityManager.createMutationQuery( "update JsonHolder b set b.theJson.nested.theString = null" ).executeUpdate();
+					entityManager.createMutationQuery( "update JsonHolder b set b.theJson.nested.theString = null" )
+							.executeUpdate();
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
 					struct.setTheString( null );
 					assertStructEquals( struct, entityManager.find( JsonHolder.class, 1L ).getAggregate() );
@@ -311,11 +364,13 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not suppported")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not suppported")
 	public void testUpdateMultipleAggregateMembers() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					entityManager.createMutationQuery( "update JsonHolder b set b.theJson.nested.theString = null, b.theJson.nested.theUuid = null" ).executeUpdate();
+					entityManager.createMutationQuery(
+									"update JsonHolder b set b.theJson.nested.theString = null, b.theJson.nested.theUuid = null" )
+							.executeUpdate();
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
 					struct.setTheString( null );
 					struct.setTheUuid( null );
@@ -326,40 +381,41 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testUpdateAllAggregateMembers() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
 					entityManager.createMutationQuery(
-							"update JsonHolder b set " +
-									"b.theJson.nested.theInt = :theInt," +
-									"b.theJson.nested.theDouble = :theDouble," +
-									"b.theJson.nested.theBoolean = :theBoolean," +
-									"b.theJson.nested.theNumericBoolean = :theNumericBoolean," +
-									"b.theJson.nested.theStringBoolean = :theStringBoolean," +
-									"b.theJson.nested.theString = :theString," +
-									"b.theJson.nested.theInteger = :theInteger," +
-									"b.theJson.nested.theUrl = :theUrl," +
-									"b.theJson.nested.theClob = :theClob," +
-									"b.theJson.nested.theBinary = :theBinary," +
-									"b.theJson.nested.theDate = :theDate," +
-									"b.theJson.nested.theTime = :theTime," +
-									"b.theJson.nested.theTimestamp = :theTimestamp," +
-									"b.theJson.nested.theInstant = :theInstant," +
-									"b.theJson.nested.theUuid = :theUuid," +
-									"b.theJson.nested.gender = :gender," +
-									"b.theJson.nested.convertedGender = :convertedGender," +
-									"b.theJson.nested.ordinalGender = :ordinalGender," +
-									"b.theJson.nested.theDuration = :theDuration," +
-									"b.theJson.nested.theLocalDateTime = :theLocalDateTime," +
-									"b.theJson.nested.theLocalDate = :theLocalDate," +
-									"b.theJson.nested.theLocalTime = :theLocalTime," +
-									"b.theJson.nested.theZonedDateTime = :theZonedDateTime," +
-									"b.theJson.nested.theOffsetDateTime = :theOffsetDateTime," +
-									"b.theJson.nested.mutableValue = :mutableValue," +
-									"b.theJson.simpleEmbeddable.integerField = :integerField " +
-									"where b.id = 2"
-					)
+									"update JsonHolder b set " +
+											"b.theJson.nested.theInt = :theInt," +
+											"b.theJson.nested.theDouble = :theDouble," +
+											"b.theJson.nested.theBoolean = :theBoolean," +
+											"b.theJson.nested.theNumericBoolean = :theNumericBoolean," +
+											"b.theJson.nested.theStringBoolean = :theStringBoolean," +
+											"b.theJson.nested.theString = :theString," +
+											"b.theJson.nested.theInteger = :theInteger," +
+											"b.theJson.nested.theUrl = :theUrl," +
+											"b.theJson.nested.theClob = :theClob," +
+											"b.theJson.nested.theBinary = :theBinary," +
+											"b.theJson.nested.theDate = :theDate," +
+											"b.theJson.nested.theTime = :theTime," +
+											"b.theJson.nested.theTimestamp = :theTimestamp," +
+											"b.theJson.nested.theInstant = :theInstant," +
+											"b.theJson.nested.theUuid = :theUuid," +
+											"b.theJson.nested.gender = :gender," +
+											"b.theJson.nested.convertedGender = :convertedGender," +
+											"b.theJson.nested.ordinalGender = :ordinalGender," +
+											"b.theJson.nested.theDuration = :theDuration," +
+											"b.theJson.nested.theLocalDateTime = :theLocalDateTime," +
+											"b.theJson.nested.theLocalDate = :theLocalDate," +
+											"b.theJson.nested.theLocalTime = :theLocalTime," +
+											"b.theJson.nested.theZonedDateTime = :theZonedDateTime," +
+											"b.theJson.nested.theOffsetDateTime = :theOffsetDateTime," +
+											"b.theJson.nested.mutableValue = :mutableValue," +
+											"b.theJson.simpleEmbeddable.integerField = :integerField " +
+											"where b.id = 2"
+							)
 							.setParameter( "theInt", struct.getTheInt() )
 							.setParameter( "theDouble", struct.getTheDouble() )
 							.setParameter( "theBoolean", struct.isTheBoolean() )
@@ -411,7 +467,12 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		public JsonHolder() {
 		}
 
-		public JsonHolder(Long id, String stringField, Integer integerField, String leaf, EmbeddableAggregate aggregate) {
+		public JsonHolder(
+				Long id,
+				String stringField,
+				Integer integerField,
+				String leaf,
+				EmbeddableAggregate aggregate) {
 			this.id = id;
 			this.theJson = new TheJson( stringField, integerField, leaf, aggregate );
 		}

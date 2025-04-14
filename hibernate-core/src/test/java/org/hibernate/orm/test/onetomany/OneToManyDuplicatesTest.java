@@ -7,12 +7,15 @@ package org.hibernate.orm.test.onetomany;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.dialect.GaussDBDialect;
+
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		OneToManyDuplicatesTest.ContactInfo.class
 })
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
-@JiraKey( "HHH-14078" )
+@JiraKey("HHH-14078")
+
 public class OneToManyDuplicatesTest {
 
 	@AfterAll
@@ -44,6 +48,7 @@ public class OneToManyDuplicatesTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void test(SessionFactoryScope scope) {
 		Long kevinId = scope.fromTransaction( session -> {
 			UserContact userContact = new UserContact();
@@ -66,7 +71,7 @@ public class OneToManyDuplicatesTest {
 		scope.inTransaction( session -> {
 			UserContact userContact = session.find( UserContact.class, 1L );
 			assertEquals( 1, userContact.getContactInfos().size() );
-		});
+		} );
 	}
 
 	@Entity(name = "UserContact")

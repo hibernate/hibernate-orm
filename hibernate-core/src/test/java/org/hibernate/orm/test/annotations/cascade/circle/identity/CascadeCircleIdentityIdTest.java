@@ -4,12 +4,15 @@
  */
 package org.hibernate.orm.test.annotations.cascade.circle.identity;
 
-import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.dialect.GaussDBDialect;
+
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
@@ -30,6 +33,7 @@ public class CascadeCircleIdentityIdTest {
 
 	@Test
 	@JiraKey(value = "HHH-5472")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testCascade(SessionFactoryScope scope) {
 		A a = new A();
 		B b = new B();

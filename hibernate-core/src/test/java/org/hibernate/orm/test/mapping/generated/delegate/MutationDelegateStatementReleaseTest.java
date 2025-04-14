@@ -1,3 +1,4 @@
+
 /*
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
@@ -12,6 +13,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.engine.jdbc.JdbcLogging;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.generator.EventType;
@@ -27,6 +29,7 @@ import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,15 +49,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Marco Belladelli
  */
-@DomainModel( annotatedClasses = {
+@DomainModel(annotatedClasses = {
 		MutationDelegateStatementReleaseTest.IdentityOnly.class,
 		MutationDelegateStatementReleaseTest.IdentityAndValues.class,
 		MutationDelegateStatementReleaseTest.BaseEntity.class,
 		MutationDelegateStatementReleaseTest.ChildEntity.class,
-} )
+})
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsIdentityColumns.class )
-@Jira( "https://hibernate.atlassian.net/browse/HHH-17688" )
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+@Jira("https://hibernate.atlassian.net/browse/HHH-17688")
+@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 public class MutationDelegateStatementReleaseTest {
 	private TriggerOnPrefixLogListener trigger;
 
@@ -172,10 +176,10 @@ public class MutationDelegateStatementReleaseTest {
 		assertThat( resourceRegistry.hasRegisteredResources() ).as( "Expected no registered resources" ).isFalse();
 	}
 
-	@Entity( name = "IdentityOnly" )
+	@Entity(name = "IdentityOnly")
 	public static class IdentityOnly {
 		@Id
-		@GeneratedValue( strategy = GenerationType.IDENTITY )
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Long id;
 
 		private String name;
@@ -189,18 +193,18 @@ public class MutationDelegateStatementReleaseTest {
 		}
 	}
 
-	@Entity( name = "IdentityAndValues" )
-	@SuppressWarnings( "unused" )
+	@Entity(name = "IdentityAndValues")
+	@SuppressWarnings("unused")
 	public static class IdentityAndValues {
 		@Id
-		@GeneratedValue( strategy = GenerationType.IDENTITY )
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Long id;
 
-		@Generated( event = EventType.INSERT )
-		@ColumnDefault( "'default_name'" )
+		@Generated(event = EventType.INSERT)
+		@ColumnDefault("'default_name'")
 		private String name;
 
-		@UpdateTimestamp( source = SourceType.DB )
+		@UpdateTimestamp(source = SourceType.DB)
 		private Date updateDate;
 
 		private String data;
@@ -222,22 +226,22 @@ public class MutationDelegateStatementReleaseTest {
 		}
 	}
 
-	@Entity( name = "BaseEntity" )
-	@Inheritance( strategy = InheritanceType.JOINED )
-	@SuppressWarnings( "unused" )
+	@Entity(name = "BaseEntity")
+	@Inheritance(strategy = InheritanceType.JOINED)
+	@SuppressWarnings("unused")
 	public static class BaseEntity {
 		@Id
-		@GeneratedValue( strategy = GenerationType.IDENTITY )
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Long id;
 
-		@Generated( event = EventType.INSERT )
-		@ColumnDefault( "'default_name'" )
+		@Generated(event = EventType.INSERT)
+		@ColumnDefault("'default_name'")
 		private String name;
 
-		@UpdateTimestamp( source = SourceType.DB )
+		@UpdateTimestamp(source = SourceType.DB)
 		private Date updateDate;
 
-		@SuppressWarnings( "FieldCanBeLocal" )
+		@SuppressWarnings("FieldCanBeLocal")
 		private String data;
 
 		public Long getId() {
@@ -257,14 +261,14 @@ public class MutationDelegateStatementReleaseTest {
 		}
 	}
 
-	@Entity( name = "ChildEntity" )
-	@SuppressWarnings( "unused" )
+	@Entity(name = "ChildEntity")
+	@SuppressWarnings("unused")
 	public static class ChildEntity extends BaseEntity {
-		@Generated( event = EventType.INSERT )
-		@ColumnDefault( "'default_child_name'" )
+		@Generated(event = EventType.INSERT)
+		@ColumnDefault("'default_child_name'")
 		private String childName;
 
-		@UpdateTimestamp( source = SourceType.DB )
+		@UpdateTimestamp(source = SourceType.DB)
 		private Date childUpdateDate;
 
 		public String getChildName() {

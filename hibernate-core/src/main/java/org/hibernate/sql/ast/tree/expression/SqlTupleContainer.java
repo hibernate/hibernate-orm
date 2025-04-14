@@ -13,9 +13,8 @@ public interface SqlTupleContainer {
 	SqlTuple getSqlTuple();
 
 	static SqlTuple getSqlTuple(SqlAstNode expression) {
-		if ( expression instanceof SqlTupleContainer ) {
-			return ( (SqlTupleContainer) expression ).getSqlTuple();
-		}
-		return null;
+		return expression instanceof SqlTupleContainer sqlTupleContainer
+				? sqlTupleContainer.getSqlTuple()
+				: null;
 	}
 }

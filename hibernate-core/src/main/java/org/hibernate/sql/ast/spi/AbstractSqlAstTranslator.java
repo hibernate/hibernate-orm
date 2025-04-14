@@ -8476,7 +8476,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			else if ( modelPart instanceof EntityAssociationMapping entityAssociationMapping ) {
 				return determineKeyColumnNames( entityAssociationMapping.getAssociatedEntityMappingType() );
 			}
-			return null;
+			else {
+				return null;
+			}
 		}
 
 		private void addKeyColumnNames(String alias, String tableAlias, String[] keyColumnNames) {

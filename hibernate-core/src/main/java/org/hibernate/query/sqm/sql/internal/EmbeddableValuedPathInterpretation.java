@@ -10,9 +10,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
@@ -30,6 +28,7 @@ import org.hibernate.sql.ast.tree.update.Assignable;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
+import static org.hibernate.query.sqm.internal.SqmUtil.determineAffectedTableName;
 import static org.hibernate.query.sqm.internal.SqmUtil.getTargetMappingIfNeeded;
 
 /**
@@ -45,28 +44,27 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 			SqmToSqlAstConverter sqlAstCreationState,
 			boolean jpaQueryComplianceEnabled) {
 		final SqmPath<?> lhs = sqmPath.getLhs();
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( lhs.getNavigablePath() );
+		final TableGroup tableGroup =
+				sqlAstCreationState.getFromClauseAccess()
+						.getTableGroup( lhs.getNavigablePath() );
 		EntityMappingType treatTarget = null;
 		if ( jpaQueryComplianceEnabled ) {
-			final MappingMetamodel mappingMetamodel = sqlAstCreationState.getCreationContext().getMappingMetamodel();
-			if ( lhs instanceof SqmTreatedPath<?, ?> && ( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget().getPersistenceType() == ENTITY ) {
-				final EntityDomainType<?> treatTargetDomainType = (EntityDomainType<?>) ( (SqmTreatedPath<?, ?>) lhs ).getTreatTarget();
+			final MappingMetamodel mappingMetamodel =
+					sqlAstCreationState.getCreationContext().getMappingMetamodel();
+			if ( lhs instanceof SqmTreatedPath<?, ?> treatedPath
+					&& treatedPath.getTreatTarget().getPersistenceType() == ENTITY ) {
+				final EntityDomainType<?> treatTargetDomainType = (EntityDomainType<?>) treatedPath.getTreatTarget();
 				treatTarget = mappingMetamodel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
 			}
-			else if ( lhs.getNodeType() instanceof EntityDomainType ) {
-				//noinspection rawtypes
-				final EntityDomainType<?> entityDomainType = (EntityDomainType) lhs.getNodeType();
+			else if ( lhs.getNodeType() instanceof EntityDomainType<?> entityDomainType ) {
 				treatTarget = mappingMetamodel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
 			}
 		}
 
-		final ModelPartContainer modelPartContainer = tableGroup.getModelPart();
 		// Use the target type to find the sub part if needed, otherwise just use the container
-		final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart) getTargetMappingIfNeeded(
-				sqmPath,
-				modelPartContainer,
-				sqlAstCreationState
-		).findSubPart( sqmPath.getReferencedPathSource().getPathName(), treatTarget );
+		final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart)
+				getTargetMappingIfNeeded( sqmPath, tableGroup.getModelPart(), sqlAstCreationState )
+						.findSubPart( sqmPath.getReferencedPathSource().getPathName(), treatTarget );
 
 		return new EmbeddableValuedPathInterpretation<>(
 				mapping.toSqlExpression(
@@ -89,7 +87,8 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 			NavigablePath navigablePath,
 			EmbeddableValuedModelPart mapping,
 			TableGroup tableGroup) {
-		this( sqlExpression, navigablePath, mapping, tableGroup, determineAffectedTableName( tableGroup, mapping ) );
+		this( sqlExpression, navigablePath, mapping, tableGroup,
+				determineAffectedTableName( tableGroup, mapping ) );
 	}
 
 	public EmbeddableValuedPathInterpretation(
@@ -101,17 +100,6 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 		super( navigablePath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
 		this.affectedTableName = affectedTableName;
-	}
-
-	private static @Nullable String determineAffectedTableName(TableGroup tableGroup, EmbeddableValuedModelPart mapping) {
-		final ModelPartContainer modelPart = tableGroup.getModelPart();
-		if ( modelPart instanceof EntityAssociationMapping ) {
-			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) modelPart;
-			if ( !associationMapping.containsTableReference( mapping.getContainingTableExpression() ) ) {
-				return associationMapping.getAssociatedEntityMappingType().getMappedTableDetails().getTableName();
-			}
-		}
-		return null;
 	}
 
 	@Override
@@ -137,10 +125,12 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 	@Override
 	public void visitColumnReferences(Consumer<ColumnReference> columnReferenceConsumer) {
 		for ( Expression expression : sqlExpression.getExpressions() ) {
-			if ( !( expression instanceof ColumnReference ) ) {
+			if ( expression instanceof ColumnReference columnReference ) {
+				columnReferenceConsumer.accept( columnReference );
+			}
+			else {
 				throw new IllegalArgumentException( "Expecting ColumnReference, found : " + expression );
 			}
-			columnReferenceConsumer.accept( (ColumnReference) expression );
 		}
 	}
 

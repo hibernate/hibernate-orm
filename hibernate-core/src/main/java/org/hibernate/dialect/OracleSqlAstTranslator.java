@@ -7,6 +7,7 @@ package org.hibernate.dialect;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -56,7 +57,6 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
-import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -467,7 +467,8 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	@Override
 	public void visitOver(Over<?> over) {
 		final Expression expression = over.getExpression();
-		if ( expression instanceof FunctionExpression && "row_number".equals( ( (FunctionExpression) expression ).getFunctionName() ) ) {
+		if ( expression instanceof FunctionExpression functionExpression
+				&& "row_number".equals( functionExpression.getFunctionName() ) ) {
 			if ( over.getPartitions().isEmpty() && over.getOrderList().isEmpty()
 					&& over.getStartKind() == FrameKind.UNBOUNDED_PRECEDING
 					&& over.getEndKind() == FrameKind.CURRENT_ROW
@@ -653,9 +654,8 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 
 	@Override
 	protected void visitSetAssignment(Assignment assignment) {
-		final Assignable assignable = assignment.getAssignable();
-		if ( assignable instanceof SqmPathInterpretation<?> ) {
-			final String affectedTableName = ( (SqmPathInterpretation<?>) assignable ).getAffectedTableName();
+		if ( assignment.getAssignable() instanceof SqmPathInterpretation<?> sqmPathInterpretation ) {
+			final String affectedTableName = sqmPathInterpretation.getAffectedTableName();
 			if ( affectedTableName != null ) {
 				addAffectedTableName( affectedTableName );
 			}
@@ -684,9 +684,9 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			appendSql( ")=" );
 			assignedValue.accept( this );
 		}
-		else {
-			assert assignedValue instanceof SqlTupleContainer;
-			final List<? extends Expression> expressions = ( (SqlTupleContainer) assignedValue ).getSqlTuple().getExpressions();
+		else if ( assignedValue instanceof SqlTupleContainer sqlTupleContainer ) {
+			final List<? extends Expression> expressions =
+					sqlTupleContainer.getSqlTuple().getExpressions();
 			columnReferences.get( 0 ).appendColumnForWrite( this, null );
 			appendSql( '=' );
 			expressions.get( 0 ).accept( this );
@@ -696,6 +696,9 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 				appendSql( '=' );
 				expressions.get( i ).accept( this );
 			}
+		}
+		else {
+			throw new AssertionFailure( "Unexpected assigned value" );
 		}
 	}
 

@@ -19,7 +19,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
@@ -50,6 +49,8 @@ import org.hibernate.sql.results.graph.Fetchable;
 
 import jakarta.persistence.criteria.Selection;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.query.sqm.internal.SqmUtil.determineAffectedTableName;
 
 public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T>
 		implements SqlTupleContainer, Assignable {
@@ -418,7 +419,10 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			EntityValuedModelPart mapping) {
-		this( sqlExpression, navigablePath, tableGroup, mapping, determineAffectedTableName( tableGroup, mapping ) );
+		this( sqlExpression, navigablePath, tableGroup, mapping,
+				mapping instanceof ValuedModelPart valuedModelPart
+						? determineAffectedTableName( tableGroup, valuedModelPart )
+						: null );
 	}
 
 	public EntityValuedPathInterpretation(
@@ -430,17 +434,6 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		super( navigablePath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
 		this.affectedTableName = affectedTableName;
-	}
-
-	private static @Nullable String determineAffectedTableName(TableGroup tableGroup, EntityValuedModelPart mapping) {
-		final ModelPartContainer modelPart = tableGroup.getModelPart();
-		if ( modelPart instanceof EntityAssociationMapping && mapping instanceof ValuedModelPart ) {
-			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) modelPart;
-			if ( !associationMapping.containsTableReference( ( (ValuedModelPart) mapping ).getContainingTableExpression() ) ) {
-				return associationMapping.getAssociatedEntityMappingType().getMappedTableDetails().getTableName();
-			}
-		}
-		return null;
 	}
 
 	@Override

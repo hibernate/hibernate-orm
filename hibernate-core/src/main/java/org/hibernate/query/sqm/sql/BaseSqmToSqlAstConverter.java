@@ -857,10 +857,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final SqmExpression<?> assignmentValue = sqmAssignment.getValue();
 				final SqmParameter<?> assignmentValueParameter = getSqmParameter( assignmentValue );
 				final Expression pathSqlExpression = assignedPathInterpretation.getSqlExpression();
-				//noinspection unchecked
 				final List<ColumnReference> targetColumnReferences =
-						pathSqlExpression instanceof SqlTupleContainer sqlTuple
-								? (List<ColumnReference>) sqlTuple.getSqlTuple().getExpressions()
+						pathSqlExpression instanceof SqlTupleContainer sqlTupleContainer
+								? sqlTupleContainer.getSqlTuple().getColumnReferences()
 								: pathSqlExpression.getColumnReference().getColumnReferences();
 				if ( assignmentValueParameter != null ) {
 					final ArrayList<Expression> expressions = new ArrayList<>( targetColumnReferences.size() );
@@ -7739,7 +7738,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			DiscriminatorPathInterpretation<?> typeExpression,
 			List<EntityTypeLiteral> literalExpressions,
 			boolean inclusive) {
-		final TableGroup tableGroup = getFromClauseIndex().getTableGroup( typeExpression.getNavigablePath().getParent() );
+		final TableGroup tableGroup =
+				getFromClauseIndex().getTableGroup( typeExpression.getNavigablePath().getParent() );
 		final MappingType partMappingType = tableGroup.getModelPart().getPartMappingType();
 		if ( !(partMappingType instanceof EntityMappingType entityMappingType) ) {
 			return;

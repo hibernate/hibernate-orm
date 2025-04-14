@@ -26,6 +26,7 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.loader.MultipleBagFetchException;
@@ -6197,14 +6198,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			MappingModelExpressible<?> valueMapping,
 			BiConsumer<Integer,JdbcParameter> jdbcParameterConsumer) {
 		sqmParameterMappingModelTypes.put( expression, valueMapping );
+		final List<List<JdbcParameter>> jdbcParams = jdbcParamsBySqmParam.get( expression );
+		final int parameterId = jdbcParams == null ? jdbcParamsBySqmParam.size()
+				: NullnessUtil.castNonNull( jdbcParams.get( 0 ).get( 0 ).getParameterId() );
 		final Bindable bindable = bindable( valueMapping );
 		if ( bindable instanceof SelectableMappings selectableMappings ) {
 			selectableMappings.forEachSelectable(
-					(index, selectableMapping) -> jdbcParameterConsumer.accept( index, new SqlTypedMappingJdbcParameter( selectableMapping ) )
+					(index, selectableMapping) -> jdbcParameterConsumer.accept( index, new SqlTypedMappingJdbcParameter( selectableMapping, parameterId ) )
 			);
 		}
 		else if ( bindable instanceof SelectableMapping selectableMapping ) {
-			jdbcParameterConsumer.accept( 0, new SqlTypedMappingJdbcParameter( selectableMapping ) );
+			jdbcParameterConsumer.accept( 0, new SqlTypedMappingJdbcParameter( selectableMapping, parameterId ) );
 		}
 		else {
 			final SqlTypedMapping sqlTypedMapping = sqlTypedMapping( expression, bindable );
@@ -6216,12 +6220,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				bindable.forEachJdbcType(
 						(index, jdbcMapping) -> jdbcParameterConsumer.accept(
 								index,
-								new JdbcParameterImpl( jdbcMapping )
+								new JdbcParameterImpl( jdbcMapping, parameterId )
 						)
 				);
 			}
 			else {
-				jdbcParameterConsumer.accept( 0, new SqlTypedMappingJdbcParameter( sqlTypedMapping ) );
+				jdbcParameterConsumer.accept( 0, new SqlTypedMappingJdbcParameter( sqlTypedMapping, parameterId ) );
 			}
 		}
 	}

@@ -70,8 +70,8 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlTreeCreationException;
-import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.internal.TableGroupHelper;
+import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -135,7 +135,6 @@ import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
-import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcLockStrategy;
@@ -177,6 +176,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.Period;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
@@ -260,7 +260,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private final StringBuilder sqlBuffer = new StringBuilder();
 
 	private final List<JdbcParameterBinder> parameterBinders = new ArrayList<>();
-	private final JdbcParametersImpl jdbcParameters = new JdbcParametersImpl();
+	private int[] parameterIdToBinderIndex;
 	private JdbcParameterBindings jdbcParameterBindings;
 	private Map<JdbcParameter, JdbcParameterBinding> appliedParameterBindings = Collections.emptyMap();
 	private SqlAstNodeRenderingMode parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
@@ -4607,11 +4607,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( fetchCount.intValue() + offsetCount.intValue() + offset );
 			}
 			else {
-				appendSql( PARAM_MARKER );
 				final JdbcParameter offsetParameter = (JdbcParameter) offsetClauseExpression;
 				final int offsetValue = offset + fetchCount.intValue();
-				jdbcParameters.addParameter( offsetParameter );
-				parameterBinders.add(
+				final int parameterPosition = addParameterBinder(
+						offsetParameter,
 						(statement, startPosition, jdbcParameterBindings, executionContext) -> {
 							final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( offsetParameter );
 							if ( binding == null ) {
@@ -4627,44 +4626,29 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							);
 						}
 				);
+				renderParameterAsParameter( parameterPosition, offsetParameter );
 			}
 		}
 		else {
-			appendSql( PARAM_MARKER );
 			final JdbcParameter offsetParameter = (JdbcParameter) offsetClauseExpression;
 			final JdbcParameter fetchParameter = (JdbcParameter) fetchClauseExpression;
-			final OffsetReceivingParameterBinder fetchBinder = new OffsetReceivingParameterBinder(
+			final FetchPlusOffsetParameterBinder fetchBinder = new FetchPlusOffsetParameterBinder(
 					offsetParameter,
 					fetchParameter,
 					offset
 			);
-			// We don't register and bind the special OffsetJdbcParameter as that comes from the query options
-			// And in this case, we only want to bind a single JDBC parameter
-			if ( !( offsetParameter instanceof OffsetJdbcParameter ) ) {
-				jdbcParameters.addParameter( offsetParameter );
-				parameterBinders.add(
-						(statement, startPosition, jdbcParameterBindings, executionContext) -> {
-							final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( offsetParameter );
-							if ( binding == null ) {
-								throw new ExecutionException( "JDBC parameter value not bound - " + offsetParameter );
-							}
-							fetchBinder.dynamicOffset = (Number) binding.getBindValue();
-						}
-				);
-			}
-			jdbcParameters.addParameter( fetchParameter );
-			parameterBinders.add( fetchBinder );
+			final int parameterPosition = addParameterBinder( fetchParameter, fetchBinder );
+			renderParameterAsParameter( parameterPosition, fetchParameter );
 		}
 	}
 
-	private static class OffsetReceivingParameterBinder implements JdbcParameterBinder {
+	private static class FetchPlusOffsetParameterBinder implements JdbcParameterBinder {
 
 		private final JdbcParameter offsetParameter;
 		private final JdbcParameter fetchParameter;
 		private final int staticOffset;
-		private Number dynamicOffset;
 
-		public OffsetReceivingParameterBinder(
+		public FetchPlusOffsetParameterBinder(
 				JdbcParameter offsetParameter,
 				JdbcParameter fetchParameter,
 				int staticOffset) {
@@ -4695,8 +4679,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				offsetValue = executionContext.getQueryOptions().getEffectiveLimit().getFirstRow();
 			}
 			else {
-				offsetValue = dynamicOffset.intValue() + staticOffset;
-				dynamicOffset = null;
+				final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( offsetParameter );
+				if ( binding == null ) {
+					throw new ExecutionException( "JDBC parameter value not bound - " + offsetParameter );
+				}
+				offsetValue = ((Number) binding.getBindValue()).intValue() + staticOffset;
 			}
 			//noinspection unchecked
 			fetchParameter.getExpressionType().getSingleJdbcMapping().getJdbcValueBinder().bind(
@@ -5670,15 +5657,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final JdbcLiteralFormatter<Object> literalFormatter = literal.getJdbcMapping().getJdbcLiteralFormatter();
 		// If we encounter a plain literal in the select clause which has no literal formatter, we must render it as parameter
 		if ( literalFormatter == null ) {
-			parameterBinders.add( literal );
+			final int parameterPosition = addParameterBinderOnly( literal );
 			final JdbcType jdbcType = literal.getJdbcMapping().getJdbcType();
-			final String marker = parameterMarkerStrategy.createMarker( parameterBinders.size(), jdbcType );
-			final LiteralAsParameter<?> jdbcParameter = new LiteralAsParameter<>( literal, marker );
+			final String marker = parameterMarkerStrategy.createMarker( parameterPosition, jdbcType );
+
 			if ( castParameter ) {
-				renderCasted( jdbcParameter );
+				renderCasted( new LiteralAsParameter<>( literal, marker ) );
 			}
 			else {
-				jdbcParameter.renderToSql( this, this, sessionFactory );
+				jdbcType.appendWriteExpression( marker, this, dialect );
 			}
 		}
 		else {
@@ -7002,15 +6989,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void visitParameterAsParameter(JdbcParameter jdbcParameter) {
-		renderParameterAsParameter( jdbcParameter );
-		parameterBinders.add( jdbcParameter.getParameterBinder() );
-		jdbcParameters.addParameter( jdbcParameter );
-	}
-
-	protected final void renderParameterAsParameter(JdbcParameter jdbcParameter) {
-		final JdbcType jdbcType = jdbcParameter.getExpressionType().getJdbcMapping( 0 ).getJdbcType();
-		assert jdbcType != null;
-		renderParameterAsParameter( parameterBinders.size() + 1, jdbcParameter );
+		final int parameterPosition = addParameterBinder( jdbcParameter );
+		renderParameterAsParameter( parameterPosition, jdbcParameter );
 	}
 
 	protected void renderWrappedParameter(JdbcParameter jdbcParameter) {
@@ -7035,6 +7015,53 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		assert jdbcType != null;
 		final String parameterMarker = parameterMarkerStrategy.createMarker( position, jdbcType );
 		jdbcType.appendWriteExpression( parameterMarker, this, dialect );
+	}
+
+	protected final int addParameterBinder(JdbcParameter parameter) {
+		return addParameterBinder( parameter, parameter.getParameterBinder() );
+	}
+
+	protected final int addParameterBinder(JdbcParameter parameter, JdbcParameterBinder parameterBinder) {
+		final Integer parameterId = parameter.getParameterId();
+		if ( ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy )
+			// Filter parameters are unique and they are not tracked via parameterInfo
+			|| parameter instanceof FilterJdbcParameter
+			|| parameterId == null ) {
+			return addParameterBinderOnly( parameterBinder );
+		}
+		else {
+			parameterIdToBinderIndex = ensureCapacity( parameterIdToBinderIndex, parameterId + 1 );
+			int binderIndex = parameterIdToBinderIndex[parameterId];
+			if ( binderIndex == -1 ) {
+				parameterIdToBinderIndex[parameterId] = binderIndex = addParameterBinderOnly( parameterBinder );
+			}
+			return binderIndex;
+		}
+	}
+
+	private static int[] ensureCapacity(int[] array, int minCapacity) {
+		int oldCapacity;
+		if ( array == null ) {
+			oldCapacity = 0;
+			array = new int[minCapacity];
+		}
+		else {
+			oldCapacity = array.length;
+			if ( minCapacity > oldCapacity ) {
+				int newCapacity = oldCapacity + (oldCapacity >> 1);
+				newCapacity = Math.max( Math.max( newCapacity, minCapacity ), 10 );
+				array = Arrays.copyOf( array, newCapacity );
+			}
+		}
+		for ( int i = oldCapacity; i < array.length; i++ ) {
+			array[i] = -1;
+		}
+		return array;
+	}
+
+	private int addParameterBinderOnly(JdbcParameterBinder parameterBinder) {
+		parameterBinders.add( parameterBinder );
+		return parameterBinders.size();
 	}
 
 	@Override
@@ -8495,7 +8522,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		assert sqlBuffer.toString().isEmpty();
 		sqlBuffer.append( tableInsert.getCustomSql() );
 
-		tableInsert.forEachParameter( this::applyParameter );
+		tableInsert.forEachParameter( this::addParameterBinder );
 	}
 
 	@Override
@@ -8604,7 +8631,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		assert sqlBuffer.toString().isEmpty();
 		sqlBuffer.append( tableUpdate.getCustomSql() );
 
-		tableUpdate.forEachParameter( this::applyParameter );
+		tableUpdate.forEachParameter( this::addParameterBinder );
 	}
 
 	@Override
@@ -8668,13 +8695,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		assert sqlBuffer.toString().isEmpty();
 		sqlBuffer.append( tableDelete.getCustomSql() );
 
-		tableDelete.forEachParameter( this::applyParameter );
-	}
-
-	protected void applyParameter(ColumnValueParameter parameter) {
-		assert parameter != null;
-		parameterBinders.add( parameter.getParameterBinder() );
-		jdbcParameters.addParameter( parameter );
+		tableDelete.forEachParameter( this::addParameterBinder );
 	}
 
 	@Override
@@ -8711,10 +8732,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void simpleColumnWriteFragmentRendering(ColumnWriteFragment columnWriteFragment) {
 		appendSql( columnWriteFragment.getFragment() );
-
-		for ( ColumnValueParameter parameter : columnWriteFragment.getParameters() ) {
-			parameterBinders.add( parameter.getParameterBinder() );
-			jdbcParameters.addParameter( parameter );
-		}
+		columnWriteFragment.getParameters().forEach( this::addParameterBinder );
 	}
 }

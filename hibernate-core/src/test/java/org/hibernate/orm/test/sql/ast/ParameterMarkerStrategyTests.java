@@ -153,6 +153,24 @@ public class ParameterMarkerStrategyTests {
 		} );
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-19632" )
+	public void testQueryParamReuse(SessionFactoryScope scope) {
+		final String queryString = "select e from EntityOfBasics e where e.id = :id and e.id = :id";
+
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			session.createSelectionQuery( queryString, EntityOfBasics.class ).setParameter( "id", 1 ).list();
+		} );
+
+		assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+		final String sql = statementInspector.getSqlQueries().get( 0 );
+		assertThat( sql ).contains( "?1" );
+		assertThat( sql ).doesNotContain( "?2" );
+	}
+
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
 		scope.getSessionFactory().getSchemaManager().truncate();

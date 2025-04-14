@@ -186,9 +186,6 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		final SqmSelectStatement<R> selectStatement = getSqmSelectStatement().copy( noParamCopyContext( SqmQuerySource.CRITERIA ) );
 		selectStatement.orderBy( orderList.stream().map( order -> sortSpecification( selectStatement, order ) )
 				.collect( toList() ) );
-		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
-		//       simply cache the new SQM as if it were a criteria query, and remove this:
-		getQueryOptions().setQueryPlanCachingEnabled( false );
 		setSqmStatement( selectStatement );
 		return this;
 	}
@@ -198,9 +195,6 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	public SelectionQuery<R> setOrder(Order<? super R> order) {
 		final SqmSelectStatement<R> selectStatement = getSqmSelectStatement().copy( noParamCopyContext( SqmQuerySource.CRITERIA ) );
 		selectStatement.orderBy( sortSpecification( selectStatement, order ) );
-		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
-		//       simply cache the new SQM as if it were a criteria query, and remove this:
-		getQueryOptions().setQueryPlanCachingEnabled( false );
 		setSqmStatement( selectStatement );
 		return this;
 	}
@@ -209,9 +203,6 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	public SelectionQuery<R> addRestriction(Restriction<? super R> restriction) {
 		final SqmSelectStatement<R> selectStatement = getSqmSelectStatement().copy( noParamCopyContext( SqmQuerySource.CRITERIA ) );
 		restriction.apply( selectStatement, selectStatement.<R>getRoot( 0, getExpectedResultType() ) );
-		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
-		//       simply cache the new SQM as if it were a criteria query, and remove this:
-		getQueryOptions().setQueryPlanCachingEnabled( false );
 		setSqmStatement( selectStatement );
 		return this;
 	}

@@ -1141,7 +1141,8 @@ public class SessionImpl
 	 * Helper to avoid creating many new instances of {@link PostLoadEvent}.
 	 * It's an allocation hot spot.
 	 */
-	private PostLoadEvent makePostLoadEvent(EntityPersister persister, Object id, Object entity) {
+	// Hibernate Reactive may need to use this
+	protected PostLoadEvent makePostLoadEvent(EntityPersister persister, Object id, Object entity) {
 		final PostLoadEvent event = postLoadEvent;
 		if ( event == null ) {
 			return new PostLoadEvent( id, persister, entity, this );
@@ -1159,7 +1160,8 @@ public class SessionImpl
 	 * Helper to avoid creating many new instances of {@link LoadEvent}.
 	 * It's an allocation hot spot.
 	 */
-	private LoadEvent makeLoadEvent(String entityName, Object id, Boolean readOnly, LockOptions lockOptions) {
+	// Hibernate Reactive may need to use this
+	protected LoadEvent makeLoadEvent(String entityName, Object id, Boolean readOnly, LockOptions lockOptions) {
 		final LoadEvent event = loadEvent;
 		if ( event == null ) {
 			return new LoadEvent( id, entityName, lockOptions, this, readOnly );
@@ -1180,7 +1182,8 @@ public class SessionImpl
 	 * Helper to avoid creating many new instances of {@link LoadEvent}.
 	 * It's an allocation hot spot.
 	 */
-	private LoadEvent makeLoadEvent(String entityName, Object id, Boolean readOnly, boolean isAssociationFetch) {
+	// Hibernate Reactive may need to use this
+	protected LoadEvent makeLoadEvent(String entityName, Object id, Boolean readOnly, boolean isAssociationFetch) {
 		final LoadEvent event = loadEvent;
 		if ( event == null ) {
 			return new LoadEvent( id, entityName, isAssociationFetch, this, readOnly );
@@ -1197,7 +1200,8 @@ public class SessionImpl
 		}
 	}
 
-	private void releasePostLoadEvent(PostLoadEvent event) {
+	// Hibernate Reactive may need to use this
+	protected void releasePostLoadEvent(PostLoadEvent event) {
 		if ( postLoadEvent == null ) {
 			event.setEntity( null );
 			event.setId( null );
@@ -1206,7 +1210,8 @@ public class SessionImpl
 		}
 	}
 
-	private void releaseLoadEvent(LoadEvent event) {
+	// Hibernate Reactive may need to use this
+	protected void releaseLoadEvent(LoadEvent event) {
 		if ( loadEvent == null ) {
 			event.setEntityClassName( null );
 			event.setEntityId( null );
@@ -2619,7 +2624,8 @@ public class SessionImpl
 		return loadAccess.withLoadGraph( graph ).load( primaryKey );
 	}
 
-	private void checkTransactionNeededForLock(LockMode lockMode) {
+	// Hibernate Reactive may need to use this
+	protected void checkTransactionNeededForLock(LockMode lockMode) {
 		// OPTIMISTIC and OPTIMISTIC_FORCE_INCREMENT require a transaction
 		// because they involve a version check at the end of the transaction
 		// All flavors of PESSIMISTIC lock also clearly require a transaction
@@ -2628,7 +2634,8 @@ public class SessionImpl
 		}
 	}
 
-	private static Boolean readOnlyHint(Map<String, Object> properties) {
+	// Hibernate Reactive may need to use this
+	protected static Boolean readOnlyHint(Map<String, Object> properties) {
 		if ( properties == null ) {
 			return null;
 		}
@@ -3116,7 +3123,8 @@ public class SessionImpl
 		eventListenerGroups = getFactory().getEventListenerGroups();
 	}
 
-	private Boolean getReadOnlyFromLoadQueryInfluencers() {
+	// Used by Hibernate reactive
+	protected Boolean getReadOnlyFromLoadQueryInfluencers() {
 		return loadQueryInfluencers != null ? loadQueryInfluencers.getReadOnly() : null;
 	}
 }

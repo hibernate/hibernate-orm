@@ -119,6 +119,13 @@ public interface DeprecationLogger extends BasicLogger {
 	void deprecatedSetting(String oldSettingName, String newSettingName);
 
 	@LogMessage(level = WARN)
+	@Message(
+			id = 90000022,
+			value = "Encountered deprecated setting [%s]"
+	)
+	void deprecatedSetting(String settingName);
+
+	@LogMessage(level = WARN)
 	@Message(value = "%s does not need to be specified explicitly using 'hibernate.dialect' "
 			+ "(remove the property setting and it will be selected by default)",
 			id = 90000025)

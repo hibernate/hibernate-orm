@@ -154,7 +154,9 @@ public interface AvailableSettings
 	 *
 	 * @apiNote The legacy name of this setting is extremely misleading;
 	 *          it has little to do with persistence contexts.
+	 * @deprecated This is no longer useful and will be removed.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	String DISCARD_PC_ON_CLOSE = "hibernate.discard_pc_on_close";
 
 	/**

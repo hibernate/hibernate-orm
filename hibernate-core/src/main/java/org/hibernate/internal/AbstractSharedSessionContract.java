@@ -21,7 +21,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Filter;
-import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
@@ -104,7 +103,6 @@ import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
-import jakarta.persistence.FlushModeType;
 import jakarta.persistence.TransactionRequiredException;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
@@ -116,7 +114,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.getFlushModeType;
 import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
 
 /**
@@ -162,7 +159,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private final TimeZone jdbcTimeZone;
 
 	// mutable state
-	private FlushMode flushMode;
 	private CacheMode cacheMode;
 	private Integer jdbcBatchSize;
 
@@ -187,7 +183,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		this.jdbcServices = factory.getJdbcServices();
 
 		cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
-		flushMode = options.getInitialSessionFlushMode();
 		tenantIdentifier = getTenantId( factoryOptions, options );
 		interceptor = interpret( options.getInterceptor() );
 		jdbcTimeZone = options.getJdbcTimeZone();
@@ -762,22 +757,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public JdbcServices getJdbcServices() {
 		return jdbcServices;
-	}
-
-	@Override
-	public FlushModeType getFlushMode() {
-		checkOpen();
-		return getFlushModeType( flushMode );
-	}
-
-	@Override
-	public void setHibernateFlushMode(FlushMode flushMode) {
-		this.flushMode = flushMode;
-	}
-
-	@Override
-	public FlushMode getHibernateFlushMode() {
-		return flushMode;
 	}
 
 	@Override

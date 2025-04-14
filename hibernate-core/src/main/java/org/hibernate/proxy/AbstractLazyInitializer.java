@@ -12,6 +12,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -206,7 +207,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			try {
 				final SessionFactoryImplementor factory =
 						SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
-				final SharedSessionContractImplementor session = factory.openSession();
+				final SessionImplementor session = factory.openSession();
 				session.getPersistenceContext().setDefaultReadOnly( true );
 				session.setHibernateFlushMode( FlushMode.MANUAL );
 

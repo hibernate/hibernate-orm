@@ -83,6 +83,7 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 */
 	ActionQueue getActionQueue();
 
+	@Override
 	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
 
 	/**
@@ -93,16 +94,6 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 * Initiate a flush to force deletion of a re-persisted entity.
 	 */
 	void forceFlush(EntityKey e) throws HibernateException;
-
-	@Override
-	default SessionImplementor asSessionImplementor() {
-		return this;
-	}
-
-	@Override
-	default boolean isSessionImplementor() {
-		return true;
-	}
 
 	@Override
 	default <C> void runWithConnection(ConnectionConsumer<C> action) {

@@ -10,6 +10,7 @@ import java.util.function.BiFunction;
 import org.hibernate.FlushMode;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.mapping.Collection;
@@ -281,7 +282,7 @@ public class EnhancementHelper {
 		}
 
 		final SessionFactoryImplementor sf = SessionFactoryRegistry.INSTANCE.getSessionFactory( interceptor.getSessionFactoryUuid() );
-		final SharedSessionContractImplementor session = sf.openSession();
+		final SessionImplementor session = sf.openSession();
 		session.getPersistenceContextInternal().setDefaultReadOnly( true );
 		session.setHibernateFlushMode( FlushMode.MANUAL );
 		return session;

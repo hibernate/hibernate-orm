@@ -172,6 +172,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 import static org.hibernate.jpa.internal.util.CacheModeHelper.interpretCacheMode;
 import static org.hibernate.internal.LockOptionsHelper.applyPropertiesToLockOptions;
+import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.getFlushModeType;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -220,6 +221,8 @@ public class SessionImpl
 
 	private LockOptions lockOptions;
 
+	private FlushMode flushMode;
+
 	private final boolean autoClear;
 	private final boolean autoClose;
 
@@ -238,6 +241,8 @@ public class SessionImpl
 			persistenceContext = createPersistenceContext();
 			actionQueue = createActionQueue();
 			eventListenerGroups = factory.getEventListenerGroups();
+
+			flushMode = options.getInitialSessionFlushMode();
 
 			autoClear = options.shouldAutoClear();
 			autoClose = options.shouldAutoClose();
@@ -1413,14 +1418,14 @@ public class SessionImpl
 			// do not auto-flush while outside a transaction
 			return false;
 		}
-		AutoFlushEvent event = new AutoFlushEvent( querySpaces, skipPreFlush, this );
+		final AutoFlushEvent event = new AutoFlushEvent( querySpaces, skipPreFlush, this );
 		eventListenerGroups.eventListenerGroup_AUTO_FLUSH
 				.fireEventOnEachListener( event, AutoFlushEventListener::onAutoFlush );
 		return event.isFlushRequired();
 	}
 
 	@Override
-	public void autoPreFlush(){
+	public void autoPreFlush() {
 		checkOpen();
 		if ( !isTransactionInProgress() ) {
 			// do not auto-flush while outside a transaction
@@ -1464,6 +1469,22 @@ public class SessionImpl
 		catch ( RuntimeException e ) {
 			throw getExceptionConverter().convert( e );
 		}
+	}
+
+	@Override
+	public void setHibernateFlushMode(FlushMode flushMode) {
+		this.flushMode = flushMode;
+	}
+
+	@Override
+	public FlushMode getHibernateFlushMode() {
+		return flushMode;
+	}
+
+	@Override
+	public FlushModeType getFlushMode() {
+		checkOpen();
+		return getFlushModeType( getHibernateFlushMode() );
 	}
 
 	@Override

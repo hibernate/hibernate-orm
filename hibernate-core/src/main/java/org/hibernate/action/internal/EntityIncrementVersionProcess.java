@@ -37,10 +37,8 @@ public class EntityIncrementVersionProcess implements BeforeTransactionCompletio
 	public void doBeforeTransactionCompletion(SessionImplementor session) {
 		final EntityEntry entry = session.getPersistenceContext().getEntry( object );
 		// Don't increment version for an entity that is not in the PersistenceContext;
-		if ( entry == null ) {
-			return;
+		if ( entry != null ) {
+			OptimisticLockHelper.forceVersionIncrement( object, entry, session.asEventSource() );
 		}
-
-		OptimisticLockHelper.forceVersionIncrement( object, entry, session.asEventSource() );
 	}
 }

@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
@@ -1280,8 +1281,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		public SessionBuilder statementInspector(Function<String, String> statementInspector) {
-			this.statementInspector = statementInspector::apply;
+		public SessionBuilder statementInspector(UnaryOperator<String> operator) {
+			this.statementInspector = operator::apply;
 			return this;
 		}
 
@@ -1422,8 +1423,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
-		public StatelessSessionBuilder statementInspector(Function<String, String> statementInspector) {
-			this.statementInspector = statementInspector::apply;
+		public StatelessSessionBuilder statementInspector(UnaryOperator<String> operator) {
+			this.statementInspector = operator::apply;
 			return this;
 		}
 

@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
@@ -2149,20 +2149,23 @@ public class SessionImpl
 			return this;
 		}
 
+		private PhysicalConnectionHandlingMode getConnectionHandlingMode() {
+			return session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode();
+		}
+
 		@Override
 		@Deprecated(since = "6.0")
 		public SharedSessionBuilderImpl connectionReleaseMode() {
-			final PhysicalConnectionHandlingMode handlingMode = PhysicalConnectionHandlingMode.interpret(
-					ConnectionAcquisitionMode.AS_NEEDED,
-					session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode().getReleaseMode()
-			);
+			final PhysicalConnectionHandlingMode handlingMode =
+					PhysicalConnectionHandlingMode.interpret( ConnectionAcquisitionMode.AS_NEEDED,
+							getConnectionHandlingMode().getReleaseMode() );
 			connectionHandlingMode( handlingMode );
 			return this;
 		}
 
 		@Override
 		public SharedSessionBuilderImpl connectionHandlingMode() {
-			connectionHandlingMode( session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode() );
+			connectionHandlingMode( getConnectionHandlingMode() );
 			return this;
 		}
 
@@ -2233,8 +2236,8 @@ public class SessionImpl
 		}
 
 		@Override
-		public SessionBuilder statementInspector(Function<String, String> statementInspector) {
-			super.statementInspector(statementInspector);
+		public SessionBuilder statementInspector(UnaryOperator<String> operator) {
+			super.statementInspector(operator);
 			return this;
 		}
 

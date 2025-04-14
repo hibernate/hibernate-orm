@@ -9,7 +9,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import java.sql.Connection;
 import java.util.TimeZone;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * Specialized {@link SessionBuilder} with access to stuff from another session.
@@ -76,7 +76,7 @@ public interface SharedSessionBuilder extends SessionBuilder {
 	SharedSessionBuilder statementInspector(StatementInspector statementInspector);
 
 	@Override
-	SessionBuilder statementInspector(Function<String, String> statementInspector);
+	SessionBuilder statementInspector(UnaryOperator<String> operator);
 
 	@Override @Deprecated
 	SharedSessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode);

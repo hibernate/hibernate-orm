@@ -6,7 +6,7 @@ package org.hibernate.engine.spi;
 
 import java.sql.Connection;
 import java.util.TimeZone;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -102,8 +102,8 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	}
 
 	@Override
-	public SessionBuilder statementInspector(Function<String, String> statementInspector) {
-		delegate.statementInspector( statementInspector );
+	public SessionBuilder statementInspector(UnaryOperator<String> operator) {
+		delegate.statementInspector( operator );
 		return this;
 	}
 

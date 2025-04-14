@@ -34,6 +34,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -86,6 +87,7 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -161,6 +163,13 @@ public class SqmUtil {
 		);
 	}
 
+	public static @Nullable String determineAffectedTableName(TableGroup tableGroup, ValuedModelPart mapping) {
+		return tableGroup.getModelPart() instanceof EntityAssociationMapping associationMapping
+			&& !associationMapping.containsTableReference( mapping.getContainingTableExpression() )
+				? associationMapping.getAssociatedEntityMappingType().getMappedTableDetails().getTableName()
+				: null;
+	}
+
 	/**
 	 * Utility that returns the entity association target's mapping type if the specified {@code sqmPath} should
 	 * be dereferenced using the target table, i.e. when the path's lhs is an explicit join that is used in the
@@ -178,10 +187,9 @@ public class SqmUtil {
 					modelPartContainer instanceof PluralAttributeMapping plural
 							? getCollectionPart( plural, castNonNull( sqmPath.getNavigablePath().getParent() ) )
 							: modelPartContainer;
-			if ( modelPart instanceof EntityAssociationMapping association ) {
-				if ( shouldRenderTargetSide( sqmPath, association, sqlAstCreationState ) ) {
-					return association.getAssociatedEntityMappingType();
-				}
+			if ( modelPart instanceof EntityAssociationMapping association
+					&& shouldRenderTargetSide( sqmPath, association, sqlAstCreationState ) ) {
+				return association.getAssociatedEntityMappingType();
 			}
 		}
 		return modelPartContainer;

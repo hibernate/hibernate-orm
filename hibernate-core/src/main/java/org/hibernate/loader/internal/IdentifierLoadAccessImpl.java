@@ -129,7 +129,8 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 				concreteType.getEntityName(), lockOptions, isReadOnly( session ) );
 	}
 
-	private Boolean isReadOnly(SessionImplementor session) {
+	// Hibernate Reactive might need to call this
+	protected Boolean isReadOnly(SessionImplementor session) {
 		return readOnly != null
 				? readOnly
 				: session.getLoadQueryInfluencers().getReadOnly();

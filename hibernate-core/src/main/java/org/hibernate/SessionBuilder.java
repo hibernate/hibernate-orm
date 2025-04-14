@@ -6,7 +6,7 @@ package org.hibernate;
 
 import java.sql.Connection;
 import java.util.TimeZone;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -51,16 +51,17 @@ public interface SessionBuilder {
 	/**
 	 * Applies the given statement inspection function to the session.
 	 *
-	 * @param statementInspector A function which accepts a SQL string,
-	 *                           returning a possibly-processed SQL string
-	 *                           to be used by Hibernate instead of the
-	 *                           given SQL.
+	 * @param operator An operator which accepts a SQL string, returning
+	 *                 a processed SQL string to be used by Hibernate
+	 *                 instead of the given original SQL. Alternatively.
+	 *                 the operator may work by side effect, and simply
+	 *                 return the original SQL.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
 	 * @since 7.0
 	 */
-	SessionBuilder statementInspector(Function<String,String> statementInspector);
+	SessionBuilder statementInspector(UnaryOperator<String> operator);
 
 	/**
 	 * Applies the given {@link StatementInspector} to the session.
@@ -70,7 +71,7 @@ public interface SessionBuilder {
 	 * @return {@code this}, for method chaining
 	 *
 	 * @deprecated This operation exposes the SPI type {@link StatementInspector}
-	 * and is therefore a layer-breaker. Use {@link #statementInspector(Function)}
+	 * and is therefore a layer-breaker. Use {@link #statementInspector(UnaryOperator)}
 	 * instead.
 	 */
 	@Deprecated(since = "7.0")

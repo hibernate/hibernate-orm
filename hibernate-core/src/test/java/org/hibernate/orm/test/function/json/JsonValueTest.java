@@ -10,6 +10,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.QuerySettings;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.sql.exec.ExecutionException;
 

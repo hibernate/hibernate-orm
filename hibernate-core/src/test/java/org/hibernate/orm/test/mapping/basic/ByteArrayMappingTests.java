@@ -5,14 +5,11 @@
 package org.hibernate.orm.test.mapping.basic;
 
 import java.sql.Types;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
-import jakarta.persistence.Table;
 
 import org.hibernate.annotations.JavaType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -27,8 +24,14 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -47,25 +50,28 @@ import static org.hamcrest.Matchers.isOneOf;
 public class ByteArrayMappingTests {
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
-		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor(EntityOfByteArrays.class);
+		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor( EntityOfByteArrays.class );
 
 		{
-			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitive");
+			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+					"primitive" );
 			final JdbcMapping jdbcMapping = primitive.getJdbcMapping();
-			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(byte[].class));
+			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( byte[].class ) );
 			assertThat( jdbcMapping.getJdbcType(), equalTo( jdbcTypeRegistry.getDescriptor( Types.VARBINARY ) ) );
 		}
 
 		{
-			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
+			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+					"wrapper" );
 			final JdbcMapping jdbcMapping = primitive.getJdbcMapping();
-			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte[].class));
+			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Byte[].class ) );
 			if ( dialect.supportsStandardArrays() ) {
 				assertThat( jdbcMapping.getJdbcType(), instanceOf( ArrayJdbcType.class ) );
 				assertThat(
@@ -76,49 +82,58 @@ public class ByteArrayMappingTests {
 			else {
 				assertThat(
 						jdbcMapping.getJdbcType().getDdlTypeCode(),
-						isOneOf( SqlTypes.ARRAY, SqlTypes.JSON, SqlTypes.SQLXML, SqlTypes.VARBINARY, SqlTypes.LONG32VARCHAR )
+						isOneOf(
+								SqlTypes.ARRAY,
+								SqlTypes.JSON,
+								SqlTypes.SQLXML,
+								SqlTypes.VARBINARY,
+								SqlTypes.LONG32VARCHAR
+						)
 				);
 			}
 		}
 
 		{
-			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapperOld");
+			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+					"wrapperOld" );
 			final JdbcMapping jdbcMapping = primitive.getJdbcMapping();
-			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte[].class));
+			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Byte[].class ) );
 			assertThat( jdbcMapping.getJdbcType(), equalTo( jdbcTypeRegistry.getDescriptor( Types.VARBINARY ) ) );
 		}
 
 		{
-			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("primitiveLob");
+			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+					"primitiveLob" );
 			final JdbcMapping jdbcMapping = primitive.getJdbcMapping();
-			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(byte[].class));
+			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( byte[].class ) );
 			assertThat( jdbcMapping.getJdbcType(), equalTo( jdbcTypeRegistry.getDescriptor( Types.BLOB ) ) );
 		}
 
 		{
-			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapperLob");
+			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
+					"wrapperLob" );
 			final JdbcMapping jdbcMapping = primitive.getJdbcMapping();
-			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte[].class));
+			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Byte[].class ) );
 			assertThat( jdbcMapping.getJdbcType(), equalTo( jdbcTypeRegistry.getDescriptor( Types.BLOB ) ) );
 		}
 
 		scope.inTransaction(
 				(session) -> {
 					session.persist(
-							new EntityOfByteArrays(1, "abc".getBytes(), new Byte[] { (byte) 1 })
+							new EntityOfByteArrays( 1, "abc".getBytes(), new Byte[] { (byte) 1 } )
 					);
 				}
 		);
 
 		scope.inTransaction(
-				(session) -> session.get(EntityOfByteArrays.class, 1)
+				(session) -> session.get( EntityOfByteArrays.class, 1 )
 		);
 	}
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createMutationQuery("delete EntityOfByteArrays").executeUpdate()
+				(session) -> session.createMutationQuery( "delete EntityOfByteArrays" ).executeUpdate()
 		);
 	}
 
@@ -133,7 +148,7 @@ public class ByteArrayMappingTests {
 		// mapped as VARBINARY
 		private byte[] primitive;
 		private Byte[] wrapper;
-		@JavaType( ByteArrayJavaType.class )
+		@JavaType(ByteArrayJavaType.class)
 		private Byte[] wrapperOld;
 
 		// mapped as (materialized) BLOB
@@ -154,7 +169,12 @@ public class ByteArrayMappingTests {
 			this.wrapperLob = wrapper;
 		}
 
-		public EntityOfByteArrays(Integer id, byte[] primitive, Byte[] wrapper, byte[] primitiveLob, Byte[] wrapperLob) {
+		public EntityOfByteArrays(
+				Integer id,
+				byte[] primitive,
+				Byte[] wrapper,
+				byte[] primitiveLob,
+				Byte[] wrapperLob) {
 			this.id = id;
 			this.primitive = primitive;
 			this.wrapper = wrapper;

@@ -4,6 +4,16 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
+import org.hibernate.dialect.GaussDBDialect;
+
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,16 +25,8 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
-import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
@@ -41,17 +43,18 @@ import org.junit.jupiter.api.Test;
 public class LazyBasicFieldMergeTest {
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void test(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Manager manager = new Manager();
-			manager.setName("John Doe");
-			manager.setResume(new byte[] {1, 2, 3});
+			manager.setName( "John Doe" );
+			manager.setResume( new byte[] { 1, 2, 3 } );
 
 			Company company = new Company();
-			company.setName("Company");
-			company.setManager(manager);
+			company.setName( "Company" );
+			company.setManager( manager );
 
-			Company _company = (Company) session.merge( company);
+			Company _company = (Company) session.merge( company );
 			assertEquals( company.getName(), _company.getName() );
 			assertArrayEquals( company.getManager().getResume(), _company.getManager().getResume() );
 		} );

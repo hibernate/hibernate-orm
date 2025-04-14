@@ -4,11 +4,14 @@
  */
 package org.hibernate.orm.test.annotations.cascade.multicircle.jpa.identity;
 
+import org.hibernate.dialect.GaussDBDialect;
+
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,7 +67,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  * Entities are inserted in the following order:
  * c, e, d, b, g, f.
  */
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @DomainModel(
 		annotatedClasses = {
 				EntityB.class,
@@ -158,6 +161,7 @@ public class MultiCircleJpaCascadeIdentityTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testPersist(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.persist( b )
@@ -167,6 +171,7 @@ public class MultiCircleJpaCascadeIdentityTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testMerge(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -4,9 +4,11 @@
  */
 package org.hibernate.orm.test.function.json;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.Tuple;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.hibernate.cfg.QuerySettings;
 import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.query.criteria.JpaFunctionJoin;
@@ -15,6 +17,7 @@ import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.expression.SqmJsonTableFunction;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -27,10 +30,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.Tuple;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -56,7 +58,7 @@ public class JsonTableTest {
 			entity.getJson().put( "theNull", null );
 			entity.getJson().put( "theArray", new String[] { "a", "b", "c" } );
 			entity.getJson().put( "theObject", new HashMap<>( entity.getJson() ) );
-			em.persist(entity);
+			em.persist( entity );
 		} );
 	}
 
@@ -68,7 +70,7 @@ public class JsonTableTest {
 	}
 
 	@Test
-//	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not support json_table")
 	public void testSimple(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-table-example[]
@@ -117,7 +119,7 @@ public class JsonTableTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not support json_table")
 	public void testNodeBuilderJsonTableObject(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -166,7 +168,7 @@ public class JsonTableTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not support json_table")
 	public void testArray(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final String query = """
@@ -188,7 +190,7 @@ public class JsonTableTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not support json_table")
 	public void testArrayParam(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final String query = """

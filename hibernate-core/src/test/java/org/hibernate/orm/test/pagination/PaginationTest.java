@@ -8,15 +8,12 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
-
+import org.hibernate.Session;
 import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
-import org.hibernate.Session;
 import org.hibernate.query.SelectionQuery;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -24,6 +21,10 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -41,6 +42,7 @@ public class PaginationTest {
 
 	@Test
 	@SessionFactory
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testLimit(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -113,7 +115,7 @@ public class PaginationTest {
 
 	@Test
 	@SessionFactory
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.gauss's bug")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.gauss's bug")
 	public void testLimitOffset(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -150,7 +152,10 @@ public class PaginationTest {
 					assertEquals( 1, result.size() );
 					assertEquals( 99, ( (DataPoint) result.get( 0 ) ).getSequence() );
 
-					result = session.createQuery( "select distinct description from DataPoint order by description", String.class )
+					result = session.createQuery(
+									"select distinct description from DataPoint order by description",
+									String.class
+							)
 							.setFirstResult( 2 )
 							.setMaxResults( 3 )
 							.list();
@@ -160,7 +165,7 @@ public class PaginationTest {
 					assertEquals( "Description: 4", result.get( 2 ) );
 
 					result = session.createNativeQuery(
-							"select description, xval, yval from DataPoint order by xval, yval", Object[].class )
+									"select description, xval, yval from DataPoint order by xval, yval", Object[].class )
 							.setFirstResult( 2 )
 							.setMaxResults( 5 )
 							.list();
@@ -194,7 +199,10 @@ public class PaginationTest {
 	}
 
 	private NativeQuery generateBaseSQLQuery(Session session) {
-		return session.createNativeQuery( "select id, seqval, xval, yval, description from DataPoint order by seqval", Object[].class )
+		return session.createNativeQuery(
+						"select id, seqval, xval, yval, description from DataPoint order by seqval",
+						Object[].class
+				)
 				.addEntity( DataPoint.class );
 	}
 

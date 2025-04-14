@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @DomainModel(annotatedClasses = EntityWithArrays.class)
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayPosition.class)
 // Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 @BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
@@ -43,8 +43,8 @@ public class ArrayPositionTest {
 	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-			em.persist( new EntityWithArrays( 1L, new String[]{} ) );
-			em.persist( new EntityWithArrays( 2L, new String[]{ "abc", null, "def" } ) );
+			em.persist( new EntityWithArrays( 1L, new String[] {} ) );
+			em.persist( new EntityWithArrays( 2L, new String[] { "abc", null, "def" } ) );
 			em.persist( new EntityWithArrays( 3L, null ) );
 		} );
 	}
@@ -57,10 +57,14 @@ public class ArrayPositionTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testPosition(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-array-position-example[]
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_position(e.theArray, 'abc') = 1", EntityWithArrays.class )
+			List<EntityWithArrays> results = em.createQuery(
+							"from EntityWithArrays e where array_position(e.theArray, 'abc') = 1",
+							EntityWithArrays.class
+					)
 					.getResultList();
 			//end::hql-array-position-example[]
 			assertEquals( 1, results.size() );
@@ -69,19 +73,26 @@ public class ArrayPositionTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.gaussdb has different behavior")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.gaussdb has different behavior")
 	public void testPositionZero(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_position(e.theArray, 'xyz') = 0", EntityWithArrays.class )
+			List<EntityWithArrays> results = em.createQuery(
+							"from EntityWithArrays e where array_position(e.theArray, 'xyz') = 0",
+							EntityWithArrays.class
+					)
 					.getResultList();
 			assertEquals( 2, results.size() );
 		} );
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testPositionNull(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_position(e.theArray, null) = 2", EntityWithArrays.class )
+			List<EntityWithArrays> results = em.createQuery(
+							"from EntityWithArrays e where array_position(e.theArray, null) = 2",
+							EntityWithArrays.class
+					)
 					.getResultList();
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).getId() );
@@ -90,14 +101,19 @@ public class ArrayPositionTest {
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-17801")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testEnumPosition(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			em.createQuery( "from EntityWithArrays e where array_position(e.theLabels, e.theLabel) > 0", EntityWithArrays.class )
+			em.createQuery(
+							"from EntityWithArrays e where array_position(e.theLabels, e.theLabel) > 0",
+							EntityWithArrays.class
+					)
 					.getResultList();
 		} );
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testNodeBuilderArray(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -117,6 +133,7 @@ public class ArrayPositionTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testNodeBuilderCollection(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -136,10 +153,14 @@ public class ArrayPositionTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testPositionOverload(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-array-position-hql-example[]
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where position('abc' in e.theArray) = 1", EntityWithArrays.class )
+			List<EntityWithArrays> results = em.createQuery(
+							"from EntityWithArrays e where position('abc' in e.theArray) = 1",
+							EntityWithArrays.class
+					)
 					.getResultList();
 			//end::hql-array-position-hql-example[]
 			assertEquals( 1, results.size() );

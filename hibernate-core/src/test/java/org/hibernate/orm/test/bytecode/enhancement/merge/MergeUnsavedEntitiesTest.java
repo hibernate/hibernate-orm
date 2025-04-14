@@ -9,12 +9,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.dialect.GaussDBDialect;
+
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -99,13 +102,14 @@ public class MergeUnsavedEntitiesTest {
 		scope.inTransaction(
 				session -> {
 					Parent parent = session.find( Parent.class, 1l );
-					assertThat( parent.getChildren()).isEmpty();
+					assertThat( parent.getChildren() ).isEmpty();
 				}
 		);
 	}
 
 	@Test
 	@Jira("HHH-18177")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testMergeTransientInstanceWithGeneratedId(SessionFactoryScope scope) {
 		Book merged = scope.fromTransaction(
 				session -> {

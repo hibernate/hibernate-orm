@@ -10,6 +10,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.QuerySettings;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.sql.exec.ExecutionException;
 
@@ -36,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @DomainModel(annotatedClasses = EntityWithJson.class)
 @SessionFactory
 @ServiceRegistry(settings = @Setting(name = QuerySettings.JSON_FUNCTIONS_ENABLED, value = "true"))
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJsonQuery.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonQuery.class)
 public class JsonQueryTest {
 
 	@BeforeEach
@@ -51,7 +52,7 @@ public class JsonQueryTest {
 			entity.getJson().put( "theNull", null );
 			entity.getJson().put( "theArray", new String[] { "a", "b", "c" } );
 			entity.getJson().put( "theObject", new HashMap<>( entity.getJson() ) );
-			em.persist(entity);
+			em.persist( entity );
 		} );
 	}
 
@@ -66,7 +67,10 @@ public class JsonQueryTest {
 	public void testSimple(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-query-example[]
-			List<Tuple> results = em.createQuery( "select json_query(e.json, '$.theString') from EntityWithJson e", Tuple.class )
+			List<Tuple> results = em.createQuery(
+							"select json_query(e.json, '$.theString') from EntityWithJson e",
+							Tuple.class
+					)
 					.getResultList();
 			//end::hql-json-query-example[]
 			assertEquals( 1, results.size() );
@@ -77,7 +81,10 @@ public class JsonQueryTest {
 	public void testPassing(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-query-passing-example[]
-			List<Tuple> results = em.createQuery( "select json_query(e.json, '$.theArray[$idx]' passing 1 as idx) from EntityWithJson e", Tuple.class )
+			List<Tuple> results = em.createQuery(
+							"select json_query(e.json, '$.theArray[$idx]' passing 1 as idx) from EntityWithJson e",
+							Tuple.class
+					)
 					.getResultList();
 			//end::hql-json-query-passing-example[]
 			assertEquals( 1, results.size() );
@@ -88,7 +95,10 @@ public class JsonQueryTest {
 	public void testWithWrapper(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-query-with-wrapper-example[]
-			List<Tuple> results = em.createQuery( "select json_query(e.json, '$.theInt' with wrapper) from EntityWithJson e", Tuple.class )
+			List<Tuple> results = em.createQuery(
+							"select json_query(e.json, '$.theInt' with wrapper) from EntityWithJson e",
+							Tuple.class
+					)
 					.getResultList();
 			//end::hql-json-query-with-wrapper-example[]
 			assertEquals( 1, results.size() );
@@ -101,12 +111,12 @@ public class JsonQueryTest {
 		scope.inSession( em -> {
 			try {
 				//tag::hql-json-query-on-error-example[]
-				em.createQuery( "select json_query('invalidJson', '$.theInt' error on error) from EntityWithJson e")
+				em.createQuery( "select json_query('invalidJson', '$.theInt' error on error) from EntityWithJson e" )
 						.getResultList();
 				//end::hql-json-query-on-error-example[]
-				fail("error clause should fail because of invalid json document");
+				fail( "error clause should fail because of invalid json document" );
 			}
-			catch ( HibernateException e ) {
+			catch (HibernateException e) {
 				if ( !( e instanceof JDBCException ) && !( e instanceof ExecutionException ) ) {
 					throw e;
 				}
@@ -115,17 +125,19 @@ public class JsonQueryTest {
 	}
 
 	@Test
-	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJsonValueErrorBehavior.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonValueErrorBehavior.class)
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testOnEmpty(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			try {
 				//tag::hql-json-query-on-empty-example[]
-				em.createQuery("select json_query(e.json, '$.nonExisting' error on empty error on error) from EntityWithJson e" )
+				em.createQuery(
+								"select json_query(e.json, '$.nonExisting' error on empty error on error) from EntityWithJson e" )
 						.getResultList();
 				//end::hql-json-query-on-empty-example[]
-				fail("empty clause should fail because of json path doesn't produce results");
+				fail( "empty clause should fail because of json path doesn't produce results" );
 			}
-			catch ( HibernateException e ) {
+			catch (HibernateException e) {
 				if ( !( e instanceof JDBCException ) && !( e instanceof ExecutionException ) ) {
 					throw e;
 				}

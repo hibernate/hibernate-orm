@@ -4,31 +4,6 @@
  */
 package org.hibernate.orm.test.mapping.embeddable;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Tuple;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.GaussDBDialect;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
-import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
-import org.hibernate.testing.orm.domain.gambit.MutableValue;
-import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.type.SqlTypes;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.net.URL;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -42,6 +17,33 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.GaussDBDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.type.SqlTypes;
+
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
+import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
+import org.hibernate.testing.orm.domain.gambit.MutableValue;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Tuple;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -81,6 +83,7 @@ public class XmlWithArrayEmbeddableTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testUpdate(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -88,48 +91,72 @@ public class XmlWithArrayEmbeddableTest {
 					XmlHolder.setAggregate( EmbeddableWithArrayAggregate.createAggregate2() );
 					entityManager.flush();
 					entityManager.clear();
-					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate2(), entityManager.find( XmlHolder.class, 1L ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals(
+							EmbeddableWithArrayAggregate.createAggregate2(),
+							entityManager.find( XmlHolder.class, 1L ).getAggregate()
+					);
 				}
 		);
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testFetch(SessionFactoryScope scope) {
 		scope.inSession(
 				entityManager -> {
-					List<XmlHolder> XmlHolders = entityManager.createQuery( "from XmlHolder b where b.id = 1", XmlHolder.class ).getResultList();
+					List<XmlHolder> XmlHolders = entityManager.createQuery(
+							"from XmlHolder b where b.id = 1",
+							XmlHolder.class
+					).getResultList();
 					assertEquals( 1, XmlHolders.size() );
 					assertEquals( 1L, XmlHolders.get( 0 ).getId() );
-					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), XmlHolders.get( 0 ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals(
+							EmbeddableWithArrayAggregate.createAggregate1(),
+							XmlHolders.get( 0 ).getAggregate()
+					);
 				}
 		);
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testFetchNull(SessionFactoryScope scope) {
 		scope.inSession(
 				entityManager -> {
-					List<XmlHolder> XmlHolders = entityManager.createQuery( "from XmlHolder b where b.id = 2", XmlHolder.class ).getResultList();
+					List<XmlHolder> XmlHolders = entityManager.createQuery(
+							"from XmlHolder b where b.id = 2",
+							XmlHolder.class
+					).getResultList();
 					assertEquals( 1, XmlHolders.size() );
 					assertEquals( 2L, XmlHolders.get( 0 ).getId() );
-					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate2(), XmlHolders.get( 0 ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals(
+							EmbeddableWithArrayAggregate.createAggregate2(),
+							XmlHolders.get( 0 ).getAggregate()
+					);
 				}
 		);
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testDomainResult(SessionFactoryScope scope) {
 		scope.inSession(
 				entityManager -> {
-					List<EmbeddableWithArrayAggregate> structs = entityManager.createQuery( "select b.aggregate from XmlHolder b where b.id = 1", EmbeddableWithArrayAggregate.class ).getResultList();
+					List<EmbeddableWithArrayAggregate> structs = entityManager.createQuery(
+							"select b.aggregate from XmlHolder b where b.id = 1",
+							EmbeddableWithArrayAggregate.class
+					).getResultList();
 					assertEquals( 1, structs.size() );
-					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), structs.get( 0 ) );
+					EmbeddableWithArrayAggregate.assertEquals(
+							EmbeddableWithArrayAggregate.createAggregate1(),
+							structs.get( 0 )
+					);
 				}
 		);
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not supported")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not supported")
 	public void testSelectionItems(SessionFactoryScope scope) {
 		scope.inSession(
 				entityManager -> {
@@ -191,16 +218,21 @@ public class XmlWithArrayEmbeddableTest {
 					struct.setTheZonedDateTime( tuple.get( 22, ZonedDateTime[].class ) );
 					struct.setTheOffsetDateTime( tuple.get( 23, OffsetDateTime[].class ) );
 					struct.setMutableValue( tuple.get( 24, MutableValue[].class ) );
-					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), struct );
+					EmbeddableWithArrayAggregate.assertEquals(
+							EmbeddableWithArrayAggregate.createAggregate1(),
+							struct
+					);
 				}
 		);
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testDeleteWhere(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					entityManager.createMutationQuery( "delete XmlHolder b where b.aggregate is not null" ).executeUpdate();
+					entityManager.createMutationQuery( "delete XmlHolder b where b.aggregate is not null" )
+							.executeUpdate();
 					assertNull( entityManager.find( XmlHolder.class, 1L ) );
 
 				}
@@ -208,6 +240,7 @@ public class XmlWithArrayEmbeddableTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testUpdateAggregate(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -219,37 +252,46 @@ public class XmlWithArrayEmbeddableTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not supported")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not supported")
 	public void testUpdateAggregateMember(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					entityManager.createMutationQuery( "update XmlHolder b set b.aggregate.theString = null" ).executeUpdate();
+					entityManager.createMutationQuery( "update XmlHolder b set b.aggregate.theString = null" )
+							.executeUpdate();
 					EmbeddableWithArrayAggregate struct = EmbeddableWithArrayAggregate.createAggregate1();
 					struct.setTheString( null );
-					EmbeddableWithArrayAggregate.assertEquals( struct, entityManager.find( XmlHolder.class, 1L ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals(
+							struct,
+							entityManager.find( XmlHolder.class, 1L ).getAggregate()
+					);
 				}
 		);
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not supported")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not supported")
 	public void testUpdateMultipleAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					entityManager.createMutationQuery( "update XmlHolder b set b.aggregate.theString = null, b.aggregate.theUuid = null" ).executeUpdate();
+					entityManager.createMutationQuery(
+									"update XmlHolder b set b.aggregate.theString = null, b.aggregate.theUuid = null" )
+							.executeUpdate();
 					EmbeddableWithArrayAggregate struct = EmbeddableWithArrayAggregate.createAggregate1();
 					struct.setTheString( null );
 					struct.setTheUuid( null );
-					EmbeddableWithArrayAggregate.assertEquals( struct, entityManager.find( XmlHolder.class, 1L ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals(
+							struct,
+							entityManager.find( XmlHolder.class, 1L ).getAggregate()
+					);
 				}
 		);
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
-	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not supported")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "External driver fix required")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not supported")
 	public void testUpdateAllAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -309,7 +351,10 @@ public class XmlWithArrayEmbeddableTest {
 							.setParameter( "theOffsetDateTime", struct.getTheOffsetDateTime() )
 							.setParameter( "mutableValue", struct.getMutableValue() )
 							.executeUpdate();
-					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), entityManager.find( XmlHolder.class, 2L ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals(
+							EmbeddableWithArrayAggregate.createAggregate1(),
+							entityManager.find( XmlHolder.class, 2L ).getAggregate()
+					);
 				}
 		);
 	}

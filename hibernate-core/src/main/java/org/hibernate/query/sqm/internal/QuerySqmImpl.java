@@ -70,7 +70,6 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -121,13 +120,13 @@ public class QuerySqmImpl<R>
 		implements SqmQueryImplementor<R>, InterpretationsKeySource, DomainQueryExecutionContext {
 
 	private final String hql;
-	private final Object queryStringCacheKey;
+	private Object queryStringCacheKey;
 	private SqmStatement<R> sqm;
 
-	private final ParameterMetadataImplementor parameterMetadata;
-	private final DomainParameterXref domainParameterXref;
+	private ParameterMetadataImplementor parameterMetadata;
+	private DomainParameterXref domainParameterXref;
 
-	private final QueryParameterBindings parameterBindings;
+	private QueryParameterBindings parameterBindings;
 
 	private final Class<R> resultType;
 	private final TupleMetadata tupleMetadata;
@@ -254,18 +253,6 @@ public class QuerySqmImpl<R>
 		tupleMetadata = buildTupleMetadata( criteria, expectedResultType );
 	}
 
-	private <T> void bindCriteriaParameter(SqmJpaCriteriaParameterWrapper<T> sqmParameter) {
-		final JpaCriteriaParameter<T> jpaCriteriaParameter = sqmParameter.getJpaCriteriaParameter();
-		final T value = jpaCriteriaParameter.getValue();
-		// We don't set a null value, unless the type is also null which
-		// is the case when using HibernateCriteriaBuilder.value
-		if ( value != null || jpaCriteriaParameter.getNodeType() == null ) {
-			// Use the anticipated type for binding the value if possible
-			getQueryParameterBindings().getBinding( jpaCriteriaParameter )
-					.setBindValue( value, jpaCriteriaParameter.getAnticipatedType() );
-		}
-	}
-
 	@Override
 	public TupleMetadata getTupleMetadata() {
 		return tupleMetadata;
@@ -289,6 +276,15 @@ public class QuerySqmImpl<R>
 	@Override
 	protected void setSqmStatement(SqmSelectStatement<R> sqm) {
 		this.sqm = sqm;
+		this.queryStringCacheKey = sqm;
+
+		final QueryParameterBindings oldParameterBindings = parameterBindings;
+		domainParameterXref = DomainParameterXref.from( sqm );
+		parameterMetadata = !domainParameterXref.hasParameters()
+				? ParameterMetadataImpl.EMPTY
+				: new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
+		parameterBindings = parameterMetadata.createBindings( getSessionFactory() );
+		copyParameterBindings( oldParameterBindings );
 	}
 
 	@Override

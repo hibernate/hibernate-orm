@@ -55,7 +55,6 @@ import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.spi.SqmSelectionQueryImplementor;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
@@ -89,12 +88,12 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		implements SqmSelectionQueryImplementor<R>, InterpretationsKeySource {
 	private final String hql;
-	private final Object queryStringCacheKey;
+	private Object queryStringCacheKey;
 	private SqmSelectStatement<R> sqm;
 
-	private final ParameterMetadataImplementor parameterMetadata;
-	private final DomainParameterXref domainParameterXref;
-	private final QueryParameterBindings parameterBindings;
+	private ParameterMetadataImplementor parameterMetadata;
+	private DomainParameterXref domainParameterXref;
+	private QueryParameterBindings parameterBindings;
 
 	private final Class<R> expectedResultType;
 	private final Class<?> resultType;
@@ -330,19 +329,6 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		}
 	}
 
-	private <T> void bindCriteriaParameter(SqmJpaCriteriaParameterWrapper<T> sqmParameter) {
-		final JpaCriteriaParameter<T> criteriaParameter = sqmParameter.getJpaCriteriaParameter();
-		final T value = criteriaParameter.getValue();
-		// We don't set a null value, unless the type is also null which
-		// is the case when using HibernateCriteriaBuilder.value
-		if ( value != null || criteriaParameter.getNodeType() == null ) {
-			// Use the anticipated type for binding the value if possible
-			getQueryParameterBindings()
-					.getBinding( criteriaParameter )
-					.setBindValue( value, criteriaParameter.getAnticipatedType() );
-		}
-	}
-
 	@Override
 	public TupleMetadata getTupleMetadata() {
 		return tupleMetadata;
@@ -356,6 +342,15 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	@Override
 	protected void setSqmStatement(SqmSelectStatement<R> sqm) {
 		this.sqm = sqm;
+		this.queryStringCacheKey = sqm;
+
+		final QueryParameterBindings oldParameterBindings = parameterBindings;
+		domainParameterXref = DomainParameterXref.from( sqm );
+		parameterMetadata = !domainParameterXref.hasParameters()
+				? ParameterMetadataImpl.EMPTY
+				: new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
+		parameterBindings = parameterMetadata.createBindings( getSessionFactory() );
+		copyParameterBindings( oldParameterBindings );
 	}
 
 	@Override

@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -37,6 +38,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 
 /**
  * @author Steve Ebersole
@@ -340,5 +342,16 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		withTypeInference( predicate.getSubQueryExpression(), predicate.getTestExpression() );
 		withTypeInference( predicate.getTestExpression(), predicate.getSubQueryExpression() );
 		return predicate;
+	}
+
+	@Override
+	public Object visitSortSpecification(SqmSortSpecification sortSpecification) {
+		if ( sortSpecification.getSortExpression() instanceof SqmAliasedNodeRef ) {
+			// Ignore aliases
+			return sortSpecification;
+		}
+		else {
+			return super.visitSortSpecification( sortSpecification );
+		}
 	}
 }

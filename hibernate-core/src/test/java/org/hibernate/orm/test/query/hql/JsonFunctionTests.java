@@ -65,13 +65,14 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@DomainModel( annotatedClasses = {
+@DomainModel(annotatedClasses = {
 		JsonFunctionTests.JsonHolder.class,
 		EntityOfBasics.class
 })
 @ServiceRegistry(settings = @Setting(name = QuerySettings.JSON_FUNCTIONS_ENABLED, value = "true"))
 @SessionFactory
 @Jira("https://hibernate.atlassian.net/browse/HHH-18496")
+@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 public class JsonFunctionTests {
 
 	JsonHolder entity;
@@ -98,7 +99,7 @@ public class JsonFunctionTests {
 									Map.of( "id", 3, "name", "val3" )
 							)
 					);
-					em.persist(entity);
+					em.persist( entity );
 
 					EntityOfBasics e1 = new EntityOfBasics();
 					e1.setId( 1 );
@@ -132,21 +133,21 @@ public class JsonFunctionTests {
 		scope.inTransaction(
 				session -> {
 					Tuple tuple = session.createQuery(
-									"select " +
-											"json_value(e.json, '$.theInt'), " +
-											"json_value(e.json, '$.theFloat'), " +
-											"json_value(e.json, '$.theString'), " +
-											"json_value(e.json, '$.theBoolean'), " +
-											"json_value(e.json, '$.theNull'), " +
-											"json_value(e.json, '$.theArray'), " +
-											"json_value(e.json, '$.theArray[1]'), " +
-											"json_value(e.json, '$.theObject'), " +
-											"json_value(e.json, '$.theObject.theInt'), " +
-											"json_value(e.json, '$.theObject.theArray[2]') " +
-											"from JsonHolder e " +
-											"where e.id = 1L",
-									Tuple.class
-							).getSingleResult();
+							"select " +
+									"json_value(e.json, '$.theInt'), " +
+									"json_value(e.json, '$.theFloat'), " +
+									"json_value(e.json, '$.theString'), " +
+									"json_value(e.json, '$.theBoolean'), " +
+									"json_value(e.json, '$.theNull'), " +
+									"json_value(e.json, '$.theArray'), " +
+									"json_value(e.json, '$.theArray[1]'), " +
+									"json_value(e.json, '$.theObject'), " +
+									"json_value(e.json, '$.theObject.theInt'), " +
+									"json_value(e.json, '$.theObject.theArray[2]') " +
+									"from JsonHolder e " +
+									"where e.id = 1L",
+							Tuple.class
+					).getSingleResult();
 					assertEquals( entity.json.get( "theInt" ).toString(), tuple.get( 0 ) );
 					assertEquals( entity.json.get( "theFloat" ), Double.parseDouble( tuple.get( 1, String.class ) ) );
 					assertEquals( entity.json.get( "theString" ), tuple.get( 2 ) );
@@ -211,14 +212,17 @@ public class JsonFunctionTests {
 									"[{\"id\":1,\"name\":\"val1\"},{\"id\":2,\"name\":\"val2\"},{\"id\":3,\"name\":\"val3\"}]" ),
 							parseJson( tuple.get( 1, String.class ) )
 					);
-					assertEquals( parseJson( "[{\"id\":1,\"name\":\"val1\"}]" ), parseJson( tuple.get( 2, String.class ) ) );
+					assertEquals(
+							parseJson( "[{\"id\":1,\"name\":\"val1\"}]" ),
+							parseJson( tuple.get( 2, String.class ) )
+					);
 				}
 		);
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonQueryNestedPath.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.Not support $.theNestedObjects[*].id")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.Not support $.theNestedObjects[*].id")
 	public void testJsonQueryNested(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -288,14 +292,20 @@ public class JsonFunctionTests {
 					).getSingleResult();
 					Map<String, Object> map = parseObject( json );
 					assertEquals( entity.json.get( "theInt" ).toString(), map.get( "theInt" ).toString() );
-					assertEquals( entity.json.get( "theFloat" ), Double.parseDouble( map.get( "theFloat" ).toString() ) );
+					assertEquals(
+							entity.json.get( "theFloat" ),
+							Double.parseDouble( map.get( "theFloat" ).toString() )
+					);
 					assertEquals( entity.json.get( "theString" ), map.get( "theString" ) );
 					assertEquals( entity.json.get( "theBoolean" ), map.get( "theBoolean" ) );
 					assertTrue( map.containsKey( "theNull" ) );
 					assertNull( map.get( "theNull" ) );
 					Map<String, Object> nested = (Map<String, Object>) map.get( "theObject" );
 					assertEquals( entity.json.get( "theInt" ).toString(), nested.get( "theInt" ).toString() );
-					assertEquals( entity.json.get( "theFloat" ), Double.parseDouble( nested.get( "theFloat" ).toString() ) );
+					assertEquals(
+							entity.json.get( "theFloat" ),
+							Double.parseDouble( nested.get( "theFloat" ).toString() )
+					);
 					assertEquals( entity.json.get( "theString" ), nested.get( "theString" ) );
 					assertEquals( entity.json.get( "theBoolean" ), nested.get( "theBoolean" ) );
 					// HSQLDB bug: https://sourceforge.net/p/hsqldb/bugs/1720/
@@ -323,7 +333,7 @@ public class JsonFunctionTests {
 							Tuple.class
 					).getSingleResult();
 					Map<String, Object> map = parseObject( tuple.get( 0 ).toString() );
-					assertEquals( List.of( 1,2,3 ), map.get( "a" ) );
+					assertEquals( List.of( 1, 2, 3 ), map.get( "a" ) );
 					assertInstanceOf( Map.class, map.get( "b" ) );
 					Map<String, Object> nested = (Map<String, Object>) map.get( "b" );
 					assertEquals( List.of( 4, 5, 6 ), nested.get( "c" ) );
@@ -395,7 +405,7 @@ public class JsonFunctionTests {
 							String.class
 					).getSingleResult();
 					Object[] array = parseArray( jsonArray );
-					assertArrayEquals( new Object[]{ "Cat", "Dog" }, array );
+					assertArrayEquals( new Object[] { "Cat", "Dog" }, array );
 				}
 		);
 	}
@@ -420,7 +430,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObjectAgg.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.not supported")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.Gauss has different behavior")
 	public void testJsonObjectAggNullFilter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -463,7 +473,7 @@ public class JsonFunctionTests {
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 has no way to throw an error on duplicate json object keys.")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 15, matchSubTypes = true, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.not supported")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.not supported")
 	public void testJsonObjectAggUniqueKeys(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -473,7 +483,7 @@ public class JsonFunctionTests {
 										"from EntityOfBasics e",
 								String.class
 						).getSingleResult();
-						fail("Should fail because keys are not unique");
+						fail( "Should fail because keys are not unique" );
 					}
 					catch (HibernateException e) {
 						assertInstanceOf( JDBCException.class, e );
@@ -625,7 +635,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonMergepatch.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss has different function definition")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss has different function definition")
 	public void testJsonMergepatch(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -643,7 +653,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonMergepatch.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss has different behavior")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss has different behavior")
 	public void testJsonMergepatchVarargs(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -851,7 +861,7 @@ public class JsonFunctionTests {
 			return binaryNode.binaryValue();
 		}
 		else {
-			throw new UnsupportedOperationException( "Unsupported node type: " +  jsonNode.getClass().getName() );
+			throw new UnsupportedOperationException( "Unsupported node type: " + jsonNode.getClass().getName() );
 		}
 	}
 

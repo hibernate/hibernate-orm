@@ -4,20 +4,22 @@
  */
 package org.hibernate.orm.test.mapping.embeddable;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.GaussDBDialect;
+import org.hibernate.type.SqlTypes;
+
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
-
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.type.SqlTypes;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonAggregate.class)
@@ -52,30 +54,40 @@ public class AggregateTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@JiraKey("HHH-17294")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testDirtyCheckingJsonAggregate() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
 					JsonHolder aggregateHolder = entityManager.find( JsonHolder.class, 1L );
-					Assertions.assertEquals("String 'abc'", aggregateHolder.getAggregate().getTheString());
+					Assertions.assertEquals( "String 'abc'", aggregateHolder.getAggregate().getTheString() );
 					aggregateHolder.getAggregate().setTheString( "MyString" );
 					entityManager.flush();
 					entityManager.clear();
-					Assertions.assertEquals( "MyString", entityManager.find( JsonHolder.class, 1L ).getAggregate().getTheString() );
+					Assertions.assertEquals(
+							"MyString", entityManager.find( JsonHolder.class, 1L )
+									.getAggregate()
+									.getTheString()
+					);
 				}
 		);
 	}
 
 	@Test
 	@JiraKey("HHH-17294")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testDirtyCheckingXmlAggregate() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
 					XmlHolder aggregateHolder = entityManager.find( XmlHolder.class, 1L );
-					Assertions.assertEquals("String 'abc'", aggregateHolder.getAggregate().getTheString());
+					Assertions.assertEquals( "String 'abc'", aggregateHolder.getAggregate().getTheString() );
 					aggregateHolder.getAggregate().setTheString( "MyString" );
 					entityManager.flush();
 					entityManager.clear();
-					Assertions.assertEquals( "MyString", entityManager.find( XmlHolder.class, 1L ).getAggregate().getTheString() );
+					Assertions.assertEquals(
+							"MyString", entityManager.find( XmlHolder.class, 1L )
+									.getAggregate()
+									.getTheString()
+					);
 				}
 		);
 	}

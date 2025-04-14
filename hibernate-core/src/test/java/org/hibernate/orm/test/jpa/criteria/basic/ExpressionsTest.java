@@ -14,8 +14,8 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -24,14 +24,14 @@ import org.hibernate.orm.test.jpa.metamodel.Phone;
 import org.hibernate.orm.test.jpa.metamodel.Product;
 import org.hibernate.orm.test.jpa.metamodel.Product_;
 import org.hibernate.query.Query;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaDerivedRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.common.TemporalUnit;
 
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -102,19 +102,19 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-15452")
-	public void testGetConjunctionExpressionsAndAddPredicate(){
+	@JiraKey(value = "HHH-15452")
+	public void testGetConjunctionExpressionsAndAddPredicate() {
 		inTransaction(
 				entityManager -> {
 					CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-					CriteriaQuery<Product> criteria = builder.createQuery(Product.class);
-					Root<Product> rootClaseGrid = criteria.from(Product.class);
+					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
+					Root<Product> rootClaseGrid = criteria.from( Product.class );
 
 					Predicate conjuncion = builder.conjunction();
-					Predicate expr = builder.equal(rootClaseGrid.get("id"), "NON existing id");
+					Predicate expr = builder.equal( rootClaseGrid.get( "id" ), "NON existing id" );
 					// Modifications to the list do not affect the query
 					List<Expression<Boolean>> expressions = conjuncion.getExpressions();
-					expressions.add( expr);
+					expressions.add( expr );
 
 					List<Product> result = entityManager.createQuery( criteria ).getResultList();
 					assertEquals( 1, result.size() );
@@ -266,7 +266,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@Jira( "https://hibernate.atlassian.net/browse/HHH-17223" )
+	@Jira("https://hibernate.atlassian.net/browse/HHH-17223")
 	public void testSumWithCoalesce() {
 		doInJPA(
 				this::entityManagerFactory,
@@ -285,12 +285,12 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@Jira( "https://hibernate.atlassian.net/browse/HHH-17260" )
+	@Jira("https://hibernate.atlassian.net/browse/HHH-17260")
 	public void testSumWithSubqueryPath() {
 		doInJPA(
 				this::entityManagerFactory,
 				entityManager -> {
-					final HibernateCriteriaBuilder cb =  entityManager.unwrap( Session.class ).getCriteriaBuilder();
+					final HibernateCriteriaBuilder cb = entityManager.unwrap( Session.class ).getCriteriaBuilder();
 					final JpaCriteriaQuery<Integer> criteria = cb.createQuery( Integer.class );
 					final JpaSubQuery<Tuple> subquery = criteria.subquery( Tuple.class );
 					final Root<Product> product = subquery.from( Product.class );
@@ -306,32 +306,38 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		);
 	}
 
-	@Test @SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "numeric overflows")
+	@Test
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "numeric overflows")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "does not support extract(epoch)")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "datediff overflow limits")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.interval_mul result month: 0.000000, day: 796176000000000000.000000 overflow")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.date multi overflows")
 	public void testDateTimeOperations() {
 		HibernateCriteriaBuilder builder = (HibernateCriteriaBuilder) this.builder;
 		doInJPA(
 				this::entityManagerFactory,
 				entityManager -> {
-					CriteriaQuery<LocalDate> criteria = builder.createQuery(LocalDate.class);
-					criteria.select( builder.addDuration( builder.localDate(),
-							builder.duration(2, TemporalUnit.YEAR) ) );
-					entityManager.createQuery(criteria).getSingleResult();
+					CriteriaQuery<LocalDate> criteria = builder.createQuery( LocalDate.class );
+					criteria.select( builder.addDuration(
+							builder.localDate(),
+							builder.duration( 2, TemporalUnit.YEAR )
+					) );
+					entityManager.createQuery( criteria ).getSingleResult();
 				}
 		);
 		doInJPA(
 				this::entityManagerFactory,
 				entityManager -> {
-					CriteriaQuery<LocalDate> criteria = builder.createQuery(LocalDate.class);
+					CriteriaQuery<LocalDate> criteria = builder.createQuery( LocalDate.class );
 					criteria.select( builder.addDuration(
 							// had to call literal() here because parameter-based binding caused error from
 							// database since it couldn't tell what sort of dateadd() function was being called
-							builder.literal( LocalDate.of(2000,1, 1) ),
-							builder.duration(2, TemporalUnit.YEAR) ) );
-					assertEquals( LocalDate.of(2002,1, 1),
-							entityManager.createQuery(criteria).getSingleResult() );
+							builder.literal( LocalDate.of( 2000, 1, 1 ) ),
+							builder.duration( 2, TemporalUnit.YEAR )
+					) );
+					assertEquals(
+							LocalDate.of( 2002, 1, 1 ),
+							entityManager.createQuery( criteria ).getSingleResult()
+					);
 				}
 		);
 		//SQL Server and others don't like this
@@ -346,65 +352,81 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		doInJPA(
 				this::entityManagerFactory,
 				entityManager -> {
-					CriteriaQuery<LocalDateTime> criteria = builder.createQuery(LocalDateTime.class);
-					criteria.select( builder.subtractDuration( builder.localDateTime(), Duration.ofMinutes(30) ) );
-					entityManager.createQuery(criteria).getSingleResult();
+					CriteriaQuery<LocalDateTime> criteria = builder.createQuery( LocalDateTime.class );
+					criteria.select( builder.subtractDuration( builder.localDateTime(), Duration.ofMinutes( 30 ) ) );
+					entityManager.createQuery( criteria ).getSingleResult();
 				}
 		);
 		doInJPA(
 				this::entityManagerFactory,
 				entityManager -> {
-					CriteriaQuery<Duration> criteria = builder.createQuery(Duration.class);
-					criteria.select( builder.durationScaled( 5, builder.duration(2, TemporalUnit.HOUR ) ) );
-					assertEquals( Duration.ofHours(10), entityManager.createQuery(criteria).getSingleResult() );
+					CriteriaQuery<Duration> criteria = builder.createQuery( Duration.class );
+					criteria.select( builder.durationScaled( 5, builder.duration( 2, TemporalUnit.HOUR ) ) );
+					assertEquals( Duration.ofHours( 10 ), entityManager.createQuery( criteria ).getSingleResult() );
 				}
 		);
 		doInJPA(
 				this::entityManagerFactory,
 				entityManager -> {
-					CriteriaQuery<Duration> criteria = builder.createQuery(Duration.class);
-					criteria.select( builder.durationSum( builder.duration(30, TemporalUnit.MINUTE ),
-							builder.duration(2, TemporalUnit.HOUR) ) );
-					assertEquals( Duration.ofMinutes(150), entityManager.createQuery(criteria).getSingleResult() );
+					CriteriaQuery<Duration> criteria = builder.createQuery( Duration.class );
+					criteria.select( builder.durationSum(
+							builder.duration( 30, TemporalUnit.MINUTE ),
+							builder.duration( 2, TemporalUnit.HOUR )
+					) );
+					assertEquals( Duration.ofMinutes( 150 ), entityManager.createQuery( criteria ).getSingleResult() );
 				}
 		);
 		doInJPA(
 				this::entityManagerFactory,
 				entityManager -> {
-					CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
-					criteria.select( builder.durationByUnit( TemporalUnit.SECOND,
-							builder.durationSum( builder.duration(30, TemporalUnit.MINUTE),
-								builder.duration(2, TemporalUnit.HOUR) ) ) );
-					assertEquals( 150*60L, entityManager.createQuery(criteria).getSingleResult() );
+					CriteriaQuery<Long> criteria = builder.createQuery( Long.class );
+					criteria.select( builder.durationByUnit(
+							TemporalUnit.SECOND,
+							builder.durationSum(
+									builder.duration( 30, TemporalUnit.MINUTE ),
+									builder.duration( 2, TemporalUnit.HOUR )
+							)
+					) );
+					assertEquals( 150 * 60L, entityManager.createQuery( criteria ).getSingleResult() );
 				}
 		);
 		doInJPA(
 				this::entityManagerFactory,
 				entityManager -> {
-					CriteriaQuery<Duration> criteria = builder.createQuery(Duration.class);
-					criteria.select( builder.durationBetween( builder.localDate(),
-							LocalDate.of(2000,1, 1) ) );
-					entityManager.createQuery(criteria).getSingleResult();
+					CriteriaQuery<Duration> criteria = builder.createQuery( Duration.class );
+					criteria.select( builder.durationBetween(
+							builder.localDate(),
+							LocalDate.of( 2000, 1, 1 )
+					) );
+					entityManager.createQuery( criteria ).getSingleResult();
 				}
 		);
 		doInJPA(
 				this::entityManagerFactory,
 				entityManager -> {
-					CriteriaQuery<Duration> criteria = builder.createQuery(Duration.class);
-					criteria.select( builder.durationBetween( builder.localDate(),
-							builder.subtractDuration( builder.localDate(),
-									builder.duration(2, TemporalUnit.DAY) ) ) );
-					assertEquals( Duration.ofDays(2), entityManager.createQuery(criteria).getSingleResult() );
+					CriteriaQuery<Duration> criteria = builder.createQuery( Duration.class );
+					criteria.select( builder.durationBetween(
+							builder.localDate(),
+							builder.subtractDuration(
+									builder.localDate(),
+									builder.duration( 2, TemporalUnit.DAY )
+							)
+					) );
+					assertEquals( Duration.ofDays( 2 ), entityManager.createQuery( criteria ).getSingleResult() );
 				}
 		);
 		doInJPA(
 				this::entityManagerFactory,
 				entityManager -> {
-					CriteriaQuery<Duration> criteria = builder.createQuery(Duration.class);
-					criteria.select( builder.durationBetween( builder.localDateTime(),
-							builder.subtractDuration( builder.localDateTime(),
-									builder.duration(20, TemporalUnit.HOUR) ) ) );
-					assertEquals( Duration.ofHours(20), entityManager.createQuery(criteria).getSingleResult() );
+					CriteriaQuery<Duration> criteria = builder.createQuery( Duration.class );
+					criteria.select( builder.durationBetween(
+							builder.localDateTime(),
+							builder.subtractDuration(
+									builder.localDateTime(),
+									builder.duration( 20, TemporalUnit.HOUR )
+							)
+					) );
+					assertEquals( Duration.ofHours( 20 ), entityManager.createQuery( criteria ).getSingleResult() );
 				}
 		);
 	}

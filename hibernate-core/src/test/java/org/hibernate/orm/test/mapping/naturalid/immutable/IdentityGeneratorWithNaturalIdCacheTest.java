@@ -4,30 +4,31 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.immutable;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import org.hamcrest.Matchers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -35,14 +36,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author Alex Burgel
  */
-@JiraKey( value = "HHH-11330" )
+@JiraKey(value = "HHH-11330")
 @ServiceRegistry(
 		settings = {
-				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
-				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" )
+				@Setting(name = AvailableSettings.GENERATE_STATISTICS, value = "true"),
+				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true")
 		}
 )
-@DomainModel( annotatedClasses = IdentityGeneratorWithNaturalIdCacheTest.Person.class )
+@DomainModel(annotatedClasses = IdentityGeneratorWithNaturalIdCacheTest.Person.class)
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class IdentityGeneratorWithNaturalIdCacheTest {
@@ -66,6 +67,7 @@ public class IdentityGeneratorWithNaturalIdCacheTest {
 
 	@Test
 	@JiraKey(value = "HHH-10659")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testNaturalIdCacheEntry(SessionFactoryScope scope) {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
@@ -92,7 +94,7 @@ public class IdentityGeneratorWithNaturalIdCacheTest {
 
 	@Entity(name = "Person")
 	@NaturalIdCache
-	@Cache( usage = CacheConcurrencyStrategy.READ_ONLY )
+	@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 	public static class Person {
 
 		@Id

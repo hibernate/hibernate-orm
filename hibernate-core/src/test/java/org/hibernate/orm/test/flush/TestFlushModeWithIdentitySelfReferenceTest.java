@@ -4,6 +4,17 @@
  */
 package org.hibernate.orm.test.flush;
 
+import org.hibernate.FlushMode;
+import org.hibernate.Session;
+import org.hibernate.dialect.GaussDBDialect;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -12,15 +23,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
-
-import org.hibernate.FlushMode;
-import org.hibernate.Session;
-import org.junit.Test;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -38,6 +40,7 @@ public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunction
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testFlushModeCommit() throws Exception {
 		Session session = openSession();
 		try {
@@ -51,6 +54,7 @@ public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunction
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testFlushModeManual() throws Exception {
 		Session session = openSession();
 		try {
@@ -64,6 +68,7 @@ public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunction
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testFlushModeAuto() throws Exception {
 		Session session = openSession();
 		try {
@@ -95,7 +100,7 @@ public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunction
 
 			return entity;
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			if ( session.getTransaction().isActive() ) {
 				session.getTransaction().rollback();
 			}
@@ -126,7 +131,7 @@ public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunction
 
 			return entity;
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			if ( session.getTransaction().isActive() ) {
 				session.getTransaction().rollback();
 			}
@@ -142,10 +147,16 @@ public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunction
 	}
 
 	private void loadAndInsert(Session session, SelfRefEntityWithEmbeddable mergedEntity) {
-		final SelfRefEntityWithEmbeddable loadedEntity = session.get( SelfRefEntityWithEmbeddable.class, mergedEntity.getId() );
+		final SelfRefEntityWithEmbeddable loadedEntity = session.get(
+				SelfRefEntityWithEmbeddable.class,
+				mergedEntity.getId()
+		);
 		assertNotNull( "Expected to find the merged entity but did not.", loadedEntity );
 		assertEquals( "test", loadedEntity.getData() );
-		assertNotNull( "Expected a non-null self reference in embeddable", loadedEntity.getInfo().getSeflRefEntityEmbedded() );
+		assertNotNull(
+				"Expected a non-null self reference in embeddable",
+				loadedEntity.getInfo().getSeflRefEntityEmbedded()
+		);
 	}
 
 	@Entity(name = "SelfRefEntity")

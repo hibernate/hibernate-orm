@@ -6,6 +6,24 @@ package org.hibernate.orm.test.jpa.graphs;
 
 import java.util.Arrays;
 import java.util.List;
+
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.dialect.GaussDBDialect;
+import org.hibernate.graph.GraphParser;
+import org.hibernate.graph.GraphSemantic;
+
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityGraph;
@@ -17,21 +35,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.Hibernate;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
-import org.hibernate.graph.GraphParser;
-import org.hibernate.graph.GraphSemantic;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -42,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Yaroslav Prokipchyn
  * @author Nathan Xu
  */
-@JiraKey( value = "HHH-14212" )
+@JiraKey(value = "HHH-14212")
 @Jpa(annotatedClasses = {
 		FetchGraphTest.LedgerRecord.class,
 		FetchGraphTest.LedgerRecordItem.class,
@@ -82,7 +85,7 @@ public class FetchGraphTest {
 					LedgerRecord ledgerRecord = new LedgerRecord();
 					ledgerRecord.budgetRecord = budgetRecord;
 					ledgerRecord.trigger = trigger;
-					ledgerRecord.ledgerRecordItems= Arrays.asList( item1, item2 );
+					ledgerRecord.ledgerRecordItems = Arrays.asList( item1, item2 );
 
 					item1.ledgerRecord = ledgerRecord;
 					item2.ledgerRecord = ledgerRecord;
@@ -106,11 +109,19 @@ public class FetchGraphTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testCollectionEntityGraph(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					final EntityGraph<LedgerRecord> entityGraph = GraphParser.parse( LedgerRecord.class, "budgetRecord, ledgerRecordItems.value(financeEntity)", entityManager );
-					final List<LedgerRecord> records = entityManager.createQuery( "from LedgerRecord", LedgerRecord.class )
+					final EntityGraph<LedgerRecord> entityGraph = GraphParser.parse(
+							LedgerRecord.class,
+							"budgetRecord, ledgerRecordItems.value(financeEntity)",
+							entityManager
+					);
+					final List<LedgerRecord> records = entityManager.createQuery(
+									"from LedgerRecord",
+									LedgerRecord.class
+							)
 							.setHint( GraphSemantic.FETCH.getJpaHintName(), entityGraph )
 							.getResultList();
 					assertThat( records.size(), is( 1 ) );
@@ -118,7 +129,7 @@ public class FetchGraphTest {
 						assertFalse( Hibernate.isInitialized( record.trigger ) );
 						assertTrue( Hibernate.isInitialized( record.budgetRecord ) );
 						assertFalse( Hibernate.isInitialized( record.budgetRecord.trigger ) );
-						assertTrue( Hibernate.isInitialized( record.ledgerRecordItems) );
+						assertTrue( Hibernate.isInitialized( record.ledgerRecordItems ) );
 						assertThat( record.ledgerRecordItems.size(), is( 2 ) );
 						record.ledgerRecordItems.forEach( item -> {
 							assertSame( record, item.ledgerRecord );

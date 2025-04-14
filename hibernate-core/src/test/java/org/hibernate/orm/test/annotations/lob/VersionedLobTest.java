@@ -4,13 +4,15 @@
  */
 package org.hibernate.orm.test.annotations.lob;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.GaussDBDialect;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -127,7 +129,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 	}
 
 	@Test
-	@JiraKey( value = "HHH-5811")
+	@JiraKey(value = "HHH-5811")
 	public void testVersionUnchangedByteArray() throws Exception {
 		Session s;
 		Transaction tx;
@@ -135,8 +137,8 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		tx = s.beginTransaction();
 		VersionedCompiledCode cc = createCompiledCode();
 		Byte[] header = new Byte[2];
-		header[0] = new Byte( ( byte ) 3 );
-		header[1] = new Byte( ( byte ) 0 );
+		header[0] = new Byte( (byte) 3 );
+		header[1] = new Byte( (byte) 0 );
 		cc.setHeader( header );
 		s.persist( cc );
 		tx.commit();
@@ -154,6 +156,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testVersionUnchangedPrimitiveByteArray() throws Exception {
 		Session s;
 		Transaction tx;
@@ -163,7 +166,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		int codeSize = 5;
 		byte[] full = new byte[codeSize];
 		for ( int i = 0; i < codeSize; i++ ) {
-			full[i] = ( byte ) ( 1 + i );
+			full[i] = (byte) ( 1 + i );
 		}
 		cc.setFullCode( full );
 		s.persist( cc );

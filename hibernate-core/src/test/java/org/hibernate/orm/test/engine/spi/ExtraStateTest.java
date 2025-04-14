@@ -4,23 +4,25 @@
  */
 package org.hibernate.orm.test.engine.spi;
 
+import org.hibernate.dialect.GaussDBDialect;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityEntryExtraState;
+import org.hibernate.engine.spi.SessionImplementor;
+
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityEntryExtraState;
-import org.hibernate.engine.spi.SessionImplementor;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -31,14 +33,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  *
  * @author Gunnar Morling
  */
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsIdentityColumns.class, jiraKey = "HHH-9918")
-@DomainModel( annotatedClasses = ExtraStateTest.ChineseTakeawayRestaurant.class )
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class, jiraKey = "HHH-9918")
+@DomainModel(annotatedClasses = ExtraStateTest.ChineseTakeawayRestaurant.class)
 @SessionFactory
 public class ExtraStateTest {
 	private SessionImplementor sessionRef;
 
 	@Test
 	@JiraKey(value = "HHH-9451")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void shouldMaintainExtraStateWhenUsingIdentityIdGenerationStrategy(SessionFactoryScope scope) {
 		scope.inSession(
 				(nonTransactedSession) -> {
@@ -56,8 +59,12 @@ public class ExtraStateTest {
 							}
 					);
 
-					TestExtraState extraState = getEntityEntry( persisted, nonTransactedSession ).getExtraState( TestExtraState.class );
-					assertNotNull( extraState, "Test extra state was not propagated from temporary to final entity entry" );
+					TestExtraState extraState = getEntityEntry( persisted, nonTransactedSession ).getExtraState(
+							TestExtraState.class );
+					assertNotNull(
+							extraState,
+							"Test extra state was not propagated from temporary to final entity entry"
+					);
 					assertEquals( 311, extraState.getValue() );
 
 					sessionRef = null;

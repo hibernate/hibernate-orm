@@ -14,4 +14,8 @@ public class JdbcParameterImpl extends AbstractJdbcParameter {
 	public JdbcParameterImpl(JdbcMapping jdbcMapping) {
 		super( jdbcMapping );
 	}
+
+	public JdbcParameterImpl(JdbcMapping jdbcMapping, Integer parameterId) {
+		super( jdbcMapping, parameterId );
+	}
 }

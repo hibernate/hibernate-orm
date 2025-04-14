@@ -599,9 +599,9 @@ public interface HibernateAnnotations {
 			Synchronize.class,
 			SynchronizeAnnotation.class
 	);
-	OrmAnnotationDescriptor<Target,TargetLegacyAnnotation> TARGET_LEGACY = new OrmAnnotationDescriptor<>(
-			Target.class,
-			TargetLegacyAnnotation.class
+	OrmAnnotationDescriptor<TargetEmbeddable,TargetEmbeddableAnnotation> TARGET_EMBEDDABLE = new OrmAnnotationDescriptor<>(
+			TargetEmbeddable.class,
+			TargetEmbeddableAnnotation.class
 	);
 	SpecializedAnnotationDescriptor<TenantId,TenantIdAnnotation> TENANT_ID = new SpecializedAnnotationDescriptor<>(
 			TenantId.class,

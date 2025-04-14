@@ -203,6 +203,7 @@ textual link:{user-guide-url}#fetching-strategies-dynamic-fetching-entity-graph-
 * Replaced uses of `CacheModeType` with `CacheMode`
 * Removed `@Cache#include` -> use `@Cache#includeLazy`
 * Removed `@TestForIssue` (for testing purposes) -> use `org.hibernate.testing.orm.junit.JiraKey` or `org.hibernate.testing.orm.junit.JiraKeyGroup`
+* Removed `@Target` - see <<targetembeddable-annotation>>
 
 
 [[proxy-annotation]]
@@ -224,6 +225,12 @@ All such cases though are already controllable by the application.
 ** `@FetchProfile`.
 
 The effect can also often be mitigated using Hibernate's bytecode-based laziness (possibly combined with `@ConcreteProxy`).
+
+[[targetembeddable-annotation]]
+=== Replace @Target
+
+The `@Target` annotation has been replaced with the new `@TargetEmbeddable`. This new annotation is only allowed on elements that are designated as `@Embedded`, and its purpose is to indicate the `@Embeddable` class that is the implementation target of the embedded instance.
+
 
 [[domain-metamodel-layering]]
 === Metamodel API layering

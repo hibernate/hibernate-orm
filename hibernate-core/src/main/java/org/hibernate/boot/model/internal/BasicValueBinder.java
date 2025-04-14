@@ -1101,14 +1101,6 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				}
 			}
 
-			final var targetAnn = attribute.locateAnnotationUsage( Target.class, getSourceModelContext() );
-			if ( targetAnn != null ) {
-				DEPRECATION_LOGGER.deprecatedAnnotation( Target.class, attribute.getName() );
-				return (BasicJavaType<?>)
-						typeConfiguration.getJavaTypeRegistry()
-								.getDescriptor( targetAnn.value() );
-			}
-
 			return null;
 		};
 

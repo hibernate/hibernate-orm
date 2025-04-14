@@ -9,19 +9,14 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
-import org.hibernate.annotations.Target;
+import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
-/**
- * @author Vlad Mihalcea
- */
-public class TargetTest extends BaseEntityManagerFunctionalTestCase {
+public class TargetEmbeddableOnInterfaceTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -32,7 +27,6 @@ public class TargetTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void testLifecycle() {
-		//tag::embeddable-Target-persist-example[]
 		doInJPA(this::entityManagerFactory, entityManager -> {
 
 			City cluj = new City();
@@ -41,10 +35,7 @@ public class TargetTest extends BaseEntityManagerFunctionalTestCase {
 
 			entityManager.persist(cluj);
 		});
-		//end::embeddable-Target-persist-example[]
 
-
-		//tag::embeddable-Target-fetching-example[]
 		doInJPA(this::entityManagerFactory, entityManager -> {
 
 			City cluj = entityManager.find(City.class, 1L);
@@ -52,10 +43,10 @@ public class TargetTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals(46.77120, cluj.getCoordinates().x(), 0.00001);
 			assertEquals(23.62360, cluj.getCoordinates().y(), 0.00001);
 		});
-		//end::embeddable-Target-fetching-example[]
 	}
 
-	//tag::embeddable-Target-example[]
+	//tag::embeddable-Target-example2[]
+	@TargetEmbeddable(GPS.class)
 	public interface Coordinates {
 		double x();
 		double y();
@@ -63,6 +54,10 @@ public class TargetTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Embeddable
 	public static class GPS implements Coordinates {
+
+	// Omitted for brevity
+
+		//end::embeddable-Target-example2[]
 
 		private double latitude;
 
@@ -85,6 +80,7 @@ public class TargetTest extends BaseEntityManagerFunctionalTestCase {
 		public double y() {
 			return longitude;
 		}
+		//tag::embeddable-Target-example2[]
 	}
 
 	@Entity(name = "City")
@@ -97,12 +93,11 @@ public class TargetTest extends BaseEntityManagerFunctionalTestCase {
 		private String name;
 
 		@Embedded
-		@Target(GPS.class)
 		private Coordinates coordinates;
 
 		//Getters and setters omitted for brevity
 
-	//end::embeddable-Target-example[]
+	//end::embeddable-Target-example2[]
 
 		public Long getId() {
 			return id;
@@ -123,7 +118,7 @@ public class TargetTest extends BaseEntityManagerFunctionalTestCase {
 		public void setCoordinates(Coordinates coordinates) {
 			this.coordinates = coordinates;
 		}
-	//tag::embeddable-Target-example[]
+	//tag::embeddable-Target-example2[]
 	}
-	//end::embeddable-Target-example[]
+	//end::embeddable-Target-example2[]
 }

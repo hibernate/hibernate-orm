@@ -12,6 +12,7 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
+import org.hibernate.internal.SessionImpl;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
@@ -95,8 +96,8 @@ public class SessionWithSharedConnectionTest {
 				.openSession();
 
 		// directly assert state of the second session
-		assertTrue( ((SessionImplementor) secondSession).isAutoCloseSessionEnabled() );
-		assertTrue( ((SessionImplementor) secondSession).shouldAutoClose() );
+		assertTrue( ((SessionImpl) secondSession).isAutoCloseSessionEnabled() );
+		assertTrue( ((SessionImpl) secondSession).shouldAutoClose() );
 
 		// now commit the transaction and make sure that does not close the sessions
 		session.getTransaction().commit();
@@ -119,8 +120,8 @@ public class SessionWithSharedConnectionTest {
 				.openSession();
 
 		// directly assert state of the second session
-		assertTrue( ((SessionImplementor) secondSession).isAutoCloseSessionEnabled() );
-		assertTrue( ((SessionImplementor) secondSession).shouldAutoClose() );
+		assertTrue( ((SessionImpl) secondSession).isAutoCloseSessionEnabled() );
+		assertTrue( ((SessionImpl) secondSession).shouldAutoClose() );
 
 		// now rollback the transaction and make sure that does not close the sessions
 		session.getTransaction().rollback();

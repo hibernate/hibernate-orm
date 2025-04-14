@@ -27,7 +27,38 @@ import java.util.function.UnaryOperator;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.EntityType;
-import org.hibernate.*;
+import org.hibernate.BatchSize;
+import org.hibernate.CacheMode;
+import org.hibernate.ConnectionAcquisitionMode;
+import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.EnabledFetchProfile;
+import org.hibernate.EntityFilterException;
+import org.hibernate.FetchNotFoundException;
+import org.hibernate.FlushMode;
+import org.hibernate.HibernateException;
+import org.hibernate.Interceptor;
+import org.hibernate.JDBCException;
+import org.hibernate.LobHelper;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
+import org.hibernate.MultiIdentifierLoadAccess;
+import org.hibernate.NaturalIdLoadAccess;
+import org.hibernate.NaturalIdMultiLoadAccess;
+import org.hibernate.ObjectDeletedException;
+import org.hibernate.ObjectNotFoundException;
+import org.hibernate.ReadOnlyMode;
+import org.hibernate.ReplicationMode;
+import org.hibernate.Session;
+import org.hibernate.SessionBuilder;
+import org.hibernate.SessionEventListener;
+import org.hibernate.SessionException;
+import org.hibernate.SharedSessionBuilder;
+import org.hibernate.SimpleNaturalIdLoadAccess;
+import org.hibernate.Transaction;
+import org.hibernate.TypeMismatchException;
+import org.hibernate.UnknownProfileException;
+import org.hibernate.UnresolvableObjectException;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -482,7 +513,10 @@ public class SessionImpl
 		return !isTransactionCoordinatorShared;
 	}
 
-	@Override
+	/**
+	 * Should this session be automatically closed after the current
+	 * transaction completes?
+	 */
 	public boolean isAutoCloseSessionEnabled() {
 		return autoClose;
 	}
@@ -521,7 +555,6 @@ public class SessionImpl
 		}
 	}
 
-	@Override
 	public boolean shouldAutoClose() {
 		if ( waitingForAutoClose ) {
 			return true;
@@ -2198,7 +2231,7 @@ public class SessionImpl
 
 		@Override
 		public SharedSessionBuilderImpl autoJoinTransactions() {
-			super.autoJoinTransactions( session.isAutoCloseSessionEnabled() );
+			super.autoJoinTransactions( session.shouldAutoJoinTransaction() );
 			return this;
 		}
 
@@ -2222,7 +2255,7 @@ public class SessionImpl
 
 		@Override
 		public SharedSessionBuilderImpl autoClose() {
-			autoClose( session.autoClose );
+			autoClose( session.isAutoCloseSessionEnabled() );
 			return this;
 		}
 

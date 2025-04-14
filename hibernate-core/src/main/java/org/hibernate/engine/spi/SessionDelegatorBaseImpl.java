@@ -375,16 +375,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public boolean shouldAutoClose() {
-		return delegate.shouldAutoClose();
-	}
-
-	@Override
-	public boolean isAutoCloseSessionEnabled() {
-		return delegate.isAutoCloseSessionEnabled();
-	}
-
-	@Override
 	public boolean shouldAutoJoinTransaction() {
 		return delegate.shouldAutoJoinTransaction();
 	}

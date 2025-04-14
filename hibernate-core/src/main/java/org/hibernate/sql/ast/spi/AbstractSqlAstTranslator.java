@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
@@ -87,7 +88,9 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.SqlTreeCreationException;
+import org.hibernate.sql.ast.internal.SqlParameterInfoImpl;
 import org.hibernate.sql.ast.internal.TableGroupHelper;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
@@ -311,6 +314,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private final Stack<Clause> clauseStack = new StandardStack<>();
 	private final Stack<QueryPart> queryPartStack = new StandardStack<>();
 	private final Stack<Statement> statementStack = new StandardStack<>();
+	private @Nullable SqlParameterInfo parameterInfo;
 
 	private final Dialect dialect;
 	private final Set<String> affectedTableNames = new HashSet<>();
@@ -345,11 +349,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private ForUpdateClause forUpdate;
 
 	protected AbstractSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+		this( sessionFactory, statement, null );
+	}
+
+	protected AbstractSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
 		this.sessionFactory = sessionFactory;
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		this.dialect = jdbcServices.getDialect();
 		this.statementStack.push( statement );
 		this.parameterMarkerStrategy = jdbcServices.getParameterMarkerStrategy();
+		this.parameterInfo = parameterInfo;
 	}
 
 	private static Clause matchWithClause(Clause clause) {
@@ -366,6 +375,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
+	}
+
+	protected SqlParameterInfo getParameterInfo() {
+		if ( parameterInfo == null ) {
+			parameterInfo = new SqlParameterInfoImpl();
+		}
+		return parameterInfo;
 	}
 
 	protected FunctionRenderer castFunction() {

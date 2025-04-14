@@ -147,7 +147,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean autoCloseSessionEnabled;
 	private boolean jtaTransactionAccessEnabled;
 	private boolean allowOutOfTransactionUpdateOperations;
-	private boolean releaseResourcesOnCloseEnabled;
 
 	// (JTA) transaction handling
 	private boolean jtaTrackByThread;
@@ -263,6 +262,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private SchemaAutoTooling schemaAutoTooling;
 	@Deprecated(forRemoval = true)
 	private boolean delayBatchFetchLoaderCreations;
+	@Deprecated(forRemoval = true)
+	private boolean releaseResourcesOnCloseEnabled;
 
 	@SuppressWarnings( "unchecked" )
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
@@ -490,6 +491,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		allowOutOfTransactionUpdateOperations = getBoolean( ALLOW_UPDATE_OUTSIDE_TRANSACTION, settings );
 
 		releaseResourcesOnCloseEnabled = getBoolean( DISCARD_PC_ON_CLOSE, settings );
+		if ( releaseResourcesOnCloseEnabled) {
+			DEPRECATION_LOGGER.deprecatedSetting( DISCARD_PC_ON_CLOSE );
+		}
 
 		jdbcTimeZone = getJdbcTimeZone( settings.get( JDBC_TIME_ZONE ) );
 
@@ -1515,6 +1519,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.allowOutOfTransactionUpdateOperations = allow;
 	}
 
+	@Deprecated(since = "7.0", forRemoval = true)
 	public void enableReleaseResourcesOnClose(boolean enable) {
 		this.releaseResourcesOnCloseEnabled = enable;
 	}

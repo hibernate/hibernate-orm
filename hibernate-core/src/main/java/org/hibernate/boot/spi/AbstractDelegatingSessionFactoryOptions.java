@@ -244,7 +244,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		return delegate.isAllowOutOfTransactionUpdateOperations();
 	}
 
-	@Override
+	@Override @Deprecated
 	public boolean isReleaseResourcesOnCloseEnabled() {
 		return delegate.isReleaseResourcesOnCloseEnabled();
 	}

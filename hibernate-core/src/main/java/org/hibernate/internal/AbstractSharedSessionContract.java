@@ -977,15 +977,18 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	final EntityPersister requireEntityPersister(Class<?> entityClass) {
+	// Hibernate Reactive may need to use this
+	protected final EntityPersister requireEntityPersister(Class<?> entityClass) {
 		return getMappingMetamodel().getEntityDescriptor( entityClass );
 	}
 
-	final EntityPersister requireEntityPersister(String entityName) {
+	// Hibernate Reactive may need to use this
+	protected final EntityPersister requireEntityPersister(String entityName) {
 		return getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
-	final CollectionPersister requireCollectionPersister(String roleName) {
+	// Hibernate Reactive may need to use this
+	protected final CollectionPersister requireCollectionPersister(String roleName) {
 		return getMappingMetamodel().getCollectionDescriptor( roleName );
 	}
 

@@ -88,6 +88,9 @@ public interface SessionBuilder {
 
 	/**
 	 * Specifies the connection handling modes for the session.
+	 * <p>
+	 * Note that if {@link ConnectionAcquisitionMode#IMMEDIATELY} is specified,
+	 * then the release mode must be {@link ConnectionReleaseMode#ON_CLOSE}.
 	 *
 	 * @return {@code this}, for method chaining
 	 *

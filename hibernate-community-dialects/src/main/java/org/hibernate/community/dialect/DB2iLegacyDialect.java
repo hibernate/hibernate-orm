@@ -4,6 +4,7 @@
  */
 package org.hibernate.community.dialect;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -27,6 +28,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Column;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -158,11 +160,10 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 	@Override
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
-
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new DB2iLegacySqlAstTranslator<>( sessionFactory, statement, getVersion() );
+					SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+				return new DB2iLegacySqlAstTranslator<>( sessionFactory, statement, parameterInfo, getVersion() );
 			}
 		};
 	}

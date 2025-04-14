@@ -4,11 +4,13 @@
  */
 package org.hibernate.community.dialect;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
@@ -42,8 +44,13 @@ import org.hibernate.type.SqlTypes;
  */
 public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public PostgreSQLLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	public PostgreSQLLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+		super( sessionFactory, statement, parameterInfo );
 	}
 
 	@Override

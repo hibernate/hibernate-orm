@@ -5,9 +5,11 @@
 package org.hibernate.dialect.sql.ast;
 
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.MySQLDeleteOrUpsertOperation;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.SqlAstTranslatorWithUpsert;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -23,8 +25,13 @@ import java.util.List;
  */
 public class SqlAstTranslatorWithOnDuplicateKeyUpdate<T extends JdbcOperation> extends SqlAstTranslatorWithUpsert<T> {
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public SqlAstTranslatorWithOnDuplicateKeyUpdate(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	public SqlAstTranslatorWithOnDuplicateKeyUpdate(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+		super( sessionFactory, statement, parameterInfo );
 	}
 
 	@Override

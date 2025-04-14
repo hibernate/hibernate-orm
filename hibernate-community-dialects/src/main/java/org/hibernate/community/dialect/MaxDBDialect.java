@@ -7,6 +7,7 @@ package org.hibernate.community.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.Types;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.sequence.MaxDBSequenceSupport;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorSAPDBDatabaseImpl;
@@ -34,6 +35,7 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -196,8 +198,8 @@ public class MaxDBDialect extends Dialect {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new MaxDBSqlAstTranslator<>( sessionFactory, statement );
+					SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+				return new MaxDBSqlAstTranslator<>( sessionFactory, statement, parameterInfo );
 			}
 		};
 	}

@@ -113,6 +113,6 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 		this.sqmParamMappingTypeResolutions = sqmInterpretation.getSqmParameterMappingModelTypeResolutions();
 
 		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-				.buildMutationTranslator( factory, sqmInterpretation.getSqlAst() );
+				.buildMutationTranslator( factory, sqmInterpretation.getSqlAst(), sqmInterpretation.getParameterInfo() );
 	}
 }

@@ -7,11 +7,13 @@ package org.hibernate.community.dialect;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.sql.ast.SybaseSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
@@ -38,8 +40,13 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 
 	private static final String UNION_ALL = " union all ";
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public SybaseAnywhereSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	public SybaseAnywhereSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+		super( sessionFactory, statement, parameterInfo );
 	}
 
 	// Sybase Anywhere does not allow CASE expressions where all result arms contain plain parameters.

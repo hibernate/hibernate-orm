@@ -6,6 +6,7 @@ package org.hibernate.dialect;
 
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
@@ -69,6 +70,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -548,8 +550,8 @@ public class HANADialect extends Dialect {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, org.hibernate.sql.ast.tree.Statement statement) {
-				return new HANASqlAstTranslator<>( sessionFactory, statement );
+					SessionFactoryImplementor sessionFactory, org.hibernate.sql.ast.tree.Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+				return new HANASqlAstTranslator<>( sessionFactory, statement, parameterInfo );
 			}
 		};
 	}

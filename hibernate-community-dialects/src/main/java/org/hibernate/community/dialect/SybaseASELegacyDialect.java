@@ -5,6 +5,7 @@
 package org.hibernate.community.dialect;
 
 import jakarta.persistence.TemporalType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
@@ -33,6 +34,7 @@ import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -226,8 +228,8 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new SybaseASELegacySqlAstTranslator<>( sessionFactory, statement );
+					SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+				return new SybaseASELegacySqlAstTranslator<>( sessionFactory, statement, parameterInfo );
 			}
 		};
 	}

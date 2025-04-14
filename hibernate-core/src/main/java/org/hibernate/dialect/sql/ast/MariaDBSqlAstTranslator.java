@@ -7,6 +7,7 @@ package org.hibernate.dialect.sql.ast;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -14,6 +15,7 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -48,8 +50,14 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	private final MariaDBDialect dialect;
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public MariaDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, MariaDBDialect dialect) {
 		super( sessionFactory, statement );
+		this.dialect = dialect;
+	}
+
+	public MariaDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo, MariaDBDialect dialect) {
+		super( sessionFactory, statement, parameterInfo );
 		this.dialect = dialect;
 	}
 

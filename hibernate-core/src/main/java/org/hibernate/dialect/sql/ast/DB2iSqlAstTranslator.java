@@ -4,9 +4,11 @@
  */
 package org.hibernate.dialect.sql.ast;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -22,8 +24,14 @@ public class DB2iSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 
 	private final DatabaseVersion version;
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public DB2iSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, DatabaseVersion version) {
 		super( sessionFactory, statement );
+		this.version = version;
+	}
+
+	public DB2iSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo, DatabaseVersion version) {
+		super( sessionFactory, statement, parameterInfo );
 		this.version = version;
 	}
 

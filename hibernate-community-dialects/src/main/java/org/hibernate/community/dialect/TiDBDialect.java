@@ -6,6 +6,7 @@ package org.hibernate.community.dialect;
 
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Timeouts;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorTiDBDatabaseImpl;
 import org.hibernate.community.dialect.sequence.TiDBSequenceSupport;
@@ -25,6 +26,7 @@ import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -116,8 +118,8 @@ public class TiDBDialect extends MySQLDialect {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new TiDBSqlAstTranslator<>( sessionFactory, statement, TiDBDialect.this );
+					SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+				return new TiDBSqlAstTranslator<>( sessionFactory, statement, parameterInfo, TiDBDialect.this );
 			}
 		};
 	}

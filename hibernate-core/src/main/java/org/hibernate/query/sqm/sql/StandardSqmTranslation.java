@@ -4,11 +4,15 @@
  */
 package org.hibernate.query.sqm.sql;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.sql.ast.SqlParameterInfo;
+import org.hibernate.sql.ast.internal.SqlParameterInfoImpl;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.Statement;
@@ -24,6 +28,7 @@ public class StandardSqmTranslation<T extends Statement> implements SqmTranslati
 	private final Map<SqmParameter<?>, MappingModelExpressible<?>> parameterMappingModelTypeMap;
 	private final SqlExpressionResolver sqlExpressionResolver;
 	private final FromClauseAccess fromClauseAccess;
+	private final SqlParameterInfo parameterInfo;
 
 	public StandardSqmTranslation(
 			T sqlAst,
@@ -36,6 +41,19 @@ public class StandardSqmTranslation<T extends Statement> implements SqmTranslati
 		this.parameterMappingModelTypeMap = parameterMappingModelTypeMap;
 		this.sqlExpressionResolver = sqlExpressionResolver;
 		this.fromClauseAccess = fromClauseAccess;
+		final IdentityHashMap<JdbcParameter, Integer> parameterIdMap = new IdentityHashMap<>();
+		int parameterId = 0;
+		for ( Map.Entry<SqmParameter<?>, List<List<JdbcParameter>>> entry : jdbcParamMap.entrySet() ) {
+			final List<List<JdbcParameter>> parameterUses = entry.getValue();
+			final int baseId = parameterId;
+			for ( List<JdbcParameter> jdbcParameters : parameterUses ) {
+				for ( int i = 0; i < jdbcParameters.size(); i++ ) {
+					parameterIdMap.put( jdbcParameters.get( i ), baseId + i );
+				}
+			}
+			parameterId += parameterUses.get( 0 ).size();
+		}
+		this.parameterInfo = new SqlParameterInfoImpl( Collections.unmodifiableMap( parameterIdMap ), parameterId );
 	}
 
 	@Override
@@ -61,5 +79,10 @@ public class StandardSqmTranslation<T extends Statement> implements SqmTranslati
 	@Override
 	public FromClauseAccess getFromClauseAccess() {
 		return fromClauseAccess;
+	}
+
+	@Override
+	public SqlParameterInfo getParameterInfo() {
+		return parameterInfo;
 	}
 }

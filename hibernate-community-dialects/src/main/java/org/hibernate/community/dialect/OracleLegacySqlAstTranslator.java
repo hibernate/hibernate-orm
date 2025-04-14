@@ -7,6 +7,7 @@ package org.hibernate.community.dialect;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Locking;
 import org.hibernate.dialect.type.OracleArrayJdbcType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -26,6 +27,7 @@ import org.hibernate.query.common.FrameKind;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -74,8 +76,13 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  */
 public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public OracleLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	public OracleLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+		super( sessionFactory, statement, parameterInfo );
 	}
 
 	@Override

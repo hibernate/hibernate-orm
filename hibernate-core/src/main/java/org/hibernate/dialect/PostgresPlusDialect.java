@@ -8,6 +8,7 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
@@ -18,6 +19,7 @@ import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -137,8 +139,8 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new PostgreSQLSqlAstTranslator<>( sessionFactory, statement ) {
+					SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+				return new PostgreSQLSqlAstTranslator<>( sessionFactory, statement, parameterInfo ) {
 					@Override
 					public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 						if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {

@@ -212,7 +212,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 		return factory.getJdbcServices()
 				.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildMutationTranslator( factory, ast );
+				.buildMutationTranslator( factory, ast, sqmInterpretation.getParameterInfo() );
 	}
 
 	private MutationStatement createDeleteAst() {

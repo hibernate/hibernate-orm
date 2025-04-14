@@ -493,7 +493,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 		final SqlAstTranslator<JdbcOperationQuerySelect> selectTranslator =
 				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-						.buildSelectTranslator( sessionFactory, sqmInterpretation.getSqlAst() );
+						.buildSelectTranslator( sessionFactory, sqmInterpretation.getSqlAst(), sqmInterpretation.getParameterInfo() );
 
 		final var jdbcParamsXref =
 				generateJdbcParamsXref( domainParameterXref, sqmInterpretation::getJdbcParamsBySqmParam );

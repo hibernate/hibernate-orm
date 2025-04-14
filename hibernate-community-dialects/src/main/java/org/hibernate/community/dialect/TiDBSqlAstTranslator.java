@@ -4,12 +4,14 @@
  */
 package org.hibernate.community.dialect;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
@@ -50,8 +52,14 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	private final TiDBDialect dialect;
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public TiDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, TiDBDialect dialect) {
 		super( sessionFactory, statement );
+		this.dialect = dialect;
+	}
+
+	public TiDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo, TiDBDialect dialect) {
+		super( sessionFactory, statement, parameterInfo );
 		this.dialect = dialect;
 	}
 

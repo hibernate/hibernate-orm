@@ -5,6 +5,7 @@
 package org.hibernate.dialect;
 
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.internal.DB2LockingSupport;
@@ -21,6 +22,7 @@ import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -187,8 +189,8 @@ public class DB2zDialect extends DB2Dialect {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new DB2zSqlAstTranslator<>( sessionFactory, statement, getVersion() );
+					SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+				return new DB2zSqlAstTranslator<>( sessionFactory, statement, parameterInfo, getVersion() );
 			}
 		};
 	}

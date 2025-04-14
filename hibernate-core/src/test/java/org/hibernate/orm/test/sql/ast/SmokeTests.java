@@ -90,10 +90,9 @@ public class SmokeTests {
 			assertThat( sqlSelection.getValuesArrayPosition(), is( 0 ) );
 			assertThat( sqlSelection.getJdbcValueExtractor(), notNullValue() );
 
-			final JdbcOperationQuerySelect jdbcSelectOperation = new StandardSqlAstTranslator<JdbcOperationQuerySelect>(
-					session.getSessionFactory(),
-					sqlAst
-			).translate( null, QueryOptions.NONE );
+			final JdbcOperationQuerySelect jdbcSelectOperation =
+					new StandardSqlAstTranslator<JdbcOperationQuerySelect>( session.getSessionFactory(), sqlAst, null )
+							.translate( null, QueryOptions.NONE );
 
 			assertThat(
 					jdbcSelectOperation.getSqlString(),
@@ -180,7 +179,8 @@ public class SmokeTests {
 
 					final JdbcOperationQuerySelect jdbcSelectOperation = new StandardSqlAstTranslator<JdbcOperationQuerySelect>(
 							session.getSessionFactory(),
-							sqlAst
+							sqlAst,
+							null
 					).translate( null, QueryOptions.NONE );
 
 					assertThat(

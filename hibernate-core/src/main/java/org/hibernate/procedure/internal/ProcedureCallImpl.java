@@ -661,11 +661,10 @@ public class ProcedureCallImpl<R>
 			for ( JdbcParameterBinder parameterBinder : call.getParameterBinders() ) {
 				parameterBinder.bindParameterValue(
 						statement,
-						paramBindingPosition,
+						paramBindingPosition++,
 						jdbcParameterBindings,
 						executionContext
 				);
-				paramBindingPosition++;
 			}
 		}
 		catch (SQLException e) {

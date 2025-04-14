@@ -6,9 +6,11 @@ package org.hibernate.community.dialect;
 
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -30,8 +32,13 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 public class TeradataSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 	private final boolean supportsLocking;
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public TeradataSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-		super( sessionFactory, statement );
+		this( sessionFactory, statement, null );
+	}
+
+	public TeradataSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+		super( sessionFactory, statement, parameterInfo );
 		supportsLocking = getDialect().getVersion().isSameOrAfter( 14 );
 	}
 

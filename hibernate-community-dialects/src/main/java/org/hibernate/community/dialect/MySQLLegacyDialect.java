@@ -6,6 +6,7 @@ package org.hibernate.community.dialect;
 
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
@@ -70,6 +71,7 @@ import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
@@ -762,8 +764,8 @@ public class MySQLLegacyDialect extends Dialect {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new MySQLLegacySqlAstTranslator<>( sessionFactory, statement, MySQLLegacyDialect.this );
+					SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+				return new MySQLLegacySqlAstTranslator<>( sessionFactory, statement, parameterInfo, MySQLLegacyDialect.this );
 			}
 		};
 	}

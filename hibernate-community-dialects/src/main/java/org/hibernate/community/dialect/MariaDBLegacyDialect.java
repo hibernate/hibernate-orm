@@ -7,6 +7,7 @@ package org.hibernate.community.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.*;
@@ -29,6 +30,7 @@ import org.hibernate.query.sqm.CastType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -189,8 +191,8 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new MariaDBLegacySqlAstTranslator<>( sessionFactory, statement, MariaDBLegacyDialect.this );
+					SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+				return new MariaDBLegacySqlAstTranslator<>( sessionFactory, statement, parameterInfo, MariaDBLegacyDialect.this );
 			}
 		};
 	}

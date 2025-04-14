@@ -126,6 +126,7 @@ public class AnsiTrimEmulationFunctionTest  {
 		Mockito.doReturn( dialect ).when( jdbcServices ).getDialect();
 		StandardSqlAstTranslator<JdbcOperation> walker = new StandardSqlAstTranslator<>(
 				factory,
+				null,
 				null
 		);
 		List<SqlAstNode> sqlAstArguments = new ArrayList<>();

@@ -68,7 +68,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 		return factory.getJdbcServices()
 				.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildMutationTranslator( factory, sqmInterpretation.getSqlAst() );
+				.buildMutationTranslator( factory, sqmInterpretation.getSqlAst(), sqmInterpretation.getParameterInfo() );
 	}
 
 	@Override

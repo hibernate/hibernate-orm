@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.sql.ast;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
@@ -16,6 +17,7 @@ import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.MutationStatement;
@@ -58,8 +60,13 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	private static final String UNION_ALL = " union all ";
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public SybaseASESqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	public SybaseASESqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+		super( sessionFactory, statement, parameterInfo );
 	}
 
 	@Override

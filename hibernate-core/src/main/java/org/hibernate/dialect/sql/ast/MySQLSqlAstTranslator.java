@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.sql.ast;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.MySQLDialect;
@@ -12,6 +13,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -55,8 +57,14 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 
 	private final MySQLDialect dialect;
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public MySQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, MySQLDialect dialect) {
 		super( sessionFactory, statement );
+		this.dialect = dialect;
+	}
+
+	public MySQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo, MySQLDialect dialect) {
+		super( sessionFactory, statement, parameterInfo );
 		this.dialect = dialect;
 	}
 

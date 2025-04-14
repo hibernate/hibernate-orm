@@ -6,10 +6,12 @@ package org.hibernate.community.dialect;
 
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
@@ -29,8 +31,13 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class RDMSOS2200SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public RDMSOS2200SqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	public RDMSOS2200SqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+		super( sessionFactory, statement, parameterInfo );
 	}
 
 	@Override

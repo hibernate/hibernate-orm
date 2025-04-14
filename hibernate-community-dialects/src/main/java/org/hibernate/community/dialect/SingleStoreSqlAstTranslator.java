@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.engine.jdbc.Size;
@@ -16,6 +17,7 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.MutationStatement;
@@ -54,8 +56,14 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	private static final int MAX_CHAR_SIZE = 8192;
 	private final SingleStoreDialect dialect;
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public SingleStoreSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, SingleStoreDialect dialect) {
 		super( sessionFactory, statement );
+		this.dialect = dialect;
+	}
+
+	public SingleStoreSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo, SingleStoreDialect dialect) {
+		super( sessionFactory, statement, parameterInfo );
 		this.dialect = dialect;
 	}
 

@@ -6,6 +6,7 @@ package org.hibernate.dialect.sql.ast;
 
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -14,6 +15,7 @@ import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.spi.SqlAstTranslatorWithMerge;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
@@ -52,8 +54,13 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 
 	private boolean renderAsArray;
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public H2SqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	public H2SqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+		super( sessionFactory, statement, parameterInfo );
 	}
 
 	@Override

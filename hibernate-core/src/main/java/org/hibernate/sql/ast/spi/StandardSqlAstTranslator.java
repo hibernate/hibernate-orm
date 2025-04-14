@@ -4,7 +4,9 @@
  */
 package org.hibernate.sql.ast.spi;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.SqlParameterInfo;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
@@ -18,7 +20,12 @@ import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
  */
 public class StandardSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public StandardSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	public StandardSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, @Nullable SqlParameterInfo parameterInfo) {
+		super( sessionFactory, statement, parameterInfo );
 	}
 }

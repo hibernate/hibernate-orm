@@ -6,6 +6,7 @@ package org.hibernate.sql.exec.internal;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -59,11 +60,11 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 
 				// bind parameters
 				// 		todo : validate that all query parameters were bound?
-				int paramBindingPosition = 1;
-				for ( JdbcParameterBinder parameterBinder : jdbcMutation.getParameterBinders() ) {
-					parameterBinder.bindParameterValue(
+				final List<JdbcParameterBinder> parameterBinders = jdbcMutation.getParameterBinders();
+				for ( int i = 0; i < parameterBinders.size(); i++ ) {
+					parameterBinders.get( i ).bindParameterValue(
 							preparedStatement,
-							paramBindingPosition++,
+							i + 1,
 							jdbcParameterBindings,
 							executionContext
 					);

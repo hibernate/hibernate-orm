@@ -147,6 +147,7 @@ public interface Expectation {
 	 * @since 6.5
 	 */
 	class None implements Expectation {
+		public static final None INSTANCE = new None();
 		@Override
 		public void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition, String sql) {
 			// nothing to do

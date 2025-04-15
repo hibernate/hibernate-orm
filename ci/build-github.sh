@@ -6,4 +6,4 @@ java -version
 if [ "$RDBMS" == "gaussdb" ]; then
   export EXTRA_GRADLE_ARGS="-x :hibernate-agroal:test"
 fi
-exec bash $DIR/build.sh
+exec bash $DIR/build.sh $EXTRA_GRADLE_ARGS

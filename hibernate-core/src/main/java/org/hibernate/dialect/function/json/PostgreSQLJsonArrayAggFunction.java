@@ -57,9 +57,9 @@ public class PostgreSQLJsonArrayAggFunction extends JsonArrayAggFunction {
 			sqlAppender.appendSql( '(' );
 			final SqlAstNode firstArg = sqlAstArguments.get( 0 );
 			final Expression arg;
-			if ( firstArg instanceof Distinct ) {
+			if ( firstArg instanceof Distinct distinct ) {
 				sqlAppender.appendSql( "distinct " );
-				arg = ( (Distinct) firstArg ).getExpression();
+				arg = distinct.getExpression();
 			}
 			else {
 				arg = (Expression) firstArg;

@@ -220,8 +220,8 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 	@Override
 	public <P> QueryParameterImplementor<P> resolve(Parameter<P> param) {
-		if ( param instanceof QueryParameterImplementor ) {
-			return (QueryParameterImplementor<P>) param;
+		if ( param instanceof QueryParameterImplementor<P> parameterImplementor ) {
+			return parameterImplementor;
 		}
 
 		final String errorMessage = "Could not resolve jakarta.persistence.Parameter '" + param + "' to org.hibernate.query.QueryParameter";

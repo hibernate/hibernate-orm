@@ -88,10 +88,9 @@ public class H2DurationIntervalSecondJdbcType implements JdbcType {
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 				// Handle the fact that a duration could also come as number of nanoseconds
 				final Object nativeValue = statement.getObject( index );
-				if ( nativeValue instanceof Number ) {
-					return javaType.wrap( nativeValue, options );
-				}
-				return javaType.wrap( statement.getObject( index, Duration.class ), options );
+				return nativeValue instanceof Number
+						? javaType.wrap( nativeValue, options )
+						: javaType.wrap( statement.getObject( index, Duration.class ), options );
 			}
 
 			@Override
@@ -99,10 +98,9 @@ public class H2DurationIntervalSecondJdbcType implements JdbcType {
 					throws SQLException {
 				// Handle the fact that a duration could also come as number of nanoseconds
 				final Object nativeValue = statement.getObject( name );
-				if ( nativeValue instanceof Number ) {
-					return javaType.wrap( nativeValue, options );
-				}
-				return javaType.wrap( statement.getObject( name, Duration.class ), options );
+				return nativeValue instanceof Number
+						? javaType.wrap( nativeValue, options )
+						: javaType.wrap( statement.getObject( name, Duration.class ), options );
 			}
 		};
 	}

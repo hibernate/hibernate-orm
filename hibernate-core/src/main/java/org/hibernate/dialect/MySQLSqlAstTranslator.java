@@ -10,7 +10,6 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -174,11 +173,10 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
-		final Statement currentStatement;
 		if ( getDialect().getMySQLVersion().isBefore( 8, 0, 19 )
 				&& "excluded".equals( columnReference.getQualifier() )
-				&& ( currentStatement = getStatementStack().getCurrent() ) instanceof InsertSelectStatement
-				&& ( (InsertSelectStatement) currentStatement ).getSourceSelectStatement() == null ) {
+				&& getStatementStack().getCurrent() instanceof InsertSelectStatement insertSelectStatement
+				&& insertSelectStatement.getSourceSelectStatement() == null ) {
 			// Accessing the excluded row for an insert-values statement in the conflict clause requires the values qualifier
 			appendSql( "values(" );
 			columnReference.appendReadExpression( this, null );
@@ -248,14 +246,13 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	@Override
 	protected String determineColumnReferenceQualifier(ColumnReference columnReference) {
 		final DmlTargetColumnQualifierSupport qualifierSupport = getDialect().getDmlTargetColumnQualifierSupport();
-		final MutationStatement currentDmlStatement;
 		final String dmlAlias;
 		// Since MySQL does not support aliasing the insert target table,
 		// we must detect column reference that are used in the conflict clause
 		// and use the table expression as qualifier instead
 		if ( getClauseStack().getCurrent() != Clause.SET
-				|| !( ( currentDmlStatement = getCurrentDmlStatement() ) instanceof InsertSelectStatement )
-				|| ( dmlAlias = currentDmlStatement.getTargetTable().getIdentificationVariable() ) == null
+				|| !( getCurrentDmlStatement() instanceof InsertSelectStatement insertSelectStatement )
+				|| ( dmlAlias = insertSelectStatement.getTargetTable().getIdentificationVariable() ) == null
 				|| !dmlAlias.equals( columnReference.getQualifier() ) ) {
 			return columnReference.getQualifier();
 		}

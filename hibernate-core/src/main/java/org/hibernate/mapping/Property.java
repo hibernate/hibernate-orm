@@ -140,8 +140,8 @@ public class Property implements Serializable, MetaAttributable {
 		if ( type instanceof AnyType ) {
 			return getCascadeStyle( cascade );
 		}
-		if ( type instanceof ComponentType ) {
-			return getCompositeCascadeStyle( (ComponentType) type, cascade );
+		if ( type instanceof ComponentType componentType ) {
+			return getCompositeCascadeStyle( componentType, cascade );
 		}
 		else if ( type instanceof CollectionType ) {
 			final Collection collection = (Collection) value;
@@ -175,8 +175,8 @@ public class Property implements Serializable, MetaAttributable {
 		if ( elementType instanceof AnyType ) {
 			return getCascadeStyle( cascade );
 		}
-		else if ( elementType instanceof ComponentType ) {
-			return getCompositeCascadeStyle( (ComponentType) elementType, cascade );
+		else if ( elementType instanceof ComponentType componentType ) {
+			return getCompositeCascadeStyle( componentType, cascade );
 		}
 		else {
 			return getCascadeStyle( cascade );

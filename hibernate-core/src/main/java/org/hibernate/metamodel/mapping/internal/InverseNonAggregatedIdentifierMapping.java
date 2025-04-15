@@ -261,9 +261,10 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 			final AttributeMapping attribute = embeddableTypeDescriptor.getAttributeMapping( position );
 			final AttributeMapping mappedIdAttributeMapping = identifierValueMapper.getAttributeMapping( position );
 			Object o = mappedIdAttributeMapping.getValue( id );
-			if ( attribute instanceof ToOneAttributeMapping toOneAttributeMapping && !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
-				final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
-						.getEntityPersister();
+			if ( attribute instanceof ToOneAttributeMapping toOneAttributeMapping
+					&& !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
+				final EntityPersister entityPersister =
+						toOneAttributeMapping.getEntityMappingType().getEntityPersister();
 				final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
 				final PersistenceContext persistenceContext = session.getPersistenceContext();
 				final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );

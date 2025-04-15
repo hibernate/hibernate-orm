@@ -148,8 +148,8 @@ public abstract class AbstractIdentifiableType<J>
 	private void checkType(SingularPersistentAttribute<?, ?> attribute, Class<?> javaType) {
 		if ( !javaType.isAssignableFrom( attribute.getType().getJavaType() ) ) {
 			final JavaType<?> attributeJavaType = attribute.getAttributeJavaType();
-			if ( !( attributeJavaType instanceof PrimitiveJavaType )
-					|| ( (PrimitiveJavaType<?>) attributeJavaType ).getPrimitiveClass() != javaType ) {
+			if ( !( attributeJavaType instanceof PrimitiveJavaType<?> primitiveJavaType )
+					|| primitiveJavaType.getPrimitiveClass() != javaType ) {
 				throw new IllegalArgumentException(
 						String.format(
 								"Attribute [%s#%s : %s] not castable to requested type [%s]",

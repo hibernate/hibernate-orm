@@ -78,9 +78,9 @@ public class ListaggGroupConcatEmulation extends AbstractSqmSelfRenderingFunctio
 		sqlAppender.appendSql( "group_concat(" );
 		final SqlAstNode firstArg = sqlAstArguments.get( 0 );
 		final Expression arg;
-		if ( firstArg instanceof Distinct ) {
+		if ( firstArg instanceof Distinct distinct ) {
 			sqlAppender.appendSql( "distinct " );
-			arg = ( (Distinct) firstArg ).getExpression();
+			arg = distinct.getExpression();
 		}
 		else {
 			arg = (Expression) firstArg;
@@ -110,8 +110,8 @@ public class ListaggGroupConcatEmulation extends AbstractSqmSelfRenderingFunctio
 		if ( sqlAstArguments.size() != 1 ) {
 			SqlAstNode separator = sqlAstArguments.get( 1 );
 			// group_concat doesn't support the overflow clause, so we just omit it
-			if ( separator instanceof Overflow ) {
-				separator = ( (Overflow) separator ).getSeparatorExpression();
+			if ( separator instanceof Overflow overflow ) {
+				separator = overflow.getSeparatorExpression();
 			}
 			sqlAppender.appendSql( " separator " );
 			separator.accept( translator );

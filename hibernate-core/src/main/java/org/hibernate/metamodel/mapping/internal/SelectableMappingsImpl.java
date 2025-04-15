@@ -36,15 +36,12 @@ public class SelectableMappingsImpl implements SelectableMappings {
 	}
 
 	private static void resolveJdbcMappings(List<JdbcMapping> jdbcMappings, MappingContext mapping, Type valueType) {
-		final Type keyType;
-		if ( valueType instanceof EntityType ) {
-			keyType = ( (EntityType) valueType ).getIdentifierOrUniqueKeyType( mapping );
-		}
-		else {
-			keyType = valueType;
-		}
-		if ( keyType instanceof CompositeType ) {
-			Type[] subtypes = ( (CompositeType) keyType ).getSubtypes();
+		final Type keyType =
+				valueType instanceof EntityType entityType
+						? entityType.getIdentifierOrUniqueKeyType( mapping )
+						: valueType;
+		if ( keyType instanceof CompositeType compositeType ) {
+			Type[] subtypes = compositeType.getSubtypes();
 			for ( Type subtype : subtypes ) {
 				resolveJdbcMappings( jdbcMappings, mapping, subtype );
 			}

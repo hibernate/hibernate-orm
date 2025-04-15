@@ -21,7 +21,7 @@ public class HSQLJsonArrayFunction extends JsonArrayFunction {
 
 	@Override
 	protected void renderValue(SqlAppender sqlAppender, SqlAstNode value, SqlAstTranslator<?> walker) {
-		if ( value instanceof Literal && ( (Literal) value ).getLiteralValue() == null ) {
+		if ( value instanceof Literal literal && literal.getLiteralValue() == null ) {
 			sqlAppender.appendSql( "cast(null as int)" );
 		}
 		else {

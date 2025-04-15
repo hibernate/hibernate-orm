@@ -12,17 +12,14 @@ import java.util.Map;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
-import jakarta.persistence.metamodel.Type;
 import org.hibernate.AssertionFailure;
 import org.hibernate.graph.CannotBecomeEntityGraphException;
-import org.hibernate.graph.CannotContainSubGraphException;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.SubGraph;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
@@ -494,26 +491,6 @@ public abstract class GraphImpl<J> extends AbstractGraphNode<J> implements Graph
 	@Override
 	public Map<Class<? extends J>, SubGraphImplementor<? extends J>> getTreatedSubgraphs() {
 		return treatedSubgraphs == null ? emptyMap() : unmodifiableMap( treatedSubgraphs );
-	}
-
-	static <T> ManagedDomainType<T> asManagedType(Type<T> domainType) {
-		if ( domainType instanceof ManagedDomainType<T> managedDomainType ) {
-			return managedDomainType;
-		}
-		else {
-			throw new CannotContainSubGraphException( "Type '" + domainType.getJavaType().getName()
-														+ "' is not a managed type" );
-		}
-	}
-
-	private <T> ManagedDomainType<T> asManagedType(DomainType<T> domainType) {
-		if ( domainType instanceof ManagedDomainType<T> managedDomainType ) {
-			return managedDomainType;
-		}
-		else {
-			throw new CannotContainSubGraphException( "Attribute is of type '" + domainType.getTypeName()
-														+ "' which is not a managed type" );
-		}
 	}
 
 	@Override

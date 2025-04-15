@@ -71,21 +71,21 @@ public enum ConnectionReleaseMode{
 		if ( setting == null ) {
 			return null;
 		}
-
-		if ( setting instanceof ConnectionReleaseMode mode ) {
+		else if ( setting instanceof ConnectionReleaseMode mode ) {
 			return mode;
 		}
-
-		final String value = setting.toString();
-		if ( isEmpty( value ) ) {
-			return null;
+		else {
+			final String value = setting.toString();
+			if ( isEmpty( value ) ) {
+				return null;
+			}
+			// here we disregard "auto"
+			else if ( value.equalsIgnoreCase( "auto" ) ) {
+				return null;
+			}
+			else {
+				return parse( value );
+			}
 		}
-
-		// here we disregard "auto"
-		if ( value.equalsIgnoreCase( "auto" ) ) {
-			return null;
-		}
-
-		return parse( value );
 	}
 }

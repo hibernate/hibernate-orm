@@ -1200,12 +1200,10 @@ public class InFlightMetadataCollectorImpl
 				}
 			}
 
-			if ( currentTable instanceof DenormalizedTable ) {
-				currentTable = ( (DenormalizedTable) currentTable ).getIncludedTable();
-			}
-			else {
-				currentTable = null;
-			}
+			currentTable =
+					currentTable instanceof DenormalizedTable denormalizedTable
+							? denormalizedTable.getIncludedTable()
+							: null;
 		}
 
 		assert table != null;
@@ -1235,12 +1233,10 @@ public class InFlightMetadataCollectorImpl
 				}
 			}
 
-			if ( currentTable instanceof DenormalizedTable ) {
-				currentTable = ( (DenormalizedTable) currentTable ).getIncludedTable();
-			}
-			else {
-				currentTable = null;
-			}
+			currentTable =
+					currentTable instanceof DenormalizedTable denormalizedTable
+							? denormalizedTable.getIncludedTable()
+							: null;
 		}
 
 		if ( logicalName == null ) {

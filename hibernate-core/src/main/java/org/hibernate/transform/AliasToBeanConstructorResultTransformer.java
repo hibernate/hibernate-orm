@@ -65,7 +65,7 @@ public class AliasToBeanConstructorResultTransformer<T> implements ResultTransfo
 	 */
 	@Override
 	public boolean equals(Object other) {
-		return other instanceof AliasToBeanConstructorResultTransformer
-			&& constructor.equals( ( (AliasToBeanConstructorResultTransformer<?>) other ).constructor );
+		return other instanceof AliasToBeanConstructorResultTransformer<?> transformer
+			&& constructor.equals( transformer.constructor );
 	}
 }

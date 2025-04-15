@@ -47,12 +47,13 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 		}
 		// Always determine the recommended type to make sure this is a valid basic java type
 		final JdbcType recommendedComponentJdbcType = componentJavaType.getRecommendedJdbcType( indicators );
-		return indicators.getTypeConfiguration().getJdbcTypeRegistry().resolveTypeConstructorDescriptor(
-				indicators.getPreferredSqlTypeCodeForArray( recommendedComponentJdbcType.getDefaultSqlTypeCode() ),
-				indicators.getTypeConfiguration().getBasicTypeRegistry().resolve(
-						componentJavaType, recommendedComponentJdbcType ),
-				ColumnTypeInformation.EMPTY
-		);
+		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		return typeConfiguration.getJdbcTypeRegistry()
+				.resolveTypeConstructorDescriptor(
+						indicators.getPreferredSqlTypeCodeForArray( recommendedComponentJdbcType.getDefaultSqlTypeCode() ),
+						typeConfiguration.getBasicTypeRegistry().resolve( componentJavaType, recommendedComponentJdbcType ),
+						ColumnTypeInformation.EMPTY
+				);
 	}
 
 	@Override

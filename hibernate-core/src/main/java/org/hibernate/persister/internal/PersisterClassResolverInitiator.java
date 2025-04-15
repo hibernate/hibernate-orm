@@ -31,14 +31,15 @@ public class PersisterClassResolverInitiator implements StandardServiceInitiator
 			return new StandardPersisterClassResolver();
 		}
 
-		if ( customImpl instanceof PersisterClassResolver ) {
-			return (PersisterClassResolver) customImpl;
+		if ( customImpl instanceof PersisterClassResolver persisterClassResolver ) {
+			return persisterClassResolver;
 		}
 
 		@SuppressWarnings("unchecked")
-		final Class<? extends PersisterClassResolver> customImplClass = customImpl instanceof Class
-				? (Class<? extends PersisterClassResolver>) customImpl
-				: locate( registry, customImpl.toString() );
+		final Class<? extends PersisterClassResolver> customImplClass =
+				customImpl instanceof Class
+						? (Class<? extends PersisterClassResolver>) customImpl
+						: locate( registry, customImpl.toString() );
 
 		try {
 			return customImplClass.newInstance();

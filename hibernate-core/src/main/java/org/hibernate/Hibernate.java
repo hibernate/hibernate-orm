@@ -65,7 +65,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  *     delegate.
  * <li>The proxy does not have the same concrete type as the proxied delegate, and so
  *     {@link #getClass(Object)} must be used in place of {@link Object#getClass()},
- *     and this method fetches the entity by side-effect.
+ *     and this method fetches the entity by side effect.
  * <li>For a polymorphic association, the concrete type of the associated entity is
  *     not known until the delegate is fetched from the database, and so
  *     {@link #unproxy(Object, Class)}} must be used to perform typecasts, and

@@ -45,8 +45,8 @@ public class ArrayViaArgumentReturnTypeResolver implements FunctionReturnTypeRes
 				? null
 				: converter.resolveFunctionImpliedReturnType();
 		if ( inferredType != null ) {
-			if ( inferredType instanceof ReturnableType<?> ) {
-				return (ReturnableType<?>) inferredType;
+			if ( inferredType instanceof ReturnableType<?> returnableType ) {
+				return returnableType;
 			}
 			else if ( inferredType instanceof BasicValuedMapping basicValuedMapping ) {
 				return (ReturnableType<?>) basicValuedMapping.getJdbcMapping();

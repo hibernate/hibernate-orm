@@ -328,29 +328,29 @@ public class JsonTableFunction extends AbstractSqmSelfRenderingSetReturningFunct
 			int nextIndex = 1;
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof Expression ) {
-					jsonPath = (Expression) node;
+				if ( node instanceof Expression expression ) {
+					jsonPath = expression;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonPathPassingClause ) {
-					passingClause = (JsonPathPassingClause) node;
+				if ( node instanceof JsonPathPassingClause jsonPathPassingClause ) {
+					passingClause = jsonPathPassingClause;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonTableErrorBehavior ) {
-					errorBehavior = (JsonTableErrorBehavior) node;
+				if ( node instanceof JsonTableErrorBehavior jsonTableErrorBehavior) {
+					errorBehavior = jsonTableErrorBehavior;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonTableColumnsClause ) {
-					columnsClause = (JsonTableColumnsClause) node;
+				if ( node instanceof JsonTableColumnsClause jsonTableColumnsClause ) {
+					columnsClause = jsonTableColumnsClause;
 				}
 			}
 			return new JsonTableArguments(

@@ -54,9 +54,8 @@ public class PostgreSQLArrayFillFunction extends AbstractArrayFillFunction {
 
 	private static boolean needsElementCasting(Expression elementExpression) {
 		// PostgreSQL needs casting of null and string literal expressions
-		return elementExpression instanceof Literal && (
-				elementExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString()
-						|| ( (Literal) elementExpression ).getLiteralValue() == null
-		);
+		return elementExpression instanceof Literal literal
+			&& ( elementExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString()
+					|| literal.getLiteralValue() == null );
 	}
 }

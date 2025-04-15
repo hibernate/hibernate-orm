@@ -263,7 +263,7 @@ public class MetadataContext {
 			IdentifiableDomainType<X> entityType,
 			BiFunction<IdentifiableDomainType<X>, Property, PersistentAttribute<X, ?>> factoryFunction) {
 		final PersistentAttribute<X, ?> attribute;
-		final Component component = property.getValue() instanceof Component ? (Component) property.getValue() : null;
+		final Component component = property.getValue() instanceof Component comp ? comp : null;
 		if ( component != null && component.isGeneric() ) {
 			// This is an embeddable property that uses generics, we have to retrieve the generic
 			// component previously registered and create the concrete attribute

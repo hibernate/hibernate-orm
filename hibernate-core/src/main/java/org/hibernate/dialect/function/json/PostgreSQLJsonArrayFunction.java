@@ -36,8 +36,8 @@ public class PostgreSQLJsonArrayFunction extends JsonArrayFunction {
 			final SqlAstNode lastArgument = sqlAstArguments.get( sqlAstArguments.size() - 1 );
 			final JsonNullBehavior nullBehavior;
 			final int argumentsCount;
-			if ( lastArgument instanceof JsonNullBehavior ) {
-				nullBehavior = (JsonNullBehavior) lastArgument;
+			if ( lastArgument instanceof JsonNullBehavior jsonNullBehavior ) {
+				nullBehavior = jsonNullBehavior;
 				argumentsCount = sqlAstArguments.size() - 1;
 			}
 			else {
@@ -53,7 +53,7 @@ public class PostgreSQLJsonArrayFunction extends JsonArrayFunction {
 					sqlAppender.appendSql( '(' );
 					sqlAppender.appendSql( i );
 					sqlAppender.appendSql( ',' );
-					if ( node instanceof Literal && ( (Literal) node ).getLiteralValue() == null ) {
+					if ( node instanceof Literal literal && literal.getLiteralValue() == null ) {
 						sqlAppender.appendSql( "null::jsonb" );
 					}
 					else {

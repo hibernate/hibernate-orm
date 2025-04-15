@@ -264,15 +264,13 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 				else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping
 						&& !( identifierValueMapper.getAttributeMapping( i ) instanceof ToOneAttributeMapping ) ) {
 					final Object toOne = getIfMerged( o, mergeContext );
-					final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
-							toOneAttributeMapping.getSideNature().inverse()
-					);
-					if ( targetPart.isEntityIdentifierMapping() ) {
-						propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( toOne, mergeContext );
-					}
-					else {
-						propertyValues[i] = toOne;
-					}
+					final ModelPart targetPart =
+							toOneAttributeMapping.getForeignKeyDescriptor()
+									.getPart( toOneAttributeMapping.getSideNature().inverse() );
+					propertyValues[i] =
+							targetPart.isEntityIdentifierMapping()
+									? ((EntityIdentifierMapping) targetPart).getIdentifier( toOne, mergeContext )
+									: toOne;
 				}
 				else {
 					propertyValues[i] = o;
@@ -303,7 +301,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 			final AttributeMapping attribute = embeddableTypeDescriptor.getAttributeMapping( i );
 			final AttributeMapping mappedIdAttributeMapping = identifierValueMapper.getAttributeMapping( i );
 			Object o = mappedIdAttributeMapping.getValue( id );
-			if ( attribute instanceof ToOneAttributeMapping toOneAttributeMapping && !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
+			if ( attribute instanceof ToOneAttributeMapping toOneAttributeMapping
+					&& !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
 				final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType().getEntityPersister();
 				final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
 				final PersistenceContext persistenceContext = session.getPersistenceContext();

@@ -35,8 +35,8 @@ public class MariaDBJsonArrayFunction extends JsonArrayFunction {
 			final SqlAstNode lastArgument = sqlAstArguments.get( sqlAstArguments.size() - 1 );
 			final JsonNullBehavior nullBehavior;
 			final int argumentsCount;
-			if ( lastArgument instanceof JsonNullBehavior ) {
-				nullBehavior = (JsonNullBehavior) lastArgument;
+			if ( lastArgument instanceof JsonNullBehavior jsonNullBehavior ) {
+				nullBehavior = jsonNullBehavior;
 				argumentsCount = sqlAstArguments.size() - 1;
 			}
 			else {

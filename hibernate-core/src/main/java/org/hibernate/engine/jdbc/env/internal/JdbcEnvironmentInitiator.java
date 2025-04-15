@@ -460,8 +460,9 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		return isNotEmpty( explicitDatabaseName ) || isNotNullAndNotEmpty( configurationValues.get( DIALECT ) );
 	}
 
-	private static boolean isNotNullAndNotEmpty(Object o) {
-		return o != null && ( !(o instanceof String) || !((String) o).isEmpty() );
+	private static boolean isNotNullAndNotEmpty(Object object) {
+		return object != null
+			&& ( !(object instanceof String string) || !string.isEmpty() );
 	}
 
 	private JdbcConnectionAccess buildJdbcConnectionAccess(ServiceRegistryImplementor registry) {

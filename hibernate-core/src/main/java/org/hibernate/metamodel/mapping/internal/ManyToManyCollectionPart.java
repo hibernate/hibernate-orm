@@ -243,10 +243,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 
 	@Override
 	public ModelPart getKeyTargetMatchPart() {
-		if ( fkTargetModelPart instanceof ToOneAttributeMapping ) {
-			return foreignKey.getKeyPart();
-		}
-		return fkTargetModelPart;
+		return fkTargetModelPart instanceof ToOneAttributeMapping
+				? foreignKey.getKeyPart()
+				: fkTargetModelPart;
 	}
 
 	@Override
@@ -637,9 +636,9 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			);
 		}
 
-		if ( fkTargetModelPart instanceof EmbeddableValuedModelPart ) {
+		if ( fkTargetModelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 			return MappingModelCreationHelper.buildEmbeddableForeignKeyDescriptor(
-					(EmbeddableValuedModelPart) fkTargetModelPart,
+					embeddableValuedModelPart,
 					fkBootDescriptorSource,
 					findContainingEntityMapping(),
 					getCollectionDescriptor().getAttributeMapping(),

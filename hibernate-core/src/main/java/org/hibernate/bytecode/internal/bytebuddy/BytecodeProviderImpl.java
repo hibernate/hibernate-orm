@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerClassLocator;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl;
@@ -335,11 +336,14 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						DynamicType.Builder<?> builder = byteBuddy.with( namingStrategy ).subclass( newSuperClass );
 						for ( Member getter : foreignPackageClassInfo.getters ) {
 							final Class<?> getterType;
-							if ( getter instanceof Field ) {
-								getterType = ( (Field) getter ).getType();
+							if ( getter instanceof Field field ) {
+								getterType = field.getType();
+							}
+							else if ( getter instanceof Method method ) {
+								getterType = method.getReturnType();
 							}
 							else {
-								getterType = ( (Method) getter ).getReturnType();
+								throw new AssertionFailure( "Unexpected member" + getter );
 							}
 
 							builder = builder.defineMethod(
@@ -360,11 +364,14 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						}
 						for ( Member setter : foreignPackageClassInfo.setters ) {
 							final Class<?> setterType;
-							if ( setter instanceof Field ) {
-								setterType = ( (Field) setter ).getType();
+							if ( setter instanceof Field field ) {
+								setterType = field.getType();
+							}
+							else if ( setter instanceof Method method ) {
+								setterType = method.getParameterTypes()[0];
 							}
 							else {
-								setterType = ( (Method) setter ).getParameterTypes()[0];
+								throw new AssertionFailure( "Unexpected member" + setter );
 							}
 
 							builder = builder.defineMethod(
@@ -1270,8 +1277,8 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			if ( setter instanceof SetterMethodImpl ) {
 				setterMember = setter.getMethod();
 			}
-			else if ( setter instanceof SetterFieldImpl ) {
-				setterMember = ( (SetterFieldImpl) setter ).getField();
+			else if ( setter instanceof SetterFieldImpl setterField ) {
+				setterMember = setterField.getField();
 				if ( Modifier.isFinal( setterMember.getModifiers() ) ) {
 					throw new InvalidPropertyAccessorException( "final accessor [" + setterMember.getName() + "]" );
 				}

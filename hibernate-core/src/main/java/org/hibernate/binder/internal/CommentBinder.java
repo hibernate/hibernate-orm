@@ -35,7 +35,7 @@ public class CommentBinder implements AttributeBinder<Comment>, TypeBinder<Comme
 					+ "' was annotated '@Comment'");
 		}
 		else if ( value instanceof Collection collection ) {
-			Table table = collection.getCollectionTable();
+			final Table table = collection.getCollectionTable();
 			// by default, the comment goes on the table
 			if ( on.isEmpty() || table.getName().equalsIgnoreCase( on ) ) {
 				table.setComment( text );

@@ -93,8 +93,8 @@ public class DomainResultGraphPrinter {
 		}
 		buffer.append( '\n' );
 
-		if ( node instanceof FetchParent ) {
-			visitFetches( (FetchParent) node );
+		if ( node instanceof FetchParent fetchParent ) {
+			visitFetches( fetchParent );
 		}
 	}
 

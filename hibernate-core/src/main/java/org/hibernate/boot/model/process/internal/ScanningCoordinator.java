@@ -104,7 +104,7 @@ public class ScanningCoordinator {
 			}
 		}
 		else {
-			if ( scannerSetting instanceof Scanner ) {
+			if ( scannerSetting instanceof Scanner scanner ) {
 				if ( archiveDescriptorFactory != null ) {
 					throw new IllegalStateException(
 							"A Scanner instance and an ArchiveDescriptorFactory were both specified; please " +
@@ -114,7 +114,7 @@ public class ScanningCoordinator {
 									"Scanner constructor assuming it is statically known."
 					);
 				}
-				return (Scanner) scannerSetting;
+				return scanner;
 			}
 
 			final Class<? extends Scanner> scannerImplClass;

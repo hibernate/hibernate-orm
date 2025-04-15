@@ -46,8 +46,8 @@ public class XmlTableSetReturningFunctionTypeResolver implements SetReturningFun
 			SqmToSqlAstConverter converter) {
 		XmlTableColumnsClause columnsClause = null;
 		for ( SqlAstNode argument : arguments ) {
-			if ( argument instanceof XmlTableColumnsClause ) {
-				columnsClause = (XmlTableColumnsClause) argument;
+			if ( argument instanceof XmlTableColumnsClause tableColumnsClause ) {
+				columnsClause = tableColumnsClause;
 				break;
 			}
 		}

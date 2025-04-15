@@ -165,12 +165,9 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 	}
 
 	private static String converterClassName(BasicValueConverter<?, ?> converter) {
-		if ( converter instanceof JpaAttributeConverter<?, ?> jpaConverter ) {
-			return jpaConverter.getConverterJavaType().getJavaTypeClass().getSimpleName();
-		}
-		else {
-			return converter.getClass().getSimpleName();
-		}
+		return converter instanceof JpaAttributeConverter<?, ?> jpaConverter
+				? jpaConverter.getConverterJavaType().getJavaTypeClass().getSimpleName()
+				: converter.getClass().getSimpleName();
 	}
 
 	static String getTypeName(JavaType<?> elementJavaType, JdbcType elementJdbcType, Dialect dialect) {
@@ -190,8 +187,8 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 					null // not needed by OracleDialect.getArrayTypeName()
 			);
 		}
-		else if ( elementJdbcType instanceof StructJdbcType ) {
-			return ( (StructJdbcType) elementJdbcType).getStructTypeName();
+		else if ( elementJdbcType instanceof StructJdbcType structJdbcType ) {
+			return structJdbcType.getStructTypeName();
 		}
 		else {
 			final Class<?> preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( null );

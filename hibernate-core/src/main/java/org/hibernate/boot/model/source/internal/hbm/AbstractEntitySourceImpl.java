@@ -40,6 +40,8 @@ import org.hibernate.boot.model.source.spi.ToolingHintContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
+import static java.util.Collections.emptyMap;
+
 /**
  * @author Steve Ebersole
  * @author Hardy Ferentschik
@@ -208,13 +210,13 @@ public abstract class AbstractEntitySourceImpl
 	}
 
 	private Map<String,SecondaryTableSource> buildSecondaryTableMap() {
-		if ( !(jaxbEntityMapping instanceof SecondaryTableContainer) ) {
-			return Collections.emptyMap();
+		if ( !(jaxbEntityMapping instanceof SecondaryTableContainer secondaryTableContainer) ) {
+			return emptyMap();
 		}
 
 		final HashMap<String,SecondaryTableSource> secondaryTableSourcesMap = new HashMap<>();
 
-		for ( final JaxbHbmSecondaryTableType joinElement :  ( (SecondaryTableContainer) jaxbEntityMapping ).getJoin() ) {
+		for ( final JaxbHbmSecondaryTableType joinElement :  secondaryTableContainer.getJoin() ) {
 			final SecondaryTableSourceImpl secondaryTableSource = new SecondaryTableSourceImpl(
 					sourceMappingDocument(),
 					joinElement,

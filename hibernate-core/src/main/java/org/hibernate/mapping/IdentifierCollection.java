@@ -52,8 +52,8 @@ public non-sealed abstract class IdentifierCollection extends Collection {
 
 	@Override
 	public boolean isSame(Collection other) {
-		return other instanceof IdentifierCollection
-			&& isSame( (IdentifierCollection) other );
+		return other instanceof IdentifierCollection identifierCollection
+			&& isSame( identifierCollection );
 	}
 
 	public boolean isSame(IdentifierCollection other) {

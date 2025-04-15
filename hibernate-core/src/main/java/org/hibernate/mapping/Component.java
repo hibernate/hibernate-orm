@@ -455,7 +455,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	@Override
 	public boolean isSame(SimpleValue other) {
-		return other instanceof Component && isSame( (Component) other );
+		return other instanceof Component component && isSame( component );
 	}
 
 	public boolean isSame(Component other) {
@@ -886,8 +886,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 				columns.clear();
 				for ( Property property : properties ) {
 					for ( Selectable selectable : property.getSelectables() ) {
-						if ( selectable instanceof Column ) {
-							columns.add( (Column) selectable );
+						if ( selectable instanceof Column column ) {
+							columns.add( column );
 						}
 					}
 				}

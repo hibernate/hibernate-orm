@@ -238,10 +238,8 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	private boolean isStringLiteral( Expression expression ) {
-		if ( expression instanceof Literal ) {
-			return ( (Literal) expression ).getJdbcMapping().getJdbcType().isStringLike();
-		}
-		return false;
+		return expression instanceof Literal literal
+			&& literal.getJdbcMapping().getJdbcType().isStringLike();
 	}
 
 	@Override

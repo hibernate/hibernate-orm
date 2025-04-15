@@ -36,8 +36,8 @@ public class PostgreSQLJsonObjectFunction extends JsonObjectFunction {
 			final SqlAstNode lastArgument = sqlAstArguments.get( sqlAstArguments.size() - 1 );
 			final JsonNullBehavior nullBehavior;
 			final int argumentsCount;
-			if ( lastArgument instanceof JsonNullBehavior ) {
-				nullBehavior = (JsonNullBehavior) lastArgument;
+			if ( lastArgument instanceof JsonNullBehavior jsonNullBehavior ) {
+				nullBehavior = jsonNullBehavior;
 				argumentsCount = sqlAstArguments.size() - 1;
 			}
 			else {
@@ -54,7 +54,7 @@ public class PostgreSQLJsonObjectFunction extends JsonObjectFunction {
 					sqlAppender.appendSql( '(' );
 					key.accept( walker );
 					sqlAppender.appendSql( ',' );
-					if ( value instanceof Literal && ( (Literal) value ).getLiteralValue() == null ) {
+					if ( value instanceof Literal literal && literal.getLiteralValue() == null ) {
 						sqlAppender.appendSql( "null::jsonb" );
 					}
 					else {

@@ -383,8 +383,8 @@ public class EntityUpdateAction extends EntityAction {
 	}
 
 	private void onPostCommitFailure(PostUpdateEventListener listener, PostUpdateEvent event) {
-		if ( listener instanceof PostCommitUpdateEventListener ) {
-			((PostCommitUpdateEventListener) listener).onPostUpdateCommitFailed( event );
+		if ( listener instanceof PostCommitUpdateEventListener postCommitUpdateEventListener ) {
+			postCommitUpdateEventListener.onPostUpdateCommitFailed( event );
 		}
 		else {
 			//default to the legacy implementation that always fires the event

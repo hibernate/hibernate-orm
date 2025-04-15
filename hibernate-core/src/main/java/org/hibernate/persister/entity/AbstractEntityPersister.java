@@ -2692,8 +2692,8 @@ public abstract class AbstractEntityPersister
 				if ( staticInsertGroup != null ) {
 					for ( int i = 0; i < staticInsertGroup.getNumberOfOperations(); i++ ) {
 						final MutationOperation mutation = staticInsertGroup.getOperation( i );
-						if ( mutation instanceof JdbcOperation ) {
-							LOG.debugf( " Insert (%s): %s", i, ( (JdbcOperation) mutation ).getSqlString() );
+						if ( mutation instanceof JdbcOperation jdbcOperation ) {
+							LOG.debugf( " Insert (%s): %s", i, jdbcOperation.getSqlString() );
 						}
 					}
 				}
@@ -2704,8 +2704,8 @@ public abstract class AbstractEntityPersister
 				if ( staticUpdateGroup != null ) {
 					for ( int i = 0; i < staticUpdateGroup.getNumberOfOperations(); i++ ) {
 						final MutationOperation mutation = staticUpdateGroup.getOperation( i );
-						if ( mutation instanceof JdbcOperation ) {
-							LOG.debugf( " Update (%s): %s", i, ( (JdbcOperation) mutation ).getSqlString() );
+						if ( mutation instanceof JdbcOperation jdbcOperation ) {
+							LOG.debugf( " Update (%s): %s", i, jdbcOperation.getSqlString() );
 						}
 					}
 				}
@@ -2716,8 +2716,8 @@ public abstract class AbstractEntityPersister
 				if ( staticDeleteGroup != null ) {
 					for ( int i = 0; i < staticDeleteGroup.getNumberOfOperations(); i++ ) {
 						final MutationOperation mutation = staticDeleteGroup.getOperation( i );
-						if ( mutation instanceof JdbcOperation ) {
-							LOG.debugf( " Delete (%s): %s", i, ( (JdbcOperation) mutation ).getSqlString() );
+						if ( mutation instanceof JdbcOperation jdbcOperation ) {
+							LOG.debugf( " Delete (%s): %s", i, jdbcOperation.getSqlString() );
 						}
 					}
 				}
@@ -5476,7 +5476,7 @@ public abstract class AbstractEntityPersister
 					creationProcess
 			);
 		}
-		else if ( attrType instanceof EntityType ) {
+		else if ( attrType instanceof EntityType entityType ) {
 			return buildSingularAssociationAttributeMapping(
 					attrName,
 					getNavigableRole().append( attrName ),
@@ -5485,7 +5485,7 @@ public abstract class AbstractEntityPersister
 					bootProperty,
 					this,
 					this,
-					(EntityType) attrType,
+					entityType,
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
 					creationProcess

@@ -96,8 +96,8 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
 		final Statement currentStatement = getStatementStack().getCurrent();
-		if ( !( currentStatement instanceof UpdateStatement )
-				|| !hasNonTrivialFromClause( ( (UpdateStatement) currentStatement ).getFromClause() ) ) {
+		if ( !( currentStatement instanceof UpdateStatement updateStatement )
+				|| !hasNonTrivialFromClause( updateStatement.getFromClause() ) ) {
 			// For UPDATE statements we render a full FROM clause and a join condition to match target table rows,
 			// but for that to work, we have to omit the alias for the target table reference here
 			renderTableReferenceIdentificationVariable( tableReference );

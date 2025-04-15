@@ -194,7 +194,7 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	@Override
 	protected boolean shouldInlineCte(TableGroup tableGroup) {
 		return tableGroup instanceof CteTableGroup
-				&& !getCteStatement( tableGroup.getPrimaryTableReference().getTableId() ).isRecursive();
+			&& !getCteStatement( tableGroup.getPrimaryTableReference().getTableId() ).isRecursive();
 	}
 
 	@Override

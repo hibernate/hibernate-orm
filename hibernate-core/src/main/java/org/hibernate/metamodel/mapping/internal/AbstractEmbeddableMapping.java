@@ -245,13 +245,13 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				attributeMapping = toOne;
 				currentIndex += attributeMapping.getJdbcTypeCount();
 			}
-			else if ( attributeMapping instanceof EmbeddableValuedModelPart ) {
+			else if ( attributeMapping instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 				final SelectableMapping[] subMappings = new SelectableMapping[attributeMapping.getJdbcTypeCount()];
 				for ( int i = 0; i < subMappings.length; i++ ) {
 					subMappings[i] = selectableMappings.getSelectable( currentIndex++ );
 				}
 				attributeMapping = MappingModelCreationHelper.createInverseModelPart(
-						(EmbeddableValuedModelPart) attributeMapping,
+						embeddableValuedModelPart,
 						declaringType,
 						declaringTableGroupProducer,
 						new SelectableMappingsImpl( subMappings ),
@@ -316,8 +316,8 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						columnExpression = selectable.getText( dialect );
 					}
 
-					if ( selectable instanceof Column ) {
-						containingTableExpression = concreteTableResolver.resolve( (Column) selectable, jdbcEnvironment );
+					if ( selectable instanceof Column column ) {
+						containingTableExpression = concreteTableResolver.resolve( column, jdbcEnvironment );
 					}
 					else {
 						containingTableExpression = rootTableExpression;
@@ -467,8 +467,8 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				);
 			}
 			else if ( subtype instanceof EntityType ) {
-				final EntityPersister entityPersister = creationProcess.getEntityPersister( bootDescriptor.getOwner()
-						.getEntityName() );
+				final EntityPersister entityPersister =
+						creationProcess.getEntityPersister( bootDescriptor.getOwner().getEntityName() );
 
 				attributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
 						bootPropertyDescriptor.getName(),
@@ -733,20 +733,17 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 		if ( value == null ) {
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					continue;
+				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+					span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 				}
-				span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 			}
 		}
 		else {
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					continue;
+				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+					span += attributeMapping.forEachJdbcValue( getValue( value, i ), span + offset, x, y, valuesConsumer, session );
 				}
-				final Object o = getValue( value, i );
-				span += attributeMapping.forEachJdbcValue( o, span + offset, x, y, valuesConsumer, session );
 			}
 		}
 		return span;

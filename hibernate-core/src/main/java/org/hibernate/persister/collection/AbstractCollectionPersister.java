@@ -483,13 +483,11 @@ public abstract class AbstractCollectionPersister
 
 		keyIsUpdateable = collectionBootDescriptor.getKey().isUpdateable();
 
-		if ( collectionBootDescriptor instanceof Array arrayDescriptor ) {
-			elementClass = arrayDescriptor.getElementClass();
-		}
-		else {
-			// for non-arrays, we don't need to know the element class
-			elementClass = null; // elementType.returnedClass();
-		}
+		elementClass =
+				collectionBootDescriptor instanceof Array arrayDescriptor
+						? arrayDescriptor.getElementClass()
+						// for non-arrays, we don't need to know the element class
+						: null; // elementType.returnedClass();
 
 		hasOrder = collectionBootDescriptor.getOrderBy() != null;
 		hasManyToManyOrder = collectionBootDescriptor.getManyToManyOrdering() != null;

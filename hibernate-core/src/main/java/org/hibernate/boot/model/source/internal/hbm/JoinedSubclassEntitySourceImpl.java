@@ -89,8 +89,8 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 
 	@Override
 	public String getDiscriminatorMatchValue() {
-		return jaxbEntityMapping() instanceof JaxbHbmJoinedSubclassEntityType
-				? ( (JaxbHbmJoinedSubclassEntityType) jaxbEntityMapping() ).getDiscriminatorValue()
+		return jaxbEntityMapping() instanceof JaxbHbmJoinedSubclassEntityType joinedSubclassEntityType
+				? joinedSubclassEntityType.getDiscriminatorValue()
 				: null;
 	}
 }

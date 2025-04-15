@@ -83,8 +83,8 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 				final JAXBContext context;
 				final Class<Object> keyClass;
 				final Class<Object> valueClass;
-				if ( javaType.getJavaType() instanceof ParameterizedType ) {
-					final Type[] typeArguments = ( (ParameterizedType) javaType.getJavaType() ).getActualTypeArguments();
+				if ( javaType.getJavaType() instanceof ParameterizedType parameterizedType ) {
+					final Type[] typeArguments = parameterizedType.getActualTypeArguments();
 					keyClass = ReflectHelper.getClass( typeArguments[0] );
 					valueClass = ReflectHelper.getClass( typeArguments[1] );
 					if ( legacyFormat ) {
@@ -167,8 +167,8 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 			else if ( Collection.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
 				final JAXBContext context;
 				final Class<Object> valueClass;
-				if ( javaType.getJavaType() instanceof ParameterizedType ) {
-					final Type[] typeArguments = ( (ParameterizedType) javaType.getJavaType() ).getActualTypeArguments();
+				if ( javaType.getJavaType() instanceof ParameterizedType parameterizedType ) {
+					final Type[] typeArguments = parameterizedType.getActualTypeArguments();
 					valueClass = ReflectHelper.getClass( typeArguments[0] );
 					context = JAXBContext.newInstance( CollectionWrapper.class, valueClass );
 				}
@@ -286,8 +286,8 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 				final Class<?> keyClass;
 				final Class<?> valueClass;
 				final Map<?, ?> map = (Map<?, ?>) value;
-				if ( javaType.getJavaType() instanceof ParameterizedType ) {
-					final Type[] typeArguments = ( (ParameterizedType) javaType.getJavaType() ).getActualTypeArguments();
+				if ( javaType.getJavaType() instanceof ParameterizedType parameterizedType ) {
+					final Type[] typeArguments = parameterizedType.getActualTypeArguments();
 					keyClass = ReflectHelper.getClass( typeArguments[0] );
 					valueClass = ReflectHelper.getClass( typeArguments[1] );
 					if ( legacyFormat ) {
@@ -374,8 +374,8 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 				final JAXBContext context;
 				final Class<Object> valueClass;
 				final Collection<?> collection = (Collection<?>) value;
-				if ( javaType.getJavaType() instanceof ParameterizedType ) {
-					final Type[] typeArguments = ( (ParameterizedType) javaType.getJavaType() ).getActualTypeArguments();
+				if ( javaType.getJavaType() instanceof ParameterizedType parameterizedType ) {
+					final Type[] typeArguments = parameterizedType.getActualTypeArguments();
 					valueClass = ReflectHelper.getClass( typeArguments[0] );
 					context = JAXBContext.newInstance( CollectionWrapper.class, valueClass );
 				}
@@ -403,10 +403,10 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 						}
 					}
 					final JAXBElementTransformer valueTransformer;
-					if ( javaType instanceof BasicPluralJavaType<?> ) {
+					if ( javaType instanceof BasicPluralJavaType<?> pluralJavaType ) {
 						valueTransformer = createTransformer(
 								appender,
-								( (BasicPluralJavaType<?>) javaType ).getElementJavaType(),
+								pluralJavaType.getElementJavaType(),
 								collectionElementTagName,
 								exampleValue,
 								context.createJAXBIntrospector(),
@@ -445,10 +445,10 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 						}
 					}
 					final JAXBElementTransformer transformer;
-					if ( javaType instanceof BasicPluralJavaType<?> ) {
+					if ( javaType instanceof BasicPluralJavaType<?> pluralJavaType ) {
 						transformer = createTransformer(
 								appender,
-								( (BasicPluralJavaType<?>) javaType ).getElementJavaType(),
+								pluralJavaType.getElementJavaType(),
 								collectionElementTagName,
 								exampleElement,
 								context.createJAXBIntrospector(),
@@ -652,16 +652,11 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 		}
 
 		@Override
-		public Object fromJAXBElement(Object element, Unmarshaller unmarshaller) throws JAXBException {
-			final Object valueElement = unmarshaller.unmarshal( (Node) element, elementClass ).getValue();
-			final Object value;
-			if ( valueElement instanceof Element ) {
-				value = ( (Element) valueElement ).getFirstChild().getTextContent();
-			}
-			else {
-				value = valueElement;
-			}
-			return value;
+		public Object fromJAXBElement(Object object, Unmarshaller unmarshaller) throws JAXBException {
+			final Object valueElement = unmarshaller.unmarshal( (Node) object, elementClass ).getValue();
+			return valueElement instanceof Element element
+					? element.getFirstChild().getTextContent()
+					: valueElement;
 		}
 
 		@Override

@@ -60,8 +60,8 @@ public class BeanValidationIntegrator implements Integrator {
 					validateMethod.invoke( null, object );
 				}
 				catch (InvocationTargetException e) {
-					if ( e.getTargetException() instanceof HibernateException ) {
-						throw (HibernateException) e.getTargetException();
+					if ( e.getTargetException() instanceof HibernateException exception ) {
+						throw exception;
 					}
 					throw new HibernateException( "Unable to check validity of passed ValidatorFactory", e );
 				}
@@ -139,8 +139,8 @@ public class BeanValidationIntegrator implements Integrator {
 					activateMethod.invoke( null, activationContext );
 				}
 				catch (InvocationTargetException e) {
-					if ( e.getTargetException() instanceof HibernateException ) {
-						throw (HibernateException) e.getTargetException();
+					if ( e.getTargetException() instanceof HibernateException exception ) {
+						throw exception;
 					}
 					throw new IntegrationException( "Error activating Bean Validation integration", e.getTargetException() );
 				}

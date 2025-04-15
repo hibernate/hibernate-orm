@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
@@ -569,11 +570,14 @@ public class MetadataBuildingProcess {
 			final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind( xmlStream, origin );
 
 			final JaxbBindableMappingDescriptor bindingRoot = binding.getRoot();
-			if ( bindingRoot instanceof JaxbHbmHibernateMapping ) {
-				contributeBinding( (JaxbHbmHibernateMapping) bindingRoot );
+			if ( bindingRoot instanceof JaxbHbmHibernateMapping hibernateMapping ) {
+				contributeBinding( hibernateMapping );
+			}
+			else if ( bindingRoot instanceof JaxbEntityMappingsImpl entityMappings ) {
+				contributeBinding( entityMappings );
 			}
 			else {
-				contributeBinding( (JaxbEntityMappingsImpl) bindingRoot );
+				throw new AssertionFailure( "Unexpected binding type" );
 			}
 		}
 

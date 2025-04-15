@@ -216,9 +216,8 @@ public class XmlTableFunction extends AbstractSqmSelfRenderingSetReturningFuncti
 			XmlTableColumnsClause columnsClause = null;
 			int nextIndex = 2;
 			if ( nextIndex < sqlAstArguments.size() ) {
-				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof XmlTableColumnsClause ) {
-					columnsClause = (XmlTableColumnsClause) node;
+				if ( sqlAstArguments.get( nextIndex ) instanceof XmlTableColumnsClause tableColumnsClause ) {
+					columnsClause = tableColumnsClause;
 				}
 			}
 			return new XmlTableArguments(

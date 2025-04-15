@@ -121,19 +121,14 @@ public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunc
 		if ( sqmArguments.isEmpty() ) {
 			return emptyList();
 		}
-		final FunctionArgumentTypeResolver argumentTypeResolver;
-		if ( getFunctionDescriptor() instanceof AbstractSqmSetReturningFunctionDescriptor ) {
-			argumentTypeResolver = ( (AbstractSqmSetReturningFunctionDescriptor) getFunctionDescriptor() ).getArgumentTypeResolver();
-		}
-		else {
-			argumentTypeResolver = null;
-		}
+		final FunctionArgumentTypeResolver argumentTypeResolver =
+				getFunctionDescriptor() instanceof AbstractSqmSetReturningFunctionDescriptor setReturningFunctionDescriptor
+						? setReturningFunctionDescriptor.getArgumentTypeResolver()
+						: null;
 		if ( argumentTypeResolver == null ) {
 			final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>( sqmArguments.size() );
 			for ( int i = 0; i < sqmArguments.size(); i++ ) {
-				sqlAstArguments.add(
-						(SqlAstNode) sqmArguments.get( i ).accept( walker )
-				);
+				sqlAstArguments.add( (SqlAstNode) sqmArguments.get( i ).accept( walker ) );
 			}
 			return sqlAstArguments;
 		}

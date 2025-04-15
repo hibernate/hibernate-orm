@@ -40,16 +40,13 @@ public enum ConnectionAcquisitionMode {
 		if ( setting == null ) {
 			return null;
 		}
-
-		if ( setting instanceof ConnectionAcquisitionMode mode ) {
+		else if ( setting instanceof ConnectionAcquisitionMode mode ) {
 			return mode;
 		}
-
-		final String value = setting.toString();
-		if ( isEmpty( value ) ) {
-			return null;
+		else {
+			final String value = setting.toString();
+			return isEmpty( value ) ? null : interpret( value );
 		}
 
-		return interpret( value );
 	}
 }

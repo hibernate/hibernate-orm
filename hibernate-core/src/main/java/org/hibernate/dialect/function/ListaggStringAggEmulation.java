@@ -92,9 +92,9 @@ public class ListaggStringAggEmulation extends AbstractSqmSelfRenderingFunctionD
 		sqlAppender.appendSql( '(' );
 		final SqlAstNode firstArg = sqlAstArguments.get( 0 );
 		final Expression arg;
-		if ( firstArg instanceof Distinct ) {
+		if ( firstArg instanceof Distinct distinct ) {
 			sqlAppender.appendSql( "distinct " );
-			arg = ( (Distinct) firstArg ).getExpression();
+			arg = distinct.getExpression();
 		}
 		else {
 			arg = (Expression) firstArg;
@@ -114,8 +114,8 @@ public class ListaggStringAggEmulation extends AbstractSqmSelfRenderingFunctionD
 		if ( sqlAstArguments.size() != 1 ) {
 			SqlAstNode separator = sqlAstArguments.get( 1 );
 			// string_agg doesn't support the overflow clause, so we just omit it
-			if ( separator instanceof Overflow ) {
-				separator = ( (Overflow) separator ).getSeparatorExpression();
+			if ( separator instanceof Overflow overflow ) {
+				separator = overflow.getSeparatorExpression();
 			}
 			sqlAppender.appendSql( ',' );
 			separator.accept( translator );

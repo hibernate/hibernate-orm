@@ -897,8 +897,8 @@ public abstract sealed class PersistentClass
 	private boolean hasCollectionNotReferencingPK(Collection<Property> properties) {
 		for ( Property property : properties ) {
 			final Value value = property.getValue();
-			if ( value instanceof Component ) {
-				if ( hasCollectionNotReferencingPK( ( (Component) value ).getProperties() ) ) {
+			if ( value instanceof Component component ) {
+				if ( hasCollectionNotReferencingPK( component.getProperties() ) ) {
 					return true;
 				}
 			}

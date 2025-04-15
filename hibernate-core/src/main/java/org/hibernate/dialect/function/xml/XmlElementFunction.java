@@ -153,8 +153,9 @@ public class XmlElementFunction extends AbstractSqmSelfRenderingFunctionDescript
 			final List<Expression> content;
 
 			int index = 1;
-			if ( arguments.size() > index && arguments.get( index ) instanceof XmlAttributes ) {
-				attributes = (XmlAttributes) arguments.get( index );
+			if ( arguments.size() > index
+					&& arguments.get( index ) instanceof XmlAttributes xmlAttributes ) {
+				attributes = xmlAttributes;
 				index++;
 			}
 			else {

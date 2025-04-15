@@ -169,7 +169,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	public void addProperty(Property prop, MemberDetails memberDetails, ClassDetails declaringClass) {
 		if ( prop.getValue() instanceof Component ) {
 			//TODO handle quote and non quote table comparison
-			String tableName = prop.getValue().getTable().getName();
+			final String tableName = prop.getValue().getTable().getName();
 			if ( getJoinsPerRealTableName().containsKey( tableName ) ) {
 				final Join join = getJoinsPerRealTableName().get( tableName );
 				addPropertyToJoin( prop, memberDetails, declaringClass, join );
@@ -314,8 +314,8 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 							final Collection initializedCollection = (Collection) originalValue;
 							final Value element = initializedCollection.getElement().copy();
 							setTypeName( element, memberDetails.getElementType().getName() );
-							if ( initializedCollection instanceof IndexedCollection ) {
-								final Value index = ( (IndexedCollection) initializedCollection ).getIndex().copy();
+							if ( initializedCollection instanceof IndexedCollection indexedCollection ) {
+								final Value index = indexedCollection.getIndex().copy();
 								if ( memberDetails.getMapKeyType() != null ) {
 									setTypeName( index, memberDetails.getMapKeyType().getName() );
 								}

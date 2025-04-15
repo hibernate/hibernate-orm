@@ -822,13 +822,13 @@ public class XmlHelper {
 			case SqlTypes.TINYINT:
 			case SqlTypes.SMALLINT:
 			case SqlTypes.INTEGER:
-				if ( value instanceof Boolean ) {
+				if ( value instanceof Boolean booleanValue ) {
 					// BooleanJavaType has this as an implicit conversion
-					appender.append( (Boolean) value ? '1' : '0' );
+					appender.append( booleanValue ? '1' : '0' );
 					break;
 				}
-				if ( value instanceof Enum ) {
-					appender.appendSql( ((Enum<?>) value ).ordinal() );
+				if ( value instanceof Enum<?> enumValue ) {
+					appender.appendSql( enumValue.ordinal() );
 					break;
 				}
 			case SqlTypes.BOOLEAN:
@@ -854,9 +854,9 @@ public class XmlHelper {
 			case SqlTypes.NCHAR:
 			case SqlTypes.VARCHAR:
 			case SqlTypes.NVARCHAR:
-				if ( value instanceof Boolean ) {
+				if ( value instanceof Boolean booleanValue ) {
 					// BooleanJavaType has this as an implicit conversion
-					appender.append( (Boolean) value ? 'Y' : 'N' );
+					appender.append( booleanValue ? 'Y' : 'N' );
 					break;
 				}
 			case SqlTypes.LONGVARCHAR:

@@ -157,7 +157,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 	}
 
 	private void takeCollectionSizeSnapshot(Object target, String fieldName, Object value) {
-		if ( value instanceof Collection && isSelfDirtinessTracker( target ) ) {
+		if ( value instanceof Collection<?> collection && isSelfDirtinessTracker( target ) ) {
 			// This must be called first, so that we remember that there is a collection out there,
 			// even if we don't know its size (see below).
 			final SelfDirtinessTracker targetSDT = asSelfDirtinessTracker( target );
@@ -167,11 +167,12 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 				tracker = targetSDT.$$_hibernate_getCollectionTracker();
 			}
 
-			if ( value instanceof PersistentCollection && !( (PersistentCollection<?>) value ).wasInitialized() ) {
-				// Cannot take a snapshot of an un-initialized collection.
+			if ( value instanceof PersistentCollection<?> persistentCollection
+					&& !persistentCollection.wasInitialized() ) {
+				// Cannot take a snapshot of an uninitialized collection.
 				return;
 			}
-			tracker.add( fieldName, ( (Collection<?>) value ).size() );
+			tracker.add( fieldName, collection.size() );
 		}
 	}
 

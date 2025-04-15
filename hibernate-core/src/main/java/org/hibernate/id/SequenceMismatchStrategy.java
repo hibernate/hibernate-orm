@@ -57,8 +57,8 @@ public enum SequenceMismatchStrategy {
 		if ( sequenceMismatchStrategy == null ) {
 			return EXCEPTION;
 		}
-		else if ( sequenceMismatchStrategy instanceof SequenceMismatchStrategy ) {
-			return (SequenceMismatchStrategy) sequenceMismatchStrategy;
+		else if ( sequenceMismatchStrategy instanceof SequenceMismatchStrategy mismatchStrategy ) {
+			return mismatchStrategy;
 		}
 		else if ( sequenceMismatchStrategy instanceof String sequenceMismatchStrategyString ) {
 			for ( SequenceMismatchStrategy value : values() ) {

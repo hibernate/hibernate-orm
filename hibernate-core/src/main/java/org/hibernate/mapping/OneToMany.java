@@ -170,7 +170,8 @@ public class OneToMany implements Value {
 
 	@Override
 	public boolean isSame(Value other) {
-		return this == other || other instanceof OneToMany && isSame( (OneToMany) other );
+		return this == other
+			|| other instanceof OneToMany oneToMany && isSame( oneToMany );
 	}
 
 	public boolean isSame(OneToMany other) {

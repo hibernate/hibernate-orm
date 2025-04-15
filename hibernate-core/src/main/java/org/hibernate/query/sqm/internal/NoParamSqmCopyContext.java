@@ -22,9 +22,6 @@ public class NoParamSqmCopyContext extends SimpleSqmCopyContext {
 
 	@Override
 	public <T> @Nullable T getCopy(T original) {
-		if ( original instanceof SqmParameter<?> ) {
-			return original;
-		}
-		return super.getCopy( original );
+		return original instanceof SqmParameter<?> ? original : super.getCopy( original );
 	}
 }

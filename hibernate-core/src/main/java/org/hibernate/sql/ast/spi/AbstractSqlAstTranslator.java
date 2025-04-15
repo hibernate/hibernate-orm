@@ -1151,8 +1151,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void visitSetAssignment(Assignment assignment) {
 		final Assignable assignable = assignment.getAssignable();
-		if ( assignable instanceof SqmPathInterpretation<?> ) {
-			final String affectedTableName = ( (SqmPathInterpretation<?>) assignable ).getAffectedTableName();
+		if ( assignable instanceof SqmPathInterpretation<?> sqmPathInterpretation ) {
+			final String affectedTableName = sqmPathInterpretation.getAffectedTableName();
 			if ( affectedTableName != null ) {
 				addAffectedTableName( affectedTableName );
 			}
@@ -1198,8 +1198,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void visitSetAssignmentEmulateJoin(Assignment assignment, UpdateStatement statement) {
 		final Assignable assignable = assignment.getAssignable();
-		if ( assignable instanceof SqmPathInterpretation<?> ) {
-			final String affectedTableName = ( (SqmPathInterpretation<?>) assignable ).getAffectedTableName();
+		if ( assignable instanceof SqmPathInterpretation<?> sqmPathInterpretation ) {
+			final String affectedTableName = sqmPathInterpretation.getAffectedTableName();
 			if ( affectedTableName != null ) {
 				addAffectedTableName( affectedTableName );
 			}
@@ -1453,8 +1453,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				selectClause.addSqlSelection( new SqlSelectionImpl( assignedValue ) );
 				columnNames.add( "c" + columnNames.size() );
 			}
-			else if ( assignedValue instanceof SqlTuple ) {
-				final List<? extends Expression> expressions = ( (SqlTuple) assignedValue ).getExpressions();
+			else if ( assignedValue instanceof SqlTuple sqlTuple ) {
+				final List<? extends Expression> expressions = sqlTuple.getExpressions();
 				for ( int i = 0; i < columnReferences.size(); i++ ) {
 					selectClause.addSqlSelection( new SqlSelectionImpl( expressions.get( i ) ) );
 					columnNames.add( "c" + columnNames.size() );
@@ -2293,8 +2293,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void visitCteObject(CteObject cteObject) {
-		if ( cteObject instanceof SelfRenderingCteObject ) {
-			( (SelfRenderingCteObject) cteObject ).render( this, this, sessionFactory );
+		if ( cteObject instanceof SelfRenderingCteObject selfRenderingCteObject ) {
+			selfRenderingCteObject.render( this, this, sessionFactory );
 		}
 		else {
 			throw new IllegalArgumentException( "Can't render CTE object " + cteObject.getName() + ": " + cteObject );
@@ -3258,8 +3258,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		switch ( jdbcMapping.getCastType() ) {
 			case STRING:
 				if ( expression.getExpressionType() instanceof SqlTypedMapping sqlTypedMapping ) {
-					if ( sqlTypedMapping.getLength() != null ) {
-						return sqlTypedMapping.getLength().intValue();
+					final Long length = sqlTypedMapping.getLength();
+					if ( length != null ) {
+						return length.intValue();
 					}
 				}
 				return Short.MAX_VALUE;
@@ -3342,8 +3343,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		switch ( jdbcMapping.getCastType() ) {
 			case STRING:
 				if ( expression.getExpressionType() instanceof SqlTypedMapping sqlTypedMapping ) {
-					if ( sqlTypedMapping.getLength() != null ) {
-						return sqlTypedMapping.getLength().intValue();
+					final Long length = sqlTypedMapping.getLength();
+					if ( length != null ) {
+						return length.intValue();
 					}
 				}
 				return Short.MAX_VALUE;
@@ -3357,8 +3359,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				return 20;
 			case FIXED:
 				if ( expression.getExpressionType() instanceof SqlTypedMapping sqlTypedMapping ) {
-					if ( sqlTypedMapping.getPrecision() != null && sqlTypedMapping.getScale() != null ) {
-						return sqlTypedMapping.getPrecision() + sqlTypedMapping.getScale() + 2;
+					final Integer precision = sqlTypedMapping.getPrecision();
+					final Integer scale = sqlTypedMapping.getScale();
+					if ( precision != null && scale != null ) {
+						return precision + scale + 2;
 					}
 				}
 				//TODO: case should not fall through here!
@@ -3698,7 +3702,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// This can happen when using window functions for emulating the offset/fetch clause of a query group
 		// But in that case we always use a SqlSelectionExpression anyway, so this is fine as it doesn't need resolving
 		if ( queryPartStack.getCurrent() == null ) {
-			assert expression instanceof SqlSelectionExpression;
 			return ( (SqlSelectionExpression) expression ).getSelection().getExpression();
 		}
 		return resolveAliasedExpression(
@@ -4616,10 +4619,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			Expression fetchClauseExpression,
 			Expression offsetClauseExpression,
 			int offset) {
-		if ( fetchClauseExpression instanceof Literal ) {
-			final Number fetchCount = (Number) ( (Literal) fetchClauseExpression ).getLiteralValue();
-			if ( offsetClauseExpression instanceof Literal ) {
-				final Number offsetCount = (Number) ( (Literal) offsetClauseExpression ).getLiteralValue();
+		if ( fetchClauseExpression instanceof Literal fetchLiteral ) {
+			final Number fetchCount = (Number) fetchLiteral.getLiteralValue();
+			if ( offsetClauseExpression instanceof Literal offsetLiteral ) {
+				final Number offsetCount = (Number) offsetLiteral.getLiteralValue();
 				appendSql( fetchCount.intValue() + offsetCount.intValue() + offset );
 			}
 			else {
@@ -4967,8 +4970,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final String alias = "r_" + queryPartForRowNumberingAliasCounter + '_';
 			queryPartForRowNumberingAliasCounter++;
 			// We always need query wrapping if we are in a query group and the query part has a fetch clause
-			final boolean needsParenthesis = queryPart instanceof QueryGroup && queryPart.hasOffsetOrFetchClause()
-					&& !queryPart.isRoot();
+			final boolean needsParenthesis =
+					queryPart instanceof QueryGroup && queryPart.hasOffsetOrFetchClause()
+							&& !queryPart.isRoot();
 			if ( needsParenthesis ) {
 				appendSql( OPEN_PARENTHESIS );
 			}
@@ -5107,8 +5111,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 
 				// We render the FOR UPDATE clause in the outer query
-				if ( queryPart instanceof QuerySpec ) {
-					visitForUpdateClause( (QuerySpec) queryPart );
+				if ( queryPart instanceof QuerySpec querySpec ) {
+					visitForUpdateClause( querySpec );
 				}
 			}
 			finally {
@@ -5297,26 +5301,22 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected final SqlSelectionExpression getSelectItemReference(Expression expression) {
 		final SqlTuple sqlTuple = getSqlTuple( expression );
 		if ( sqlTuple != null ) {
-			for ( Expression e : sqlTuple.getExpressions() ) {
-				if ( e instanceof SqlSelectionExpression ) {
-					return (SqlSelectionExpression) e;
+			for ( Expression elementExpression : sqlTuple.getExpressions() ) {
+				if ( elementExpression instanceof SqlSelectionExpression selection) {
+					return selection;
 				}
-				else if ( e instanceof SqmPathInterpretation<?> ) {
-					final Expression sqlExpression = ( (SqmPathInterpretation<?>) e ).getSqlExpression();
-					if ( sqlExpression instanceof SqlSelectionExpression ) {
-						return (SqlSelectionExpression) sqlExpression;
-					}
+				else if ( elementExpression instanceof SqmPathInterpretation<?> pathInterpretation
+							&& pathInterpretation.getSqlExpression() instanceof SqlSelectionExpression selection ) {
+					return selection;
 				}
 			}
 		}
-		else if ( expression instanceof SqlSelectionExpression ) {
-			return (SqlSelectionExpression) expression;
+		else if ( expression instanceof SqlSelectionExpression selection ) {
+			return selection;
 		}
-		else if ( expression instanceof SqmPathInterpretation<?> ) {
-			final Expression sqlExpression = ( (SqmPathInterpretation<?>) expression ).getSqlExpression();
-			if ( sqlExpression instanceof SqlSelectionExpression ) {
-				return (SqlSelectionExpression) sqlExpression;
-			}
+		else if ( expression instanceof SqmPathInterpretation<?> pathInterpretation
+					&& pathInterpretation.getSqlExpression() instanceof SqlSelectionExpression selection ) {
+			return selection;
 		}
 		return null;
 	}
@@ -5367,7 +5367,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		overExpression.accept( this );
 		final boolean orderedSetAggregate =
 				overExpression instanceof OrderedSetAggregateFunctionExpression expression
-						&& expression.getWithinGroup() != null && !expression.getWithinGroup().isEmpty();
+						&& expression.getWithinGroup() != null
+						&& !expression.getWithinGroup().isEmpty();
 		visitOverClause(
 				over.getPartitions(),
 				over.getOrderList(),
@@ -6058,10 +6059,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			return false;
 		}
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();
-		if ( tableReference instanceof NamedTableReference ) {
-			return renderNamedTableReference( (NamedTableReference) tableReference, lockMode );
+		if ( tableReference instanceof NamedTableReference namedTableReference ) {
+			return renderNamedTableReference( namedTableReference, lockMode );
 		}
-		renderDerivedTableReference( (DerivedTableReference) tableReference );
+		else if ( tableReference instanceof DerivedTableReference derivedTableReference ) {
+			renderDerivedTableReference( derivedTableReference );
+		}
+		else {
+			throw new AssertionFailure( "Unexpected table reference type" );
+		}
 		return false;
 	}
 
@@ -6152,8 +6158,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected boolean isCorrelated(CteStatement cteStatement) {
 		// Assume that a CTE is correlated/lateral when the CTE is defined in a subquery
-		return statementStack.getCurrent() instanceof SelectStatement
-				&& !( (SelectStatement) statementStack.getCurrent() ).getQueryPart().isRoot();
+		return statementStack.getCurrent() instanceof SelectStatement selectStatement
+			&& !selectStatement.getQueryPart().isRoot();
 	}
 
 	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
@@ -6732,9 +6738,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private boolean isFetchFirstRowOnly(QueryPart queryPart) {
 		return queryPart.getFetchClauseType() == FetchClauseType.ROWS_ONLY
-				&& queryPart.getFetchClauseExpression() instanceof QueryLiteral<?>
-				&& Integer.valueOf( 1 )
-				.equals( ( (QueryLiteral<?>) queryPart.getFetchClauseExpression() ).getLiteralValue() );
+				&& queryPart.getFetchClauseExpression() instanceof QueryLiteral<?> queryLiteral
+				&& Integer.valueOf( 1 ).equals( queryLiteral.getLiteralValue() );
 	}
 
 	private SelectStatement stripToSelectClause(SelectStatement statement) {
@@ -6746,11 +6751,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private QueryPart stripToSelectClause(QueryPart queryPart) {
-		if ( queryPart instanceof QueryGroup ) {
-			return stripToSelectClause( (QueryGroup) queryPart );
+		if ( queryPart instanceof QueryGroup queryGroup ) {
+			return stripToSelectClause( queryGroup );
+		}
+		else if ( queryPart instanceof QuerySpec querySpec) {
+			return stripToSelectClause( querySpec );
 		}
 		else {
-			return stripToSelectClause( (QuerySpec) queryPart );
+			throw new AssertionFailure( "Unexpected query part" );
 		}
 	}
 
@@ -7103,9 +7111,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					separator = COMMA_SEPARATOR;
 				}
 			}
-			else if ( expression instanceof Expression ) {
+			else if ( expression instanceof Expression expr ) {
 				appendSql( separator );
-				renderSelectExpression( (Expression) expression );
+				renderSelectExpression( expr );
 			}
 			else {
 				appendSql( separator );
@@ -7127,9 +7135,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					separator = COMMA_SEPARATOR;
 				}
 			}
-			else if ( expression instanceof Expression ) {
+			else if ( expression instanceof Expression expr ) {
 				appendSql( separator );
-				renderSelectExpression( (Expression) expression );
+				renderSelectExpression( expr );
 			}
 			else {
 				appendSql( separator );

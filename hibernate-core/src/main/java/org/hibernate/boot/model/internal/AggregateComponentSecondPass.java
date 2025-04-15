@@ -190,8 +190,8 @@ public class AggregateComponentSecondPass implements SecondPass {
 	private static void validateComponent(Component component, String basePath, boolean inArray) {
 		for ( Property property : component.getProperties() ) {
 			final Value value = property.getValue();
-			if ( value instanceof Component c ) {
-				validateComponent( c, qualify( basePath, property.getName() ), inArray );
+			if ( value instanceof Component comp ) {
+				validateComponent( comp, qualify( basePath, property.getName() ), inArray );
 			}
 			else if ( value instanceof ToOne toOne ) {
 				if ( inArray && toOne.getReferencedPropertyName() != null ) {
@@ -335,8 +335,9 @@ public class AggregateComponentSecondPass implements SecondPass {
 			}
 			else {
 				for ( Selectable selectable : value.getSelectables() ) {
-					if ( selectable instanceof Column && structColumnName.equals( ( (Column) selectable ).getName() ) ) {
-						orderedColumns.add( (Column) selectable );
+					if ( selectable instanceof Column column
+							&& structColumnName.equals( column.getName() ) ) {
+						orderedColumns.add( column );
 						return true;
 					}
 				}
@@ -377,8 +378,8 @@ public class AggregateComponentSecondPass implements SecondPass {
 			// Make sure this state is initialized
 			aggregatedColumn.getSqlTypeCode( metadataCollector );
 			aggregatedColumn.getSqlType( metadataCollector );
-			if ( aggregatedColumn instanceof AggregateColumn ) {
-				ensureChildrenInitialized( metadataCollector, (AggregateColumn) aggregatedColumn );
+			if ( aggregatedColumn instanceof AggregateColumn aggregate ) {
+				ensureChildrenInitialized( metadataCollector, aggregate );
 			}
 		}
 

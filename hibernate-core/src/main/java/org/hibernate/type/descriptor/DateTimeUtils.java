@@ -238,19 +238,16 @@ public final class DateTimeUtils {
 				);
 			}
 		}
-		else if ( temporalAccessor instanceof Instant ) {
+		else if ( temporalAccessor instanceof Instant instant ) {
 			if ( supportsOffset ) {
 				formatWithOffset.formatTo(
-						( (Instant) temporalAccessor ).atZone( jdbcTimeZone.toZoneId() ),
+						instant.atZone( jdbcTimeZone.toZoneId() ),
 						appender
 				);
 			}
 			else {
 				format.formatTo(
-						LocalDateTime.ofInstant(
-								(Instant) temporalAccessor,
-								jdbcTimeZone.toZoneId()
-						),
+						LocalDateTime.ofInstant( instant, jdbcTimeZone.toZoneId() ),
 						appender
 				);
 			}

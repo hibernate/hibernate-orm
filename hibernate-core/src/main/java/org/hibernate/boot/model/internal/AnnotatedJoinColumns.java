@@ -386,9 +386,15 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	}
 
 	private static Table table(Object persistentClassOrJoin) {
-		return persistentClassOrJoin instanceof PersistentClass
-				? ( (PersistentClass) persistentClassOrJoin ).getTable()
-				: ( (Join) persistentClassOrJoin ).getTable();
+		if ( persistentClassOrJoin instanceof PersistentClass persistentClass ) {
+			return persistentClass.getTable();
+		}
+		else if ( persistentClassOrJoin instanceof Join join ) {
+			return join.getTable();
+		}
+		else {
+			throw new IllegalArgumentException( "Unexpected object" );
+		}
 	}
 
 	private static Column column(MetadataBuildingContext context, Table table, String logicalReferencedColumnName) {

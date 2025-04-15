@@ -76,8 +76,8 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 
 	@Override
 	public RuntimeException convert(HibernateException exception, LockOptions lockOptions) {
-		if ( exception instanceof StaleStateException ) {
-			final PersistenceException converted = wrapStaleStateException( (StaleStateException) exception );
+		if ( exception instanceof StaleStateException staleStateException ) {
+			final PersistenceException converted = wrapStaleStateException( staleStateException );
 			rollbackIfNecessary( converted );
 			return converted;
 		}

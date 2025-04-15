@@ -65,8 +65,8 @@ public class ParameterizedTypeImpl implements ParameterizedType {
 			return false;
 		}
 		return Objects.equals( getOwnerType(), other.getOwnerType() )
-				&& Objects.equals( getRawType(), other.getRawType() )
-				&& Arrays.equals( getActualTypeArguments(), other.getActualTypeArguments() );
+			&& Objects.equals( getRawType(), other.getRawType() )
+			&& Arrays.equals( getActualTypeArguments(), other.getActualTypeArguments() );
 	}
 
 	@Override
@@ -84,18 +84,18 @@ public class ParameterizedTypeImpl implements ParameterizedType {
 
 			sb.append( "$" );
 
-			if ( ownerType instanceof ParameterizedType ) {
+			if ( ownerType instanceof ParameterizedType parameterizedType ) {
 				// Find simple name of nested type by removing the
 				// shared prefix with owner.
 				sb.append(
 						rawType.getTypeName().replace(
-								( (ParameterizedType) ownerType ).getRawType().getTypeName() + "$",
+								parameterizedType.getRawType().getTypeName() + "$",
 								""
 						)
 				);
 			}
-			else if ( rawType instanceof Class<?> ) {
-				sb.append( ( (Class<?>) rawType ).getSimpleName() );
+			else if ( rawType instanceof Class<?> clazz ) {
+				sb.append( clazz.getSimpleName() );
 			}
 			else {
 				sb.append( rawType.getTypeName() );

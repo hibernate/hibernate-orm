@@ -26,7 +26,6 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
@@ -174,13 +173,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			if ( discriminatorMapping != null ) {
 				log.debug( "Encountered explicit discriminator mapping for joined inheritance" );
 				final Selectable selectable = discriminatorMapping.getSelectables().get(0);
-				if ( selectable instanceof Formula ) {
-					throw new MappingException( "Discriminator formulas on joined inheritance hierarchies not supported at this time" );
-				}
-				else {
-					final Column column = (Column) selectable;
+				if ( selectable instanceof Column column ) {
 					explicitDiscriminatorColumnName = column.getQuotedName( dialect );
 					discriminatorAlias = column.getAlias( dialect, persistentClass.getRootTable() );
+				}
+				else {
+					throw new MappingException( "Discriminator formulas on joined inheritance hierarchies not supported at this time" );
 				}
 				discriminatorType = DiscriminatorHelper.getDiscriminatorType( persistentClass );
 				discriminatorValue = DiscriminatorHelper.getDiscriminatorValue( persistentClass );

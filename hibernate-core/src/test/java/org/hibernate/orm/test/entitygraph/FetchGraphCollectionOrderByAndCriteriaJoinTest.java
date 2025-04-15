@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.entitygraph;
 
 import jakarta.persistence.CascadeType;
@@ -105,7 +109,7 @@ public class FetchGraphCollectionOrderByAndCriteriaJoinTest {
 			}
 
 			// Add all defined predicates to the criteria query
-			criteriaQuery.where( builder.and( predicates ) );
+			criteriaQuery.where( builder.and( predicates.toArray(new Predicate[0]) ) );
 
 			// Set some default root ordering (not required for the test case)
 			criteriaQuery.orderBy( builder.asc( root.get( "id" ) ) );

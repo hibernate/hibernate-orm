@@ -75,7 +75,7 @@ public class ScrollableResultsConsumer<R> implements ResultsConsumer<ScrollableR
 	private boolean containsCollectionFetches(JdbcValuesMapping valuesMapping) {
 		final List<DomainResult<?>> domainResults = valuesMapping.getDomainResults();
 		for ( DomainResult<?> domainResult : domainResults ) {
-			if ( domainResult instanceof EntityResult && ( (EntityResult) domainResult ).containsCollectionFetches() ) {
+			if ( domainResult instanceof EntityResult entityResult && entityResult.containsCollectionFetches() ) {
 				return true;
 			}
 		}

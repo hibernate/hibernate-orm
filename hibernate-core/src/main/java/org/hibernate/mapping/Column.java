@@ -271,8 +271,8 @@ public sealed class Column
 
 	@Override
 	public boolean equals(Object object) {
-		return object instanceof Column
-			&& equals( (Column) object );
+		return object instanceof Column column
+			&& equals( column );
 	}
 
 	public boolean equals(Column column) {

@@ -90,8 +90,8 @@ public class AggregateFunctionChecker extends AbstractSqlAstWalker {
 		if ( expression instanceof AggregateFunctionExpression ) {
 			throw new AggregateFunctionException();
 		}
-		else if ( expression instanceof FunctionExpression ) {
-			for ( SqlAstNode argument : ( (FunctionExpression) expression ).getArguments() ) {
+		else if ( expression instanceof FunctionExpression functionExpression ) {
+			for ( SqlAstNode argument : functionExpression.getArguments() ) {
 				argument.accept( this );
 			}
 		}

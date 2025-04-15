@@ -171,10 +171,10 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 				ReturnableType<?> resultType,
 				List<SqlAstNode> arguments) {
 			MappingModelExpressible<?> mapping;
-			if ( resultType instanceof MappingModelExpressible) {
+			if ( resultType instanceof MappingModelExpressible<?> mappingModelExpressible) {
 				// here we have a BasicType, which can be cast
 				// directly to BasicValuedMapping
-				mapping = (MappingModelExpressible<?>) resultType;
+				mapping = mappingModelExpressible;
 			}
 			else {
 				// here we have something that is not a BasicType,

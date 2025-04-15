@@ -40,8 +40,8 @@ public class EnhancementHelper {
 		final Value value = bootMapping.getValue();
 
 		if ( ! isEnhanced ) {
-			if ( value instanceof ToOne ) {
-				if ( ( (ToOne) value ).isUnwrapProxy() ) {
+			if ( value instanceof ToOne toOne ) {
+				if ( toOne.isUnwrapProxy() ) {
 					BytecodeInterceptorLogging.MESSAGE_LOGGER.debugf(
 							"To-one property `%s#%s` was mapped with LAZY + NO_PROXY but the class was not enhanced",
 							bootMapping.getPersistentClass().getEntityName(),
@@ -117,7 +117,7 @@ public class EnhancementHelper {
 				return true;
 			}
 
-			if ( toOne instanceof ManyToOne && ( (ManyToOne) toOne ).isIgnoreNotFound() ) {
+			if ( toOne instanceof ManyToOne manyToOne && manyToOne.isIgnoreNotFound() ) {
 				if ( unwrapExplicitlyRequested ) {
 					BytecodeInterceptorLogging.LOGGER.debugf(
 							"%s#%s specified NotFoundAction.IGNORE & LazyToOneOption.NO_PROXY; " +
@@ -140,7 +140,7 @@ public class EnhancementHelper {
 		}
 
 		return collectionsInDefaultFetchGroupEnabled && ( value instanceof Collection )
-				|| ! bootMapping.isLazy();
+			|| ! bootMapping.isLazy();
 	}
 
 	public static <T> T performWork(

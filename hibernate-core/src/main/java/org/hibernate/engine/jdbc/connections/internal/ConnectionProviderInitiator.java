@@ -246,9 +246,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	 */
 	public static Properties getConnectionProperties(Map<String, Object> properties) {
 		final Properties result = new Properties();
-		for ( Map.Entry<?, Object> entry : properties.entrySet() ) {
-			if ( entry.getKey() instanceof String key
-					&& entry.getValue() instanceof String value ) {
+		for ( var entry : properties.entrySet() ) {
+			if ( entry.getValue() instanceof String value ) {
+				final String key = entry.getKey();
 				if ( key.startsWith( CONNECTION_PREFIX ) ) {
 					if ( SPECIAL_PROPERTIES.contains( key ) ) {
 						if ( USER.equals( key ) ) {

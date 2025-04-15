@@ -35,8 +35,8 @@ public class ArrayDdlTypeImpl extends DdlTypeImpl {
 		final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) type;
 		final BasicType<?> elementType = pluralType.getElementType();
 		String arrayElementTypeName;
-		if ( elementType.getJavaTypeDescriptor() instanceof EmbeddableAggregateJavaType<?> ) {
-			arrayElementTypeName = ( (EmbeddableAggregateJavaType<?>) elementType.getJavaTypeDescriptor() ).getStructName();
+		if ( elementType.getJavaTypeDescriptor() instanceof EmbeddableAggregateJavaType<?> embeddableAggregateJavaType ) {
+			arrayElementTypeName = embeddableAggregateJavaType.getStructName();
 		}
 		else {
 			arrayElementTypeName = ddlTypeRegistry.getDescriptor( elementType.getJdbcType().getDdlTypeCode() )
@@ -89,8 +89,8 @@ public class ArrayDdlTypeImpl extends DdlTypeImpl {
 	private static String getElementTypeSimpleName(BasicType<?> elementType, Dialect dialect) {
 		final BasicValueConverter<?, ?> converter = elementType.getValueConverter();
 		if ( converter != null ) {
-			if ( converter instanceof JpaAttributeConverter<?, ?> ) {
-				return ( (JpaAttributeConverter<?, ?>) converter ).getConverterJavaType()
+			if ( converter instanceof JpaAttributeConverter<?, ?> attributeConverter ) {
+				return attributeConverter.getConverterJavaType()
 						.getJavaTypeClass()
 						.getSimpleName();
 			}

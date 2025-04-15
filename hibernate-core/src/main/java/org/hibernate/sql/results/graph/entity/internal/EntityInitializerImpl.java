@@ -234,8 +234,8 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		keyTypeForEqualsHashCode = entityDescriptor.getIdentifierType().getTypeForEqualsHashCode();
 		// The id can only be the entity instance if this is a non-aggregated id that has no containing class
 		couldUseEmbeddedIdentifierInstanceAsEntity =
-				entityDescriptor.getIdentifierMapping() instanceof CompositeIdentifierMapping
-						&& !( (CompositeIdentifierMapping) entityDescriptor.getIdentifierMapping() ).hasContainingClass();
+				entityDescriptor.getIdentifierMapping() instanceof CompositeIdentifierMapping composite
+						&& !composite.hasContainingClass();
 
 		this.navigablePath = resultDescriptor.getNavigablePath();
 		this.sourceAlias = sourceAlias;
@@ -447,8 +447,8 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 	private static boolean isPreviousRowReuse(@Nullable InitializerParent<?> parent) {
 		// Traverse up the parents to find out if one of our parents has row reuse enabled
 		while ( parent != null ) {
-			if ( parent instanceof EntityInitializerImpl ) {
-				return ( (EntityInitializerImpl) parent ).isPreviousRowReuse();
+			if ( parent instanceof EntityInitializerImpl entityInitializer ) {
+				return entityInitializer.isPreviousRowReuse();
 			}
 			// Immediate collections don't reuse previous rows for elements, so we can safely assume false
 			if ( parent instanceof AbstractImmediateCollectionInitializer<?> ) {

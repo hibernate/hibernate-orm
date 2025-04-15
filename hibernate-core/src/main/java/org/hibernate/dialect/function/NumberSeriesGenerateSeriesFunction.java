@@ -109,7 +109,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 			final BasicType<?> nodeType = (BasicType<?>) left.getExpressionType().getSingleJdbcMapping();
 			final FunctionRenderer timestampadd = (FunctionRenderer) converter.getCreationContext()
 					.getSqmFunctionRegistry().findFunctionDescriptor( "timestampadd" );
-			return new SelfRenderingFunctionSqlAstExpression(
+			return new SelfRenderingFunctionSqlAstExpression<>(
 					"timestampadd",
 					timestampadd,
 					List.of(
@@ -484,8 +484,8 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 
 		private String getExpression(Expression expression, String tableIdentifierVariable, String syntheticColumnName, SqmToSqlAstConverter walker) {
 			if ( expression instanceof Literal literal ) {
-				//noinspection unchecked
 				final SqlAstCreationContext creationContext = walker.getCreationContext();
+				//noinspection unchecked
 				return literal.getJdbcMapping().getJdbcLiteralFormatter()
 						.toJdbcLiteral( literal.getLiteralValue(), creationContext.getDialect(),
 								creationContext.getWrapperOptions() );

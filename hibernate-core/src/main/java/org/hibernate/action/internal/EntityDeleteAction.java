@@ -234,8 +234,8 @@ public class EntityDeleteAction extends EntityAction {
 	}
 
 	private static void postCommitDeleteOnUnsuccessful(PostDeleteEventListener listener, PostDeleteEvent event) {
-		if ( listener instanceof PostCommitDeleteEventListener ) {
-			( (PostCommitDeleteEventListener) listener ).onPostDeleteCommitFailed( event );
+		if ( listener instanceof PostCommitDeleteEventListener postCommitDeleteEventListener ) {
+			postCommitDeleteEventListener.onPostDeleteCommitFailed( event );
 		}
 		else {
 			//default to the legacy implementation that always fires the event

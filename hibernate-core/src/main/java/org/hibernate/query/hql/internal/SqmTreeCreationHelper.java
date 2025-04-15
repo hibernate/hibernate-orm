@@ -160,14 +160,14 @@ public class SqmTreeCreationHelper {
 		final int size = entityWithJoinsContext.getChildCount();
 		for ( int i = 1; i < size; i++ ) {
 			final ParseTree parseTree = entityWithJoinsContext.getChild( i );
-			if ( parseTree instanceof HqlParser.CrossJoinContext ) {
-				sqmBuilder.consumeCrossJoin( (HqlParser.CrossJoinContext) parseTree, sqmPrimaryRoot );
+			if ( parseTree instanceof HqlParser.CrossJoinContext crossJoinContext ) {
+				sqmBuilder.consumeCrossJoin( crossJoinContext, sqmPrimaryRoot );
 			}
-			else if ( parseTree instanceof HqlParser.JoinContext ) {
-				sqmBuilder.consumeJoin( (HqlParser.JoinContext) parseTree, sqmPrimaryRoot );
+			else if ( parseTree instanceof HqlParser.JoinContext joinContext ) {
+				sqmBuilder.consumeJoin( joinContext, sqmPrimaryRoot );
 			}
-			else if ( parseTree instanceof HqlParser.JpaCollectionJoinContext ) {
-				sqmBuilder.consumeJpaCollectionJoin( (HqlParser.JpaCollectionJoinContext) parseTree, sqmPrimaryRoot );
+			else if ( parseTree instanceof HqlParser.JpaCollectionJoinContext collectionJoinContext ) {
+				sqmBuilder.consumeJpaCollectionJoin( collectionJoinContext, sqmPrimaryRoot );
 			}
 		}
 	}

@@ -211,9 +211,9 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 
 	private void addCollectionKey(
 			PluralAttributeMapping pluralAttributeMapping,
-			Object o,
+			Object object,
 			PersistenceContext persistenceContext) {
-		if ( o instanceof PersistentCollection ) {
+		if ( object instanceof PersistentCollection ) {
 			final CollectionPersister collectionPersister = pluralAttributeMapping.getCollectionDescriptor();
 			final Object key = AbstractEntityPersister.getCollectionKey(
 					collectionPersister,
@@ -223,7 +223,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 			);
 			if ( key != null ) {
 				final CollectionKey collectionKey = new CollectionKey( collectionPersister, key );
-				persistenceContext.addCollectionByKey( collectionKey, (PersistentCollection<?>) o );
+				persistenceContext.addCollectionByKey( collectionKey, (PersistentCollection<?>) object );
 			}
 		}
 	}

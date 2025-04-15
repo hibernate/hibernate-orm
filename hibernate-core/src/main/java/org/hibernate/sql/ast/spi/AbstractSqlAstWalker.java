@@ -115,8 +115,8 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 				if ( aggregateFunctionExpression.getFilter() != null ) {
 					aggregateFunctionExpression.getFilter().accept( this );
 				}
-				if ( expression instanceof OrderedSetAggregateFunctionExpression ) {
-					for ( SortSpecification specification : ( (OrderedSetAggregateFunctionExpression) expression ).getWithinGroup() ) {
+				if ( expression instanceof OrderedSetAggregateFunctionExpression orderedSetAggregateFunctionExpression ) {
+					for ( SortSpecification specification : orderedSetAggregateFunctionExpression.getWithinGroup() ) {
 						specification.accept( this );
 					}
 				}

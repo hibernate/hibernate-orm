@@ -66,8 +66,8 @@ public class OptimizerFactory {
 	 */
 	public static Optimizer buildOptimizer(OptimizerDescriptor type, Class<?> returnClass, int incrementSize, long explicitInitialValue) {
 		final Optimizer optimizer = buildOptimizer( type, returnClass, incrementSize );
-		if ( optimizer instanceof InitialValueAwareOptimizer ) {
-			( (InitialValueAwareOptimizer) optimizer ).injectInitialValue( explicitInitialValue );
+		if ( optimizer instanceof InitialValueAwareOptimizer initialValueAwareOptimizer ) {
+			initialValueAwareOptimizer.injectInitialValue( explicitInitialValue );
 		}
 		return optimizer;
 	}

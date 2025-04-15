@@ -546,8 +546,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	 */
 	public final void replaceQueuedOperationValues(CollectionPersister persister, Map<Object,Object> copyCache) {
 		for ( DelayedOperation<?> operation : operationQueue ) {
-			if ( operation instanceof ValueDelayedOperation ) {
-				( (ValueDelayedOperation<?>) operation ).replace( persister, copyCache );
+			if ( operation instanceof ValueDelayedOperation<?> valueDelayedOperation ) {
+				valueDelayedOperation.replace( persister, copyCache );
 			}
 		}
 	}
@@ -1062,13 +1062,11 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		}
 
 		@Override
-		public final boolean equals(Object o) {
-			if ( o == this ) {
-				return true;
-			}
-			return o instanceof Set<?> s
-				&& s.size() == size()
-				&& containsAll( s );
+		public final boolean equals(Object object) {
+			return object == this
+				|| object instanceof Set<?> that
+				&& that.size() == this.size()
+				&& containsAll( that );
 		}
 
 		@Override

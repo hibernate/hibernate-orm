@@ -253,9 +253,9 @@ public class DomainResultCreationStateImpl
 
 		final Expression created = creator.apply( this );
 
-		if ( created instanceof ResultSetMappingSqlSelection ) {
-			sqlSelectionMap.put( key, (ResultSetMappingSqlSelection) created );
-			sqlSelectionConsumer.accept( (ResultSetMappingSqlSelection) created );
+		if ( created instanceof ResultSetMappingSqlSelection resultSetMappingSqlSelection ) {
+			sqlSelectionMap.put( key, resultSetMappingSqlSelection );
+			sqlSelectionConsumer.accept( resultSetMappingSqlSelection );
 		}
 		else if ( created instanceof ColumnReference columnReference) {
 			final String selectableName = columnReference.getSelectableName();
@@ -429,7 +429,8 @@ public class DomainResultCreationStateImpl
 			else {
 				fetchBuilderLegacy = null;
 			}
-			if ( fetchable instanceof Association association && fetchable.getMappedFetchOptions().getTiming() == FetchTiming.DELAYED ) {
+			if ( fetchable instanceof Association association
+					&& fetchable.getMappedFetchOptions().getTiming() == FetchTiming.DELAYED ) {
 				final ForeignKeyDescriptor foreignKeyDescriptor = association.getForeignKeyDescriptor();
 				// If there are no fetch builders for this association, we only want to fetch the FK
 				if ( explicitFetchBuilder == null && fetchBuilderLegacy == null  ) {

@@ -232,11 +232,11 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 		final JdbcTypeConstructor jdbcTypeConstructor = getConstructor( jdbcTypeConstructorCode );
 		if ( jdbcTypeConstructor != null ) {
 			final JdbcType jdbcType;
-			if ( elementType instanceof BasicType<?> ) {
+			if ( elementType instanceof BasicType<?> basicType ) {
 				jdbcType = jdbcTypeConstructor.resolveType(
 						typeConfiguration,
 						typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect(),
-						(BasicType<?>) elementType,
+						basicType,
 						columnTypeInformation
 				);
 			}

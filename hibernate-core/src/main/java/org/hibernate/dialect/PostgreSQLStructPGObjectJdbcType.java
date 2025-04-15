@@ -58,10 +58,9 @@ public class PostgreSQLStructPGObjectJdbcType extends AbstractPostgreSQLStructJd
 
 	@Override
 	protected String getRawStructFromJdbcValue(Object rawJdbcValue) {
-		if ( rawJdbcValue instanceof PGobject ) {
-			return ( (PGobject) rawJdbcValue ).getValue();
-		}
-		return (String) rawJdbcValue;
+		return rawJdbcValue instanceof PGobject pGobject
+				? pGobject.getValue()
+				: (String) rawJdbcValue;
 	}
 
 	@Override

@@ -440,8 +440,8 @@ public final class ConfigurationHelper {
 		while ( itr.hasNext() ) {
 			final Map.Entry<?,Object> entry = itr.next();
 			final Object value = entry.getValue();
-			if (value instanceof String) {
-				final String resolved = resolvePlaceHolder( ( String ) value );
+			if ( value instanceof String string ) {
+				final String resolved = resolvePlaceHolder( string );
 				if ( !value.equals( resolved ) ) {
 					if ( resolved == null ) {
 						itr.remove();

@@ -449,9 +449,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 						if ( string.charAt( i + 1 ) == '(' ) {
 							// This could be a nested struct
 							final JdbcMapping jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
-							if ( jdbcMapping.getJdbcType() instanceof AbstractPostgreSQLStructJdbcType ) {
-								final AbstractPostgreSQLStructJdbcType structJdbcType;
-								structJdbcType = (AbstractPostgreSQLStructJdbcType) jdbcMapping.getJdbcType();
+							if ( jdbcMapping.getJdbcType() instanceof AbstractPostgreSQLStructJdbcType structJdbcType ) {
 								final Object[] subValues = new Object[structJdbcType.embeddableMappingType.getJdbcValueCount()];
 								final int subEnd = structJdbcType.deserializeStruct(
 										string,
@@ -1000,8 +998,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 			int count = 0;
 			for ( int i = 0; i < size; i++ ) {
 				final ValuedModelPart modelPart = getEmbeddedPart( embeddableMappingType, orderMapping[i] );
-				final MappingType mappedType = modelPart.getMappedType();
-				if ( mappedType instanceof EmbeddableMappingType embeddableMappingType ) {
+				if ( modelPart.getMappedType() instanceof EmbeddableMappingType embeddableMappingType ) {
 					final SelectableMapping aggregateMapping = embeddableMappingType.getAggregateMapping();
 					if ( aggregateMapping == null ) {
 						final SelectableMapping subSelectable = embeddableMappingType.getJdbcValueSelectable( jdbcValueSelectableIndex - count );
@@ -1211,9 +1208,9 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 					embeddableMappingType.getJdbcValueSelectable( i ) :
 					embeddableMappingType.getJdbcValueSelectable( orderMapping[i] );
 			final JdbcMapping jdbcMapping = selectableMapping.getJdbcMapping();
-			if ( jdbcMapping.getJdbcType() instanceof AbstractPostgreSQLStructJdbcType ) {
+			if ( jdbcMapping.getJdbcType() instanceof AbstractPostgreSQLStructJdbcType structJdbcType ) {
 				appender.quoteStart();
-				( (AbstractPostgreSQLStructJdbcType) jdbcMapping.getJdbcType() ).serializeJdbcValuesTo(
+				structJdbcType.serializeJdbcValuesTo(
 						appender,
 						options,
 						(Object[]) jdbcValue,
@@ -1239,13 +1236,13 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 			case SqlTypes.TINYINT:
 			case SqlTypes.SMALLINT:
 			case SqlTypes.INTEGER:
-				if ( subValue instanceof Boolean ) {
+				if ( subValue instanceof Boolean booleanValue ) {
 					// BooleanJavaType has this as an implicit conversion
-					appender.append( (Boolean) subValue ? '1' : '0' );
+					appender.append( booleanValue ? '1' : '0' );
 					break;
 				}
-				if ( subValue instanceof Enum ) {
-					appender.appendSql( ((Enum<?>) subValue).ordinal() );
+				if ( subValue instanceof Enum<?> enumValue ) {
+					appender.appendSql( enumValue.ordinal() );
 					break;
 				}
 			case SqlTypes.BOOLEAN:
@@ -1263,9 +1260,9 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 			case SqlTypes.NCHAR:
 			case SqlTypes.VARCHAR:
 			case SqlTypes.NVARCHAR:
-				if ( subValue instanceof Boolean ) {
+				if ( subValue instanceof Boolean booleanValue ) {
 					// BooleanJavaType has this as an implicit conversion
-					appender.append( (Boolean) subValue ? 'Y' : 'N' );
+					appender.append( booleanValue ? 'Y' : 'N' );
 					break;
 				}
 			case SqlTypes.LONGVARCHAR:
@@ -1438,14 +1435,14 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 		appender.append( '"' );
 		switch ( jdbcMapping.getJdbcType().getJdbcTypeCode() ) {
 			case SqlTypes.DATE:
-				if ( value instanceof java.util.Date ) {
-					appendAsDate( appender, (java.util.Date) value );
+				if ( value instanceof java.util.Date date ) {
+					appendAsDate( appender, date );
 				}
-				else if ( value instanceof java.util.Calendar ) {
-					appendAsDate( appender, (java.util.Calendar) value );
+				else if ( value instanceof java.util.Calendar calendar ) {
+					appendAsDate( appender, calendar );
 				}
-				else if ( value instanceof TemporalAccessor ) {
-					appendAsDate( appender, (TemporalAccessor) value );
+				else if ( value instanceof TemporalAccessor temporalAccessor ) {
+					appendAsDate( appender, temporalAccessor );
 				}
 				else {
 					appendAsDate(
@@ -1457,11 +1454,11 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 			case SqlTypes.TIME:
 			case SqlTypes.TIME_WITH_TIMEZONE:
 			case SqlTypes.TIME_UTC:
-				if ( value instanceof java.util.Date ) {
-					appendAsTime( appender, (java.util.Date) value, jdbcTimeZone );
+				if ( value instanceof java.util.Date date ) {
+					appendAsTime( appender, date, jdbcTimeZone );
 				}
-				else if ( value instanceof java.util.Calendar ) {
-					appendAsTime( appender, (java.util.Calendar) value, jdbcTimeZone );
+				else if ( value instanceof java.util.Calendar calendar ) {
+					appendAsTime( appender, calendar, jdbcTimeZone );
 				}
 				else if ( value instanceof TemporalAccessor temporalAccessor ) {
 					if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
@@ -1482,11 +1479,11 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 			case SqlTypes.TIMESTAMP:
 			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 			case SqlTypes.TIMESTAMP_UTC:
-				if ( value instanceof java.util.Date ) {
-					appendAsTimestampWithMicros( appender, (java.util.Date) value, jdbcTimeZone );
+				if ( value instanceof java.util.Date date ) {
+					appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
 				}
-				else if ( value instanceof java.util.Calendar ) {
-					appendAsTimestampWithMillis( appender, (java.util.Calendar) value, jdbcTimeZone );
+				else if ( value instanceof java.util.Calendar calendar ) {
+					appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
 				}
 				else if ( value instanceof TemporalAccessor temporalAccessor ) {
 					appendAsTimestampWithMicros( appender, temporalAccessor, temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ), jdbcTimeZone );

@@ -72,8 +72,8 @@ public class DdlTypeHelper {
 	}
 
 	public static String getTypeName(JdbcMappingContainer type, Size size, TypeConfiguration typeConfiguration) {
-		if ( type instanceof SqlTypedMapping ) {
-			return AbstractSqlAstTranslator.getSqlTypeName( (SqlTypedMapping) type, typeConfiguration );
+		if ( type instanceof SqlTypedMapping sqlTypedMapping ) {
+			return AbstractSqlAstTranslator.getSqlTypeName( sqlTypedMapping, typeConfiguration );
 		}
 		else {
 			final BasicType<?> basicType = (BasicType<?>) type.getSingleJdbcMapping();
@@ -90,8 +90,8 @@ public class DdlTypeHelper {
 	}
 
 	public static String getTypeName(ReturnableType<?> type, Size size, TypeConfiguration typeConfiguration) {
-		if ( type instanceof SqlTypedMapping ) {
-			return AbstractSqlAstTranslator.getSqlTypeName( (SqlTypedMapping) type, typeConfiguration );
+		if ( type instanceof SqlTypedMapping sqlTypedMapping ) {
+			return AbstractSqlAstTranslator.getSqlTypeName( sqlTypedMapping, typeConfiguration );
 		}
 		else {
 			final BasicType<?> basicType = (BasicType<?>) ( (JdbcMappingContainer) type ).getSingleJdbcMapping();
@@ -116,8 +116,8 @@ public class DdlTypeHelper {
 	}
 
 	public static String getCastTypeName(JdbcMappingContainer type, Size size, TypeConfiguration typeConfiguration) {
-		if ( type instanceof SqlTypedMapping ) {
-			return AbstractSqlAstTranslator.getCastTypeName( (SqlTypedMapping) type, typeConfiguration );
+		if ( type instanceof SqlTypedMapping sqlTypedMapping ) {
+			return AbstractSqlAstTranslator.getCastTypeName( sqlTypedMapping, typeConfiguration );
 		}
 		else {
 			final BasicType<?> basicType = (BasicType<?>) type.getSingleJdbcMapping();
@@ -134,8 +134,8 @@ public class DdlTypeHelper {
 	}
 
 	public static String getCastTypeName(ReturnableType<?> type, Size size, TypeConfiguration typeConfiguration) {
-		if ( type instanceof SqlTypedMapping ) {
-			return AbstractSqlAstTranslator.getCastTypeName( (SqlTypedMapping) type, typeConfiguration );
+		if ( type instanceof SqlTypedMapping sqlTypedMapping ) {
+			return AbstractSqlAstTranslator.getCastTypeName( sqlTypedMapping, typeConfiguration );
 		}
 		else {
 			final BasicType<?> basicType = (BasicType<?>) ( (JdbcMappingContainer) type ).getSingleJdbcMapping();

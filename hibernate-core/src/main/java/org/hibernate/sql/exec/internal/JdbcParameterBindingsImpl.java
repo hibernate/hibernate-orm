@@ -64,10 +64,10 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 				if ( type == null ) {
 					jdbcMapping = factory.getTypeConfiguration().getBasicTypeForJavaType( Object.class );
 				}
-				else if ( type instanceof BasicTypeReference ) {
-					jdbcMapping = factory.getTypeConfiguration()
-							.getBasicTypeRegistry()
-							.resolve( ( (BasicTypeReference<?>) type ) );
+				else if ( type instanceof BasicTypeReference<?> basicTypeReference ) {
+					jdbcMapping =
+							factory.getTypeConfiguration().getBasicTypeRegistry()
+									.resolve( basicTypeReference );
 				}
 				else if ( type instanceof BasicValuedMapping basicValuedMapping ) {
 					jdbcMapping = basicValuedMapping.getJdbcMapping();

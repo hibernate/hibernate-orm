@@ -50,9 +50,8 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		final Expression array = (Expression) sqlAstArguments.get( 0 );
-		final @Nullable SqlTypedMapping sqlTypedMapping = array.getExpressionType() instanceof SqlTypedMapping
-				? (SqlTypedMapping) array.getExpressionType()
-				: null;
+		final @Nullable SqlTypedMapping sqlTypedMapping =
+				array.getExpressionType() instanceof SqlTypedMapping sqlTyped ? sqlTyped : null;
 		final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) array.getExpressionType().getSingleJdbcMapping();
 		final int ddlTypeCode = pluralType.getJdbcType().getDefaultSqlTypeCode();
 		if ( ddlTypeCode == SqlTypes.JSON_ARRAY ) {

@@ -1365,11 +1365,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		 * Callback at start of processing an attribute
 		 */
 		public void startingAttribute(AttributeMapping attribute) {
-			if ( attribute.getJdbcTypeCount() < 1 || !( attribute instanceof SingularAttributeMapping ) ) {
+			if ( attribute.getJdbcTypeCount() < 1
+					|| !( attribute instanceof SingularAttributeMapping singularAttributeMapping ) ) {
 				currentAttributeAnalysis = new SkippedAttributeAnalysis( attribute );
 			}
 			else {
-				currentAttributeAnalysis = new IncludedAttributeAnalysis( (SingularAttributeMapping) attribute );
+				currentAttributeAnalysis = new IncludedAttributeAnalysis( singularAttributeMapping );
 				if ( dirtyAttributeIndexes == null
 						|| contains( dirtyAttributeIndexes, attribute.getStateArrayPosition() ) ) {
 					currentAttributeAnalysis.markDirty( dirtyAttributeIndexes != null );

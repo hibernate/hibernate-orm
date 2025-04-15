@@ -175,11 +175,10 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 			return null;
 		}
 		final Object row = cachedResults.get( position + offset );
-		if ( valueIndexesToCacheIndexes == null ) {
-			return ( (Object[]) row )[valueIndex];
-		}
-		else if ( row instanceof Object[] ) {
-			return ( (Object[]) row )[valueIndexesToCacheIndexes[valueIndex]];
+		if ( row instanceof Object[] array ) {
+			return valueIndexesToCacheIndexes == null
+					? array[valueIndex]
+					: array[valueIndexesToCacheIndexes[valueIndex]];
 		}
 		else {
 			assert valueIndexesToCacheIndexes[valueIndex] == 0;

@@ -155,9 +155,9 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		sqlAppender.appendSql( countFunctionName );
 		sqlAppender.appendSql( '(' );
 		final SqlTuple tuple;
-		if ( arg instanceof Distinct ) {
+		if ( arg instanceof Distinct distinct ) {
 			sqlAppender.appendSql( "distinct " );
-			final Expression distinctArg = ( (Distinct) arg ).getExpression();
+			final Expression distinctArg = distinct.getExpression();
 			if ( ( tuple = SqlTupleContainer.getSqlTuple( distinctArg ) ) != null ) {
 				final List<? extends Expression> expressions = tuple.getExpressions();
 				// Single element tuple

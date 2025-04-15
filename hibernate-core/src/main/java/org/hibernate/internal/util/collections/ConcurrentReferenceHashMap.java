@@ -1676,10 +1676,8 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public boolean equals(Object o) {
-			if ( !(o instanceof @SuppressWarnings("unchecked")Entry e) ) {
-				return false;
-			}
-			return eq( key, e.getKey() ) && eq( value, e.getValue() );
+			return o instanceof Entry<?, ?> e
+				&& eq( key, e.getKey() ) && eq( value, e.getValue() );
 		}
 
 		@Override

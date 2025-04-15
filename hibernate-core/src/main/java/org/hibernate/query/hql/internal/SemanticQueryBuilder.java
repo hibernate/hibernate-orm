@@ -2092,7 +2092,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private static SqmCteStatement<?> matchCteStatement(SqmCreationProcessingState state, String n) {
-		return state.getProcessingQuery() instanceof SqmCteContainer container ? container.getCteStatement( n ) : null;
+		return state.getProcessingQuery() instanceof SqmCteContainer container
+				? container.getCteStatement( n )
+				: null;
 	}
 
 	@Override
@@ -2395,7 +2397,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmPredicate visitNegatedPredicate(HqlParser.NegatedPredicateContext ctx) {
-		SqmPredicate predicate = (SqmPredicate) ctx.predicate().accept( this );
+		final SqmPredicate predicate = (SqmPredicate) ctx.predicate().accept( this );
 		if ( predicate instanceof SqmNegatablePredicate negatablePredicate ) {
 			negatablePredicate.negate();
 			return predicate;
@@ -3129,13 +3131,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			if ( columnContext instanceof HqlParser.XmlTableQueryColumnContext queryColumnContext ) {
 				final String columnName = visitIdentifier( queryColumnContext.identifier() );
 				final TerminalNode pathNode = queryColumnContext.STRING_LITERAL();
-				final String xpath;
-				if ( pathNode == null ) {
-					xpath = null;
-				}
-				else {
-					xpath = unquoteStringLiteral( pathNode.getText() );
-				}
+				final String xpath = pathNode == null ? null : unquoteStringLiteral( pathNode.getText() );
 				final JpaXmlTableColumnNode<String> node = xmlTable.queryColumn( columnName, xpath );
 				final HqlParser.XmltableDefaultClauseContext defaultClause = queryColumnContext.xmltableDefaultClause();
 				if ( defaultClause != null ) {
@@ -3148,13 +3144,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				//noinspection unchecked
 				final SqmCastTarget<Object> castTarget = (SqmCastTarget<Object>) visitCastTarget( valueColumnContext.castTarget() );
 				final TerminalNode pathNode = valueColumnContext.STRING_LITERAL();
-				final String xpath;
-				if ( pathNode == null ) {
-					xpath = null;
-				}
-				else {
-					xpath = unquoteStringLiteral( pathNode.getText() );
-				}
+				final String xpath = pathNode == null ? null : unquoteStringLiteral( pathNode.getText() );
 				final JpaXmlTableColumnNode<Object> node = xmlTable.valueColumn( columnName, castTarget, xpath );
 				final HqlParser.XmltableDefaultClauseContext defaultClause = valueColumnContext.xmltableDefaultClause();
 				if ( defaultClause != null ) {

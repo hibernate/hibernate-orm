@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -226,11 +227,14 @@ public class DynamicResultBuilderEntityStandard
 					keyPart = elementDescriptor.getForeignKeyDescriptor().getKeyPart();
 					keyTableGroup = collectionTableGroup;
 					final List<String> idColumnAliases;
-					if ( idFetchBuilder instanceof DynamicFetchBuilder ) {
-						idColumnAliases = ( (DynamicFetchBuilder) idFetchBuilder ).getColumnAliases();
+					if ( idFetchBuilder instanceof DynamicFetchBuilder dynamicFetchBuilder ) {
+						idColumnAliases = dynamicFetchBuilder.getColumnAliases();
+					}
+					else if ( idFetchBuilder instanceof CompleteFetchBuilder completeFetchBuilder ) {
+						idColumnAliases = completeFetchBuilder.getColumnAliases();
 					}
 					else {
-						idColumnAliases = ( (CompleteFetchBuilder) idFetchBuilder ).getColumnAliases();
+						throw new AssertionFailure( "Unexpected fetch builder" );
 					}
 
 					entityMapping

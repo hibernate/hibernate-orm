@@ -494,14 +494,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 							.addEntityConfig( bootEntityDescriptor, accessType );
 				}
 
-				if ( bootEntityDescriptor instanceof RootClass
+				if ( bootEntityDescriptor instanceof RootClass rootClass
 						&& bootEntityDescriptor.hasNaturalId()
 						&& bootEntityDescriptor.getNaturalIdCacheRegionName() != null ) {
 					regionConfigBuilders.computeIfAbsent(
 							bootEntityDescriptor.getNaturalIdCacheRegionName(),
 							DomainDataRegionConfigImpl.Builder::new
 					)
-							.addNaturalIdConfig( (RootClass) bootEntityDescriptor, accessType );
+							.addNaturalIdConfig( rootClass, accessType );
 				}
 			}
 		}

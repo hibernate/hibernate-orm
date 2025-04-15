@@ -230,8 +230,9 @@ public class FromClause implements SqlAstNode {
 					if ( navigablePath.equals( tg.getNavigablePath() ) ) {
 						return tg;
 					}
-					if ( tg instanceof OneToManyTableGroup && tg.getNavigablePath().equals( navigablePath.getParent() ) ) {
-						return ( (OneToManyTableGroup) tg ).getTableGroup( CollectionPart.Nature.fromName( navigablePath.getLocalName() ) );
+					if ( tg instanceof OneToManyTableGroup oneToManyTableGroup
+							&& tg.getNavigablePath().equals( navigablePath.getParent() ) ) {
+						return oneToManyTableGroup.getTableGroup( CollectionPart.Nature.fromName( navigablePath.getLocalName() ) );
 					}
 					return null;
 				}

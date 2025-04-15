@@ -863,8 +863,8 @@ public class MySQLDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIMESTAMP:
-				if ( temporalAccessor instanceof ZonedDateTime ) {
-					temporalAccessor = ((ZonedDateTime) temporalAccessor).toOffsetDateTime();
+				if ( temporalAccessor instanceof ZonedDateTime zonedDateTime ) {
+					temporalAccessor = zonedDateTime.toOffsetDateTime();
 				}
 				appender.appendSql( "timestamp '" );
 				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone, false );

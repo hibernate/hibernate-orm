@@ -49,26 +49,23 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Seriali
 
 	@Override
 	public long getElementCountInMemory() {
-		if ( region instanceof ExtendedStatisticsSupport ) {
-			return ( (ExtendedStatisticsSupport) region ).getElementCountInMemory();
-		}
-		return NO_EXTENDED_STAT_SUPPORT_RETURN;
+		return region instanceof ExtendedStatisticsSupport extended
+				? extended.getElementCountInMemory()
+				: NO_EXTENDED_STAT_SUPPORT_RETURN;
 	}
 
 	@Override
 	public long getElementCountOnDisk() {
-		if ( region instanceof ExtendedStatisticsSupport ) {
-			return ( (ExtendedStatisticsSupport) region ).getElementCountOnDisk();
-		}
-		return NO_EXTENDED_STAT_SUPPORT_RETURN;
+		return region instanceof ExtendedStatisticsSupport extended
+				? extended.getElementCountOnDisk()
+				: NO_EXTENDED_STAT_SUPPORT_RETURN;
 	}
 
 	@Override
 	public long getSizeInMemory() {
-		if ( region instanceof ExtendedStatisticsSupport ) {
-			return ( (ExtendedStatisticsSupport) region ).getSizeInMemory();
-		}
-		return NO_EXTENDED_STAT_SUPPORT_RETURN;
+		return region instanceof ExtendedStatisticsSupport extended
+				? extended.getSizeInMemory()
+				: NO_EXTENDED_STAT_SUPPORT_RETURN;
 	}
 
 	void incrementHitCount() {

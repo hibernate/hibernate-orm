@@ -400,12 +400,12 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		if ( component == null ) {
 			return null;
 		}
-		else if ( component instanceof Object[] ) {
+		else if ( component instanceof Object[] array ) {
 			// A few calls to hashCode pass the property values already in an
 			// Object[] (ex: QueryKey hash codes for cached queries).
 			// It's easiest to just check for the condition here prior to
 			// trying reflection.
-			return ((Object[]) component)[i];
+			return array[i];
 		}
 		else {
 			final EmbeddableMappingType embeddableMappingType = embeddableTypeDescriptor();
@@ -432,12 +432,12 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		if (component == null) {
 			return new Object[propertySpan + discriminatorColumnSpan];
 		}
-		else if ( component instanceof Object[] ) {
+		else if ( component instanceof Object[] array ) {
 			// A few calls to hashCode pass the property values already in an
 			// Object[] (ex: QueryKey hash codes for cached queries).
 			// It's easiest to just check for the condition here prior to
 			// trying reflection.
-			return (Object[]) component;
+			return array;
 		}
 		else {
 			return embeddableTypeDescriptor().getValues( component );

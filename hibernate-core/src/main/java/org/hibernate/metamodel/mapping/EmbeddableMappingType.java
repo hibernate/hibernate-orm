@@ -137,8 +137,8 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final AttributeMapping attributeMapping = getAttributeMapping( i );
 			final MappingType mappedType = attributeMapping.getMappedType();
-			if ( mappedType instanceof EmbeddableMappingType
-					&& ( (EmbeddableMappingType) mappedType ).getAggregateMapping() != null ) {
+			if ( mappedType instanceof EmbeddableMappingType embeddableMappingType
+					&& embeddableMappingType.getAggregateMapping() != null ) {
 				count++;
 			}
 			else {
@@ -172,8 +172,8 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 						}
 						count++;
 					}
-					else if ( keyPart instanceof EmbeddableValuedModelPart ) {
-						final EmbeddableMappingType mappingType = ( (EmbeddableValuedModelPart) keyPart ).getEmbeddableTypeDescriptor();
+					else if ( keyPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+						final EmbeddableMappingType mappingType = embeddableValuedModelPart.getEmbeddableTypeDescriptor();
 						final SelectableMapping selectable = mappingType.getJdbcValueSelectable( columnIndex - count );
 						if ( selectable != null ) {
 							return selectable;
@@ -204,8 +204,8 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 			}
 			else {
 				if ( count == columnIndex ) {
-					if ( attributeMapping instanceof SelectableMapping ) {
-						return (SelectableMapping) attributeMapping;
+					if ( attributeMapping instanceof SelectableMapping selectableMapping ) {
+						return selectableMapping;
 					}
 					assert attributeMapping.getJdbcTypeCount() == 0;
 				}
@@ -241,8 +241,8 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 					offset += embeddableMappingType.getJdbcTypeCount();
 				}
 			}
-			else if ( attributeMapping instanceof SelectableMapping ) {
-				if ( ( (SelectableMapping) attributeMapping ).getSelectableName().equals( selectableName ) ) {
+			else if ( attributeMapping instanceof SelectableMapping selectableMapping) {
+				if ( selectableMapping.getSelectableName().equals( selectableName ) ) {
 					return offset;
 				}
 				offset++;

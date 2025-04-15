@@ -660,9 +660,10 @@ public class QuerySqmImpl<R>
 
 	protected boolean hasIdentifierAssigned(SqmInsertStatement<?> sqmInsert, EntityPersister entityDescriptor) {
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-		final String partName = identifierMapping instanceof SingleAttributeIdentifierMapping
-				? identifierMapping.getAttributeName()
-				: EntityIdentifierMapping.ID_ROLE_NAME;
+		final String partName =
+				identifierMapping instanceof SingleAttributeIdentifierMapping
+						? identifierMapping.getAttributeName()
+						: EntityIdentifierMapping.ID_ROLE_NAME;
 		for ( SqmPath<?> insertionTargetPath : sqmInsert.getInsertionTargetPaths() ) {
 			if ( insertionTargetPath.getLhs() instanceof SqmRoot<?> ) {
 				if ( insertionTargetPath.getReferencedPathSource().getPathName().equals( partName ) ) {

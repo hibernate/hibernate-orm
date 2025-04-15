@@ -91,7 +91,7 @@ public class ArrayJdbcType implements JdbcType {
 			//noinspection unchecked
 			elementJavaType = (JavaType<T>) ByteJavaType.INSTANCE;
 		}
-		else if (javaTypeDescriptor instanceof BasicPluralJavaType) {
+		else if ( javaTypeDescriptor instanceof BasicPluralJavaType ) {
 			//noinspection unchecked
 			elementJavaType = ((BasicPluralJavaType<T>) javaTypeDescriptor).getElementJavaType();
 		}
@@ -112,8 +112,8 @@ public class ArrayJdbcType implements JdbcType {
 	protected String getElementTypeName(JavaType<?> javaType, SharedSessionContractImplementor session) {
 		// TODO: ideally, we would have the actual size or the actual type/column accessible
 		//       this is something that we would need for supporting composite types anyway
-		if ( elementJdbcType instanceof StructJdbcType ) {
-			return ( (StructJdbcType) elementJdbcType ).getStructTypeName();
+		if ( elementJdbcType instanceof StructJdbcType structJdbcType ) {
+			return structJdbcType.getStructTypeName();
 		}
 		final JavaType<?> elementJavaType;
 		if ( javaType instanceof ByteArrayJavaType ) {

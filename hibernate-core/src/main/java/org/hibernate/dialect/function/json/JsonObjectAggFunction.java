@@ -147,15 +147,15 @@ public class JsonObjectAggFunction extends AbstractSqmSelfRenderingFunctionDescr
 			JsonObjectAggUniqueKeysBehavior uniqueKeysBehavior = null;
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonNullBehavior ) {
-					nullBehavior = (JsonNullBehavior) node;
+				if ( node instanceof JsonNullBehavior jsonNullBehavior ) {
+					nullBehavior = jsonNullBehavior;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonObjectAggUniqueKeysBehavior ) {
-					uniqueKeysBehavior = (JsonObjectAggUniqueKeysBehavior) node;
+				if ( node instanceof JsonObjectAggUniqueKeysBehavior jsonObjectAggUniqueKeysBehavior ) {
+					uniqueKeysBehavior = jsonObjectAggUniqueKeysBehavior;
 					nextIndex++;
 				}
 			}

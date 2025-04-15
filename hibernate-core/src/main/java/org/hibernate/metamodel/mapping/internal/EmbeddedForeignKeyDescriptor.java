@@ -193,8 +193,9 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		}
 		else {
 			AttributeMapping attributeMapping = modelPart.asAttributeMapping();
-			while ( attributeMapping != null && attributeMapping.getDeclaringType() instanceof EmbeddableMappingType ) {
-				final EmbeddableValuedModelPart declaringModelPart = ( (EmbeddableMappingType) attributeMapping.getDeclaringType() ).getEmbeddedValueMapping();
+			while ( attributeMapping != null
+					&& attributeMapping.getDeclaringType() instanceof EmbeddableMappingType embeddableMappingType ) {
+				final EmbeddableValuedModelPart declaringModelPart = embeddableMappingType.getEmbeddedValueMapping();
 				if ( declaringModelPart == keyPart ) {
 					return true;
 				}
@@ -318,9 +319,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	private boolean isTargetTableGroup(TableGroup tableGroup) {
 		tableGroup = getUnderlyingTableGroup( tableGroup );
 		final TableGroupProducer tableGroupProducer;
-		if ( tableGroup instanceof OneToManyTableGroup ) {
-			tableGroupProducer = (TableGroupProducer) ( (OneToManyTableGroup) tableGroup ).getElementTableGroup()
-					.getModelPart();
+		if ( tableGroup instanceof OneToManyTableGroup oneToManyTableGroup ) {
+			tableGroupProducer = (TableGroupProducer) oneToManyTableGroup.getElementTableGroup().getModelPart();
 		}
 		else {
 			tableGroupProducer = (TableGroupProducer) tableGroup.getModelPart();

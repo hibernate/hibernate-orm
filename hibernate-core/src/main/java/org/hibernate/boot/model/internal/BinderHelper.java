@@ -323,9 +323,16 @@ public class BinderHelper {
 			MetadataBuildingContext context,
 			String syntheticPropertyName,
 			List<Property> properties) {
-		final Component embeddedComponent = persistentClassOrJoin instanceof PersistentClass
-				? new Component( context, (PersistentClass) persistentClassOrJoin )
-				: new Component( context, (Join) persistentClassOrJoin );
+		final Component embeddedComponent;
+		if ( persistentClassOrJoin instanceof PersistentClass persistentClass ) {
+			embeddedComponent = new Component( context, persistentClass );
+		}
+		else if ( persistentClassOrJoin instanceof Join join ) {
+			embeddedComponent = new Component( context, join );
+		}
+		else {
+			throw new IllegalArgumentException( "Unexpected object" );
+		}
 		embeddedComponent.setComponentClassName( embeddedComponent.getOwner().getClassName() );
 		embeddedComponent.setEmbedded( true );
 		for ( Property property : properties ) {

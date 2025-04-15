@@ -14,6 +14,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.SharedSessionContract;
@@ -121,6 +122,7 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
+import static org.hibernate.metamodel.mapping.internal.FetchOptionsHelper.determineFetchTiming;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
@@ -666,7 +668,7 @@ public class MappingModelCreationHelper {
 				sessionFactory
 		);
 
-		final FetchTiming timing = FetchOptionsHelper.determineFetchTiming(
+		final FetchTiming timing = determineFetchTiming(
 				style,
 				collectionType,
 				collectionDescriptor.isLazy(),
@@ -1463,25 +1465,28 @@ public class MappingModelCreationHelper {
 					creationProcess.getEntityPersister( elementEntityType.getAssociatedEntityName() );
 
 			final EntityCollectionPart elementDescriptor;
-			if ( element instanceof OneToMany ) {
+			if ( element instanceof OneToMany oneToMany ) {
 				elementDescriptor = new OneToManyCollectionPart(
 						CollectionPart.Nature.ELEMENT,
 						bootDescriptor,
 						collectionDescriptor,
 						associatedEntity,
-						( (OneToMany) element ).getNotFoundAction(),
+						oneToMany.getNotFoundAction(),
 						creationProcess
 				);
 			}
-			else {
+			else if ( element instanceof ManyToOne manyToOne ) {
 				elementDescriptor = new ManyToManyCollectionPart(
 						CollectionPart.Nature.ELEMENT,
 						bootDescriptor,
 						collectionDescriptor,
 						associatedEntity,
-						( (ManyToOne) element ).getNotFoundAction(),
+						manyToOne.getNotFoundAction(),
 						creationProcess
 				);
+			}
+			else {
+				throw new AssertionFailure( "Unexpected association type" );
 			}
 
 			creationProcess.registerInitializationCallback(
@@ -1831,13 +1836,13 @@ public class MappingModelCreationHelper {
 			final boolean lazy = value.isLazy();
 			if ( lazy && entityPersister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 				if ( value.isUnwrapProxy() ) {
-					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
+					fetchTiming = determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
 				}
 				else if ( value instanceof ManyToOne manyToOne && value.isNullable() && manyToOne.isIgnoreNotFound() ) {
 					fetchTiming = FetchTiming.IMMEDIATE;
 				}
 				else {
-					fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
+					fetchTiming = determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
 				}
 			}
 			else if ( !lazy
@@ -1855,7 +1860,7 @@ public class MappingModelCreationHelper {
 				}
 			}
 			else {
-				fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
+				fetchTiming = determineFetchTiming( fetchStyle, type, lazy, role, sessionFactory );
 			}
 
 			final ToOneAttributeMapping attributeMapping = mappingConverter.apply( new ToOneAttributeMapping(

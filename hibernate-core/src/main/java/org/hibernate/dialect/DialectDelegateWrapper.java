@@ -120,12 +120,9 @@ public class DialectDelegateWrapper extends Dialect {
 	 */
 	public static Dialect extractRealDialect(Dialect dialect) {
 		Objects.requireNonNull( dialect );
-		if ( !( dialect instanceof DialectDelegateWrapper ) ) {
-			return dialect;
-		}
-		else {
-			return extractRealDialect( ( (DialectDelegateWrapper) dialect ).wrapped );
-		}
+		return dialect instanceof DialectDelegateWrapper dialectDelegateWrapper
+				? extractRealDialect( dialectDelegateWrapper.wrapped )
+				: dialect;
 	}
 
 	/**

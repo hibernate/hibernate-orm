@@ -129,8 +129,8 @@ public enum CollectionClassification {
 		if ( value == null ) {
 			return null;
 		}
-		else if ( value instanceof CollectionClassification ) {
-			return (CollectionClassification) value;
+		else if ( value instanceof CollectionClassification classification ) {
+			return classification;
 		}
 		else if ( value instanceof String string ) {
 			for ( CollectionClassification collectionClassification : values() ) {
@@ -140,8 +140,8 @@ public enum CollectionClassification {
 			}
 			return null;
 		}
-		else if ( value instanceof Class ) {
-			return interpretClass( (Class<?>) value );
+		else if ( value instanceof Class<?> type ) {
+			return interpretClass( type );
 		}
 		else {
 			return null;

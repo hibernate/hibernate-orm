@@ -73,8 +73,8 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 		}
 
 		final String entityName;
-		if ( domainForm instanceof Class ) {
-			entityName = ( (Class<?>) domainForm ).getName();
+		if ( domainForm instanceof Class<?> clazz ) {
+			entityName = clazz.getName();
 		}
 		else {
 			entityName = (String) domainForm;

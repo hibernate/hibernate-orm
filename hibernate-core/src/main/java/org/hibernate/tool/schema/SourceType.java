@@ -69,8 +69,8 @@ public enum SourceType {
 			return defaultValue;
 		}
 
-		if ( value instanceof SourceType ) {
-			return (SourceType) value;
+		if ( value instanceof SourceType sourceType ) {
+			return sourceType;
 		}
 
 		final String name = value.toString().trim().replace('-', '_');

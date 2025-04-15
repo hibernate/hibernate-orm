@@ -113,8 +113,8 @@ public class JsonHelper {
 		final Object[] values = embeddableMappingType.getValues( domainValue );
 		for ( int i = 0; i < values.length; i++ ) {
 			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, i );
-			if ( attributeMapping instanceof SelectableMapping ) {
-				final String name = ( (SelectableMapping) attributeMapping ).getSelectableName();
+			if ( attributeMapping instanceof SelectableMapping selectableMapping ) {
+				final String name = selectableMapping.getSelectableName();
 				appender.append( separator );
 				appender.append( '"' );
 				appender.append( name );
@@ -157,8 +157,8 @@ public class JsonHelper {
 		if ( value == null ) {
 			appender.append( "null" );
 		}
-		else if ( mappedType instanceof EmbeddableMappingType ) {
-			toString( (EmbeddableMappingType) mappedType, value, options, appender );
+		else if ( mappedType instanceof EmbeddableMappingType embeddableMappingType ) {
+			toString( embeddableMappingType, value, options, appender );
 		}
 		else if ( mappedType instanceof BasicType<?> ) {
 			//noinspection unchecked
@@ -213,13 +213,13 @@ public class JsonHelper {
 			case SqlTypes.TINYINT:
 			case SqlTypes.SMALLINT:
 			case SqlTypes.INTEGER:
-				if ( value instanceof Boolean ) {
+				if ( value instanceof Boolean booleanValue ) {
 					// BooleanJavaType has this as an implicit conversion
-					appender.append( (Boolean) value ? '1' : '0' );
+					appender.append( booleanValue ? '1' : '0' );
 					break;
 				}
-				if ( value instanceof Enum ) {
-					appender.appendSql( ((Enum<?>) value ).ordinal() );
+				if ( value instanceof Enum<?> enumValue ) {
+					appender.appendSql( enumValue.ordinal() );
 					break;
 				}
 			case SqlTypes.BOOLEAN:
@@ -235,10 +235,10 @@ public class JsonHelper {
 			case SqlTypes.NCHAR:
 			case SqlTypes.VARCHAR:
 			case SqlTypes.NVARCHAR:
-				if ( value instanceof Boolean ) {
+				if ( value instanceof Boolean booleanValue ) {
 					// BooleanJavaType has this as an implicit conversion
 					appender.append( '"' );
-					appender.append( (Boolean) value ? 'Y' : 'N' );
+					appender.append( booleanValue ? 'Y' : 'N' );
 					appender.append( '"' );
 					break;
 				}

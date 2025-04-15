@@ -137,8 +137,8 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 
 	@Override
 	public void apply(JpaOrmXmlPersistenceUnitDefaults jpaOrmXmlPersistenceUnitDefaults) {
-		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware ) {
-			( (JpaOrmXmlPersistenceUnitDefaultAware) delegate ).apply( jpaOrmXmlPersistenceUnitDefaults );
+		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware persistenceUnitDefaultAware ) {
+			persistenceUnitDefaultAware.apply( jpaOrmXmlPersistenceUnitDefaults );
 		}
 		else {
 			throw new HibernateException(
@@ -151,8 +151,8 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 
 	@Override
 	public void apply(PersistenceUnitMetadata persistenceUnitMetadata) {
-		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware ) {
-			( (JpaOrmXmlPersistenceUnitDefaultAware) delegate ).apply( persistenceUnitMetadata );
+		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware persistenceUnitDefaultAware ) {
+			persistenceUnitDefaultAware.apply( persistenceUnitMetadata );
 		}
 		else {
 			throw new HibernateException(

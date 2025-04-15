@@ -42,8 +42,7 @@ public class XmlForestFunction extends AbstractSqmSelfRenderingFunctionDescripto
 									String functionName,
 									BindingContext bindingContext) {
 								for ( int i = 0; i < arguments.size(); i++ ) {
-									SqmTypedNode<?> argument = arguments.get( i );
-									if ( !( argument instanceof SqmNamedExpression<?> namedExpression ) ) {
+									if ( !( arguments.get( i ) instanceof SqmNamedExpression<?> namedExpression ) ) {
 										throw new FunctionArgumentException(
 												String.format(
 														"Parameter %d of function 'xmlforest()' is not named",

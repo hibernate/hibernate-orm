@@ -37,8 +37,8 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 		if ( isPersistentAttributeInterceptable( entity ) ) {
 			PersistentAttributeInterceptor attributeInterceptor =
 					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-			if ( attributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				interceptor = (EnhancementAsProxyLazinessInterceptor) attributeInterceptor;
+			if ( attributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
+				interceptor = lazinessInterceptor;
 			}
 		}
 		this.interceptor = interceptor;

@@ -117,8 +117,8 @@ public class AccessStrategyHelper {
 		// This marks the attribute as initialized, so it doesn't get lazily loaded afterward
 		if ( ( enhancementState & PERSISTENT_ATTRIBUTE_INTERCEPTABLE_MASK ) != 0 ) {
 			PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( target ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof BytecodeLazyAttributeInterceptor ) {
-				( (BytecodeLazyAttributeInterceptor) interceptor ).attributeInitialized( propertyName );
+			if ( interceptor instanceof BytecodeLazyAttributeInterceptor lazyAttributeInterceptor ) {
+				lazyAttributeInterceptor.attributeInitialized( propertyName );
 			}
 		}
 	}

@@ -45,7 +45,7 @@ public class PostgreSQLJsonArrayAppendFunction extends AbstractJsonArrayAppendFu
 			sqlAppender.appendSql( "case when (t.d)#>t.p is not null then jsonb_set" );
 		}
 		sqlAppender.appendSql( "(t.d,t.p,(t.d)#>t.p||" );
-		if ( value instanceof Literal && ( (Literal) value ).getLiteralValue() == null ) {
+		if ( value instanceof Literal literal && literal.getLiteralValue() == null ) {
 			sqlAppender.appendSql( "null::jsonb" );
 		}
 		else {

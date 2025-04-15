@@ -105,7 +105,7 @@ public abstract sealed class ToOne
 
 	@Override
 	public boolean isSame(SimpleValue other) {
-		return other instanceof ToOne && isSame( (ToOne) other );
+		return other instanceof ToOne toOne && isSame( toOne );
 	}
 
 	public boolean isSame(ToOne other) {

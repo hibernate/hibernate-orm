@@ -7,6 +7,7 @@ package org.hibernate.boot.model.source.internal.hbm;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
@@ -89,9 +90,11 @@ public class RelationalObjectBinder {
 						columnNamingDelegate
 				);
 			}
-			else {
-				final DerivedValueSource formulaSource = (DerivedValueSource) relationalValueSource;
+			else if ( relationalValueSource instanceof DerivedValueSource formulaSource ) {
 				simpleValue.addFormula( new Formula( formulaSource.getExpression() ) );
+			}
+			else {
+				throw new AssertionFailure( "Unrecognized RelationalValueSource" );
 			}
 		}
 	}

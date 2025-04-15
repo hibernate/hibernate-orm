@@ -50,7 +50,7 @@ public final class FetchOptionsHelper {
 		}
 
 		if ( type instanceof EntityType ) {
-			EntityPersister persister = (EntityPersister) type.getAssociatedJoinable( sessionFactory );
+			final EntityPersister persister = (EntityPersister) type.getAssociatedJoinable( sessionFactory );
 			if ( persister.isBatchLoadable() ) {
 				return FetchStyle.BATCH;
 			}

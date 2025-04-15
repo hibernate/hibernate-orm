@@ -53,7 +53,7 @@ public class FunctionExpression implements OrderingExpression, FunctionRenderer 
 	}
 
 	@Override
-	public SelfRenderingFunctionSqlAstExpression resolve(
+	public SelfRenderingFunctionSqlAstExpression<?> resolve(
 			QuerySpec ast,
 			TableGroup tableGroup,
 			String modelPartName,
@@ -64,14 +64,12 @@ public class FunctionExpression implements OrderingExpression, FunctionRenderer 
 		for ( int i = 0; i < size; i++ ) {
 			final OrderingExpression orderingExpression = arguments.get( i );
 			final String subModelPartName;
-			if ( orderingExpression instanceof DomainPath ) {
-				final String partName = ( (DomainPath) orderingExpression ).getNavigablePath().getLocalName();
-				if ( CollectionPart.Nature.ELEMENT.getName().equals( partName ) ) {
-					subModelPartName = AbstractDomainPath.ELEMENT_TOKEN;
-				}
-				else {
-					subModelPartName = partName;
-				}
+			if ( orderingExpression instanceof DomainPath domainPath ) {
+				final String partName = domainPath.getNavigablePath().getLocalName();
+				subModelPartName =
+						CollectionPart.Nature.ELEMENT.getName().equals( partName )
+								? AbstractDomainPath.ELEMENT_TOKEN
+								: partName;
 			}
 			else {
 				subModelPartName = null;
@@ -79,7 +77,7 @@ public class FunctionExpression implements OrderingExpression, FunctionRenderer 
 			args.add( orderingExpression.resolve( ast, tableGroup, subModelPartName, creationState ) );
 		}
 
-		return new SelfRenderingFunctionSqlAstExpression(
+		return new SelfRenderingFunctionSqlAstExpression<>(
 				name,
 				this,
 				args,

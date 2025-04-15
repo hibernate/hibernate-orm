@@ -57,17 +57,9 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 		collectOrdering( declaration, paramTypes );
 		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration );
-		boolean unwrapped = !isUsingEntityManager();
-		if ( isReactive() ) {
-			// Reactive doesn't support the createSelectionCriteria() method yet
-			createQuery( declaration );
-			handleRestrictionParameters( declaration, paramTypes );
-			unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
-		}
-		else {
-			createQuery( declaration, paramTypes, containerType );
-		}
+		createQuery( declaration, paramTypes, containerType );
 		handlePageParameters( declaration, paramTypes, containerType );
+		boolean unwrapped = !isUsingEntityManager();
 		unwrapped = enableFetchProfile( declaration, unwrapped );
 		execute( declaration, paramTypes, unwrapped );
 	}

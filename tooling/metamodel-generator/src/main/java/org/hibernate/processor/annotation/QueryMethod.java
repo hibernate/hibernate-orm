@@ -99,7 +99,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		castResult( declaration );
 		boolean unwrapped = !isUsingEntityManager();
 		if ( isReactive() ) {
-			// Reactive doesn't support the createSelectionCriteria() method yet
+			// Reactive doesn't support the createSelectionBuilder() method yet
 			createQuery( declaration );
 			handleRestrictionParameters( declaration, paramTypes );
 			unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
@@ -145,7 +145,7 @@ public class QueryMethod extends AbstractQueryMethod {
 						.append( annotationMetaEntity.importType( HIB_SHARED_SESSION ) )
 						.append( ".class)\n" );
 			}
-			declaration.append("\t\t\t.createSelectionCriteria");
+			declaration.append("\t\t\t.createSelectionBuilder");
 		}
 		else {
 			declaration.append( '.' ).append( createQueryMethod() );

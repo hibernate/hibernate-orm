@@ -9,7 +9,7 @@ import java.util.Set;
 
 import org.hibernate.Incubating;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.query.Query;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.common.FetchClauseType;
 
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -87,7 +87,7 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	 * @since 7.0
 	 */
 	@Incubating
-	default Query<T> toQuery(SharedSessionContract session) {
+	default SelectionQuery<T> toQuery(SharedSessionContract session) {
 		return session.createQuery( this );
 	}
 

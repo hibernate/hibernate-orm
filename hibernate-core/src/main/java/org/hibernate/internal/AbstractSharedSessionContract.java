@@ -70,6 +70,7 @@ import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryTypeMismatchException;
+import org.hibernate.query.SelectionBuilder;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownNamedQueryException;
 import org.hibernate.query.criteria.CriteriaDefinition;
@@ -77,6 +78,7 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
+import org.hibernate.query.internal.SelectionBuilderImpl;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.HqlInterpretation;
@@ -875,6 +877,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public <R> JpaCriteriaQuery<R> createSelectionCriteria(String hqlString, Class<R> resultClass) {
 		return getCriteriaBuilder().createQuery(hqlString, resultClass);
+	}
+
+	@Override
+	public <R> SelectionBuilder<R> createSelectionBuilder(String hqlString, Class<R> resultClass) {
+		return new SelectionBuilderImpl<>( getCriteriaBuilder().createQuery(hqlString, resultClass), this );
 	}
 
 	@Override

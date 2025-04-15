@@ -34,6 +34,7 @@ import org.hibernate.jdbc.Work;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.MutationQuery;
+import org.hibernate.query.SelectionBuilder;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
@@ -158,6 +159,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public <R> JpaCriteriaQuery<R> createSelectionCriteria(String hqlString, Class<R> resultClass) {
 		return queryDelegate().createSelectionCriteria( hqlString, resultClass );
+	}
+
+	@Override
+	public <R> SelectionBuilder<R> createSelectionBuilder(String hqlString, Class<R> resultClass) {
+		return queryDelegate().createSelectionBuilder( hqlString, resultClass );
 	}
 
 	@Override

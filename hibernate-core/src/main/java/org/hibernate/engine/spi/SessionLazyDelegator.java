@@ -38,6 +38,7 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
+import org.hibernate.query.SelectionBuilder;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
@@ -708,6 +709,11 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public <R> JpaCriteriaQuery<R> createSelectionCriteria(String hqlString, Class<R> resultClass) {
 		return this.lazySession.get().createSelectionCriteria( hqlString, resultClass );
+	}
+
+	@Override
+	public <R> SelectionBuilder<R> createSelectionBuilder(String hqlString, Class<R> resultClass) {
+		return this.lazySession.get().createSelectionBuilder( hqlString, resultClass );
 	}
 
 	@Override

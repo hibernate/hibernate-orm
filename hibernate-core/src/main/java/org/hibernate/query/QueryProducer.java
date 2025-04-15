@@ -393,6 +393,19 @@ public interface QueryProducer {
 	<R> JpaCriteriaQuery<R> createSelectionCriteria(String hqlString, Class<R> resultClass);
 
 	/**
+	 * Transform the given HQL {@code select} query to an equivalent criteria query.
+	 *
+	 * @param hqlString The HQL {@code select} query
+	 * @param resultClass The result type of the query
+	 *
+	 * @see org.hibernate.query.criteria.HibernateCriteriaBuilder#createQuery(String, Class)
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	<R> SelectionBuilder<R> createSelectionBuilder(String hqlString, Class<R> resultClass);
+
+	/**
 	 * Create a {@link SelectionQuery} reference for the given
 	 * {@link CriteriaQuery}.
 	 *

@@ -36,6 +36,7 @@ jobs:
           - rdbms: mysql
           - rdbms: mariadb
           - rdbms: postgresql
+          - rdbms: gauss
           - rdbms: edb
           - rdbms: oracle
           - rdbms: db2

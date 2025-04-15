@@ -164,7 +164,7 @@ public class Configuration {
 
 	private Map<String, SqmFunctionDescriptor> customFunctionDescriptors;
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-	private HashMap<Class<?>, ConverterDescriptor<?,?>> attributeConverterDescriptorsByClass;
+	private Map<Class<?>, ConverterDescriptor<?,?>> attributeConverterDescriptorsByClass;
 	private List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
 
 	// used to build SF

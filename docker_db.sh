@@ -239,10 +239,11 @@ gaussdb() {
     echo " Initialize the database using the PostgreSQL client container..."
 
     $CONTAINER_CLI run --rm --network=host ${PSQL_IMAGE} \
-    bash -c "
-      PGPASSWORD='${DB_PASSWORD}' psql -h localhost -p ${PORT} -U gaussdb -d postgres -c \"CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';\" &&
-      PGPASSWORD='${DB_PASSWORD}' psql -h localhost -p ${PORT} -U gaussdb -d postgres -c \"CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};\"
-    "
+      bash -c "
+        PGPASSWORD='${DB_PASSWORD}' psql -h localhost -p ${PORT} -U gaussdb -d postgres -c \"CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';\" &&
+        PGPASSWORD='${DB_PASSWORD}' psql -h localhost -p ${PORT} -U gaussdb -d postgres -c \"CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};\" &&
+        PGPASSWORD='${DB_PASSWORD}' psql -h localhost -p ${PORT} -U gaussdb -d ${DB_NAME} -c \"CREATE SCHEMA test AUTHORIZATION ${DB_USER};\"
+      "
 
     echo "✅ Initialization completed"
     echo "📌 connection information："

@@ -25,7 +25,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.*;
 import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;

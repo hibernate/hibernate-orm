@@ -8,7 +8,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.Incubating;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicJavaType;

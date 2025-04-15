@@ -37,7 +37,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BasicTypeRegistration;

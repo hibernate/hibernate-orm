@@ -7,7 +7,7 @@ package org.hibernate.boot.spi;
 import java.util.List;
 
 import org.hibernate.Incubating;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;

@@ -10,7 +10,7 @@ import java.util.Locale;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.CacheRegionDefinition;

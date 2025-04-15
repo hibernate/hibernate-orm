@@ -5,7 +5,7 @@
 package org.hibernate.type.descriptor.jdbc;
 
 import org.hibernate.Incubating;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.TypeConfiguration;
 

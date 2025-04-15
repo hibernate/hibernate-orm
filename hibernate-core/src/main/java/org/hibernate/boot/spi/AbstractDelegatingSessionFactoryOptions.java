@@ -17,7 +17,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;

@@ -51,11 +51,9 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.Order;
 import org.hibernate.query.PathException;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
@@ -1650,21 +1648,6 @@ public class NativeQueryImpl<R>
 	public NativeQueryImplementor<R> setFirstResult(int startPosition) {
 		super.setFirstResult( startPosition );
 		return this;
-	}
-
-	@Override
-	public Query<R> setOrder(List<? extends Order<? super R>> orderList) {
-		throw new UnsupportedOperationException("Ordering not currently supported for native queries");
-	}
-
-	@Override
-	public Query<R> setOrder(Order<? super R> order) {
-		throw new UnsupportedOperationException("Ordering not currently supported for native queries");
-	}
-
-	@Override
-	public Query<R> addRestriction(Restriction<? super R> restriction) {
-		throw new UnsupportedOperationException("Restrictions not currently supported for native queries");
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -26,7 +26,6 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.transform.ResultTransformer;
 
@@ -928,15 +927,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 
 	@Override
 	Query<R> setLockMode(LockModeType lockMode);
-
-	@Override @Incubating
-	Query<R> setOrder(List<? extends Order<? super R>> orderList);
-
-	@Override @Incubating
-	Query<R> setOrder(Order<? super R> order);
-
-	@Override @Incubating
-	Query<R> addRestriction(Restriction<? super R> restriction);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// deprecated methods

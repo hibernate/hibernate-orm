@@ -38,11 +38,9 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.criteria.internal.NamedCriteriaQueryMementoImpl;
@@ -766,24 +764,6 @@ public class QuerySqmImpl<R>
 		verifySelect();
 		getSession().checkOpen( false );
 		return getLockOptions().getLockMode().toJpaLockMode();
-	}
-
-	@Override
-	public Query<R> setOrder(Order<? super R> order) {
-		super.setOrder(order);
-		return this;
-	}
-
-	@Override
-	public Query<R> addRestriction(Restriction<? super R> restriction) {
-		super.addRestriction( restriction );
-		return this;
-	}
-
-	@Override
-	public Query<R> setOrder(List<? extends Order<? super R>> orders) {
-		super.setOrder(orders);
-		return this;
 	}
 
 	@Override

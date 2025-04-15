@@ -5,6 +5,7 @@
 package org.hibernate.query;
 
 import jakarta.persistence.EntityGraph;
+import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
 
 import jakarta.persistence.TypedQueryReference;

@@ -24,14 +24,12 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
-import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
-import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -293,26 +291,6 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	@Override
 	public SqmSelectionQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
 		getDelegate().setLockMode( alias, lockMode );
-		return this;
-	}
-
-	@Override
-	@Incubating
-	public SqmSelectionQueryImplementor<R> setOrder(List<? extends Order<? super R>> orders) {
-		getDelegate().setOrder( orders );
-		return this;
-	}
-
-	@Override
-	@Incubating
-	public SqmSelectionQueryImplementor<R> setOrder(Order<? super R> order) {
-		getDelegate().setOrder( order );
-		return this;
-	}
-
-	@Override
-	public SqmSelectionQueryImplementor<R> addRestriction(Restriction<? super R> restriction) {
-		getDelegate().addRestriction( restriction );
 		return this;
 	}
 

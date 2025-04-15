@@ -38,6 +38,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  *
  * @author Steve Ebersole
  */
+// Hibernate Reactive extends this class: see ReactiveIdentifierLoadAccessImpl
 public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, JavaType.CoercionContext {
 	private final LoadAccessContext context;
 	private final EntityPersister entityPersister;
@@ -85,6 +86,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 		return perform( () -> doGetReference( id ) );
 	}
 
+	// Hibernate Reactive overrides this
 	protected T perform(Supplier<T> executor) {
 		final SessionImplementor session = context.getSession();
 		final CacheMode sessionCacheMode = session.getCacheMode();
@@ -122,6 +124,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	}
 
 	@SuppressWarnings( "unchecked" )
+	// Hibernate Reactive overrides this
 	protected T doGetReference(Object id) {
 		final SessionImplementor session = context.getSession();
 		final EntityMappingType concreteType = entityPersister.resolveConcreteProxyTypeForId( id, session );
@@ -147,7 +150,8 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	}
 
 	@SuppressWarnings( "unchecked" )
-	protected final T doLoad(Object id) {
+	// Hibernate Reactive overrides this
+	protected T doLoad(Object id) {
 		final SessionImplementor session = context.getSession();
 		Object result;
 		try {
@@ -162,7 +166,8 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 		return (T) result;
 	}
 
-	private Object coerceId(Object id, SessionFactoryImplementor factory) {
+	// Used by Hibernate Reactive
+	protected Object coerceId(Object id, SessionFactoryImplementor factory) {
 		if ( isLoadByIdComplianceEnabled( factory ) ) {
 			return id;
 		}
@@ -235,5 +240,31 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 			enabledFetchProfiles.remove( profileName );
 		}
 		return this;
+	}
+
+	// Getters for Hibernate Reactive
+
+	protected CacheMode getCacheMode() {
+		return cacheMode;
+	}
+
+	protected GraphSemantic getGraphSemantic() {
+		return graphSemantic;
+	}
+
+	protected LoadAccessContext getContext() {
+		return context;
+	}
+
+	protected EntityPersister getEntityPersister() {
+		return entityPersister;
+	}
+
+	protected LockOptions getLockOptions() {
+		return lockOptions;
+	}
+
+	public RootGraphImplementor<T> getRootGraph() {
+		return rootGraph;
 	}
 }

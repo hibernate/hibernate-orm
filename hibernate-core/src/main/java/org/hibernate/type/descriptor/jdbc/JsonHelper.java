@@ -36,6 +36,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.format.JsonDocumentItemType;
 import org.hibernate.type.format.JsonDocumentReader;
 import org.hibernate.type.format.JsonDocumentWriter;
@@ -264,7 +265,15 @@ public class JsonHelper {
 		objectArrayResult = new Object[embeddableMappingType.getJdbcValueCount()+ ( embeddableMappingType.isPolymorphic() ? 1 : 0 )];
 		objectArrays.push( objectArrayResult );
 
-		while(reader.hasNext()) {
+		// We loop on two conditions:
+		//   - the parser still has tokens left
+		//   - the type stack is not empty
+		// Even if the reader has some tokens left, if the type stack is empty,
+		// that means that we have to stop parsing. That may be the case while parsing an object of object array,
+		// the array is not empty, but we ae done parsing that specific object.
+		// When we encounter OBJECT_END the current type is popped out of the stack. When parsing one object of an array we may end up
+		// having an empty stack. Next Objects are parsed in the next round.
+		while(reader.hasNext() && !embeddableMappingTypes.isEmpty()) {
 			JsonDocumentItemType type = reader.next();
 			switch (type) {
 				case VALUE_KEY:
@@ -461,6 +470,15 @@ public class JsonHelper {
 					break;
 				case VALUE:
 					arrayList.add( adapter.fromValue(jdbcJavaType, elementJdbcType ,reader, options) );
+					break;
+				case OBJECT_START:
+					assert elementJdbcType instanceof JsonJdbcType;
+					Object o = deserialize(
+							((JsonJdbcType) elementJdbcType).getEmbeddableMappingType(),
+							reader,
+							true,
+							options);
+					arrayList.add(o);
 					break;
 				default:
 					throw new UnsupportedOperationException( "Unexpected JSON type " + type );

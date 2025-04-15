@@ -128,14 +128,12 @@ public class XmlJdbcType implements AggregateJdbcType {
 			}
 
 			private X getObject(SQLXML sqlxml, WrapperOptions options) throws SQLException {
-				if ( sqlxml == null ) {
-					return null;
-				}
-				return ( (XmlJdbcType) getJdbcType() ).fromString(
-						sqlxml.getString(),
-						getJavaType(),
-						options
-				);
+				return sqlxml == null ? null
+						: getXmlJdbcType().fromString( sqlxml.getString(), getJavaType(), options );
+			}
+
+			private XmlJdbcType getXmlJdbcType() {
+				return (XmlJdbcType) getJdbcType();
 			}
 		};
 	}
@@ -145,22 +143,27 @@ public class XmlJdbcType implements AggregateJdbcType {
 			super( javaType, jdbcType );
 		}
 
+		private XmlJdbcType getXmlJdbcType() {
+			return (XmlJdbcType) getJdbcType();
+		}
+
+		private SQLXML getSqlxml(PreparedStatement st, X value, WrapperOptions options) throws SQLException {
+			final String xml = getXmlJdbcType().toString( value, getJavaType(), options );
+			SQLXML sqlxml = st.getConnection().createSQLXML();
+			sqlxml.setString( xml );
+			return sqlxml;
+		}
+
 		@Override
 		protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 				throws SQLException {
-			final String xml = ( (XmlJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
-			SQLXML sqlxml = st.getConnection().createSQLXML();
-			sqlxml.setString( xml );
-			st.setSQLXML( index, sqlxml );
+			st.setSQLXML( index, getSqlxml( st, value, options ) );
 		}
 
 		@Override
 		protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 				throws SQLException {
-			final String xml = ( (XmlJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
-			SQLXML sqlxml = st.getConnection().createSQLXML();
-			sqlxml.setString( xml );
-			st.setSQLXML( name, sqlxml );
+			st.setSQLXML( name, getSqlxml( st, value, options ) );
 		}
 	}
 }

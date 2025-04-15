@@ -19,7 +19,7 @@ import org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType;
 
-import static org.hibernate.TimeZoneStorageStrategy.COLUMN;
+import static org.hibernate.type.TimeZoneStorageStrategy.COLUMN;
 import static org.hibernate.dialect.TimeZoneSupport.NATIVE;
 
 public class TimeZoneStorageHelper {

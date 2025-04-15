@@ -6,6 +6,7 @@ package org.hibernate.annotations;
 
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.TimeZoneStorageStrategy;
 
 /**
  * Describes the storage of timezone information for zoned datetime types,
@@ -61,7 +62,7 @@ import org.hibernate.dialect.Dialect;
  * @since 6.0
  *
  * @see TimeZoneStorage
- * @see org.hibernate.TimeZoneStorageStrategy
+ * @see TimeZoneStorageStrategy
  */
 @Incubating
 public enum TimeZoneStorageType {

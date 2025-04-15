@@ -2,7 +2,9 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate;
+package org.hibernate.type;
+
+import org.hibernate.Incubating;
 
 /**
  * Enumerates the possible storage strategies for offset or zoned datetimes.

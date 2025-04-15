@@ -2555,7 +2555,8 @@ public class SessionImpl
 		}
 	}
 
-	private static <T> void logIgnoringEntityNotFound(Class<T> entityClass, Object primaryKey) {
+	// Hibernate Reactive calls this
+	protected static <T> void logIgnoringEntityNotFound(Class<T> entityClass, Object primaryKey) {
 		if ( log.isDebugEnabled() ) {
 			log.ignoringEntityNotFound(
 					entityClass != null ? entityClass.getName(): null,

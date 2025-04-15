@@ -63,7 +63,7 @@ public class VectorFunctionFactory {
 	}
 
 	public void vectorNorm() {
-		registerNamedVectorFunction( "vector_norm", integerType, 1 );
+		registerNamedVectorFunction( "vector_norm", doubleType, 1 );
 	}
 
 	public void registerVectorDistanceFunction(String functionName, String pattern) {

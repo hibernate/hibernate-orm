@@ -3,7 +3,6 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 import java.nio.charset.StandardCharsets
-import java.util.function.Function
 
 import groovy.json.JsonSlurper
 
@@ -268,6 +267,16 @@ def stageMigrationGuideTask = tasks.register( "stageMigrationGuide", Copy ) {
     into layout.buildDirectory.dir( "documentation/migration-guide" )
 }
 
+def stageWhatsNewGuideTask = tasks.register( "stageWhatsNewGuide", Copy ) {
+    group 'documentation'
+    description "Stages the What's New guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderWhatsNew'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/whats-new" ) }
+    into layout.buildDirectory.dir( "documentation/whats-new" )
+}
+
 tasks.named( "publishMigrationGuide" ).configure {
     dependsOn stageMigrationGuideTask
 }
@@ -320,7 +329,7 @@ def stageDialectReportTask = tasks.register( "stageDialectReport", Copy ) { task
     dependsOn ':documentation:renderDialectReport'
 
     from project( ":documentation" ).tasks.renderDialectReport
-    into "${buildDir}/documentation/dialect"
+    into project.layout.buildDirectory.dir("documentation/dialect")
 }
 
 def stageOrmReportsTask = tasks.register( "stageOrmReports" ) {
@@ -342,7 +351,7 @@ def stageJavadocsTask = tasks.register( "stageJavadocs", Copy ) {
     dependsOn ':documentation:javadoc'
 
     from project( ":documentation" ).tasks.javadoc
-    into "${buildDir}/documentation/javadocs"
+    into project.layout.buildDirectory.dir("documentation/javadocs")
 }
 
 /**
@@ -364,6 +373,7 @@ def assembleDocumentationTask = tasks.register( "assembleDocumentation" ) {
     dependsOn stageIntegrationGuideTask
     dependsOn stageTopicalGuideTask
     dependsOn stageMigrationGuideTask
+    dependsOn stageWhatsNewGuideTask
     dependsOn stageOrmReportsTask
 }
 

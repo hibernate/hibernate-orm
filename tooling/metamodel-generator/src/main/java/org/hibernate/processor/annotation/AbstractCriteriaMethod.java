@@ -11,6 +11,8 @@ import javax.lang.model.element.TypeElement;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import static org.hibernate.processor.util.Constants.HIB_JPA_CRITERIA_QUERY;
+import static org.hibernate.processor.util.Constants.HIB_SHARED_SESSION;
 import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 
@@ -81,6 +83,32 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 				.append(".")
 				.append(createQueryMethod())
 				.append("(_query)\n");
+	}
+
+	void createQuery(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
+		var hasOrdering = hasOrderParameters( containerType, paramTypes );
+		var hasRestrictions = hasRestrictionParameters( paramTypes );
+
+		if ( hasOrdering || hasRestrictions ) {
+			declaration.append( "((" ).append( annotationMetaEntity.importType(HIB_JPA_CRITERIA_QUERY) ).append( "<" );
+			declaration.append( annotationMetaEntity.importType(entity) ).append( ">) _query)\n" );
+			if ( hasOrdering ) {
+				applyOrder( declaration, paramTypes, containerType, true );
+			}
+			if ( hasRestrictions ) {
+				handleRestrictionParameters( declaration, paramTypes );
+			}
+			declaration.append("\t\t\t.toQuery(").append( localSessionName() );
+			if ( isUsingEntityManager() ) {
+				declaration.append( ".unwrap(" )
+						.append( annotationMetaEntity.importType( HIB_SHARED_SESSION ) )
+						.append( ".class)\n" );
+			}
+			declaration.append( ")\n");
+		}
+		else {
+			createQuery( declaration );
+		}
 	}
 
 	void createCriteriaQuery(StringBuilder declaration) {

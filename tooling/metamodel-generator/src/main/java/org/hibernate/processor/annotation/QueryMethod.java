@@ -11,6 +11,7 @@ import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 import static org.hibernate.processor.util.Constants.BOOLEAN;
+import static org.hibernate.processor.util.Constants.HIB_SHARED_SESSION;
 import static org.hibernate.processor.util.Constants.QUERY;
 import static org.hibernate.processor.util.Constants.VOID;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
@@ -96,12 +97,18 @@ public class QueryMethod extends AbstractQueryMethod {
 		chainSession( declaration );
 		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration );
-		createQuery( declaration );
-		handleRestrictionParameters( declaration, paramTypes );
+		boolean unwrapped = !isUsingEntityManager();
+		if ( isReactive() ) {
+			// Reactive doesn't support the createSelectionCriteria() method yet
+			createQuery( declaration );
+			handleRestrictionParameters( declaration, paramTypes );
+			unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
+		}
+		else {
+			createQuery( declaration, paramTypes, containerType );
+		}
 		setParameters( declaration, paramTypes, "");
 		handlePageParameters( declaration, paramTypes, containerType );
-		boolean unwrapped = !isUsingEntityManager();
-		unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
 		execute( declaration, unwrapped );
 		convertExceptions( declaration );
 		chainSessionEnd( isUpdate, declaration );
@@ -124,6 +131,49 @@ public class QueryMethod extends AbstractQueryMethod {
 					.append(".class");
 		}
 		declaration.append(")\n");
+	}
+
+	void createQuery(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
+		var hasOrdering = hasOrderParameters( containerType, paramTypes );
+		var hasRestrictions = hasRestrictionParameters( paramTypes );
+
+		declaration.append(localSessionName());
+
+		if ( hasOrdering || hasRestrictions ) {
+			if ( isUsingEntityManager() ) {
+				declaration.append( ".unwrap(" )
+						.append( annotationMetaEntity.importType( HIB_SHARED_SESSION ) )
+						.append( ".class)\n" );
+			}
+			declaration.append("\t\t\t.createSelectionCriteria");
+		}
+		else {
+			declaration.append( '.' ).append( createQueryMethod() );
+		}
+		declaration.append("(")
+				.append(getConstantName());
+		if ( returnTypeClass != null && !isUpdate ) {
+			declaration
+					.append(", ")
+					.append(annotationMetaEntity.importType(returnTypeClass))
+					.append(".class");
+		}
+		declaration.append(")\n");
+		if ( hasOrdering || hasRestrictions ) {
+			if ( hasOrdering ) {
+				applyOrder( declaration, paramTypes, containerType, true );
+			}
+			if ( hasRestrictions ) {
+				handleRestrictionParameters( declaration, paramTypes );
+			}
+			declaration.append("\t\t\t.toQuery(").append( localSessionName() );
+			if ( isUsingEntityManager() ) {
+				declaration.append( ".unwrap(" )
+						.append( annotationMetaEntity.importType( HIB_SHARED_SESSION ) )
+						.append( ".class)\n" );
+			}
+			declaration.append( ")\n");
+		}
 	}
 
 	private String createQueryMethod() {

@@ -264,6 +264,10 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		}
 	}
 
+	boolean hasOrderParameters(@Nullable String containerType, List<String> paramTypes) {
+		return !isJakartaCursoredPage(containerType) && hasOrdering(paramTypes);
+	}
+
 	boolean applyOrder(
 			StringBuilder declaration, List<String> paramTypes,
 			@Nullable String containerType, boolean unwrapped) {
@@ -288,6 +292,19 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				}
 			}
 		}
+	}
+
+	boolean hasRestrictionParameters(List<String> paramTypes) {
+		for ( int i = 0; i < paramNames.size(); i++ ) {
+			final String paramType = paramTypes.get( i );
+			if ( isRestrictionParam( paramType ) ) {
+				return true;
+			}
+			else if ( isRangeParam( paramType ) && returnTypeName != null ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	void handleRestrictionParameters(

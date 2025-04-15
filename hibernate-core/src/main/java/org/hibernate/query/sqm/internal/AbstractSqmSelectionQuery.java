@@ -45,7 +45,6 @@ import static org.hibernate.query.sqm.internal.KeyedResult.collectKeys;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectResults;
 import static org.hibernate.query.sqm.internal.SqmUtil.isHqlTuple;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToResultType;
-import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 
 /**
  * @author Gavin King

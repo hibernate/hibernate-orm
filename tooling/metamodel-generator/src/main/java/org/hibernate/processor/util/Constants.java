@@ -103,6 +103,8 @@ public final class Constants {
 	public static final String HIB_QUERY = "org.hibernate.query.Query";
 	public static final String HIB_SELECTION_QUERY = "org.hibernate.query.SelectionQuery";
 	public static final String HIB_SESSION = "org.hibernate.Session";
+	public static final String HIB_SHARED_SESSION = "org.hibernate.SharedSessionContract";
+	public static final String HIB_JPA_CRITERIA_QUERY = "org.hibernate.query.criteria.JpaCriteriaQuery";
 	public static final String HIB_SESSION_FACTORY = "org.hibernate.SessionFactory";
 	public static final String HIB_STATELESS_SESSION = "org.hibernate.StatelessSession";
 	public static final String MUTINY_SESSION_FACTORY = "org.hibernate.reactive.mutiny.Mutiny.SessionFactory";

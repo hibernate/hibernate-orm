@@ -145,7 +145,6 @@ import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.DOUBLE;
-import static org.hibernate.type.SqlTypes.DURATION;
 import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTEGER;

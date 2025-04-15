@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect;
 
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import oracle.jdbc.OracleType;
 import oracle.jdbc.driver.DatabaseError;
@@ -12,6 +13,7 @@ import oracle.sql.json.OracleJsonDatum;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonGenerator;
 
+import oracle.sql.json.OracleJsonParser;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -26,6 +28,7 @@ import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.format.OsonDocumentReader;
 import org.hibernate.type.format.OsonDocumentWriter;
 
 import java.io.ByteArrayOutputStream;
@@ -125,9 +128,19 @@ public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
 
 			private X fromOson(InputStream osonBytes, WrapperOptions options) throws Exception {
 				FormatMapper mapper = options.getJsonFormatMapper();
-				JsonParser osonParser = osonFactory.createParser( osonBytes );
+				OracleJsonParser osonParser = new OracleJsonFactory().createJsonBinaryParser( osonBytes );
+				final JdbcType elementJdbcType = getElementJdbcType();
+				if (elementJdbcType instanceof JsonJdbcType) {
+					if (((JsonJdbcType) elementJdbcType).getEmbeddableMappingType() != null) {
+						// embeddable array case.
+						return JsonHelper.deserializeArray( javaType,
+								elementJdbcType, new OsonDocumentReader( osonParser ), options );
+					}
+				}
+				try (JsonParser oParser = ((JsonFactory)osonFactory).createParser(  osonBytes )) {
+					return mapper.readFromSource(  getJavaType(), oParser, options);
+				}
 
-				return mapper.readFromSource(  getJavaType(), osonParser, options);
 			}
 
 			private X doExtraction(OracleJsonDatum datum,  WrapperOptions options) throws SQLException {

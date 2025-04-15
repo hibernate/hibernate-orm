@@ -57,92 +57,108 @@ public class RestrictionTest {
 		var pages = (SingularAttribute<? super Book, Integer>) bookType.findSingularAttribute("pages");
 
 		Book book = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class )
+				session.createSelectionCriteria( "from Book", Book.class )
 						.addRestriction( equal( isbn, "9781932394153" ) )
+						.toQuery( session )
 						.getSingleResult() );
 		assertEquals( "Hibernate in Action", book.title );
 		List<Book> books = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( like( title, "%Hibernate%" ) )
 						.setOrder( desc( title ) )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 2, books.size() );
 		assertEquals( "Java Persistence with Hibernate", books.get(0).title );
 		assertEquals( "Hibernate in Action", books.get(1).title );
 		List<Book> booksByIsbn = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( in( isbn, List.of("9781932394153", "9781617290459") ) )
 						.setOrder( asc( title ) )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 2, booksByIsbn.size() );
 		assertEquals( "Hibernate in Action", booksByIsbn.get(0).title );
 		assertEquals( "Java Persistence with Hibernate", booksByIsbn.get(1).title );
 		List<Book> booksByPages = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( greaterThan( pages, 500 ) )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 1, booksByPages.size() );
 		List<Book> booksByPageRange = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( between( pages, 150, 400 ) )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 1, booksByPageRange.size() );
 		Book bookByTitle = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( equalIgnoringCase( title, "hibernate in action" ) )
+						.toQuery( session )
 						.getSingleResultOrNull() );
 		assertEquals( "9781932394153", bookByTitle.isbn );
 		Book bookByTitleUnsafe = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( restrict( Book.class, "title",
 								singleCaseInsensitiveValue("hibernate in action") ) )
+						.toQuery( session )
 						.getSingleResultOrNull() );
 		assertEquals( "9781932394153", bookByTitleUnsafe.isbn );
 		List<Book> allBooks = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( unrestricted() )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 2, allBooks.size() );
 		List<Book> noBooks = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( unrestricted().negated() )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 0, noBooks.size() );
 		List<Book> books1 = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( endsWith(title, "Hibernate") )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 1, books1.size() );
 		List<Book> books2 = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( like(title, "*Hibernat?", false, '?', '*') )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 1, books2.size() );
 		List<Book> books3 = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( contains(title, "Hibernate") )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 2, books3.size() );
 		List<Book> booksByTitleAndIsbn = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( all( contains(title, "Hibernate"),
 								equal( isbn, "9781932394153" ) ) )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 1, booksByTitleAndIsbn.size() );
 		List<Book> booksByTitleOrIsbn = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( any( contains(title, "Hibernate"),
 								equal( isbn, "9781932394153" ) ) )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 2, booksByTitleOrIsbn.size() );
 		List<Book> booksByIsbn1 = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( in( isbn, "9781932394153", "9781617290459", "XYZ" ) )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 2, booksByIsbn1.size() );
 		List<Book> booksByIsbn2 = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( in( isbn, List.of("9781617290459", "XYZ", "ABC") ) )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 1, booksByIsbn2.size() );
 	}
@@ -174,44 +190,51 @@ public class RestrictionTest {
 		var version = (SingularAttribute<? super Publisher, Integer>) pubType.findSingularAttribute("version");
 
 		scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( from(Book.class).equalTo( session.find(Book.class, "9781932394153") ) )
+						.toQuery( session )
 						.getSingleResult() );
 
 		List<Book> booksInIsbn = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( from(Book.class).to(isbn).in( List.of("9781932394153", "9781617290459") ) )
 						.setOrder( desc( isbn ) )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 2, booksInIsbn.size() );
 		List<Book> booksWithPub = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( from(Book.class).to(publisher).to(name).equalTo("Manning") )
 						.setOrder( desc( title ) )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 2, booksWithPub.size() );
 		List<Book> noBookWithPub = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( from(Book.class).to(publisher).to(name).notEqualTo("Manning") )
 						.setOrder( desc( title ) )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 0, noBookWithPub.size() );
 		List<Book> books = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( from(Book.class).to(title).restrict( containing("hibernate", false) ) )
 						.setOrder( desc( title ) )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 2, books.size() );
 		List<Book> booksWithPubVersion = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( from(Book.class).to(publisher).to(version).restrict( greaterThan(5) ) )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 0, booksWithPubVersion.size() );
 		List<Book> unsafeTest = scope.fromSession( session ->
-				session.createSelectionQuery( "from Book", Book.class)
+				session.createSelectionCriteria( "from Book", Book.class)
 						.addRestriction( from(Book.class)
 								.to("publisher", Publisher.class)
 								.to("name", String.class).equalTo("Manning") )
+						.toQuery( session )
 						.getResultList() );
 		assertEquals( 2, unsafeTest.size() );
 	}

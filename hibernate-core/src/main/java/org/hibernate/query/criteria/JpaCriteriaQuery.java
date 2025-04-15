@@ -7,6 +7,9 @@ package org.hibernate.query.criteria;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.Incubating;
+import org.hibernate.SharedSessionContract;
+import org.hibernate.query.Query;
 import org.hibernate.query.common.FetchClauseType;
 
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -17,6 +20,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.metamodel.EntityType;
+import org.hibernate.query.restriction.Restriction;
 
 /**
  * Extension of the JPA {@link CriteriaQuery}
@@ -33,6 +37,59 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	 * @see org.hibernate.query.SelectionQuery#getResultCount()
 	 */
 	JpaCriteriaQuery<Long> createCountQuery();
+
+	/**
+	 * If the result type of this query is an entity class, add one or more
+	 * {@linkplain org.hibernate.query.Order rules} for ordering the query results.
+	 *
+	 * @param orderList one or more instances of {@link org.hibernate.query.Order}
+	 *
+	 * @see org.hibernate.query.Order
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaCriteriaQuery<T> setOrder(List<? extends org.hibernate.query.Order<? super T>> orderList);
+
+	/**
+	 * If the result type of this query is an entity class, add a
+	 * {@linkplain org.hibernate.query.Order rule} for ordering the query results.
+	 *
+	 * @param order an instance of {@link org.hibernate.query.Order}
+	 *
+	 * @see org.hibernate.query.Order
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaCriteriaQuery<T> setOrder(org.hibernate.query.Order<? super T> order);
+
+	/**
+	 * If the result type of this query is an entity class, add a
+	 * {@linkplain Restriction rule} for restricting the query results.
+	 *
+	 * @param restriction an instance of {@link Restriction}
+	 *
+	 * @see Restriction
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	JpaCriteriaQuery<T> addRestriction(Restriction<? super T> restriction);
+
+	/**
+	 * Creates a query for this criteria query.
+	 *
+	 * @param session the Hibernate session
+	 *
+	 * @see SharedSessionContract#createQuery(CriteriaQuery)
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	default Query<T> toQuery(SharedSessionContract session) {
+		return session.createQuery( this );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Limit/Offset/Fetch clause

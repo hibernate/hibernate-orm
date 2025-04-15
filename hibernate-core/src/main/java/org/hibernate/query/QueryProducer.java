@@ -11,6 +11,7 @@ import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
 
 /**
  * Contract for things that can produce instances of {@link Query} and {@link NativeQuery}.
@@ -376,6 +377,19 @@ public interface QueryProducer {
 	 * @since 7.0
 	 */
 	<R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph);
+
+	/**
+	 * Transform the given HQL {@code select} query to an equivalent criteria query.
+	 *
+	 * @param hqlString The HQL {@code select} query
+	 * @param resultClass The result type of the query
+	 *
+	 * @see org.hibernate.query.criteria.HibernateCriteriaBuilder#createQuery(String, Class)
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	<R> JpaCriteriaQuery<R> createSelectionCriteria(String hqlString, Class<R> resultClass);
 
 	/**
 	 * Create a {@link SelectionQuery} reference for the given

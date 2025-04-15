@@ -38,48 +38,54 @@ public class OrderTest {
 		SingularAttribute<? super Book, ?> title = bookType.findSingularAttribute("title");
 		SingularAttribute<? super Book, ?> isbn = bookType.findSingularAttribute("isbn");
 		scope.inSession(session -> {
-			List<String> titlesAsc = session.createSelectionQuery("from Book", Book.class)
+			List<String> titlesAsc = session.createSelectionCriteria("from Book", Book.class)
 					.setOrder(asc(title))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", titlesAsc.get(0));
 			assertEquals("Java Persistence with Hibernate", titlesAsc.get(1));
 
-			List<String> titlesDesc = session.createSelectionQuery("from Book", Book.class)
+			List<String> titlesDesc = session.createSelectionCriteria("from Book", Book.class)
 					.setOrder(desc(title))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", titlesDesc.get(1));
 			assertEquals("Java Persistence with Hibernate", titlesDesc.get(0));
 
-			List<String> isbnAsc = session.createSelectionQuery("from Book", Book.class)
+			List<String> isbnAsc = session.createSelectionCriteria("from Book", Book.class)
 					.setOrder(List.of(asc(isbn), desc(title)))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", isbnAsc.get(1));
 			assertEquals("Java Persistence with Hibernate", isbnAsc.get(0));
 
-			List<String> isbnDesc = session.createSelectionQuery("from Book", Book.class)
+			List<String> isbnDesc = session.createSelectionCriteria("from Book", Book.class)
 					.setOrder(List.of(desc(isbn), desc(title)))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", isbnDesc.get(0));
 			assertEquals("Java Persistence with Hibernate", isbnDesc.get(1));
 
-//            titlesAsc = session.createSelectionQuery("from Book order by isbn asc", Book.class)
+//            titlesAsc = session.createSelectionCriteria("from Book order by isbn asc", Book.class)
 //                    .setOrder(asc(title))
+//                    .toQuery( session )
 //                    .getResultList()
 //                    .stream().map(book -> book.title)
 //                    .collect(toList());
 //            assertEquals("Hibernate in Action", titlesAsc.get(1));
 //            assertEquals("Java Persistence with Hibernate", titlesAsc.get(0));
-			titlesAsc = session.createSelectionQuery("from Book order by isbn asc", Book.class)
+			titlesAsc = session.createSelectionCriteria("from Book order by isbn asc", Book.class)
 //                    .setOrder(emptyList())
 					.setOrder(asc(title))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
@@ -98,54 +104,60 @@ public class OrderTest {
 		SingularAttribute<? super Book, ?> title = bookType.findSingularAttribute("title");
 		SingularAttribute<? super Book, ?> isbn = bookType.findSingularAttribute("isbn");
 		scope.inSession(session -> {
-			List<String> titlesAsc = session.createSelectionQuery("from Book where title like ?1", Book.class)
-					.setParameter(1, "%Hibernate%")
+			List<String> titlesAsc = session.createSelectionCriteria("from Book where title like ?1", Book.class)
 					.setOrder(asc(title))
+					.toQuery( session )
+					.setParameter(1, "%Hibernate%")
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", titlesAsc.get(0));
 			assertEquals("Java Persistence with Hibernate", titlesAsc.get(1));
 
-			List<String> titlesDesc = session.createSelectionQuery("from Book where title like ?1", Book.class)
-					.setParameter(1, "%Hibernate%")
+			List<String> titlesDesc = session.createSelectionCriteria("from Book where title like ?1", Book.class)
 					.setOrder(Order.desc(title))
+					.toQuery( session )
+					.setParameter(1, "%Hibernate%")
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", titlesDesc.get(1));
 			assertEquals("Java Persistence with Hibernate", titlesDesc.get(0));
 
-			List<String> isbnAsc = session.createSelectionQuery("from Book where title like ?1", Book.class)
-					.setParameter(1, "%Hibernate%")
+			List<String> isbnAsc = session.createSelectionCriteria("from Book where title like ?1", Book.class)
 					.setOrder(List.of(asc(isbn), desc(title)))
+					.toQuery( session )
+					.setParameter(1, "%Hibernate%")
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", isbnAsc.get(1));
 			assertEquals("Java Persistence with Hibernate", isbnAsc.get(0));
 
-			List<String> isbnDesc = session.createSelectionQuery("from Book where title like ?1", Book.class)
-					.setParameter(1, "%Hibernate%")
+			List<String> isbnDesc = session.createSelectionCriteria("from Book where title like ?1", Book.class)
 					.setOrder(List.of(desc(isbn), desc(title)))
+					.toQuery( session )
+					.setParameter(1, "%Hibernate%")
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", isbnDesc.get(0));
 			assertEquals("Java Persistence with Hibernate", isbnDesc.get(1));
 
-//            titlesAsc = session.createSelectionQuery("from Book where title like ?1 order by isbn asc", Book.class)
+//            titlesAsc = session.createSelectionCriteria("from Book where title like ?1 order by isbn asc", Book.class)
 //                    .setParameter(1, "%Hibernate%")
 //                    .setOrder(asc(title))
+//                    .toQuery( session )
 //                    .getResultList()
 //                    .stream().map(book -> book.title)
 //                    .collect(toList());
 //            assertEquals("Hibernate in Action", titlesAsc.get(1));
 //            assertEquals("Java Persistence with Hibernate", titlesAsc.get(0));
-			titlesAsc = session.createSelectionQuery("from Book where title like ?1 order by isbn asc", Book.class)
-					.setParameter(1, "%Hibernate%")
+			titlesAsc = session.createSelectionCriteria("from Book where title like ?1 order by isbn asc", Book.class)
 //                    .setOrder(emptyList())
 					.setOrder(asc(title))
+					.toQuery( session )
+					.setParameter(1, "%Hibernate%")
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
@@ -164,54 +176,60 @@ public class OrderTest {
 		SingularAttribute<? super Book, ?> title = bookType.findSingularAttribute("title");
 		SingularAttribute<? super Book, ?> isbn = bookType.findSingularAttribute("isbn");
 		scope.inSession(session -> {
-			List<String> titlesAsc = session.createSelectionQuery("from Book where title like :title", Book.class)
-					.setParameter("title", "%Hibernate%")
+			List<String> titlesAsc = session.createSelectionCriteria("from Book where title like :title", Book.class)
 					.setOrder(asc(title))
+					.toQuery( session )
+					.setParameter("title", "%Hibernate%")
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", titlesAsc.get(0));
 			assertEquals("Java Persistence with Hibernate", titlesAsc.get(1));
 
-			List<String> titlesDesc = session.createSelectionQuery("from Book where title like :title", Book.class)
-					.setParameter("title", "%Hibernate%")
+			List<String> titlesDesc = session.createSelectionCriteria("from Book where title like :title", Book.class)
 					.setOrder(desc(title))
+					.toQuery( session )
+					.setParameter("title", "%Hibernate%")
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", titlesDesc.get(1));
 			assertEquals("Java Persistence with Hibernate", titlesDesc.get(0));
 
-			List<String> isbnAsc = session.createSelectionQuery("from Book where title like :title", Book.class)
-					.setParameter("title", "%Hibernate%")
+			List<String> isbnAsc = session.createSelectionCriteria("from Book where title like :title", Book.class)
 					.setOrder(List.of(asc(isbn), desc(title)))
+					.toQuery( session )
+					.setParameter("title", "%Hibernate%")
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", isbnAsc.get(1));
 			assertEquals("Java Persistence with Hibernate", isbnAsc.get(0));
 
-			List<String> isbnDesc = session.createSelectionQuery("from Book where title like :title", Book.class)
-					.setParameter("title", "%Hibernate%")
+			List<String> isbnDesc = session.createSelectionCriteria("from Book where title like :title", Book.class)
 					.setOrder(List.of(desc(isbn), desc(title)))
+					.toQuery( session )
+					.setParameter("title", "%Hibernate%")
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", isbnDesc.get(0));
 			assertEquals("Java Persistence with Hibernate", isbnDesc.get(1));
 
-//            titlesAsc = session.createSelectionQuery("from Book where title like :title order by isbn asc", Book.class)
+//            titlesAsc = session.createSelectionCriteria("from Book where title like :title order by isbn asc", Book.class)
 //                    .setParameter("title", "%Hibernate%")
 //                    .setOrder(asc(title))
+//                    .toQuery( session )
 //                    .getResultList()
 //                    .stream().map(book -> book.title)
 //                    .collect(toList());
 //            assertEquals("Hibernate in Action", titlesAsc.get(1));
 //            assertEquals("Java Persistence with Hibernate", titlesAsc.get(0));
-			titlesAsc = session.createSelectionQuery("from Book where title like :title order by isbn asc", Book.class)
+			titlesAsc = session.createSelectionCriteria("from Book where title like :title order by isbn asc", Book.class)
+					.setOrder(asc(title))
+					.toQuery( session )
 					.setParameter("title", "%Hibernate%")
 //                    .setOrder(emptyList())
-					.setOrder(asc(title))
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
@@ -227,32 +245,36 @@ public class OrderTest {
 			session.persist(new Book("9781617290459", "Java Persistence with Hibernate"));
 		});
 		scope.inSession(session -> {
-			List<?> titlesAsc = session.createSelectionQuery("select isbn, title from Book", Object[].class)
+			List<?> titlesAsc = session.createSelectionCriteria("select isbn, title from Book", Object[].class)
 					.setOrder(asc(2))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book[1])
 					.collect(toList());
 			assertEquals("Hibernate in Action", titlesAsc.get(0));
 			assertEquals("Java Persistence with Hibernate", titlesAsc.get(1));
 
-			List<?> titlesDesc = session.createSelectionQuery("select isbn, title from Book", Object[].class)
+			List<?> titlesDesc = session.createSelectionCriteria("select isbn, title from Book", Object[].class)
 					.setOrder(desc(2))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book[1])
 					.collect(toList());
 			assertEquals("Hibernate in Action", titlesDesc.get(1));
 			assertEquals("Java Persistence with Hibernate", titlesDesc.get(0));
 
-			List<?> isbnAsc = session.createSelectionQuery("select isbn, title from Book", Object[].class)
+			List<?> isbnAsc = session.createSelectionCriteria("select isbn, title from Book", Object[].class)
 					.setOrder(List.of(asc(1), desc(2)))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book[1])
 					.collect(toList());
 			assertEquals("Hibernate in Action", isbnAsc.get(1));
 			assertEquals("Java Persistence with Hibernate", isbnAsc.get(0));
 
-			List<?> isbnDesc = session.createSelectionQuery("select isbn, title from Book", Object[].class)
+			List<?> isbnDesc = session.createSelectionCriteria("select isbn, title from Book", Object[].class)
 					.setOrder(List.of(desc(1), desc(2)))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book[1])
 					.collect(toList());
@@ -271,48 +293,54 @@ public class OrderTest {
 		SingularAttribute<? super Book, ?> title = bookType.findSingularAttribute("title");
 		SingularAttribute<? super Book, ?> isbn = bookType.findSingularAttribute("isbn");
 		scope.inSession(session -> {
-			List<String> titlesAsc = session.createSelectionQuery("from Book", Book.class)
+			List<String> titlesAsc = session.createSelectionCriteria("from Book", Book.class)
 					.setOrder(asc(title).ignoringCase())
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", titlesAsc.get(0));
 			assertEquals("Java Persistence with Hibernate", titlesAsc.get(1));
 
-			List<String> titlesDesc = session.createSelectionQuery("from Book", Book.class)
+			List<String> titlesDesc = session.createSelectionCriteria("from Book", Book.class)
 					.setOrder(desc(title).ignoringCase())
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", titlesDesc.get(1));
 			assertEquals("Java Persistence with Hibernate", titlesDesc.get(0));
 
-			List<String> isbnAsc = session.createSelectionQuery("from Book", Book.class)
+			List<String> isbnAsc = session.createSelectionCriteria("from Book", Book.class)
 					.setOrder(List.of(asc(isbn).ignoringCase(), desc(title).ignoringCase()))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", isbnAsc.get(1));
 			assertEquals("Java Persistence with Hibernate", isbnAsc.get(0));
 
-			List<String> isbnDesc = session.createSelectionQuery("from Book", Book.class)
+			List<String> isbnDesc = session.createSelectionCriteria("from Book", Book.class)
 					.setOrder(List.of(desc(isbn).ignoringCase(), desc(title).ignoringCase()))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", isbnDesc.get(0));
 			assertEquals("Java Persistence with Hibernate", isbnDesc.get(1));
 
-//            titlesAsc = session.createSelectionQuery("from Book order by isbn asc", Book.class)
+//            titlesAsc = session.createSelectionCriteria("from Book order by isbn asc", Book.class)
 //                    .setOrder(asc(title))
+//                    .toQuery( session )
 //                    .getResultList()
 //                    .stream().map(book -> book.title)
 //                    .collect(toList());
 //            assertEquals("Hibernate in Action", titlesAsc.get(1));
 //            assertEquals("Java Persistence with Hibernate", titlesAsc.get(0));
-			titlesAsc = session.createSelectionQuery("from Book order by isbn asc", Book.class)
+			titlesAsc = session.createSelectionCriteria("from Book order by isbn asc", Book.class)
 //                    .setOrder(emptyList())
 					.setOrder(asc(title).ignoringCase())
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
@@ -331,48 +359,54 @@ public class OrderTest {
 		SingularAttribute<? super Book, ?> title = bookType.findSingularAttribute("title");
 		SingularAttribute<? super Book, ?> isbn = bookType.findSingularAttribute("isbn");
 		scope.inSession(session -> {
-			List<String> titlesAsc = session.createSelectionQuery("from Book", Book.class)
+			List<String> titlesAsc = session.createSelectionCriteria("from Book", Book.class)
 					.setOrder(by(title, ASCENDING, true))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", titlesAsc.get(0));
 			assertEquals("Java Persistence with Hibernate", titlesAsc.get(1));
 
-			List<String> titlesDesc = session.createSelectionQuery("from Book", Book.class)
+			List<String> titlesDesc = session.createSelectionCriteria("from Book", Book.class)
 					.setOrder(by(title, DESCENDING, true))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", titlesDesc.get(1));
 			assertEquals("Java Persistence with Hibernate", titlesDesc.get(0));
 
-			List<String> isbnAsc = session.createSelectionQuery("from Book", Book.class)
+			List<String> isbnAsc = session.createSelectionCriteria("from Book", Book.class)
 					.setOrder(List.of(by(isbn, ASCENDING, true), by(title, DESCENDING, true)))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", isbnAsc.get(1));
 			assertEquals("Java Persistence with Hibernate", isbnAsc.get(0));
 
-			List<String> isbnDesc = session.createSelectionQuery("from Book", Book.class)
+			List<String> isbnDesc = session.createSelectionCriteria("from Book", Book.class)
 					.setOrder(List.of(by(isbn, DESCENDING, true), by(title, DESCENDING, true)))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
 			assertEquals("Hibernate in Action", isbnDesc.get(0));
 			assertEquals("Java Persistence with Hibernate", isbnDesc.get(1));
 
-//            titlesAsc = session.createSelectionQuery("from Book order by isbn asc", Book.class)
+//            titlesAsc = session.createSelectionCriteria("from Book order by isbn asc", Book.class)
 //                    .setOrder(asc(title))
+//                    .toQuery( session )
 //                    .getResultList()
 //                    .stream().map(book -> book.title)
 //                    .collect(toList());
 //            assertEquals("Hibernate in Action", titlesAsc.get(1));
 //            assertEquals("Java Persistence with Hibernate", titlesAsc.get(0));
-			titlesAsc = session.createSelectionQuery("from Book order by isbn asc", Book.class)
+			titlesAsc = session.createSelectionCriteria("from Book order by isbn asc", Book.class)
 //                    .setOrder(emptyList())
 					.setOrder(by(title, ASCENDING, true))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book.title)
 					.collect(toList());
@@ -388,32 +422,36 @@ public class OrderTest {
 			session.persist(new Book("9781617290459", "Java Persistence with Hibernate"));
 		});
 		scope.inSession(session -> {
-			List<?> titlesAsc = session.createSelectionQuery("select isbn, title from Book", Object[].class)
+			List<?> titlesAsc = session.createSelectionCriteria("select isbn, title from Book", Object[].class)
 					.setOrder(asc(2).ignoringCase())
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book[1])
 					.collect(toList());
 			assertEquals("Hibernate in Action", titlesAsc.get(0));
 			assertEquals("Java Persistence with Hibernate", titlesAsc.get(1));
 
-			List<?> titlesDesc = session.createSelectionQuery("select isbn, title from Book", Object[].class)
+			List<?> titlesDesc = session.createSelectionCriteria("select isbn, title from Book", Object[].class)
 					.setOrder(desc(2).ignoringCase())
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book[1])
 					.collect(toList());
 			assertEquals("Hibernate in Action", titlesDesc.get(1));
 			assertEquals("Java Persistence with Hibernate", titlesDesc.get(0));
 
-			List<?> isbnAsc = session.createSelectionQuery("select isbn, title from Book", Object[].class)
+			List<?> isbnAsc = session.createSelectionCriteria("select isbn, title from Book", Object[].class)
 					.setOrder(List.of(asc(1).ignoringCase(), desc(2).ignoringCase()))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book[1])
 					.collect(toList());
 			assertEquals("Hibernate in Action", isbnAsc.get(1));
 			assertEquals("Java Persistence with Hibernate", isbnAsc.get(0));
 
-			List<?> isbnDesc = session.createSelectionQuery("select isbn, title from Book", Object[].class)
+			List<?> isbnDesc = session.createSelectionCriteria("select isbn, title from Book", Object[].class)
 					.setOrder(List.of(desc(1).ignoringCase(), desc(2).ignoringCase()))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book[1])
 					.collect(toList());
@@ -429,32 +467,36 @@ public class OrderTest {
 			session.persist(new Book("9781617290459", "Java Persistence with Hibernate"));
 		});
 		scope.inSession(session -> {
-			List<?> titlesAsc = session.createSelectionQuery("select isbn, title from Book", Object[].class)
+			List<?> titlesAsc = session.createSelectionCriteria("select isbn, title from Book", Object[].class)
 					.setOrder(by(2, ASCENDING, true))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book[1])
 					.collect(toList());
 			assertEquals("Hibernate in Action", titlesAsc.get(0));
 			assertEquals("Java Persistence with Hibernate", titlesAsc.get(1));
 
-			List<?> titlesDesc = session.createSelectionQuery("select isbn, title from Book", Object[].class)
+			List<?> titlesDesc = session.createSelectionCriteria("select isbn, title from Book", Object[].class)
 					.setOrder(by(2, DESCENDING, true))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book[1])
 					.collect(toList());
 			assertEquals("Hibernate in Action", titlesDesc.get(1));
 			assertEquals("Java Persistence with Hibernate", titlesDesc.get(0));
 
-			List<?> isbnAsc = session.createSelectionQuery("select isbn, title from Book", Object[].class)
+			List<?> isbnAsc = session.createSelectionCriteria("select isbn, title from Book", Object[].class)
 					.setOrder(List.of(by(1, ASCENDING, true), by(2, DESCENDING, true)))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book[1])
 					.collect(toList());
 			assertEquals("Hibernate in Action", isbnAsc.get(1));
 			assertEquals("Java Persistence with Hibernate", isbnAsc.get(0));
 
-			List<?> isbnDesc = session.createSelectionQuery("select isbn, title from Book", Object[].class)
+			List<?> isbnDesc = session.createSelectionCriteria("select isbn, title from Book", Object[].class)
 					.setOrder(List.of(by(1, DESCENDING, true), by(2, DESCENDING, true)))
+					.toQuery( session )
 					.getResultList()
 					.stream().map(book -> book[1])
 					.collect(toList());

@@ -49,6 +49,7 @@ import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
@@ -585,6 +586,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
 		return queryDelegate().createSelectionQuery( hqlString, resultGraph );
+	}
+
+	@Override
+	public <R> JpaCriteriaQuery<R> createSelectionCriteria(String hqlString, Class<R> resultClass) {
+		return queryDelegate().createSelectionCriteria( hqlString, resultClass );
 	}
 
 	@Override

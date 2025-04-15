@@ -841,7 +841,7 @@ public class SqmUtil {
 		}
 	}
 
-	static JpaOrder sortSpecification(SqmSelectStatement<?> sqm, Order<?> order) {
+	public static JpaOrder sortSpecification(SqmSelectStatement<?> sqm, Order<?> order) {
 		final List<SqmSelectableNode<?>> items = sqm.getQuerySpec().getSelectClause().getSelectionItems();
 		final int element = order.getElement();
 		if ( element < 1) {

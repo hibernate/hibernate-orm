@@ -75,6 +75,7 @@ import org.hibernate.query.UnknownNamedQueryException;
 import org.hibernate.query.criteria.CriteriaDefinition;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
@@ -871,6 +872,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				.setEntityGraph( resultGraph, GraphSemantic.LOAD );
 	}
 
+	@Override
+	public <R> JpaCriteriaQuery<R> createSelectionCriteria(String hqlString, Class<R> resultClass) {
+		return getCriteriaBuilder().createQuery(hqlString, resultClass);
+	}
 
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria) {

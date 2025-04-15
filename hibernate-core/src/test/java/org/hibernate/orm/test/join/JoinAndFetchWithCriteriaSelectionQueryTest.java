@@ -12,6 +12,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.Order;
 
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -120,8 +122,8 @@ class JoinAndFetchWithCriteriaSelectionQueryTest {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();
 		scope.inTransaction( session -> {
-			CriteriaBuilder cb = session.getCriteriaBuilder();
-			CriteriaQuery<Book> query = cb.createQuery( Book.class );
+			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			JpaCriteriaQuery<Book> query = cb.createQuery( Book.class );
 			Root<Book> from = query.from( Book.class );
 
 			// The join MUST BE created before the fetch for this test
@@ -135,9 +137,9 @@ class JoinAndFetchWithCriteriaSelectionQueryTest {
 			SingularAttribute<? super Book, ?> title = bookType.findSingularAttribute( "title" );
 			query.select( from ).distinct( true );
 
-			List<Book> books = session
-					.createSelectionQuery( query )
+			List<Book> books = query
 					.setOrder( Order.asc( title ) )
+					.toQuery( session )
 					.getResultList();
 			assertThat( books ).containsExactly( leftHand, timeWar );
 			assertThat( Hibernate.isInitialized( books.get( 0 ).getAuthors() ) ).isTrue();
@@ -154,8 +156,8 @@ class JoinAndFetchWithCriteriaSelectionQueryTest {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();
 		scope.inTransaction( session -> {
-			CriteriaBuilder cb = session.getCriteriaBuilder();
-			CriteriaQuery<Book> query = cb.createQuery( Book.class );
+			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			JpaCriteriaQuery<Book> query = cb.createQuery( Book.class );
 			Root<Book> from = query.from( Book.class );
 
 			// The fetch MUST BE created before the join for this test
@@ -169,9 +171,9 @@ class JoinAndFetchWithCriteriaSelectionQueryTest {
 			SingularAttribute<? super Book, ?> title = bookType.findSingularAttribute( "title" );
 			query.select( from ).distinct( true );
 
-			List<Book> books = session
-					.createSelectionQuery( query )
+			List<Book> books = query
 					.setOrder( Order.asc( title ) )
+					.toQuery( session )
 					.getResultList();
 			assertThat( books ).containsExactly( leftHand, timeWar );
 			assertThat( Hibernate.isInitialized( books.get( 0 ).getAuthors() ) ).isTrue();

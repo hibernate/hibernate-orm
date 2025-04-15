@@ -41,6 +41,7 @@ import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.stat.SessionStatistics;
 
 import jakarta.persistence.ConnectionConsumer;
@@ -702,6 +703,11 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
 		return this.lazySession.get().createSelectionQuery( hqlString, resultGraph );
+	}
+
+	@Override
+	public <R> JpaCriteriaQuery<R> createSelectionCriteria(String hqlString, Class<R> resultClass) {
+		return this.lazySession.get().createSelectionCriteria( hqlString, resultClass );
 	}
 
 	@Override

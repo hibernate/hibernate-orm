@@ -16,6 +16,7 @@ import org.hibernate.query.QueryProducer;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.spi.HibernateCriteriaBuilderDelegate;
 import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
@@ -494,5 +495,20 @@ public abstract class CriteriaDefinition<R>
 	@Override
 	public JpaCriteriaQuery<Long> createCountQuery() {
 		return query.createCountQuery();
+	}
+
+	@Override
+	public JpaCriteriaQuery<R> setOrder(List<? extends org.hibernate.query.Order<? super R>> orderList) {
+		return query.setOrder( orderList );
+	}
+
+	@Override
+	public JpaCriteriaQuery<R> setOrder(org.hibernate.query.Order<? super R> order) {
+		return query.setOrder( order );
+	}
+
+	@Override
+	public JpaCriteriaQuery<R> addRestriction(Restriction<? super R> restriction) {
+		return query.addRestriction( restriction );
 	}
 }

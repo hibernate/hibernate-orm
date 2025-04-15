@@ -17,6 +17,7 @@ import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -43,6 +44,8 @@ import jakarta.persistence.metamodel.EntityType;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
+import static java.util.stream.Collectors.toList;
+import static org.hibernate.query.sqm.internal.SqmUtil.sortSpecification;
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.combinePredicates;
 import static org.hibernate.query.sqm.SqmQuerySource.CRITERIA;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
@@ -551,6 +554,25 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 			}
 			return query;
 		}
+	}
+
+	@Override
+	public JpaCriteriaQuery<T> setOrder(List<? extends org.hibernate.query.Order<? super T>> orderList) {
+		orderBy( orderList.stream().map( order -> sortSpecification( this, order ) )
+				.collect( toList() ) );
+		return this;
+	}
+
+	@Override
+	public JpaCriteriaQuery<T> setOrder(org.hibernate.query.Order<? super T> order) {
+		orderBy( sortSpecification( this, order ) );
+		return this;
+	}
+
+	@Override
+	public JpaCriteriaQuery<T> addRestriction(Restriction<? super T> restriction) {
+		restriction.apply( this, this.<T>getRoot( 0, getResultType() ) );
+		return this;
 	}
 
 	private <S> void aliasSelections(SqmQueryPart<S> queryPart) {

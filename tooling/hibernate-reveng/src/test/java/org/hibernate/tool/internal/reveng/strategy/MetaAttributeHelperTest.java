@@ -1,15 +1,13 @@
 /*
  * Hibernate Tools, Tooling for your Hibernate Projects
- * 
- * Copyright 2020 Red Hat, Inc.
  *
- * Licensed under the GNU Lesser General Public License (LGPL), 
- * version 2.1 or later (the "License").
- * You may not use this file except in compliance with the License.
- * You may read the licence in the 'lgpl.txt' file in the root folder of 
- * project or obtain a copy at
+ * Copyright 2020-2025 Red Hat, Inc.
  *
- *     http://www.gnu.org/licenses/lgpl-2.1.html
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" basis,

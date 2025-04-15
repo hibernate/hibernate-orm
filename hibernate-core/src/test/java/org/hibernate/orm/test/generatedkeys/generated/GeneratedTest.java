@@ -17,7 +17,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 import org.junit.jupiter.api.Test;

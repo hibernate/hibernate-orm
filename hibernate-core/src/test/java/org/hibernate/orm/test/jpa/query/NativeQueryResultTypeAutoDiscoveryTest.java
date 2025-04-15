@@ -38,7 +38,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;

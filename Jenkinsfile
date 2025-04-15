@@ -40,8 +40,6 @@ stage('Configure') {
 // Don't build with HANA by default, but only do it nightly until we receive a 3rd instance
 // 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ),
 		new BuildEnvironment( node: 's390x' ),
-		new BuildEnvironment( dbName: 'tidb', node: 'tidb',
-				notificationRecipients: 'tidb_hibernate@pingcap.com' ),
 		// We want to enable preview features when testing newer builds of OpenJDK:
 		// even if we don't use these features, just enabling them can cause side effects
 		// and it's useful to test that.
@@ -64,6 +62,9 @@ stage('Configure') {
 		}
 		if ( pullRequest.labels.contains( 'sybase' ) ) {
 			this.environments.add( new BuildEnvironment( dbName: 'sybase_jconn' ) )
+		}
+		if ( pullRequest.labels.contains( 'tidb' ) ) {
+			this.environments.add( new BuildEnvironment( dbName: 'tidb', node: 'tidb', notificationRecipients: 'tidb_hibernate@pingcap.com' ) )
 		}
 	}
 

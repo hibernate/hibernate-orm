@@ -2,13 +2,19 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.MySQLServerConfiguration;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.sequence.TiDBSequenceSupport;
+import org.hibernate.community.dialect.sequence.TiDBSequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.IntervalType;
@@ -18,7 +24,7 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorTiDBDatabaseImpl;
+import org.hibernate.community.dialect.sequence.SequenceInformationExtractorTiDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 import jakarta.persistence.TemporalType;
@@ -43,7 +49,7 @@ public class TiDBDialect extends MySQLDialect {
 	}
 
 	public TiDBDialect(DialectResolutionInfo info) {
-		super( createVersion( info ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
+		super( createVersion( info, MINIMUM_VERSION ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
 	}
 
@@ -62,19 +68,19 @@ public class TiDBDialect extends MySQLDialect {
 	protected void registerDefaultKeywords() {
 		super.registerDefaultKeywords();
 		// TiDB implemented 'Window Functions' of MySQL 8, so the following keywords are reserved.
-		registerKeyword("CUME_DIST");
-		registerKeyword("DENSE_RANK");
-		registerKeyword("EXCEPT");
-		registerKeyword("FIRST_VALUE");
-		registerKeyword("GROUPS");
-		registerKeyword("LAG");
-		registerKeyword("LAST_VALUE");
-		registerKeyword("LEAD");
-		registerKeyword("NTH_VALUE");
-		registerKeyword("NTILE");
-		registerKeyword("PERCENT_RANK");
-		registerKeyword("RANK");
-		registerKeyword("ROW_NUMBER");
+		registerKeyword( "CUME_DIST" );
+		registerKeyword( "DENSE_RANK" );
+		registerKeyword( "EXCEPT" );
+		registerKeyword( "FIRST_VALUE" );
+		registerKeyword( "GROUPS" );
+		registerKeyword( "LAG" );
+		registerKeyword( "LAST_VALUE" );
+		registerKeyword( "LEAD" );
+		registerKeyword( "NTH_VALUE" );
+		registerKeyword( "NTILE" );
+		registerKeyword( "PERCENT_RANK" );
+		registerKeyword( "RANK" );
+		registerKeyword( "ROW_NUMBER" );
 	}
 
 	@Override
@@ -134,12 +140,12 @@ public class TiDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	boolean supportsForShare() {
+	protected boolean supportsForShare() {
 		return false;
 	}
 
 	@Override
-	boolean supportsAliasLocks() {
+	protected boolean supportsAliasLocks() {
 		return false;
 	}
 
@@ -192,12 +198,13 @@ public class TiDBDialect extends MySQLDialect {
 		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
 	}
 
-	@Override @SuppressWarnings("deprecation")
+	@Override
+	@SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		// TiDB doesn't natively support adding fractional seconds
 		return unit == TemporalUnit.SECOND && intervalType == null
 				? "timestampadd(microsecond,?2*1e6,?3)"
-				: super.timestampaddPattern(unit, temporalType, intervalType);
+				: super.timestampaddPattern( unit, temporalType, intervalType );
 	}
 
 	@Override

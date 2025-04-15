@@ -11,7 +11,7 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.dialect.MySQLDialect;
 
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;

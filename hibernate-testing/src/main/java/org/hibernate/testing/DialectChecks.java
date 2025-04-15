@@ -14,7 +14,7 @@ import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 
 /**
  * Container class for different implementation of the {@link DialectCheck} interface.

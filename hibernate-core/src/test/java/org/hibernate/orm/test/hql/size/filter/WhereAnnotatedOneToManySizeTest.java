@@ -11,7 +11,7 @@ import java.util.List;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.SkipForDialect;

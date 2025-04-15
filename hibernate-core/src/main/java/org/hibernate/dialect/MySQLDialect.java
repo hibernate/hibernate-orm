@@ -1550,11 +1550,11 @@ public class MySQLDialect extends Dialect {
 		registerKeyword( "key" );
 	}
 
-	boolean supportsForShare() {
+	protected boolean supportsForShare() {
 		return true;
 	}
 
-	boolean supportsAliasLocks() {
+	protected boolean supportsAliasLocks() {
 		return true;
 	}
 

@@ -2,12 +2,14 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect.sequence;
+package org.hibernate.community.dialect.sequence;
 
 import org.hibernate.MappingException;
+import org.hibernate.community.dialect.TiDBDialect;
+import org.hibernate.dialect.sequence.SequenceSupport;
 
 /**
- * Sequence support for {@link org.hibernate.dialect.TiDBDialect}.
+ * Sequence support for {@link TiDBDialect}.
  *
  * @author Cong Wang
  */

@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.jpa.exception;
 
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.exception.ConstraintViolationException;
 
 import org.hibernate.testing.orm.junit.JiraKey;

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;

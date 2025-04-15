@@ -5,7 +5,7 @@
 package org.hibernate.test.agroal;
 
 import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.agroal.internal.AgroalConnectionProvider;
 

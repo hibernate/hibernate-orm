@@ -6,7 +6,7 @@ package org.hibernate.test.hikaricp;
 
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.hikaricp.internal.HikariCPConnectionProvider;
 

@@ -2,10 +2,13 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.tool.schema.extract.internal;
+package org.hibernate.community.dialect.sequence;
 
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
+import org.hibernate.tool.schema.extract.internal.SequenceInformationImpl;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 

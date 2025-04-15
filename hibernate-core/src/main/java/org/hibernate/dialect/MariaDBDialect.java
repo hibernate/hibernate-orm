@@ -286,13 +286,13 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	boolean supportsForShare() {
+	protected boolean supportsForShare() {
 		//only supported on MySQL
 		return false;
 	}
 
 	@Override
-	boolean supportsAliasLocks() {
+	protected boolean supportsAliasLocks() {
 		//only supported on MySQL
 		return false;
 	}

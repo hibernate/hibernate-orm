@@ -211,6 +211,48 @@ postgresql_17() {
     $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-17-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
 }
 
+gaussdb() {
+    $CONTAINER_CLI rm -f opengauss || true
+
+    # config param
+    CONTAINER_NAME=opengauss
+    IMAGE=enmotech/opengauss:latest
+    PORT=5432
+    DB_USER=hibernate_orm_test
+    DB_PASSWORD=Hibernate_orm_test@1234
+    DB_NAME=hibernate_orm_test
+    PSQL_IMAGE=postgres:14
+
+    echo "🐳 start OpenGauss container..."
+    $CONTAINER_CLI run --name ${CONTAINER_NAME} \
+    --privileged \
+    -e GS_PASSWORD=${DB_PASSWORD} \
+    -e GS_NODENAME=opengauss \
+    -e GS_PORT=${PORT} \
+    -e GS_CGROUP_DISABLE=YES \
+    -p ${PORT}:5432 \
+    -d ${IMAGE}
+
+    echo "⏳ wait OpenGauss starting..."
+    sleep 20
+
+    echo " Initialize the database using the PostgreSQL client container..."
+
+    $CONTAINER_CLI run --rm --network=host ${PSQL_IMAGE} \
+    bash -c "
+      PGPASSWORD='${DB_PASSWORD}' psql -h localhost -p ${PORT} -U gaussdb -d postgres -c \"CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';\" &&
+      PGPASSWORD='${DB_PASSWORD}' psql -h localhost -p ${PORT} -U gaussdb -d postgres -c \"CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};\"
+    "
+
+    echo "✅ Initialization completed"
+    echo "📌 connection information："
+    echo "    Host:     localhost"
+    echo "    Port:     ${PORT}"
+    echo "    Username: ${DB_USER}"
+    echo "    Password: ${DB_PASSWORD}"
+    echo "    Database: ${DB_NAME}"
+}
+
 edb() {
     edb_17
 }
@@ -1089,6 +1131,7 @@ if [ -z ${1} ]; then
     echo -e "\toracle"
     echo -e "\toracle_23"
     echo -e "\toracle_21"
+    echo -e "\tgauss"
     echo -e "\tpostgresql"
     echo -e "\tpostgresql_17"
     echo -e "\tpostgresql_16"

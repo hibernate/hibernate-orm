@@ -27,7 +27,7 @@ record ValueList<U>(List<U> values) implements Range<U> {
 
 	@Override
 	public Predicate toPredicate(Path<? extends U> path, CriteriaBuilder builder) {
-		return path.in( values.stream().map( builder::literal ).toList() );
+		return path.in( values );
 	}
 
 	@Override

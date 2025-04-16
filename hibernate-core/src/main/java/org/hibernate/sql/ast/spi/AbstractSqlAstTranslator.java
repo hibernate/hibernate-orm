@@ -6853,9 +6853,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private boolean isFetchFirstRowOnly(QueryPart queryPart) {
 		return queryPart.getFetchClauseType() == FetchClauseType.ROWS_ONLY
-				&& queryPart.getFetchClauseExpression() instanceof QueryLiteral<?>
-				&& Integer.valueOf( 1 )
-				.equals( ( (QueryLiteral<?>) queryPart.getFetchClauseExpression() ).getLiteralValue() );
+				&& queryPart.getFetchClauseExpression() != null
+				&& Integer.valueOf( 1 ).equals( getLiteralValue( queryPart.getFetchClauseExpression() ) );
+	}
+
+	public <X> X getLiteralValue(Expression expression) {
+		return interpretExpression( expression, jdbcParameterBindings );
 	}
 
 	private SelectStatement stripToSelectClause(SelectStatement statement) {

@@ -19,7 +19,7 @@ record Interval<U extends Comparable<U>>(LowerBound<U> lowerBound, UpperBound<U>
 	public Predicate toPredicate(Path<? extends U> path, CriteriaBuilder builder) {
 		return lowerBound.open() || upperBound.open()
 				? builder.and( lowerBound.toPredicate( path, builder ), upperBound.toPredicate( path, builder ) )
-				: builder.between( path, builder.literal( lowerBound.bound() ), builder.literal( upperBound.bound() ) );
+				: builder.between( path, lowerBound.bound(), upperBound.bound() );
 	}
 
 	@Override

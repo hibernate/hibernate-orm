@@ -66,6 +66,8 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	private final JavaType<?> javaTypeDescriptor;
 	private final Map<String, ModelPart> modelParts;
 	private final Set<String> compatibleTableExpressions;
+	private final SqlTypedMapping[] sqlTypedMappings;
+	private final int jdbcTypeCount;
 
 	public AnonymousTupleTableGroupProducer(
 			AnonymousTupleType<?> tupleType,
@@ -75,6 +77,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 		this.aliasStem = aliasStem;
 		this.javaTypeDescriptor = tupleType.getExpressibleJavaType();
 		final Set<String> compatibleTableExpressions = new HashSet<>();
+		this.sqlTypedMappings = sqlTypedMappings;
 		// The empty table expression is the default for derived model parts
 		compatibleTableExpressions.add( "" );
 
@@ -127,6 +130,7 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 		}
 		this.modelParts = modelParts;
 		this.compatibleTableExpressions = compatibleTableExpressions;
+		jdbcTypeCount = selectionIndex;
 	}
 
 	private ModelPart getModelPart(TableGroup tableGroup) {
@@ -401,11 +405,16 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 
 	@Override
 	public JdbcMapping getJdbcMapping(int index) {
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		return sqlTypedMappings[index].getJdbcMapping();
 	}
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public int getJdbcTypeCount() {
+		return jdbcTypeCount;
 	}
 }

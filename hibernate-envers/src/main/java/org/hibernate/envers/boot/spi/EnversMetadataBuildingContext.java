@@ -10,7 +10,7 @@ import org.hibernate.envers.configuration.internal.MappingCollector;
 import org.hibernate.envers.configuration.internal.metadata.AuditEntityConfigurationRegistry;
 import org.hibernate.envers.configuration.internal.metadata.AuditEntityNameRegister;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -25,7 +25,7 @@ public interface EnversMetadataBuildingContext extends MetadataBuildingContext {
 
 	ServiceRegistry getServiceRegistry();
 
-	SourceModelBuildingContext getSourceModelBuildingContext();
+	ModelsContext getModelsContext();
 
 	ClassDetailsRegistry getClassDetailsRegistry();
 

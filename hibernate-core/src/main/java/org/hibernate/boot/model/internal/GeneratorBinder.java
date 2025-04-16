@@ -43,7 +43,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.internal.Helper;
 
@@ -265,7 +265,7 @@ public class GeneratorBinder {
 			AnnotationTarget annotatedElement,
 			Consumer<IdentifierGeneratorDefinition> consumer,
 			MetadataBuildingContext buildingContext) {
-		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 
 		annotatedElement.forEachAnnotationUsage( TableGenerator.class, modelsContext,
 				usage -> consumer.accept( buildTableIdGenerator( usage ) ) );
@@ -799,7 +799,7 @@ public class GeneratorBinder {
 			PropertyData inferredData,
 			SimpleValue idValue,
 			MetadataBuildingContext buildingContext) {
-		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		final MemberDetails idAttributeMember = inferredData.getAttributeMember();
 		final List<? extends Annotation> idGeneratorAnnotations =
 				idAttributeMember.getMetaAnnotated( IdGeneratorType.class, modelsContext );
@@ -850,7 +850,7 @@ public class GeneratorBinder {
 	static GeneratorCreator createValueGeneratorFromAnnotations(
 			PropertyHolder holder, String propertyName,
 			Value value, MemberDetails property, MetadataBuildingContext buildingContext) {
-		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		final List<? extends Annotation> generatorAnnotations =
 				property.getMetaAnnotated( ValueGenerationType.class, modelsContext );
 		return switch ( generatorAnnotations.size() ) {

@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.MappedSuperclass;
 
@@ -19,19 +19,19 @@ public class MappedSuperclassJpaAnnotation implements MappedSuperclass {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public MappedSuperclassJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public MappedSuperclassJpaAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public MappedSuperclassJpaAnnotation(MappedSuperclass annotation, SourceModelBuildingContext modelContext) {
+	public MappedSuperclassJpaAnnotation(MappedSuperclass annotation, ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public MappedSuperclassJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public MappedSuperclassJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 	}
 
 	@Override

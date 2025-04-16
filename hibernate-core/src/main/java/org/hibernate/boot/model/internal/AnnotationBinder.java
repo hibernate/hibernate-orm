@@ -35,7 +35,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -124,7 +124,7 @@ public final class AnnotationBinder {
 
 	}
 
-	private static SourceModelBuildingContext modelsContext(MetadataBuildingContext context) {
+	private static ModelsContext modelsContext(MetadataBuildingContext context) {
 		return context.getBootstrapContext().getModelsContext();
 	}
 
@@ -170,7 +170,7 @@ public final class AnnotationBinder {
 	}
 
 	private static void bindNamedHibernateQueries(AnnotationTarget annotationTarget, MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext = modelsContext( context );
+		final ModelsContext sourceModelContext = modelsContext( context );
 
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				HibernateAnnotations.NAMED_QUERY,
@@ -186,7 +186,7 @@ public final class AnnotationBinder {
 	}
 
 	private static void bindNamedJpaQueries(AnnotationTarget annotationTarget, MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext = modelsContext( context );
+		final ModelsContext sourceModelContext = modelsContext( context );
 
 		annotationTarget.forEachRepeatedAnnotationUsages(
 				JpaAnnotations.SQL_RESULT_SET_MAPPING,
@@ -277,7 +277,7 @@ public final class AnnotationBinder {
 		final ManagedBeanRegistry managedBeanRegistry =
 				context.getBootstrapContext().getManagedBeanRegistry();
 
-		final SourceModelBuildingContext sourceModelContext = modelsContext( context );
+		final ModelsContext sourceModelContext = modelsContext( context );
 
 		annotatedElement.forEachAnnotationUsage( JavaTypeRegistration.class, sourceModelContext, (usage) -> {
 			handleJavaTypeRegistration( context, managedBeanRegistry, usage );
@@ -382,7 +382,7 @@ public final class AnnotationBinder {
 	}
 
 	private static void bindConverterRegistrations(AnnotationTarget container, MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext = modelsContext( context );
+		final ModelsContext sourceModelContext = modelsContext( context );
 		container.forEachAnnotationUsage( ConverterRegistration.class, sourceModelContext, (usage) -> {
 			handleConverterRegistration( usage, context );
 		} );

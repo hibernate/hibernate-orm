@@ -30,7 +30,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MutableMemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 /**
  * @author Marco Belladelli
@@ -40,7 +40,7 @@ public class CommonPluralAttributeProcessing {
 			JaxbPluralAttribute jaxbPluralAttribute,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final SourceModelBuildingContext buildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext buildingContext = xmlDocumentContext.getModelBuildingContext();
 		final ClassDetailsRegistry classDetailsRegistry = buildingContext.getClassDetailsRegistry();
 
 		if ( jaxbPluralAttribute.getFetchMode() != null ) {

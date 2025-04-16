@@ -11,7 +11,7 @@ import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedRes
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -41,14 +41,14 @@ public class ColumnTests {
 				metadataBuildingOptions
 		);
 		metadataBuildingOptions.setBootstrapContext( bootstrapContext );
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
+		final ModelsContext ModelsContext = createBuildingContext(
 				managedResources,
 				false,
 				metadataBuildingOptions,
 				bootstrapContext
 		);
 
-		final ClassDetails anEntityDetails = sourceModelBuildingContext.getClassDetailsRegistry().getClassDetails( AnEntity.class.getName() );
+		final ClassDetails anEntityDetails = ModelsContext.getClassDetailsRegistry().getClassDetails( AnEntity.class.getName() );
 
 		final FieldDetails nameField = anEntityDetails.findFieldByName( "name" );
 		assertThat( nameField ).isNotNull();
@@ -75,14 +75,14 @@ public class ColumnTests {
 				metadataBuildingOptions
 		);
 		metadataBuildingOptions.setBootstrapContext( bootstrapContext );
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
+		final ModelsContext ModelsContext = createBuildingContext(
 				managedResources,
 				false,
 				metadataBuildingOptions,
 				bootstrapContext
 		);
 
-		final ClassDetails anEntityDetails = sourceModelBuildingContext.getClassDetailsRegistry().getClassDetails( AnEntity.class.getName() );
+		final ClassDetails anEntityDetails = ModelsContext.getClassDetailsRegistry().getClassDetails( AnEntity.class.getName() );
 
 		final FieldDetails nameField = anEntityDetails.findFieldByName( "name" );
 		assertThat( nameField ).isNotNull();

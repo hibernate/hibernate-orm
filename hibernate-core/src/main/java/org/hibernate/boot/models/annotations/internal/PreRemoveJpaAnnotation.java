@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.PreRemove;
 
@@ -18,19 +18,19 @@ public class PreRemoveJpaAnnotation implements PreRemove {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public PreRemoveJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public PreRemoveJpaAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public PreRemoveJpaAnnotation(PreRemove annotation, SourceModelBuildingContext modelContext) {
+	public PreRemoveJpaAnnotation(PreRemove annotation, ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public PreRemoveJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public PreRemoveJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 	}
 
 	@Override

@@ -77,7 +77,7 @@ import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.spi.NavigablePath;
 
@@ -164,7 +164,7 @@ public class EntityBinder {
 	private String naturalIdCacheRegion;
 	private CacheLayout queryCacheLayout;
 
-	private SourceModelBuildingContext modelsContext() {
+	private ModelsContext modelsContext() {
 		return context.getBootstrapContext().getModelsContext();
 	}
 
@@ -184,7 +184,7 @@ public class EntityBinder {
 		}
 
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
-		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
 
 		//TODO: be more strict with secondary table allowance (not for ids, not for secondary table join columns etc)
 
@@ -234,7 +234,7 @@ public class EntityBinder {
 		handleSecondaryTables();
 	}
 
-	private static void checkOverrides(ClassDetails clazzToProcess, PersistentClass superEntity, SourceModelBuildingContext sourceModelContext) {
+	private static void checkOverrides(ClassDetails clazzToProcess, PersistentClass superEntity, ModelsContext sourceModelContext) {
 		if ( superEntity != null ) {
 			//TODO: correctly handle compound paths (embeddables)
 			clazzToProcess.forEachAnnotationUsage( AttributeOverride.class, sourceModelContext, (usage) -> checkOverride(
@@ -288,7 +288,7 @@ public class EntityBinder {
 	}
 
 	private static SoftDelete extractSoftDelete(ClassDetails classDetails, MetadataBuildingContext context) {
-		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
 		final SoftDelete fromClass = classDetails.getAnnotationUsage( SoftDelete.class, modelsContext );
 		if ( fromClass != null ) {
 			return fromClass;
@@ -1117,7 +1117,7 @@ public class EntityBinder {
 		final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
 		joinColumns.setBuildingContext( context );
 
-		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
 		final PrimaryKeyJoinColumns primaryKeyJoinColumns =
 				clazzToProcess.getAnnotationUsage( PrimaryKeyJoinColumns.class, modelsContext );
 		if ( primaryKeyJoinColumns != null ) {
@@ -1597,7 +1597,7 @@ public class EntityBinder {
 	}
 
 	private SQLRestriction extractSQLRestriction(ClassDetails classDetails) {
-		final SourceModelBuildingContext modelsContext = modelsContext();
+		final ModelsContext modelsContext = modelsContext();
 		final SQLRestriction fromClass = getOverridableAnnotation( classDetails, SQLRestriction.class, context );
 		if ( fromClass != null ) {
 			return fromClass;
@@ -1671,7 +1671,7 @@ public class EntityBinder {
 	}
 
 	private void bindRootClassCache() {
-		final SourceModelBuildingContext sourceModelContext = modelsContext();
+		final ModelsContext sourceModelContext = modelsContext();
 
 		final Cache cache = annotatedClass.getAnnotationUsage( Cache.class, sourceModelContext );
 		final Cacheable cacheable = annotatedClass.getAnnotationUsage( Cacheable.class, sourceModelContext );

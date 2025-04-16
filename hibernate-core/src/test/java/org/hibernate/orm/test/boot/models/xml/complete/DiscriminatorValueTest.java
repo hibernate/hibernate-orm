@@ -9,7 +9,7 @@ import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.orm.test.boot.models.xml.SimpleEntity;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -31,11 +31,11 @@ public class DiscriminatorValueTest {
 				.addXmlMappings( "mappings/models/complete/discriminator-value.xml" )
 				.build();
 
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
+		final ModelsContext ModelsContext = createBuildingContext(
 				managedResources,
 				registryScope.getRegistry()
 		);
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
 
 		{
 			final ClassDetails rootClassDetails = classDetailsRegistry.getClassDetails( Root.class.getName() );

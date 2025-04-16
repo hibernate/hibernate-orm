@@ -44,7 +44,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -828,7 +828,7 @@ public class BinderHelper {
 	private static void processAnyDiscriminatorValues(
 			MemberDetails property,
 			Consumer<AnyDiscriminatorValue> consumer,
-			SourceModelBuildingContext sourceModelContext) {
+			ModelsContext sourceModelContext) {
 		final AnyDiscriminatorValues valuesAnn =
 				property.locateAnnotationUsage( AnyDiscriminatorValues.class, sourceModelContext );
 		if ( valuesAnn != null ) {
@@ -1076,7 +1076,7 @@ public class BinderHelper {
 			return null;
 		}
 		else {
-			final SourceModelBuildingContext modelsContext =
+			final ModelsContext modelsContext =
 					context.getBootstrapContext().getModelsContext();
 			try {
 				return modelsContext.getClassDetailsRegistry()

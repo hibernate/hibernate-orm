@@ -106,7 +106,7 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.CompositeUserType;
@@ -264,7 +264,7 @@ public abstract class CollectionBinder {
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
 			MemberDetails property,
 			AnnotatedJoinColumns joinColumns) {
-		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
 
 		final OneToMany oneToManyAnn = property.getAnnotationUsage( OneToMany.class, modelsContext );
 		final ManyToMany manyToManyAnn = property.getAnnotationUsage( ManyToMany.class, modelsContext );
@@ -381,7 +381,7 @@ public abstract class CollectionBinder {
 			PropertyData inferredData,
 			MemberDetails property,
 			ManyToMany manyToManyAnn,
-			SourceModelBuildingContext sourceModelContext) {
+			ModelsContext sourceModelContext) {
 		final NotFound notFound = property.getAnnotationUsage( NotFound.class, sourceModelContext );
 		if ( notFound != null ) {
 			if ( manyToManyAnn == null ) {
@@ -634,7 +634,7 @@ public abstract class CollectionBinder {
 	private static JoinColumn[] mapKeyJoinColumnAnnotations(
 			MemberDetails property,
 			MetadataBuildingContext context) {
-		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
 
 		final MapKeyJoinColumn[] mapKeyJoinColumns = property.getRepeatedAnnotationUsages(
 				JpaAnnotations.MAP_KEY_JOIN_COLUMN,
@@ -957,7 +957,7 @@ public abstract class CollectionBinder {
 			return CollectionClassification.ARRAY;
 		}
 
-		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		if ( !property.hasAnnotationUsage( Bag.class, modelsContext ) ) {
 			return determineCollectionClassification( determineSemanticJavaType( property ), property, buildingContext );
 		}
@@ -1026,7 +1026,7 @@ public abstract class CollectionBinder {
 				return CollectionClassification.BAG;
 			}
 
-			final SourceModelBuildingContext modelsContext =
+			final ModelsContext modelsContext =
 					buildingContext.getBootstrapContext().getModelsContext();
 			final ManyToMany manyToMany = property.getAnnotationUsage( ManyToMany.class, modelsContext );
 			if ( manyToMany != null && !manyToMany.mappedBy().isBlank() ) {
@@ -1460,7 +1460,7 @@ public abstract class CollectionBinder {
 		handleFetchProfileOverrides();
 	}
 
-	private SourceModelBuildingContext modelsContext() {
+	private ModelsContext modelsContext() {
 		return buildingContext.getBootstrapContext().getModelsContext();
 	}
 

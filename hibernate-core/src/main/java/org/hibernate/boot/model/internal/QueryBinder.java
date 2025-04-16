@@ -36,7 +36,7 @@ import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
@@ -281,7 +281,7 @@ public abstract class QueryBinder {
 		}
 		final JdbcCall jdbcCall = parseJdbcCall( sqlString, exceptionProducer );
 
-		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
 		final NamedStoredProcedureQueryJpaAnnotation nameStoredProcedureQueryAnn =
 				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERY.createUsage( modelsContext );
 		nameStoredProcedureQueryAnn.name( builder.getName() );

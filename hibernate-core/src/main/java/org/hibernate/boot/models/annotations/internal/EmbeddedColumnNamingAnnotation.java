@@ -5,7 +5,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import org.hibernate.annotations.EmbeddedColumnNaming;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
@@ -17,7 +17,7 @@ public class EmbeddedColumnNamingAnnotation implements EmbeddedColumnNaming {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public EmbeddedColumnNamingAnnotation(SourceModelBuildingContext modelContext) {
+	public EmbeddedColumnNamingAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
@@ -25,7 +25,7 @@ public class EmbeddedColumnNamingAnnotation implements EmbeddedColumnNaming {
 	 */
 	public EmbeddedColumnNamingAnnotation(
 			EmbeddedColumnNaming annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = annotation.value();
 	}
 
@@ -34,7 +34,7 @@ public class EmbeddedColumnNamingAnnotation implements EmbeddedColumnNaming {
 	 */
 	public EmbeddedColumnNamingAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (String) attributeValues.get( "value" );
 	}
 

@@ -16,7 +16,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,7 +32,7 @@ public class DomainModelCategorizationCollector {
 	private final boolean areIdGeneratorsGlobal;
 
 	private final GlobalRegistrationsImpl globalRegistrations;
-	private final SourceModelBuildingContext modelsContext;
+	private final ModelsContext modelsContext;
 
 	private final Set<ClassDetails> rootEntities = new HashSet<>();
 	private final Map<String,ClassDetails> mappedSuperclasses = new HashMap<>();
@@ -41,7 +41,7 @@ public class DomainModelCategorizationCollector {
 	public DomainModelCategorizationCollector(
 			boolean areIdGeneratorsGlobal,
 			GlobalRegistrations globalRegistrations,
-			SourceModelBuildingContext modelsContext) {
+			ModelsContext modelsContext) {
 		this.areIdGeneratorsGlobal = areIdGeneratorsGlobal;
 		this.globalRegistrations = (GlobalRegistrationsImpl) globalRegistrations;
 		this.modelsContext = modelsContext;

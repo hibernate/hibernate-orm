@@ -31,8 +31,7 @@ import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
-import org.hibernate.models.spi.SourceModelContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
@@ -65,7 +64,7 @@ public class GeneratorAnnotationHelper {
 			@Nullable Function<A,String> nameExtractor,
 			@Nullable String matchName,
 			MetadataBuildingContext context) {
-		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
 
 		A possibleMatch = null;
 
@@ -152,11 +151,11 @@ public class GeneratorAnnotationHelper {
 	}
 
 	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, MetadataBuildingContext buildingContext) {
-		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		return locatePackageInfoDetails( classDetails, modelsContext );
 	}
 
-	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, SourceModelContext modelContext) {
+	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, ModelsContext modelContext) {
 		return locatePackageInfoDetails( classDetails, modelContext.getClassDetailsRegistry() );
 	}
 

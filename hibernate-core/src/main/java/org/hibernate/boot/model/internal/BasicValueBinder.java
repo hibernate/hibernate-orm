@@ -42,7 +42,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -151,7 +151,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		this.buildingContext = buildingContext;
 	}
 
-	protected SourceModelBuildingContext getSourceModelContext() {
+	protected ModelsContext getSourceModelContext() {
 		return buildingContext.getBootstrapContext().getModelsContext();
 	}
 
@@ -1370,21 +1370,21 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	 * Access to detail of basic value mappings based on {@link Kind}
 	 */
 	private interface BasicMappingAccess {
-		Class<? extends UserType<?>> customType(MemberDetails attribute, SourceModelBuildingContext context);
-		Map<String,String> customTypeParameters(MemberDetails attribute, SourceModelBuildingContext context);
+		Class<? extends UserType<?>> customType(MemberDetails attribute, ModelsContext context);
+		Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context);
 	}
 
 	private static class ValueMappingAccess implements BasicMappingAccess {
 		private static final ValueMappingAccess INSTANCE = new ValueMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Class<? extends UserType<?>> customType(MemberDetails attribute, ModelsContext context) {
 			final Type customType = attribute.locateAnnotationUsage( Type.class, context );
 			return customType == null ? null : customType.value();
 		}
 
 		@Override
-		public Map<String,String> customTypeParameters(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context) {
 			final Type customType = attribute.locateAnnotationUsage( Type.class, context );
 			return customType == null ? null : extractParameterMap( customType.parameters() );
 		}
@@ -1394,12 +1394,12 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		private static final AnyDiscriminatorMappingAccess INSTANCE = new AnyDiscriminatorMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Class<? extends UserType<?>> customType(MemberDetails attribute, ModelsContext context) {
 			return null;
 		}
 
 		@Override
-		public Map<String,String> customTypeParameters(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context) {
 			return emptyMap();
 		}
 	}
@@ -1408,12 +1408,12 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		private static final AnyKeyMappingAccess INSTANCE = new AnyKeyMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Class<? extends UserType<?>> customType(MemberDetails attribute, ModelsContext context) {
 			return null;
 		}
 
 		@Override
-		public Map<String,String> customTypeParameters(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context) {
 			return emptyMap();
 		}
 	}
@@ -1422,14 +1422,14 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		private static final MapKeyMappingAccess INSTANCE = new MapKeyMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Class<? extends UserType<?>> customType(MemberDetails attribute, ModelsContext context) {
 			final MapKeyType customType = attribute.locateAnnotationUsage( MapKeyType.class, context );
 			return customType == null ? null : customType.value();
 
 		}
 
 		@Override
-		public Map<String,String> customTypeParameters(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context) {
 			final MapKeyType customType = attribute.locateAnnotationUsage( MapKeyType.class, context );
 			return customType == null ? null : extractParameterMap( customType.parameters() );
 
@@ -1440,14 +1440,14 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		private static final CollectionIdMappingAccess INSTANCE = new CollectionIdMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Class<? extends UserType<?>> customType(MemberDetails attribute, ModelsContext context) {
 			final CollectionIdType customType = attribute.locateAnnotationUsage( CollectionIdType.class, context );
 			return customType == null ? null : customType.value();
 
 		}
 
 		@Override
-		public Map<String,String> customTypeParameters(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context) {
 			final CollectionIdType customType = attribute.locateAnnotationUsage( CollectionIdType.class, context );
 			return customType == null ? null : extractParameterMap( customType.parameters() );
 
@@ -1458,12 +1458,12 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		private static final ListIndexMappingAccess INSTANCE = new ListIndexMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Class<? extends UserType<?>> customType(MemberDetails attribute, ModelsContext context) {
 			return null;
 		}
 
 		@Override
-		public Map<String,String> customTypeParameters(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context) {
 			return emptyMap();
 		}
 	}

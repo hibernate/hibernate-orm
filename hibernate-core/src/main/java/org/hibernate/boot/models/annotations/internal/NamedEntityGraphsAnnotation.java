@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import org.hibernate.annotations.NamedEntityGraph;
 import org.hibernate.annotations.NamedEntityGraphs;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
@@ -24,20 +24,20 @@ public class NamedEntityGraphsAnnotation implements NamedEntityGraphs, Repeatabl
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public NamedEntityGraphsAnnotation(SourceModelBuildingContext modelContext) {
+	public NamedEntityGraphsAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public NamedEntityGraphsAnnotation(NamedEntityGraphs annotation, SourceModelBuildingContext modelContext) {
+	public NamedEntityGraphsAnnotation(NamedEntityGraphs annotation, ModelsContext modelContext) {
 		this.value = extractJdkValue( annotation, NAMED_ENTITY_GRAPHS, "value", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public NamedEntityGraphsAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public NamedEntityGraphsAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (NamedEntityGraph[]) attributeValues.get( "value" );
 	}
 

@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.CompositeTypeRegistration;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -19,7 +19,7 @@ public class CompositeTypeRegistrationAnnotation implements CompositeTypeRegistr
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public CompositeTypeRegistrationAnnotation(SourceModelBuildingContext modelContext) {
+	public CompositeTypeRegistrationAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
@@ -27,7 +27,7 @@ public class CompositeTypeRegistrationAnnotation implements CompositeTypeRegistr
 	 */
 	public CompositeTypeRegistrationAnnotation(
 			CompositeTypeRegistration annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.embeddableClass = annotation.embeddableClass();
 		this.userType = annotation.userType();
 	}
@@ -35,7 +35,7 @@ public class CompositeTypeRegistrationAnnotation implements CompositeTypeRegistr
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public CompositeTypeRegistrationAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public CompositeTypeRegistrationAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.embeddableClass = (Class<?>) attributeValues.get( "embeddableClass" );
 		this.userType = (Class<? extends org.hibernate.usertype.CompositeUserType<?>>) attributeValues.get( "userType" );
 	}

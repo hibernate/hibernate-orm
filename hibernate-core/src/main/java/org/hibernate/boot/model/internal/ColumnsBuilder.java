@@ -16,7 +16,7 @@ import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -239,7 +239,7 @@ class ColumnsBuilder {
 	}
 
 	private JoinColumnOrFormula[] joinColumnOrFormulaAnnotations(MemberDetails property, PropertyData inferredData) {
-		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		final JoinColumnOrFormula[] annotations = property.getRepeatedAnnotationUsages(
 				HibernateAnnotations.JOIN_COLUMN_OR_FORMULA,
 				modelsContext
@@ -252,7 +252,7 @@ class ColumnsBuilder {
 	}
 
 	private JoinColumn[] getJoinColumnAnnotations(MemberDetails property, PropertyData inferredData) {
-		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 
 		final JoinColumn[] joinColumns = property.getRepeatedAnnotationUsages(
 				JpaAnnotations.JOIN_COLUMN,

@@ -19,7 +19,7 @@ import org.hibernate.boot.models.xml.internal.XmlPreProcessingResultImpl;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.models.internal.StringTypeDescriptor;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
 import org.hibernate.orm.test.boot.models.XmlHelper;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
@@ -123,7 +123,7 @@ public class XmlProcessingSmokeTests {
 	@Test
 	@ServiceRegistry
 	void testSimpleGlobalXmlProcessing(ServiceRegistryScope scope) {
-		final SourceModelBuildingContext buildingContext = SourceModelTestHelper.createBuildingContext( StringTypeDescriptor.class );
+		final ModelsContext buildingContext = SourceModelTestHelper.createBuildingContext( StringTypeDescriptor.class );
 		final XmlPreProcessingResultImpl collectedXmlResources = new XmlPreProcessingResultImpl();
 
 		final JaxbEntityMappingsImpl xmlMapping = XmlHelper.loadMapping( "mappings/models/globals.xml", SIMPLE_CLASS_LOADING );

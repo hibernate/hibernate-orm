@@ -60,14 +60,14 @@ public class SingleStoreJsonObjectAggFunction extends JsonObjectAggFunction {
 	@Override
 	protected void renderArgument(
 			SqlAppender sqlAppender, Expression arg, JsonNullBehavior nullBehavior, SqlAstTranslator<?> translator) {
-		sqlAppender.appendSql( "to_json(" );
 		if ( nullBehavior != JsonNullBehavior.NULL ) {
 			sqlAppender.appendSql( "nullif(" );
 		}
+		sqlAppender.appendSql( "to_json(" );
 		arg.accept( translator );
-		if ( nullBehavior != JsonNullBehavior.NULL ) {
-			sqlAppender.appendSql( ",'null')" );
-		}
 		sqlAppender.appendSql( ")" );
+		if ( nullBehavior != JsonNullBehavior.NULL ) {
+			sqlAppender.appendSql( ",to_json('null'))" );
+		}
 	}
 }

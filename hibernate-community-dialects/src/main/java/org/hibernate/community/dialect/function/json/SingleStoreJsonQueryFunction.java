@@ -50,9 +50,9 @@ public class SingleStoreJsonQueryFunction extends JsonQueryFunction {
 			final JsonQueryWrapMode wrapMode = arguments.wrapMode();
 			final DecorationMode decorationMode = determineDecorationMode( wrapMode );
 			if ( decorationMode == DecorationMode.WRAP ) {
-				sqlAppender.appendSql( "concat('['," );
+				sqlAppender.appendSql( "json_build_array(" );
 			}
-			sqlAppender.appendSql( "nullif(json_extract_string(" );
+			sqlAppender.appendSql( "nullif(json_extract_json(" );
 			arguments.jsonDocument().accept( walker );
 			for ( JsonPathHelper.JsonPathElement pathElement : jsonPathElements ) {
 				sqlAppender.appendSql( ',' );
@@ -69,9 +69,9 @@ public class SingleStoreJsonQueryFunction extends JsonQueryFunction {
 					sqlAppender.appendSql( '\'' );
 				}
 			}
-			sqlAppender.appendSql( "),'null')" );
+			sqlAppender.appendSql( "),to_json('null'))" );
 			if ( decorationMode == DecorationMode.WRAP ) {
-				sqlAppender.appendSql( ",']')" );
+				sqlAppender.appendSql( ")" );
 			}
 		}
 	}

@@ -54,7 +54,7 @@ public class SingleStoreJsonValueFunction extends JsonValueFunction {
 			throw new QueryException( "SingleStore json_value only support literal json paths, but got " + arguments.jsonPath() );
 		}
 		final List<JsonPathHelper.JsonPathElement> jsonPathElements = JsonPathHelper.parseJsonPathElements( jsonPath );
-		sqlAppender.appendSql( "json_extract_string(" );
+		sqlAppender.appendSql( "json_extract_json(" );
 		arguments.jsonDocument().accept( walker );
 		for ( JsonPathHelper.JsonPathElement pathElement : jsonPathElements ) {
 			sqlAppender.appendSql( ',' );

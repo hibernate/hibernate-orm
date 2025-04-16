@@ -4,8 +4,6 @@
  */
 package org.hibernate.community.dialect.function.json;
 
-import java.util.List;
-
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.json.AbstractJsonArrayInsertFunction;
 import org.hibernate.dialect.function.json.JsonPathHelper;
@@ -14,8 +12,9 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import java.util.List;
 
 /**
  * SingleStore json_array_insert function.
@@ -48,24 +47,26 @@ public class SingleStoreJsonArrayInsertFunction extends AbstractJsonArrayInsertF
 		json.accept( translator );
 		buildJsonPath( sqlAppender, jsonPath, jsonPathElements );
 		sqlAppender.appendSql( ")) = 'array' THEN " );
-		buildJsonArrayInsertValue( sqlAppender, value );
+		sqlAppender.appendSql( "json_splice_json(" );
 		sqlAppender.appendSql( "json_extract_json(" );
 		json.accept( translator );
 		buildJsonPath( sqlAppender, jsonPath, jsonPathElements );
 		sqlAppender.appendSql( "), " );
 		sqlAppender.appendSql( arrayIndex );
 		sqlAppender.appendSql( ", 0, " );
+		sqlAppender.appendSql( "to_json(" );
 		value.accept( translator );
-		sqlAppender.appendSql( ") ELSE " );
-		buildJsonArrayInsertValue( sqlAppender, value );
+		sqlAppender.appendSql( ")) ELSE " );
+		sqlAppender.appendSql( "json_splice_json(" );
 		sqlAppender.appendSql( "json_build_array(json_extract_json(" );
 		json.accept( translator );
 		buildJsonPath( sqlAppender, jsonPath, jsonPathElements );
 		sqlAppender.appendSql( "))," );
 		sqlAppender.appendSql( arrayIndex );
 		sqlAppender.appendSql( ", 0, " );
+		sqlAppender.appendSql( "to_json(" );
 		value.accept( translator );
-		sqlAppender.appendSql( ") END" );
+		sqlAppender.appendSql( ")) END" );
 		if ( jsonPathElements.size() > 1 ) {
 			sqlAppender.appendSql( ')' );
 		}
@@ -81,15 +82,6 @@ public class SingleStoreJsonArrayInsertFunction extends AbstractJsonArrayInsertF
 					"SingleStore json_array_insert function last path parameter must be an array index element" );
 		}
 		return ( (JsonPathHelper.JsonIndexAccess) lastPathElement ).index();
-	}
-
-	private static boolean isNumeric(SqlAstNode value) {
-		return value instanceof UnparsedNumericLiteral<?>;
-	}
-
-	private static void buildJsonArrayInsertValue(SqlAppender sqlAppender, SqlAstNode value) {
-		sqlAppender.appendSql( "json_splice_" );
-		sqlAppender.appendSql( isNumeric( value ) ? "double(" : "string(" );
 	}
 
 	private static void buildJsonPath(

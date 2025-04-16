@@ -14,7 +14,6 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -39,8 +38,7 @@ public class SingleStoreJsonSetFunction extends AbstractJsonSetFunction {
 		final List<JsonPathHelper.JsonPathElement> jsonPathElements = JsonPathHelper.parseJsonPathElements( translator.getLiteralValue(
 				jsonPath ) );
 		final SqlAstNode value = arguments.get( 2 );
-		sqlAppender.appendSql( "json_set_" );
-		sqlAppender.appendSql( isNumeric( value ) ? "double(" : "string(" );
+		sqlAppender.appendSql( "json_set_json(" );
 		json.accept( translator );
 		for ( JsonPathHelper.JsonPathElement pathElement : jsonPathElements ) {
 			sqlAppender.appendSql( ',' );
@@ -57,13 +55,8 @@ public class SingleStoreJsonSetFunction extends AbstractJsonSetFunction {
 				sqlAppender.appendSql( '\'' );
 			}
 		}
-		sqlAppender.appendSql( ',' );
+		sqlAppender.appendSql( ", to_json(" );
 		value.accept( translator );
-		sqlAppender.appendSql( ')' );
+		sqlAppender.appendSql( "))" );
 	}
-
-	private static boolean isNumeric(SqlAstNode value) {
-		return value instanceof UnparsedNumericLiteral<?>;
-	}
-
 }

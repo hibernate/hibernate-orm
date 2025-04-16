@@ -38,7 +38,7 @@ public class SingleStoreJsonArrayAggFunction extends JsonArrayAggFunction {
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
 		final boolean caseWrapper = filter != null;
-		sqlAppender.appendSql( "concat('[',group_concat(" );
+		sqlAppender.appendSql( "json_build_array(group_concat(" );
 		final JsonNullBehavior nullBehavior;
 		if ( sqlAstArguments.size() > 1 ) {
 			nullBehavior = (JsonNullBehavior) sqlAstArguments.get( 1 );
@@ -80,20 +80,20 @@ public class SingleStoreJsonArrayAggFunction extends JsonArrayAggFunction {
 			}
 			translator.getCurrentClauseStack().pop();
 		}
-		sqlAppender.appendSql( " separator ','),']')" );
+		sqlAppender.appendSql( " separator ','))" );
 	}
 
 	@Override
 	protected void renderArgument(
 			SqlAppender sqlAppender, Expression arg, JsonNullBehavior nullBehavior, SqlAstTranslator<?> translator) {
-		sqlAppender.appendSql( "to_json(" );
 		if ( nullBehavior != JsonNullBehavior.NULL ) {
 			sqlAppender.appendSql( "nullif(" );
 		}
+		sqlAppender.appendSql( "to_json(" );
 		arg.accept( translator );
-		if ( nullBehavior != JsonNullBehavior.NULL ) {
-			sqlAppender.appendSql( ",'null')" );
-		}
 		sqlAppender.appendSql( ')' );
+		if ( nullBehavior != JsonNullBehavior.NULL ) {
+			sqlAppender.appendSql( ",to_json('null'))" );
+		}
 	}
 }

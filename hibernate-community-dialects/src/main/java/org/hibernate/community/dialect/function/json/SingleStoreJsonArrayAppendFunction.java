@@ -14,7 +14,6 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -45,29 +44,22 @@ public class SingleStoreJsonArrayAppendFunction extends AbstractJsonArrayAppendF
 		json.accept( translator );
 		buildJsonPath( sqlAppender, jsonPath, jsonPathElements );
 		sqlAppender.appendSql( ")) = 'array' THEN " );
-		buildJsonArrayPushValue( sqlAppender, value );
+		sqlAppender.appendSql( "json_array_push_json(" );
 		sqlAppender.appendSql( "json_extract_json(" );
 		json.accept( translator );
 		buildJsonPath( sqlAppender, jsonPath, jsonPathElements );
 		sqlAppender.appendSql( ")," );
+		sqlAppender.appendSql( "to_json(" );
 		value.accept( translator );
-		sqlAppender.appendSql( ") ELSE " );
-		buildJsonArrayPushValue( sqlAppender, value );
+		sqlAppender.appendSql( ")) ELSE " );
+		sqlAppender.appendSql( "json_array_push_json(" );
 		sqlAppender.appendSql( "json_build_array(json_extract_json(" );
 		json.accept( translator );
 		buildJsonPath( sqlAppender, jsonPath, jsonPathElements );
 		sqlAppender.appendSql( "))," );
+		sqlAppender.appendSql( "to_json(" );
 		value.accept( translator );
-		sqlAppender.appendSql( ") END )" );
-	}
-
-	private static boolean isNumeric(SqlAstNode value) {
-		return value instanceof UnparsedNumericLiteral<?>;
-	}
-
-	private static void buildJsonArrayPushValue(SqlAppender sqlAppender, SqlAstNode value) {
-		sqlAppender.appendSql( "json_array_push_" );
-		sqlAppender.appendSql( isNumeric( value ) ? "double(" : "string(" );
+		sqlAppender.appendSql( ")) END )" );
 	}
 
 	private static void buildJsonPath(

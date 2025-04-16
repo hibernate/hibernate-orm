@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.SQLJoinTableRestriction;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -18,7 +18,7 @@ public class SQLJoinTableRestrictionAnnotation implements SQLJoinTableRestrictio
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public SQLJoinTableRestrictionAnnotation(SourceModelBuildingContext modelContext) {
+	public SQLJoinTableRestrictionAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
@@ -26,7 +26,7 @@ public class SQLJoinTableRestrictionAnnotation implements SQLJoinTableRestrictio
 	 */
 	public SQLJoinTableRestrictionAnnotation(
 			SQLJoinTableRestriction annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = annotation.value();
 	}
 
@@ -35,7 +35,7 @@ public class SQLJoinTableRestrictionAnnotation implements SQLJoinTableRestrictio
 	 */
 	public SQLJoinTableRestrictionAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (String) attributeValues.get( "value" );
 	}
 

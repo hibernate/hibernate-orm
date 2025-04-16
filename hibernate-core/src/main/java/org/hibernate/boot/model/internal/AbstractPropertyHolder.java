@@ -25,7 +25,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 
@@ -172,7 +172,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		return context;
 	}
 
-	protected SourceModelBuildingContext getSourceModelContext() {
+	protected ModelsContext getSourceModelContext() {
 		return getContext().getBootstrapContext().getModelsContext();
 	}
 
@@ -435,7 +435,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			return result;
 		}
 
-		final SourceModelBuildingContext sourceModelContext =
+		final ModelsContext sourceModelContext =
 				context.getBootstrapContext().getModelsContext();
 		final Map<String, List<Column>> columnOverrideMap = new HashMap<>();
 
@@ -571,7 +571,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	private static Map<String, ColumnTransformer> buildColumnTransformerOverride(AnnotationTarget element, MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext = context.getBootstrapContext().getModelsContext();
+		final ModelsContext sourceModelContext = context.getBootstrapContext().getModelsContext();
 		final Map<String, ColumnTransformer> columnOverride = new HashMap<>();
 		if ( element != null ) {
 			element.forEachAnnotationUsage( ColumnTransformer.class, sourceModelContext, (usage) -> {

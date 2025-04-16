@@ -68,7 +68,7 @@ import org.hibernate.models.spi.ArrayTypeDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeVariableScope;
 import org.hibernate.usertype.CompositeUserType;
@@ -131,7 +131,7 @@ public class PropertyBinder {
 	private boolean toMany;
 	private String referencedEntityName; // only used for @MapsId or @IdClass
 
-	protected SourceModelBuildingContext getSourceModelContext() {
+	protected ModelsContext getSourceModelContext() {
 		return buildingContext.getBootstrapContext().getModelsContext();
 	}
 
@@ -652,7 +652,7 @@ public class PropertyBinder {
 		return idPropertyCounter;
 	}
 
-	private static void checkIdProperty(MemberDetails property, PropertyData propertyData, SourceModelBuildingContext context) {
+	private static void checkIdProperty(MemberDetails property, PropertyData propertyData, ModelsContext context) {
 		final boolean incomingIdProperty = hasIdAnnotation( property );
 		final MemberDetails attributeMember = propertyData.getAttributeMember();
 		final boolean existingIdProperty = hasIdAnnotation( attributeMember );
@@ -1320,7 +1320,7 @@ public class PropertyBinder {
 	private static Class<? extends CompositeUserType<?>> resolveCompositeUserType(
 			PropertyData inferredData,
 			MetadataBuildingContext buildingContext) {
-		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 
 		final MemberDetails attributeMember = inferredData.getAttributeMember();
 		final TypeDetails classOrElementType = inferredData.getClassOrElementType();

@@ -13,7 +13,7 @@ import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.AbstractOverrider;
 import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.models.spi.AnnotationDescriptor;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_FILTER_DEFS;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
@@ -30,7 +30,7 @@ public class OverriddenFilterDefsAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public OverriddenFilterDefsAnnotation(SourceModelBuildingContext modelContext) {
+	public OverriddenFilterDefsAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
@@ -38,7 +38,7 @@ public class OverriddenFilterDefsAnnotation
 	 */
 	public OverriddenFilterDefsAnnotation(
 			DialectOverride.FilterDefs annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		dialect( annotation.dialect() );
 		before( annotation.before() );
 		sameOrAfter( annotation.sameOrAfter() );
@@ -50,7 +50,7 @@ public class OverriddenFilterDefsAnnotation
 	 */
 	public OverriddenFilterDefsAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		super( attributeValues, DIALECT_OVERRIDE_FILTER_DEFS, modelContext );
 		override( (FilterDefs) attributeValues.get( "override" ) );
 	}

@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.QueryHint;
 
@@ -20,13 +20,13 @@ public class QueryHintJpaAnnotation implements QueryHint {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public QueryHintJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public QueryHintJpaAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public QueryHintJpaAnnotation(QueryHint annotation, SourceModelBuildingContext modelContext) {
+	public QueryHintJpaAnnotation(QueryHint annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.value = annotation.value();
 	}
@@ -34,7 +34,7 @@ public class QueryHintJpaAnnotation implements QueryHint {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public QueryHintJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public QueryHintJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.value = (String) attributeValues.get( "value" );
 	}

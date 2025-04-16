@@ -28,7 +28,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -335,7 +335,7 @@ public class ToOneBinder {
 			PropertyData inferredData) {
 		final MetadataBuildingContext context = toOne.getBuildingContext();
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
-		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
 		property.forEachAnnotationUsage( FetchProfileOverride.class, modelsContext,
 				usage -> collector.addSecondPass( new FetchSecondPass( usage, propertyHolder, inferredData.getPropertyName(), context ) ));
 	}
@@ -605,7 +605,7 @@ public class ToOneBinder {
 	}
 
 	private static ClassDetails getTargetEntityClass(MemberDetails property, MetadataBuildingContext context) {
-		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
 		final ManyToOne manyToOne = property.getDirectAnnotationUsage( ManyToOne.class );
 		if ( manyToOne != null ) {
 			return modelsContext.getClassDetailsRegistry().resolveClassDetails( manyToOne.targetEntity().getName() );

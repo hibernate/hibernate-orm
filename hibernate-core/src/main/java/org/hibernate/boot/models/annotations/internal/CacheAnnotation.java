@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.Cache;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -20,7 +20,7 @@ public class CacheAnnotation implements Cache {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public CacheAnnotation(SourceModelBuildingContext modelContext) {
+	public CacheAnnotation(ModelsContext modelContext) {
 		this.region = "";
 		this.includeLazy = true;
 	}
@@ -28,7 +28,7 @@ public class CacheAnnotation implements Cache {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public CacheAnnotation(Cache annotation, SourceModelBuildingContext modelContext) {
+	public CacheAnnotation(Cache annotation, ModelsContext modelContext) {
 		this.usage = annotation.usage();
 		this.region = annotation.region();
 		this.includeLazy = annotation.includeLazy();
@@ -37,7 +37,7 @@ public class CacheAnnotation implements Cache {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public CacheAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public CacheAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.usage = (org.hibernate.annotations.CacheConcurrencyStrategy) attributeValues.get( "usage" );
 		this.region = (String) attributeValues.get( "region" );
 		this.includeLazy = (boolean) attributeValues.get( "includeLazy" );

@@ -10,7 +10,7 @@ import java.util.Map;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbStoredProcedureParameterImpl;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.StoredProcedureParameter;
 
@@ -24,7 +24,7 @@ public class StoredProcedureParameterJpaAnnotation implements StoredProcedurePar
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public StoredProcedureParameterJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public StoredProcedureParameterJpaAnnotation(ModelsContext modelContext) {
 		this.name = "";
 		this.mode = jakarta.persistence.ParameterMode.IN;
 	}
@@ -34,7 +34,7 @@ public class StoredProcedureParameterJpaAnnotation implements StoredProcedurePar
 	 */
 	public StoredProcedureParameterJpaAnnotation(
 			StoredProcedureParameter annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.mode = annotation.mode();
 		this.type = annotation.type();
@@ -45,7 +45,7 @@ public class StoredProcedureParameterJpaAnnotation implements StoredProcedurePar
 	 */
 	public StoredProcedureParameterJpaAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.mode = (jakarta.persistence.ParameterMode) attributeValues.get( "mode" );
 		this.type = (Class<?>) attributeValues.get( "type" );

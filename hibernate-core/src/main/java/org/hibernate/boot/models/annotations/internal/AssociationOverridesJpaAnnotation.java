@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.AssociationOverrides;
 
@@ -22,13 +22,13 @@ public class AssociationOverridesJpaAnnotation implements AssociationOverrides {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public AssociationOverridesJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public AssociationOverridesJpaAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public AssociationOverridesJpaAnnotation(AssociationOverrides annotation, SourceModelBuildingContext modelContext) {
+	public AssociationOverridesJpaAnnotation(AssociationOverrides annotation, ModelsContext modelContext) {
 		this.value = extractJdkValue( annotation, JpaAnnotations.ASSOCIATION_OVERRIDES, "value", modelContext );
 	}
 
@@ -37,7 +37,7 @@ public class AssociationOverridesJpaAnnotation implements AssociationOverrides {
 	 */
 	public AssociationOverridesJpaAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (jakarta.persistence.AssociationOverride[]) attributeValues.get( "value" );
 	}
 

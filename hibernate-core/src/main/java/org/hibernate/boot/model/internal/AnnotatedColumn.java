@@ -36,7 +36,7 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
@@ -831,7 +831,7 @@ public class AnnotatedColumn {
 			FractionalSeconds fractionalSeconds,
 			String sqlType,
 			String tableName,
-			SourceModelBuildingContext sourceModelContext) {
+			ModelsContext sourceModelContext) {
 		final String columnName = logicalColumnName( inferredData, suffixForDefaultColumnName, database, column );
 		final AnnotatedColumn annotatedColumn = new AnnotatedColumn();
 		annotatedColumn.setLogicalColumnName( columnName );
@@ -983,7 +983,7 @@ public class AnnotatedColumn {
 	private void extractDataFromPropertyData(
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
-			SourceModelBuildingContext context) {
+			ModelsContext context) {
 		if ( inferredData != null ) {
 			final MemberDetails attributeMember = inferredData.getAttributeMember();
 			if ( attributeMember != null ) {

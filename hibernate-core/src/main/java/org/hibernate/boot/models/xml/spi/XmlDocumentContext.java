@@ -26,7 +26,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MutableClassDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.usertype.UserType;
@@ -50,9 +50,9 @@ public interface XmlDocumentContext {
 	EffectiveMappingDefaults getEffectiveDefaults();
 
 	/**
-	 * Access to the containing SourceModelBuildingContext
+	 * Access to the containing ModelsContext
 	 */
-	SourceModelBuildingContext getModelBuildingContext();
+	ModelsContext getModelBuildingContext();
 
 	/**
 	 * Access to the containing BootstrapContext

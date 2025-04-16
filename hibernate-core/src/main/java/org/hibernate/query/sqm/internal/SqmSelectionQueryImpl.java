@@ -162,10 +162,18 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 			SqmSelectStatement<R> criteria,
 			Class<R> expectedResultType,
 			SharedSessionContractImplementor session) {
+		this( criteria, session.isCriteriaCopyTreeEnabled(), expectedResultType, session );
+	}
+
+	public SqmSelectionQueryImpl(
+			SqmSelectStatement<R> criteria,
+			boolean copyAst,
+			Class<R> expectedResultType,
+			SharedSessionContractImplementor session) {
 		super( session );
 		this.expectedResultType = expectedResultType;
 		hql = CRITERIA_HQL_STRING;
-		if ( session.isCriteriaCopyTreeEnabled() ) {
+		if ( copyAst ) {
 			sqm = criteria.copy( SqmCopyContext.simpleContext() );
 			if ( session.isCriteriaPlanCacheEnabled() ) {
 				queryStringCacheKey = sqm.toHqlString();
@@ -212,6 +220,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		setComment( hql );
 
 		tupleMetadata = buildTupleMetadata( sqm, expectedResultType );
+
 	}
 
 	<E> SqmSelectionQueryImpl(AbstractSqmSelectionQuery<?> original, KeyedPage<E> keyedPage) {

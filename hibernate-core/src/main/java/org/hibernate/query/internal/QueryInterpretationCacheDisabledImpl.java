@@ -120,6 +120,11 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 	}
 
 	@Override
+	public <R> void cacheHqlInterpretation(Object cacheKey, HqlInterpretation<R> hqlInterpretation) {
+		// nothing to do
+	}
+
+	@Override
 	public ParameterInterpretation resolveNativeQueryParameters(
 			String queryString,
 			Function<String, ParameterInterpretation> creator) {

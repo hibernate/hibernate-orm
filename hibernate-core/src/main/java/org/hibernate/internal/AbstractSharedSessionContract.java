@@ -4,19 +4,12 @@
  */
 package org.hibernate.internal;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serial;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.TimeZone;
-import java.util.UUID;
-import java.util.function.Function;
-
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.TypedQueryReference;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityNameResolver;
@@ -78,6 +71,10 @@ import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.programmatic.MutationSpecification;
+import org.hibernate.query.programmatic.SelectionSpecification;
+import org.hibernate.query.programmatic.internal.MutationSpecificationImpl;
+import org.hibernate.query.programmatic.internal.SelectionSpecificationImpl;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
@@ -102,15 +99,21 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
-
-import jakarta.persistence.TransactionRequiredException;
-import jakarta.persistence.TypedQueryReference;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serial;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.TimeZone;
+import java.util.UUID;
+import java.util.function.Function;
 
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -1255,6 +1258,21 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return buildNamedQuery( queryName,
 				memento -> createSqmQueryImplementor( queryName, memento ),
 				memento -> createNativeQueryImplementor( queryName, memento ) );
+	}
+
+	@Override
+	public <T> SelectionSpecification<T> createSelectionSpecification(String hql, Class<T> resultType) {
+		return new SelectionSpecificationImpl<>( hql, resultType, this );
+	}
+
+	@Override
+	public <T> SelectionSpecification<T> createSelectionSpecification(Class<T> rootEntityType) {
+		return new SelectionSpecificationImpl<>( rootEntityType, this );
+	}
+
+	@Override
+	public <T> MutationSpecification<T> createMutationSpecification(String hql, Class<T> mutationTarget) {
+		return new MutationSpecificationImpl<>( hql, mutationTarget, this );
 	}
 
 	protected <T> NativeQueryImplementor<T> createNativeQueryImplementor(String queryName, NamedNativeQueryMemento<T> memento) {

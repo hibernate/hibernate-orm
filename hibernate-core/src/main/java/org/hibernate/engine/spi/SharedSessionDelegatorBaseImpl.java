@@ -10,7 +10,6 @@ import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
@@ -37,6 +36,8 @@ import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
+import org.hibernate.query.programmatic.MutationSpecification;
+import org.hibernate.query.programmatic.SelectionSpecification;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
@@ -226,6 +227,21 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public MutationQuery createNamedMutationQuery(String name) {
 		return delegate.createNamedMutationQuery( name );
+	}
+
+	@Override
+	public <T> SelectionSpecification<T> createSelectionSpecification(String hql, Class<T> resultType) {
+		return delegate.createSelectionSpecification( hql, resultType );
+	}
+
+	@Override
+	public <T> SelectionSpecification<T> createSelectionSpecification(Class<T> rootEntityType) {
+		return delegate.createSelectionSpecification( rootEntityType );
+	}
+
+	@Override
+	public <T> MutationSpecification<T> createMutationSpecification(String hql, Class<T> mutationTarget) {
+		return delegate.createMutationSpecification( hql, mutationTarget );
 	}
 
 	@Override

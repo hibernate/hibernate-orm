@@ -52,7 +52,6 @@ The https://github.com/hibernate/hibernate-models[Hibernate Models] project was 
 to HCANN.
 7.0 uses Hibernate Models in place of HCANN.
 
-
 [[soft-delete-timestamp]]
 == @SoftDelete with TIMESTAMP
 
@@ -120,6 +119,53 @@ link:{userGuideBase}#fetching-strategies-dynamic-fetching-entity-graph-parsing-a
 
 The new operation `Session.findMultiple()` provides a convenient way to fetch a batch of entities by id.
 Combined with the `BatchSize` option, allows breaking up the JDBC calls into "batches".
+
+
+[[QuerySpecification]]
+== QuerySpecification
+
+A new API has been added for incremental definition of a query, with support for selections -
+
+====
+[source, java, indent=0]
+----
+SelectionQuery<Book> qry = session.createSelectionSpecification(
+    "from Book",
+    Book.class
+).restriction(
+    Restriction.restrict(
+        Book_.suggestedCost,
+        Range.closed(10.00, 19.99)
+    )
+).order(
+    Order.asc(Book_.suggestedCost)
+).createQuery();
+----
+====
+
+as well as mutations -
+
+====
+[source, java, indent=0]
+----
+MutationQuery<Book> qry = session.createMutationSpecification(
+    "delete Book",
+    Book.class
+).restriction(
+    Restriction.restrict(
+        Book_.suggestedCost,
+        Range.closed(10.00, 19.99)
+    )
+).createQuery();
+----
+====
+
+[NOTE]
+====
+These APIs are considered incubating.
+====
+
+See the link:{userGuideBase}#QuerySpecification[User Guide] for details.
 
 
 [[session-managed-entities]]

@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.ValueGenerationType;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -18,20 +18,20 @@ public class ValueGenerationTypeAnnotation implements ValueGenerationType {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public ValueGenerationTypeAnnotation(SourceModelBuildingContext modelContext) {
+	public ValueGenerationTypeAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public ValueGenerationTypeAnnotation(ValueGenerationType annotation, SourceModelBuildingContext modelContext) {
+	public ValueGenerationTypeAnnotation(ValueGenerationType annotation, ModelsContext modelContext) {
 		this.generatedBy = annotation.generatedBy();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ValueGenerationTypeAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public ValueGenerationTypeAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.generatedBy = (Class<? extends org.hibernate.generator.Generator>) attributeValues.get( "generatedBy" );
 	}
 

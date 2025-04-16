@@ -73,7 +73,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
@@ -359,7 +359,7 @@ public class MetadataBuildingProcess {
 		// 	- pre-process the XML
 		// 	- collect all known classes
 		// 	- resolve (possibly building) Jandex index
-		// 	- build the SourceModelBuildingContext
+		// 	- build the ModelsContext
 		//
 		// INPUTS:
 		//		- serviceRegistry
@@ -369,9 +369,9 @@ public class MetadataBuildingProcess {
 		// OUTPUTS:
 		//		- xmlPreProcessingResult
 		//		- allKnownClassNames (technically could be included in xmlPreProcessingResult)
-		//		- sourceModelBuildingContext
+		//		- ModelsContext
 
-		final SourceModelBuildingContext modelsContext = bootstrapContext.getModelsContext();
+		final ModelsContext modelsContext = bootstrapContext.getModelsContext();
 		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources(
 				managedResources,
 				metadataCollector.getPersistenceUnitMetadata()
@@ -404,7 +404,7 @@ public class MetadataBuildingProcess {
 		// INPUTS:
 		//		- "options" (areIdGeneratorsGlobal, etc)
 		//		- xmlPreProcessingResult
-		//		- sourceModelBuildingContext
+		//		- ModelsContext
 		//
 		// OUTPUTS
 		//		- rootEntities

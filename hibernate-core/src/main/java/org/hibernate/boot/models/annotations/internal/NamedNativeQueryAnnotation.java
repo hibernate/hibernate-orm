@@ -18,7 +18,7 @@ import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.MutableClassDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -46,7 +46,7 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public NamedNativeQueryAnnotation(SourceModelBuildingContext modelContext) {
+	public NamedNativeQueryAnnotation(ModelsContext modelContext) {
 		resultClass = void.class;
 		resultSetMapping = "";
 		flushMode = FlushModeType.PERSISTENCE_CONTEXT;
@@ -65,7 +65,7 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public NamedNativeQueryAnnotation(NamedNativeQuery annotation, SourceModelBuildingContext modelContext) {
+	public NamedNativeQueryAnnotation(NamedNativeQuery annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.query = annotation.query();
 		this.resultClass = annotation.resultClass();
@@ -90,7 +90,7 @@ public class NamedNativeQueryAnnotation implements NamedNativeQuery {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public NamedNativeQueryAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public NamedNativeQueryAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.query = (String) attributeValues.get( "query" );
 		this.resultClass = (Class<?>) attributeValues.get( "resultClass" );

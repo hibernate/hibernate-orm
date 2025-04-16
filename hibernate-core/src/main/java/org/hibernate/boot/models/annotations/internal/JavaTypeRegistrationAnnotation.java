@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.JavaTypeRegistration;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -19,13 +19,13 @@ public class JavaTypeRegistrationAnnotation implements JavaTypeRegistration {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public JavaTypeRegistrationAnnotation(SourceModelBuildingContext modelContext) {
+	public JavaTypeRegistrationAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public JavaTypeRegistrationAnnotation(JavaTypeRegistration annotation, SourceModelBuildingContext modelContext) {
+	public JavaTypeRegistrationAnnotation(JavaTypeRegistration annotation, ModelsContext modelContext) {
 		this.javaType = annotation.javaType();
 		this.descriptorClass = annotation.descriptorClass();
 	}
@@ -35,7 +35,7 @@ public class JavaTypeRegistrationAnnotation implements JavaTypeRegistration {
 	 */
 	public JavaTypeRegistrationAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.javaType = (Class<?>) attributeValues.get( "javaType" );
 		this.descriptorClass = (Class<? extends org.hibernate.type.descriptor.java.BasicJavaType<?>>) attributeValues
 				.get( "descriptorClass" );

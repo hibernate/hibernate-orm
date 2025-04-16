@@ -21,7 +21,7 @@ import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedRes
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -51,9 +51,9 @@ public class DynamicModelTests {
 		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addXmlMappings( "mappings/models/dynamic/dynamic-simple.xml" )
 				.build();
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, registryScope.getRegistry() );
+		final ModelsContext ModelsContext = createBuildingContext( managedResources, registryScope.getRegistry() );
 
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
 
 		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( "SimpleEntity" );
 		assertThat( classDetails.getClassName() ).isNull();
@@ -77,9 +77,9 @@ public class DynamicModelTests {
 				.addXmlMappings( "mappings/models/dynamic/dynamic-semi-simple.xml" )
 				.build();
 
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, registryScope.getRegistry() );
+		final ModelsContext ModelsContext = createBuildingContext( managedResources, registryScope.getRegistry() );
 
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
 
 		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( "Contact" );
 		assertThat( classDetails.getClassName() ).isNull();
@@ -124,9 +124,9 @@ public class DynamicModelTests {
 		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addXmlMappings( "mappings/models/dynamic/dynamic-id-class.xml" )
 				.build();
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, registryScope.getRegistry() );
+		final ModelsContext ModelsContext = createBuildingContext( managedResources, registryScope.getRegistry() );
 
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
 		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( Employee.class.getName() );
 
 		final IdClass idClass = classDetails.getDirectAnnotationUsage( IdClass.class );
@@ -142,8 +142,8 @@ public class DynamicModelTests {
 		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addXmlMappings( "mappings/models/dynamic/dynamic-plurals.xml" )
 				.build();
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, registryScope.getRegistry() );
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ModelsContext ModelsContext = createBuildingContext( managedResources, registryScope.getRegistry() );
+		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
 
 		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( Employee.class.getName() );
 		assertThat( classDetails.getName() ).isEqualTo( Employee.class.getName() );
@@ -153,7 +153,7 @@ public class DynamicModelTests {
 		final OneToMany oneToManyAnn = oneToMany.getDirectAnnotationUsage( OneToMany.class );
 		assertThat( oneToManyAnn.fetch() ).isEqualTo( FetchType.EAGER );
 		assertThat( oneToMany.getDirectAnnotationUsage( OnDelete.class ).action() ).isEqualTo( OnDeleteAction.CASCADE );
-		final JoinColumn joinColumn = oneToMany.getAnnotationUsage( JoinColumn.class, sourceModelBuildingContext );
+		final JoinColumn joinColumn = oneToMany.getAnnotationUsage( JoinColumn.class, ModelsContext );
 		assertThat( joinColumn.name() ).isEqualTo( "employee_id" );
 		assertThat( joinColumn.referencedColumnName() ).isEqualTo( "emp_num" );
 		assertThat( joinColumn.insertable() ).isEqualTo( Boolean.FALSE );

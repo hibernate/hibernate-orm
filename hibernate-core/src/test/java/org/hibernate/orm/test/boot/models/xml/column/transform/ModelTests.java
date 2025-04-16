@@ -14,7 +14,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -38,11 +38,11 @@ public class ModelTests {
 				.addXmlMappings( "mappings/models/column/transform/mapping.xml" )
 				.build();
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, serviceRegistry );
+		final ModelsContext ModelsContext = createBuildingContext( managedResources, serviceRegistry );
 
-		final ClassDetails classDetails = sourceModelBuildingContext.getClassDetailsRegistry().getClassDetails( Item.class.getName() );
+		final ClassDetails classDetails = ModelsContext.getClassDetailsRegistry().getClassDetails( Item.class.getName() );
 		final FieldDetails costField = classDetails.findFieldByName( "cost" );
-		final ColumnTransformer transformerAnn = costField.getAnnotationUsage( ColumnTransformer.class, sourceModelBuildingContext );
+		final ColumnTransformer transformerAnn = costField.getAnnotationUsage( ColumnTransformer.class, ModelsContext );
 		assertThat( transformerAnn ).isNotNull();
 		assertThat( transformerAnn.read() ).isEqualTo( "cost / 100.00" );
 		assertThat( transformerAnn.write() ).isEqualTo( "? * 100.00" );
@@ -60,11 +60,11 @@ public class ModelTests {
 				.addXmlMappings( hbmXmlResourceName )
 				.build();
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, serviceRegistry );
+		final ModelsContext ModelsContext = createBuildingContext( managedResources, serviceRegistry );
 
-		final ClassDetails classDetails = sourceModelBuildingContext.getClassDetailsRegistry().getClassDetails( Item.class.getName() );
+		final ClassDetails classDetails = ModelsContext.getClassDetailsRegistry().getClassDetails( Item.class.getName() );
 		final FieldDetails costField = classDetails.findFieldByName( "cost" );
-		final ColumnTransformer transformerAnn = costField.getAnnotationUsage( ColumnTransformer.class, sourceModelBuildingContext );
+		final ColumnTransformer transformerAnn = costField.getAnnotationUsage( ColumnTransformer.class, ModelsContext );
 		assertThat( transformerAnn ).isNotNull();
 		assertThat( transformerAnn.read() ).isEqualTo( "cost / 100.00" );
 		assertThat( transformerAnn.write() ).isEqualTo( "? * 100.00" );

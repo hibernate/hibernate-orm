@@ -39,11 +39,6 @@ public class ClassLoaderServiceLoading implements ClassLoading {
 	}
 
 	@Override
-	public Package packageForName(String name) {
-		return classLoaderService.packageForNameOrNull( name );
-	}
-
-	@Override
 	public URL locateResource(String resourceName) {
 		return classLoaderService.locateResource( resourceName );
 	}

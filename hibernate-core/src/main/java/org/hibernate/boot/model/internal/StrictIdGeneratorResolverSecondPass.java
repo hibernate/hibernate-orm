@@ -19,7 +19,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.GeneratedValue;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handleGenericGenerator;
 import static org.hibernate.boot.model.internal.GeneratorAnnotationHelper.handleSequenceGenerator;
@@ -51,7 +51,7 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 		super( entityMapping, idValue, idMember, generatedValue, buildingContext );
 	}
 
-	private SourceModelBuildingContext modelsContext() {
+	private ModelsContext modelsContext() {
 		return buildingContext.getBootstrapContext().getModelsContext();
 	}
 

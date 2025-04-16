@@ -15,7 +15,7 @@ import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
@@ -77,7 +77,7 @@ public class DialectOverridesAnnotationHelper {
 			AnnotationTarget element,
 			Class<T> annotationType,
 			MetadataBuildingContext context) {
-		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
 		final Class<? extends Annotation> overrideAnnotation = OVERRIDE_MAP.get( annotationType );
 
 		if ( overrideAnnotation != null ) {

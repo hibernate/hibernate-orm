@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect.pagination;
+package org.hibernate.community.dialect.pagination;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.spi.Limit;
 

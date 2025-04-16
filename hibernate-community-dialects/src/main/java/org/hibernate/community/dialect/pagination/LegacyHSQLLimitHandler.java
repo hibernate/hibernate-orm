@@ -2,7 +2,10 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect.pagination;
+package org.hibernate.community.dialect.pagination;
+
+import org.hibernate.dialect.pagination.AbstractSimpleLimitHandler;
+import org.hibernate.dialect.pagination.LimitHandler;
 
 /**
  * A {@link LimitHandler} for HSQL prior to 2.0.

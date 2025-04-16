@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.derived;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +68,8 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 	private final JavaType<?> javaTypeDescriptor;
 	private final Map<String, ModelPart> modelParts;
 	private final Set<String> compatibleTableExpressions;
+	private final int jdbcTypeCount;
+	private final List<JdbcMapping> jdbcMappings = new ArrayList<>();
 
 	public AnonymousTupleTableGroupProducer(
 			AnonymousTupleType<?> tupleType,
@@ -114,10 +117,14 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 				);
 			}
 			modelParts.put( partName, modelPart );
+			for ( int j = 0; j < modelPart.getJdbcTypeCount(); j++ ) {
+				jdbcMappings.add( modelPart.getJdbcMapping( j ) );
+			}
 			selectionIndex += modelPart.getJdbcTypeCount();
 		}
 		this.modelParts = modelParts;
 		this.compatibleTableExpressions = compatibleTableExpressions;
+		jdbcTypeCount = selectionIndex;
 	}
 
 	private ModelPart getModelPart(TableGroup tableGroup) {
@@ -368,11 +375,16 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 
 	@Override
 	public JdbcMapping getJdbcMapping(int index) {
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		return jdbcMappings.get( index );
 	}
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public int getJdbcTypeCount() {
+		return jdbcTypeCount;
 	}
 }

@@ -12,7 +12,7 @@ import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
@@ -32,7 +32,7 @@ import static org.hibernate.boot.models.JpaAnnotations.PRE_UPDATE;
 
 /**
  * JPA-style event listener with support for resolving callback methods from
- * {@linkplain #from(JpaEventListenerStyle, ClassDetails, JaxbEntityListenerImpl, SourceModelBuildingContext) XML}
+ * {@linkplain #from(JpaEventListenerStyle, ClassDetails, JaxbEntityListenerImpl, ModelsContext) XML}
  * or from {@linkplain #from(JpaEventListenerStyle, ClassDetails) annotation}.
  * <p/>
  * Represents a global entity listener defined in the persistence unit
@@ -127,7 +127,7 @@ public class JpaEventListener {
 			JpaEventListenerStyle consumerType,
 			ClassDetails listenerClassDetails,
 			JaxbEntityListenerImpl jaxbMapping,
-			SourceModelBuildingContext modelsContext) {
+			ModelsContext modelsContext) {
 		final MutableObject<MethodDetails> prePersistMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postPersistMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> preRemoveMethod = new MutableObject<>();

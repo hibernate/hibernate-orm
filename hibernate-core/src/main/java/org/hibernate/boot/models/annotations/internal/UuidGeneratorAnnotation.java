@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.id.uuid.UuidValueGenerator;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -20,7 +20,7 @@ public class UuidGeneratorAnnotation implements UuidGenerator {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public UuidGeneratorAnnotation(SourceModelBuildingContext modelContext) {
+	public UuidGeneratorAnnotation(ModelsContext modelContext) {
 		this.style = org.hibernate.annotations.UuidGenerator.Style.AUTO;
 		this.algorithm = UuidValueGenerator.class;
 	}
@@ -28,7 +28,7 @@ public class UuidGeneratorAnnotation implements UuidGenerator {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public UuidGeneratorAnnotation(UuidGenerator annotation, SourceModelBuildingContext modelContext) {
+	public UuidGeneratorAnnotation(UuidGenerator annotation, ModelsContext modelContext) {
 		this.style = annotation.style();
 		this.algorithm = annotation.algorithm();
 	}
@@ -36,7 +36,7 @@ public class UuidGeneratorAnnotation implements UuidGenerator {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public UuidGeneratorAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public UuidGeneratorAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.style = (Style) attributeValues.get( "style" );
 		this.algorithm = (Class<? extends UuidValueGenerator>) attributeValues.get( "algorithm" );
 	}

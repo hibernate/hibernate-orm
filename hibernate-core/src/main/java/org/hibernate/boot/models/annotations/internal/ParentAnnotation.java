@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.Parent;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -17,19 +17,19 @@ public class ParentAnnotation implements Parent {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public ParentAnnotation(SourceModelBuildingContext modelContext) {
+	public ParentAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public ParentAnnotation(Parent annotation, SourceModelBuildingContext modelContext) {
+	public ParentAnnotation(Parent annotation, ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ParentAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public ParentAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 	}
 
 	@Override

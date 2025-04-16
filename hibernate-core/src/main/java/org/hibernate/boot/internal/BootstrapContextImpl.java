@@ -29,7 +29,7 @@ import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.models.spi.ModelsConfiguration;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
@@ -80,7 +80,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private final ManagedTypeRepresentationResolver representationStrategySelector;
 	private final ConfigurationService configurationService;
 
-	private final SourceModelBuildingContext modelsContext;
+	private final ModelsContext modelsContext;
 
 	public BootstrapContextImpl(
 			StandardServiceRegistry serviceRegistry,
@@ -136,7 +136,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public SourceModelBuildingContext getModelsContext() {
+	public ModelsContext getModelsContext() {
 		return modelsContext;
 	}
 
@@ -354,7 +354,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		cacheRegionDefinitions.add( cacheRegionDefinition );
 	}
 
-	public static SourceModelBuildingContext createModelBuildingContext(
+	public static ModelsContext createModelBuildingContext(
 			ClassLoaderService classLoaderService,
 			ConfigurationService configService) {
 		final ClassLoaderServiceLoading classLoading = new ClassLoaderServiceLoading( classLoaderService );

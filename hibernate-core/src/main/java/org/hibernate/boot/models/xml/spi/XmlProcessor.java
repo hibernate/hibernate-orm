@@ -11,7 +11,7 @@ import org.hibernate.boot.models.xml.internal.XmlDocumentContextImpl;
 import org.hibernate.boot.models.xml.internal.XmlDocumentImpl;
 import org.hibernate.boot.models.xml.internal.XmlProcessingResultImpl;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 /**
  * Processes XML mappings - applying metadata-complete mappings and collecting
@@ -23,7 +23,7 @@ public class XmlProcessor {
 	public static XmlProcessingResult processXml(
 			XmlPreProcessingResult xmlPreProcessingResult,
 			DomainModelCategorizationCollector modelCategorizationCollector,
-			SourceModelBuildingContext sourceModelBuildingContext,
+			ModelsContext ModelsContext,
 			BootstrapContext bootstrapContext,
 			RootMappingDefaults mappingDefaults) {
 		final boolean xmlMappingsGloballyComplete = xmlPreProcessingResult.getPersistenceUnitMetadata().areXmlMappingsComplete();
@@ -37,7 +37,7 @@ public class XmlProcessor {
 			final XmlDocumentContext xmlDocumentContext = new XmlDocumentContextImpl(
 					xmlDocument,
 					mappingDefaults,
-					sourceModelBuildingContext,
+					ModelsContext,
 					bootstrapContext
 			);
 			modelCategorizationCollector.apply( jaxbRoot, xmlDocumentContext );

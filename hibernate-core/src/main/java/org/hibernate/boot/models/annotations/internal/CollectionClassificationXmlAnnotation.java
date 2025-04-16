@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.boot.internal.CollectionClassification;
 import org.hibernate.boot.internal.LimitedCollectionClassification;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -19,7 +19,7 @@ public class CollectionClassificationXmlAnnotation implements CollectionClassifi
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public CollectionClassificationXmlAnnotation(SourceModelBuildingContext modelContext) {
+	public CollectionClassificationXmlAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
@@ -27,7 +27,7 @@ public class CollectionClassificationXmlAnnotation implements CollectionClassifi
 	 */
 	public CollectionClassificationXmlAnnotation(
 			CollectionClassification annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = annotation.value();
 	}
 
@@ -36,7 +36,7 @@ public class CollectionClassificationXmlAnnotation implements CollectionClassifi
 	 */
 	public CollectionClassificationXmlAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (LimitedCollectionClassification) attributeValues.get( "value" );
 	}
 

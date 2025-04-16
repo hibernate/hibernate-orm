@@ -16,7 +16,7 @@ import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeVariableScope;
 
@@ -80,7 +80,7 @@ public class PropertyInferredData implements PropertyData {
 	@Override
 	public TypeDetails getPropertyType() throws MappingException {
 		final org.hibernate.boot.internal.Target targetAnnotation = propertyMember.getDirectAnnotationUsage( org.hibernate.boot.internal.Target.class );
-		final SourceModelBuildingContext sourceModelContext = buildingContext.getBootstrapContext().getModelsContext();
+		final ModelsContext sourceModelContext = buildingContext.getBootstrapContext().getModelsContext();
 		if ( targetAnnotation != null ) {
 			final String targetName = targetAnnotation.value();
 			final ClassDetails classDetails = ModelsHelper.resolveClassDetails(
@@ -101,7 +101,7 @@ public class PropertyInferredData implements PropertyData {
 
 	private static ClassTypeDetailsImpl resolveLegacyTargetAnnotation(
 			Target legacyTargetAnnotation,
-			SourceModelBuildingContext sourceModelContext) {
+			ModelsContext sourceModelContext) {
 		final ClassDetailsRegistry classDetailsRegistry = sourceModelContext.getClassDetailsRegistry();
 		final ClassDetails targetClassDetails = classDetailsRegistry.resolveClassDetails( legacyTargetAnnotation.value().getName() );
 		return new ClassTypeDetailsImpl( targetClassDetails, TypeDetails.Kind.CLASS );
@@ -109,7 +109,7 @@ public class PropertyInferredData implements PropertyData {
 
 	@Override
 	public TypeDetails getClassOrElementType() throws MappingException {
-		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		final org.hibernate.boot.internal.Target annotationUsage = propertyMember.getDirectAnnotationUsage( org.hibernate.boot.internal.Target.class );
 		if ( annotationUsage != null ) {
 			final String targetName = annotationUsage.value();

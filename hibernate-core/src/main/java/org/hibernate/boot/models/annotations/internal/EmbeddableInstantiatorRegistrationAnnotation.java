@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.EmbeddableInstantiatorRegistration;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -19,7 +19,7 @@ public class EmbeddableInstantiatorRegistrationAnnotation implements EmbeddableI
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public EmbeddableInstantiatorRegistrationAnnotation(SourceModelBuildingContext modelContext) {
+	public EmbeddableInstantiatorRegistrationAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
@@ -27,7 +27,7 @@ public class EmbeddableInstantiatorRegistrationAnnotation implements EmbeddableI
 	 */
 	public EmbeddableInstantiatorRegistrationAnnotation(
 			EmbeddableInstantiatorRegistration annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.embeddableClass = annotation.embeddableClass();
 		this.instantiator = annotation.instantiator();
 	}
@@ -37,7 +37,7 @@ public class EmbeddableInstantiatorRegistrationAnnotation implements EmbeddableI
 	 */
 	public EmbeddableInstantiatorRegistrationAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.embeddableClass = (Class<?>) attributeValues.get( "embeddableClass" );
 		this.instantiator = (Class<? extends org.hibernate.metamodel.spi.EmbeddableInstantiator>) attributeValues
 				.get( "instantiator" );

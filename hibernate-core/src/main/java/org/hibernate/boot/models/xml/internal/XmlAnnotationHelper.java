@@ -136,7 +136,7 @@ import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.type.SqlTypes;
 
 import jakarta.persistence.AssociationOverride;
@@ -331,7 +331,7 @@ public class XmlAnnotationHelper {
 
 	public static Parameter[] collectParameters(
 			List<JaxbConfigurationParameterImpl> jaxbParameters,
-			SourceModelBuildingContext sourceModelContext) {
+			ModelsContext sourceModelContext) {
 		if ( isEmpty( jaxbParameters ) ) {
 			return NO_PARAMETERS;
 		}
@@ -681,7 +681,7 @@ public class XmlAnnotationHelper {
 			String namePrefix,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 
 		final AttributeOverrideJpaAnnotation overrideUsage = ATTRIBUTE_OVERRIDE.createUsage( modelBuildingContext );
 
@@ -1241,7 +1241,7 @@ public class XmlAnnotationHelper {
 			JaxbEntityOrMappedSuperclass jaxbClass,
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 
 		if ( jaxbClass.getExcludeDefaultListeners() != null ) {
 			classDetails.applyAnnotationUsage( EXCLUDE_DEFAULT_LISTENERS, modelBuildingContext );
@@ -1608,7 +1608,7 @@ public class XmlAnnotationHelper {
 
 	public static UniqueConstraint[] collectUniqueConstraints(
 			List<JaxbUniqueConstraintImpl> jaxbUniqueConstraints,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		if ( isEmpty( jaxbUniqueConstraints ) ) {
 			return NO_UNIQUE_CONSTRAINTS;
 		}
@@ -1635,7 +1635,7 @@ public class XmlAnnotationHelper {
 
 	public static Index[] collectIndexes(
 			List<JaxbIndexImpl> jaxbIndexes,
-			SourceModelBuildingContext sourceModelContext) {
+			ModelsContext sourceModelContext) {
 		if ( isEmpty( jaxbIndexes ) ) {
 			return NO_INDICES;
 		}
@@ -1666,7 +1666,7 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 		final PrimaryKeyJoinColumnsJpaAnnotation columnsAnn = (PrimaryKeyJoinColumnsJpaAnnotation) classDetails.replaceAnnotationUsage(
 				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
 				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMNS,

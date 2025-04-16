@@ -23,7 +23,7 @@ import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MethodDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.property.access.spi.Getter;
 
 import jakarta.persistence.Entity;
@@ -47,7 +47,7 @@ public final class CallbackDefinitionResolver {
 			InFlightMetadataCollector metadataCollector,
 			ClassDetails entityClass,
 			CallbackType callbackType) {
-		final SourceModelBuildingContext modelsContext = metadataCollector.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = metadataCollector.getBootstrapContext().getModelsContext();
 
 		final List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
 		final List<String> callbacksMethodNames = new ArrayList<>();
@@ -163,7 +163,7 @@ public final class CallbackDefinitionResolver {
 			Property embeddableProperty,
 			CallbackType callbackType) {
 
-		final SourceModelBuildingContext modelsContext = metadataCollector.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = metadataCollector.getBootstrapContext().getModelsContext();
 		final Class<?> embeddableClass = embeddableProperty.getType().getReturnedClass();
 		final ClassDetails embeddableClassDetails = modelsContext.getClassDetailsRegistry().getClassDetails( embeddableClass.getName() );
 
@@ -236,7 +236,7 @@ public final class CallbackDefinitionResolver {
 	private static void applyListeners(
 			ClassDetails currentClazz,
 			List<ClassDetails> listOfListeners,
-			SourceModelBuildingContext sourceModelContext) {
+			ModelsContext sourceModelContext) {
 		final ClassDetailsRegistry classDetailsRegistry = sourceModelContext.getClassDetailsRegistry();
 
 		final EntityListeners entityListeners = currentClazz.getDirectAnnotationUsage( EntityListeners.class );

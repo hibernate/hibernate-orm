@@ -700,6 +700,11 @@ public class NativeQueryImpl<R>
 		throw new UnsupportedOperationException("native queries do not support key-based pagination");
 	}
 
+	@Override
+	public KeyedResultList<R> getKeyedResultList() {
+		throw new UnsupportedOperationException("native queries do not support key-based pagination");
+	}
+
 	protected SelectQueryPlan<R> resolveSelectQueryPlan() {
 		final ResultSetMapping mapping;
 		if ( resultType != null && resultSetMapping.isDynamic() && resultSetMapping.getNumberOfResultBuilders() == 0 ) {

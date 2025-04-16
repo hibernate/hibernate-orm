@@ -5,7 +5,10 @@
 package org.hibernate.query.sqm.internal;
 
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.TupleElement;
+import jakarta.persistence.criteria.CompoundSelection;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.query.BindableType;
@@ -14,11 +17,12 @@ import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
+import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryLogging;
-import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.internal.QuerySplitter;
+import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.spi.AbstractSelectionQuery;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
@@ -44,14 +48,16 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.type.BasicTypeRegistry;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-
-import jakarta.persistence.TupleElement;
-import jakarta.persistence.criteria.CompoundSelection;
+import java.util.Map;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.cfg.QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
 import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NEXT_PAGE;
+import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_LAST_ON_PREVIOUS_PAGE;
+import static org.hibernate.query.KeyedPage.KeyInterpretation.NO_KEY;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectKeys;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectResults;
 import static org.hibernate.query.sqm.internal.SqmUtil.isHqlTuple;
@@ -223,14 +229,129 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		return this;
 	}
 
+	static class KeyedCursor<R> extends KeyedPage<R> {
+//		private final CriteriaQuery<R> selectionQuery;
+		private final Map<Integer,Object> ordinalParameters;
+		private final Map<String, Object> namedParameters;
+
+		public KeyedCursor(List<Order<? super R>> orders,
+						Page page,
+						List<Comparable<?>> key,
+						KeyInterpretation interpretation,
+//						   CriteriaQuery<R> selectionQuery,
+						Map<Integer, Object> ordinalParameters,
+						Map<String, Object> namedParameters) {
+			super( orders, page, key, interpretation );
+//			this.selectionQuery = selectionQuery;
+			this.ordinalParameters = ordinalParameters;
+			this.namedParameters = namedParameters;
+		}
+
+		public KeyedCursor(List<Order<? super R>> orders,
+						Page page,
+//						   CriteriaQuery<R> selectionQuery,
+						Map<Integer, Object> ordinalParameters,
+						Map<String, Object> namedParameters) {
+			super( orders, page, null, NO_KEY );
+//			this.selectionQuery = selectionQuery;
+			this.ordinalParameters = ordinalParameters;
+			this.namedParameters = namedParameters;
+		}
+
+//		public KeyedResultList<R> getKeyedResultList(QueryProducer session) {
+//			return session.createQuery( selectionQuery )
+//					.setProperties( namedParameters )
+//					.getKeyedResultList( this );
+//		}
+
+		@Internal
+		public KeyedCursor<R> nextPage(List<Comparable<?>> keyOfLastResultOnThisPage) {
+			return new KeyedCursor<>(
+					getKeyDefinition(),
+					getPage().next(),
+					keyOfLastResultOnThisPage,
+					KEY_OF_LAST_ON_PREVIOUS_PAGE,
+//					selectionQuery,
+					ordinalParameters,
+					namedParameters
+			);
+		}
+		@Internal
+		public KeyedCursor<R> previousPage(List<Comparable<?>> keyOfFirstResultOnThisPage) {
+			if ( getPage().isFirst() ) {
+				return null;
+			}
+			else {
+				return new KeyedCursor<>( getKeyDefinition(),
+						getPage().previous(),
+						keyOfFirstResultOnThisPage,
+						KEY_OF_FIRST_ON_NEXT_PAGE,
+//						selectionQuery,
+						ordinalParameters,
+						namedParameters
+				);
+			}
+		}
+	}
+
+	@Override
+	public KeyedResultList<R> getKeyedResultList() {
+		final SqmSelectStatement<R> sqmSelectStatement = getSqmSelectStatement();
+		final ParameterMetadata parameterMetadata = getParameterMetadata();
+		final QueryOptions queryOptions = getQueryOptions();
+		final int parameterCount = parameterMetadata.getParameterCount();
+		final Map<String,Object> namedParameters =
+				new HashMap<>( parameterMetadata.hasNamedParameters() ? parameterCount : 0 );
+		for ( String name : parameterMetadata.getNamedParameterNames() ) {
+			namedParameters.put( name, getParameterValue( name ) );
+		}
+		final Map<Integer,Object> ordinalParameters =
+				new HashMap<>( parameterMetadata.hasPositionalParameters() ? parameterCount : 0 );
+		for ( Integer label : parameterMetadata.getOrdinalParameterLabels() ) {
+			ordinalParameters.put( label, getParameterValue( label ) );
+		}
+		final List<Order<? super R>> orders = new ArrayList<>();
+		for ( var order : sqmSelectStatement.getOrderList() ) {
+			orders.add( Order.of( getExpectedResultType(), order ) );
+		}
+		if ( orders.isEmpty() ) {
+			throw new IllegalStateException( "Query has no order" );
+		}
+		final Integer maxResults = queryOptions.getMaxRows();
+		final Integer firstResult = queryOptions.getFirstRow();
+		if ( maxResults == null ) {
+			throw new IllegalStateException( "Query has no maxResults" );
+		}
+		// TODO: validate firstResult ??
+		final Page page = Page.page( maxResults, firstResult / maxResults );
+		final KeyedCursor<R> cursor =
+				new KeyedCursor<>( orders, page,
+//						sqmSelectStatement,
+						ordinalParameters, namedParameters );
+		final List<KeyedResult<R>> results =
+				new SqmSelectionQueryImpl<KeyedResult<R>>( this, cursor )
+						.getResultList();
+		return new KeyedResultList<>(
+				collectResults( results, maxResults, cursor.getKeyInterpretation() ),
+				collectKeys( results, maxResults ),
+				cursor,
+				nextPage( cursor, results ),
+				previousPage( cursor, results )
+		);
+	}
+
 	@Override
 	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> keyedPage) {
 		if ( keyedPage == null ) {
 			throw new IllegalArgumentException( "KeyedPage was null" );
 		}
-		final List<KeyedResult<R>> results =
-				new SqmSelectionQueryImpl<KeyedResult<R>>( this, keyedPage )
-						.getResultList();
+		final SqmSelectionQueryImpl<KeyedResult<R>> query
+				= new SqmSelectionQueryImpl<>( this, keyedPage );
+		if ( keyedPage instanceof KeyedCursor<R> cursor ) {
+			cursor.namedParameters.forEach( query::setParameter );
+			cursor.ordinalParameters.forEach( query::setParameter );
+		}
+		final List<KeyedResult<R>> results = query.getResultList();
 		final int pageSize = keyedPage.getPage().getSize();
 		return new KeyedResultList<>(
 				collectResults( results, pageSize, keyedPage.getKeyInterpretation() ),

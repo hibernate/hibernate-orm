@@ -282,6 +282,21 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Incubating
 	KeyedResultList<R> getKeyedResultList(KeyedPage<R> page);
 
+	/**
+	 * Execute the query and return the results for the first
+	 * page, using key-based pagination.
+	 *
+	 * @return the query results and the key of the next page
+	 *         as an instance of {@link KeyedResultList}
+	 *
+	 * @since 7.0
+	 *
+	 * @see KeyedPage
+	 * @see KeyedResultList
+	 */
+	@Incubating
+	KeyedResultList<R> getKeyedResultList();
+
 	@Override
 	SelectionQuery<R> setHint(String hintName, Object value);
 

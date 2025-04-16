@@ -76,7 +76,7 @@ public class KeyedPage<R> {
 		this( keyDefinition, page, null, NO_KEY );
 	}
 
-	KeyedPage(List<Order<? super R>> keyDefinition, Page page, List<Comparable<?>> key, KeyInterpretation interpretation) {
+	protected KeyedPage(List<Order<? super R>> keyDefinition, Page page, List<Comparable<?>> key, KeyInterpretation interpretation) {
 		this.keyDefinition = unmodifiableList(keyDefinition);
 		this.page = page;
 		this.key = key;

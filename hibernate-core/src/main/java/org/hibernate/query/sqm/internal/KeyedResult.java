@@ -16,7 +16,7 @@ import java.util.List;
  *
  * @author Gavin King
  */
-class KeyedResult<R> {
+public class KeyedResult<R> {
 	final R result;
 	final List<Comparable<?>> key;
 
@@ -33,7 +33,7 @@ class KeyedResult<R> {
 		return key;
 	}
 
-	static <R> List<R> collectResults(List<KeyedResult<R>> executed, int pageSize, KeyInterpretation interpretation) {
+	public static <R> List<R> collectResults(List<KeyedResult<R>> executed, int pageSize, KeyInterpretation interpretation) {
 		//note: given list probably has one more result than needed
 		final int size = executed.size();
 		final List<R> resultList = new ArrayList<>( size );
@@ -58,7 +58,7 @@ class KeyedResult<R> {
 		return resultList;
 	}
 
-	static List<List<?>> collectKeys(List<? extends KeyedResult<?>> executed, int pageSize) {
+	public static List<List<?>> collectKeys(List<? extends KeyedResult<?>> executed, int pageSize) {
 		final int size = executed.size();
 		final List<List<?>> resultList = new ArrayList<>( size );
 		for ( int i = 0; i < size && i < pageSize; i++ ) {

@@ -43,7 +43,7 @@ import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
-import org.hibernate.dialect.pagination.LegacyOracleLimitHandler;
+import org.hibernate.community.dialect.pagination.LegacyOracleLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
 import org.hibernate.dialect.sequence.OracleSequenceSupport;

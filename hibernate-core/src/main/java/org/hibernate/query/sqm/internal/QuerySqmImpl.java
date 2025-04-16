@@ -4,20 +4,16 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
-
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.TemporalType;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -41,8 +37,8 @@ import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.Query;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.criteria.internal.NamedCriteriaQueryMementoImpl;
@@ -51,6 +47,7 @@ import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
 import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.spi.DelegatingQueryOptions;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
@@ -81,15 +78,17 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.Parameter;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.TemporalType;
 import org.hibernate.sql.results.spi.SingleResultConsumer;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
 import static java.util.Collections.emptyMap;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
@@ -197,9 +196,20 @@ public class QuerySqmImpl<R>
 			SqmStatement<R> criteria,
 			Class<R> expectedResultType,
 			SharedSessionContractImplementor producer) {
+		this( criteria, producer.isCriteriaCopyTreeEnabled(), expectedResultType, producer );
+	}
+
+	/**
+	 * Used from {@linkplain org.hibernate.query.QueryProducer#createMutationSpecification}
+	 */
+	public QuerySqmImpl(
+			SqmStatement<R> criteria,
+			boolean copyAst,
+			Class<R> expectedResultType,
+			SharedSessionContractImplementor producer) {
 		super( producer );
 		hql = CRITERIA_HQL_STRING;
-		if ( producer.isCriteriaCopyTreeEnabled() ) {
+		if ( copyAst ) {
 			sqm = criteria.copy( SqmCopyContext.simpleContext() );
 			if ( producer.isCriteriaPlanCacheEnabled() ) {
 				queryStringCacheKey = sqm.toHqlString();

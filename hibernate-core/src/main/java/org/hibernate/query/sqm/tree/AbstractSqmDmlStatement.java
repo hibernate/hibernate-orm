@@ -4,12 +4,8 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-
+import jakarta.persistence.criteria.AbstractQuery;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -22,8 +18,11 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
-import jakarta.persistence.criteria.AbstractQuery;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 
 /**
  * @author Steve Ebersole

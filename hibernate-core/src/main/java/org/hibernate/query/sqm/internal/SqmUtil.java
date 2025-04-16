@@ -43,12 +43,14 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
 import org.hibernate.query.QueryTypeMismatchException;
-import org.hibernate.query.criteria.JpaOrder;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -59,6 +61,7 @@ import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -74,6 +77,7 @@ import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
@@ -130,6 +134,10 @@ public class SqmUtil {
 		return sqm instanceof SqmDmlStatement;
 	}
 
+	public static <T> boolean isRestrictedMutation(SqmStatement<T> sqmStatement) {
+		return sqmStatement instanceof SqmDeleteOrUpdateStatement;
+	}
+
 	public static void verifyIsSelectStatement(SqmStatement<?> sqm, String hqlString) {
 		if ( ! isSelect( sqm ) ) {
 			throw new IllegalSelectQueryException(
@@ -161,6 +169,20 @@ public class SqmUtil {
 				hqlString,
 				null
 		);
+	}
+
+	public static void verifyIsRestrictedMutation(SqmStatement<?> sqm, String hqlString) {
+		if ( ! isRestrictedMutation( sqm ) ) {
+			throw new IllegalMutationQueryException(
+					String.format(
+							Locale.ROOT,
+							"Expecting a restricted mutation query [%s], but found %s",
+							SqmDeleteOrUpdateStatement.class.getName(),
+							sqm.getClass().getName()
+					),
+					hqlString
+			);
+		}
 	}
 
 	public static @Nullable String determineAffectedTableName(TableGroup tableGroup, ValuedModelPart mapping) {
@@ -841,7 +863,7 @@ public class SqmUtil {
 		}
 	}
 
-	static JpaOrder sortSpecification(SqmSelectStatement<?> sqm, Order<?> order) {
+	public static SqmSortSpecification sortSpecification(SqmSelectStatement<?> sqm, Order<?> order) {
 		final List<SqmSelectableNode<?>> items = sqm.getQuerySpec().getSelectClause().getSelectionItems();
 		final int element = order.getElement();
 		if ( element < 1) {
@@ -920,6 +942,15 @@ public class SqmUtil {
 		return expressible == null || expressible.getExpressibleJavaType() == null
 				? null
 				: expressible.getExpressibleJavaType().getJavaTypeClass();
+	}
+
+	public static <X> SqmPredicate restriction(
+			SqmSelectStatement<X> sqmStatement,
+			Class<X> resultType,
+			Restriction<X> restriction) {
+		//noinspection unchecked
+		final JpaRoot<X> root = (JpaRoot<X>) sqmStatement.getRoot( 0, resultType );
+		return  (SqmPredicate) restriction.toPredicate( root, sqmStatement.nodeBuilder() );
 	}
 
 	private static class CriteriaParameterCollector {

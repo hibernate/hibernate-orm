@@ -35,6 +35,7 @@ public interface QueryInterpretationCache {
 	int getNumberOfCachedQueryPlans();
 
 	<R> HqlInterpretation<R> resolveHqlInterpretation(String queryString, Class<R> expectedResultType, HqlTranslator translator);
+	<R> void cacheHqlInterpretation(Object cacheKey, HqlInterpretation<R> hqlInterpretation);
 
 	<R> SelectQueryPlan<R> resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan<R>> creator);
 

@@ -4,14 +4,23 @@
  */
 package org.hibernate.engine.spi;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.UUID;
-
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FindOption;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockOption;
+import jakarta.persistence.RefreshOption;
+import jakarta.persistence.TypedQueryReference;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
+import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.Metamodel;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
@@ -49,30 +58,22 @@ import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
+import org.hibernate.query.programmatic.MutationSpecification;
+import org.hibernate.query.programmatic.SelectionSpecification;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
-
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.FindOption;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.LockOption;
-import jakarta.persistence.RefreshOption;
-import jakarta.persistence.TypedQueryReference;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaSelect;
-import jakarta.persistence.criteria.CriteriaUpdate;
-import jakarta.persistence.metamodel.Metamodel;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.type.format.FormatMapper;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.UUID;
 
 /**
  * A wrapper class that delegates all method invocations to a delegate instance of
@@ -654,6 +655,21 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public MutationQuery createNamedMutationQuery(String name) {
 		return delegate.createNamedMutationQuery( name );
+	}
+
+	@Override
+	public <T> SelectionSpecification<T> createSelectionSpecification(String hql, Class<T> resultType) {
+		return delegate.createSelectionSpecification( hql, resultType );
+	}
+
+	@Override
+	public <T> SelectionSpecification<T> createSelectionSpecification(Class<T> rootEntityType) {
+		return delegate.createSelectionSpecification( rootEntityType );
+	}
+
+	@Override
+	public <T> MutationSpecification<T> createMutationSpecification(String hql, Class<T> mutationTarget) {
+		return delegate.createMutationSpecification( hql, mutationTarget );
 	}
 
 	@Override

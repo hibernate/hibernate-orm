@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -1333,6 +1333,16 @@ public class GaussDBDialect extends Dialect {
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
 		return false;
+	}
+
+	@Override
+	public String getForUpdateString() {
+		return " for no key update";
+	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		return true;
 	}
 
 	@Override

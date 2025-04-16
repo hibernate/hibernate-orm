@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -35,11 +35,9 @@ import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.type.SqlTypes;
 
 /**
- * A SQL AST translator for GaussDB.
+ * A SQL AST translator for PostgreSQL.
  *
- * @author liubao
- *
- * Notes: Original code of this class is based on PostgreSQLSqlAstTranslator.
+ * @author Christian Beikov
  */
 public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithMerge<T> {
 
@@ -84,7 +82,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		if ( identificationVariable != null ) {
 			final Clause currentClause = getClauseStack().getCurrent();
 			if ( currentClause == Clause.INSERT ) {
-				// GaussDB requires the "as" keyword for inserts
+				// PostgreSQL requires the "as" keyword for inserts
 				appendSql( " as " );
 			}
 			else {
@@ -98,8 +96,8 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
 		final Statement currentStatement = getStatementStack().getCurrent();
-		if ( !( currentStatement instanceof UpdateStatement )
-				|| !hasNonTrivialFromClause( ( (UpdateStatement) currentStatement ).getFromClause() ) ) {
+		if ( !( currentStatement instanceof UpdateStatement updateStatement )
+			|| !hasNonTrivialFromClause( updateStatement.getFromClause() ) ) {
 			// For UPDATE statements we render a full FROM clause and a join condition to match target table rows,
 			// but for that to work, we have to omit the alias for the target table reference here
 			renderTableReferenceIdentificationVariable( tableReference );
@@ -125,8 +123,8 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
 		if ( lhsExpressionType != null && lhsExpressionType.getJdbcTypeCount() == 1
-				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
-			// In GaussDB, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+			&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
+			// In PostgreSQL, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
 			switch ( operator ) {
 				case EQUAL:
 				case NOT_DISTINCT_FROM:
@@ -189,23 +187,8 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	}
 
 	@Override
-	protected boolean supportsRowConstructor() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsArrayConstructor() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsFilterClause() {
-		return false;
-	}
-
-	@Override
 	protected String getForUpdate() {
-		return " for update";
+		return getDialect().getForUpdateString();
 	}
 
 	@Override
@@ -255,24 +238,9 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	}
 
 	@Override
-	protected boolean supportsRecursiveSearchClause() {
-		return getDialect().getVersion().isSameOrAfter( 14 );
-	}
-
-	@Override
-	protected boolean supportsRecursiveCycleClause() {
-		return getDialect().getVersion().isSameOrAfter( 14 );
-	}
-
-	@Override
-	protected boolean supportsRecursiveCycleUsingClause() {
-		return getDialect().getVersion().isSameOrAfter( 14 );
-	}
-
-	@Override
 	protected void renderStandardCycleClause(CteStatement cte) {
 		super.renderStandardCycleClause( cte );
-		if ( cte.getCycleMarkColumn() != null && cte.getCyclePathColumn() == null && supportsRecursiveCycleUsingClause() ) {
+		if ( cte.getCycleMarkColumn() != null && cte.getCyclePathColumn() == null && getDialect().supportsRecursiveCycleUsingClause() ) {
 			appendSql( " using " );
 			appendSql( determineCyclePathColumnName( cte ) );
 		}
@@ -285,8 +253,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		if ( expression instanceof Literal ) {
 			appendSql( "()" );
 		}
-		else if ( expression instanceof Summarization ) {
-			Summarization summarization = (Summarization) expression;
+		else if ( expression instanceof Summarization summarization ) {
 			appendSql( summarization.getKind().sqlText() );
 			appendSql( OPEN_PARENTHESIS );
 			renderCommaSeparated( summarization.getGroupings() );
@@ -299,8 +266,10 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	@Override
 	public void visitLikePredicate(LikePredicate likePredicate) {
-		// We need a custom implementation here because GaussDB
+		// We need a custom implementation here because PostgreSQL
 		// uses the backslash character as default escape character
+		// According to the documentation, we can overcome this by specifying an empty escape character
+		// See https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-LIKE
 		likePredicate.getMatchExpression().accept( this );
 		if ( likePredicate.isNegated() ) {
 			appendSql( " not" );
@@ -317,6 +286,9 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		if ( likePredicate.getEscapeCharacter() != null ) {
 			appendSql( " escape " );
 			likePredicate.getEscapeCharacter().accept( this );
+		}
+		else {
+			appendSql( " escape ''" );
 		}
 	}
 

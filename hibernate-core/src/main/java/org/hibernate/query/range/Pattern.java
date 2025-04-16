@@ -16,6 +16,12 @@ import java.util.Locale;
  * @author Gavin King
  */
 record Pattern(String pattern, boolean caseSensitive) implements Range<String> {
+
+	// default escape and wildcard characters
+	private static final char ESCAPE = '\\';
+	private static final char WILDCARD_CHAR = '_';
+	private static final char WILDCARD_STRING = '%';
+
 	Pattern(String pattern, boolean caseSensitive, char charWildcard, char stringWildcard) {
 		this( translate( pattern, charWildcard, stringWildcard ), caseSensitive );
 	}
@@ -25,10 +31,8 @@ record Pattern(String pattern, boolean caseSensitive) implements Range<String> {
 		@SuppressWarnings("unchecked")
 		final Path<String> stringPath = (Path<String>) path; // safe, because String is final
 		return caseSensitive
-				? builder.like( stringPath, builder.literal( pattern ), '\\' )
-				: builder.like( builder.lower( stringPath ),
-						builder.literal( pattern.toLowerCase( Locale.ROOT ) ),
-						'\\' );
+				? builder.like( stringPath, pattern, ESCAPE )
+				: builder.like( builder.lower( stringPath ), pattern.toLowerCase( Locale.ROOT ), ESCAPE );
 	}
 
 	@Override
@@ -41,14 +45,14 @@ record Pattern(String pattern, boolean caseSensitive) implements Range<String> {
 		for ( int i = 0; i < pattern.length(); i++ ) {
 			final char ch = pattern.charAt( i );
 			if ( ch == charWildcard ) {
-				result.append( '_' );
+				result.append( WILDCARD_CHAR );
 			}
 			else if ( ch == stringWildcard ) {
-				result.append( '%' );
+				result.append( WILDCARD_STRING );
 			}
 			else {
-				if ( ch == '%' || ch == '_' || ch == '\\' ) {
-					result.append( '\\' );
+				if ( ch == WILDCARD_STRING || ch == WILDCARD_CHAR || ch == ESCAPE ) {
+					result.append( ESCAPE );
 				}
 				result.append( ch );
 			}

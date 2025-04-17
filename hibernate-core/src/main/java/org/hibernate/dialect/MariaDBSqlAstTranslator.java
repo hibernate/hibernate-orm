@@ -48,7 +48,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 
 	public MariaDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
-		this.dialect = (MariaDBDialect) DialectDelegateWrapper.extractRealDialect( super.getDialect() );
+		this.dialect = (MariaDBDialect) super.getDialect();
 	}
 
 	@Override

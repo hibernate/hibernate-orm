@@ -9,7 +9,6 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DialectDelegateWrapper;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.NationalizationSupport;
@@ -103,7 +102,6 @@ abstract public class DialectChecks {
 
 	public static class SupportsRowValueConstructorSyntaxCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof HANADialect
 				|| dialect instanceof CockroachDialect
 				|| dialect instanceof MySQLDialect

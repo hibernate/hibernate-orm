@@ -17,9 +17,10 @@ import java.util.List;
  * A compound path is a sequence of attribute references rooted at
  * the root entity type of the query.
  * <pre>
- * session.createSelectionQuery("from Book", Book.class)
+ * session.createSelectionSpecification("from Book", Book.class)
  *         .addRestriction(from(Book.class).to(Book_.publisher).to(Publisher_.name)
  *                         .equalTo("Manning"))
+ *         .createQuery()
  *         .getResultList()
  * </pre>
  * A compound path-based restriction has the same semantics as the

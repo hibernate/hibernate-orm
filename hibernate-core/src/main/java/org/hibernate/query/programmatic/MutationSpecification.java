@@ -11,14 +11,23 @@ import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.restriction.Restriction;
 
 /**
- * Specialization of QuerySpecification for building
+ * Specialization of {@link QuerySpecification} for programmatic customization of
  * {@linkplain MutationQuery mutation queries}.
- * Once all {@linkplain #addRestriction restrictions} are defined, call
- * {@linkplain #createQuery()} to obtain the executable form.
+ * <p>
+ * The method {@link #addRestriction(Restriction)} allows application of additional
+ * {@linkplain Restriction filtering} to the mutated entity. The static factory
+ * methods of {@link Restriction} are used to express filtering criteria of various
+ * kinds.
+ * <p>
+ * Once all {@linkplain #addRestriction restrictions} are specified, call
+ * {@linkplain #createQuery()} to obtain an {@linkplain SelectionQuery an
+ * executable mutation query object}.
  *
  * @param <T> The entity type which is the target of the mutation.
  *
  * @author Steve Ebersole
+ *
+ * @since 7.0
  */
 @Incubating
 public interface MutationSpecification<T> extends QuerySpecification<T> {
@@ -38,5 +47,6 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	/**
 	 * Finalize the building and create the {@linkplain SelectionQuery} instance.
 	 */
+	@Override
 	MutationQuery createQuery();
 }

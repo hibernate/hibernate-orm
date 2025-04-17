@@ -115,10 +115,10 @@ public class StringJsonDocumentReader extends StringJsonDocument implements Json
 				break;
 			case QUOTE:
 				switch ( currentState ) {
-					case JsonProcessingState.STARTING_ARRAY:
+					case STARTING_ARRAY:
 						this.processingStates.push( JsonProcessingState.ARRAY );
 						break;
-					case JsonProcessingState.STARTING_OBJECT:
+					case STARTING_OBJECT:
 						this.processingStates.push( JsonProcessingState.OBJECT );
 						this.processingStates.push( JsonProcessingState.OBJECT_KEY_NAME );
 						break;
@@ -175,18 +175,18 @@ public class StringJsonDocumentReader extends StringJsonDocument implements Json
 					//        - if we just hit ':' that's a quoted value
 					//        - if we just hit ',' that's a quoted key
 					switch ( this.processingStates.getCurrent() ) {
-						case JsonProcessingState.STARTING_ARRAY:
+						case STARTING_ARRAY:
 							//this.processingStates.push( JsonProcessingState.ARRAY );
 							return JsonDocumentItemType.VALUE;
-						case JsonProcessingState.ARRAY:
+						case ARRAY:
 							return JsonDocumentItemType.VALUE;
-						case JsonProcessingState.STARTING_OBJECT:
+						case STARTING_OBJECT:
 							//this.processingStates.push( JsonProcessingState.OBJECT );
 							//this.processingStates.push( JsonProcessingState.OBJECT_KEY_NAME );
 							return JsonDocumentItemType.VALUE_KEY;
-						case JsonProcessingState.OBJECT: // we are processing object attribute value elements
+						case OBJECT: // we are processing object attribute value elements
 							return JsonDocumentItemType.VALUE;
-						case JsonProcessingState.OBJECT_KEY_NAME: // we are processing object elements key
+						case OBJECT_KEY_NAME: // we are processing object elements key
 							return JsonDocumentItemType.VALUE_KEY;
 						default:
 							throw new IllegalStateException( "unexpected quote read in current processing state " +
@@ -211,8 +211,8 @@ public class StringJsonDocumentReader extends StringJsonDocument implements Json
 								this.jsonString.charAt( this.position )));
 					}
 					switch ( this.processingStates.getCurrent() ) {
-						case JsonProcessingState.ARRAY:
-						case JsonProcessingState.OBJECT:
+						case ARRAY:
+						case OBJECT:
 							return getUnquotedValueType(this.jsonString.charAt( this.jsonValueStart));
 						default:
 							throw new IllegalStateException( "unexpected read ["+

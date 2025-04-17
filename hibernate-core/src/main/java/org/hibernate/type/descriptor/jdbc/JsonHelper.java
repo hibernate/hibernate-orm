@@ -456,7 +456,7 @@ public class JsonHelper {
 		while(reader.hasNext()) {
 			JsonDocumentItemType type = reader.next();
 			switch ( type ) {
-				case JsonDocumentItemType.ARRAY_END:
+				case ARRAY_END:
 					endArrayFound=true;
 					break;
 				case NULL_VALUE:

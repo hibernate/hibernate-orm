@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -117,6 +118,7 @@ public class JsonEmbeddableArrayTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
+	@FailureExpected(jiraKey = "HHH-18717", reason = "Requires array functions to work with JSON_ARRAY")
 	public void testSelectionItems() {
 		sessionFactoryScope().inSession(
 				entityManager -> {
@@ -205,6 +207,7 @@ public class JsonEmbeddableArrayTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
+	@FailureExpected(jiraKey = "HHH-18717", reason = "Requires array functions to work with JSON_ARRAY")
 	public void testUpdateAggregateMember() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
@@ -217,6 +220,7 @@ public class JsonEmbeddableArrayTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
+	@FailureExpected(jiraKey = "HHH-18717", reason = "Requires array functions to work with JSON_ARRAY")
 	public void testUpdateMultipleAggregateMembers() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
@@ -230,6 +234,7 @@ public class JsonEmbeddableArrayTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
+	@FailureExpected(jiraKey = "HHH-18717", reason = "Requires array functions to work with JSON_ARRAY")
 	public void testUpdateAllAggregateMembers() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {

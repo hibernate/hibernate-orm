@@ -18,9 +18,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Time;
 import java.sql.Timestamp;
-import java.time.Duration;
 import java.time.OffsetDateTime;
 
 /**
@@ -171,8 +169,7 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 			case SqlTypes.MATERIALIZED_NCLOB:
 			case SqlTypes.ENUM:
 			case SqlTypes.NAMED_ENUM:
-				// correct?
-				generator.write( javaType.unwrap( value,String.class,options ) );
+				generator.write( javaType.toString( value ) );
 				break;
 			case SqlTypes.DATE:
 				DATE dd = new DATE(javaType.unwrap( value,java.sql.Date.class,options ));
@@ -182,8 +179,7 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 			case SqlTypes.TIME:
 			case SqlTypes.TIME_WITH_TIMEZONE:
 			case SqlTypes.TIME_UTC:
-				Time time = javaType.unwrap( value, Time.class,options );
-				generator.write( time.toString() );
+				generator.write( javaType.toString( value ) );
 				break;
 			case SqlTypes.TIMESTAMP:
 				TIMESTAMP TS = new TIMESTAMP(javaType.unwrap( value, Timestamp.class, options ));
@@ -205,11 +201,8 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 				break;
 
 			case SqlTypes.DURATION:
-				Duration duration = javaType.unwrap( value, Duration.class, options );
-				generator.write( duration );
-				break;
 			case SqlTypes.UUID:
-				generator.write( javaType.unwrap( value, String.class, options ) );
+				generator.write( javaType.toString( value ) );
 				break;
 			case SqlTypes.BINARY:
 			case SqlTypes.VARBINARY:

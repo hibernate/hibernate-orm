@@ -31,7 +31,6 @@ public class OsonValueJDBCTypeAdapter implements JsonValueJDBCTypeAdapter {
 			case SqlTypes.VARBINARY:
 			case SqlTypes.LONGVARBINARY:
 			case SqlTypes.LONG32VARBINARY:
-			case SqlTypes.UUID:
 				valueToBeWrapped = source.getValue( PrimitiveByteArrayJavaType.INSTANCE, options );
 				break;
 			case SqlTypes.DATE:

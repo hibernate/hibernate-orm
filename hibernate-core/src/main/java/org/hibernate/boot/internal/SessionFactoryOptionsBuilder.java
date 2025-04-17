@@ -794,13 +794,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				FormatMapper.class,
 				setting,
 				(Callable<FormatMapper>) () -> {
-					FormatMapper jsonJacksonFormatMapper = null;
-					if (JacksonIntegration.isOracleOsonExtensionAvailable()) {
-						jsonJacksonFormatMapper = getOsonJacksonFormatMapperOrNull();
-					}
-					else {
-						jsonJacksonFormatMapper = getJsonJacksonFormatMapperOrNull();
-					}
+					// Prefer the OSON Jackson FormatMapper by default if available
+					final FormatMapper jsonJacksonFormatMapper = JacksonIntegration.isJacksonOsonExtensionAvailable()
+							? getOsonJacksonFormatMapperOrNull()
+							: getJsonJacksonFormatMapperOrNull();
 					return jsonJacksonFormatMapper != null ? jsonJacksonFormatMapper : getJakartaJsonBFormatMapperOrNull();
 				}
 		);

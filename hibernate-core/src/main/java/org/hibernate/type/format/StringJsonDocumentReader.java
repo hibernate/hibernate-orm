@@ -222,8 +222,10 @@ public class StringJsonDocumentReader extends StringJsonDocument implements Json
 					}
 			}
 		}
-		// no way we get here.
-		return null;
+		throw new IllegalStateException( "unexpected end of JSON ["+
+										this.jsonString.substring( this.jsonValueStart,this.jsonValueEnd )+
+										"] in current processing state " +
+										this.processingStates.getCurrent() );
 	}
 
 	/**
@@ -295,31 +297,17 @@ public class StringJsonDocumentReader extends StringJsonDocument implements Json
 		throw new IllegalStateException("character [" + character + "] is not the next non-blank character");
 	}
 
-	/**
-	 * Goes through the JSON string to locate a non-escaped instance of a given character.
-	 * Ex: on 'AB\"C"' this method returns 5 (not 3)
-	 *
-	 * @param character character to be found
-	 * @return the position of the character or -1 if not found.
-	 */
-	private int locateCharacter(char character) {
+	private int nextQuote() {
 		int pointer = this.position;
 
 		while ( pointer < this.limit) {
 			final char c = this.jsonString.charAt( pointer );
 			if (c == ESCAPE_CHAR) {
-				// We encountered an escape character.
-				// We should just skip the next one as it is either the expected character
-				// but as escaped one, we should ignore it, either this is something else
-				// and we should ignore it also
-				pointer += 2;
-				continue;
+				pointer++;
 			}
-			else {
-				if ( c == character ) {
-					// found
-					return pointer;
-				}
+			else if (c == '"') {
+				// found
+				return pointer;
 			}
 			pointer++;
 		}
@@ -366,7 +354,7 @@ public class StringJsonDocumentReader extends StringJsonDocument implements Json
 		this.position++;
 
 		//locate ending quote
-		int endingQuote = locateCharacter( StringJsonDocumentMarker.QUOTE.getMarkerCharacter());
+		int endingQuote = nextQuote();
 		if (endingQuote == -1) {
 			throw new IllegalStateException("Can't find ending quote of key name");
 		}

@@ -10,7 +10,6 @@ import org.hibernate.Length;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -103,8 +102,6 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
-import org.hibernate.type.format.jackson.JacksonIntegration;
-import org.hibernate.type.format.jackson.JacksonJsonFormatMapper;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.CallableStatement;
@@ -260,14 +257,6 @@ public class OracleDialect extends Dialect {
 
 	public boolean isApplicationContinuity() {
 		return applicationContinuity;
-	}
-
-	private static boolean isJacksonJsonFormatMapper(ConfigurationService configService) {
-		// Mirror the behavior of SessionFactoryOptionsBuilder#determineJsonFormatMapper
-		final String mapperName = configService.getSetting( MappingSettings.JSON_FORMAT_MAPPER,
-				StandardConverters.STRING,JacksonJsonFormatMapper.SHORT_NAME);
-		return JacksonJsonFormatMapper.SHORT_NAME.equalsIgnoreCase( mapperName )
-			|| mapperName == null && JacksonIntegration.getJsonJacksonFormatMapperOrNull() != null;
 	}
 
 	@Override
@@ -1016,22 +1005,21 @@ public class OracleDialect extends Dialect {
 			);
 		}
 
-
 		if ( getVersion().isSameOrAfter( 21 ) ) {
-			final boolean osonDisabled = getBoolean( ORACLE_OSON_DISABLED , configurationService.getSettings() );
-			if ( !osonDisabled && JacksonIntegration.isOracleOsonExtensionAvailable() && isJacksonJsonFormatMapper( configurationService )) {
+			final boolean osonDisabled = getBoolean( ORACLE_OSON_DISABLED, configurationService.getSettings() );
+			if ( !osonDisabled && OracleJdbcHelper.isOsonAvailable( serviceRegistry ) ) {
 				// We must check that that extension is available and actually used.
-				typeContributions.contributeJdbcType( OracleOsonJacksonJdbcType.INSTANCE );
+				typeContributions.contributeJdbcType( OracleOsonJdbcType.INSTANCE );
 				typeContributions.contributeJdbcTypeConstructor( OracleOsonArrayJdbcTypeConstructor.INSTANCE );
 
-				DIALECT_LOGGER.log( Logger.Level.DEBUG, "Oracle OSON Jackson extension used" );
+				DIALECT_LOGGER.log( Logger.Level.DEBUG, "Oracle OSON extension enabled" );
 			}
 			else {
-				if (DIALECT_LOGGER.isDebugEnabled()) {
-					DIALECT_LOGGER.log( Logger.Level.DEBUG, "Oracle OSON Jackson extension not used" );
-					DIALECT_LOGGER.log( Logger.Level.DEBUG,
-							"JacksonIntegration.isOracleOsonExtensionAvailable(): " +
-									JacksonIntegration.isOracleOsonExtensionAvailable());
+				if ( osonDisabled ) {
+					DIALECT_LOGGER.log( Logger.Level.DEBUG, "Oracle OSON extension disabled" );
+				}
+				else {
+					DIALECT_LOGGER.log( Logger.Level.DEBUG, "Oracle OSON extension not available" );
 				}
 				typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
 				typeContributions.contributeJdbcTypeConstructor( OracleJsonArrayJdbcTypeConstructor.NATIVE_INSTANCE );

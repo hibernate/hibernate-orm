@@ -49,14 +49,13 @@ import static org.hibernate.type.SqlTypes.*;
 
 public class OracleAggregateSupport extends AggregateSupportImpl {
 
-	protected static final AggregateSupport V23_INSTANCE = new OracleAggregateSupport( true, JsonSupport.OSON, true );
+	protected static final AggregateSupport V23_INSTANCE = new OracleAggregateSupport( true, JsonSupport.OSON );
 	// Special instance used when an Oracle OSON extension is available and used
-	protected static final AggregateSupport V23_OSON_EXT_INSTANCE = new OracleAggregateSupport( true, JsonSupport.OSON,false);
-	protected static final AggregateSupport V21_INSTANCE = new OracleAggregateSupport( false, JsonSupport.OSON, true );
-	protected static final AggregateSupport V19_INSTANCE = new OracleAggregateSupport( false, JsonSupport.MERGEPATCH , true);
-	protected static final AggregateSupport V18_INSTANCE = new OracleAggregateSupport( false, JsonSupport.QUERY_AND_PATH, true );
-	protected static final AggregateSupport V12_INSTANCE = new OracleAggregateSupport( false, JsonSupport.QUERY , true);
-	protected static final AggregateSupport LEGACY_INSTANCE = new OracleAggregateSupport( false, JsonSupport.NONE , true);
+	protected static final AggregateSupport V21_INSTANCE = new OracleAggregateSupport( false, JsonSupport.OSON );
+	protected static final AggregateSupport V19_INSTANCE = new OracleAggregateSupport( false, JsonSupport.MERGEPATCH );
+	protected static final AggregateSupport V18_INSTANCE = new OracleAggregateSupport( false, JsonSupport.QUERY_AND_PATH );
+	protected static final AggregateSupport V12_INSTANCE = new OracleAggregateSupport( false, JsonSupport.QUERY );
+	protected static final AggregateSupport LEGACY_INSTANCE = new OracleAggregateSupport( false, JsonSupport.NONE );
 
 	private static final String JSON_QUERY_START = "json_query(";
 	private static final String JSON_QUERY_JSON_END = "' returning json)";
@@ -70,17 +69,13 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 
 	private final boolean checkConstraintSupport;
 	private final JsonSupport jsonSupport;
-	private final boolean dateTypesStoreAsString;
 
-	private OracleAggregateSupport(boolean checkConstraintSupport, JsonSupport jsonSupport, boolean dateTypesStoreAsString) {
+	private OracleAggregateSupport(boolean checkConstraintSupport, JsonSupport jsonSupport) {
 		this.checkConstraintSupport = checkConstraintSupport;
 		this.jsonSupport = jsonSupport;
-		// this flag tell us if data is serialized/de-serialized as String. As opposed to using OSON
-		// In other words, this flag tells us if the Oracle OSON JDBC extension is used or not.
-		this.dateTypesStoreAsString = dateTypesStoreAsString;
 	}
 
-	public static AggregateSupport valueOf(Dialect dialect, boolean useDateStoredAsString) {
+	public static AggregateSupport valueOf(Dialect dialect) {
 		final DatabaseVersion version = dialect.getVersion();
 		return switch ( version.getMajor() ) {
 			case 12, 13, 14, 15, 16, 17 -> V12_INSTANCE;
@@ -88,10 +83,14 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			case 19, 20 -> V19_INSTANCE;
 			case 21, 22 -> V21_INSTANCE;
 			default -> version.isSameOrAfter( 23 )
-				? useDateStoredAsString?OracleAggregateSupport.V23_INSTANCE:
-				OracleAggregateSupport.V23_OSON_EXT_INSTANCE
-								: OracleAggregateSupport.LEGACY_INSTANCE;
+					? OracleAggregateSupport.V23_INSTANCE
+					: OracleAggregateSupport.LEGACY_INSTANCE;
 		};
+	}
+
+	private boolean supportsOson() {
+		// OSON is supported when check constraints are supported
+		return checkConstraintSupport;
 	}
 
 	@Override
@@ -147,17 +146,17 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 								);
 
 							case DATE:
-								if (this.dateTypesStoreAsString) {
-									return template.replace(
-											placeholder,
-											"to_date(json_value(" + parentPartExpression + columnExpression + "'),'YYYY-MM-DD')"
-									);
-								}
-								else {
+								if (supportsOson()) {
 									// Oracle OSON extension is used, value is not stored as string
 									return template.replace(
 											placeholder,
 											"json_value(" + parentPartExpression + columnExpression + "' returning date)"
+									);
+								}
+								else {
+									return template.replace(
+											placeholder,
+											"to_date(substr(json_value(" + parentPartExpression + columnExpression + "'),1,10),'YYYY-MM-DD')"
 									);
 								}
 
@@ -167,45 +166,31 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 										"to_timestamp(json_value(" + parentPartExpression + columnExpression + "'),'hh24:mi:ss')"
 								);
 							case TIMESTAMP:
-								if (this.dateTypesStoreAsString) {
+								if (supportsOson()) {
+									return template.replace(
+											placeholder,
+											"json_value(" + parentPartExpression + columnExpression + "' returning timestamp(9))"
+									);
+								}
+								else {
 									return template.replace(
 											placeholder,
 											"to_timestamp(json_value(" + parentPartExpression + columnExpression + "'),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9')"
 									);
 								}
-								else {
-
-									return template.replace(
-											placeholder,
-											"json_value(" + parentPartExpression + columnExpression + "' returning timestamp)"
-									);
-								}
-							case DURATION:
-								if (this.dateTypesStoreAsString) {
-									return template.replace(
-											placeholder,
-											"cast(json_value(" + parentPartExpression + columnExpression + "') as " + column.getColumnDefinition() + ')'
-									);
-								}
-								else {
-									return template.replace(
-											placeholder,
-											"json_value(" + parentPartExpression + columnExpression + "' returning interval day to second)"
-									);
-								}
 							case TIMESTAMP_WITH_TIMEZONE:
 							case TIMESTAMP_UTC:
-								if (this.dateTypesStoreAsString) {
-									return template.replace(
-											placeholder,
-											"to_timestamp_tz(json_value(" + parentPartExpression + columnExpression + "'),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9TZH:TZM')"
-									);
-								}
-								else {
+								if (supportsOson()) {
 									// Oracle OSON extension is used, value is not stored as string
 									return template.replace(
 											placeholder,
-											"json_value(" + parentPartExpression + columnExpression + "')"
+											"json_value(" + parentPartExpression + columnExpression + "' returning timestamp(9) with time zone)"
+									);
+								}
+								else {
+									return template.replace(
+											placeholder,
+											"to_timestamp_tz(json_value(" + parentPartExpression + columnExpression + "'),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9TZH:TZM')"
 									);
 								}
 							case UUID:
@@ -236,13 +221,8 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 								final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) column.getJdbcMapping();
 								final OracleArrayJdbcType jdbcType = (OracleArrayJdbcType) pluralType.getJdbcType();
 								switch ( jdbcType.getElementJdbcType().getDefaultSqlTypeCode() ) {
-
-									case DATE:
-										return template.replace(
-												placeholder,
-												"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getColumnDefinition() + ')'
-										);
 									case BOOLEAN:
+									case DATE:
 									case TIME:
 									case TIMESTAMP:
 									case TIMESTAMP_WITH_TIMEZONE:
@@ -251,10 +231,14 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 									case VARBINARY:
 									case LONG32VARBINARY:
 									case UUID:
-									default:
 										return template.replace(
 												placeholder,
 												jdbcType.getSqlTypeName() + "_from_json(json_query(" + parentPartExpression + columnExpression + "' returning " + jsonTypeName + "))"
+										);
+									default:
+										return template.replace(
+												placeholder,
+												"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getColumnDefinition() + ')'
 										);
 								}
 							case JSON:

@@ -8,6 +8,7 @@ import jakarta.persistence.criteria.CommonAbstractCriteria;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.Root;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.programmatic.MutationSpecification;
 import org.hibernate.query.IllegalMutationQueryException;
@@ -44,7 +45,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 			Class<T> mutationTarget,
 			SharedSessionContractImplementor session) {
 		this.session = session;
-		this.sqmStatement = resolveSqmTree( hql, session );
+		this.sqmStatement = resolveSqmTree( hql, session.getFactory() );
 		this.mutationTargetRoot = resolveSqmRoot( this.sqmStatement, mutationTarget );
 	}
 
@@ -53,7 +54,8 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 			SharedSessionContractImplementor session) {
 		this.session = session;
 		this.sqmStatement = (SqmUpdateStatement<T>) criteriaQuery;
-		this.mutationTargetRoot = resolveSqmRoot( sqmStatement, sqmStatement.getTarget().getManagedType().getJavaType() );
+		this.mutationTargetRoot = resolveSqmRoot( sqmStatement,
+				sqmStatement.getTarget().getManagedType().getJavaType() );
 	}
 
 	public MutationSpecificationImpl(
@@ -61,7 +63,8 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 			SharedSessionContractImplementor session) {
 		this.session = session;
 		this.sqmStatement = (SqmDeleteStatement<T>) criteriaQuery;
-		this.mutationTargetRoot = resolveSqmRoot( sqmStatement, sqmStatement.getTarget().getManagedType().getJavaType() );
+		this.mutationTargetRoot = resolveSqmRoot( sqmStatement,
+				sqmStatement.getTarget().getManagedType().getJavaType() );
 	}
 
 	@Override
@@ -96,8 +99,8 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 	 */
 	private static <T> SqmDeleteOrUpdateStatement<T> resolveSqmTree(
 			String hql,
-			SharedSessionContractImplementor session) {
-		final QueryEngine queryEngine = session.getFactory().getQueryEngine();
+			SessionFactoryImplementor sessionFactory) {
+		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
 		final HqlInterpretation<T> hqlInterpretation = queryEngine
 				.getInterpretationCache()
 				.resolveHqlInterpretation( hql, null, queryEngine.getHqlTranslator() );

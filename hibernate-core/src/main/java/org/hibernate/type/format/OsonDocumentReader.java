@@ -50,52 +50,52 @@ public class OsonDocumentReader implements JsonDocumentReader {
 		currentKeyName = null;
 		currentValue = null;
 		switch (evt) {
-			case OracleJsonParser.Event.START_OBJECT:
+			case START_OBJECT:
 				return JsonDocumentItemType.OBJECT_START;
-			case OracleJsonParser.Event.END_OBJECT:
+			case END_OBJECT:
 				return JsonDocumentItemType.OBJECT_END;
-			case OracleJsonParser.Event.START_ARRAY:
+			case START_ARRAY:
 				return JsonDocumentItemType.ARRAY_START;
-			case OracleJsonParser.Event.END_ARRAY:
+			case END_ARRAY:
 				return JsonDocumentItemType.ARRAY_END;
-			case OracleJsonParser.Event.KEY_NAME:
+			case KEY_NAME:
 				currentKeyName = this.parser.getString();
 				return JsonDocumentItemType.VALUE_KEY;
-			case OracleJsonParser.Event.VALUE_TIMESTAMPTZ:
+			case VALUE_TIMESTAMPTZ:
 				currentValue = this.parser.getOffsetDateTime();
 				return JsonDocumentItemType.VALUE;
-			case OracleJsonParser.Event.VALUE_DATE:
-			case OracleJsonParser.Event.VALUE_TIMESTAMP:
+			case VALUE_DATE:
+			case VALUE_TIMESTAMP:
 				currentValue = this.parser.getLocalDateTime();
 				return JsonDocumentItemType.VALUE;
-			case OracleJsonParser.Event.VALUE_INTERVALDS:
+			case VALUE_INTERVALDS:
 				currentValue = this.parser.getDuration();
 				return JsonDocumentItemType.VALUE;
-			case OracleJsonParser.Event.VALUE_INTERVALYM:
+			case VALUE_INTERVALYM:
 				currentValue = this.parser.getPeriod();
 				return JsonDocumentItemType.VALUE;
-			case OracleJsonParser.Event.VALUE_STRING:
+			case VALUE_STRING:
 				currentValue = this.parser.getString();
 				return JsonDocumentItemType.VALUE;
-			case OracleJsonParser.Event.VALUE_TRUE:
+			case VALUE_TRUE:
 				currentValue = Boolean.TRUE;
 				return JsonDocumentItemType.BOOLEAN_VALUE;
-			case OracleJsonParser.Event.VALUE_FALSE:
+			case VALUE_FALSE:
 				currentValue = Boolean.FALSE;
 				return JsonDocumentItemType.BOOLEAN_VALUE;
-			case OracleJsonParser.Event.VALUE_NULL:
+			case VALUE_NULL:
 				currentValue = null;
 				return JsonDocumentItemType.NULL_VALUE;
-			case OracleJsonParser.Event.VALUE_DECIMAL:
+			case VALUE_DECIMAL:
 				currentValue = this.parser.getBigDecimal();
 				return JsonDocumentItemType.VALUE;
-			case OracleJsonParser.Event.VALUE_DOUBLE:
+			case VALUE_DOUBLE:
 				currentValue = this.parser.getDouble();
 				return JsonDocumentItemType.VALUE;
-			case OracleJsonParser.Event.VALUE_FLOAT:
+			case VALUE_FLOAT:
 				currentValue = this.parser.getFloat();
 				return JsonDocumentItemType.VALUE;
-			case OracleJsonParser.Event.VALUE_BINARY:
+			case VALUE_BINARY:
 				currentValue = this.parser.getBytes();
 				return JsonDocumentItemType.VALUE;
 			default :

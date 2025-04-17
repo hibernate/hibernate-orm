@@ -5,6 +5,8 @@
 package org.hibernate.query.programmatic.internal;
 
 import jakarta.persistence.criteria.CommonAbstractCriteria;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.Root;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.programmatic.MutationSpecification;
@@ -17,8 +19,10 @@ import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
 import java.util.Locale;
 
@@ -42,6 +46,22 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 		this.session = session;
 		this.sqmStatement = resolveSqmTree( hql, session );
 		this.mutationTargetRoot = resolveSqmRoot( this.sqmStatement, mutationTarget );
+	}
+
+	public MutationSpecificationImpl(
+			CriteriaUpdate<T> criteriaQuery,
+			SharedSessionContractImplementor session) {
+		this.session = session;
+		this.sqmStatement = (SqmUpdateStatement<T>) criteriaQuery;
+		this.mutationTargetRoot = resolveSqmRoot( sqmStatement, sqmStatement.getTarget().getManagedType().getJavaType() );
+	}
+
+	public MutationSpecificationImpl(
+			CriteriaDelete<T> criteriaQuery,
+			SharedSessionContractImplementor session) {
+		this.session = session;
+		this.sqmStatement = (SqmDeleteStatement<T>) criteriaQuery;
+		this.mutationTargetRoot = resolveSqmRoot( sqmStatement, sqmStatement.getTarget().getManagedType().getJavaType() );
 	}
 
 	@Override

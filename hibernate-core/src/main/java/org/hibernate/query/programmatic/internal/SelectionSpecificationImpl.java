@@ -60,6 +60,15 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 		this( "from " + determineEntityName( rootEntityType, session ), rootEntityType, session );
 	}
 
+	public SelectionSpecificationImpl(
+			CriteriaQuery<T> criteriaQuery,
+			SharedSessionContractImplementor session) {
+		this.resultType = criteriaQuery.getResultType();
+		this.session = session;
+		this.sqmStatement = (SqmSelectStatement<T>) criteriaQuery;
+		this.sqmRoot = extractRoot( sqmStatement, resultType, "criteria query" );
+	}
+
 	@Override
 	public Root<T> getRoot() {
 		return sqmRoot;

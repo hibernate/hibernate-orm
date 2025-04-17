@@ -668,8 +668,23 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <T> SelectionSpecification<T> createSelectionSpecification(CriteriaQuery<T> criteria) {
+		return delegate.createSelectionSpecification( criteria );
+	}
+
+	@Override
 	public <T> MutationSpecification<T> createMutationSpecification(String hql, Class<T> mutationTarget) {
 		return delegate.createMutationSpecification( hql, mutationTarget );
+	}
+
+	@Override
+	public <T> MutationSpecification<T> createMutationSpecification(CriteriaUpdate<T> criteriaUpdate) {
+		return delegate.createMutationSpecification( criteriaUpdate );
+	}
+
+	@Override
+	public <T> MutationSpecification<T> createMutationSpecification(CriteriaDelete<T> criteriaDelete) {
+		return delegate.createMutationSpecification( criteriaDelete );
 	}
 
 	@Override

@@ -761,8 +761,23 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public <T> SelectionSpecification<T> createSelectionSpecification(CriteriaQuery<T> criteria) {
+		return this.lazySession.get().createSelectionSpecification( criteria );
+	}
+
+	@Override
 	public <T> MutationSpecification<T> createMutationSpecification(String hql, Class<T> mutationTarget) {
 		return this.lazySession.get().createMutationSpecification( hql, mutationTarget );
+	}
+
+	@Override
+	public <T> MutationSpecification<T> createMutationSpecification(CriteriaUpdate<T> criteriaUpdate) {
+		return this.lazySession.get().createMutationSpecification( criteriaUpdate );
+	}
+
+	@Override
+	public <T> MutationSpecification<T> createMutationSpecification(CriteriaDelete<T> criteriaDelete) {
+		return this.lazySession.get().createMutationSpecification( criteriaDelete );
 	}
 
 	@SuppressWarnings("rawtypes")

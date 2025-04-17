@@ -6,10 +6,8 @@ package org.hibernate.dialect;
 
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Timeout;
 import org.hibernate.Length;
 import org.hibernate.QueryTimeoutException;
-import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.MappingSettings;
@@ -124,13 +122,14 @@ import org.jboss.logging.Logger;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_USE_BINARY_FLOATS;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
-import static org.hibernate.dialect.DialectLogging.DIALECT_MESSAGE_LOGGER;
 import static org.hibernate.dialect.type.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.dialect.type.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
+import static org.hibernate.dialect.DialectLogging.DIALECT_LOGGER;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.HOUR;
 import static org.hibernate.query.common.TemporalUnit.MINUTE;
@@ -198,8 +197,6 @@ public class OracleDialect extends Dialect {
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 19 );
 
-	private boolean osonExtensionEnabled = false;
-
 	private final OracleUserDefinedTypeExporter userDefinedTypeExporter = new OracleUserDefinedTypeExporter( this );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 	private final SequenceSupport oracleSequenceSupport = OracleSequenceSupport.getInstance(this);
@@ -223,9 +220,6 @@ public class OracleDialect extends Dialect {
 	// Is the database accessed using a database service protected by Application Continuity.
 	protected final boolean applicationContinuity;
 
-	// Is the database OSON format should be disabled.
-	protected final boolean isOracleOsonDisabled;
-
 	protected final int driverMajorVersion;
 	protected final int driverMinorVersion;
 	private boolean useBinaryFloat;
@@ -239,7 +233,6 @@ public class OracleDialect extends Dialect {
 		autonomous = false;
 		extended = false;
 		applicationContinuity = false;
-		isOracleOsonDisabled = false;
 		driverMajorVersion = 19;
 		driverMinorVersion = 0;
 	}
@@ -248,14 +241,13 @@ public class OracleDialect extends Dialect {
 		this( info, OracleServerConfiguration.fromDialectResolutionInfo( info ) );
 	}
 
-	public OracleDialect(DialectResolutionInfo info, OracleServerConfiguration configuration) {
+	public OracleDialect(DialectResolutionInfo info, OracleServerConfiguration serverConfiguration) {
 		super( info );
-		autonomous = configuration.isAutonomous();
-		extended = configuration.isExtended();
-		applicationContinuity = configuration.isApplicationContinuity();
-		isOracleOsonDisabled = configuration.isOSONEnabled();
-		driverMinorVersion = configuration.getDriverMinorVersion();
-		driverMajorVersion = configuration.getDriverMajorVersion();
+		autonomous = serverConfiguration.isAutonomous();
+		extended = serverConfiguration.isExtended();
+		applicationContinuity = serverConfiguration.isApplicationContinuity();
+		this.driverMinorVersion = serverConfiguration.getDriverMinorVersion();
+		this.driverMajorVersion = serverConfiguration.getDriverMajorVersion();
 	}
 
 	public boolean isAutonomous() {
@@ -269,7 +261,6 @@ public class OracleDialect extends Dialect {
 	public boolean isApplicationContinuity() {
 		return applicationContinuity;
 	}
-	public boolean isOracleOsonDisabled() {return isOracleOsonDisabled;}
 
 	private static boolean isJacksonJsonFormatMapper(ConfigurationService configService) {
 		// Mirror the behavior of SessionFactoryOptionsBuilder#determineJsonFormatMapper
@@ -302,11 +293,10 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry( functionContributions );
+		super.initializeFunctionRegistry(functionContributions);
 		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
 
-		final var functionFactory = new CommonFunctionFactory( functionContributions );
-
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.cosh();
@@ -984,11 +974,6 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsUserDefinedTypes() {
-		return true;
-	}
-
-	@Override
 	public String getArrayTypeName(String javaElementTypeName, String elementTypeName, Integer maxLength) {
 		return ( javaElementTypeName == null ? elementTypeName : javaElementTypeName ) + "Array";
 	}
@@ -1032,29 +1017,21 @@ public class OracleDialect extends Dialect {
 		}
 
 
-		final String mapperName = configurationService.getSetting( "hibernate.type.json_format_mapper",
-				StandardConverters.STRING,JACKSON_MAPPER_NAME);
-
 		if ( getVersion().isSameOrAfter( 21 ) ) {
-
-			if ( !isOracleOsonDisabled() && JacksonIntegration.isOracleOsonExtensionAvailable() && JACKSON_MAPPER_NAME.equalsIgnoreCase( mapperName )) {
+			final boolean osonDisabled = getBoolean( ORACLE_OSON_DISABLED , configurationService.getSettings() );
+			if ( !osonDisabled && JacksonIntegration.isOracleOsonExtensionAvailable() && isJacksonJsonFormatMapper( configurationService )) {
 				// We must check that that extension is available and actually used.
 				typeContributions.contributeJdbcType( OracleOsonJacksonJdbcType.INSTANCE );
 				typeContributions.contributeJdbcTypeConstructor( OracleOsonArrayJdbcTypeConstructor.INSTANCE );
 
-				DIALECT_MESSAGE_LOGGER.DIALECT_LOGGER.log( Logger.Level.DEBUG,
-						"Oracle OSON Jackson extension used" );
-				osonExtensionEnabled = true;
+				DIALECT_LOGGER.log( Logger.Level.DEBUG, "Oracle OSON Jackson extension used" );
 			}
 			else {
-				if (DIALECT_MESSAGE_LOGGER.DIALECT_LOGGER.isDebugEnabled()) {
-					DIALECT_MESSAGE_LOGGER.DIALECT_LOGGER.log( Logger.Level.DEBUG,
-							"Oracle OSON Jackson extension not used" );
-					DIALECT_MESSAGE_LOGGER.DIALECT_LOGGER.log( Logger.Level.DEBUG,
+				if (DIALECT_LOGGER.isDebugEnabled()) {
+					DIALECT_LOGGER.log( Logger.Level.DEBUG, "Oracle OSON Jackson extension not used" );
+					DIALECT_LOGGER.log( Logger.Level.DEBUG,
 							"JacksonIntegration.isOracleOsonExtensionAvailable(): " +
 									JacksonIntegration.isOracleOsonExtensionAvailable());
-					DIALECT_MESSAGE_LOGGER.DIALECT_LOGGER.log( Logger.Level.DEBUG,
-							"hibernate.type.json_format_mapper : " + mapperName);
 				}
 				typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
 				typeContributions.contributeJdbcTypeConstructor( OracleJsonArrayJdbcTypeConstructor.NATIVE_INSTANCE );
@@ -1105,7 +1082,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return OracleAggregateSupport.valueOf( this ,!osonExtensionEnabled );
+		return OracleAggregateSupport.valueOf( this );
 	}
 
 	@Override
@@ -1521,36 +1498,12 @@ public class OracleDialect extends Dialect {
 		return " for update of " + aliases + " skip locked";
 	}
 
-	private String withTimeout(String lockString, Timeout timeout) {
-		return withTimeout( lockString, timeout.milliseconds() );
-	}
-
-	@Override
-	public String getWriteLockString(Timeout timeout) {
-		return withTimeout( getForUpdateString(), timeout );
-	}
-
-	@Override
-	public String getWriteLockString(String aliases, Timeout timeout) {
-		return withTimeout( getForUpdateString(aliases), timeout );
-	}
-
-	@Override
-	public String getReadLockString(Timeout timeout) {
-		return getWriteLockString( timeout );
-	}
-
-	@Override
-	public String getReadLockString(String aliases, Timeout timeout) {
-		return getWriteLockString( aliases, timeout );
-	}
-
 	private String withTimeout(String lockString, int timeout) {
 		return switch (timeout) {
-			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
-			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			case Timeouts.WAIT_FOREVER_MILLI -> lockString;
-			default -> supportsWait() ? lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout ) : lockString;
+			case NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case SKIP_LOCKED -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case WAIT_FOREVER -> lockString;
+			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
 		};
 	}
 
@@ -1726,10 +1679,10 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore( true );
-		return super.buildIdentifierHelper( builder, metadata );
+		return super.buildIdentifierHelper( builder, dbMetaData );
 	}
 
 	@Override

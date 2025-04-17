@@ -992,7 +992,7 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return OracleAggregateSupport.valueOf( this ,true);
+		return OracleAggregateSupport.valueOf( this );
 	}
 
 	@Override

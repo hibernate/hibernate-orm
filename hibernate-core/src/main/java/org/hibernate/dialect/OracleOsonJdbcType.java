@@ -4,11 +4,8 @@
  */
 package org.hibernate.dialect;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
 import oracle.jdbc.OracleType;
 import oracle.jdbc.driver.DatabaseError;
-import oracle.jdbc.provider.oson.OsonFactory;
 import oracle.sql.json.OracleJsonDatum;
 import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonGenerator;
@@ -27,6 +24,7 @@ import org.hibernate.type.format.OsonDocumentReader;
 import org.hibernate.type.format.OsonDocumentWriter;
 
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.CallableStatement;
@@ -37,26 +35,24 @@ import java.sql.SQLException;
 /**
  *
  * Type mapping JSON SQL data type for Oracle database.
- * This implementation is used when Jackson mapper is used and that the JDBC OSON extension
- * is available.
+ * This implementation is used when the JDBC OSON extension is available.
  *
  * @author Emmanuel Jannetti
  */
-public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
-	public static final OracleOsonJacksonJdbcType INSTANCE = new OracleOsonJacksonJdbcType( null );
+public class OracleOsonJdbcType extends OracleJsonJdbcType {
+	public static final OracleOsonJdbcType INSTANCE = new OracleOsonJdbcType( null );
 
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( OracleOsonJacksonJdbcType.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( OracleOsonJdbcType.class );
 
-	static final OsonFactory OSON_JACKSON_FACTORY = new OsonFactory();
 	static final OracleJsonFactory OSON_JSON_FACTORY = new OracleJsonFactory();
 
-	private OracleOsonJacksonJdbcType(EmbeddableMappingType embeddableMappingType) {
+	private OracleOsonJdbcType(EmbeddableMappingType embeddableMappingType) {
 		super( embeddableMappingType );
 	}
 
 	@Override
 	public String toString() {
-		return "OracleOsonJacksonJdbcType";
+		return "OracleOsonJdbcType";
 	}
 
 	@Override
@@ -64,7 +60,7 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 			EmbeddableMappingType mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
-		return new OracleOsonJacksonJdbcType( mappingType );
+		return new OracleOsonJdbcType( mappingType );
 	}
 
 	@Override
@@ -90,18 +86,33 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 					}
 				}
 				else {
-					try (JsonGenerator osonGen = OSON_JACKSON_FACTORY.createGenerator( out )) {
+					try (Closeable osonGen = OracleOsonJacksonHelper.createWriteTarget( out )) {
 						options.getJsonFormatMapper().writeToTarget( value, javaType, osonGen, options );
 					}
 				}
 				return out.toByteArray();
 			}
 
+			private boolean useUtf8(WrapperOptions options) {
+				return getEmbeddableMappingType() == null
+					&& !options.getJsonFormatMapper().supportsTargetType( OracleOsonJacksonHelper.WRITER_CLASS );
+			}
+
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
 				try {
-					st.setObject( index, toOson( value, getJavaType(), options ), OracleType.JSON);
+					if ( useUtf8( options ) ) {
+						final String json = OracleOsonJdbcType.this.toString(
+								value,
+								getJavaType(),
+								options
+						);
+						st.setBytes( index, json.getBytes( StandardCharsets.UTF_8 ) );
+					}
+					else {
+						st.setObject( index, toOson( value, getJavaType(), options ), OracleType.JSON );
+					}
 				}
 				catch (Exception e) {
 					throw new SQLException( e );
@@ -112,7 +123,17 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				try {
-					st.setObject( name, toOson( value, getJavaType(), options ), OracleType.JSON);
+					if ( useUtf8( options ) ) {
+						final String json = OracleOsonJdbcType.this.toString(
+								value,
+								getJavaType(),
+								options
+						);
+						st.setBytes( name, json.getBytes( StandardCharsets.UTF_8 ) );
+					}
+					else {
+						st.setObject( name, toOson( value, getJavaType(), options ), OracleType.JSON );
+					}
 				}
 				catch (Exception e) {
 					throw new SQLException( e );
@@ -140,10 +161,15 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 					);
 				}
 				else {
-					try (JsonParser osonParser = OSON_JACKSON_FACTORY.createParser( osonBytes )) {
+					try (Closeable osonParser = OracleOsonJacksonHelper.createReadSource( osonBytes )) {
 						return options.getJsonFormatMapper().readFromSource( getJavaType(), osonParser, options );
 					}
 				}
+			}
+
+			private boolean useUtf8(WrapperOptions options) {
+				return getEmbeddableMappingType() == null
+					&& !options.getJsonFormatMapper().supportsTargetType( OracleOsonJacksonHelper.READER_CLASS );
 			}
 
 			private X doExtraction(OracleJsonDatum datum,  WrapperOptions options) throws SQLException {
@@ -159,21 +185,34 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 				}
 			}
 
+			private X fromString(byte[] json, WrapperOptions options) throws SQLException {
+				if ( json == null ) {
+					return null;
+				}
+				return OracleOsonJdbcType.this.fromString(
+						new String( json, StandardCharsets.UTF_8 ),
+						getJavaType(),
+						options
+				);
+			}
+
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				try {
-					OracleJsonDatum ojd = rs.getObject( paramIndex, OracleJsonDatum.class );
-					return doExtraction(ojd,options);
+					if ( useUtf8( options ) ) {
+						return fromString( rs.getBytes( paramIndex ), options );
+					}
+					else {
+						OracleJsonDatum ojd = rs.getObject( paramIndex, OracleJsonDatum.class );
+						return doExtraction( ojd, options );
+					}
 				} catch (SQLException exc) {
 					if ( exc.getErrorCode() == DatabaseError.JDBC_ERROR_BASE + DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
 						// This may happen if we are fetching data from an existing schema
 						// that uses BLOB for JSON column In that case we assume bytes are
 						// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
 						LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
-						return OracleOsonJacksonJdbcType.this.fromString(
-								new String( rs.getBytes( paramIndex ), StandardCharsets.UTF_8 ),
-								getJavaType(),
-								options);
+						return fromString( rs.getBytes( paramIndex ), options );
 					} else {
 						throw exc;
 					}
@@ -183,18 +222,20 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 				try {
-					OracleJsonDatum ojd = statement.getObject( index, OracleJsonDatum.class );
-					return doExtraction(ojd,options);
+					if ( useUtf8( options ) ) {
+						return fromString( statement.getBytes( index ), options );
+					}
+					else {
+						OracleJsonDatum ojd = statement.getObject( index, OracleJsonDatum.class );
+						return doExtraction( ojd, options );
+					}
 				} catch (SQLException exc) {
 					if ( exc.getErrorCode() == DatabaseError.JDBC_ERROR_BASE + DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
 						// This may happen if we are fetching data from an existing schema
 						// that uses BLOB for JSON column In that case we assume bytes are
 						// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
 						LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
-						return OracleOsonJacksonJdbcType.this.fromString(
-								new String( statement.getBytes( index ), StandardCharsets.UTF_8 ),
-								getJavaType(),
-								options);
+						return fromString( statement.getBytes( index ), options);
 					} else {
 						throw exc;
 					}
@@ -205,18 +246,20 @@ public class OracleOsonJacksonJdbcType extends OracleJsonJdbcType {
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
 				try {
-					OracleJsonDatum ojd = statement.getObject( name, OracleJsonDatum.class );
-					return doExtraction(ojd,options);
+					if ( useUtf8( options ) ) {
+						return fromString( statement.getBytes( name ), options );
+					}
+					else {
+						OracleJsonDatum ojd = statement.getObject( name, OracleJsonDatum.class );
+						return doExtraction( ojd, options );
+					}
 				} catch (SQLException exc) {
 					if ( exc.getErrorCode() == DatabaseError.JDBC_ERROR_BASE + DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
 						// This may happen if we are fetching data from an existing schema
 						// that uses BLOB for JSON column In that case we assume bytes are
 						// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
 						LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
-						return OracleOsonJacksonJdbcType.this.fromString(
-								new String( statement.getBytes( name ), StandardCharsets.UTF_8 ),
-								getJavaType(),
-								options);
+						return fromString( statement.getBytes( name ), options);
 					} else {
 						throw exc;
 					}

@@ -17,6 +17,8 @@ import org.hibernate.query.restriction.Restriction;
  * @apiNote Query specifications only support a {@linkplain #getRoot() single root}.
  *
  * @author Steve Ebersole
+ *
+ * @since 7.0
  */
 @Incubating
 public interface QuerySpecification<T> {

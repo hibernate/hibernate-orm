@@ -513,6 +513,8 @@ public interface QueryProducer {
 	 *
 	 * @throws IllegalSelectQueryException The given HQL is expected to be a {@code select} query.  This method will
 	 * throw an exception if not.
+	 *
+	 * @since 7.0
 	 */
 	@Incubating
 	<T> SelectionSpecification<T> createSelectionSpecification(String hql, Class<T> resultType)
@@ -530,6 +532,8 @@ public interface QueryProducer {
 	 *
 	 * @param <T> The entity type which is the root of the query.
 	 * {@code resultType} and {@code <T>} are both expected to refer to a singular query root.
+	 *
+	 * @since 7.0
 	 */
 	@Incubating
 	<T> SelectionSpecification<T> createSelectionSpecification(Class<T> rootEntityType);
@@ -547,6 +551,8 @@ public interface QueryProducer {
 	 *
 	 * @throws IllegalMutationQueryException Only {@code update} and {@code delete} are supported;
 	 * this method will throw an exception if the given HQL query is not an {@code update} or {@code delete}.
+	 *
+	 * @since 7.0
 	 */
 	@Incubating
 	<T> MutationSpecification<T> createMutationSpecification(String hql, Class<T> mutationTarget)

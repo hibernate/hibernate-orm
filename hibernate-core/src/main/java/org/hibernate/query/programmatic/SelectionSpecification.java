@@ -14,15 +14,40 @@ import org.hibernate.query.restriction.Restriction;
 import java.util.List;
 
 /**
- * Specialization of QuerySpecification for building
- * {@linkplain SelectionQuery selection queries} supporting ordering
- * in addition to restrictions.
+ * Specialization of {@link QuerySpecification} for programmatic customization of
+ * {@linkplain SelectionQuery selection queries} with ordering and restriction criteria.
+ * <ul>
+ * <li>The method {@link #addRestriction(Restriction)} allows application of additional
+ *     {@linkplain Restriction filtering} to the query results. The static factory methods
+ *     of {@link Restriction} are used to express filtering criteria of various kinds.
+ * <li>Refinement or replacement of the query sorting criteria is possible via the methods
+ *     {@link #addOrdering(Order)} and {@link #setOrdering(List)}, together with the static
+ *     factory methods of {@link Order}.
+ * </ul>
+ * <p>
  * Once all {@linkplain #addOrdering sorting} and {@linkplain #addRestriction restrictions}
- * are defined, call {@linkplain #createQuery()} to obtain the executable form.
+ * are specified, call {@linkplain #createQuery()} to obtain an {@linkplain SelectionQuery
+ * executable selection query object}.
+ * <pre>
+ * session.createSelectionSpecification("from Book", Book.class)
+ *         .addRestriction(Restriction.contains(Book_.title, "hibernate", false))
+ *         .setOrdering(Order.desc(Book_.title))
+ *         .createQuery()                       // obtain a SelectionQuery
+ *         .setPage(Page.first(50))
+ *         .getResultList();
+ * </pre>
+ * <p>
+ * A {@code SelectionSpecification} always represents a query which returns a singe root
+ * entity. The restriction and ordering criteria are interpreted as applying to the field
+ * and properties of this root entity.
+ *
+ * @param <T> The entity type returned by the query
  *
  * @see QueryProducer#createSelectionSpecification(String, Class)
  *
  * @author Steve Ebersole
+ *
+ * @since 7.0
  */
 @Incubating
 public interface SelectionSpecification<T> extends QuerySpecification<T> {
@@ -73,5 +98,6 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	/**
 	 * Covariant override.
 	 */
+	@Override
 	SelectionQuery<T> createQuery();
 }

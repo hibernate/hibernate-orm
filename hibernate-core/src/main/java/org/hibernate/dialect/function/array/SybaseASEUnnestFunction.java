@@ -4,7 +4,7 @@
  */
 package org.hibernate.dialect.function.array;
 
-import org.hibernate.dialect.XmlHelper;
+import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;

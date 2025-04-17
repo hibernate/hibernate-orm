@@ -19,7 +19,7 @@ import java.util.Map;
 import javax.xml.namespace.QName;
 
 import jakarta.xml.bind.annotation.XmlElement;
-import org.hibernate.dialect.XmlHelper;
+import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;

@@ -7,7 +7,7 @@ package org.hibernate.dialect.function.xml;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.dialect.XmlHelper;
+import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.BindingContext;
 import org.hibernate.query.spi.QueryEngine;

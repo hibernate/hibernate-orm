@@ -101,6 +101,9 @@ dependencies {
         testRuntimeOnly jdbcLibs.oracle
         testRuntimeOnly jdbcLibs.oracleXml
         testRuntimeOnly jdbcLibs.oracleXmlParser
+        testRuntimeOnly (jdbcLibs.oracleJdbcJacksonOsonExtension) {
+            exclude group: 'com.oracle.database.jdbc', module: 'ojdbc8'
+        }
     }
     else if ( db.startsWith( 'altibase' ) ) {
         testRuntimeOnly jdbcLibs.altibase

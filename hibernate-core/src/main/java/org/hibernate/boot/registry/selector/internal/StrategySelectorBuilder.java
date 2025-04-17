@@ -308,18 +308,16 @@ public class StrategySelectorBuilder {
 				JsonBJsonFormatMapper.SHORT_NAME,
 				JsonBJsonFormatMapper.class
 		);
-		if ( JacksonIntegration.isOracleOsonExtensionAvailable() ) {
+		strategySelector.registerStrategyImplementor(
+				FormatMapper.class,
+				JacksonJsonFormatMapper.SHORT_NAME,
+				JacksonJsonFormatMapper.class
+		);
+		if ( JacksonIntegration.isJacksonOsonExtensionAvailable() ) {
 			strategySelector.registerStrategyImplementor(
 					FormatMapper.class,
 					JacksonOsonFormatMapper.SHORT_NAME,
 					JacksonOsonFormatMapper.class
-			);
-		}
-		else {
-			strategySelector.registerStrategyImplementor(
-					FormatMapper.class,
-					JacksonJsonFormatMapper.SHORT_NAME,
-					JacksonJsonFormatMapper.class
 			);
 		}
 	}

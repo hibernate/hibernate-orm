@@ -12,7 +12,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Factory for {@link OracleOsonJacksonArrayJdbcType}.
+ * Factory for {@link OracleOsonArrayJdbcType}.
  * @author Emmanuel Jannetti
  */
 public class OracleOsonArrayJdbcTypeConstructor implements JdbcTypeConstructor {
@@ -33,7 +33,7 @@ public class OracleOsonArrayJdbcTypeConstructor implements JdbcTypeConstructor {
 			Dialect dialect,
 			JdbcType elementType,
 			ColumnTypeInformation columnTypeInformation) {
-		return new OracleOsonJacksonArrayJdbcType( elementType );
+		return new OracleOsonArrayJdbcType( elementType );
 	}
 
 	@Override

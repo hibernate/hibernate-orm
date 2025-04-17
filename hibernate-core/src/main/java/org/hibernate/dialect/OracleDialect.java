@@ -124,9 +124,9 @@ import static org.hibernate.LockOptions.SKIP_LOCKED;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_USE_BINARY_FLOATS;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
-import static org.hibernate.dialect.DialectLogging.DIALECT_MESSAGE_LOGGER;
 import static org.hibernate.dialect.type.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.dialect.type.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
+import static org.hibernate.dialect.DialectLogging.DIALECT_LOGGER;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -198,8 +198,6 @@ public class OracleDialect extends Dialect {
 	private static final String ADD_MONTH_EXPRESSION = String.format( yqmSelect, "?2", "?3" );
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 19 );
-
-	private boolean osonExtensionEnabled = false;
 
 	private final OracleUserDefinedTypeExporter userDefinedTypeExporter = new OracleUserDefinedTypeExporter( this );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
@@ -1023,16 +1021,12 @@ public class OracleDialect extends Dialect {
 				typeContributions.contributeJdbcType( OracleOsonJacksonJdbcType.INSTANCE );
 				typeContributions.contributeJdbcTypeConstructor( OracleOsonArrayJdbcTypeConstructor.INSTANCE );
 
-				DIALECT_MESSAGE_LOGGER.DIALECT_LOGGER.log( Logger.Level.DEBUG,
-						"Oracle OSON Jackson extension used" );
-				// as we speak, this is not supported by OSON extension
-				osonExtensionEnabled = true;
+				DIALECT_LOGGER.log( Logger.Level.DEBUG, "Oracle OSON Jackson extension used" );
 			}
 			else {
-				if (DIALECT_MESSAGE_LOGGER.DIALECT_LOGGER.isDebugEnabled()) {
-					DIALECT_MESSAGE_LOGGER.DIALECT_LOGGER.log( Logger.Level.DEBUG,
-							"Oracle OSON Jackson extension not used" );
-					DIALECT_MESSAGE_LOGGER.DIALECT_LOGGER.log( Logger.Level.DEBUG,
+				if (DIALECT_LOGGER.isDebugEnabled()) {
+					DIALECT_LOGGER.log( Logger.Level.DEBUG, "Oracle OSON Jackson extension not used" );
+					DIALECT_LOGGER.log( Logger.Level.DEBUG,
 							"JacksonIntegration.isOracleOsonExtensionAvailable(): " +
 									JacksonIntegration.isOracleOsonExtensionAvailable());
 				}
@@ -1085,7 +1079,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return OracleAggregateSupport.valueOf( this ,!osonExtensionEnabled );
+		return OracleAggregateSupport.valueOf( this );
 	}
 
 	@Override

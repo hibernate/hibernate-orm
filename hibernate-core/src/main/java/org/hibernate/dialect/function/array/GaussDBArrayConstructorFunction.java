@@ -53,7 +53,7 @@ public class GaussDBArrayConstructorFunction extends ArrayConstructorFunction {
 	}
 
 	private static boolean needsArrayCasting(BasicType<?> elementType) {
-		// PostgreSQL doesn't do implicit conversion between text[] and varchar[], so we need casting
+		// GaussDB doesn't do implicit conversion between text[] and varchar[], so we need casting
 		return elementType.getJdbcType().isString();
 	}
 }

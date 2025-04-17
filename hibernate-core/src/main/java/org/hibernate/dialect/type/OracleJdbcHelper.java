@@ -31,6 +31,16 @@ public class OracleJdbcHelper {
 			return false;
 		}
 	}
+	public static boolean isOsonAvailable(ServiceRegistry serviceRegistry) {
+		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
+		try {
+			classLoaderService.classForName( "oracle.sql.json.OracleJsonFactory" );
+			return true;
+		}
+		catch (ClassLoadingException ex) {
+			return false;
+		}
+	}
 
 	public static JdbcTypeConstructor getArrayJdbcTypeConstructor(ServiceRegistry serviceRegistry) {
 		return create( serviceRegistry, "org.hibernate.dialect.type.OracleArrayJdbcTypeConstructor" );

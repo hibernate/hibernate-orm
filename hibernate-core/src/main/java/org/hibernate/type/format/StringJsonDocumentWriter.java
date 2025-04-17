@@ -4,7 +4,7 @@
  */
 package org.hibernate.type.format;
 
-import org.hibernate.dialect.JsonHelper;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BooleanJavaType;
@@ -14,30 +14,34 @@ import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import java.io.OutputStream;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
 
 /**
  * Implementation of <code>JsonDocumentWriter</code> for String-based OSON document.
- * This implementation will receive a {@link JsonHelper.JsonAppender } to a serialze JSON object to it
+ * This implementation will receive a {@link JsonAppender } to a serialze JSON object to it
  * @author Emmanuel Jannetti
  */
 public class StringJsonDocumentWriter extends StringJsonDocument implements JsonDocumentWriter {
 
-
-
-	private JsonHelper.JsonAppender appender;
-
-
+	private final JsonAppender appender;
 
 	/**
 	 * Creates a new StringJsonDocumentWriter.
-	 * @param appender the appender to receive the serialze JSON object
 	 */
-	public StringJsonDocumentWriter(JsonHelper.JsonAppender appender) {
+	public StringJsonDocumentWriter() {
+		this(new StringBuilder());
+	}
+
+	/**
+	 * Creates a new StringJsonDocumentWriter.
+	 * @param sb the StringBuilder to receive the serialized JSON
+	 */
+	public StringJsonDocumentWriter(StringBuilder sb) {
 		this.processingStates.push( JsonProcessingState.NONE );
-		this.appender = appender;
+		this.appender = new JsonAppender( sb );
 	}
 
 	/**
@@ -237,7 +241,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	private  void convertedBasicValueToString(
 			Object value,
 			WrapperOptions options,
-			JsonHelper.JsonAppender appender,
+			JsonAppender appender,
 			JavaType<Object> javaType,
 			JdbcType jdbcType) {
 		switch ( jdbcType.getDefaultSqlTypeCode() ) {
@@ -354,8 +358,184 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 		}
 	}
 
+	public String getJson() {
+		return appender.toString();
+	}
+
 	@Override
 	public String toString() {
 		return appender.toString();
+	}
+
+	private static class JsonAppender extends OutputStream implements SqlAppender {
+
+		private final static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+
+		private final StringBuilder sb;
+		private boolean escape;
+
+		public JsonAppender(StringBuilder sb) {
+			this.sb = sb;
+		}
+
+		@Override
+		public void appendSql(String fragment) {
+			append( fragment );
+		}
+
+		@Override
+		public void appendSql(char fragment) {
+			append( fragment );
+		}
+
+		@Override
+		public void appendSql(int value) {
+			sb.append( value );
+		}
+
+		@Override
+		public void appendSql(long value) {
+			sb.append( value );
+		}
+
+		@Override
+		public void appendSql(boolean value) {
+			sb.append( value );
+		}
+
+		@Override
+		public String toString() {
+			return sb.toString();
+		}
+
+		public void startEscaping() {
+			assert !escape;
+			escape = true;
+		}
+
+		public void endEscaping() {
+			assert escape;
+			escape = false;
+		}
+
+		@Override
+		public JsonAppender append(char fragment) {
+			if ( escape ) {
+				appendEscaped( fragment );
+			}
+			else {
+				sb.append( fragment );
+			}
+			return this;
+		}
+
+		@Override
+		public JsonAppender append(CharSequence csq) {
+			return append( csq, 0, csq.length() );
+		}
+
+		@Override
+		public JsonAppender append(CharSequence csq, int start, int end) {
+			if ( escape ) {
+				int len = end - start;
+				sb.ensureCapacity( sb.length() + len );
+				for ( int i = start; i < end; i++ ) {
+					appendEscaped( csq.charAt( i ) );
+				}
+			}
+			else {
+				sb.append( csq, start, end );
+			}
+			return this;
+		}
+
+		@Override
+		public void write(int v) {
+			final String hex = Integer.toHexString( v );
+			sb.ensureCapacity( sb.length() + hex.length() + 1 );
+			if ( ( hex.length() & 1 ) == 1 ) {
+				sb.append( '0' );
+			}
+			sb.append( hex );
+		}
+
+		@Override
+		public void write(byte[] bytes) {
+			write(bytes, 0, bytes.length);
+		}
+
+		@Override
+		public void write(byte[] bytes, int off, int len) {
+			sb.ensureCapacity( sb.length() + ( len << 1 ) );
+			for ( int i = 0; i < len; i++ ) {
+				final int v = bytes[off + i] & 0xFF;
+				sb.append( HEX_ARRAY[v >>> 4] );
+				sb.append( HEX_ARRAY[v & 0x0F] );
+			}
+		}
+
+		private void appendEscaped(char fragment) {
+			switch ( fragment ) {
+				case 0:
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6:
+				case 7:
+				//   8 is '\b'
+				//   9 is '\t'
+				//   10 is '\n'
+				case 11:
+				//   12 is '\f'
+				//   13 is '\r'
+				case 14:
+				case 15:
+				case 16:
+				case 17:
+				case 18:
+				case 19:
+				case 20:
+				case 21:
+				case 22:
+				case 23:
+				case 24:
+				case 25:
+				case 26:
+				case 27:
+				case 28:
+				case 29:
+				case 30:
+				case 31:
+					sb.append( "\\u" ).append( Integer.toHexString( fragment ) );
+					break;
+				case '\b':
+					sb.append("\\b");
+					break;
+				case '\t':
+					sb.append("\\t");
+					break;
+				case '\n':
+					sb.append("\\n");
+					break;
+				case '\f':
+					sb.append("\\f");
+					break;
+				case '\r':
+					sb.append("\\r");
+					break;
+				case '"':
+					sb.append( "\\\"" );
+					break;
+				case '\\':
+					sb.append( "\\\\" );
+					break;
+				default:
+					sb.append( fragment );
+					break;
+			}
+		}
+
 	}
 }

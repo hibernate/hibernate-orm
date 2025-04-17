@@ -77,7 +77,7 @@ public class JsonJdbcType implements AggregateJdbcType {
 			return null;
 		}
 		if ( embeddableMappingType != null ) {
-			return (X) JsonHelper.deserialize(
+			return JsonHelper.deserialize(
 					embeddableMappingType,
 					new StringJsonDocumentReader(string),
 					javaType.getJavaTypeClass() != Object[].class,
@@ -90,11 +90,10 @@ public class JsonJdbcType implements AggregateJdbcType {
 	@Override
 	public Object createJdbcValue(Object domainValue, WrapperOptions options) throws SQLException {
 		assert embeddableMappingType != null;
-		StringBuilder sb = new StringBuilder();
-		StringJsonDocumentWriter writer = new StringJsonDocumentWriter(new JsonHelper.JsonAppender(sb) );
+		final StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
 		try {
-			JsonHelper.serialize( embeddableMappingType ,domainValue,options, writer );
-			return writer.toString();
+			JsonHelper.serialize( embeddableMappingType, domainValue, options, writer );
+			return writer.getJson();
 		}
 		catch (IOException e) {
 			throw new SQLException( e );
@@ -104,16 +103,15 @@ public class JsonJdbcType implements AggregateJdbcType {
 	@Override
 	public Object[] extractJdbcValues(Object rawJdbcValue, WrapperOptions options) throws SQLException {
 		assert embeddableMappingType != null;
-		return JsonHelper.deserialize( embeddableMappingType, new StringJsonDocumentReader( (String)rawJdbcValue ), false, options );
+		return JsonHelper.deserialize( embeddableMappingType, new StringJsonDocumentReader( (String) rawJdbcValue ), false, options );
 	}
 
 	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {
 		if ( embeddableMappingType != null ) {
 			try {
-				StringBuilder sb = new StringBuilder();
-				StringJsonDocumentWriter writer = new StringJsonDocumentWriter(new JsonHelper.JsonAppender(sb) );
-				JsonHelper.serialize( embeddableMappingType, value, options, writer);
-				return writer.toString();
+				final StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
+				JsonHelper.serialize( embeddableMappingType, value, options, writer );
+				return writer.getJson();
 			}
 			catch (IOException e) {
 				throw new RuntimeException("Failed to serialize JSON mapping", e );

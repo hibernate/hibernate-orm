@@ -7,7 +7,7 @@ package org.hibernate.community.dialect;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.dialect.OracleArrayJdbcType;
+import org.hibernate.dialect.type.OracleArrayJdbcType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.CollectionPart;

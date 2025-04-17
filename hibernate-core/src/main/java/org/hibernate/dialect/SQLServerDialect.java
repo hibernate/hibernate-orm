@@ -38,6 +38,8 @@ import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
 import org.hibernate.dialect.sequence.SQLServer16SequenceSupport;
 import org.hibernate.dialect.sequence.SQLServerSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.type.SQLServerCastingXmlArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.SQLServerCastingXmlJdbcType;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.Size;

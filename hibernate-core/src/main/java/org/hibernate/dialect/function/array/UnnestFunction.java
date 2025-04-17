@@ -6,7 +6,7 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
-import org.hibernate.dialect.XmlHelper;
+import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.dialect.function.UnnestSetReturningFunctionTypeResolver;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;

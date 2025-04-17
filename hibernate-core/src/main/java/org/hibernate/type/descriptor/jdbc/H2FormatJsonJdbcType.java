@@ -5,6 +5,7 @@
 package org.hibernate.type.descriptor.jdbc;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.type.H2JsonJdbcType;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -14,7 +15,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
  * '{@code ? format json}' write expression for H2.
  *
  * @author Marco Belladelli
- * @deprecated Use {@link org.hibernate.dialect.H2JsonJdbcType} instead
+ * @deprecated Use {@link H2JsonJdbcType} instead
  */
 @Deprecated(forRemoval = true, since = "6.5")
 public class H2FormatJsonJdbcType extends JsonJdbcType {

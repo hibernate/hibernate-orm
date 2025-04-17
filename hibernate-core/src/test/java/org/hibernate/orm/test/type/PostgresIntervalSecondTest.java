@@ -11,7 +11,7 @@ import java.time.Duration;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.PostgreSQLIntervalSecondJdbcType;
+import org.hibernate.dialect.type.PostgreSQLIntervalSecondJdbcType;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.SqlTypes;

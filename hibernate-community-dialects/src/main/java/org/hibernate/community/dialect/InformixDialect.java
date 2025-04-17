@@ -24,7 +24,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
-import org.hibernate.dialect.VarcharUUIDJdbcType;
+import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;

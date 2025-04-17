@@ -7,7 +7,7 @@ package org.hibernate.procedure.internal;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.AbstractPostgreSQLStructJdbcType;
+import org.hibernate.dialect.type.AbstractPostgreSQLStructJdbcType;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;

@@ -169,6 +169,27 @@ public class SimpleQuerySpecificationTests {
 	}
 
 	@Test
+	void testCriteriaForm(SessionFactoryScope factoryScope) {
+		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+
+		factoryScope.inTransaction( (session) -> {
+			sqlCollector.clear();
+			var criteriaBuilder = session.getCriteriaBuilder();
+			var query = criteriaBuilder.createQuery( BasicEntity.class );
+			var entity = query.from( BasicEntity.class );
+			query.select( entity );
+			query.where( criteriaBuilder.like( entity.get( BasicEntity_.name ), "%" ) );
+			session.createSelectionSpecification( query )
+					.addOrdering( Order.asc( BasicEntity_.position ) )
+					.createQuery()
+					.getResultList();
+		} );
+
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " order by be1_0.position" );
+	}
+
+	@Test
 	void testBaseParameters(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 

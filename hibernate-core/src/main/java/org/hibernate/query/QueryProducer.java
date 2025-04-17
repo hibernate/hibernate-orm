@@ -540,6 +540,21 @@ public interface QueryProducer {
 
 	/**
 	 * Returns a specification reference which can be used to programmatically,
+	 * iteratively build a {@linkplain SelectionQuery} for the given criteria query,
+	 * allowing the addition of {@linkplain SelectionSpecification#addOrdering sorting}
+	 * and {@linkplain SelectionSpecification#addRestriction restrictions}.
+	 *
+	 * @param criteria The criteria query
+	 *
+	 * @param <T> The entity type which is the root of the query.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	<T> SelectionSpecification<T> createSelectionSpecification(CriteriaQuery<T> criteria);
+
+	/**
+	 * Returns a specification reference which can be used to programmatically,
 	 * iteratively build a {@linkplain MutationQuery} based on a base HQL statement,
 	 * allowing the addition of {@linkplain MutationSpecification#addRestriction restrictions}.
 	 *
@@ -557,6 +572,34 @@ public interface QueryProducer {
 	@Incubating
 	<T> MutationSpecification<T> createMutationSpecification(String hql, Class<T> mutationTarget)
 			throws IllegalMutationQueryException;
+
+	/**
+	 * Returns a specification reference which can be used to programmatically,
+	 * iteratively build a {@linkplain MutationQuery} based on the given criteria update,
+	 * allowing the addition of {@linkplain MutationSpecification#addRestriction restrictions}.
+	 *
+	 * @param criteriaUpdate The criteria update query
+	 *
+	 * @param <T> The root entity type for the mutation (the "target").
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	<T> MutationSpecification<T> createMutationSpecification(CriteriaUpdate<T> criteriaUpdate);
+
+	/**
+	 * Returns a specification reference which can be used to programmatically,
+	 * iteratively build a {@linkplain MutationQuery} based on the given criteria delete,
+	 * allowing the addition of {@linkplain MutationSpecification#addRestriction restrictions}.
+	 *
+	 * @param criteriaDelete The criteria delete query
+	 *
+	 * @param <T> The root entity type for the mutation (the "target").
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	<T> MutationSpecification<T> createMutationSpecification(CriteriaDelete<T> criteriaDelete);
 
 	/**
 	 * Create a {@link Query} instance for the named query.

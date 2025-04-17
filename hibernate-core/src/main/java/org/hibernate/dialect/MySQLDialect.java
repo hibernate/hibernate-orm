@@ -731,7 +731,7 @@ public class MySQLDialect extends Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new MySQLSqlAstTranslator<>( sessionFactory, statement );
+				return new MySQLSqlAstTranslator<>( sessionFactory, statement, MySQLDialect.this );
 			}
 		};
 	}

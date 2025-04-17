@@ -212,7 +212,7 @@ public class MariaDBDialect extends MySQLDialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new MariaDBSqlAstTranslator<>( sessionFactory, statement );
+				return new MariaDBSqlAstTranslator<>( sessionFactory, statement, MariaDBDialect.this );
 			}
 		};
 	}

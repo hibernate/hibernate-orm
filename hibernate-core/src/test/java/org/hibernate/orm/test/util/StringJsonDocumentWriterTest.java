@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.util;
 
-import org.hibernate.dialect.JsonHelper;
 import org.hibernate.type.format.StringJsonDocumentWriter;
 import org.junit.jupiter.api.Test;
 
@@ -22,8 +21,7 @@ public class StringJsonDocumentWriterTest {
 
 	@Test
 	public void testEmptyDocument() {
-		StringBuilder sb = new StringBuilder();
-		StringJsonDocumentWriter writer = new StringJsonDocumentWriter(new JsonHelper.JsonAppender(sb) );
+		StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
 		writer.startObject();
 		writer.endObject();
 		assertEquals( "{}" , writer.toString());
@@ -31,16 +29,14 @@ public class StringJsonDocumentWriterTest {
 
 	@Test
 	public void testEmptyArray() {
-		StringBuilder sb = new StringBuilder();
-		StringJsonDocumentWriter writer = new StringJsonDocumentWriter(new JsonHelper.JsonAppender(sb) );
+		StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
 		writer.startArray();
 		writer.endArray();
 		assertEquals( "[]" , writer.toString() );
 	}
 	@Test
 	public void testArray() {
-		StringBuilder sb = new StringBuilder();
-		StringJsonDocumentWriter writer = new StringJsonDocumentWriter(new JsonHelper.JsonAppender(sb) );
+		StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
 		writer.startArray();
 		writer.booleanValue( false );
 		writer.booleanValue( true );
@@ -51,8 +47,7 @@ public class StringJsonDocumentWriterTest {
 
 	@Test
 	public void testMixedArrayDocument() {
-		StringBuilder sb = new StringBuilder();
-		StringJsonDocumentWriter writer = new StringJsonDocumentWriter(new JsonHelper.JsonAppender(sb) );
+		StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
 		writer.startArray();
 		writer.nullValue();
 		writer.booleanValue( false );
@@ -64,8 +59,7 @@ public class StringJsonDocumentWriterTest {
 	}
 	@Test
 	public void testSimpleDocument() {
-		StringBuilder sb = new StringBuilder();
-		StringJsonDocumentWriter writer = new StringJsonDocumentWriter(new JsonHelper.JsonAppender(sb) );
+		StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
 		writer.startObject();
 		writer.objectKey( "key1" );
 		writer.stringValue( "value1" );
@@ -82,8 +76,7 @@ public class StringJsonDocumentWriterTest {
 
 	@Test
 	public void testNonStringValueDocument() {
-		StringBuilder sb = new StringBuilder();
-		StringJsonDocumentWriter writer = new StringJsonDocumentWriter(new JsonHelper.JsonAppender(sb) );
+		StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
 		writer.startObject();
 		writer.objectKey( "aNull" );
 		writer.nullValue();
@@ -103,8 +96,7 @@ public class StringJsonDocumentWriterTest {
 
 	@Test
 	public void testArrayValueDocument() {
-		StringBuilder sb = new StringBuilder();
-		StringJsonDocumentWriter writer = new StringJsonDocumentWriter( new JsonHelper.JsonAppender( sb ) );
+		StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
 		writer.startObject();
 		writer.objectKey( "anEmptyArray" );
 		writer.startArray();
@@ -126,8 +118,7 @@ public class StringJsonDocumentWriterTest {
 	}
 	@Test
 	public void testObjectArrayMultipleValueDocument() {
-		StringBuilder sb = new StringBuilder();
-		StringJsonDocumentWriter writer = new StringJsonDocumentWriter( new JsonHelper.JsonAppender( sb ) );
+		StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
 		writer.startObject();
 		writer.objectKey( "anArray" ).startArray().nullValue().stringValue( "2" ).startObject()
 		.objectKey( "foo" ).stringValue( "bar" ).endObject().endArray().endObject();
@@ -136,14 +127,13 @@ public class StringJsonDocumentWriterTest {
 					{
 						"anArray" : [null, "2" , {\"foo\":\"bar\"}  ]
 					}
-					""" , sb.toString() );
+					""" , writer.toString() );
 
 	}
 
 	@Test
 	public void testNestedDocument() {
-		StringBuilder sb = new StringBuilder();
-		StringJsonDocumentWriter writer = new StringJsonDocumentWriter( new JsonHelper.JsonAppender( sb ) );
+		StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
 		writer.startObject().objectKey( "nested" ).startObject()
 				.objectKey( "converted_gender" ).stringValue( "M" )
 				.endObject()

@@ -327,5 +327,5 @@ public class JsonEmbeddableArrayTest extends BaseSessionFactoryFunctionalTest {
 		}
 
 	}
-	
+
 }

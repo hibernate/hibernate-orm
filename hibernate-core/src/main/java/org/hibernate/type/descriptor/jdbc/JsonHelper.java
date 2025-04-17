@@ -6,7 +6,6 @@ package org.hibernate.type.descriptor.jdbc;
 
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.AbstractCollection;
@@ -17,16 +16,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
@@ -238,32 +239,80 @@ public class JsonHelper {
 	 */
 	private static <X> X consumeJsonDocumentItems(JsonDocumentReader reader, EmbeddableMappingType embeddableMappingType, boolean returnEmbeddable, WrapperOptions options)
 			throws SQLException {
-		// final result of a mapped object array
-		Object [] objectArrayResult;
-		// current mapping to be used
-		SelectableMapping currentSelectableMapping = null;
-		String currentKeyName = null;
-		List<Object> subArrayObjectList = null;
-		BasicPluralType<?, ?> subArrayObjectTypes = null;
+		record SelectableData(String selectableName, int selectableIndex, SelectableMapping selectableMapping){}
+		record ParseLevel(
+				@Nullable SelectableData selectableData,
+				@Nullable EmbeddableMappingType embeddableMappingType,
+				@Nullable BasicPluralType<?, ?> arrayType,
+				@Nullable List<Object> subArrayObjectList,
+				@Nullable Object [] objectArray
+		) {
+			ParseLevel(EmbeddableMappingType embeddableMappingType) {
+				this(null, embeddableMappingType);
+			}
+			ParseLevel(@Nullable SelectableData selectableData, EmbeddableMappingType embeddableMappingType) {
+				this(
+						selectableData,
+						embeddableMappingType,
+						null,
+						null,
+						new Object[embeddableMappingType.getJdbcValueCount()+ ( embeddableMappingType.isPolymorphic() ? 1 : 0 )]
+				);
+			}
+			ParseLevel(@Nullable SelectableData selectableData, BasicPluralType<?, ?> arrayType) {
+				this( selectableData, null, arrayType, new ArrayList<>(), null );
+			}
 
-		// mapping definitions are in a tree
-		// Each mapping definition may contain sub mappings (sub embeddable mapping)
-		// This stack is used to keep a pointer on the current mapping to be used to assign correct types.
-		// see onStartObject()/onEndObject() methods
-		StandardStack<EmbeddableMappingType> embeddableMappingTypes = new StandardStack<>();
-		// As for mapping definitions, when "sub embeddable" is encountered, the array
-		// that needs to be filled with Objects is the one we allocate in the final result array slot.
-		// We use a stack to keep track of array ref
-		StandardStack<Object[]> objectArrays = new StandardStack<>();
+			public void addValue(@Nullable SelectableData selectableData, @Nullable Object value) {
+				if ( embeddableMappingType != null ) {
+					assert selectableData != null;
+					objectArray[selectableData.selectableIndex] = value;
+				}
+				else {
+					assert subArrayObjectList != null;
+					subArrayObjectList.add(value);
+				}
+			}
 
-		// index within objectArrayResult
-		int currentSelectableIndexInResultArray = -1;
+			public JdbcMapping determineJdbcMapping(@Nullable SelectableData currentSelectableData) {
+				if ( currentSelectableData != null ) {
+					return currentSelectableData.selectableMapping.getJdbcMapping();
+				}
+				else if ( arrayType != null ) {
+					return arrayType.getElementType();
+				}
+				else {
+					assert selectableData != null;
+					return selectableData.selectableMapping.getJdbcMapping();
+				}
+			}
 
-		JsonValueJDBCTypeAdapter adapter = JsonValueJDBCTypeAdapterFactory.getAdapter(reader,returnEmbeddable);
+			public static String determineSelectablePath(StandardStack<ParseLevel> parseLevel, @Nullable SelectableData currentSelectableData) {
+				if ( currentSelectableData != null ) {
+					return currentSelectableData.selectableName;
+				}
+				else {
+					return determineSelectablePath( parseLevel, 0 );
+				}
+			}
 
-		embeddableMappingTypes.push(embeddableMappingType);
-		objectArrayResult = new Object[embeddableMappingType.getJdbcValueCount()+ ( embeddableMappingType.isPolymorphic() ? 1 : 0 )];
-		objectArrays.push( objectArrayResult );
+			private static String determineSelectablePath(StandardStack<ParseLevel> stack, int level) {
+				final ParseLevel parseLevel = stack.peek( level );
+				assert parseLevel != null;
+				if ( parseLevel.selectableData != null ) {
+					return parseLevel.selectableData.selectableName;
+				}
+				else {
+					assert parseLevel.arrayType != null;
+					return determineSelectablePath( stack, level + 1 ) + ".{element}";
+				}
+			}
+		}
+		final StandardStack<ParseLevel> parseLevel = new StandardStack<>();
+		final JsonValueJDBCTypeAdapter adapter = JsonValueJDBCTypeAdapterFactory.getAdapter(reader,returnEmbeddable);
+
+		parseLevel.push(new ParseLevel( embeddableMappingType ));
+		SelectableData currentSelectableData = null;
 
 		// We loop on two conditions:
 		//   - the parser still has tokens left
@@ -273,117 +322,141 @@ public class JsonHelper {
 		// the array is not empty, but we ae done parsing that specific object.
 		// When we encounter OBJECT_END the current type is popped out of the stack. When parsing one object of an array we may end up
 		// having an empty stack. Next Objects are parsed in the next round.
-		while(reader.hasNext() && !embeddableMappingTypes.isEmpty()) {
-			JsonDocumentItemType type = reader.next();
-			switch (type) {
-				case VALUE_KEY:
-					currentKeyName = reader.getObjectKeyName();
+		while(reader.hasNext() && !parseLevel.isEmpty()) {
+			final ParseLevel currentLevel = parseLevel.getCurrent();
+			assert currentLevel != null;
+			switch (reader.next()) {
+				case VALUE_KEY -> {
+					final EmbeddableMappingType currentEmbeddableMappingType = currentLevel.embeddableMappingType;
+					assert currentEmbeddableMappingType != null
+							: "Value keys are only valid for objects";
 
-					currentSelectableIndexInResultArray = embeddableMappingTypes.getCurrent().getSelectableIndex( currentKeyName );
-					if ( currentSelectableIndexInResultArray >= 0 ) {
-						// we may not have a selectable mapping for that key
-						currentSelectableMapping = embeddableMappingTypes.getCurrent().getJdbcValueSelectable( currentSelectableIndexInResultArray );
-					}
-					else {
+					assert currentSelectableData == null;
+
+					final String selectableName = reader.getObjectKeyName();
+					final int selectableIndex = currentEmbeddableMappingType.getSelectableIndex( selectableName );
+					if ( selectableIndex < 0 ) {
 						throw new IllegalArgumentException(
 								String.format(
 										"Could not find selectable [%s] in embeddable type [%s] for JSON processing.",
-										currentKeyName,
-										embeddableMappingTypes.getCurrent().getMappedJavaType().getJavaTypeClass().getName()
+										selectableName,
+										currentEmbeddableMappingType.getMappedJavaType().getJavaTypeClass().getName()
 								)
 						);
 					}
-					break;
-				case ARRAY_START:
-					assert (subArrayObjectList == null && subArrayObjectTypes == null) : "ARRAY_START item received twice in a row";
+					final SelectableMapping selectableMapping =
+							currentEmbeddableMappingType.getJdbcValueSelectable( selectableIndex );
+					currentSelectableData = new SelectableData( selectableName, selectableIndex, selectableMapping );
+				}
+				case ARRAY_START -> {
+					assert currentSelectableData != null;
 
-					// initialize an array to gather values
-					subArrayObjectList = new ArrayList<>();
-					assert (currentSelectableMapping.getJdbcMapping() instanceof BasicPluralType<?, ?>)
-							: "Array event received for non plural type";
-					// initialize array's element type
-					subArrayObjectTypes = (BasicPluralType<?, ?>) currentSelectableMapping.getJdbcMapping();
-					break;
-				case ARRAY_END:
-					assert (subArrayObjectList != null && subArrayObjectTypes != null) : "ARRAY_END item received twice in a row";
+					if ( !(currentSelectableData.selectableMapping.getJdbcMapping() instanceof BasicPluralType<?, ?> pluralType) ) {
+						throw new IllegalArgumentException(
+								String.format(
+										"Can't parse JSON array for selectable [%s] which is not of type BasicPluralType.",
+										ParseLevel.determineSelectablePath( parseLevel, currentSelectableData )
+								)
+						);
+					}
+					parseLevel.push( new ParseLevel( currentSelectableData, pluralType ) );
+					currentSelectableData = null;
+				}
+				case ARRAY_END -> {
+					assert currentLevel.arrayType != null;
+					assert currentLevel.selectableData != null;
+
+					parseLevel.pop();
+					final ParseLevel parentLevel = parseLevel.getCurrent();
+
+					assert parentLevel.embeddableMappingType != null;
 					// flush array values
-					objectArrays.getCurrent()[currentSelectableIndexInResultArray] = subArrayObjectTypes.getJdbcJavaType().wrap( subArrayObjectList, options );
-					// reset until we encounter next array element
-					subArrayObjectList = null;
-					subArrayObjectTypes = null;
-					break;
-				case OBJECT_START:
-					if (currentKeyName != null) {
-						// We are dealing with a sub-object, allocate space for it then,
-						// otherwise, we have nothing to do.
-						// Push the new (sub)mapping definition.
-						assert embeddableMappingTypes.getCurrent() != null;
-						currentSelectableIndexInResultArray = embeddableMappingTypes.getCurrent().getSelectableIndex( currentKeyName );
-						assert currentSelectableIndexInResultArray != -1: "Cannot get index of " + currentKeyName;
+					parentLevel.addValue(
+							currentLevel.selectableData,
+							currentLevel.arrayType.getJdbcJavaType().wrap( currentLevel.subArrayObjectList, options )
+					);
+				}
+				case OBJECT_START -> {
+					final JdbcMapping jdbcMapping = currentLevel.determineJdbcMapping( currentSelectableData );
 
-						final SelectableMapping selectable = embeddableMappingTypes.getCurrent().getJdbcValueSelectable(
-								currentSelectableIndexInResultArray );
-						final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) selectable.getJdbcMapping()
-								.getJdbcType();
-						final EmbeddableMappingType subMappingType = aggregateJdbcType.getEmbeddableMappingType();
-						assert objectArrays.getCurrent() != null;
-						objectArrays.getCurrent()[currentSelectableIndexInResultArray] =
-								new Object[subMappingType.getJdbcValueCount()];
-						embeddableMappingTypes.push( subMappingType );
-						objectArrays.push( (Object[]) objectArrays.getCurrent()[currentSelectableIndexInResultArray] );
+					if ( !(jdbcMapping.getJdbcType() instanceof AggregateJdbcType aggregateJdbcType) ) {
+						throw new IllegalArgumentException(
+								String.format(
+										"Can't parse JSON object for selectable [%s] which is not of type AggregateJdbcType.",
+										ParseLevel.determineSelectablePath( parseLevel, currentSelectableData )
+								)
+						);
 					}
-					break;
-				case OBJECT_END:
+					parseLevel.push(
+							new ParseLevel( currentSelectableData, aggregateJdbcType.getEmbeddableMappingType() ) );
+					currentSelectableData = null;
+				}
+				case OBJECT_END -> {
+					final EmbeddableMappingType currentEmbeddableMappingType = currentLevel.embeddableMappingType;
+					assert currentEmbeddableMappingType != null;
+
 					// go back in the mapping definition tree
-					embeddableMappingTypes.pop();
-					objectArrays.pop();
-					break;
-				case NULL_VALUE:
-					if ( subArrayObjectList != null ) {
-						// dealing with arrays
-						subArrayObjectList.add( null );
+					parseLevel.pop();
+					final Object objectValue;
+					if ( returnEmbeddable ) {
+						final StructAttributeValues attributeValues = StructHelper.getAttributeValues(
+								embeddableMappingType,
+								currentLevel.objectArray,
+								options
+						);
+						objectValue = instantiate( embeddableMappingType, attributeValues );
 					}
 					else {
-						objectArrays.getCurrent()[currentSelectableIndexInResultArray] = null;
+						objectValue = currentLevel.objectArray;
 					}
-					break;
-				case NUMERIC_VALUE:
-					if ( subArrayObjectList != null ) {
-						// dealing with arrays
-						subArrayObjectList.add( adapter.fromNumericValue( subArrayObjectTypes.getElementType().getJdbcJavaType(),
-								subArrayObjectTypes.getElementType().getJdbcType(),reader,options));
+					if ( parseLevel.isEmpty() ) {
+						//noinspection unchecked
+						return (X) objectValue;
 					}
 					else {
-						objectArrays.getCurrent()[currentSelectableIndexInResultArray] = adapter.fromNumericValue( currentSelectableMapping.getJdbcMapping().getJdbcJavaType(),
-								currentSelectableMapping.getJdbcMapping().getJdbcType(),reader,options);
+						parseLevel.getCurrent().addValue( currentLevel.selectableData, objectValue );
 					}
-					break;
-				case BOOLEAN_VALUE:
-					if ( subArrayObjectList != null ) {
-						// dealing with arrays
-						subArrayObjectList.add( reader.getBooleanValue()?Boolean.TRUE:Boolean.FALSE);
-					}
-					else {
-						objectArrays.getCurrent()[currentSelectableIndexInResultArray] = reader.getBooleanValue()?Boolean.TRUE:Boolean.FALSE;
-					}
-					break;
-				case VALUE:
-					if ( subArrayObjectList != null ) {
-						// dealing with arrays
-						subArrayObjectList.add(adapter.fromValue( subArrayObjectTypes.getElementType().getJdbcJavaType(),
-								subArrayObjectTypes.getElementType().getJdbcType(),reader,options));
-					}
-					else {
-						objectArrays.getCurrent()[currentSelectableIndexInResultArray] = adapter.fromValue( currentSelectableMapping.getJdbcMapping().getJdbcJavaType(),
-								currentSelectableMapping.getJdbcMapping().getJdbcType(),reader,options);
-					}
-
-					break;
-				default:
-					assert false: "Unexpected type " + type;
+				}
+				case NULL_VALUE -> {
+					currentLevel.addValue( currentSelectableData, null );
+					currentSelectableData = null;
+				}
+				case NUMERIC_VALUE -> {
+					final JdbcMapping jdbcMapping = currentLevel.determineJdbcMapping( currentSelectableData );
+					currentLevel.addValue(
+							currentSelectableData,
+							adapter.fromNumericValue(
+									jdbcMapping.getJdbcJavaType(),
+									jdbcMapping.getJdbcType(),
+									reader,
+									options
+							)
+					);
+					currentSelectableData = null;
+				}
+				case BOOLEAN_VALUE -> {
+					currentLevel.addValue(
+							currentSelectableData,
+							reader.getBooleanValue() ? Boolean.TRUE : Boolean.FALSE
+					);
+					currentSelectableData = null;
+				}
+				case VALUE -> {
+					final JdbcMapping jdbcMapping = currentLevel.determineJdbcMapping( currentSelectableData );
+					currentLevel.addValue(
+							currentSelectableData,
+							adapter.fromValue(
+									jdbcMapping.getJdbcJavaType(),
+									jdbcMapping.getJdbcType(),
+									reader,
+									options
+							)
+					);
+					currentSelectableData = null;
+				}
 			}
 		}
-		return (X) objectArrayResult;
+		throw new IllegalArgumentException( "Expected JSON object end, but none found." );
 	}
 
 	/**
@@ -401,20 +474,16 @@ public class JsonHelper {
 			JsonDocumentReader reader,
 			boolean returnEmbeddable,
 			WrapperOptions options) throws SQLException {
-
-
-		final Object[] values = consumeJsonDocumentItems(reader, embeddableMappingType, returnEmbeddable, options);
-		if ( returnEmbeddable ) {
-			final StructAttributeValues attributeValues = StructHelper.getAttributeValues(
-					embeddableMappingType,
-					values,
-					options
-			);
-			//noinspection unchecked
-			return (X) instantiate( embeddableMappingType, attributeValues );
+		final JsonDocumentItemType event;
+		if ( !reader.hasNext() || ( event = reader.next() ) == JsonDocumentItemType.NULL_VALUE ) {
+			return null;
 		}
-		//noinspection unchecked
-		return (X) values;
+		if ( event != JsonDocumentItemType.OBJECT_START ) {
+			throw new IllegalArgumentException("Malformed JSON. Expected object but got: " + event);
+		}
+		final X result = consumeJsonDocumentItems( reader, embeddableMappingType, returnEmbeddable, options );
+		assert !reader.hasNext();
+		return result;
 	}
 
 
@@ -435,7 +504,13 @@ public class JsonHelper {
 			JdbcType elementJdbcType,
 			JsonDocumentReader reader,
 			WrapperOptions options) throws SQLException {
-
+		final JsonDocumentItemType event;
+		if ( !reader.hasNext() || ( event = reader.next() ) == JsonDocumentItemType.NULL_VALUE ) {
+			return null;
+		}
+		if ( event != JsonDocumentItemType.ARRAY_START ) {
+			throw new IllegalArgumentException("Malformed JSON. Expected array but got: " + event);
+		}
 
 		final CustomArrayList arrayList = new CustomArrayList();
 		final JavaType<?> elementJavaType = ((BasicPluralJavaType<?>) javaType).getElementJavaType();
@@ -448,17 +523,13 @@ public class JsonHelper {
 			jdbcJavaType = options.getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( preferredJavaTypeClass );
 		}
 
-		JsonValueJDBCTypeAdapter adapter = JsonValueJDBCTypeAdapterFactory.getAdapter(reader,false);
-
-		assert reader.hasNext():"Invalid array string";
-		assert reader.next() == JsonDocumentItemType.ARRAY_START:"Invalid start of array";
-		boolean endArrayFound = false;
+		final JsonValueJDBCTypeAdapter adapter = JsonValueJDBCTypeAdapterFactory.getAdapter(reader,false);
 		while(reader.hasNext()) {
 			JsonDocumentItemType type = reader.next();
 			switch ( type ) {
 				case ARRAY_END:
-					endArrayFound=true;
-					break;
+					assert !reader.hasNext();
+					return javaType.wrap( arrayList, options );
 				case NULL_VALUE:
 					arrayList.add( null );
 					break;
@@ -473,196 +544,17 @@ public class JsonHelper {
 					break;
 				case OBJECT_START:
 					assert elementJdbcType instanceof JsonJdbcType;
-					Object o = deserialize(
-							((JsonJdbcType) elementJdbcType).getEmbeddableMappingType(),
-							reader,
-							true,
-							options);
-					arrayList.add(o);
+					final EmbeddableMappingType embeddableMappingType = ((JsonJdbcType) elementJdbcType).getEmbeddableMappingType();
+					arrayList.add( consumeJsonDocumentItems(reader, embeddableMappingType, true, options) );
 					break;
 				default:
 					throw new UnsupportedOperationException( "Unexpected JSON type " + type );
 			}
 		}
 
-
-		assert endArrayFound:"Invalid end of array";
-		return javaType.wrap( arrayList, options );
+		throw new IllegalArgumentException( "Expected JSON array end, but none found." );
 	}
 
-
-
-	public static class JsonAppender extends OutputStream implements SqlAppender {
-
-		private final static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
-
-		private final StringBuilder sb;
-		private boolean escape;
-
-		public JsonAppender(StringBuilder sb) {
-			this.sb = sb;
-		}
-
-		@Override
-		public void appendSql(String fragment) {
-			append( fragment );
-		}
-
-		@Override
-		public void appendSql(char fragment) {
-			append( fragment );
-		}
-
-		@Override
-		public void appendSql(int value) {
-			sb.append( value );
-		}
-
-		@Override
-		public void appendSql(long value) {
-			sb.append( value );
-		}
-
-		@Override
-		public void appendSql(boolean value) {
-			sb.append( value );
-		}
-
-		@Override
-		public String toString() {
-			return sb.toString();
-		}
-
-		public void startEscaping() {
-			assert !escape;
-			escape = true;
-		}
-
-		public void endEscaping() {
-			assert escape;
-			escape = false;
-		}
-
-		@Override
-		public JsonAppender append(char fragment) {
-			if ( escape ) {
-				appendEscaped( fragment );
-			}
-			else {
-				sb.append( fragment );
-			}
-			return this;
-		}
-
-		@Override
-		public JsonAppender append(CharSequence csq) {
-			return append( csq, 0, csq.length() );
-		}
-
-		@Override
-		public JsonAppender append(CharSequence csq, int start, int end) {
-			if ( escape ) {
-				int len = end - start;
-				sb.ensureCapacity( sb.length() + len );
-				for ( int i = start; i < end; i++ ) {
-					appendEscaped( csq.charAt( i ) );
-				}
-			}
-			else {
-				sb.append( csq, start, end );
-			}
-			return this;
-		}
-
-		@Override
-		public void write(int v) {
-			final String hex = Integer.toHexString( v );
-			sb.ensureCapacity( sb.length() + hex.length() + 1 );
-			if ( ( hex.length() & 1 ) == 1 ) {
-				sb.append( '0' );
-			}
-			sb.append( hex );
-		}
-
-		@Override
-		public void write(byte[] bytes) {
-			write(bytes, 0, bytes.length);
-		}
-
-		@Override
-		public void write(byte[] bytes, int off, int len) {
-			sb.ensureCapacity( sb.length() + ( len << 1 ) );
-			for ( int i = 0; i < len; i++ ) {
-				final int v = bytes[off + i] & 0xFF;
-				sb.append( HEX_ARRAY[v >>> 4] );
-				sb.append( HEX_ARRAY[v & 0x0F] );
-			}
-		}
-
-		private void appendEscaped(char fragment) {
-			switch ( fragment ) {
-				case 0:
-				case 1:
-				case 2:
-				case 3:
-				case 4:
-				case 5:
-				case 6:
-				case 7:
-				//   8 is '\b'
-				//   9 is '\t'
-				//   10 is '\n'
-				case 11:
-				//   12 is '\f'
-				//   13 is '\r'
-				case 14:
-				case 15:
-				case 16:
-				case 17:
-				case 18:
-				case 19:
-				case 20:
-				case 21:
-				case 22:
-				case 23:
-				case 24:
-				case 25:
-				case 26:
-				case 27:
-				case 28:
-				case 29:
-				case 30:
-				case 31:
-					sb.append( "\\u" ).append( Integer.toHexString( fragment ) );
-					break;
-				case '\b':
-					sb.append("\\b");
-					break;
-				case '\t':
-					sb.append("\\t");
-					break;
-				case '\n':
-					sb.append("\\n");
-					break;
-				case '\f':
-					sb.append("\\f");
-					break;
-				case '\r':
-					sb.append("\\r");
-					break;
-				case '"':
-					sb.append( "\\\"" );
-					break;
-				case '\\':
-					sb.append( "\\\\" );
-					break;
-				default:
-					sb.append( fragment );
-					break;
-			}
-		}
-
-	}
 
 	private static class CustomArrayList extends AbstractCollection<Object> implements Collection<Object> {
 		Object[] array = ArrayHelper.EMPTY_OBJECT_ARRAY;

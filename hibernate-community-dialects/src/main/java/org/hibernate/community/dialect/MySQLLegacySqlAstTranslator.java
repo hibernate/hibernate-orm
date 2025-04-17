@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.MySQLSqlAstTranslator;
+import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;

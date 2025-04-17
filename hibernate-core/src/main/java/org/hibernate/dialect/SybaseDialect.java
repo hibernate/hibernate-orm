@@ -15,6 +15,8 @@ import org.hibernate.dialect.function.SybaseTruncFunction;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SybaseJconnIdentityColumnSupport;
+import org.hibernate.dialect.sql.ast.SybaseSqlAstTranslator;
+import org.hibernate.dialect.sql.ast.SybaseSqmToSqlAstConverter;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;

@@ -2,16 +2,13 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.dialect.sql.ast;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
@@ -23,7 +20,6 @@ import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
-import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -31,37 +27,24 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
-import org.hibernate.sql.model.internal.TableInsertStandard;
-import org.hibernate.type.SqlTypes;
 
 /**
- * A SQL AST translator for PostgreSQL.
+ * A SQL AST translator for Cockroach.
  *
  * @author Christian Beikov
  */
-public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithMerge<T> {
+public class CockroachSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	public PostgreSQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public CockroachSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
 
 	@Override
-	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
-		inArrayPredicate.getTestExpression().accept( this );
-		appendSql( " = any (" );
-		inArrayPredicate.getArrayParameter().accept( this );
-		appendSql( ")" );
-	}
-
-	@Override
-	protected String getArrayContainsFunction() {
-		return super.getArrayContainsFunction();
-	}
-
-	@Override
-	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
-		renderIntoIntoAndTable( tableInsert );
-		appendSql( "default values" );
+	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
+		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
+			appendSql( "floor" );
+		}
+		super.visitBinaryArithmeticExpression(arithmeticExpression);
 	}
 
 	@Override
@@ -120,61 +103,19 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 	}
 
 	@Override
-	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
-		if ( lhsExpressionType != null && lhsExpressionType.getJdbcTypeCount() == 1
-				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
-			// In PostgreSQL, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
-			switch ( operator ) {
-				case EQUAL:
-				case NOT_DISTINCT_FROM:
-				case NOT_EQUAL:
-				case DISTINCT_FROM:
-					appendSql( "cast(" );
-					lhs.accept( this );
-					appendSql( " as text)" );
-					appendSql( operator.sqlText() );
-					appendSql( "cast(" );
-					rhs.accept( this );
-					appendSql( " as text)" );
-					return;
-				default:
-					// Fall through
-					break;
-			}
-		}
-		renderComparisonStandard( lhs, operator, rhs );
-	}
-
-	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		final boolean isNegated = booleanExpressionPredicate.isNegated();
-		if ( isNegated ) {
-			appendSql( "not(" );
-		}
-		booleanExpressionPredicate.getExpression().accept( this );
-		if ( isNegated ) {
-			appendSql( CLOSE_PARENTHESIS );
-		}
-	}
-
-	@Override
-	public void visitNullnessPredicate(NullnessPredicate nullnessPredicate) {
-		final Expression expression = nullnessPredicate.getExpression();
-		final JdbcMappingContainer expressionType = expression.getExpressionType();
-		if ( isStruct( expressionType ) ) {
-			// Surprise, the null predicate checks if all components of the struct are null or not,
-			// rather than the column itself, so we have to use the distinct from predicate to implement this instead
-			expression.accept( this );
-			if ( nullnessPredicate.isNegated() ) {
-				appendSql( " is distinct from null" );
-			}
-			else {
-				appendSql( " is not distinct from null" );
-			}
+		if ( booleanExpressionPredicate.isNegated() ) {
+			super.visitBooleanExpressionPredicate( booleanExpressionPredicate );
 		}
 		else {
-			super.visitNullnessPredicate( nullnessPredicate );
+			final boolean isNegated = booleanExpressionPredicate.isNegated();
+			if ( isNegated ) {
+				appendSql( "not (" );
+			}
+			booleanExpressionPredicate.getExpression().accept( this );
+			if ( isNegated ) {
+				appendSql( CLOSE_PARENTHESIS );
+			}
 		}
 	}
 
@@ -187,22 +128,14 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 	}
 
 	@Override
-	protected String getForUpdate() {
-		return getDialect().getForUpdateString();
-	}
-
-	@Override
 	protected String getForShare(int timeoutMillis) {
-		// Note that `for key share` is inappropriate as that only means "prevent PK changes"
 		return " for share";
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
-		if ( getQueryPartForRowNumbering() == queryPart || isRowsOnlyFetchClauseType( queryPart ) ) {
-			return false;
-		}
-		return !getDialect().supportsFetchClause( queryPart.getFetchClauseType() );
+		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
+				&& !isRowsOnlyFetchClauseType( queryPart );
 	}
 
 	@Override
@@ -228,36 +161,20 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
-			if ( getDialect().supportsFetchClause( FetchClauseType.ROWS_ONLY ) ) {
-				renderOffsetFetchClause( queryPart, true );
-			}
-			else {
-				renderLimitOffsetClause( queryPart );
-			}
-		}
-	}
-
-	@Override
-	protected void renderStandardCycleClause(CteStatement cte) {
-		super.renderStandardCycleClause( cte );
-		if ( cte.getCycleMarkColumn() != null && cte.getCyclePathColumn() == null && getDialect().supportsRecursiveCycleUsingClause() ) {
-			appendSql( " using " );
-			appendSql( determineCyclePathColumnName( cte ) );
+			renderLimitOffsetClause( queryPart );
 		}
 	}
 
 	@Override
 	protected void renderPartitionItem(Expression expression) {
-		// We render an empty group instead of literals as some DBs don't support grouping by literals
-		// Note that integer literals, which refer to select item positions, are handled in #visitGroupByClause
 		if ( expression instanceof Literal ) {
-			appendSql( "()" );
+			appendSql( "'0' || '0'" );
 		}
-		else if ( expression instanceof Summarization summarization ) {
-			appendSql( summarization.getKind().sqlText() );
-			appendSql( OPEN_PARENTHESIS );
-			renderCommaSeparated( summarization.getGroupings() );
-			appendSql( CLOSE_PARENTHESIS );
+		else if ( expression instanceof Summarization ) {
+			// This could theoretically be emulated by rendering all grouping variations of the query and
+			// connect them via union all but that's probably pretty inefficient and would have to happen
+			// on the query spec level
+			throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
 		}
 		else {
 			expression.accept( this );
@@ -266,10 +183,7 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 
 	@Override
 	public void visitLikePredicate(LikePredicate likePredicate) {
-		// We need a custom implementation here because PostgreSQL
-		// uses the backslash character as default escape character
-		// According to the documentation, we can overcome this by specifying an empty escape character
-		// See https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-LIKE
+		// Custom implementation because CockroachDB uses backslash as default escape character
 		likePredicate.getMatchExpression().accept( this );
 		if ( likePredicate.isNegated() ) {
 			appendSql( " not" );
@@ -293,11 +207,10 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 	}
 
 	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		appendSql( OPEN_PARENTHESIS );
-		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-		appendSql( CLOSE_PARENTHESIS );
+	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+		inArrayPredicate.getTestExpression().accept( this );
+		appendSql( " = any(" );
+		inArrayPredicate.getArrayParameter().accept( this );
+		appendSql( ')' );
 	}
 }

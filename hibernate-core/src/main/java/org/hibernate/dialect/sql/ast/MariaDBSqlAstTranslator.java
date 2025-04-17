@@ -2,11 +2,16 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.dialect.sql.ast;
 
-import org.hibernate.engine.jdbc.Size;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
@@ -19,10 +24,8 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.DerivedTableReference;
-import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
-import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
@@ -36,86 +39,18 @@ import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
 /**
- * A SQL AST translator for MySQL.
+ * A SQL AST translator for MariaDB.
  *
  * @author Christian Beikov
  */
-public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	/**
-	 * On MySQL, 1GB or {@code 2^30 - 1} is the maximum size that a char value can be casted.
-	 */
-	private static final int MAX_CHAR_SIZE = (1 << 30) - 1;
+	private final MariaDBDialect dialect;
 
-	public MySQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public MariaDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
-	}
-
-	public static String getSqlType(CastTarget castTarget, SessionFactoryImplementor factory) {
-		final String sqlType = getCastTypeName( castTarget, factory.getTypeConfiguration() );
-		return getSqlType( castTarget, sqlType, factory.getJdbcServices().getDialect() );
-	}
-
-	//TODO: this is really, really bad since it circumvents the whole machinery we have in DdlType
-	//      and in the Dialect for doing this in a unified way! These mappings should be held in
-	//      the DdlTypes themselves and should be set up in registerColumnTypes(). Doing it here
-	//      means we have problems distinguishing, say, the 'as Character' special case
-	private static String getSqlType(CastTarget castTarget, String sqlType, Dialect dialect) {
-		if ( sqlType != null ) {
-			int parenthesesIndex = sqlType.indexOf( '(' );
-			final String baseName = parenthesesIndex == -1 ? sqlType : sqlType.substring( 0, parenthesesIndex ).trim();
-			switch ( baseName.toLowerCase( Locale.ROOT ) ) {
-				case "bit":
-					return "unsigned";
-				case "tinyint":
-				case "smallint":
-				case "integer":
-				case "bigint":
-					return "signed";
-				case "float":
-				case "real":
-				case "double precision":
-					if ( ((MySQLDialect) dialect).getMySQLVersion().isSameOrAfter( 8, 0, 17 ) ) {
-						return sqlType;
-					}
-					final int precision = castTarget.getPrecision() == null
-							? dialect.getDefaultDecimalPrecision()
-							: castTarget.getPrecision();
-					final int scale = castTarget.getScale() == null ? Size.DEFAULT_SCALE : castTarget.getScale();
-					return "decimal(" + precision + "," + scale + ")";
-				case "char":
-				case "varchar":
-				case "nchar":
-				case "nvarchar":
-				case "text":
-				case "mediumtext":
-				case "longtext":
-				case "enum":
-					if ( castTarget.getLength() == null ) {
-						// TODO: this is ugly and fragile, but could easily be handled in a DdlType
-						if ( castTarget.getJdbcMapping().getJdbcJavaType().getJavaType() == Character.class ) {
-							return "char(1)";
-						}
-						else {
-							return "char";
-						}
-					}
-					return castTarget.getLength() > MAX_CHAR_SIZE ? "char" : "char(" + castTarget.getLength() + ")";
-				case "binary":
-				case "varbinary":
-				case "mediumblob":
-				case "longblob":
-					return castTarget.getLength() == null
-						? "binary"
-						: "binary(" + castTarget.getLength() + ")";
-			}
-		}
-		return sqlType;
+		this.dialect = (MariaDBDialect) super.getDialect();
 	}
 
 	@Override
@@ -158,23 +93,12 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 		}
 		else {
 			visitValuesList( statement.getValuesList() );
-			if ( statement.getConflictClause() != null && getDialect().getMySQLVersion().isSameOrAfter( 8, 0, 19 ) ) {
-				appendSql( " as excluded" );
-				char separator = '(';
-				for ( ColumnReference targetColumn : statement.getTargetColumns() ) {
-					appendSql( separator );
-					appendSql( targetColumn.getColumnExpression() );
-					separator = ',';
-				}
-				appendSql( ')' );
-			}
 		}
 	}
 
 	@Override
 	public void visitColumnReference(ColumnReference columnReference) {
-		if ( getDialect().getMySQLVersion().isBefore( 8, 0, 19 )
-				&& "excluded".equals( columnReference.getQualifier() )
+		if ( "excluded".equals( columnReference.getQualifier() )
 				&& getStatementStack().getCurrent() instanceof InsertSelectStatement insertSelectStatement
 				&& insertSelectStatement.getSourceSelectStatement() == null ) {
 			// Accessing the excluded row for an insert-values statement in the conflict clause requires the values qualifier
@@ -247,7 +171,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	protected String determineColumnReferenceQualifier(ColumnReference columnReference) {
 		final DmlTargetColumnQualifierSupport qualifierSupport = getDialect().getDmlTargetColumnQualifierSupport();
 		final String dmlAlias;
-		// Since MySQL does not support aliasing the insert target table,
+		// Since MariaDB does not support aliasing the insert target table,
 		// we must detect column reference that are used in the conflict clause
 		// and use the table expression as qualifier instead
 		if ( getClauseStack().getCurrent() != Clause.SET
@@ -272,7 +196,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	protected void visitRecursivePath(Expression recursivePath, int sizeEstimate) {
-		// MySQL determines the type and size of a column in a recursive CTE based on the expression of the non-recursive part
+		// MariaDB determines the type and size of a column in a recursive CTE based on the expression of the non-recursive part
 		// Due to that, we have to cast the path in the non-recursive path to a varchar of appropriate size to avoid data truncation errors
 		if ( sizeEstimate == -1 ) {
 			super.visitRecursivePath( recursivePath, sizeEstimate );
@@ -300,13 +224,20 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	protected String getForShare(int timeoutMillis) {
-		return " for share";
+		return " lock in share mode";
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
-		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
-				&& getDialect().supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
+		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart && supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
+	}
+
+	@Override
+	protected boolean shouldEmulateLateralWithIntersect(QueryPart queryPart) {
+		// Intersect emulation requires nested correlation when no simple query grouping is possible
+		// and the query has an offset/fetch clause, so we have to disable the emulation in this case,
+		// because nested correlation is not supported though
+		return getDialect().supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
 	}
 
 	@Override
@@ -330,19 +261,13 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	public void visitValuesTableReference(ValuesTableReference tableReference) {
-		emulateValuesTableReferenceColumnAliasing( tableReference );
+	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
+		emulateQueryPartTableReferenceColumnAliasing( tableReference );
 	}
 
 	@Override
-	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
-		if ( tableReference instanceof FunctionTableReference && tableReference.isLateral() ) {
-			// No need for a lateral keyword for functions
-			tableReference.accept( this );
-		}
-		else {
-			super.renderDerivedTableReference( tableReference );
-		}
+	protected void renderDerivedTableReferenceIdentificationVariable(DerivedTableReference tableReference) {
+		renderTableReferenceIdentificationVariable( tableReference );
 	}
 
 	@Override
@@ -354,7 +279,54 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		renderComparisonDistinctOperator( lhs, operator, rhs );
+		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
+		if ( lhsExpressionType != null && lhsExpressionType.getJdbcTypeCount() == 1
+				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().isJson() ) {
+			switch ( operator ) {
+				case DISTINCT_FROM:
+					appendSql( "case when json_equals(" );
+					lhs.accept( this );
+					appendSql( ',' );
+					rhs.accept( this );
+					appendSql( ")=1 or " );
+					lhs.accept( this );
+					appendSql( " is null and " );
+					rhs.accept( this );
+					appendSql( " is null then 0 else 1 end=1" );
+					break;
+				case NOT_DISTINCT_FROM:
+					appendSql( "case when json_equals(" );
+					lhs.accept( this );
+					appendSql( ',' );
+					rhs.accept( this );
+					appendSql( ")=1 or " );
+					lhs.accept( this );
+					appendSql( " is null and " );
+					rhs.accept( this );
+					appendSql( " is null then 0 else 1 end=0" );
+					break;
+				case NOT_EQUAL:
+					appendSql( "json_equals(" );
+					lhs.accept( this );
+					appendSql( ',' );
+					rhs.accept( this );
+					appendSql( ")=0" );
+					break;
+				case EQUAL:
+					appendSql( "json_equals(" );
+					lhs.accept( this );
+					appendSql( ',' );
+					rhs.accept( this );
+					appendSql( ")=1" );
+					break;
+				default:
+					renderComparisonDistinctOperator( lhs, operator, rhs );
+					break;
+			}
+		}
+		else {
+			renderComparisonDistinctOperator( lhs, operator, rhs );
+		}
 	}
 
 	@Override
@@ -374,61 +346,54 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	public void visitLikePredicate(LikePredicate likePredicate) {
-		// Custom implementation because MySQL uses backslash as the default escape character
-		if ( getDialect().getVersion().isSameOrAfter( 8, 0, 24 ) ) {
-			// From version 8.0.24 we can override this by specifying an empty escape character
-			// See https://dev.mysql.com/doc/refman/8.0/en/string-comparison-functions.html#operator_like
-			super.visitLikePredicate( likePredicate );
-			if ( !getDialect().isNoBackslashEscapesEnabled() && likePredicate.getEscapeCharacter() == null ) {
-				appendSql( " escape ''" );
+		if ( likePredicate.isCaseSensitive() ) {
+			likePredicate.getMatchExpression().accept( this );
+			if ( likePredicate.isNegated() ) {
+				appendSql( " not" );
 			}
+			appendSql( " like " );
+			renderBackslashEscapedLikePattern(
+					likePredicate.getPattern(),
+					likePredicate.getEscapeCharacter(),
+					getDialect().isNoBackslashEscapesEnabled()
+			);
 		}
 		else {
-			if ( likePredicate.isCaseSensitive() ) {
-				likePredicate.getMatchExpression().accept( this );
-				if ( likePredicate.isNegated() ) {
-					appendSql( " not" );
-				}
-				appendSql( " like " );
-				renderBackslashEscapedLikePattern(
-						likePredicate.getPattern(),
-						likePredicate.getEscapeCharacter(),
-						getDialect().isNoBackslashEscapesEnabled()
-				);
+			appendSql( getDialect().getLowercaseFunction() );
+			appendSql( OPEN_PARENTHESIS );
+			likePredicate.getMatchExpression().accept( this );
+			appendSql( CLOSE_PARENTHESIS );
+			if ( likePredicate.isNegated() ) {
+				appendSql( " not" );
 			}
-			else {
-				appendSql( getDialect().getLowercaseFunction() );
-				appendSql( OPEN_PARENTHESIS );
-				likePredicate.getMatchExpression().accept( this );
-				appendSql( CLOSE_PARENTHESIS );
-				if ( likePredicate.isNegated() ) {
-					appendSql( " not" );
-				}
-				appendSql( " like " );
-				appendSql( getDialect().getLowercaseFunction() );
-				appendSql( OPEN_PARENTHESIS );
-				renderBackslashEscapedLikePattern(
-						likePredicate.getPattern(),
-						likePredicate.getEscapeCharacter(),
-						getDialect().isNoBackslashEscapesEnabled()
-				);
-				appendSql( CLOSE_PARENTHESIS );
-			}
-			if ( likePredicate.getEscapeCharacter() != null ) {
-				appendSql( " escape " );
-				likePredicate.getEscapeCharacter().accept( this );
-			}
+			appendSql( " like " );
+			appendSql( getDialect().getLowercaseFunction() );
+			appendSql( OPEN_PARENTHESIS );
+			renderBackslashEscapedLikePattern(
+					likePredicate.getPattern(),
+					likePredicate.getEscapeCharacter(),
+					getDialect().isNoBackslashEscapesEnabled()
+			);
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		if ( likePredicate.getEscapeCharacter() != null ) {
+			appendSql( " escape " );
+			likePredicate.getEscapeCharacter().accept( this );
 		}
 	}
 
 	@Override
-	public MySQLDialect getDialect() {
-		return (MySQLDialect) super.getDialect();
+	public MariaDBDialect getDialect() {
+		return this.dialect;
+	}
+
+	private boolean supportsWindowFunctions() {
+		return true;
 	}
 
 	@Override
 	public void visitCastTarget(CastTarget castTarget) {
-		String sqlType = getSqlType( castTarget, getSessionFactory() );
+		String sqlType = MySQLSqlAstTranslator.getSqlType( castTarget, getSessionFactory() );
 		if ( sqlType != null ) {
 			appendSql( sqlType );
 		}
@@ -439,7 +404,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	protected void renderStringContainsExactlyPredicate(Expression haystack, Expression needle) {
-		// MySQL can't cope with NUL characters in the position function, so we use a like predicate instead
+		// MariaDB can't cope with NUL characters in the position function, so we use a like predicate instead
 		haystack.accept( this );
 		appendSql( " like concat('%',replace(replace(replace(" );
 		needle.accept( this );

@@ -23,6 +23,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sequence.HANASequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.HANASqlAstTranslator;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -310,7 +311,7 @@ public class HANADialect extends Dialect {
 		return defaultTableTypeColumn;
 	}
 
-	protected boolean isCloud() {
+	public boolean isCloud() {
 		return getVersion().isSameOrAfter( 4 );
 	}
 

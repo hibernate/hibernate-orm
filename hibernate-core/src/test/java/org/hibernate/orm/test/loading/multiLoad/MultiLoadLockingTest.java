@@ -23,7 +23,7 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.PostgreSQLSqlAstTranslator;
+import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.testing.jdbc.SQLStatementInspector;

@@ -289,9 +289,6 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 			appendSql( " escape " );
 			likePredicate.getEscapeCharacter().accept( this );
 		}
-		else {
-			appendSql( " escape ''" );
-		}
 	}
 
 	@Override

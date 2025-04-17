@@ -7,7 +7,6 @@ package org.hibernate.community.dialect;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.dialect.DialectDelegateWrapper;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.MySQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -54,7 +53,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	public SingleStoreSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
-		this.dialect = (SingleStoreDialect) DialectDelegateWrapper.extractRealDialect( super.getDialect() );
+		this.dialect = (SingleStoreDialect) super.getDialect();
 	}
 
 	@Override

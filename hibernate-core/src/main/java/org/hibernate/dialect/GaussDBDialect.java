@@ -1337,7 +1337,7 @@ public class GaussDBDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString() {
-		return " for no key update";
+		return " for update";
 	}
 
 	@Override

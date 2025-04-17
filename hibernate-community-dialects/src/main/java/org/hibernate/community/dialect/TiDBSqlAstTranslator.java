@@ -51,9 +51,9 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	private final TiDBDialect dialect;
 
-	public TiDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public TiDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, TiDBDialect dialect) {
 		super( sessionFactory, statement );
-		this.dialect = (TiDBDialect) super.getDialect();
+		this.dialect = dialect;
 	}
 
 	@Override
@@ -327,7 +327,7 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	@Override
 	public TiDBDialect getDialect() {
-		return this.dialect;
+		return dialect;
 	}
 
 	@Override

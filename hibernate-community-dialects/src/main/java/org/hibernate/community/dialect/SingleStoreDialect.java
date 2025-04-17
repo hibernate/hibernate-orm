@@ -772,7 +772,7 @@ public class SingleStoreDialect extends Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new SingleStoreSqlAstTranslator<>( sessionFactory, statement );
+				return new SingleStoreSqlAstTranslator<>( sessionFactory, statement, SingleStoreDialect.this );
 			}
 		};
 	}

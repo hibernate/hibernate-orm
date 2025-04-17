@@ -47,8 +47,11 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
  */
 public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	public MySQLLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	private final MySQLLegacyDialect dialect;
+
+	public MySQLLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, MySQLLegacyDialect dialect) {
 		super( sessionFactory, statement );
+		this.dialect = dialect;
 	}
 
 	@Override
@@ -365,7 +368,7 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	@Override
 	public MySQLLegacyDialect getDialect() {
-		return (MySQLLegacyDialect) super.getDialect();
+		return dialect;
 	}
 
 	@Override

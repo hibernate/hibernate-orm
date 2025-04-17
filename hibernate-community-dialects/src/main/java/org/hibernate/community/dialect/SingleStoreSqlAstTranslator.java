@@ -51,9 +51,9 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	private final SingleStoreDialect dialect;
 
-	public SingleStoreSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public SingleStoreSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, SingleStoreDialect dialect) {
 		super( sessionFactory, statement );
-		this.dialect = (SingleStoreDialect) super.getDialect();
+		this.dialect = dialect;
 	}
 
 	@Override
@@ -396,7 +396,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	@Override
 	public SingleStoreDialect getDialect() {
-		return this.dialect;
+		return dialect;
 	}
 
 	private boolean supportsWindowFunctions() {

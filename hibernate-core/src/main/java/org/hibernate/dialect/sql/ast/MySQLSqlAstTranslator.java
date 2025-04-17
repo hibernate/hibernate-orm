@@ -35,9 +35,7 @@ import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
-import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,8 +53,11 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	 */
 	private static final int MAX_CHAR_SIZE = (1 << 30) - 1;
 
-	public MySQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	private final MySQLDialect dialect;
+
+	public MySQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, MySQLDialect dialect) {
 		super( sessionFactory, statement );
+		this.dialect = dialect;
 	}
 
 	public static String getSqlType(CastTarget castTarget, SessionFactoryImplementor factory) {
@@ -227,18 +228,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
-	}
-
-	@Override
-	protected JdbcOperationQueryInsert translateInsert(InsertSelectStatement sqlAst) {
-		visitInsertStatement( sqlAst );
-
-		return new JdbcOperationQueryInsertImpl(
-				getSql(),
-				getParameterBinders(),
-				getAffectedTableNames(),
-				getUniqueConstraintNameThatMayFail(sqlAst)
-		);
 	}
 
 	@Override
@@ -426,7 +415,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	public MySQLDialect getDialect() {
-		return (MySQLDialect) super.getDialect();
+		return dialect;
 	}
 
 	@Override

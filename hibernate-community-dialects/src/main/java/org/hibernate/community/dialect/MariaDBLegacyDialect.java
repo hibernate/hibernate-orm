@@ -184,7 +184,7 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new MariaDBLegacySqlAstTranslator<>( sessionFactory, statement );
+				return new MariaDBLegacySqlAstTranslator<>( sessionFactory, statement, MariaDBLegacyDialect.this );
 			}
 		};
 	}

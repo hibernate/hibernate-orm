@@ -114,7 +114,7 @@ public class TiDBDialect extends MySQLDialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new TiDBSqlAstTranslator<>( sessionFactory, statement );
+				return new TiDBSqlAstTranslator<>( sessionFactory, statement, TiDBDialect.this );
 			}
 		};
 	}

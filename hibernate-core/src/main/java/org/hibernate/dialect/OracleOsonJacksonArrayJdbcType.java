@@ -4,16 +4,12 @@
  */
 package org.hibernate.dialect;
 
-import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import oracle.jdbc.OracleType;
 import oracle.jdbc.driver.DatabaseError;
-import oracle.jdbc.provider.oson.OsonFactory;
 import oracle.sql.json.OracleJsonDatum;
-import oracle.sql.json.OracleJsonFactory;
 import oracle.sql.json.OracleJsonGenerator;
 
-import oracle.sql.json.OracleJsonParser;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -22,12 +18,12 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
-import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.format.OsonDocumentReader;
 import org.hibernate.type.format.OsonDocumentWriter;
 
@@ -38,6 +34,9 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import static org.hibernate.dialect.OracleOsonJacksonJdbcType.OSON_JACKSON_FACTORY;
+import static org.hibernate.dialect.OracleOsonJacksonJdbcType.OSON_JSON_FACTORY;
 
 /**
  *
@@ -51,8 +50,6 @@ import java.sql.SQLException;
 public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( OracleOsonJacksonArrayJdbcType.class );
-
-	private static final OsonFactory osonFactory = new OsonFactory();
 
 	public OracleOsonJacksonArrayJdbcType(JdbcType elementJdbcType) {
 		super(elementJdbcType);
@@ -70,29 +67,31 @@ public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
 
 		return new BasicBinder<>( javaType, this ) {
 
-			private <X> byte[] toOsonStream(X value, JavaType<X> javaType, WrapperOptions options) throws Exception {
+			private <T> byte[] toOsonStream(T value, JavaType<T> javaType, WrapperOptions options) throws Exception {
 				final Object[] domainObjects = javaType.unwrap( value, Object[].class, options );
-
-				ByteArrayOutputStream out = new ByteArrayOutputStream();
-				try (OracleJsonGenerator generator = new OracleJsonFactory().createJsonBinaryGenerator( out )) {
-					OsonDocumentWriter writer = new OsonDocumentWriter( generator );
-
-					if ( getElementJdbcType() instanceof JsonJdbcType jsonElementJdbcType ) {
-						final EmbeddableMappingType embeddableMappingType = jsonElementJdbcType.getEmbeddableMappingType();
-						JsonHelper.serializeArray( embeddableMappingType, domainObjects, options, writer );
+				final ByteArrayOutputStream out = new ByteArrayOutputStream();
+				try (OracleJsonGenerator generator = OSON_JSON_FACTORY.createJsonBinaryGenerator( out )) {
+					final JavaType<?> elementJavaType = ((BasicPluralJavaType<?>) javaType).getElementJavaType();
+					if ( elementJavaType instanceof UnknownBasicJavaType<?> ) {
+						options.getJsonFormatMapper().writeToTarget( value, javaType, generator, options);
 					}
 					else {
-						assert !( getElementJdbcType() instanceof AggregateJdbcType );
-						final JavaType<?> elementJavaType = ( (BasicPluralJavaType<?>) javaType ).getElementJavaType();
-						JsonHelper.serializeArray(
-								elementJavaType,
-								getElementJdbcType(),
-								domainObjects,
-								options,
-								writer
-						);
+						final OsonDocumentWriter writer = new OsonDocumentWriter( generator );
+						if ( getElementJdbcType() instanceof JsonJdbcType jsonElementJdbcType ) {
+							final EmbeddableMappingType embeddableMappingType = jsonElementJdbcType.getEmbeddableMappingType();
+							JsonHelper.serializeArray( embeddableMappingType, domainObjects, options, writer );
+						}
+						else {
+							assert !(getElementJdbcType() instanceof AggregateJdbcType);
+							JsonHelper.serializeArray(
+									elementJavaType,
+									getElementJdbcType(),
+									domainObjects,
+									options,
+									writer
+							);
+						}
 					}
-					generator.close();
 					return out.toByteArray();
 				}
 
@@ -127,20 +126,20 @@ public class OracleOsonJacksonArrayJdbcType extends OracleJsonArrayJdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 
 			private X fromOson(InputStream osonBytes, WrapperOptions options) throws Exception {
-				FormatMapper mapper = options.getJsonFormatMapper();
-				OracleJsonParser osonParser = new OracleJsonFactory().createJsonBinaryParser( osonBytes );
-				final JdbcType elementJdbcType = getElementJdbcType();
-				if (elementJdbcType instanceof JsonJdbcType) {
-					if (((JsonJdbcType) elementJdbcType).getEmbeddableMappingType() != null) {
-						// embeddable array case.
-						return JsonHelper.deserializeArray( javaType,
-								elementJdbcType, new OsonDocumentReader( osonParser ), options );
+				if ( ((BasicPluralJavaType<?>) getJavaType()).getElementJavaType() instanceof UnknownBasicJavaType<?> ) {
+					try (JsonParser oParser = OSON_JACKSON_FACTORY.createParser( osonBytes )) {
+						return options.getJsonFormatMapper().readFromSource( getJavaType(), oParser, options );
 					}
 				}
-				try (JsonParser oParser = ((JsonFactory)osonFactory).createParser(  osonBytes )) {
-					return mapper.readFromSource(  getJavaType(), oParser, options);
+				else {
+					// embeddable array case.
+					return JsonHelper.deserializeArray(
+							javaType,
+							getElementJdbcType(),
+							new OsonDocumentReader( OSON_JSON_FACTORY.createJsonBinaryParser( osonBytes ) ),
+							options
+					);
 				}
-
 			}
 
 			private X doExtraction(OracleJsonDatum datum,  WrapperOptions options) throws SQLException {

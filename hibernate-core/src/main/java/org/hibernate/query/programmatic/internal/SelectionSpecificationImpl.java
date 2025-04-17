@@ -7,6 +7,7 @@ package org.hibernate.query.programmatic.internal;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import org.hibernate.QueryException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.IllegalSelectQueryException;
@@ -50,14 +51,14 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 			SharedSessionContractImplementor session) {
 		this.resultType = resultType;
 		this.session = session;
-		this.sqmStatement = resolveSqmTree( hql, resultType, session );
+		this.sqmStatement = resolveSqmTree( hql, resultType, session.getFactory() );
 		this.sqmRoot = extractRoot( sqmStatement, resultType, hql );
 	}
 
 	public SelectionSpecificationImpl(
 			Class<T> rootEntityType,
 			SharedSessionContractImplementor session) {
-		this( "from " + determineEntityName( rootEntityType, session ), rootEntityType, session );
+		this( "from " + determineEntityName( rootEntityType, session.getFactory() ), rootEntityType, session );
 	}
 
 	public SelectionSpecificationImpl(
@@ -124,8 +125,8 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	private static <T> SqmSelectStatement<T> resolveSqmTree(
 			String hql,
 			Class<T> resultType,
-			SharedSessionContractImplementor session) {
-		final QueryEngine queryEngine = session.getFactory().getQueryEngine();
+			SessionFactoryImplementor sessionFactory) {
+		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
 		final HqlInterpretation<T> hqlInterpretation = queryEngine
 				.getInterpretationCache()
 				.resolveHqlInterpretation( hql, resultType, queryEngine.getHqlTranslator() );
@@ -174,11 +175,10 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 
 	private static String determineEntityName(
 			Class<?> rootEntityType,
-			SharedSessionContractImplementor session) {
-		final EntityDomainType<?> entityType = session
-				.getFactory()
-				.getJpaMetamodel()
-				.findEntityType( rootEntityType );
+			SessionFactoryImplementor sessionFactory) {
+		final EntityDomainType<?> entityType =
+				sessionFactory.getJpaMetamodel()
+						.findEntityType( rootEntityType );
 		if ( entityType == null ) {
 			return rootEntityType.getName();
 		}

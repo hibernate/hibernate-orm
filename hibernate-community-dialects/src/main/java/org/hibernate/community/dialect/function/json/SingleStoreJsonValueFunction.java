@@ -12,6 +12,7 @@ import org.hibernate.dialect.function.json.JsonValueFunction;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -31,9 +32,9 @@ public class SingleStoreJsonValueFunction extends JsonValueFunction {
 			JsonValueArguments arguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-
-		if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonValueErrorBehavior.NULL ) {
-			throw new QueryException( "Can't emulate on error clause on SingleStore" );
+		if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonValueErrorBehavior.NULL
+			|| arguments.emptyBehavior() != null && arguments.emptyBehavior() != JsonValueEmptyBehavior.NULL ) {
+			super.render( sqlAppender, arguments, returnType, walker );
 		}
 		if ( arguments.emptyBehavior() != null && arguments.emptyBehavior() != JsonValueEmptyBehavior.NULL ) {
 			throw new QueryException( "Can't emulate on empty clause on SingleStore" );
@@ -54,7 +55,7 @@ public class SingleStoreJsonValueFunction extends JsonValueFunction {
 			throw new QueryException( "SingleStore json_value only support literal json paths, but got " + arguments.jsonPath() );
 		}
 		final List<JsonPathHelper.JsonPathElement> jsonPathElements = JsonPathHelper.parseJsonPathElements( jsonPath );
-		sqlAppender.appendSql( "json_extract_json(" );
+		sqlAppender.appendSql( "json_extract_string(" );
 		arguments.jsonDocument().accept( walker );
 		for ( JsonPathHelper.JsonPathElement pathElement : jsonPathElements ) {
 			sqlAppender.appendSql( ',' );
@@ -62,8 +63,15 @@ public class SingleStoreJsonValueFunction extends JsonValueFunction {
 				sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
 			}
 			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
+				assert arguments.passingClause() != null;
 				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) pathElement ).parameterName();
-				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
+				final Expression expression = arguments.passingClause().getPassingExpressions().get( parameterName );
+				if ( expression == null ) {
+					throw new QueryException( "JSON path [" + JsonPathHelper.toJsonPath( jsonPathElements ) + "] uses parameter [" + parameterName + "] that is not passed" );
+				}
+				sqlAppender.appendSql( "cast(" );
+				expression.accept( walker );
+				sqlAppender.appendSql( " as char)" );
 			}
 			else {
 				sqlAppender.appendSql( '\'' );

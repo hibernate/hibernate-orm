@@ -12,6 +12,7 @@ import org.hibernate.dialect.function.json.JsonQueryFunction;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonQueryEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonQueryErrorBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonQueryWrapMode;
@@ -32,11 +33,10 @@ public class SingleStoreJsonQueryFunction extends JsonQueryFunction {
 			JsonQueryArguments arguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonQueryErrorBehavior.ERROR ) {
-			throw new QueryException( "Can't emulate on error clause on SingleStore" );
-		}
-		if ( arguments.emptyBehavior() != null && arguments.emptyBehavior() != JsonQueryEmptyBehavior.NULL ) {
-			throw new QueryException( "Can't emulate on empty clause on SingleStore" );
+		if ( arguments.errorBehavior() != null && arguments.errorBehavior() != JsonQueryErrorBehavior.ERROR
+			|| arguments.emptyBehavior() == JsonQueryEmptyBehavior.ERROR
+			|| arguments.emptyBehavior() != null && arguments.emptyBehavior() != JsonQueryEmptyBehavior.NULL ) {
+			super.render( sqlAppender, arguments, returnType, walker );
 		}
 		else {
 			final String jsonPath;
@@ -60,8 +60,15 @@ public class SingleStoreJsonQueryFunction extends JsonQueryFunction {
 					sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
 				}
 				else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
+					assert arguments.passingClause() != null;
 					final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) pathElement ).parameterName();
-					throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
+					final Expression expression = arguments.passingClause().getPassingExpressions().get( parameterName );
+					if ( expression == null ) {
+						throw new QueryException( "JSON path [" + JsonPathHelper.toJsonPath( jsonPathElements ) + "] uses parameter [" + parameterName + "] that is not passed" );
+					}
+					sqlAppender.appendSql( "cast(" );
+					expression.accept( walker );
+					sqlAppender.appendSql( " as char)" );
 				}
 				else {
 					sqlAppender.appendSql( '\'' );

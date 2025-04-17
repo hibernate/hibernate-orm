@@ -55,8 +55,8 @@ public class SingleStoreJsonSetFunction extends AbstractJsonSetFunction {
 				sqlAppender.appendSql( '\'' );
 			}
 		}
-		sqlAppender.appendSql( ", to_json(" );
+		sqlAppender.appendSql( ',' );
 		value.accept( translator );
-		sqlAppender.appendSql( "))" );
+		sqlAppender.appendSql( ')' );
 	}
 }

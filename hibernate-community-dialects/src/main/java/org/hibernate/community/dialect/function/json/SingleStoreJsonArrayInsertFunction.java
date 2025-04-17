@@ -37,16 +37,16 @@ public class SingleStoreJsonArrayInsertFunction extends AbstractJsonArrayInsertF
 				jsonPath ) );
 		final SqlAstNode value = arguments.get( 2 );
 		final int arrayIndex = getArrayIndex( jsonPathElements );
+		sqlAppender.appendSql( "case when json_get_type(json_extract_json(" );
+		json.accept( translator );
+		buildJsonPath( sqlAppender, jsonPath, jsonPathElements );
+		sqlAppender.appendSql( ")) = 'array' THEN " );
 		if ( jsonPathElements.size() > 1 ) {
 			sqlAppender.appendSql( "json_set_json(" );
 			json.accept( translator );
 			buildJsonPath( sqlAppender, jsonPath, jsonPathElements );
 			sqlAppender.appendSql( ", " );
 		}
-		sqlAppender.appendSql( "case when json_get_type(json_extract_json(" );
-		json.accept( translator );
-		buildJsonPath( sqlAppender, jsonPath, jsonPathElements );
-		sqlAppender.appendSql( ")) = 'array' THEN " );
 		sqlAppender.appendSql( "json_splice_json(" );
 		sqlAppender.appendSql( "json_extract_json(" );
 		json.accept( translator );
@@ -56,20 +56,13 @@ public class SingleStoreJsonArrayInsertFunction extends AbstractJsonArrayInsertF
 		sqlAppender.appendSql( ", 0, " );
 		sqlAppender.appendSql( "to_json(" );
 		value.accept( translator );
-		sqlAppender.appendSql( ")) ELSE " );
-		sqlAppender.appendSql( "json_splice_json(" );
-		sqlAppender.appendSql( "json_build_array(json_extract_json(" );
-		json.accept( translator );
-		buildJsonPath( sqlAppender, jsonPath, jsonPathElements );
-		sqlAppender.appendSql( "))," );
-		sqlAppender.appendSql( arrayIndex );
-		sqlAppender.appendSql( ", 0, " );
-		sqlAppender.appendSql( "to_json(" );
-		value.accept( translator );
-		sqlAppender.appendSql( ")) END" );
+		sqlAppender.appendSql( "))" );
 		if ( jsonPathElements.size() > 1 ) {
 			sqlAppender.appendSql( ')' );
 		}
+		sqlAppender.appendSql( " else " );
+		json.accept( translator );
+		sqlAppender.appendSql( " END" );
 	}
 
 	private static int getArrayIndex(List<JsonPathHelper.JsonPathElement> jsonPathElements) {

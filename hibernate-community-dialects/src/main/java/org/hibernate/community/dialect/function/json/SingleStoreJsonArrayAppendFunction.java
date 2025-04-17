@@ -36,14 +36,14 @@ public class SingleStoreJsonArrayAppendFunction extends AbstractJsonArrayAppendF
 		final List<JsonPathHelper.JsonPathElement> jsonPathElements = JsonPathHelper.parseJsonPathElements( translator.getLiteralValue(
 				jsonPath ) );
 		final SqlAstNode value = arguments.get( 2 );
+		sqlAppender.appendSql( "case when json_get_type(json_extract_json(" );
+		json.accept( translator );
+		buildJsonPath( sqlAppender, jsonPath, jsonPathElements );
+		sqlAppender.appendSql( ")) = 'array' THEN " );
 		sqlAppender.appendSql( "json_set_json(" );
 		json.accept( translator );
 		buildJsonPath( sqlAppender, jsonPath, jsonPathElements );
 		sqlAppender.appendSql( ',' );
-		sqlAppender.appendSql( " case when json_get_type(json_extract_json(" );
-		json.accept( translator );
-		buildJsonPath( sqlAppender, jsonPath, jsonPathElements );
-		sqlAppender.appendSql( ")) = 'array' THEN " );
 		sqlAppender.appendSql( "json_array_push_json(" );
 		sqlAppender.appendSql( "json_extract_json(" );
 		json.accept( translator );
@@ -51,15 +51,24 @@ public class SingleStoreJsonArrayAppendFunction extends AbstractJsonArrayAppendF
 		sqlAppender.appendSql( ")," );
 		sqlAppender.appendSql( "to_json(" );
 		value.accept( translator );
-		sqlAppender.appendSql( ")) ELSE " );
-		sqlAppender.appendSql( "json_array_push_json(" );
-		sqlAppender.appendSql( "json_build_array(json_extract_json(" );
+		sqlAppender.appendSql( ")))" );
+		sqlAppender.appendSql( " when json_get_type(json_extract_json(" );
+		json.accept( translator );
+		buildJsonPath( sqlAppender, jsonPath, jsonPathElements );
+		sqlAppender.appendSql( ")) is null THEN " );
+		json.accept( translator );
+		sqlAppender.appendSql( " else " );
+		sqlAppender.appendSql( "json_set_json(" );
+		json.accept( translator );
+		buildJsonPath( sqlAppender, jsonPath, jsonPathElements );
+		sqlAppender.appendSql( ',' );
+		sqlAppender.appendSql( "json_array_push_json(json_build_array(json_extract_json(" );
 		json.accept( translator );
 		buildJsonPath( sqlAppender, jsonPath, jsonPathElements );
 		sqlAppender.appendSql( "))," );
 		sqlAppender.appendSql( "to_json(" );
 		value.accept( translator );
-		sqlAppender.appendSql( ")) END )" );
+		sqlAppender.appendSql( "))) END" );
 	}
 
 	private static void buildJsonPath(

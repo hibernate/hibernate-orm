@@ -38,7 +38,7 @@ public class SingleStoreJsonArrayAggFunction extends JsonArrayAggFunction {
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
 		final boolean caseWrapper = filter != null;
-		sqlAppender.appendSql( "json_build_array(group_concat(" );
+		sqlAppender.appendSql( "concat('[',group_concat(" );
 		final JsonNullBehavior nullBehavior;
 		if ( sqlAstArguments.size() > 1 ) {
 			nullBehavior = (JsonNullBehavior) sqlAstArguments.get( 1 );
@@ -80,7 +80,7 @@ public class SingleStoreJsonArrayAggFunction extends JsonArrayAggFunction {
 			}
 			translator.getCurrentClauseStack().pop();
 		}
-		sqlAppender.appendSql( " separator ','))" );
+		sqlAppender.appendSql( " separator ','),']')" );
 	}
 
 	@Override

@@ -4,12 +4,7 @@
  */
 package org.hibernate.community.dialect;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DialectDelegateWrapper;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -44,6 +39,10 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * A SQL AST translator for SingleStore.

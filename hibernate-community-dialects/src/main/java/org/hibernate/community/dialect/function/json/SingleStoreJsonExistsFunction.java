@@ -12,6 +12,7 @@ import org.hibernate.dialect.function.json.JsonPathHelper;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonExistsErrorBehavior;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -49,8 +50,15 @@ public class SingleStoreJsonExistsFunction extends JsonExistsFunction {
 				sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
 			}
 			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
+				assert arguments.passingClause() != null;
 				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) pathElement ).parameterName();
-				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
+				final Expression expression = arguments.passingClause().getPassingExpressions().get( parameterName );
+				if ( expression == null ) {
+					throw new QueryException( "JSON path [" + JsonPathHelper.toJsonPath( jsonPathElements ) + "] uses parameter [" + parameterName + "] that is not passed" );
+				}
+				sqlAppender.appendSql( "cast(" );
+				expression.accept( walker );
+				sqlAppender.appendSql( " as char)" );
 			}
 			else {
 				sqlAppender.appendSql( '\'' );

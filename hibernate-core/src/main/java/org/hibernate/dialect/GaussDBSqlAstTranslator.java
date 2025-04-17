@@ -35,9 +35,11 @@ import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.type.SqlTypes;
 
 /**
- * A SQL AST translator for PostgreSQL.
+ * A SQL AST translator for GaussDB.
  *
- * @author Christian Beikov
+ * @author liubao
+ *
+ * Notes: Original code of this class is based on PostgreSQLSqlAstTranslator.
  */
 public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithMerge<T> {
 
@@ -82,7 +84,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		if ( identificationVariable != null ) {
 			final Clause currentClause = getClauseStack().getCurrent();
 			if ( currentClause == Clause.INSERT ) {
-				// PostgreSQL requires the "as" keyword for inserts
+				// GaussDB requires the "as" keyword for inserts
 				appendSql( " as " );
 			}
 			else {
@@ -123,8 +125,8 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
 		if ( lhsExpressionType != null && lhsExpressionType.getJdbcTypeCount() == 1
-			&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
-			// In PostgreSQL, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
+			// In GaussDB, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
 			switch ( operator ) {
 				case EQUAL:
 				case NOT_DISTINCT_FROM:
@@ -266,7 +268,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	@Override
 	public void visitLikePredicate(LikePredicate likePredicate) {
-		// We need a custom implementation here because PostgreSQL
+		// We need a custom implementation here because GaussDB
 		// uses the backslash character as default escape character
 		// According to the documentation, we can overcome this by specifying an empty escape character
 		// See https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-LIKE

@@ -53,16 +53,16 @@ ext {
 //                        'jdbc.datasource' : 'org.apache.derby.jdbc.EmbeddedDataSource',
                     'connection.init_sql' : ''
             ],
-            pgsql                      : [
-                    'db.dialect'         : 'org.hibernate.dialect.PostgreSQLDialect',
-                    'jdbc.driver'        : 'org.postgresql.Driver',
-                    'jdbc.user'          : 'postgres',
-                    'jdbc.pass'          : 'chenzhida',
+            pgsql : [
+                    'db.dialect' : 'org.hibernate.dialect.PostgreSQLDialect',
+                    'jdbc.driver': 'org.postgresql.Driver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
                     // Disable prepared statement caching due to https://www.postgresql.org/message-id/CAEcMXhmmRd4-%2BNQbnjDT26XNdUoXdmntV9zdr8%3DTu8PL9aVCYg%40mail.gmail.com
-                    'jdbc.url'           : 'jdbc:postgresql://' + dbHost + '/hibernate_orm_test?currentSchema=test&preparedStatementCacheQueries=0&escapeSyntaxCallMode=callIfNoReturn',
-                    'jdbc.datasource'    : 'org.postgresql.Driver',
+                    'jdbc.url'   : 'jdbc:postgresql://' + dbHost + '/hibernate_orm_test?preparedStatementCacheQueries=0&escapeSyntaxCallMode=callIfNoReturn',
+                    'jdbc.datasource' : 'org.postgresql.Driver',
 //                        'jdbc.datasource' : 'org.postgresql.ds.PGSimpleDataSource',
-                    'connection.init_sql': ''
+                    'connection.init_sql' : ''
             ],
             pgsql_ci : [
                     'db.dialect' : 'org.hibernate.dialect.PostgreSQLDialect',
@@ -78,10 +78,10 @@ ext {
             gaussdb                    : [
                     'db.dialect'         : 'org.hibernate.dialect.GaussDBDialect',
                     'jdbc.driver'        : 'com.huawei.gaussdb.jdbc.Driver',
-					'jdbc.user'          : 'root',
-					'jdbc.pass'          : 'czd@1106403012',
-//					'jdbc.user'  : 'hibernate_orm_test',
-//					'jdbc.pass'  : 'Hibernate_orm_test@1234',
+//					'jdbc.user'          : 'root',
+//					'jdbc.pass'          : 'czd@1106403012',
+					'jdbc.user'  : 'hibernate_orm_test',
+					'jdbc.pass'  : 'Hibernate_orm_test@1234',
 //                    'jdbc.user'  : 'gaussdb',
 //                    'jdbc.pass'  : 'OpenGauss123456@Go',
                     // Disable prepared statement caching to avoid issues with changing schemas

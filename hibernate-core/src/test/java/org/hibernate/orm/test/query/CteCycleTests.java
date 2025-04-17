@@ -7,6 +7,7 @@ package org.hibernate.orm.test.query;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -18,6 +19,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(standardModels = StandardDomainModel.CONTACTS)
 @SessionFactory
+@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resoving.don't support")
 public class CteCycleTests {
 
 	@Test

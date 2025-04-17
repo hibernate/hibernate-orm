@@ -1271,8 +1271,23 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
+	public <T> SelectionSpecification<T> createSelectionSpecification(CriteriaQuery<T> criteria) {
+		return new SelectionSpecificationImpl<>( criteria, this );
+	}
+
+	@Override
 	public <T> MutationSpecification<T> createMutationSpecification(String hql, Class<T> mutationTarget) {
 		return new MutationSpecificationImpl<>( hql, mutationTarget, this );
+	}
+
+	@Override
+	public <T> MutationSpecification<T> createMutationSpecification(CriteriaDelete<T> criteriaDelete) {
+		return new MutationSpecificationImpl<>( criteriaDelete, this );
+	}
+
+	@Override
+	public <T> MutationSpecification<T> createMutationSpecification(CriteriaUpdate<T> criteriaUpdate)  {
+		return new MutationSpecificationImpl<>( criteriaUpdate, this );
 	}
 
 	protected <T> NativeQueryImplementor<T> createNativeQueryImplementor(String queryName, NamedNativeQueryMemento<T> memento) {

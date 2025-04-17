@@ -35,6 +35,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.CockroachSqlAstTranslator;
 import org.hibernate.dialect.type.PgJdbcHelper;
 import org.hibernate.dialect.type.PostgreSQLArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.PostgreSQLCastingInetJdbcType;

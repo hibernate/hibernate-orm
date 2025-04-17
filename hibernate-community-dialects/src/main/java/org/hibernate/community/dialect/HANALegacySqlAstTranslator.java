@@ -39,7 +39,7 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 
-import static org.hibernate.dialect.SybaseASESqlAstTranslator.isLob;
+import static org.hibernate.dialect.sql.ast.SybaseASESqlAstTranslator.isLob;
 
 /**
  * An SQL AST translator for the Legacy HANA dialect.

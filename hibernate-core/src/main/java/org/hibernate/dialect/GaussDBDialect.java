@@ -1342,7 +1342,7 @@ public class GaussDBDialect extends Dialect {
 
 	@Override
 	public boolean supportsFilterClause() {
-		return true;
+		return false;
 	}
 
 	@Override

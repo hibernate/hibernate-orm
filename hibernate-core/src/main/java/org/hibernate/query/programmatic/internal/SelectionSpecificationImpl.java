@@ -7,9 +7,9 @@ package org.hibernate.query.programmatic.internal;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import org.hibernate.QueryException;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
 import org.hibernate.query.SelectionQuery;
@@ -40,7 +40,6 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
  */
 public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> {
 	private final Class<T> resultType;
-	private final SharedSessionContractImplementor session;
 
 	private final SqmSelectStatement<T> sqmStatement;
 	private final SqmRoot<T> sqmRoot;
@@ -48,24 +47,14 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	public SelectionSpecificationImpl(
 			String hql,
 			Class<T> resultType,
-			SharedSessionContractImplementor session) {
+			SessionFactoryImplementor factory) {
 		this.resultType = resultType;
-		this.session = session;
-		this.sqmStatement = resolveSqmTree( hql, resultType, session.getFactory() );
+		this.sqmStatement = resolveSqmTree( hql, resultType, factory.getQueryEngine() );
 		this.sqmRoot = extractRoot( sqmStatement, resultType, hql );
 	}
 
-	public SelectionSpecificationImpl(
-			Class<T> rootEntityType,
-			SharedSessionContractImplementor session) {
-		this( "from " + determineEntityName( rootEntityType, session.getFactory() ), rootEntityType, session );
-	}
-
-	public SelectionSpecificationImpl(
-			CriteriaQuery<T> criteriaQuery,
-			SharedSessionContractImplementor session) {
+	public SelectionSpecificationImpl(CriteriaQuery<T> criteriaQuery) {
 		this.resultType = criteriaQuery.getResultType();
-		this.session = session;
 		this.sqmStatement = (SqmSelectStatement<T>) criteriaQuery;
 		this.sqmRoot = extractRoot( sqmStatement, resultType, "criteria query" );
 	}
@@ -114,22 +103,19 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	}
 
 	@Override
-	public SelectionQuery<T> createQuery() {
-		return new SqmSelectionQueryImpl<>( sqmStatement, true, resultType, session );
+	public SelectionQuery<T> createQuery(SharedSessionContract session) {
+		return new SqmSelectionQueryImpl<>( sqmStatement, true, resultType,
+				(SharedSessionContractImplementor) session );
 	}
 
 	/**
 	 * Used during construction to parse/interpret the incoming HQL
 	 * and produce the corresponding SQM tree.
 	 */
-	private static <T> SqmSelectStatement<T> resolveSqmTree(
-			String hql,
-			Class<T> resultType,
-			SessionFactoryImplementor sessionFactory) {
-		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
-		final HqlInterpretation<T> hqlInterpretation = queryEngine
-				.getInterpretationCache()
-				.resolveHqlInterpretation( hql, resultType, queryEngine.getHqlTranslator() );
+	private static <T> SqmSelectStatement<T> resolveSqmTree(String hql, Class<T> resultType, QueryEngine queryEngine) {
+		final HqlInterpretation<T> hqlInterpretation =
+				queryEngine.getInterpretationCache()
+						.resolveHqlInterpretation( hql, resultType, queryEngine.getHqlTranslator() );
 
 		if ( !SqmUtil.isSelect( hqlInterpretation.getSqmStatement() ) ) {
 			throw new IllegalSelectQueryException( "Expecting a selection query, but found '" + hql + "'", hql );
@@ -171,17 +157,5 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 		}
 		//noinspection unchecked
 		return (SqmRoot<T>) sqmRoot;
-	}
-
-	private static String determineEntityName(
-			Class<?> rootEntityType,
-			SessionFactoryImplementor sessionFactory) {
-		final EntityDomainType<?> entityType =
-				sessionFactory.getJpaMetamodel()
-						.findEntityType( rootEntityType );
-		if ( entityType == null ) {
-			return rootEntityType.getName();
-		}
-		return entityType.getName();
 	}
 }

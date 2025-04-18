@@ -7,6 +7,7 @@ package org.hibernate.query.programmatic;
 import jakarta.persistence.criteria.CommonAbstractCriteria;
 import jakarta.persistence.criteria.Root;
 import org.hibernate.Incubating;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.restriction.Restriction;
 
@@ -49,5 +50,5 @@ public interface QuerySpecification<T> {
 	/**
 	 * Finalize the building and create executable query instance.
 	 */
-	CommonQueryContract createQuery();
+	CommonQueryContract createQuery(SharedSessionContract session);
 }

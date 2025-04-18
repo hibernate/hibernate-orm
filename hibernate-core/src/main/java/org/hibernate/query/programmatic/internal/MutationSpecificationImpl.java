@@ -8,6 +8,7 @@ import jakarta.persistence.criteria.CommonAbstractCriteria;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.Root;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.programmatic.MutationSpecification;
@@ -35,7 +36,6 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
  * @author Steve Ebersole
  */
 public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
-	private final SharedSessionContractImplementor session;
 
 	private final SqmDeleteOrUpdateStatement<T> sqmStatement;
 	private final SqmRoot<T> mutationTargetRoot;
@@ -43,25 +43,18 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 	public MutationSpecificationImpl(
 			String hql,
 			Class<T> mutationTarget,
-			SharedSessionContractImplementor session) {
-		this.session = session;
-		this.sqmStatement = resolveSqmTree( hql, session.getFactory() );
+			SessionFactoryImplementor factory) {
+		this.sqmStatement = resolveSqmTree( hql, factory.getQueryEngine() );
 		this.mutationTargetRoot = resolveSqmRoot( this.sqmStatement, mutationTarget );
 	}
 
-	public MutationSpecificationImpl(
-			CriteriaUpdate<T> criteriaQuery,
-			SharedSessionContractImplementor session) {
-		this.session = session;
+	public MutationSpecificationImpl(CriteriaUpdate<T> criteriaQuery) {
 		this.sqmStatement = (SqmUpdateStatement<T>) criteriaQuery;
 		this.mutationTargetRoot = resolveSqmRoot( sqmStatement,
 				sqmStatement.getTarget().getManagedType().getJavaType() );
 	}
 
-	public MutationSpecificationImpl(
-			CriteriaDelete<T> criteriaQuery,
-			SharedSessionContractImplementor session) {
-		this.session = session;
+	public MutationSpecificationImpl(CriteriaDelete<T> criteriaQuery) {
 		this.sqmStatement = (SqmDeleteStatement<T>) criteriaQuery;
 		this.mutationTargetRoot = resolveSqmRoot( sqmStatement,
 				sqmStatement.getTarget().getManagedType().getJavaType() );
@@ -89,21 +82,19 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 	}
 
 	@Override
-	public MutationQuery createQuery() {
-		return new QuerySqmImpl<>( sqmStatement, true, null, session );
+	public MutationQuery createQuery(SharedSessionContract session) {
+		return new QuerySqmImpl<>( sqmStatement, true, null,
+				(SharedSessionContractImplementor) session );
 	}
 
 	/**
 	 * Used during construction to parse/interpret the incoming HQL
 	 * and produce the corresponding SQM tree.
 	 */
-	private static <T> SqmDeleteOrUpdateStatement<T> resolveSqmTree(
-			String hql,
-			SessionFactoryImplementor sessionFactory) {
-		final QueryEngine queryEngine = sessionFactory.getQueryEngine();
-		final HqlInterpretation<T> hqlInterpretation = queryEngine
-				.getInterpretationCache()
-				.resolveHqlInterpretation( hql, null, queryEngine.getHqlTranslator() );
+	private static <T> SqmDeleteOrUpdateStatement<T> resolveSqmTree(String hql, QueryEngine queryEngine) {
+		final HqlInterpretation<T> hqlInterpretation =
+				queryEngine.getInterpretationCache()
+						.resolveHqlInterpretation( hql, null, queryEngine.getHqlTranslator() );
 
 		if ( !SqmUtil.isRestrictedMutation( hqlInterpretation.getSqmStatement() ) ) {
 			throw new IllegalMutationQueryException( "Expecting a delete or update query, but found '" + hql + "'", hql);

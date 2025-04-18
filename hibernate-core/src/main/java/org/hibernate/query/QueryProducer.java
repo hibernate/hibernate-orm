@@ -9,10 +9,7 @@ import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
-import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
-import org.hibernate.query.programmatic.MutationSpecification;
-import org.hibernate.query.programmatic.SelectionSpecification;
 
 /**
  * Contract for things that can produce instances of {@link Query} and {@link NativeQuery}.
@@ -498,108 +495,6 @@ public interface QueryProducer {
 	 * @throws UnknownNamedQueryException if no query has been defined with the given name
 	 */
 	MutationQuery createNamedMutationQuery(String name);
-
-	/**
-	 * Returns a specification reference which can be used to programmatically,
-	 * iteratively build a {@linkplain SelectionQuery} based on a base HQL statement,
-	 * allowing the addition of {@linkplain SelectionSpecification#addOrdering sorting}
-	 * and {@linkplain SelectionSpecification#addRestriction restrictions}.
-	 *
-	 * @param hql The base HQL query.
-	 * @param resultType The result type which will ultimately be returned from the {@linkplain SelectionQuery}
-	 *
-	 * @param <T> The root entity type for the query.
-	 * {@code resultType} and {@code <T>} are both expected to refer to a singular query root.
-	 *
-	 * @throws IllegalSelectQueryException The given HQL is expected to be a {@code select} query.  This method will
-	 * throw an exception if not.
-	 *
-	 * @since 7.0
-	 */
-	@Incubating
-	<T> SelectionSpecification<T> createSelectionSpecification(String hql, Class<T> resultType)
-			throws IllegalSelectQueryException;
-
-	/**
-	 * Returns a specification reference which can be used to programmatically,
-	 * iteratively build a {@linkplain SelectionQuery} for the given entity type,
-	 * allowing the addition of {@linkplain SelectionSpecification#addOrdering sorting}
-	 * and {@linkplain SelectionSpecification#addRestriction restrictions}.
-	 * This is effectively the same as calling {@linkplain QueryProducer#createSelectionSpecification(String, Class)}
-	 * with {@code "from {rootEntityType}"} as the HQL.
-	 *
-	 * @param rootEntityType The entity type which is the root of the query.
-	 *
-	 * @param <T> The entity type which is the root of the query.
-	 * {@code resultType} and {@code <T>} are both expected to refer to a singular query root.
-	 *
-	 * @since 7.0
-	 */
-	@Incubating
-	<T> SelectionSpecification<T> createSelectionSpecification(Class<T> rootEntityType);
-
-	/**
-	 * Returns a specification reference which can be used to programmatically,
-	 * iteratively build a {@linkplain SelectionQuery} for the given criteria query,
-	 * allowing the addition of {@linkplain SelectionSpecification#addOrdering sorting}
-	 * and {@linkplain SelectionSpecification#addRestriction restrictions}.
-	 *
-	 * @param criteria The criteria query
-	 *
-	 * @param <T> The entity type which is the root of the query.
-	 *
-	 * @since 7.0
-	 */
-	@Incubating
-	<T> SelectionSpecification<T> createSelectionSpecification(CriteriaQuery<T> criteria);
-
-	/**
-	 * Returns a specification reference which can be used to programmatically,
-	 * iteratively build a {@linkplain MutationQuery} based on a base HQL statement,
-	 * allowing the addition of {@linkplain MutationSpecification#addRestriction restrictions}.
-	 *
-	 * @param hql The base HQL query (expected to be an {@code update} or {@code delete} query).
-	 * @param mutationTarget The entity which is the target of the mutation.
-	 *
-	 * @param <T> The root entity type for the mutation (the "target").
-	 * {@code mutationTarget} and {@code <T>} are both expected to refer to the mutation target.
-	 *
-	 * @throws IllegalMutationQueryException Only {@code update} and {@code delete} are supported;
-	 * this method will throw an exception if the given HQL query is not an {@code update} or {@code delete}.
-	 *
-	 * @since 7.0
-	 */
-	@Incubating
-	<T> MutationSpecification<T> createMutationSpecification(String hql, Class<T> mutationTarget)
-			throws IllegalMutationQueryException;
-
-	/**
-	 * Returns a specification reference which can be used to programmatically,
-	 * iteratively build a {@linkplain MutationQuery} based on the given criteria update,
-	 * allowing the addition of {@linkplain MutationSpecification#addRestriction restrictions}.
-	 *
-	 * @param criteriaUpdate The criteria update query
-	 *
-	 * @param <T> The root entity type for the mutation (the "target").
-	 *
-	 * @since 7.0
-	 */
-	@Incubating
-	<T> MutationSpecification<T> createMutationSpecification(CriteriaUpdate<T> criteriaUpdate);
-
-	/**
-	 * Returns a specification reference which can be used to programmatically,
-	 * iteratively build a {@linkplain MutationQuery} based on the given criteria delete,
-	 * allowing the addition of {@linkplain MutationSpecification#addRestriction restrictions}.
-	 *
-	 * @param criteriaDelete The criteria delete query
-	 *
-	 * @param <T> The root entity type for the mutation (the "target").
-	 *
-	 * @since 7.0
-	 */
-	@Incubating
-	<T> MutationSpecification<T> createMutationSpecification(CriteriaDelete<T> criteriaDelete);
 
 	/**
 	 * Create a {@link Query} instance for the named query.

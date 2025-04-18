@@ -53,8 +53,6 @@ import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
-import org.hibernate.query.programmatic.MutationSpecification;
-import org.hibernate.query.programmatic.SelectionSpecification;
 import org.hibernate.stat.SessionStatistics;
 
 import java.util.Collection;
@@ -748,36 +746,6 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public MutationQuery createNamedMutationQuery(String name) {
 		return this.lazySession.get().createNamedMutationQuery( name );
-	}
-
-	@Override
-	public <T> SelectionSpecification<T> createSelectionSpecification(String hql, Class<T> resultType) {
-		return this.lazySession.get().createSelectionSpecification( hql, resultType );
-	}
-
-	@Override
-	public <T> SelectionSpecification<T> createSelectionSpecification(Class<T> rootEntityType) {
-		return this.lazySession.get().createSelectionSpecification( rootEntityType );
-	}
-
-	@Override
-	public <T> SelectionSpecification<T> createSelectionSpecification(CriteriaQuery<T> criteria) {
-		return this.lazySession.get().createSelectionSpecification( criteria );
-	}
-
-	@Override
-	public <T> MutationSpecification<T> createMutationSpecification(String hql, Class<T> mutationTarget) {
-		return this.lazySession.get().createMutationSpecification( hql, mutationTarget );
-	}
-
-	@Override
-	public <T> MutationSpecification<T> createMutationSpecification(CriteriaUpdate<T> criteriaUpdate) {
-		return this.lazySession.get().createMutationSpecification( criteriaUpdate );
-	}
-
-	@Override
-	public <T> MutationSpecification<T> createMutationSpecification(CriteriaDelete<T> criteriaDelete) {
-		return this.lazySession.get().createMutationSpecification( criteriaDelete );
 	}
 
 	@SuppressWarnings("rawtypes")

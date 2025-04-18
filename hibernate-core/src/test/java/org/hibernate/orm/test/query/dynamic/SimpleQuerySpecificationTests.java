@@ -4,14 +4,16 @@
  */
 package org.hibernate.orm.test.query.dynamic;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
+import org.hibernate.query.programmatic.MutationSpecification;
+import org.hibernate.query.programmatic.SelectionSpecification;
 import org.hibernate.query.range.Range;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
@@ -25,17 +27,19 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = BasicEntity.class)
-@SessionFactory(useCollectingStatementInspector = true)
+@org.hibernate.testing.orm.junit.SessionFactory(useCollectingStatementInspector = true)
 public class SimpleQuerySpecificationTests {
 	@Test
 	void testSimpleSelectionOrder(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
+		final SessionFactory factory = factoryScope.getSessionFactory();
+
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
-			session.createSelectionSpecification( "from BasicEntity", BasicEntity.class )
+			SelectionSpecification.create( factory, BasicEntity.class, "from BasicEntity" )
 					.addOrdering( Order.asc( BasicEntity_.position ) )
-					.createQuery()
+					.createQuery( session )
 					.list();
 		} );
 
@@ -47,12 +51,14 @@ public class SimpleQuerySpecificationTests {
 	void testSimpleSelectionOrderMultiple(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
+		final SessionFactory factory = factoryScope.getSessionFactory();
+
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
-			session.createSelectionSpecification( "from BasicEntity", BasicEntity.class )
+			SelectionSpecification.create( factory, BasicEntity.class, "from BasicEntity" )
 					.addOrdering( Order.asc( BasicEntity_.position ) )
 					.addOrdering( Order.asc( BasicEntity_.id ) )
-					.createQuery()
+					.createQuery( session )
 					.list();
 		} );
 
@@ -64,10 +70,13 @@ public class SimpleQuerySpecificationTests {
 	void testSimpleSelectionSetOrdering(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
-		factoryScope.inTransaction( (session) -> {			sqlCollector.clear();
-			session.createSelectionSpecification( "from BasicEntity", BasicEntity.class )
+		final SessionFactory factory = factoryScope.getSessionFactory();
+
+		factoryScope.inTransaction( (session) -> {
+			sqlCollector.clear();
+			SelectionSpecification.create( factory, BasicEntity.class, "from BasicEntity" )
 					.setOrdering( Order.asc( BasicEntity_.position ) )
-					.createQuery()
+					.createQuery( session )
 					.list();
 		} );
 
@@ -79,11 +88,13 @@ public class SimpleQuerySpecificationTests {
 	void testSimpleSelectionSetOrderingMultiple(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
+		final SessionFactory factory = factoryScope.getSessionFactory();
+
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
-			session.createSelectionSpecification( "from BasicEntity", BasicEntity.class )
+			SelectionSpecification.create( factory, BasicEntity.class, "from BasicEntity" )
 					.setOrdering( List.of( Order.asc( BasicEntity_.position ), Order.asc( BasicEntity_.id ) ) )
-					.createQuery()
+					.createQuery( session )
 					.list();
 		} );
 
@@ -95,12 +106,14 @@ public class SimpleQuerySpecificationTests {
 	void testSimpleSelectionSetOrderingReplace(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
+		final SessionFactory factory = factoryScope.getSessionFactory();
+
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
-			session.createSelectionSpecification( "from BasicEntity", BasicEntity.class )
+			SelectionSpecification.create( factory, BasicEntity.class, "from BasicEntity" )
 					.setOrdering( Order.asc( BasicEntity_.id ) )
 					.setOrdering( Order.asc( BasicEntity_.position ) )
-					.createQuery()
+					.createQuery( session )
 					.list();
 		} );
 
@@ -109,10 +122,10 @@ public class SimpleQuerySpecificationTests {
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
-			session.createSelectionSpecification( "from BasicEntity", BasicEntity.class )
+			SelectionSpecification.create( factory, BasicEntity.class, "from BasicEntity" )
 					.addOrdering( Order.asc( BasicEntity_.id ) )
 					.setOrdering( Order.asc( BasicEntity_.position ) )
-					.createQuery()
+					.createQuery( session )
 					.list();
 		} );
 
@@ -124,11 +137,13 @@ public class SimpleQuerySpecificationTests {
 	void testSimpleSelectionRestriction(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
+		final SessionFactory factory = factoryScope.getSessionFactory();
+
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
-			session.createSelectionSpecification( "from BasicEntity", BasicEntity.class )
+			SelectionSpecification.create( factory, BasicEntity.class, "from BasicEntity" )
 					.addRestriction( Restriction.restrict( BasicEntity_.position, Range.closed( 1, 5 ) ) )
-					.createQuery()
+					.createQuery( session )
 					.list();
 		} );
 
@@ -140,11 +155,13 @@ public class SimpleQuerySpecificationTests {
 	void testSimpleMutationRestriction(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
+		final SessionFactory factory = factoryScope.getSessionFactory();
+
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
-			session.createMutationSpecification( "delete BasicEntity", BasicEntity.class )
+			MutationSpecification.create( factory, BasicEntity.class, "delete BasicEntity" )
 					.addRestriction( Restriction.restrict( BasicEntity_.position, Range.closed( 1, 5 ) ) )
-					.createQuery()
+					.createQuery( session )
 					.executeUpdate();
 		} );
 
@@ -156,11 +173,13 @@ public class SimpleQuerySpecificationTests {
 	void testRootEntityForm(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
+		final SessionFactory factory = factoryScope.getSessionFactory();
+
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
-			session.createSelectionSpecification( BasicEntity.class )
+			SelectionSpecification.create( factory, BasicEntity.class )
 					.addOrdering( Order.asc( BasicEntity_.position ) )
-					.createQuery()
+					.createQuery( session )
 					.getResultList();
 		} );
 
@@ -179,9 +198,9 @@ public class SimpleQuerySpecificationTests {
 			var entity = query.from( BasicEntity.class );
 			query.select( entity );
 			query.where( criteriaBuilder.like( entity.get( BasicEntity_.name ), "%" ) );
-			session.createSelectionSpecification( query )
+			SelectionSpecification.create( query )
 					.addOrdering( Order.asc( BasicEntity_.position ) )
-					.createQuery()
+					.createQuery( session )
 					.getResultList();
 		} );
 
@@ -193,11 +212,13 @@ public class SimpleQuerySpecificationTests {
 	void testBaseParameters(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
+		final SessionFactory factory = factoryScope.getSessionFactory();
+
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
-			session.createSelectionSpecification( "from BasicEntity where id > :id", BasicEntity.class )
+			SelectionSpecification.create( factory, BasicEntity.class, "from BasicEntity where id > :id" )
 					.addRestriction( Restriction.restrict( BasicEntity_.position, Range.closed( 1, 5 ) ) )
-					.createQuery()
+					.createQuery( session )
 					.setParameter( "id", 200 )
 					.getResultList();
 		} );
@@ -208,9 +229,10 @@ public class SimpleQuerySpecificationTests {
 
 	@Test
 	void testIllegalSelection(SessionFactoryScope factoryScope) {
+		final SessionFactory factory = factoryScope.getSessionFactory();
 		factoryScope.inTransaction( (session) -> {
 			try {
-				session.createSelectionSpecification( "delete BasicEntity", BasicEntity.class );
+				SelectionSpecification.create( factory, BasicEntity.class, "delete BasicEntity" );
 				fail( "Expecting a IllegalSelectQueryException, but not thrown" );
 			}
 			catch (IllegalSelectQueryException expected) {
@@ -220,9 +242,10 @@ public class SimpleQuerySpecificationTests {
 
 	@Test
 	void testIllegalMutation(SessionFactoryScope factoryScope) {
+		final SessionFactory factory = factoryScope.getSessionFactory();
 		factoryScope.inTransaction( (session) -> {
 			try {
-				session.createMutationSpecification( "from BasicEntity", BasicEntity.class );
+				MutationSpecification.create( factory, BasicEntity.class, "from BasicEntity" );
 				fail( "Expecting a IllegalMutationQueryException, but not thrown" );
 			}
 			catch (IllegalMutationQueryException expected) {

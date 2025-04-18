@@ -71,10 +71,6 @@ import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
-import org.hibernate.query.programmatic.MutationSpecification;
-import org.hibernate.query.programmatic.SelectionSpecification;
-import org.hibernate.query.programmatic.internal.MutationSpecificationImpl;
-import org.hibernate.query.programmatic.internal.SelectionSpecificationImpl;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
@@ -1258,36 +1254,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return buildNamedQuery( queryName,
 				memento -> createSqmQueryImplementor( queryName, memento ),
 				memento -> createNativeQueryImplementor( queryName, memento ) );
-	}
-
-	@Override
-	public <T> SelectionSpecification<T> createSelectionSpecification(String hql, Class<T> resultType) {
-		return new SelectionSpecificationImpl<>( hql, resultType, this );
-	}
-
-	@Override
-	public <T> SelectionSpecification<T> createSelectionSpecification(Class<T> rootEntityType) {
-		return new SelectionSpecificationImpl<>( rootEntityType, this );
-	}
-
-	@Override
-	public <T> SelectionSpecification<T> createSelectionSpecification(CriteriaQuery<T> criteria) {
-		return new SelectionSpecificationImpl<>( criteria, this );
-	}
-
-	@Override
-	public <T> MutationSpecification<T> createMutationSpecification(String hql, Class<T> mutationTarget) {
-		return new MutationSpecificationImpl<>( hql, mutationTarget, this );
-	}
-
-	@Override
-	public <T> MutationSpecification<T> createMutationSpecification(CriteriaDelete<T> criteriaDelete) {
-		return new MutationSpecificationImpl<>( criteriaDelete, this );
-	}
-
-	@Override
-	public <T> MutationSpecification<T> createMutationSpecification(CriteriaUpdate<T> criteriaUpdate)  {
-		return new MutationSpecificationImpl<>( criteriaUpdate, this );
 	}
 
 	protected <T> NativeQueryImplementor<T> createNativeQueryImplementor(String queryName, NamedNativeQueryMemento<T> memento) {

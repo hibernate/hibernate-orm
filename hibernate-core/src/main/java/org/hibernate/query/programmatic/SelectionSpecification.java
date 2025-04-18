@@ -113,6 +113,34 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 
 	/**
 	 * Add an {@linkplain Augmentation augmentation} to the specification.
+	 * <p>
+	 * For example:
+	 * <pre>
+	 * SelectionSpecification.create(Book.class)
+	 *       .addAugmentation((builder, query, book) ->
+	 *               // augment the query via JPA Criteria API
+	 *               query.where(builder.like(book.get(Book_.title), titlePattern)),
+	 *                           builder.greaterThan(book.get(Book_.pages), minPages))
+	 *                   .orderBy(builder.asc(book.get(Book_.isbn)))
+	 *       .createQuery(session)
+	 *       .getResultList();
+	 * </pre>
+	 * For complicated cases, a {@link org.hibernate.query.criteria.CriteriaDefinition}
+	 * may be used within an augmentation to eliminate repetitive explicit references to
+	 * the {@link CriteriaBuilder}.
+	 * <pre>
+	 * SelectionSpecification.create(Book.class)
+	 *       .addAugmentation((builder, query, book) ->
+	 *           // eliminate explicit references to 'builder'
+	 *           new CriteriaDefinition<>(query) {{
+	 *               where(like(entity.get(BasicEntity_.title), titlePattern),
+	 *                     greaterThan(book.get(Book_.pages), minPages));
+	 *               orderBy(asc(book.get(Book_.isbn)));
+	 *           }}
+	 *       )
+	 *       .createQuery(session)
+	 *       .getResultList();
+	 * </pre>
 	 *
 	 * @param augmentation A function capable of modifying or augmenting a criteria query.
 	 *

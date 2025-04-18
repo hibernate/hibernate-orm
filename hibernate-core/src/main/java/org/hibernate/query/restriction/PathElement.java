@@ -26,7 +26,7 @@ record PathElement<X, U, V>(Path<? super X, U> parent, SingularAttribute<? super
 	}
 
 	@Override
-	public FetchParent<?, ? extends V> fetch(Root<? extends X> root) {
+	public FetchParent<?, V> fetch(Root<? extends X> root) {
 		return parent.fetch( root ).fetch( attribute );
 	}
 }

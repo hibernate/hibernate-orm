@@ -32,7 +32,7 @@ record NamedPathElement<X, U, V>(Path<? super X, U> parent, String attributeName
 	}
 
 	@Override
-	public FetchParent<?, ? extends V> fetch(Root<? extends X> root) {
+	public FetchParent<?, V> fetch(Root<? extends X> root) {
 		return parent.fetch( root ).fetch( attributeName );
 	}
 }

@@ -13,6 +13,7 @@ import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.programmatic.internal.SelectionSpecificationImpl;
+import org.hibernate.query.restriction.Path;
 import org.hibernate.query.restriction.Restriction;
 
 import java.util.List;
@@ -90,6 +91,15 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 */
 	@Override
 	SelectionSpecification<T> addRestriction(Restriction<T> restriction);
+
+	/**
+	 * Add a fetch {@linkplain Path path} to the specification.
+	 *
+	 * @param fetchPath The path to fetch
+	 *
+	 * @return {@code this} for method chaining.
+	 */
+	SelectionSpecification<T> addFetching(Path<T,?> fetchPath);
 
 	@FunctionalInterface
 	interface Mutator<T> {

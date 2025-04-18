@@ -12,6 +12,7 @@ import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.programmatic.SelectionSpecification;
+import org.hibernate.query.restriction.Path;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.QueryEngine;
@@ -75,6 +76,12 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	public SelectionSpecification<T> mutate(Mutator<T> mutation) {
 		specifications.add( (sqmStatement, root) ->
 				mutation.mutate( sqmStatement.nodeBuilder(), sqmStatement, root ) );
+		return this;
+	}
+
+	@Override
+	public SelectionSpecification<T> addFetching(Path<T, ?> fetchPath) {
+		specifications.add( (sqmStatement, root) -> fetchPath.fetch( root ) );
 		return this;
 	}
 

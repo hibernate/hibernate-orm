@@ -6,20 +6,11 @@ package org.hibernate.orm.test.query.dynamic;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-/**
- * @author Steve Ebersole
- */
-@Entity(name = "BasicEntity")
-@Table(name = "BasicEntity")
-public class BasicEntity {
+@Entity(name = "OtherEntity")
+@Table(name = "OtherEntity")
+public class OtherEntity {
 	@Id
 	private Integer id;
-	private String name;
-	private int position;
-
-	@ManyToOne
-	OtherEntity other;
 }

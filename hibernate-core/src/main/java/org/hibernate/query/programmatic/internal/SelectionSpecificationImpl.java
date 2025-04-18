@@ -5,10 +5,8 @@
 package org.hibernate.query.programmatic.internal;
 
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
 import org.hibernate.QueryException;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
@@ -26,10 +24,12 @@ import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 
@@ -40,72 +40,95 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
  */
 public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> {
 	private final Class<T> resultType;
+	private final String hql;
+	private final CriteriaQuery<T> criteriaQuery;
+	private final List<BiConsumer<SqmSelectStatement<T>, SqmRoot<T>>> specifications = new ArrayList<>();
 
-	private final SqmSelectStatement<T> sqmStatement;
-	private final SqmRoot<T> sqmRoot;
-
-	public SelectionSpecificationImpl(
-			String hql,
-			Class<T> resultType,
-			SessionFactoryImplementor factory) {
+	public SelectionSpecificationImpl(Class<T> resultType) {
 		this.resultType = resultType;
-		this.sqmStatement = resolveSqmTree( hql, resultType, factory.getQueryEngine() );
-		this.sqmRoot = extractRoot( sqmStatement, resultType, hql );
+		this.hql = null;
+		this.criteriaQuery = null;
+	}
+
+	public SelectionSpecificationImpl(String hql, Class<T> resultType) {
+		this.resultType = resultType;
+		this.hql = hql;
+		this.criteriaQuery = null;
 	}
 
 	public SelectionSpecificationImpl(CriteriaQuery<T> criteriaQuery) {
 		this.resultType = criteriaQuery.getResultType();
-		this.sqmStatement = (SqmSelectStatement<T>) criteriaQuery;
-		this.sqmRoot = extractRoot( sqmStatement, resultType, "criteria query" );
-	}
-
-	@Override
-	public Root<T> getRoot() {
-		return sqmRoot;
-	}
-
-	@Override
-	public CriteriaQuery<T> getCriteria() {
-		return sqmStatement;
+		this.hql = null;
+		this.criteriaQuery = criteriaQuery;
 	}
 
 	@Override
 	public SelectionSpecification<T> addRestriction(Restriction<T> restriction) {
-		final SqmPredicate sqmPredicate = SqmUtil.restriction( sqmStatement, resultType, restriction );
-		sqmStatement.getQuerySpec().applyPredicate( sqmPredicate );
-
+		specifications.add( (sqmStatement, root) -> {
+			final SqmPredicate sqmPredicate = SqmUtil.restriction( sqmStatement, resultType, restriction );
+			sqmStatement.getQuerySpec().applyPredicate( sqmPredicate );
+		} );
 		return this;
 	}
 
 	@Override
 	public SelectionSpecification<T> addOrdering(Order<T> order) {
-		final SqmSortSpecification sortSpecification = SqmUtil.sortSpecification( sqmStatement, order );
-		if ( sqmStatement.getQuerySpec().getOrderByClause() == null ) {
-			sqmStatement.getQuerySpec().setOrderByClause( new SqmOrderByClause() );
-		}
-		sqmStatement.getQuerySpec().getOrderByClause().addSortSpecification( sortSpecification );
-
+		specifications.add( (sqmStatement, root) -> {
+			addOrder( order, sqmStatement );
+		} );
 		return this;
 	}
 
 	@Override
 	public final SelectionSpecification<T> setOrdering(Order<T> order) {
-		sqmStatement.getQuerySpec().setOrderByClause( new SqmOrderByClause() );
-		addOrdering( order );
+		specifications.add( (sqmStatement, root) -> {
+			sqmStatement.getQuerySpec().setOrderByClause( new SqmOrderByClause() );
+			addOrder( order, sqmStatement );
+		} );
 		return this;
 	}
 
 	@Override
 	public final SelectionSpecification<T> setOrdering(List<Order<T>> orders) {
-		sqmStatement.getQuerySpec().setOrderByClause( new SqmOrderByClause() );
-		orders.forEach( this::addOrdering );
+		specifications.add( (sqmStatement, root) -> {
+			sqmStatement.getQuerySpec().setOrderByClause( new SqmOrderByClause() );
+			orders.forEach( order -> addOrder( order, sqmStatement ) );
+		} );
 		return this;
+	}
+
+	private static <T> void addOrder(Order<T> order, SqmSelectStatement<T> sqmStatement) {
+		final SqmSortSpecification sortSpecification = SqmUtil.sortSpecification( sqmStatement, order );
+		final var querySpec = sqmStatement.getQuerySpec();
+		if ( querySpec.getOrderByClause() == null ) {
+			querySpec.setOrderByClause( new SqmOrderByClause() );
+		}
+		querySpec.getOrderByClause().addSortSpecification( sortSpecification );
 	}
 
 	@Override
 	public SelectionQuery<T> createQuery(SharedSessionContract session) {
-		return new SqmSelectionQueryImpl<>( sqmStatement, true, resultType,
-				(SharedSessionContractImplementor) session );
+		final var sessionImpl = (SharedSessionContractImplementor) session;
+		final SqmSelectStatement<T> sqmStatement;
+		final SqmRoot<T> sqmRoot;
+		if ( hql != null ) {
+			sqmStatement = resolveSqmTree( hql, resultType, sessionImpl.getFactory().getQueryEngine() );
+			sqmRoot = extractRoot( sqmStatement, resultType, hql );
+		}
+		else if ( criteriaQuery != null ) {
+			sqmStatement = (SqmSelectStatement<T>) criteriaQuery;
+			sqmRoot = extractRoot( sqmStatement, resultType, "criteria query" );
+		}
+		else {
+			var builder = sessionImpl.getCriteriaBuilder();
+			var query = builder.createQuery( resultType );
+			var root = query.from( resultType );
+			query.select( root );
+			sqmRoot = (SqmRoot<T>) root;
+			sqmStatement = (SqmSelectStatement<T>) query;
+		}
+		specifications.forEach( consumer -> consumer.accept( sqmStatement, sqmRoot ) );
+		return new SqmSelectionQueryImpl<>( sqmStatement, true, resultType, sessionImpl );
 	}
 
 	/**

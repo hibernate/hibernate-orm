@@ -4,12 +4,10 @@
  */
 package org.hibernate.query.programmatic.internal;
 
-import jakarta.persistence.criteria.CommonAbstractCriteria;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaUpdate;
-import jakarta.persistence.criteria.Root;
+import org.hibernate.AssertionFailure;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.programmatic.MutationSpecification;
 import org.hibernate.query.IllegalMutationQueryException;
@@ -26,7 +24,10 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.function.BiConsumer;
 
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 
@@ -37,54 +38,60 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
  */
 public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 
-	private final SqmDeleteOrUpdateStatement<T> sqmStatement;
-	private final SqmRoot<T> mutationTargetRoot;
+	private final List<BiConsumer<SqmDeleteOrUpdateStatement<T>, SqmRoot<T>>> specifications = new ArrayList<>();
+	private final String hql;
+	private final Class<T> mutationTarget;
+	private final SqmDeleteOrUpdateStatement<T> deleteOrUpdateStatement;
 
-	public MutationSpecificationImpl(
-			String hql,
-			Class<T> mutationTarget,
-			SessionFactoryImplementor factory) {
-		this.sqmStatement = resolveSqmTree( hql, factory.getQueryEngine() );
-		this.mutationTargetRoot = resolveSqmRoot( this.sqmStatement, mutationTarget );
+	public MutationSpecificationImpl(String hql, Class<T> mutationTarget) {
+		this.hql = hql;
+		this.mutationTarget = mutationTarget;
+		this.deleteOrUpdateStatement = null;
 	}
 
 	public MutationSpecificationImpl(CriteriaUpdate<T> criteriaQuery) {
-		this.sqmStatement = (SqmUpdateStatement<T>) criteriaQuery;
-		this.mutationTargetRoot = resolveSqmRoot( sqmStatement,
-				sqmStatement.getTarget().getManagedType().getJavaType() );
+		this.deleteOrUpdateStatement = (SqmUpdateStatement<T>) criteriaQuery;
+		this.mutationTarget = deleteOrUpdateStatement.getTarget().getManagedType().getJavaType();
+		this.hql = null;
 	}
 
 	public MutationSpecificationImpl(CriteriaDelete<T> criteriaQuery) {
-		this.sqmStatement = (SqmDeleteStatement<T>) criteriaQuery;
-		this.mutationTargetRoot = resolveSqmRoot( sqmStatement,
-				sqmStatement.getTarget().getManagedType().getJavaType() );
-	}
-
-	@Override
-	public Root<T> getRoot() {
-		return mutationTargetRoot;
-	}
-
-	@Override
-	public CommonAbstractCriteria getCriteria() {
-		return sqmStatement;
+		this.deleteOrUpdateStatement = (SqmDeleteStatement<T>) criteriaQuery;
+		this.mutationTarget = deleteOrUpdateStatement.getTarget().getManagedType().getJavaType();
+		this.hql = null;
 	}
 
 	@Override
 	public MutationSpecification<T> addRestriction(Restriction<T> restriction) {
-		final SqmPredicate sqmPredicate = (SqmPredicate) restriction.toPredicate(
-				mutationTargetRoot,
-				sqmStatement.nodeBuilder()
-		);
-		sqmStatement.applyPredicate( sqmPredicate );
-
+		specifications.add( (sqmStatement, mutationTargetRoot) -> {
+			final SqmPredicate sqmPredicate = (SqmPredicate) restriction.toPredicate(
+					mutationTargetRoot,
+					sqmStatement.nodeBuilder()
+			);
+			sqmStatement.applyPredicate( sqmPredicate );
+		} );
 		return this;
 	}
 
 	@Override
 	public MutationQuery createQuery(SharedSessionContract session) {
-		return new QuerySqmImpl<>( sqmStatement, true, null,
-				(SharedSessionContractImplementor) session );
+		final var sessionImpl = (SharedSessionContractImplementor) session;
+		final SqmDeleteOrUpdateStatement<T> sqmStatement;
+		final SqmRoot<T> mutationTargetRoot;
+		if ( hql != null ) {
+			sqmStatement = resolveSqmTree( hql, sessionImpl.getFactory().getQueryEngine() );
+			mutationTargetRoot = resolveSqmRoot( sqmStatement, mutationTarget );
+		}
+		else if ( deleteOrUpdateStatement != null ) {
+			sqmStatement = deleteOrUpdateStatement;
+			mutationTargetRoot = resolveSqmRoot( sqmStatement,
+					sqmStatement.getTarget().getManagedType().getJavaType() );
+		}
+		else {
+			throw new AssertionFailure( "No HQL or criteria" );
+		}
+		specifications.forEach( consumer -> consumer.accept( sqmStatement, mutationTargetRoot ) );
+		return new QuerySqmImpl<>( sqmStatement, true, null, sessionImpl );
 	}
 
 	/**

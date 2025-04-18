@@ -23,7 +23,7 @@ import java.util.List;
  * a {@link org.hibernate.query.programmatic.SelectionSpecification} by calling
  * {@link SelectionQuery#addRestriction(Restriction)}.
  * <pre>
- * SelectionSpecification.create(factory, Book.class)
+ * SelectionSpecification.create(Book.class)
  *         .addRestriction(Restriction.like(Book_.title, "%Hibernate%", false))
  *         .addRestriction(Restriction.greaterThan(Book_.pages, 100))
  *         .setOrder(Order.desc(Book_.title))

@@ -4,14 +4,11 @@
  */
 package org.hibernate.query.programmatic;
 
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.criteria.CriteriaQuery;
 import org.hibernate.Incubating;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
-import org.hibernate.query.QueryProducer;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.programmatic.internal.SelectionSpecificationImpl;
 import org.hibernate.query.restriction.Restriction;
@@ -31,11 +28,10 @@ import java.util.List;
  * </ul>
  * <p>
  * Once all {@linkplain #addOrdering sorting} and {@linkplain #addRestriction restrictions}
- * are specified, call {@linkplain QuerySpecification#createQuery(SharedSessionContract)} to obtain an {@linkplain SelectionQuery
- * executable selection query object}.
+ * are specified, call {@link #createQuery createQuery()} to obtain an
+ * {@linkplain SelectionQuery executable selection query object}.
  * <pre>
- * SelectionSpecification.create(factory, Book.class,
- *                               "from Book where discontinued = false")
+ * SelectionSpecification.create(Book.class, "from Book where discontinued = false")
  *         .addRestriction(Restriction.contains(Book_.title, "hibernate", false))
  *         .setOrdering(Order.desc(Book_.title))
  *         .createQuery(session)                       // obtain a SelectionQuery
@@ -48,8 +44,6 @@ import java.util.List;
  * and properties of this root entity.
  *
  * @param <T> The entity type returned by the query
- *
- * @see QueryProducer#createSelectionSpecification(String, Class)
  *
  * @author Steve Ebersole
  *
@@ -93,12 +87,6 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 * Covariant override.
 	 */
 	@Override
-	CriteriaQuery<T> getCriteria();
-
-	/**
-	 * Covariant override.
-	 */
-	@Override
 	SelectionSpecification<T> addRestriction(Restriction<T> restriction);
 
 	/**
@@ -112,7 +100,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 * iteratively build a {@linkplain SelectionQuery} for the given entity type,
 	 * allowing the addition of {@linkplain SelectionSpecification#addOrdering sorting}
 	 * and {@linkplain SelectionSpecification#addRestriction restrictions}.
-	 * This is effectively the same as calling {@linkplain QueryProducer#createSelectionSpecification(String, Class)}
+	 * This is effectively the same as calling {@linkplain #create(Class, String)}
 	 * with {@code "from {rootEntityType}"} as the HQL.
 	 *
 	 * @param rootEntityType The entity type which is the root of the query.
@@ -120,12 +108,8 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 * @param <T> The entity type which is the root of the query.
 	 * {@code resultType} and {@code <T>} are both expected to refer to a singular query root.
 	 */
-	static <T> SelectionSpecification<T> create(EntityManagerFactory factory, Class<T> rootEntityType) {
-		var builder = factory.getCriteriaBuilder();
-		var query = builder.createQuery( rootEntityType );
-		var root = query.from( rootEntityType );
-		query.select( root );
-		return new SelectionSpecificationImpl<>( query );
+	static <T> SelectionSpecification<T> create(Class<T> rootEntityType) {
+		return new SelectionSpecificationImpl<>( rootEntityType );
 	}
 
 	/**
@@ -143,8 +127,8 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 * @throws IllegalSelectQueryException The given HQL is expected to be a {@code select} query.  This method will
 	 * throw an exception if not.
 	 */
-	static <T> SelectionSpecification<T> create(EntityManagerFactory factory, Class<T> resultType, String hql) {
-		return new SelectionSpecificationImpl<>( hql, resultType, (SessionFactoryImplementor) factory );
+	static <T> SelectionSpecification<T> create(Class<T> resultType, String hql) {
+		return new SelectionSpecificationImpl<>( hql, resultType );
 	}
 
 	/**

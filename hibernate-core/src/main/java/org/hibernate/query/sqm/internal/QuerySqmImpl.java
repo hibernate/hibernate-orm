@@ -200,7 +200,7 @@ public class QuerySqmImpl<R>
 	}
 
 	/**
-	 * Used from {@linkplain org.hibernate.query.QueryProducer#createMutationSpecification}
+	 * Used for specifications.
 	 */
 	public QuerySqmImpl(
 			SqmStatement<R> criteria,

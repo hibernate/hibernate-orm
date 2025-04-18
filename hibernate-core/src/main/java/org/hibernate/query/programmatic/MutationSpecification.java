@@ -4,13 +4,10 @@
  */
 package org.hibernate.query.programmatic;
 
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.CriteriaDelete;
 import org.hibernate.Incubating;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
@@ -27,7 +24,7 @@ import org.hibernate.query.restriction.Restriction;
  * kinds.
  * <p>
  * Once all {@linkplain #addRestriction restrictions} are specified, call
- * {@linkplain QuerySpecification#createQuery(SharedSessionContract)} to obtain an {@linkplain SelectionQuery an
+ * {@link #createQuery createQuery()} to obtain an {@linkplain SelectionQuery
  * executable mutation query object}.
  *
  * @param <T> The entity type which is the target of the mutation.
@@ -38,12 +35,6 @@ import org.hibernate.query.restriction.Restriction;
  */
 @Incubating
 public interface MutationSpecification<T> extends QuerySpecification<T> {
-	/**
-	 * The entity being mutated.
-	 */
-	default Root<T> getMutationTarget() {
-		return getRoot();
-	}
 
 	/**
 	 * Covariant override.
@@ -71,8 +62,8 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	 * @throws IllegalMutationQueryException Only {@code update} and {@code delete} are supported;
 	 * this method will throw an exception if the given HQL query is not an {@code update} or {@code delete}.
 	 */
-	static <T> MutationSpecification<T> create(EntityManagerFactory factory, Class<T> entityClass, String hql) {
-		return new MutationSpecificationImpl<>( hql, entityClass, (SessionFactoryImplementor) factory );
+	static <T> MutationSpecification<T> create(Class<T> mutationTarget, String hql) {
+		return new MutationSpecificationImpl<>( hql, mutationTarget );
 	}
 
 	/**

@@ -4,8 +4,11 @@
  */
 package org.hibernate.query.programmatic;
 
+import jakarta.persistence.criteria.CommonAbstractCriteria;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Root;
 import org.hibernate.Incubating;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.query.IllegalMutationQueryException;
@@ -41,6 +44,13 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	 */
 	@Override
 	MutationSpecification<T> addRestriction(Restriction<T> restriction);
+
+	@FunctionalInterface
+	interface Mutator<T> {
+		void mutate(CriteriaBuilder builder, CommonAbstractCriteria query, Root<T> mutationTarget);
+	}
+
+	MutationSpecification<T> mutate(Mutator<T> mutation);
 
 	/**
 	 * Finalize the building and create the {@linkplain SelectionQuery} instance.

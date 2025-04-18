@@ -74,6 +74,13 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 	}
 
 	@Override
+	public MutationSpecification<T> mutate(Mutator<T> mutation) {
+		specifications.add( (sqmStatement, mutationTargetRoot) ->
+				mutation.mutate( sqmStatement.nodeBuilder(), sqmStatement, mutationTargetRoot ) );
+		return this;
+	}
+
+	@Override
 	public MutationQuery createQuery(SharedSessionContract session) {
 		final var sessionImpl = (SharedSessionContractImplementor) session;
 		final SqmDeleteOrUpdateStatement<T> sqmStatement;

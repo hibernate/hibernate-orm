@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -522,7 +522,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	}
 
 	@Override
-	public Supplier<Boolean> hasMultiValuedParameterBindingsChecker() {
+	public BooleanSupplier hasMultiValuedParameterBindingsChecker() {
 		return this::hasMultiValuedParameterBindings;
 	}
 

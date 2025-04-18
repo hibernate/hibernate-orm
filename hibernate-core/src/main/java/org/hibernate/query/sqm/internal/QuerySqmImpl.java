@@ -88,7 +88,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
 
 import static java.util.Collections.emptyMap;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
@@ -339,7 +339,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public Supplier<Boolean> hasMultiValuedParameterBindingsChecker() {
+	public BooleanSupplier hasMultiValuedParameterBindingsChecker() {
 		return this::hasMultiValuedParameterBindings;
 	}
 

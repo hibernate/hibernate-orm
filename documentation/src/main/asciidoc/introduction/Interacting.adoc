@@ -1048,21 +1048,32 @@ In Hibernate 7, there's a new option, a very ergonomic API for programmatically 
 This new API:
 
 - isn't part of the Criteria Query API, and so we don't need a `CriteriaQuery` object to make use of it,
-- works with both HQL and Criteria queries, and even with <<named-queries,named HQL queries>>, and
+- _does_ make use of the JPA <<metamodel-generator,static metamodel>> for type safety,
+- works with both HQL and Criteria queries, and
 - is optimized for the case of a query which returns its single root entity.
 
 [source,java]
 ----
-var query = session.createSelectionQuery("from Book where year(publicationDate) > 2000", Book.class);
-if (titlePattern != null) {
-    query.addRestriction(Restriction.like(Book_.title, namePattern));
-}
-if (isbns != null && !isbns.isEmpty()) {
-    query.addRestriction(Restriction.in(Book_.isbn, isbns))
-}
-query.setOrder(List.of(Order.asc(Book_.title), Order.asc(Book_.isbn)));
-List<Book> matchingBooks = query.getResultList();
+var selection =
+        SelectionSpecification.create(Book.class,
+            // an optional base query, written in HQL:
+                "from Book where year(publicationDate) > 2000");
 
+// add programmatic restrictions:
+if (titlePattern != null)
+    selection.addRestriction(Restriction.like(Book_.title, namePattern));
+if (isbns != null && !isbns.isEmpty())
+    selection.addRestriction(Restriction.in(Book_.isbn, isbns));
+
+// add programmatic ordering:
+if (orderByTitle) selection.addOrdering(Order.asc(Book_.title));
+if (orderByIsbn) selection.addOrdering(Order.asc(Book_.isbn));
+
+// add programmatic association fetching:
+if (fetchPublisher) selection.addFetching(Path.from(Book.class).to(Book_.publisher));
+
+// execute the query in the given session:
+List<Book> matchingBooks = selection.createQuery(session).getResultList();
 ----
 
 Notice that:
@@ -1070,18 +1081,18 @@ Notice that:
 - The link:{doc-javadoc-url}org/hibernate/query/restriction/Restriction.html[`Restriction`] interface has static methods for constructing a variety of different kinds of restriction in a completely typesafe way.
 - Similarly, the link:{doc-javadoc-url}org/hibernate/query/Order.html[`Order`] class has a variety of static methods for constructing different kinds of ordering criteria.
 
-We need the following methods of `SelectionQuery`:
+We need the following methods of link:{doc-javadoc-url}org/hibernate/query/programmatic/SelectionSpecification.html[`SelectionSpecification`]:
 
 .Methods for query restriction and ordering
-[%breakable,cols="30,~,^15"]
+[%breakable,cols="20,~]
 |===
-| Method name | Purpose | JPA-standard
+| Method name | Purpose
 
-| `addRestriction()` | Add a restriction on the query results | &#10006;
-| `setOrder()` | Specify how the query results should be ordered | &#10006;
+| `addRestriction()` | Add a restriction on the query results
+| `setOrder()`, `addOrder()` | Specify how the query results should be ordered
+| `addFetching()` | Add a fetched association
+| `addAugmentation()` | Add a custom function which directly manipulates the query
 |===
-
-Unfortunately, `Restriction` and `Order` can't be used with JPA's `TypedQuery` interface, and JPA has no built-in alternative, so if we're using `EntityManager`, we need to call `unwrap()` to obtain a `SelectionQuery`.
 
 Alternatively, `Restriction` and `Order` can be used with <<paging-and-ordering,generated query or finder methods>>, and even with link:{doc-data-repositories-url}[Jakarta Data repositories].
 
@@ -1090,11 +1101,54 @@ The interface link:{doc-javadoc-url}org/hibernate/query/restriction/Path.html[`P
 [source,java]
 ----
 List<Book> booksForPublisher =
-        session.createSelectionQuery("from Book", Book.class)
+        SelectionSpecification.create(Book.class)
                 .addRestriction(Path.from(Book.class).to(Book_.publisher).to(Publisher_.name)
                                 .equalTo(publisherName))
+                .addFetching(Path.from(Book.class).to(Book_.publisher))
+                .createQuery(session)
                 .getResultList();
 ----
+
+When `Restriction`, `Path`, and `Order` aren't expressive enough, we can _augment_ the query by manipulating its representation as a criteria:
+
+[source,java]
+----
+var books =
+        SelectionSpecification.create(Book.class)
+              .addAugmentation((builder, query, book) ->
+                      // augment the query via JPA Criteria API
+                      query.where(builder.like(book.get(Book_.title), titlePattern)))
+                          .orderBy(builder.asc(book.get(Book_.isbn)))
+              .createQuery(session)
+              .getResultList();
+----
+
+For really advanced cases, `addAugmentation()` works quite nicely with <<criteria-definition,`CriteriaDefinition`>>.
+
+[source,java]
+----
+var books =
+        SelectionSpecification.create(Book.class)
+              .addAugmentation((builder, query, book) ->
+                  // eliminate explicit references to 'builder'
+                  new CriteriaDefinition<>(query) {{
+                      where(like(entity.get(BasicEntity_.title), titlePattern),
+                            greaterThan(book.get(Book_.pages), minPages));
+                      orderBy(asc(book.get(Book_.isbn)));
+                  }}
+              )
+              .createQuery(session)
+              .getResultList();
+----
+
+However, we emphasize that this API shines in cases where complex manipulations are _not_ required.
+
+[NOTE]
+====
+`SelectionSpecification` (similar to its friend `MutationSpecification`) may be used in cases where a query returns a single "root" entity, possibly with some fetched associations.
+It is not useful in cases where a query should return multiple entities, a projection of entity fields, or an aggregation.
+For such cases, the full Criteria API is appropriate.
+====
 
 Programmatic restrictions, and especially programmatic ordering, are often used together with pagination.
 

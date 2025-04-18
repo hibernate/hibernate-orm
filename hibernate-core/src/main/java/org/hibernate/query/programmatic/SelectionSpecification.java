@@ -5,6 +5,8 @@
 package org.hibernate.query.programmatic;
 
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Root;
 import org.hibernate.Incubating;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.query.IllegalSelectQueryException;
@@ -88,6 +90,13 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 */
 	@Override
 	SelectionSpecification<T> addRestriction(Restriction<T> restriction);
+
+	@FunctionalInterface
+	interface Mutator<T> {
+		void mutate(CriteriaBuilder builder, CriteriaQuery<T> query, Root<T> root);
+	}
+
+	SelectionSpecification<T> mutate(Mutator<T> mutation);
 
 	/**
 	 * Covariant override.

@@ -73,9 +73,9 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	}
 
 	@Override
-	public SelectionSpecification<T> mutate(Mutator<T> mutation) {
+	public SelectionSpecification<T> addAugmentation(Augmentation<T> augmentation) {
 		specifications.add( (sqmStatement, root) ->
-				mutation.mutate( sqmStatement.nodeBuilder(), sqmStatement, root ) );
+				augmentation.augment( sqmStatement.nodeBuilder(), sqmStatement, root ) );
 		return this;
 	}
 

@@ -101,12 +101,24 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 */
 	SelectionSpecification<T> addFetching(Path<T,?> fetchPath);
 
+	/**
+	 * A function capable of modifying or augmenting a criteria query.
+	 *
+	 * @param <T> The root entity type
+	 */
 	@FunctionalInterface
-	interface Mutator<T> {
-		void mutate(CriteriaBuilder builder, CriteriaQuery<T> query, Root<T> root);
+	interface Augmentation<T> {
+		void augment(CriteriaBuilder builder, CriteriaQuery<T> query, Root<T> root);
 	}
 
-	SelectionSpecification<T> mutate(Mutator<T> mutation);
+	/**
+	 * Add an {@linkplain Augmentation augmentation} to the specification.
+	 *
+	 * @param augmentation A function capable of modifying or augmenting a criteria query.
+	 *
+	 * @return {@code this} for method chaining.
+	 */
+	SelectionSpecification<T> addAugmentation(Augmentation<T> augmentation);
 
 	/**
 	 * Covariant override.

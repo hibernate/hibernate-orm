@@ -45,12 +45,24 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	@Override
 	MutationSpecification<T> addRestriction(Restriction<T> restriction);
 
+	/**
+	 * A function capable of modifying or augmenting a criteria query.
+	 *
+	 * @param <T> The target entity type
+	 */
 	@FunctionalInterface
-	interface Mutator<T> {
-		void mutate(CriteriaBuilder builder, CommonAbstractCriteria query, Root<T> mutationTarget);
+	interface Augmentation<T> {
+		void augment(CriteriaBuilder builder, CommonAbstractCriteria query, Root<T> mutationTarget);
 	}
 
-	MutationSpecification<T> mutate(Mutator<T> mutation);
+	/**
+	 * Add an {@linkplain Augmentation augmentation} to the specification.
+	 *
+	 * @param augmentation A function capable of modifying or augmenting a criteria query.
+	 *
+	 * @return {@code this} for method chaining.
+	 */
+	MutationSpecification<T> addAugmentation(Augmentation<T> augmentation);
 
 	/**
 	 * Finalize the building and create the {@linkplain SelectionQuery} instance.

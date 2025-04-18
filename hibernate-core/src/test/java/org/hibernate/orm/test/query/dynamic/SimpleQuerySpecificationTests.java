@@ -201,7 +201,7 @@ public class SimpleQuerySpecificationTests {
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
 			SelectionSpecification.create( BasicEntity.class )
-					.mutate( (builder, query, entity) -> query.where( builder.like( entity.get( BasicEntity_.name ), "%" ) ) )
+					.addAugmentation( (builder, query, entity) -> query.where( builder.like( entity.get( BasicEntity_.name ), "%" ) ) )
 					.addOrdering( Order.asc( BasicEntity_.position ) )
 					.createQuery( session )
 					.getResultList();

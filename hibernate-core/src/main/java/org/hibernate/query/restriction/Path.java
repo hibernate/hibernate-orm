@@ -5,6 +5,7 @@
 package org.hibernate.query.restriction;
 
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.FetchParent;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.Incubating;
 import org.hibernate.query.range.Range;
@@ -76,4 +77,6 @@ public interface Path<X,U> {
 	default Restriction<X> notNull() {
 		return restrict( Range.notNull( getType() ) );
 	}
+
+	FetchParent<?, ? extends U> fetch(Root<? extends X> root);
 }

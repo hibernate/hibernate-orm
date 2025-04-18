@@ -11,6 +11,7 @@ import org.hibernate.query.Order;
 import org.hibernate.query.programmatic.MutationSpecification;
 import org.hibernate.query.programmatic.SelectionSpecification;
 import org.hibernate.query.range.Range;
+import org.hibernate.query.restriction.Path;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -26,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(annotatedClasses = BasicEntity.class)
+@DomainModel(annotatedClasses = {BasicEntity.class, OtherEntity.class})
 @org.hibernate.testing.orm.junit.SessionFactory(useCollectingStatementInspector = true)
 public class SimpleQuerySpecificationTests {
 	@Test
@@ -184,6 +185,7 @@ public class SimpleQuerySpecificationTests {
 			query.where( criteriaBuilder.like( entity.get( BasicEntity_.name ), "%" ) );
 			SelectionSpecification.create( query )
 					.addOrdering( Order.asc( BasicEntity_.position ) )
+					.addFetching( Path.from(BasicEntity.class).to( BasicEntity_.other ) )
 					.createQuery( session )
 					.getResultList();
 		} );

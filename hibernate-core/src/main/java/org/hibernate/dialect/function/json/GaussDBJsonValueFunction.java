@@ -7,12 +7,12 @@ package org.hibernate.dialect.function.json;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.hibernate.dialect.JsonHelper;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
+import org.hibernate.type.descriptor.jdbc.JsonHelper;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

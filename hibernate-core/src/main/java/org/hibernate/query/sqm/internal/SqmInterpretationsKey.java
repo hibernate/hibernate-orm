@@ -5,10 +5,9 @@
 package org.hibernate.query.sqm.internal;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
 
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -18,12 +17,11 @@ import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
-import static java.lang.Boolean.TRUE;
 
 /**
  * @author Steve Ebersole
  */
-public final class SqmInterpretationsKey implements QueryInterpretationCache.Key {
+final class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	public interface CacheabilityInfluencers {
 		boolean isQueryPlanCacheable();
 		String getQueryString();
@@ -31,7 +29,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 		SqmStatement<?> getSqmStatement();
 		QueryOptions getQueryOptions();
 		LoadQueryInfluencers getLoadQueryInfluencers();
-		Supplier<Boolean> hasMultiValuedParameterBindingsChecker();
+		BooleanSupplier hasMultiValuedParameterBindingsChecker();
 	}
 
 	public interface InterpretationsKeySource extends CacheabilityInfluencers {
@@ -61,17 +59,15 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 			return null;
 		}
 		else {
-			switch ( set.size() ) {
-				case 0:
-					return null;
-				case 1:
-					return Set.of( set.iterator().next() );
-				case 2:
-					final Iterator<String> iterator = set.iterator();
-					return Set.of( iterator.next(), iterator.next() );
-				default:
-					return Set.copyOf( set );
-			}
+			return switch ( set.size() ) {
+				case 0 -> null;
+				case 1 -> Set.of( set.iterator().next() );
+				case 2 -> {
+					final var iterator = set.iterator();
+					yield Set.of( iterator.next(), iterator.next() );
+				}
+				default -> Set.copyOf( set );
+			};
 		}
 	}
 
@@ -83,7 +79,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 		// parameters are part of the query string; with Criteria, they're not.
 		return keySource.isQueryPlanCacheable()
 				// At the moment we cannot cache query plan if there is filter enabled.
-			&& ! keySource.getLoadQueryInfluencers().hasEnabledFilters()
+			&& !keySource.getLoadQueryInfluencers().hasEnabledFilters()
 				// At the moment we cannot cache query plan if it has an entity graph
 			&& keySource.getQueryOptions().getAppliedGraph().getSemantic() == null
 				// todo (6.0) : this one may be ok because of how I implemented multi-valued param handling
@@ -92,7 +88,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 				//   in ConcreteSqmSelectQueryPlan is a concurrency issue when cached
 				// - This could be solved by using a method-local clone of domainParameterXref
 				//   when multi-valued params exist
-			&& ! keySource.hasMultiValuedParameterBindingsChecker().get() == TRUE;
+			&& !keySource.hasMultiValuedParameterBindingsChecker().getAsBoolean();
 	}
 
 	public static QueryInterpretationCache.Key generateNonSelectKey(InterpretationsKeySource keyDetails) {
@@ -109,7 +105,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 	private final TupleTransformer<?> tupleTransformer;
 	private final ResultListTransformer<?> resultListTransformer;
 	private final Collection<String> enabledFetchProfiles;
-	private final int hashcode;
+	private final int hashCode;
 
 	private SqmInterpretationsKey(
 			Object query,
@@ -120,7 +116,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 			ResultListTransformer<?> resultListTransformer,
 			Collection<String> enabledFetchProfiles) {
 		this.query = query;
-		this.hashcode = hash;
+		this.hashCode = hash;
 		this.resultType = resultType;
 		this.lockOptions = lockOptions;
 		this.tupleTransformer = tupleTransformer;
@@ -132,7 +128,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 	public QueryInterpretationCache.Key prepareForStore() {
 		return new SqmInterpretationsKey(
 				query,
-				hashcode,
+				hashCode,
 				resultType,
 				// Since lock options might be mutable, we need a copy for the cache key
 				lockOptions.makeDefensiveCopy(),
@@ -148,26 +144,24 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object other) {
+		if ( this == other ) {
 			return true;
 		}
-		if ( o == null || SqmInterpretationsKey.class != o.getClass() ) {
+		if ( !(other instanceof SqmInterpretationsKey that)) {
 			return false;
 		}
-
-		final SqmInterpretationsKey that = (SqmInterpretationsKey) o;
-		return this.hashcode == o.hashCode() //check this first as some other checks are expensive
-			&& query.equals( that.query )
-			&& Objects.equals( resultType, that.resultType )
-			&& Objects.equals( lockOptions, that.lockOptions )
-			&& Objects.equals( tupleTransformer, that.tupleTransformer )
-			&& Objects.equals( resultListTransformer, that.resultListTransformer )
-			&& Objects.equals( enabledFetchProfiles, that.enabledFetchProfiles );
+		return this.hashCode == that.hashCode //check this first as some other checks are expensive
+			&& this.query.equals( that.query )
+			&& Objects.equals( this.resultType, that.resultType )
+			&& Objects.equals( this.lockOptions, that.lockOptions )
+			&& Objects.equals( this.tupleTransformer, that.tupleTransformer )
+			&& Objects.equals( this.resultListTransformer, that.resultListTransformer )
+			&& Objects.equals( this.enabledFetchProfiles, that.enabledFetchProfiles );
 	}
 
 	@Override
 	public int hashCode() {
-		return hashcode;
+		return hashCode;
 	}
 }

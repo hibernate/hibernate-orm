@@ -74,9 +74,9 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 	}
 
 	@Override
-	public MutationSpecification<T> mutate(Mutator<T> mutation) {
+	public MutationSpecification<T> addAugmentation(Augmentation<T> augmentation) {
 		specifications.add( (sqmStatement, mutationTargetRoot) ->
-				mutation.mutate( sqmStatement.nodeBuilder(), sqmStatement, mutationTargetRoot ) );
+				augmentation.augment( sqmStatement.nodeBuilder(), sqmStatement, mutationTargetRoot ) );
 		return this;
 	}
 

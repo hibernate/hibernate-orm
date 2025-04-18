@@ -8,6 +8,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
+import org.hibernate.query.criteria.CriteriaDefinition;
 import org.hibernate.query.programmatic.MutationSpecification;
 import org.hibernate.query.programmatic.SelectionSpecification;
 import org.hibernate.query.range.Range;
@@ -195,7 +196,7 @@ public class SimpleQuerySpecificationTests {
 	}
 
 	@Test
-	void testCriteriaFormWithMutation(SessionFactoryScope factoryScope) {
+	void testAugmentation(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
 		factoryScope.inTransaction( (session) -> {
@@ -211,6 +212,27 @@ public class SimpleQuerySpecificationTests {
 		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " order by be1_0.position" );
 	}
 
+	@Test
+	void testAugmentationViaCriteriaDefinition(SessionFactoryScope factoryScope) {
+		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+
+		factoryScope.inTransaction( (session) -> {
+			sqlCollector.clear();
+			SelectionSpecification.create( BasicEntity.class )
+					.addAugmentation( (builder, query, entity) ->
+							new CriteriaDefinition<>( query ) {{
+								where( like( entity.get( BasicEntity_.name ), "%" ),
+										equal( entity.get( BasicEntity_.position), 1 ) );
+							}}
+					)
+					.addOrdering( Order.asc( BasicEntity_.position ) )
+					.createQuery( session )
+					.getResultList();
+		} );
+
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " order by be1_0.position" );
+	}
 	@Test
 	void testBaseParameters(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();

@@ -169,6 +169,11 @@ public abstract class CriteriaDefinition<R>
 		query = (JpaCriteriaQuery<R>) baseQuery;
 	}
 
+	public CriteriaDefinition(CriteriaQuery<R> baseQuery) {
+		super( ((JpaCriteriaQuery<R>) baseQuery).getCriteriaBuilder() );
+		query = (JpaCriteriaQuery<R>) baseQuery;
+	}
+
 	public CriteriaDefinition(EntityManagerFactory factory, Class<R> resultType) {
 		super( factory.getCriteriaBuilder() );
 		query = createQuery( resultType );

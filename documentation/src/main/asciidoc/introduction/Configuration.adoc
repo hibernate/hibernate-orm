@@ -397,13 +397,14 @@ properties:
 | Configuration property name                                | Purpose
 
 | `jakarta.persistence.schema-generation.database.action`
-a| * If `drop-and-create`, first drop the schema and then export tables, sequences, and constraints
-* If `create`, export tables, sequences, and constraints, without attempting to drop them first
-* If `create-drop`, drop the schema and recreate it on `SessionFactory` startup
-Additionally, drop the schema on `SessionFactory` shutdown
+a| * If `drop-and-create`, first drop the schema, then export tables, sequences, and constraints, and then populate initial data
+* If `create`, export tables, sequences, and constraints, without attempting to drop them first, and then populate initial data
+* If `create-drop`, drop the schema and recreate it on `SessionFactory` startup;
+additionally, drop the schema on `SessionFactory` shutdown
 * If `drop`, drop the schema on `SessionFactory` shutdown
 * If `validate`, validate the database schema without changing it
-* If `update`, only export what's missing in the schema
+* If `update`, only export what's missing in the schema, and alter incorrect column types
+* If `populate`, only populate initial data
 
 | `jakarta.persistence.create-database-schemas`
 | (Optional) If `true`, automatically create schemas and catalogs
@@ -478,7 +479,7 @@ logger.jdbc-extract.level=trace
 
 ----
 
-But with this approach we miss out on the pretty highlighting.
+SQL logging respects the settings `hibernate.format_sql` and `hibernate.highlight_sql`, so we don't miss out on the pretty formatting and highlighting.
 
 [[minimizing]]
 === Minimizing repetitive mapping information

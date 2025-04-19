@@ -161,7 +161,7 @@ We're going to <<organizing-persistence,come back soon>> to the thorny question 
 
 Before we get deeper into the weeds, we'll quickly present a basic example program that will help you get started if you don't already have Hibernate integrated into your project.
 
-We begin with a simple gradle build file:
+We begin with a simple https://gradle.org[Gradle] build file:
 
 [[build-gradle]]
 [source,groovy,subs="attributes+"]
@@ -203,7 +203,7 @@ dependencies {
 
 Only the first of these dependencies is absolutely _required_ to run Hibernate.
 
-Next, we'll add a logging configuration file for log4j:
+Next, we'll add a logging configuration file for https://logging.apache.org/log4j/[log4j]:
 
 [source,properties]
 .`log4j2.properties`
@@ -212,9 +212,20 @@ rootLogger.level = info
 rootLogger.appenderRefs = console
 rootLogger.appenderRef.console.ref = console
 
+# SQL statements (set level=debug to enable)
 logger.hibernate.name = org.hibernate.SQL
 logger.hibernate.level = info
+# JDBC parameter binding (set level=trace to enable)
+logger.jdbc-bind.name=org.hibernate.orm.jdbc.bind
+logger.jdbc-bind.level=info
+# JDBC result set extraction (set level=trace to enable)
+logger.jdbc-extract.name=org.hibernate.orm.jdbc.extract
+logger.jdbc-extract.level=info
+# JDBC batching (set level=trace to enable)
+logger.batch.name=org.hibernate.orm.jdbc.batch
+logger.batch.level=info
 
+# direct log output to the console
 appender.console.name = console
 appender.console.type = Console
 appender.console.layout.type = PatternLayout
@@ -222,7 +233,7 @@ appender.console.layout.pattern = %highlight{[%p]} %m%n
 ----
 
 Now we need some Java code.
-We begin with our _entity class_:
+We begin with our <<domain-model,_entity class_>>:
 
 [[book]]
 [source,java]
@@ -251,9 +262,9 @@ class Book {
 }
 ----
 
-Finally, let's see code which configures and instantiates Hibernate and asks it to persist and query the entity.
+Finally, let's see code which <<configuration,configures>> and instantiates Hibernate and asks it to <<interacting,persist and query>> the entity.
 Don't worry if this makes no sense at all right now.
-It's the job of this Introduction to make all this crystal clear.
+It's the job of the rest of this Short Guide to make all this crystal clear.
 
 [[main-hibernate]]
 [source,java]

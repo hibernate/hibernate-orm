@@ -695,7 +695,7 @@ Hibernate features three complementary ways to write queries:
 
 :hql: {doc-user-guide-url}#query-language
 
-A full discussion of the query language would require almost as much text as the rest of this Introduction.
+A full discussion of the query language would require almost as much text as the rest of this Short Guide.
 Fortunately, HQL is already described in exhaustive (and exhausting) detail in {doc-query-language-url}[_A Guide to Hibernate Query Language_].
 It doesn't make sense to repeat that information here.
 // The query language is discussed in great detail below in <<query-language>>.

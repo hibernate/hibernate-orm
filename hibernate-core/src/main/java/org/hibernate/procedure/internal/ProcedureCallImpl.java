@@ -951,6 +951,11 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	public KeyedResultList<R> getKeyedResultList() {
+		throw new UnsupportedOperationException("getKeyedResultList() not implemented for ProcedureCall/StoredProcedureQuery");
+	}
+
+	@Override
 	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
 		throw new UnsupportedOperationException( "scroll() is not implemented for ProcedureCall/StoredProcedureQuery" );
 	}

@@ -664,4 +664,8 @@ public abstract class AbstractQuery<R>
 		throw new UnsupportedOperationException("Getting keyed result list is not supported by this query.");
 	}
 
+	@Override
+	public KeyedResultList<R> getKeyedResultList() {
+		throw new UnsupportedOperationException("Getting keyed result list is not supported by this query.");
+	}
 }

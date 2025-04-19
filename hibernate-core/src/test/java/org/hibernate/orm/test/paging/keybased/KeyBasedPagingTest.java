@@ -24,6 +24,32 @@ import static org.junit.jupiter.api.Assertions.*;
 @SessionFactory
 @DomainModel(annotatedClasses = KeyBasedPagingTest.Person.class)
 public class KeyBasedPagingTest {
+	@Test void play(SessionFactoryScope scope) {
+		scope.inTransaction(session -> {
+			for (int i = 1; i<18; i++) {
+				Person p = new Person();
+				p.dob = LocalDate.of(1970, 2, i);
+				p.ssn = i*7 + "-" + i*123;
+				p.firstName = Integer.toString(i);
+				p.lastName = Integer.toString(i);
+				session.persist(p);
+			}
+		});
+
+		scope.inTransaction(session -> {
+			var firstPage =
+					session.createSelectionQuery("from Person where dob > :dob order by ssn", Person.class )
+							.setParameter( "dob", LocalDate.of(1970, 2, 1) )
+							.setPage( Page.first( 10 ) )
+							.getKeyedResultList();
+			firstPage.getResultList().forEach(p -> System.out.println(p.ssn));
+			var secondPage =
+					session.createSelectionQuery( "from Person where dob > :dob order by ssn", Person.class )
+							.getKeyedResultList( firstPage.getNextPage() );
+			secondPage.getResultList().forEach(p -> System.out.println(p.ssn));
+		});
+	}
+
 	@Test void test(SessionFactoryScope scope) {
 		scope.inTransaction(session -> {
 			for (int i = 1; i<18; i++) {

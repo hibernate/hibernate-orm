@@ -7,6 +7,7 @@ package org.hibernate.query;
 import jakarta.persistence.criteria.Nulls;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.Incubating;
+import org.hibernate.query.criteria.JpaPath;
 
 import java.util.List;
 import java.util.Objects;
@@ -296,6 +297,16 @@ public class Order<X> {
 	 */
 	public static Order<Object[]> by(int element, SortDirection direction, Nulls nullPrecedence) {
 		return new Order<>( direction, nullPrecedence, element );
+	}
+
+	public static <R> Order<R> of(Class<R> resultType, jakarta.persistence.criteria.Order order) {
+		return new Order<>(
+				order.isAscending() ? ASCENDING : DESCENDING,
+				order.getNullPrecedence(),
+				resultType,
+				((JpaPath<?>) order.getExpression())
+						.getNavigablePath().getLocalName()
+		);
 	}
 
 	public SortDirection getDirection() {

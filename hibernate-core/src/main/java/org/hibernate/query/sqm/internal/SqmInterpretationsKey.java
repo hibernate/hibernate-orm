@@ -7,34 +7,18 @@ package org.hibernate.query.sqm.internal;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.BooleanSupplier;
 
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryInterpretationCache;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.spi.InterpretationsKeySource;
 
 
 /**
  * @author Steve Ebersole
  */
-final class SqmInterpretationsKey implements QueryInterpretationCache.Key {
-	public interface CacheabilityInfluencers {
-		boolean isQueryPlanCacheable();
-		String getQueryString();
-		Object getQueryStringCacheKey();
-		SqmStatement<?> getSqmStatement();
-		QueryOptions getQueryOptions();
-		LoadQueryInfluencers getLoadQueryInfluencers();
-		BooleanSupplier hasMultiValuedParameterBindingsChecker();
-	}
-
-	public interface InterpretationsKeySource extends CacheabilityInfluencers {
-		Class<?> getResultType();
-	}
+public final class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 
 	public static SqmInterpretationsKey createInterpretationsKey(InterpretationsKeySource keySource) {
 		if ( isCacheable ( keySource ) ) {

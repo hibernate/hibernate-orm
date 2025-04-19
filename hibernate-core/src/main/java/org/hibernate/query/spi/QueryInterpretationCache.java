@@ -10,6 +10,8 @@ import java.util.function.Supplier;
 import org.hibernate.Incubating;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
+import org.hibernate.query.sqm.internal.SqmInterpretationsKey;
+import org.hibernate.query.sqm.spi.InterpretationsKeySource;
 
 /**
  * Cache for various parts of translating or interpreting queries.
@@ -29,6 +31,11 @@ public interface QueryInterpretationCache {
 			return this;
 		}
 		String getQueryString();
+	}
+
+	// Used by Hibernate Reactive
+	static Key createInterpretationsKey(InterpretationsKeySource keySource) {
+		return SqmInterpretationsKey.createInterpretationsKey(keySource);
 	}
 
 	int getNumberOfCachedHqlInterpretations();

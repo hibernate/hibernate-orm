@@ -1596,7 +1596,7 @@ In this section we'll quickly sketch some general strategies for avoiding "quagm
   Even when everything seems to be "working", there might be a lurking <<association-fetching,N+1 selects monster>>.
 - Be careful when <<bidirectional-problem,modifying bidirectional associations>>.
   In principle, you should update _both ends_ of the association.
-  But Hibernate doesn't strictly enforce that, since there are some situations where such a rule would be too heavy-handed.
+  But Hibernate doesn't strictly enforce that, since there are situations where such a rule would be too heavy-handed.
   Whatever the case, it's up to you to maintain consistency across your model.
 - Never <<persistence-contexts,leak a persistence context>> across threads or concurrent transactions.
   Have a strategy or framework to guarantee this never happens.
@@ -1612,11 +1612,13 @@ In this section we'll quickly sketch some general strategies for avoiding "quagm
   Isolate the problem.
   Find the absolute minimum test case which reproduces the behavior, _before_ asking for help online.
   Most of the time, the mere act of isolating the problem will suggest an obvious solution.
-- Avoid frameworks and libraries that "wrap" JPA.
+- If you're new to Hibernate, avoid frameworks and libraries that "wrap" JPA.
+  You need an excellent understanding of Hibernate and JPA _first_, before introducing unnecessary additional moving parts.
   If there's any one criticism of Hibernate and ORM that sometimes _does_ ring true, it's that it takes you too far from direct control over JDBC.
   An additional layer just takes you even further.
+  If you insist you really do need this extra layer, we beg you to consider https://hibernate.org/repositories/[Hibernate Data Repositories] instead of older third-party solutions.
 - Avoid copy/pasting code from random bloggers or stackoverflow reply guys.
-  Many of the suggestions you'll find online just aren't the simplest solution, and many aren't correct for Hibernate 6.
+  Many of the suggestions you'll find online just aren't the simplest solution, and many aren't correct for Hibernate 6 and 7.
   Instead, _understand_ what you're doing; study the Javadoc of the APIs you're using; read the JPA specification; follow the advice we give in this document; go direct to the Hibernate team on Zulip.
   (Sure, we can be a bit cantankerous at times, but we _do_ always want you to be successful.)
 - Always consider other options.

@@ -349,14 +349,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public String scope() {
-		if (jakartaDataRepository) {
-			return context.addTransactionScopedAnnotation()
-					? "jakarta.transaction.TransactionScoped"
-					: "jakarta.enterprise.context.RequestScoped";
-		}
-		else {
-			return "jakarta.enterprise.context.Dependent";
-		}
+		// @TransactionScoped doesn't work here because repositories
+		// are supposed to be able to demarcate transactions, which
+		// means they should be injectable when there is no active tx
+		// @RequestScoped doesn't work because Arc folks think this
+		// scope should only be active during a HTTP request, which
+		// is simply wrong according to me, but whatever
+		// @ApplicationScoped could work in principle, but buys us
+		// nothing additional, since repositories are stateless
+		return "jakarta.enterprise.context.Dependent";
 	}
 
 	@Override

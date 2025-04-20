@@ -6,11 +6,11 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
-import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
 
@@ -22,18 +22,18 @@ import jakarta.persistence.criteria.Predicate;
  */
 public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> implements SqmTreatedAttributeJoin<O,T,S> {
 	private final SqmSetJoin<O,T> wrappedPath;
-	private final TreatableDomainType<S> treatTarget;
+	private final SqmTreatableDomainType<S> treatTarget;
 
 	public SqmTreatedSetJoin(
 			SqmSetJoin<O, T> wrappedPath,
-			TreatableDomainType<S> treatTarget,
+			SqmTreatableDomainType<S> treatTarget,
 			String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
 	public SqmTreatedSetJoin(
 				SqmSetJoin<O, T> wrappedPath,
-				TreatableDomainType<S> treatTarget,
+				SqmTreatableDomainType<S> treatTarget,
 				String alias,
 				boolean fetched) {
 		//noinspection unchecked
@@ -42,7 +42,7 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 				wrappedPath.getNavigablePath()
 						.append( CollectionPart.Nature.ELEMENT.getName() )
 						.treatAs( treatTarget.getTypeName(), alias ),
-				(SetPersistentAttribute<O, S>) wrappedPath.getAttribute(),
+				(SqmSetPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				fetched,
@@ -55,14 +55,14 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 	private SqmTreatedSetJoin(
 			NavigablePath navigablePath,
 			SqmSetJoin<O, T> wrappedPath,
-			TreatableDomainType<S> treatTarget,
+			SqmTreatableDomainType<S> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
 				navigablePath,
-				(SetPersistentAttribute<O, S>) wrappedPath.getAttribute(),
+				(SqmSetPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				fetched,
@@ -108,19 +108,19 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 	}
 
 	@Override
-	public TreatableDomainType<S> getReferencedPathSource() {
+	public SqmTreatableDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
+	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( "treat(" );
-		wrappedPath.appendHqlString( hql );
+		wrappedPath.appendHqlString( hql, context );
 		hql.append( " as " );
 		hql.append( treatTarget.getTypeName() );
 		hql.append( ')' );

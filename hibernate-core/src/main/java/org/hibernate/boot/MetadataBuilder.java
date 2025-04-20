@@ -377,7 +377,7 @@ public interface MetadataBuilder {
 	 * @return {@code this} for method chaining
 	 *
 	 */
-	MetadataBuilder applyAttributeConverter(ConverterDescriptor descriptor);
+	MetadataBuilder applyAttributeConverter(ConverterDescriptor<?,?> descriptor);
 
 	/**
 	 * Adds an AttributeConverter by its Class.

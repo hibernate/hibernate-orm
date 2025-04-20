@@ -13,15 +13,15 @@ import java.util.function.Function;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.annotations.TimeZoneStorageType;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorBypassedImpl;
-import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
@@ -87,7 +87,8 @@ import static org.hibernate.mapping.MappingHelper.injectParameters;
 /**
  * @author Steve Ebersole
  */
-public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resolvable, JpaAttributeConverterCreationContext {
+public class BasicValue extends SimpleValue
+		implements JdbcTypeIndicators, Resolvable, JpaAttributeConverterCreationContext {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( BasicValue.class );
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -197,7 +198,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		this.timeZoneStorageType = timeZoneStorageType;
 	}
 
-	public void setJpaAttributeConverterDescriptor(ConverterDescriptor descriptor) {
+	public void setJpaAttributeConverterDescriptor(ConverterDescriptor<?,?> descriptor) {
 		setAttributeConverterDescriptor( descriptor );
 		super.setJpaAttributeConverterDescriptor( descriptor );
 	}
@@ -442,7 +443,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		else {
 			// determine JavaType if we can
 			final JavaType<?> javaType = determineJavaType();
-			final ConverterDescriptor converterDescriptor = getConverterDescriptor( javaType );
+			final ConverterDescriptor<?,?> converterDescriptor = getConverterDescriptor( javaType );
 			return converterDescriptor != null
 					? converterResolution( javaType, converterDescriptor )
 					: resolution( getExplicitJavaType(), javaType );
@@ -453,12 +454,15 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		return explicitJavaTypeAccess == null ? null : explicitJavaTypeAccess.apply( getTypeConfiguration() );
 	}
 
-	private ConverterDescriptor getConverterDescriptor(JavaType<?> javaType) {
-		final ConverterDescriptor converterDescriptor = getAttributeConverterDescriptor();
+	private ConverterDescriptor<?,?> getConverterDescriptor(JavaType<?> javaType) {
+		final ConverterDescriptor<?,?> converterDescriptor = getAttributeConverterDescriptor();
 		if ( isSoftDelete() && getSoftDeleteStrategy() != SoftDeleteType.TIMESTAMP ) {
 			assert converterDescriptor != null;
-			final ConverterDescriptor softDeleteConverterDescriptor =
-					getSoftDeleteConverterDescriptor( converterDescriptor, javaType);
+			@SuppressWarnings("unchecked")
+			final ConverterDescriptor<Boolean, ?> booleanConverterDescriptor =
+					(ConverterDescriptor<Boolean, ?>) converterDescriptor;
+			final ConverterDescriptor<Boolean,?> softDeleteConverterDescriptor =
+					getSoftDeleteConverterDescriptor( booleanConverterDescriptor, javaType );
 			return getSoftDeleteStrategy() == SoftDeleteType.ACTIVE
 					? new ReversedConverterDescriptor<>( softDeleteConverterDescriptor )
 					: softDeleteConverterDescriptor;
@@ -468,24 +472,24 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		}
 	}
 
-	private ConverterDescriptor getSoftDeleteConverterDescriptor(
-			ConverterDescriptor attributeConverterDescriptor, JavaType<?> javaType) {
+	private ConverterDescriptor<Boolean,?> getSoftDeleteConverterDescriptor(
+			ConverterDescriptor<Boolean,?> attributeConverterDescriptor, JavaType<?> javaType) {
 		final boolean conversionWasUnspecified =
 				SoftDelete.UnspecifiedConversion.class.equals( attributeConverterDescriptor.getAttributeConverterClass() );
 		if ( conversionWasUnspecified ) {
-			final JdbcType jdbcType = BooleanJdbcType.INSTANCE.resolveIndicatedType( this, javaType);
+			final JdbcType jdbcType = BooleanJdbcType.INSTANCE.resolveIndicatedType( this, javaType );
 			final ClassmateContext classmateContext = getBuildingContext().getBootstrapContext().getClassmateContext();
 			if ( jdbcType.isNumber() ) {
-				return new InstanceBasedConverterDescriptor( NumericBooleanConverter.INSTANCE, classmateContext );
+				return ConverterDescriptors.of( NumericBooleanConverter.INSTANCE, classmateContext );
 			}
 			else if ( jdbcType.isString() ) {
 				// here we pick 'T' / 'F' storage, though 'Y' / 'N' is equally valid - its 50/50
-				return new InstanceBasedConverterDescriptor( TrueFalseConverter.INSTANCE, classmateContext );
+				return ConverterDescriptors.of( TrueFalseConverter.INSTANCE, classmateContext );
 			}
 			else {
 				// should indicate BIT or BOOLEAN == no conversion needed
 				//		- we still create the converter to properly set up JDBC type, etc
-				return new InstanceBasedConverterDescriptor( PassThruSoftDeleteConverter.INSTANCE, classmateContext );
+				return ConverterDescriptors.of( PassThruSoftDeleteConverter.INSTANCE, classmateContext );
 			}
 		}
 		else {
@@ -493,10 +497,10 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		}
 	}
 
-	private static class ReversedConverterDescriptor<R> implements ConverterDescriptor {
-		private final ConverterDescriptor underlyingDescriptor;
+	private static class ReversedConverterDescriptor<R> implements ConverterDescriptor<Boolean,R> {
+		private final ConverterDescriptor<Boolean,R> underlyingDescriptor;
 
-		public ReversedConverterDescriptor(ConverterDescriptor underlyingDescriptor) {
+		public ReversedConverterDescriptor(ConverterDescriptor<Boolean,R> underlyingDescriptor) {
 			this.underlyingDescriptor = underlyingDescriptor;
 		}
 
@@ -523,9 +527,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 		@Override
 		public JpaAttributeConverter<Boolean,R> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
-			//noinspection unchecked
 			return new ReversedJpaAttributeConverter<>(
-					(JpaAttributeConverter<Boolean, R>) underlyingDescriptor.createJpaAttributeConverter( context ),
+					underlyingDescriptor.createJpaAttributeConverter( context ),
 					context.getJavaTypeRegistry().getDescriptor( ReversedJpaAttributeConverter.class )
 			);
 		}
@@ -545,12 +548,13 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 		@Override
 		public Boolean toDomainValue(R relationalValue) {
-			return !underlyingJpaConverter.toDomainValue( relationalValue );
+			final Boolean domainValue = underlyingJpaConverter.toDomainValue( relationalValue );
+			return domainValue==null ? null : !domainValue;
 		}
 
 		@Override
 		public R toRelationalValue(Boolean domainValue) {
-			return underlyingJpaConverter.toRelationalValue( domainValue != null ? !domainValue : null );
+			return underlyingJpaConverter.toRelationalValue( domainValue == null ? null : !domainValue );
 		}
 
 		@Override
@@ -658,7 +662,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		return getBuildingContext().getBootstrapContext().getManagedBeanRegistry();
 	}
 
-	private Resolution<?> converterResolution(JavaType<?> javaType, ConverterDescriptor attributeConverterDescriptor) {
+	private Resolution<?> converterResolution(JavaType<?> javaType, ConverterDescriptor<?,?> attributeConverterDescriptor) {
 		final NamedConverterResolution<?> converterResolution = NamedConverterResolution.from(
 				attributeConverterDescriptor,
 				explicitJavaTypeAccess,
@@ -799,7 +803,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			Function<TypeConfiguration, BasicJavaType<?>> explicitJtdAccess,
 			Function<TypeConfiguration, JdbcType> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
-			ConverterDescriptor converterDescriptor,
+			ConverterDescriptor<?,?> converterDescriptor,
 			Map<Object,Object> localTypeParams,
 			Consumer<Properties> combinedParameterConsumer,
 			JdbcTypeIndicators stdIndicators,
@@ -870,9 +874,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		if ( typeDefinition != null ) {
 			final Resolution<?> resolution = typeDefinition.resolve(
 					localTypeParams,
-					explicitMutabilityPlanAccess != null
-							? explicitMutabilityPlanAccess.apply( typeConfiguration )
-							: null,
+					getMutabilityPlan( explicitMutabilityPlanAccess, typeConfiguration ),
 					context,
 					stdIndicators
 			);
@@ -891,9 +893,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				context.getTypeDefinitionRegistry().register( implicitDefinition );
 				return implicitDefinition.resolve(
 						localTypeParams,
-						explicitMutabilityPlanAccess != null
-								? explicitMutabilityPlanAccess.apply( typeConfiguration )
-								: null,
+						getMutabilityPlan( explicitMutabilityPlanAccess, typeConfiguration ),
 						context,
 						stdIndicators
 				);
@@ -911,7 +911,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	private static <J> NamedBasicTypeResolution<J> getNamedBasicTypeResolution(
 			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
-			ConverterDescriptor converterDescriptor,
+			ConverterDescriptor<?,?> converterDescriptor,
 			JpaAttributeConverterCreationContext converterCreationContext,
 			BasicType<J> basicTypeByName,
 			TypeConfiguration typeConfiguration) {
@@ -932,9 +932,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				domainJtd,
 				basicTypeByName,
 				valueConverter,
-				explicitMutabilityPlanAccess != null
-						? (MutabilityPlan<J>) explicitMutabilityPlanAccess.apply( typeConfiguration )
-						: null
+				getMutabilityPlan( explicitMutabilityPlanAccess, typeConfiguration )
 		);
 	}
 
@@ -946,12 +944,19 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				basicType.getJavaTypeDescriptor(),
 				basicType,
 				null,
-				explicitMutabilityPlanAccess != null
-						? (MutabilityPlan<J>) explicitMutabilityPlanAccess.apply( bootstrapContext.getTypeConfiguration() )
-						: null
+				getMutabilityPlan( explicitMutabilityPlanAccess,
+						bootstrapContext.getTypeConfiguration() )
 		);
 	}
 
+	@SuppressWarnings( "unchecked" )
+	private static <J> MutabilityPlan<J> getMutabilityPlan(
+			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
+			TypeConfiguration typeConfiguration) {
+		return explicitMutabilityPlanAccess != null
+				? (MutabilityPlan<J>) explicitMutabilityPlanAccess.apply( typeConfiguration )
+				: null;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SqlTypeDescriptorIndicators

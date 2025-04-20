@@ -38,8 +38,9 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
@@ -327,9 +328,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		doTest( TimestampEntity.class, new Timestamp( zonedDateTime.toInstant().toEpochMilli() ) );
 	}
 
-	@SuppressWarnings("unchecked")
 	private <E extends TestedEntity<T>, T> void doTest(Class<E> entityType, T testedValue) {
-		this.doTest( entityType, (Class<? extends T>) testedValue.getClass(), ignored -> testedValue );
+		this.doTest( entityType, ReflectHelper.getClass( testedValue ), ignored -> testedValue );
 	}
 
 	private <E extends TestedEntity<T>, T> void doTest(Class<E> entityType, Class<? extends T> testedValueClass,

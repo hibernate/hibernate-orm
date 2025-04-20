@@ -9,10 +9,12 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
 
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -36,7 +38,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 
 	public static <T> NamedConverterResolution<T> from(
-			ConverterDescriptor converterDescriptor,
+			ConverterDescriptor<T,?> converterDescriptor,
 			Function<TypeConfiguration, BasicJavaType<?>> explicitJtdAccess,
 			Function<TypeConfiguration, JdbcType> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
@@ -66,11 +68,11 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		assert name.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX );
 		final String converterClassName = name.substring( ConverterDescriptor.TYPE_NAME_PREFIX.length() );
 
-		final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
-				context.getBootstrapContext().getClassLoaderService()
-						.classForName( converterClassName ),
-				context.getBootstrapContext().getClassmateContext()
-		);
+		final BootstrapContext bootstrapContext = context.getBootstrapContext();
+		final Class<? extends AttributeConverter<T, ?>> converterClass =
+				bootstrapContext.getClassLoaderService().classForName( converterClassName );
+		final ConverterDescriptor<T,?> converterDescriptor =
+				ConverterDescriptors.of( converterClass, bootstrapContext.getClassmateContext() );
 
 		return fromInternal(
 				explicitJtdAccess,
@@ -83,18 +85,17 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 		);
 	}
 
-	private static <T> JpaAttributeConverter<T, ?> converter(
+	private static <T, S> JpaAttributeConverter<T, S> converter(
 			JpaAttributeConverterCreationContext converterCreationContext,
-			ConverterDescriptor converterDescriptor) {
-		//noinspection unchecked
-		return (JpaAttributeConverter<T,?>) converterDescriptor.createJpaAttributeConverter(converterCreationContext);
+			ConverterDescriptor<T,S> converterDescriptor) {
+		return converterDescriptor.createJpaAttributeConverter(converterCreationContext);
 	}
 
-	private static <T> NamedConverterResolution<T> fromInternal(
+	private static <T,S> NamedConverterResolution<T> fromInternal(
 			Function<TypeConfiguration, BasicJavaType<?>> explicitJtdAccess,
 			Function<TypeConfiguration, JdbcType> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
-			JpaAttributeConverter<T,?> converter,
+			JpaAttributeConverter<T,S> converter,
 			Type resolvedJavaType,
 			JdbcTypeIndicators sqlTypeIndicators,
 			MetadataBuildingContext context) {

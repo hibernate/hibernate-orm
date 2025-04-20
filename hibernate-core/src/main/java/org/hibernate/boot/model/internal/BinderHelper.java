@@ -44,7 +44,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -323,9 +323,16 @@ public class BinderHelper {
 			MetadataBuildingContext context,
 			String syntheticPropertyName,
 			List<Property> properties) {
-		final Component embeddedComponent = persistentClassOrJoin instanceof PersistentClass
-				? new Component( context, (PersistentClass) persistentClassOrJoin )
-				: new Component( context, (Join) persistentClassOrJoin );
+		final Component embeddedComponent;
+		if ( persistentClassOrJoin instanceof PersistentClass persistentClass ) {
+			embeddedComponent = new Component( context, persistentClass );
+		}
+		else if ( persistentClassOrJoin instanceof Join join ) {
+			embeddedComponent = new Component( context, join );
+		}
+		else {
+			throw new IllegalArgumentException( "Unexpected object" );
+		}
 		embeddedComponent.setComponentClassName( embeddedComponent.getOwner().getClassName() );
 		embeddedComponent.setEmbedded( true );
 		for ( Property property : properties ) {
@@ -821,7 +828,7 @@ public class BinderHelper {
 	private static void processAnyDiscriminatorValues(
 			MemberDetails property,
 			Consumer<AnyDiscriminatorValue> consumer,
-			SourceModelBuildingContext sourceModelContext) {
+			ModelsContext sourceModelContext) {
 		final AnyDiscriminatorValues valuesAnn =
 				property.locateAnnotationUsage( AnyDiscriminatorValues.class, sourceModelContext );
 		if ( valuesAnn != null ) {
@@ -1069,7 +1076,7 @@ public class BinderHelper {
 			return null;
 		}
 		else {
-			final SourceModelBuildingContext modelsContext =
+			final ModelsContext modelsContext =
 					context.getBootstrapContext().getModelsContext();
 			try {
 				return modelsContext.getClassDetailsRegistry()

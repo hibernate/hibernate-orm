@@ -44,8 +44,8 @@ public class ColumnValueParameterList extends ArrayList<ColumnValueParameter> im
 	}
 
 	public void apply(Object parameterRef) {
-		if ( parameterRef instanceof ColumnValueParameterList ) {
-			addAll( (ColumnValueParameterList) parameterRef );
+		if ( parameterRef instanceof ColumnValueParameterList columnValueParameters ) {
+			addAll( columnValueParameters );
 		}
 		else {
 			add( (ColumnValueParameter) parameterRef );

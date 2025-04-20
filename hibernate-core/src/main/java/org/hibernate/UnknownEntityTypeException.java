@@ -6,7 +6,7 @@ package org.hibernate;
 
 /**
  * Indicates an attempt was made to refer to an unknown entity name or class.
- * <p>
+ *
  * @implNote This class extends {@link MappingException} for legacy reasons.
  * Longer term I think it makes more sense to have a different hierarchy for
  * runtime-"mapping" exceptions.

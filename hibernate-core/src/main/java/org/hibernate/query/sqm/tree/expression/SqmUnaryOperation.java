@@ -8,6 +8,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 /**
@@ -72,8 +73,8 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 		return ( operation == UnaryArithmeticOperator.UNARY_MINUS ? '-' : '+' ) + operand.asLoggableText();
 	}
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( operation == UnaryArithmeticOperator.UNARY_MINUS ? '-' : '+' );
-		operand.appendHqlString( hql );
+		operand.appendHqlString( hql, context );
 	}
 }

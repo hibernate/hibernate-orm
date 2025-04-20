@@ -15,6 +15,8 @@ import org.hibernate.boot.model.source.spi.FilterSource;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.StringHelper;
 
+import static org.hibernate.internal.util.StringHelper.isBlank;
+
 /**
  * @author Steve Ebersole
  */
@@ -39,10 +41,9 @@ public class FilterSourceImpl
 		String conditionContent = null;
 
 		for ( Serializable content : filterElement.getContent() ) {
-			if ( content instanceof String ) {
-				final String str = content.toString();
-				if ( !StringHelper.isBlank( str ) ) {
-					conditionContent = str.trim();
+			if ( content instanceof String string ) {
+				if ( !isBlank( string ) ) {
+					conditionContent = string.trim();
 				}
 			}
 			else {

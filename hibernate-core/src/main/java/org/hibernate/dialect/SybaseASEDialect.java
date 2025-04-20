@@ -20,15 +20,16 @@ import org.hibernate.dialect.aggregate.SybaseASEAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
+import org.hibernate.dialect.sql.ast.SybaseASESqlAstTranslator;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.service.ServiceRegistry;
@@ -50,6 +51,8 @@ import jakarta.persistence.TemporalType;
 import static org.hibernate.cfg.DialectSpecificSettings.SYBASE_ANSI_NULL;
 import static org.hibernate.cfg.DialectSpecificSettings.SYBASE_PAGE_SIZE;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -295,10 +298,7 @@ public class SybaseASEDialect extends SybaseDialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, TinyIntJdbcType.INSTANCE );
-		// At least the jTDS driver does not support this type code
-		if ( getDriverKind() == SybaseDriverKind.JTDS ) {
-			jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
-		}
+		jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
 	}
 
 	@Override
@@ -665,28 +665,28 @@ public class SybaseASEDialect extends SybaseDialect {
 		return EXTRACTOR;
 	}
 
-	/**
-	 * Constraint-name extractor for Sybase ASE constraint violation exceptions.
-	 * Orginally contributed by Denny Bartelt.
-	 */
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
-				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
+				final String sqlState = extractSqlState( sqle );
 				if ( sqlState != null ) {
-					switch ( sqlState ) {
-						case "S1000":
-						case "23000":
-							switch ( errorCode ) {
-								case 2601:
-									// UNIQUE VIOLATION
-									return extractUsingTemplate( "with unique index '", "'", sqle.getMessage() );
-								case 546:
-									// Foreign key violation
-									return extractUsingTemplate( "constraint name = '", "'", sqle.getMessage() );
-							}
-							break;
-					}
+					return switch ( sqlState ) {
+						case "S1000", "23000" -> switch ( extractErrorCode( sqle ) ) {
+							case 2601 ->
+								// Unique constraint violation
+									extractUsingTemplate( "with unique index '", "'", sqle.getMessage() );
+							case 546, 548 ->
+								// Foreign key or check constraint violation
+									extractUsingTemplate( "constraint name = '", "'", sqle.getMessage() );
+							case 515 ->
+								// Not null violation
+									extractUsingTemplate( "column '", "'", sqle.getMessage() );
+							case 233 ->
+								// Not null violation
+									extractUsingTemplate( "The column ", " ", sqle.getMessage() );
+							default -> null;
+						};
+						default -> null;
+					};
 				}
 				return null;
 			} );
@@ -694,59 +694,53 @@ public class SybaseASEDialect extends SybaseDialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			final String sqlState = extractSqlState( sqlException );
 			if ( sqlState != null ) {
-				switch ( sqlState ) {
-					case "HY008":
-						return new QueryTimeoutException( message, sqlException, sql );
-					case "JZ0TO":
-					case "JZ006":
-						return new LockTimeoutException( message, sqlException, sql );
-					case "S1000":
-					case "23000":
-						switch ( errorCode ) {
-							case 515:
-								// Attempt to insert NULL value into column; column does not allow nulls.
-								return new ConstraintViolationException(
-										message,
-										sqlException,
-										sql,
-										getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-								);
-							case 546:
-								// Foreign key violation
-								return new ConstraintViolationException(
-										message,
-										sqlException,
-										sql,
-										getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-								);
-							case 2601:
-								// Unique constraint violation
-								return new ConstraintViolationException(
-										message,
-										sqlException,
-										sql,
-										ConstraintViolationException.ConstraintKind.UNIQUE,
-										getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-								);
-						}
-						break;
-					case "ZZZZZ":
+				final int errorCode = extractErrorCode( sqlException );
+				return switch ( sqlState ) {
+					case "HY008" ->
+						new QueryTimeoutException( message, sqlException, sql );
+					case "JZ0TO", "JZ006" ->
+						new LockTimeoutException( message, sqlException, sql );
+					case "S1000", "23000" ->
+						convertConstraintViolation( sqlException, message, sql, errorCode );
+					case "ZZZZZ" -> {
 						if ( 515 == errorCode ) {
 							// Attempt to insert NULL value into column; column does not allow nulls.
-							return new ConstraintViolationException(
-									message,
-									sqlException,
-									sql,
-									getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-							);
+							yield new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 						}
-						break;
-				}
+						else {
+							yield null;
+						}
+					}
+					default -> null;
+				};
 			}
 			return null;
+		};
+	}
+
+	private ConstraintViolationException convertConstraintViolation(
+			SQLException sqlException, String message, String sql, int errorCode) {
+		return switch ( errorCode ) {
+			case 515, 233 ->
+				// Attempt to insert NULL value into column; column does not allow nulls.
+					new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+			case 546 ->
+				// Foreign key violation
+					new ConstraintViolationException( message, sqlException, sql, ConstraintKind.FOREIGN_KEY,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+			case 548 ->
+				// Check constraint violation
+					new ConstraintViolationException( message, sqlException, sql, ConstraintKind.CHECK,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+			case 2601 ->
+				// Unique constraint violation
+					new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+			default -> null;
 		};
 	}
 

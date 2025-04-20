@@ -13,8 +13,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.StructAttributeValues;
-import org.hibernate.dialect.StructHelper;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.build.AllowReflection;
@@ -33,7 +31,7 @@ import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ParameterizedTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.dialect.StructHelper.instantiate;
+import static org.hibernate.type.descriptor.jdbc.StructHelper.instantiate;
 
 /**
  * Descriptor for {@link Types#ARRAY ARRAY} handling.
@@ -91,7 +89,7 @@ public class ArrayJdbcType implements JdbcType {
 			//noinspection unchecked
 			elementJavaType = (JavaType<T>) ByteJavaType.INSTANCE;
 		}
-		else if (javaTypeDescriptor instanceof BasicPluralJavaType) {
+		else if ( javaTypeDescriptor instanceof BasicPluralJavaType ) {
 			//noinspection unchecked
 			elementJavaType = ((BasicPluralJavaType<T>) javaTypeDescriptor).getElementJavaType();
 		}
@@ -112,8 +110,8 @@ public class ArrayJdbcType implements JdbcType {
 	protected String getElementTypeName(JavaType<?> javaType, SharedSessionContractImplementor session) {
 		// TODO: ideally, we would have the actual size or the actual type/column accessible
 		//       this is something that we would need for supporting composite types anyway
-		if ( elementJdbcType instanceof StructJdbcType ) {
-			return ( (StructJdbcType) elementJdbcType ).getStructTypeName();
+		if ( elementJdbcType instanceof StructuredJdbcType structJdbcType ) {
+			return structJdbcType.getStructTypeName();
 		}
 		final JavaType<?> elementJavaType;
 		if ( javaType instanceof ByteArrayJavaType ) {

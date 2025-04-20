@@ -144,8 +144,8 @@ public class StandardHqlTranslator implements HqlTranslator {
 		String errorText = "";
 		if ( includeLocation ) {
 			errorText += "At " + line + ":" + charPositionInLine;
-			if ( offendingSymbol instanceof CommonToken ) {
-				String token = ( (CommonToken) offendingSymbol).getText();
+			if ( offendingSymbol instanceof CommonToken commonToken ) {
+				String token = commonToken.getText();
 				if ( token != null && !token.isEmpty() ) {
 					errorText += " and token '" + token + "'";
 				}

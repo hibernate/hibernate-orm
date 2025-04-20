@@ -21,10 +21,11 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Version;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.*;
 import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -41,7 +42,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -118,7 +119,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private MemberDetails memberDetails;
 	private AccessType accessType;
 
-	private ConverterDescriptor converterDescriptor;
+	private ConverterDescriptor<?,?> converterDescriptor;
 
 	private boolean isNationalized;
 	private boolean isLob;
@@ -150,7 +151,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		this.buildingContext = buildingContext;
 	}
 
-	protected SourceModelBuildingContext getSourceModelContext() {
+	protected ModelsContext getSourceModelContext() {
 		return buildingContext.getBootstrapContext().getModelsContext();
 	}
 
@@ -301,7 +302,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			MemberDetails value,
 			TypeDetails typeDetails,
 			String declaringClassName,
-			ConverterDescriptor converterDescriptor) {
+			@Nullable ConverterDescriptor converterDescriptor) {
 		this.memberDetails = value;
 		final boolean isArray = value.isArray();
 		if ( typeDetails == null && !isArray ) {
@@ -1157,7 +1158,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		return getMetadataCollector().getDatabase().getDialect();
 	}
 
-	private void applyJpaConverter(MemberDetails attribute, ConverterDescriptor attributeConverterDescriptor) {
+	private void applyJpaConverter(MemberDetails attribute, ConverterDescriptor<?,?> attributeConverterDescriptor) {
 		final boolean autoApply = attributeConverterDescriptor.getAutoApplyDescriptor().isAutoApplicable();
 		disallowConverter( attribute, Id.class, autoApply );
 		disallowConverter( attribute, Version.class, autoApply );
@@ -1187,10 +1188,6 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	void disallowConverter(MemberDetails attribute, Class<? extends Annotation> annotationType, boolean autoApply) {
-		// NOTE: A really faithful reading of the JPA spec is that we should
-		//       just silently ignore any auto-apply converter which matches
-		//       one of the disallowed attribute types, but for now let's be
-		//       a bit more fussy/helpful, and see how many people complain.
 		if ( attribute.hasDirectAnnotationUsage( annotationType ) ) {
 			throw new AnnotationException( "'AttributeConverter' not allowed for attribute '" + attribute.getName()
 											+ "' annotated '@" + annotationType.getName() + "'"
@@ -1373,21 +1370,21 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	 * Access to detail of basic value mappings based on {@link Kind}
 	 */
 	private interface BasicMappingAccess {
-		Class<? extends UserType<?>> customType(MemberDetails attribute, SourceModelBuildingContext context);
-		Map<String,String> customTypeParameters(MemberDetails attribute, SourceModelBuildingContext context);
+		Class<? extends UserType<?>> customType(MemberDetails attribute, ModelsContext context);
+		Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context);
 	}
 
 	private static class ValueMappingAccess implements BasicMappingAccess {
 		private static final ValueMappingAccess INSTANCE = new ValueMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Class<? extends UserType<?>> customType(MemberDetails attribute, ModelsContext context) {
 			final Type customType = attribute.locateAnnotationUsage( Type.class, context );
 			return customType == null ? null : customType.value();
 		}
 
 		@Override
-		public Map<String,String> customTypeParameters(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context) {
 			final Type customType = attribute.locateAnnotationUsage( Type.class, context );
 			return customType == null ? null : extractParameterMap( customType.parameters() );
 		}
@@ -1397,12 +1394,12 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		private static final AnyDiscriminatorMappingAccess INSTANCE = new AnyDiscriminatorMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Class<? extends UserType<?>> customType(MemberDetails attribute, ModelsContext context) {
 			return null;
 		}
 
 		@Override
-		public Map<String,String> customTypeParameters(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context) {
 			return emptyMap();
 		}
 	}
@@ -1411,12 +1408,12 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		private static final AnyKeyMappingAccess INSTANCE = new AnyKeyMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Class<? extends UserType<?>> customType(MemberDetails attribute, ModelsContext context) {
 			return null;
 		}
 
 		@Override
-		public Map<String,String> customTypeParameters(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context) {
 			return emptyMap();
 		}
 	}
@@ -1425,14 +1422,14 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		private static final MapKeyMappingAccess INSTANCE = new MapKeyMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Class<? extends UserType<?>> customType(MemberDetails attribute, ModelsContext context) {
 			final MapKeyType customType = attribute.locateAnnotationUsage( MapKeyType.class, context );
 			return customType == null ? null : customType.value();
 
 		}
 
 		@Override
-		public Map<String,String> customTypeParameters(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context) {
 			final MapKeyType customType = attribute.locateAnnotationUsage( MapKeyType.class, context );
 			return customType == null ? null : extractParameterMap( customType.parameters() );
 
@@ -1443,14 +1440,14 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		private static final CollectionIdMappingAccess INSTANCE = new CollectionIdMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Class<? extends UserType<?>> customType(MemberDetails attribute, ModelsContext context) {
 			final CollectionIdType customType = attribute.locateAnnotationUsage( CollectionIdType.class, context );
 			return customType == null ? null : customType.value();
 
 		}
 
 		@Override
-		public Map<String,String> customTypeParameters(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context) {
 			final CollectionIdType customType = attribute.locateAnnotationUsage( CollectionIdType.class, context );
 			return customType == null ? null : extractParameterMap( customType.parameters() );
 
@@ -1461,12 +1458,12 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		private static final ListIndexMappingAccess INSTANCE = new ListIndexMappingAccess();
 
 		@Override
-		public Class<? extends UserType<?>> customType(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Class<? extends UserType<?>> customType(MemberDetails attribute, ModelsContext context) {
 			return null;
 		}
 
 		@Override
-		public Map<String,String> customTypeParameters(MemberDetails attribute, SourceModelBuildingContext context) {
+		public Map<String,String> customTypeParameters(MemberDetails attribute, ModelsContext context) {
 			return emptyMap();
 		}
 	}

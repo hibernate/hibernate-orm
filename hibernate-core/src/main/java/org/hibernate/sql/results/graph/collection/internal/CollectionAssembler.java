@@ -32,11 +32,10 @@ public class CollectionAssembler implements DomainResultAssembler {
 	public Object assemble(RowProcessingState rowProcessingState) {
 		assert initializer.getData( rowProcessingState ).getState() != Initializer.State.UNINITIALIZED
 				&& initializer.getData( rowProcessingState ).getState() != Initializer.State.KEY_RESOLVED;
-		PersistentCollection<?> collectionInstance = initializer.getCollectionInstance( rowProcessingState );
-		if ( collectionInstance instanceof PersistentArrayHolder ) {
-			return collectionInstance.getValue();
-		}
-		return collectionInstance;
+		final PersistentCollection<?> collectionInstance = initializer.getCollectionInstance( rowProcessingState );
+		return collectionInstance instanceof PersistentArrayHolder
+				? collectionInstance.getValue()
+				: collectionInstance;
 	}
 
 	@Override

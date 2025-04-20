@@ -27,7 +27,7 @@ public interface ConverterAutoApplyHandler {
 	 *
 	 * @param attributeMember The HCANN descriptor for the basic attribute
 	 */
-	ConverterDescriptor findAutoApplyConverterForAttribute(MemberDetails attributeMember, MetadataBuildingContext context);
+	ConverterDescriptor<?,?> findAutoApplyConverterForAttribute(MemberDetails attributeMember, MetadataBuildingContext context);
 
 	/**
 	 * Resolve the auto-applied converter to be applied to the elements of a plural attribute
@@ -36,7 +36,7 @@ public interface ConverterAutoApplyHandler {
 	 *
 	 * @param attributeMember The HCANN descriptor for the plural attribute
 	 */
-	ConverterDescriptor findAutoApplyConverterForCollectionElement(MemberDetails attributeMember, MetadataBuildingContext context);
+	ConverterDescriptor<?,?> findAutoApplyConverterForCollectionElement(MemberDetails attributeMember, MetadataBuildingContext context);
 
 	/**
 	 * Resolve the auto-applied converter to be applied to the keys of a plural Map attribute
@@ -45,5 +45,5 @@ public interface ConverterAutoApplyHandler {
 	 *
 	 * @param attributeMember The HCANN descriptor for the Map-typed plural attribute
 	 */
-	ConverterDescriptor findAutoApplyConverterForMapKey(MemberDetails attributeMember, MetadataBuildingContext context);
+	ConverterDescriptor<?,?> findAutoApplyConverterForMapKey(MemberDetails attributeMember, MetadataBuildingContext context);
 }

@@ -93,8 +93,8 @@ public class SchemaUpdate {
 			tool.getSchemaMigrator( config ).doMigration( metadata, executionOptions, ContributableMatcher.ALL, targetDescriptor );
 		}
 		finally {
-			if ( exceptionHandler instanceof ExceptionHandlerCollectingImpl ) {
-				exceptions.addAll( ( (ExceptionHandlerCollectingImpl) exceptionHandler ).getExceptions() );
+			if ( exceptionHandler instanceof ExceptionHandlerCollectingImpl handler ) {
+				exceptions.addAll( handler.getExceptions() );
 			}
 		}
 	}

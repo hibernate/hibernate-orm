@@ -17,7 +17,7 @@ import java.util.TimeZone;
 
 import org.hibernate.Length;
 import org.hibernate.LockOptions;
-import org.hibernate.PessimisticLockException;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
@@ -32,8 +32,11 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.type.MySQLCastingJsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.MySQLCastingJsonJdbcType;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
@@ -42,6 +45,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -727,7 +731,7 @@ public class MySQLDialect extends Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new MySQLSqlAstTranslator<>( sessionFactory, statement );
+				return new MySQLSqlAstTranslator<>( sessionFactory, statement, MySQLDialect.this );
 			}
 		};
 	}
@@ -862,8 +866,8 @@ public class MySQLDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIMESTAMP:
-				if ( temporalAccessor instanceof ZonedDateTime ) {
-					temporalAccessor = ((ZonedDateTime) temporalAccessor).toOffsetDateTime();
+				if ( temporalAccessor instanceof ZonedDateTime zonedDateTime ) {
+					temporalAccessor = zonedDateTime.toOffsetDateTime();
 				}
 				appender.appendSql( "timestamp '" );
 				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone, false );
@@ -970,15 +974,12 @@ public class MySQLDialect extends Dialect {
 	}
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
-			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				final String sqlState = extractSqlState( sqle );
-				if ( sqlState != null ) {
-					return switch ( parseInt( sqlState ) ) {
-						case 23000 -> extractUsingTemplate( " for key '", "'", sqle.getMessage() );
-						default -> null;
-					};
-				}
-				return null;
+			new TemplatedViolatedConstraintNameExtractor( sqle -> switch ( sqle.getErrorCode() ) {
+				case 1062 -> extractUsingTemplate( " for key '", "'", sqle.getMessage() );
+				case 1451, 1452 -> extractUsingTemplate( " CONSTRAINT `", "`", sqle.getMessage() );
+				case 3819-> extractUsingTemplate( " constraint '", "'", sqle.getMessage() );
+				case 1048 -> extractUsingTemplate( "Column '", "'", sqle.getMessage() );
+				default -> null;
 			} );
 
 	@Override
@@ -1245,21 +1246,31 @@ public class MySQLDialect extends Dialect {
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			switch ( sqlException.getErrorCode() ) {
-				case 1205:
-				case 3572:
-					return new PessimisticLockException( message, sqlException, sql );
-				case 1207:
-				case 1206:
+				case 1205: // ER_LOCK_WAIT_TIMEOUT
+					return new LockTimeoutException( message, sqlException, sql );
+				case 3572: // ER_LOCK_NOWAIT
+				case 1207: // ER_READ_ONLY_TRANSACTION
+				case 1206: // ER_LOCK_TABLE_FULL
 					return new LockAcquisitionException( message, sqlException, sql );
+				case 3024: // ER_QUERY_TIMEOUT
+				case 1317: // ER_QUERY_INTERRUPTED
+					return new QueryTimeoutException( message, sqlException, sql );
 				case 1062:
 					// Unique constraint violation
-					return new ConstraintViolationException(
-							message,
-							sqlException,
-							sql,
-							ConstraintViolationException.ConstraintKind.UNIQUE,
-							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-					);
+					return new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+				case 1048:
+					// Null constraint violation
+					return new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+				case 1451, 1452:
+					// Foreign key constraint violation
+					return new ConstraintViolationException( message, sqlException, sql, ConstraintKind.FOREIGN_KEY,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+				case 3819:
+					// Check constraint violation
+					return new ConstraintViolationException( message, sqlException, sql, ConstraintKind.CHECK,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 			}
 
 			final String sqlState = extractSqlState( sqlException );
@@ -1542,11 +1553,11 @@ public class MySQLDialect extends Dialect {
 		registerKeyword( "key" );
 	}
 
-	boolean supportsForShare() {
+	protected boolean supportsForShare() {
 		return true;
 	}
 
-	boolean supportsAliasLocks() {
+	protected boolean supportsAliasLocks() {
 		return true;
 	}
 

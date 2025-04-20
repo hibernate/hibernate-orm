@@ -489,8 +489,8 @@ public final class ArrayHelper {
 	}
 
 	public static Object[] toObjectArray(Object array) {
-		if ( array instanceof Object[] ) {
-			return ( Object[] ) array;
+		if ( array instanceof Object[] objects ) {
+			return objects;
 		}
 		final int arrayLength = Array.getLength( array );
 		final Object[] outputArray = new Object[ arrayLength ];

@@ -21,7 +21,6 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.UserTypeJavaTypeWrapper;
@@ -101,20 +100,9 @@ public class CustomType<J>
 	}
 
 	private JavaType<J> getMappedJavaType(UserType<J> userType) {
-		if ( userType instanceof JavaType<?> ) {
-			//noinspection unchecked
-			return (JavaType<J>) userType;
-		}
-		else if ( userType instanceof JavaTypedExpressible<?> ) {
-			//noinspection unchecked
-			return ( (JavaTypedExpressible<J>) userType).getExpressibleJavaType();
-		}
-		else if ( userType instanceof UserVersionType<J> userVersionType ) {
-			return new UserTypeVersionJavaTypeWrapper<>( userVersionType );
-		}
-		else {
-			return new UserTypeJavaTypeWrapper<>( userType );
-		}
+		return userType instanceof UserVersionType<J> userVersionType
+				? new UserTypeVersionJavaTypeWrapper<>( userVersionType )
+				: new UserTypeJavaTypeWrapper<>( userType );
 	}
 
 	public UserType<J> getUserType() {

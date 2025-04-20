@@ -53,8 +53,8 @@ public class StandardTableCleaner implements Cleaner {
 		String[] truncateTableStatements = dialect.getTruncateTableStatements( tableNames );
 		String[] initStatements = tables.stream()
 				.flatMap( table -> table.getInitCommands( context ).stream() )
-				.flatMap( command -> stream( command.getInitCommands() ) )
-				.collect( toList() )
+				.flatMap( command -> stream( command.initCommands() ) )
+				.toList()
 				.toArray( ArrayHelper.EMPTY_STRING_ARRAY );
 		return join( truncateTableStatements, initStatements );
 	}

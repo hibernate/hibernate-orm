@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.MapsId;
 
@@ -19,21 +19,21 @@ public class MapsIdJpaAnnotation implements MapsId {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public MapsIdJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public MapsIdJpaAnnotation(ModelsContext modelContext) {
 		this.value = "";
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public MapsIdJpaAnnotation(MapsId annotation, SourceModelBuildingContext modelContext) {
+	public MapsIdJpaAnnotation(MapsId annotation, ModelsContext modelContext) {
 		this.value = annotation.value();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public MapsIdJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public MapsIdJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (String) attributeValues.get( "value" );
 	}
 

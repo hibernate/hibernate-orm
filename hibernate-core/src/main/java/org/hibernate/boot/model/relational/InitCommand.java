@@ -9,13 +9,8 @@ package org.hibernate.boot.model.relational;
  *
  * @author Steve Ebersole
  */
-public class InitCommand {
-	private final String[] initCommands;
-
-	public InitCommand(String... initCommands) {
-		this.initCommands = initCommands;
-	}
-
+public record InitCommand(String... initCommands) {
+	@Deprecated(since = "7")
 	public String[] getInitCommands() {
 		return initCommands;
 	}

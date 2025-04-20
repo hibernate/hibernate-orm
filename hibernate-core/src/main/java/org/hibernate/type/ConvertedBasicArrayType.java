@@ -102,8 +102,8 @@ public class ConvertedBasicArrayType<T,S,E>
 	@Override
 	public boolean equals(Object o) {
 		return o == this || super.equals( o )
-				&& o instanceof ConvertedBasicArrayType<?, ?, ?>
-				&& Objects.equals( converter, ( (ConvertedBasicArrayType<?, ?, ?>) o ).converter );
+			&& o instanceof ConvertedBasicArrayType<?, ?, ?> that
+			&& Objects.equals( converter, that.converter );
 	}
 
 	@Override

@@ -4,21 +4,16 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
-
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.TemporalType;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -42,8 +37,8 @@ import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.Query;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.criteria.internal.NamedCriteriaQueryMementoImpl;
@@ -52,6 +47,7 @@ import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
 import org.hibernate.query.internal.ParameterMetadataImpl;
+import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.spi.DelegatingQueryOptions;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
@@ -71,7 +67,6 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -83,16 +78,19 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.Parameter;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.TemporalType;
 import org.hibernate.sql.results.spi.SingleResultConsumer;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BooleanSupplier;
+
+import static java.util.Collections.emptyMap;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
@@ -121,39 +119,44 @@ public class QuerySqmImpl<R>
 		implements SqmQueryImplementor<R>, InterpretationsKeySource, DomainQueryExecutionContext {
 
 	private final String hql;
+	private Object queryStringCacheKey;
 	private SqmStatement<R> sqm;
 
-	private final ParameterMetadataImplementor parameterMetadata;
-	private final DomainParameterXref domainParameterXref;
+	private ParameterMetadataImplementor parameterMetadata;
+	private DomainParameterXref domainParameterXref;
 
-	private final QueryParameterBindings parameterBindings;
+	private QueryParameterBindings parameterBindings;
 
 	private final Class<R> resultType;
 	private final TupleMetadata tupleMetadata;
 
 	/**
-	 * Creates a Query instance from a named HQL memento
+	 * Creates a {@link org.hibernate.query.Query}
+	 * instance from a named HQL memento.
+	 * Form used from {@link NamedHqlQueryMementoImpl}.
 	 */
 	public QuerySqmImpl(
-			NamedHqlQueryMementoImpl<?> memento,
+			NamedSqmQueryMemento<?> memento,
 			Class<R> expectedResultType,
 			SharedSessionContractImplementor session) {
-		this(
-				memento.getHqlString(),
+		this( memento.getHqlString(),
 				interpretation( memento, expectedResultType, session ),
-				expectedResultType,
-				session
-		);
-		applyOptions( memento );
+				expectedResultType, session );
+		applySqmOptions( memento );
 	}
 
+	/**
+	 * Creates a {@link org.hibernate.query.Query}
+	 * instance from a named criteria query memento.
+	 * Form used from {@link NamedCriteriaQueryMementoImpl}
+	 */
 	public QuerySqmImpl(
-			NamedCriteriaQueryMementoImpl<?> memento,
+			NamedSqmQueryMemento<?> memento,
+			SqmStatement<R> statement,
 			Class<R> resultType,
 			SharedSessionContractImplementor session) {
-		this( (SqmStatement<R>) memento.getSqmStatement(), resultType, session );
-
-		applyOptions( memento );
+		this( statement, resultType, session );
+		applySqmOptions( memento );
 	}
 
 	/**
@@ -166,6 +169,7 @@ public class QuerySqmImpl<R>
 			SharedSessionContractImplementor session) {
 		super( session );
 		this.hql = hql;
+		this.queryStringCacheKey = hql;
 		this.resultType = resultType;
 
 		sqm = hqlInterpretation.getSqmStatement();
@@ -177,10 +181,8 @@ public class QuerySqmImpl<R>
 		if ( sqm instanceof SqmSelectStatement<?> ) {
 			hqlInterpretation.validateResultType( resultType );
 		}
-		else {
-			if ( resultType != null ) {
-				throw new IllegalQueryOperationException( "Result type given for a non-SELECT Query", hql, null );
-			}
+		else if ( resultType != null ) {
+			throw new IllegalQueryOperationException( "Result type given for a non-SELECT Query", hql, null );
 		}
 		setComment( hql );
 
@@ -194,13 +196,37 @@ public class QuerySqmImpl<R>
 			SqmStatement<R> criteria,
 			Class<R> expectedResultType,
 			SharedSessionContractImplementor producer) {
+		this( criteria, producer.isCriteriaCopyTreeEnabled(), expectedResultType, producer );
+	}
+
+	/**
+	 * Used for specifications.
+	 */
+	public QuerySqmImpl(
+			SqmStatement<R> criteria,
+			boolean copyAst,
+			Class<R> expectedResultType,
+			SharedSessionContractImplementor producer) {
 		super( producer );
 		hql = CRITERIA_HQL_STRING;
-		if ( producer.isCriteriaCopyTreeEnabled() ) {
+		if ( copyAst ) {
 			sqm = criteria.copy( SqmCopyContext.simpleContext() );
+			if ( producer.isCriteriaPlanCacheEnabled() ) {
+				queryStringCacheKey = sqm.toHqlString();
+				setQueryPlanCacheable( true );
+			}
+			else {
+				queryStringCacheKey = sqm;
+			}
 		}
 		else {
 			sqm = criteria;
+			if ( producer.isCriteriaPlanCacheEnabled() ) {
+				queryStringCacheKey = sqm.toHqlString();
+			}
+			else {
+				queryStringCacheKey = sqm;
+			}
 			// Cache immutable query plans by default
 			setQueryPlanCacheable( true );
 		}
@@ -237,18 +263,6 @@ public class QuerySqmImpl<R>
 		tupleMetadata = buildTupleMetadata( criteria, expectedResultType );
 	}
 
-	private <T> void bindCriteriaParameter(SqmJpaCriteriaParameterWrapper<T> sqmParameter) {
-		final JpaCriteriaParameter<T> jpaCriteriaParameter = sqmParameter.getJpaCriteriaParameter();
-		final T value = jpaCriteriaParameter.getValue();
-		// We don't set a null value, unless the type is also null which
-		// is the case when using HibernateCriteriaBuilder.value
-		if ( value != null || jpaCriteriaParameter.getNodeType() == null ) {
-			// Use the anticipated type for binding the value if possible
-			getQueryParameterBindings().getBinding( jpaCriteriaParameter )
-					.setBindValue( value, jpaCriteriaParameter.getAnticipatedType() );
-		}
-	}
-
 	@Override
 	public TupleMetadata getTupleMetadata() {
 		return tupleMetadata;
@@ -260,6 +274,11 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
+	public Object getQueryStringCacheKey() {
+		return queryStringCacheKey;
+	}
+
+	@Override
 	public SqmStatement<R> getSqmStatement() {
 		return sqm;
 	}
@@ -267,6 +286,15 @@ public class QuerySqmImpl<R>
 	@Override
 	protected void setSqmStatement(SqmSelectStatement<R> sqm) {
 		this.sqm = sqm;
+		this.queryStringCacheKey = sqm;
+
+		final QueryParameterBindings oldParameterBindings = parameterBindings;
+		domainParameterXref = DomainParameterXref.from( sqm );
+		parameterMetadata = !domainParameterXref.hasParameters()
+				? ParameterMetadataImpl.EMPTY
+				: new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
+		parameterBindings = parameterMetadata.createBindings( getSessionFactory() );
+		copyParameterBindings( oldParameterBindings );
 	}
 
 	@Override
@@ -311,7 +339,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public Supplier<Boolean> hasMultiValuedParameterBindingsChecker() {
+	public BooleanSupplier hasMultiValuedParameterBindingsChecker() {
 		return this::hasMultiValuedParameterBindings;
 	}
 
@@ -638,9 +666,10 @@ public class QuerySqmImpl<R>
 
 	protected boolean hasIdentifierAssigned(SqmInsertStatement<?> sqmInsert, EntityPersister entityDescriptor) {
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-		final String partName = identifierMapping instanceof SingleAttributeIdentifierMapping
-				? identifierMapping.getAttributeName()
-				: EntityIdentifierMapping.ID_ROLE_NAME;
+		final String partName =
+				identifierMapping instanceof SingleAttributeIdentifierMapping
+						? identifierMapping.getAttributeName()
+						: EntityIdentifierMapping.ID_ROLE_NAME;
 		for ( SqmPath<?> insertionTargetPath : sqmInsert.getInsertionTargetPaths() ) {
 			if ( insertionTargetPath.getLhs() instanceof SqmRoot<?> ) {
 				if ( insertionTargetPath.getReferencedPathSource().getPathName().equals( partName ) ) {
@@ -810,7 +839,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public Query<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
+	public Query<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
 		super.setEntityGraph( graph, semantic );
 		return this;
 	}
@@ -882,18 +911,12 @@ public class QuerySqmImpl<R>
 	@Override
 	public NamedSqmQueryMemento<R> toMemento(String name) {
 		if ( CRITERIA_HQL_STRING.equals( getQueryString() ) ) {
-			final SqmStatement<R> sqmStatement;
-			if ( !getSession().isCriteriaCopyTreeEnabled() ) {
-				sqmStatement = getSqmStatement().copy( SqmCopyContext.simpleContext() );
-			}
-			else {
-				// the statement has already been copied
-				sqmStatement = getSqmStatement();
-			}
 			return new NamedCriteriaQueryMementoImpl<>(
 					name,
 					getResultType(),
-					sqmStatement,
+					getSession().isCriteriaCopyTreeEnabled()
+							? getSqmStatement() // the statement has already been copied
+							: getSqmStatement().copy( SqmCopyContext.simpleContext() ),
 					getQueryOptions().getLimit().getFirstRow(),
 					getQueryOptions().getLimit().getMaxRows(),
 					isCacheable(),
@@ -905,62 +928,66 @@ public class QuerySqmImpl<R>
 					getTimeout(),
 					getFetchSize(),
 					getComment(),
-					Collections.emptyMap(),
+					emptyMap(),
 					getHints()
 			);
 		}
-
-		return new NamedHqlQueryMementoImpl<>(
-				name,
-				getResultType(),
-				getQueryString(),
-				getQueryOptions().getLimit().getFirstRow(),
-				getQueryOptions().getLimit().getMaxRows(),
-				isCacheable(),
-				getCacheRegion(),
-				getCacheMode(),
-				getQueryOptions().getFlushMode(),
-				isReadOnly(),
-				getLockOptions(),
-				getTimeout(),
-				getFetchSize(),
-				getComment(),
-				Collections.emptyMap(),
-				getHints()
-		);
+		else {
+			return new NamedHqlQueryMementoImpl<>(
+					name,
+					getResultType(),
+					getQueryString(),
+					getQueryOptions().getLimit().getFirstRow(),
+					getQueryOptions().getLimit().getMaxRows(),
+					isCacheable(),
+					getCacheRegion(),
+					getCacheMode(),
+					getQueryOptions().getFlushMode(),
+					isReadOnly(),
+					getLockOptions(),
+					getTimeout(),
+					getFetchSize(),
+					getComment(),
+					emptyMap(),
+					getHints()
+			);
+		}
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// unwrap
 
-	@SuppressWarnings("unchecked")
-	public <T> T unwrap(Class<T> cls) {
-		if ( cls.isInstance( this ) ) {
-			return (T) this;
+	public <T> T unwrap(Class<T> type) {
+		if ( type.isInstance( this ) ) {
+			return type.cast( this );
 		}
 
-		if ( cls.isInstance( parameterMetadata ) ) {
-			return (T) parameterMetadata;
+		if ( type.isInstance( parameterMetadata ) ) {
+			return type.cast( parameterMetadata );
 		}
 
-		if ( cls.isInstance( parameterBindings ) ) {
-			return (T) parameterBindings;
+		if ( type.isInstance( parameterBindings ) ) {
+			return type.cast( parameterBindings );
 		}
 
-		if ( cls.isInstance( sqm ) ) {
-			return (T) sqm;
+		if ( type.isInstance( sqm ) ) {
+			return type.cast( sqm );
 		}
 
-		if ( cls.isInstance( getQueryOptions() ) ) {
-			return (T) getQueryOptions();
+		if ( type.isInstance( getQueryOptions() ) ) {
+			return type.cast( getQueryOptions() );
 		}
 
-		if ( cls.isInstance( getQueryOptions().getAppliedGraph() ) ) {
-			return (T) getQueryOptions().getAppliedGraph();
+		if ( type.isInstance( getQueryOptions().getAppliedGraph() ) ) {
+			return type.cast( getQueryOptions().getAppliedGraph() );
 		}
 
-		throw new PersistenceException( "Unrecognized unwrap type [" + cls.getName() + "]" );
+		if ( type.isInstance( getSession() ) ) {
+			return type.cast( getSession() );
+		}
+
+		throw new PersistenceException( "Unrecognized unwrap type [" + type.getName() + "]" );
 	}
 
 

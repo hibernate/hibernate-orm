@@ -10,6 +10,7 @@ import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.query.criteria.JpaCastTarget;
 import org.hibernate.query.criteria.JpaXmlTableColumnNode;
 import org.hibernate.query.criteria.JpaXmlTableFunction;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -170,12 +171,12 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( "xmltable(" );
-		getArguments().get( 0 ).appendHqlString( hql );
+		getArguments().get( 0 ).appendHqlString( hql, context );
 		hql.append( " passing " );
-		getArguments().get( 1 ).appendHqlString( hql );
-		columns.appendHqlString( hql );
+		getArguments().get( 1 ).appendHqlString( hql, context );
+		columns.appendHqlString( hql, context );
 		hql.append( ')' );
 	}
 
@@ -194,7 +195,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 
 		XmlTableColumnDefinition convertToSqlAst(SqmToSqlAstConverter walker);
 
-		void appendHqlString(StringBuilder sb);
+		void appendHqlString(StringBuilder sb, SqmRenderContext context);
 
 		int populateTupleType(int offset, String[] componentNames, SqmExpressible<?>[] componentTypes);
 	}
@@ -257,7 +258,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		}
 
 		@Override
-		public void appendHqlString(StringBuilder sb) {
+		public void appendHqlString(StringBuilder sb, SqmRenderContext context) {
 			sb.append( name );
 			sb.append( " xml" );
 			if ( xpath != null ) {
@@ -266,7 +267,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 			}
 			if ( defaultExpression != null ) {
 				sb.append( " default " );
-				defaultExpression.appendHqlString( sb );
+				defaultExpression.appendHqlString( sb, context );
 			}
 		}
 
@@ -342,17 +343,17 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		}
 
 		@Override
-		public void appendHqlString(StringBuilder sb) {
+		public void appendHqlString(StringBuilder sb, SqmRenderContext context) {
 			sb.append( name );
 			sb.append( ' ' );
-			type.appendHqlString( sb );
+			type.appendHqlString( sb, context );
 			if ( xpath != null ) {
 				sb.append( " path " );
 				QuotingHelper.appendSingleQuoteEscapedString( sb, xpath );
 			}
 			if ( defaultExpression != null ) {
 				sb.append( " default " );
-				defaultExpression.appendHqlString( sb );
+				defaultExpression.appendHqlString( sb, context );
 			}
 		}
 
@@ -382,7 +383,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		}
 
 		@Override
-		public void appendHqlString(StringBuilder sb) {
+		public void appendHqlString(StringBuilder sb, SqmRenderContext context) {
 			sb.append( name );
 			sb.append( " for ordinality" );
 		}
@@ -445,11 +446,11 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		}
 
 		@Override
-		public void appendHqlString(StringBuilder hql) {
+		public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 			String separator = " columns ";
 			for ( ColumnDefinition columnDefinition : columnDefinitions ) {
 				hql.append( separator );
-				columnDefinition.appendHqlString( hql );
+				columnDefinition.appendHqlString( hql, context );
 				separator = ", ";
 			}
 		}

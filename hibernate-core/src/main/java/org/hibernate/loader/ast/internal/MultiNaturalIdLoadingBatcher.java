@@ -100,8 +100,8 @@ public class MultiNaturalIdLoadingBatcher {
 		int offset = 0;
 		int size = 0;
 
-		for ( int i = 0; i < naturalIdValues.length; i++ ) {
-			final Object bindValue = keyValueResolver.resolveKeyToLoad( naturalIdValues[ i ], session );
+		for ( Object naturalIdValue : naturalIdValues ) {
+			final Object bindValue = keyValueResolver.resolveKeyToLoad( naturalIdValue, session );
 			if ( bindValue != null ) {
 				offset += jdbcParamBindings.registerParametersForEachJdbcValue(
 						bindValue,

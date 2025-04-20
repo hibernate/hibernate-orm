@@ -151,7 +151,7 @@ pipeline {
                         }
                         archiveArtifacts artifacts: 'results/**'
                         script {
-                            failures = sh (
+                            def failures = sh (
                                 script: """ \
                                     while read line; do
                                       if [[ "\$line" = *'-error" style="display:none;">' ]]; then

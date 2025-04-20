@@ -201,18 +201,16 @@ public class CteTable {
 		if ( modelPart == modelPartToFind ) {
 			return -offset;
 		}
-		if ( modelPart instanceof EntityValuedModelPart ) {
-			final ModelPart keyPart;
-			if ( modelPart instanceof Association ) {
-				keyPart = ( (Association) modelPart ).getForeignKeyDescriptor();
-			}
-			else {
-				keyPart = ( (EntityValuedModelPart) modelPart ).getEntityMappingType().getIdentifierMapping();
-			}
+		if ( modelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
+			final ModelPart keyPart =
+					modelPart instanceof Association association
+							? association.getForeignKeyDescriptor()
+							: entityValuedModelPart.getEntityMappingType().getIdentifierMapping();
 			return determineModelPartStartIndex( offset, keyPart, modelPartToFind );
 		}
 		else if ( modelPart instanceof EmbeddableValuedModelPart embeddablePart ) {
-			final AttributeMappingsList attributeMappings = embeddablePart.getEmbeddableTypeDescriptor().getAttributeMappings();
+			final AttributeMappingsList attributeMappings =
+					embeddablePart.getEmbeddableTypeDescriptor().getAttributeMappings();
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping mapping = attributeMappings.get( i );
 				final int result = determineModelPartStartIndex( offset, mapping, modelPartToFind );

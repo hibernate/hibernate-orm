@@ -10,7 +10,8 @@ import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.spi.EventSource;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
@@ -80,7 +81,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 			List<Object> idsInBatch,
 			LockOptions lockOptions,
 			MultiIdLoadOptions loadOptions,
-			EventSource session) {
+			SharedSessionContractImplementor session) {
 		final SelectStatement sqlAst = createSelectBySingleArrayParameter(
 				getLoadable(),
 				getIdentifierMapping(),
@@ -90,9 +91,8 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				getSessionFactory()
 		);
 
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(1);
-		jdbcParameterBindings.addBinding( jdbcParameter,
-				new JdbcParameterBindingImpl( arrayJdbcMapping, toIdArray( idsInBatch ) ) );
+		final JdbcParameterBindings bindings = new JdbcParameterBindingsImpl(1);
+		bindings.addBinding( jdbcParameter, new JdbcParameterBindingImpl( arrayJdbcMapping, toIdArray( idsInBatch ) ) );
 
 		getJdbcSelectExecutor().executeQuery(
 				getSqlAstTranslatorFactory().buildSelectTranslator( getSessionFactory(), sqlAst )
@@ -102,16 +102,18 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 								return lockOptions;
 							}
 						} ),
-				jdbcParameterBindings,
+				bindings,
 				new ExecutionContextWithSubselectFetchHandler(
 						session,
 						createRegistrationHandler(
 								session.getPersistenceContext().getBatchFetchQueue(),
 								sqlAst,
 								JdbcParametersList.singleton( jdbcParameter ),
-								jdbcParameterBindings
+								bindings
 						),
-						TRUE.equals( loadOptions.getReadOnly( session ) ),
+						// stateless sessions don't have a read-only mode
+						session instanceof SessionImplementor statefulSession
+								&& TRUE.equals( loadOptions.getReadOnly( statefulSession ) ),
 						lockOptions
 				),
 				RowTransformerStandardImpl.instance(),
@@ -123,11 +125,11 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 	@Override
 	protected void loadEntitiesWithUnresolvedIds(
+			Object[] unresolvableIds,
 			MultiIdLoadOptions loadOptions,
 			LockOptions lockOptions,
-			EventSource session,
-			Object[] unresolvableIds,
-			List<E> result) {
+			List<E> results,
+			SharedSessionContractImplementor session) {
 		final SelectStatement sqlAst = createSelectBySingleArrayParameter(
 				getLoadable(),
 				getIdentifierMapping(),
@@ -154,7 +156,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				session.isDefaultReadOnly(),
 				session
 		);
-		result.addAll( databaseResults );
+		results.addAll( databaseResults );
 	}
 
 	@Override

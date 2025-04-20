@@ -4,7 +4,6 @@
  */
 package org.hibernate.dialect;
 
-import java.lang.invoke.MethodHandles;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,7 +21,6 @@ import java.util.regex.Pattern;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -37,6 +35,16 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.CockroachSqlAstTranslator;
+import org.hibernate.dialect.type.PgJdbcHelper;
+import org.hibernate.dialect.type.PostgreSQLArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.PostgreSQLCastingInetJdbcType;
+import org.hibernate.dialect.type.PostgreSQLCastingIntervalSecondJdbcType;
+import org.hibernate.dialect.type.PostgreSQLCastingJsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.PostgreSQLCastingJsonJdbcType;
+import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
+import org.hibernate.dialect.type.PostgreSQLOrdinalEnumJdbcType;
+import org.hibernate.dialect.type.PostgreSQLUUIDJdbcType;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -44,11 +52,11 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.query.SemanticException;
@@ -76,8 +84,6 @@ import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeI
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
@@ -128,7 +134,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class CockroachDialect extends Dialect {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CockroachDialect.class.getName() );
 	// KNOWN LIMITATIONS:
 	// * no support for java.sql.Clob
 
@@ -204,11 +209,6 @@ public class CockroachDialect extends Dialect {
 				databaseVersion=  new SimpleDatabaseVersion( majorVersion, minorVersion, microVersion);
 		}
 		if ( databaseVersion == null ) {
-			LOG.unableToDetermineCockroachDatabaseVersion(
-					MINIMUM_VERSION.getDatabaseMajorVersion() + "." +
-							MINIMUM_VERSION.getDatabaseMinorVersion() + "." +
-							MINIMUM_VERSION.getDatabaseMicroVersion()
-			);
 			databaseVersion = MINIMUM_VERSION;
 		}
 		return databaseVersion;
@@ -1073,21 +1073,13 @@ public class CockroachDialect extends Dialect {
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
 				final String sqlState = extractSqlState( sqle );
-				if ( sqlState == null ) {
-					return null;
-				}
-				return switch ( parseInt( sqlState ) ) {
-					// CHECK VIOLATION
-					case 23514 -> extractUsingTemplate( "violates check constraint \"", "\"", sqle.getMessage() );
-					// UNIQUE VIOLATION
-					case 23505 -> extractUsingTemplate(" violates unique constraint \"", "\"", sqle.getMessage() );
-					// FOREIGN KEY VIOLATION
-					case 23503 -> extractUsingTemplate( "violates foreign key constraint \"", "\"", sqle.getMessage() );
-					// NOT NULL VIOLATION
-					case 23502 -> extractUsingTemplate( "null value in column \"", "\" violates not-null constraint", sqle.getMessage() );
-					// TODO: RESTRICT VIOLATION
-					case 23001 -> null;
-					// ALL OTHER
+				return sqlState == null ? null : switch ( parseInt( sqlState ) ) {
+					case 23505, 23514, 23503 ->
+						// UNIQUE, CHECK, OR FOREIGN KEY VIOLATION
+							extractUsingTemplate( "constraint \"", "\"", sqle.getMessage() );
+					case 23502 ->
+						// NOT NULL VIOLATION
+							extractUsingTemplate( "column \"", "\"", sqle.getMessage() );
 					default -> null;
 				};
 			} );
@@ -1096,19 +1088,22 @@ public class CockroachDialect extends Dialect {
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final String sqlState = extractSqlState( sqlException );
-			if ( sqlState == null ) {
-				return null;
-			}
-			return switch (sqlState) {
-				// Serialization Exception
-				case "40001" -> message.contains("WriteTooOldError")
-						? new TransactionSerializationException( message, sqlException, sql )
-						: null;
-				// DEADLOCK DETECTED
-				case "40P01" -> new LockAcquisitionException( message, sqlException, sql );
-				// LOCK NOT AVAILABLE
-				case "55P03" -> new PessimisticLockException( message, sqlException, sql );
-				case "57014" -> new QueryTimeoutException( message, sqlException, sql );
+			return sqlState == null ? null : switch ( sqlState ) {
+				case "40001" ->
+						message.contains( "WriteTooOldError" ) // Serialization Exception
+							? new TransactionSerializationException( message, sqlException, sql )
+							: null;
+				case "40P01" ->
+					// DEADLOCK DETECTED
+						new LockAcquisitionException( message, sqlException, sql );
+				case "55P03" ->
+					// LOCK NOT AVAILABLE
+					//TODO: should we check that the message is "canceling statement due to lock timeout"
+					//      and return LockAcquisitionException if it is not?
+						new LockTimeoutException( message, sqlException, sql );
+				case "57014" ->
+					// QUERY CANCELLED
+						new QueryTimeoutException( message, sqlException, sql );
 				// returning null allows other delegates to operate
 				default -> null;
 			};

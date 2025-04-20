@@ -7,7 +7,7 @@ package org.hibernate.dialect.function.xml;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.dialect.XmlHelper;
+import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.BindingContext;
 import org.hibernate.query.spi.QueryEngine;
@@ -153,8 +153,9 @@ public class XmlElementFunction extends AbstractSqmSelfRenderingFunctionDescript
 			final List<Expression> content;
 
 			int index = 1;
-			if ( arguments.size() > index && arguments.get( index ) instanceof XmlAttributes ) {
-				attributes = (XmlAttributes) arguments.get( index );
+			if ( arguments.size() > index
+					&& arguments.get( index ) instanceof XmlAttributes xmlAttributes ) {
+				attributes = xmlAttributes;
 				index++;
 			}
 			else {

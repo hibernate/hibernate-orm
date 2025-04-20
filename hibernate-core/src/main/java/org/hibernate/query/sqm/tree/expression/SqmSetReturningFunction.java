@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaSetReturningFunction;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -78,17 +79,17 @@ public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode impleme
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( functionName );
 		if ( arguments.isEmpty() ) {
 			hql.append( "()" );
 			return;
 		}
 		hql.append( '(' );
-		arguments.get( 0 ).appendHqlString( hql );
+		arguments.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < arguments.size(); i++ ) {
 			hql.append( ", " );
-			arguments.get( i ).appendHqlString( hql );
+			arguments.get( i ).appendHqlString( hql, context );
 		}
 
 		hql.append( ')' );

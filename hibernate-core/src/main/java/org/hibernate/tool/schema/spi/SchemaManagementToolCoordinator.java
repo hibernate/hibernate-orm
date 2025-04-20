@@ -291,6 +291,7 @@ public class SchemaManagementToolCoordinator {
 								serviceRegistry
 						)
 				);
+				break;
 			}
 			case POPULATE: {
 				tool.getSchemaPopulator( executionOptions.getConfigurationValues() ).doPopulation(
@@ -301,6 +302,7 @@ public class SchemaManagementToolCoordinator {
 								serviceRegistry
 						)
 				);
+				break;
 			}
 		}
 	}

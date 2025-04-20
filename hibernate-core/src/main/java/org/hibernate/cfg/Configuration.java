@@ -27,13 +27,12 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
-import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
@@ -165,7 +164,7 @@ public class Configuration {
 
 	private Map<String, SqmFunctionDescriptor> customFunctionDescriptors;
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-	private HashMap<Class<?>, ConverterDescriptor> attributeConverterDescriptorsByClass;
+	private Map<Class<?>, ConverterDescriptor<?,?>> attributeConverterDescriptorsByClass;
 	private List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
 
 	// used to build SF
@@ -1052,7 +1051,8 @@ public class Configuration {
 		}
 
 		if ( attributeConverterDescriptorsByClass != null ) {
-			attributeConverterDescriptorsByClass.values().forEach( metadataBuilder::applyAttributeConverter );
+			attributeConverterDescriptorsByClass.values()
+					.forEach( metadataBuilder::applyAttributeConverter );
 		}
 
 		final Metadata metadata = metadataBuilder.build();
@@ -1158,7 +1158,7 @@ public class Configuration {
 	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass, boolean autoApply) {
-		addAttributeConverter( new ClassBasedConverterDescriptor( attributeConverterClass, autoApply, classmateContext ) );
+		addAttributeConverter( ConverterDescriptors.of( attributeConverterClass, autoApply, false, classmateContext ) );
 		return this;
 	}
 
@@ -1169,8 +1169,8 @@ public class Configuration {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass) {
-		addAttributeConverter( new ClassBasedConverterDescriptor( attributeConverterClass, classmateContext ) );
+	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?, ?>> attributeConverterClass) {
+		addAttributeConverter( ConverterDescriptors.of( attributeConverterClass, classmateContext ) );
 		return this;
 	}
 
@@ -1184,7 +1184,7 @@ public class Configuration {
 	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAttributeConverter(AttributeConverter<?,?> attributeConverter) {
-		addAttributeConverter( new InstanceBasedConverterDescriptor( attributeConverter, classmateContext ) );
+		addAttributeConverter( ConverterDescriptors.of( attributeConverter, classmateContext ) );
 		return this;
 	}
 
@@ -1201,7 +1201,7 @@ public class Configuration {
 	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply) {
-		addAttributeConverter( new InstanceBasedConverterDescriptor( attributeConverter, autoApply, classmateContext ) );
+		addAttributeConverter( ConverterDescriptors.of( attributeConverter, autoApply, classmateContext ) );
 		return this;
 	}
 
@@ -1212,7 +1212,7 @@ public class Configuration {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	public Configuration addAttributeConverter(ConverterDescriptor converterDescriptor) {
+	public Configuration addAttributeConverter(ConverterDescriptor<?,?> converterDescriptor) {
 		if ( attributeConverterDescriptorsByClass == null ) {
 			attributeConverterDescriptorsByClass = new HashMap<>();
 		}

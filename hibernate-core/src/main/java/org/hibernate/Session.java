@@ -44,7 +44,14 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  *     {@code Session}.
  * </ul>
  * <p>
- * At any given time, an instance may be associated with at most one open session.
+ * Each persistent instance has a <em>persistent identity</em> determined by its type
+ * and identifier value. There may be at most one persistent instance with a given
+ * persistent identity associated with a given session. A persistent identity is
+ * assigned when an {@linkplain #persist(Object) instance is made persistent}.
+ * <p>
+ * An instance of an entity class may be associated with at most one open session.
+ * Distinct sessions represent state with the same persistent identity using distinct
+ * persistent instances of the mapped entity class.
  * <p>
  * Any instance returned by {@link #get(Class, Object)}, {@link #find(Class, Object)},
  * or by a query is persistent. A persistent instance might hold references to other
@@ -59,8 +66,8 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * <p>
  * A transient instance may be made persistent by calling {@link #persist(Object)}.
  * A persistent instance may be made detached by calling {@link #detach(Object)}.
- * A persistent instance may be marked for removal, and eventually made transient, by
- * calling {@link #remove(Object)}.
+ * A persistent instance may be marked for removal, and eventually made transient,
+ * by calling {@link #remove(Object)}.
  * <p>
  * Persistent instances are held in a managed state by the persistence context. Any
  * change to the state of a persistent instance is automatically detected and eventually
@@ -588,7 +595,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @see #byMultipleIds(Class)
 	 * @since 7.0
 	 */
-	<E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options);
+	<E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options);
 
 	/**
 	 * Read the persistent state associated with the given identifier into the given

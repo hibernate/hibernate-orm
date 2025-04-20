@@ -535,9 +535,6 @@ public class MapBinder extends CollectionBinder {
 		else if ( selectable instanceof Formula formula ) {
 			targetValue.addFormula( new Formula( formula.getFormula() ) );
 		}
-		else {
-			throw new AssertionFailure( "Unknown element in column iterator: " + selectable.getClass() );
-		}
 	}
 
 	private Component createIndexComponent(Collection collection, PersistentClass associatedClass, Component component) {

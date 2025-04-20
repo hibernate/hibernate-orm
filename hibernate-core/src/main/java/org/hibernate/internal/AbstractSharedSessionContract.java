@@ -4,24 +4,16 @@
  */
 package org.hibernate.internal;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serial;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.TimeZone;
-import java.util.UUID;
-import java.util.function.Function;
-
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.TypedQueryReference;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Filter;
-import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
@@ -49,6 +41,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -102,20 +95,24 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
-
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.TransactionRequiredException;
-import jakarta.persistence.TypedQueryReference;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serial;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.TimeZone;
+import java.util.UUID;
+import java.util.function.Function;
+
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.getFlushModeType;
 import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
 
 /**
@@ -161,11 +158,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private final TimeZone jdbcTimeZone;
 
 	// mutable state
-	private FlushMode flushMode;
 	private CacheMode cacheMode;
 	private Integer jdbcBatchSize;
 
 	private boolean criteriaCopyTreeEnabled;
+	private boolean criteriaPlanCacheEnabled;
 
 	private boolean nativeJdbcParametersIgnored;
 
@@ -185,7 +182,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		this.jdbcServices = factory.getJdbcServices();
 
 		cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
-		flushMode = options.getInitialSessionFlushMode();
 		tenantIdentifier = getTenantId( factoryOptions, options );
 		interceptor = interpret( options.getInterceptor() );
 		jdbcTimeZone = options.getJdbcTimeZone();
@@ -193,6 +189,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 
 		setCriteriaCopyTreeEnabled( factoryOptions.isCriteriaCopyTreeEnabled() );
+		setCriteriaPlanCacheEnabled( factoryOptions.isCriteriaPlanCacheEnabled() );
 		setNativeJdbcParametersIgnored( factoryOptions.getNativeJdbcParametersIgnored() );
 		setCacheMode( factoryOptions.getInitialSessionCacheMode() );
 
@@ -295,14 +292,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private static SessionEventListenerManager createSessionEventsManager(
 			SessionFactoryOptions factoryOptions, SessionCreationOptions options) {
 		final List<SessionEventListener> customListeners = options.getCustomSessionEventListener();
-		if ( customListeners == null ) {
-			final SessionEventListener[] baseline =
-					factoryOptions.getBaselineSessionEventsListenerBuilder().buildBaseline();
-			return new SessionEventListenerManagerImpl( baseline );
-		}
-		else {
-			return new SessionEventListenerManagerImpl( customListeners );
-		}
+		return customListeners == null
+				? new SessionEventListenerManagerImpl( factoryOptions.buildSessionEventListeners() )
+				: new SessionEventListenerManagerImpl( customListeners );
 	}
 
 	/**
@@ -767,22 +759,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public FlushModeType getFlushMode() {
-		checkOpen();
-		return getFlushModeType( flushMode );
-	}
-
-	@Override
-	public void setHibernateFlushMode(FlushMode flushMode) {
-		this.flushMode = flushMode;
-	}
-
-	@Override
-	public FlushMode getHibernateFlushMode() {
-		return flushMode;
-	}
-
-	@Override
 	public CacheMode getCacheMode() {
 		return cacheMode;
 	}
@@ -800,6 +776,16 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public boolean isCriteriaCopyTreeEnabled() {
 		return criteriaCopyTreeEnabled;
+	}
+
+	@Override
+	public boolean isCriteriaPlanCacheEnabled() {
+		return criteriaPlanCacheEnabled;
+	}
+
+	@Override
+	public void setCriteriaPlanCacheEnabled(boolean criteriaPlanCacheEnabled) {
+		this.criteriaPlanCacheEnabled = criteriaPlanCacheEnabled;
 	}
 
 	@Override
@@ -875,6 +861,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> expectedResultType) {
 		return interpretAndCreateSelectionQuery( hqlString, expectedResultType );
+	}
+
+	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
+		final RootGraph<R> rootGraph = (RootGraph<R>) resultGraph;
+		return interpretAndCreateSelectionQuery( hqlString, rootGraph.getGraphedType().getJavaType() )
+				.setEntityGraph( resultGraph, GraphSemantic.LOAD );
 	}
 
 
@@ -983,15 +976,18 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	final EntityPersister requireEntityPersister(Class<?> entityClass) {
+	// Hibernate Reactive may need to use this
+	protected final EntityPersister requireEntityPersister(Class<?> entityClass) {
 		return getMappingMetamodel().getEntityDescriptor( entityClass );
 	}
 
-	final EntityPersister requireEntityPersister(String entityName) {
+	// Hibernate Reactive may need to use this
+	protected final EntityPersister requireEntityPersister(String entityName) {
 		return getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
-	final CollectionPersister requireCollectionPersister(String roleName) {
+	// Hibernate Reactive may need to use this
+	protected final CollectionPersister requireCollectionPersister(String roleName) {
 		return getMappingMetamodel().getCollectionDescriptor( roleName );
 	}
 
@@ -1633,9 +1629,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		jdbcServices = factory.getJdbcServices();
 
 		//TODO: this isn't quite right, see createSessionEventsManager()
-		final SessionEventListener[] baseline =
-				factoryOptions.getBaselineSessionEventsListenerBuilder()
-						.buildBaseline();
+		final SessionEventListener[] baseline = factoryOptions.buildSessionEventListeners();
 		sessionEventsManager = new SessionEventListenerManagerImpl( baseline );
 
 		jdbcSessionContext = createJdbcSessionContext( (StatementInspector) ois.readObject() );

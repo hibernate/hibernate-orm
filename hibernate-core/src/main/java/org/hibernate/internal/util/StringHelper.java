@@ -813,15 +813,15 @@ public final class StringHelper {
 		}
 	}
 
-	public static String nullIfEmpty(@Nullable String value) {
+	public static @Nullable String nullIfEmpty(@Nullable String value) {
 		return isEmpty( value ) ? null : value;
 	}
 
-	public static String nullIfBlank(@Nullable String value) {
+	public static @Nullable String nullIfBlank(@Nullable String value) {
 		return isBlank( value ) ? null : value;
 	}
 
-	public static String subStringNullIfEmpty(String value, Character startChar) {
+	public static @Nullable String subStringNullIfEmpty(String value, Character startChar) {
 		if ( isEmpty( value ) ) {
 			return null;
 		}
@@ -831,7 +831,7 @@ public final class StringHelper {
 		}
 	}
 
-	public static String[] splitAtCommas(String incomingString) {
+	public static String[] splitAtCommas(@Nullable String incomingString) {
 		return incomingString==null || incomingString.isBlank()
 				? EMPTY_STRINGS
 				: COMMA_SEPARATED_PATTERN.split( incomingString );

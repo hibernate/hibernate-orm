@@ -65,7 +65,7 @@ public class PostgreSQLJsonArrayInsertFunction extends AbstractJsonArrayInsertFu
 			separator = ',';
 		}
 		sqlAppender.appendSql( "]::text[]," );
-		if ( value instanceof Literal && ( (Literal) value ).getLiteralValue() == null ) {
+		if ( value instanceof Literal literal && literal.getLiteralValue() == null ) {
 			sqlAppender.appendSql( "null::jsonb" );
 		}
 		else {

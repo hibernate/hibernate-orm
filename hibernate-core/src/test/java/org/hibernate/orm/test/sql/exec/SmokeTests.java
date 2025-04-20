@@ -22,7 +22,6 @@ import jakarta.persistence.Table;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.Query;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -99,7 +98,7 @@ public class SmokeTests {
 	public void testHqlSelectEntityBasicAttribute(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<String> query = session.createQuery(
+					final Query<String> query = session.createQuery(
 							"select e.name from SimpleEntity e",
 							String.class
 					);
@@ -114,7 +113,7 @@ public class SmokeTests {
 	public void testHqlSelectConvertedAttribute(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<Gender> query = session.createQuery(
+					final Query<Gender> query = session.createQuery(
 							"select e.gender from SimpleEntity e",
 							Gender.class
 					);
@@ -129,7 +128,7 @@ public class SmokeTests {
 	public void testHqlSelectRootEntity(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<SimpleEntity> query = session.createQuery(
+					final Query<SimpleEntity> query = session.createQuery(
 							"select e from SimpleEntity e",
 							SimpleEntity.class
 					);
@@ -151,7 +150,7 @@ public class SmokeTests {
 	public void testHqlSelectEmbeddedAttribute(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<Component> query = session.createQuery(
+					final Query<Component> query = session.createQuery(
 							"select e.component from SimpleEntity e",
 							Component.class
 					);
@@ -167,7 +166,7 @@ public class SmokeTests {
 	public void testHqlSelectEmbeddableSubAttribute(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<String> query = session.createQuery(
+					final Query<String> query = session.createQuery(
 							"select e.component.attribute1 from SimpleEntity e",
 							String.class
 					);
@@ -181,7 +180,7 @@ public class SmokeTests {
 	public void testHqlSelectLiteral(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<String> query = session.createQuery(
+					final Query<String> query = session.createQuery(
 							"select 'items' from SimpleEntity e",
 							String.class
 					);
@@ -195,7 +194,7 @@ public class SmokeTests {
 	public void testHqlSelectParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<String> query = session.createQuery(
+					final Query<String> query = session.createQuery(
 							"select cast(:param as String) from SimpleEntity e",
 							String.class
 					);
@@ -209,7 +208,7 @@ public class SmokeTests {
 	public void testHqlBasicParameterUsage(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<Component> query = session.createQuery(
+					final Query<Component> query = session.createQuery(
 							"select e.component from SimpleEntity e where e.component.attribute1 = :param",
 							Component.class
 					);
@@ -276,7 +275,7 @@ public class SmokeTests {
 		scope.inTransaction(
 				session -> {
 					// create a Query ref that we will use to query for each entity individually through a parameter
-					final QueryImplementor<Component> query = session.createQuery(
+					final Query<Component> query = session.createQuery(
 							"select e.component from SimpleEntity e where e.component.attribute1 = :param",
 							Component.class
 					);
@@ -341,19 +340,19 @@ public class SmokeTests {
 	public String executeQueriesForConcurrency(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<Component> query1 = session.createQuery(
+					final Query<Component> query1 = session.createQuery(
 							"select e.component from SimpleEntity e where e.component.attribute1 = :param",
 							Component.class
 					);
 					query1.setParameter( "param", "a1" ).list();
 
-					final QueryImplementor<Component> query2 = session.createQuery(
+					final Query<Component> query2 = session.createQuery(
 							"select e.component from SimpleEntity e where e.component.attribute1 = :param",
 							Component.class
 					);
 					query2.setParameter( "param", "b1" ).list();
 
-					final QueryImplementor<Component> query3 = session.createQuery(
+					final Query<Component> query3 = session.createQuery(
 							"select e from SimpleEntity e where e.component.attribute1 = :param",
 							Component.class
 					);

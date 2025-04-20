@@ -6,7 +6,7 @@ package org.hibernate.orm.test.stats;
 
 import java.util.List;
 
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -38,7 +38,7 @@ public class CriteriaStatTest extends BaseCoreFunctionalTestCase  {
 			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 			CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery( Employee.class );
 			criteriaQuery.from( Employee.class );
-			QueryImplementor<Employee> query = session.createQuery( criteriaQuery );
+			Query<Employee> query = session.createQuery( criteriaQuery );
 
 			List<Employee> employees = query.getResultList();
 			assertThat( employees ).isEmpty();

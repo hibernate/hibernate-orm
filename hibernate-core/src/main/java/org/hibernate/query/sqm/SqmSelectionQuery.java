@@ -15,7 +15,9 @@ import org.hibernate.FlushMode;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.SelectionQuery;
+import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.SqmQuery;
 
 import jakarta.persistence.Parameter;
@@ -163,4 +165,10 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 
 	@Override
 	SqmSelectionQuery<R> setReadOnly(boolean readOnly);
+
+	@Override
+	<T> SqmSelectionQuery<T> setTupleTransformer(TupleTransformer<T> transformer);
+
+	@Override
+	SqmSelectionQuery<R> setResultListTransformer(ResultListTransformer<R> transformer);
 }

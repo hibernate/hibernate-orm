@@ -42,8 +42,8 @@ public enum MissingCacheStrategy {
 	}
 
 	public static MissingCacheStrategy interpretSetting(Object value) {
-		if ( value instanceof MissingCacheStrategy ) {
-			return (MissingCacheStrategy) value;
+		if ( value instanceof MissingCacheStrategy missingCacheStrategy ) {
+			return missingCacheStrategy;
 		}
 
 		final String externalRepresentation = value == null ? null : value.toString().trim();

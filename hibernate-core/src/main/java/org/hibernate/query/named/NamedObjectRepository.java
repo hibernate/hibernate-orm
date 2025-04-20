@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
@@ -35,6 +36,8 @@ public interface NamedObjectRepository {
 	<R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType);
 
 	void registerNamedQuery(String name, Query query);
+
+	<R> TypedQueryReference<R> registerNamedQuery(String name, TypedQuery<R> query);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named SQM Memento
@@ -84,7 +87,7 @@ public interface NamedObjectRepository {
 	/**
 	 * Resolve the named query with the given name.
 	 */
-	NamedQueryMemento resolve(
+	NamedQueryMemento<?> resolve(
 			SessionFactoryImplementor sessionFactory,
 			MetadataImplementor bootMetamodel,
 			String registrationName);

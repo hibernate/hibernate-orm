@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -26,7 +27,8 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 		//noinspection unchecked
 		super(
 				navigablePath,
-				( (PluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource() ).getElementPathSource(),
+				( (SqmPluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource() )
+						.getElementPathSource(),
 				pluralDomainPath,
 				pluralDomainPath.nodeBuilder()
 		);
@@ -83,7 +85,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		if ( getReferencedPathSource().getSqmPathType() instanceof EntityDomainType ) {
+		if ( getReferencedPathSource().getPathType() instanceof EntityDomainType ) {
 			return getTreatedPath( treatTarget );
 		}
 
@@ -91,10 +93,10 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		getLhs().appendHqlString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		getLhs().appendHqlString( hql, context );
 		hql.append( '[' );
-		selectorExpression.appendHqlString( hql );
+		selectorExpression.appendHqlString( hql, context );
 		hql.append( ']' );
 	}
 }

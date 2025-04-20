@@ -11,7 +11,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.spi.EventSource;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -69,7 +69,7 @@ public abstract class AbstractSelectLockingStrategy implements LockingStrategy {
 	}
 
 	@Override
-	public void lock(Object id, Object version, Object object, int timeout, EventSource session)
+	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
 			throws StaleObjectStateException, JDBCException {
 		final String sql = determineSql( timeout );
 		final SessionFactoryImplementor factory = session.getFactory();
@@ -112,7 +112,7 @@ public abstract class AbstractSelectLockingStrategy implements LockingStrategy {
 		}
 	}
 
-	private JDBCException jdbcException(Object id, EventSource session, SQLException sqle, String sql) {
+	private JDBCException jdbcException(Object id, SharedSessionContractImplementor session, SQLException sqle, String sql) {
 		return session.getJdbcServices().getSqlExceptionHelper()
 				.convert( sqle, "could not lock: " + infoString( lockable, id, session.getFactory() ), sql );
 	}

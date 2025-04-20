@@ -43,7 +43,8 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.model.domain.TupleType;
+import org.hibernate.query.BindingContext;
+import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -91,7 +92,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Andrea Boriero
  */
 public class MappingMetamodelImpl
-		implements MappingMetamodelImplementor, JpaMetamodel, Metamodel, QueryParameterBindingTypeResolver, Serializable {
+		implements MappingMetamodelImplementor, JpaMetamodel, Metamodel, QueryParameterBindingTypeResolver, BindingContext, Serializable {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( MappingMetamodelImpl.class );
 
@@ -638,7 +639,7 @@ public class MappingMetamodelImpl
 			SqmExpressible<?> sqmExpressible,
 			Function<NavigablePath, TableGroup> tableGroupLocator) {
 		if ( sqmExpressible instanceof SqmPath<?> sqmPath ) {
-			final DomainType<?> sqmPathType = sqmPath.getResolvedModel().getSqmPathType();
+			final DomainType<?> sqmPathType = sqmPath.getResolvedModel().getPathType();
 			if ( sqmPathType instanceof MappingModelExpressible<?> mappingExpressible ) {
 				return mappingExpressible;
 			}
@@ -673,7 +674,7 @@ public class MappingMetamodelImpl
 
 		else if ( sqmExpressible instanceof AnonymousTupleSqmPathSource<?> anonymousTupleSqmPathSource ) {
 			return resolveMappingExpressible(
-					anonymousTupleSqmPathSource.getSqmPathType(),
+					anonymousTupleSqmPathSource.getPathType().resolveExpressible( this ),
 					tableGroupLocator
 			);
 		}

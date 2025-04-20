@@ -21,10 +21,12 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
+import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -70,9 +72,13 @@ public class FullyQualifiedReflectivePathTerminal<E>
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// See if it is an entity-type literal
 
-			final EntityDomainType<?> entityDescriptor = creationContext.getJpaMetamodel().findEntityType( fullPath );
+			final EntityDomainType<?> entityDescriptor =
+					creationContext.getJpaMetamodel().findEntityType( fullPath );
 			if ( entityDescriptor != null ) {
-				return new SqmLiteralEntityType<>( entityDescriptor, creationContext.getNodeBuilder() );
+				return new SqmLiteralEntityType<>(
+						(SqmEntityDomainType<?>) entityDescriptor,
+						creationContext.getNodeBuilder()
+				);
 			}
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -151,7 +157,7 @@ public class FullyQualifiedReflectivePathTerminal<E>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( getParent().getFullPath() );
 		hql.append( '.' );
 		hql.append( getLocalName() );

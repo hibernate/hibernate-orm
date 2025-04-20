@@ -25,14 +25,14 @@ public class ArrayIncludesArgumentTypeResolver extends AbstractFunctionArgumentT
 	public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
 		if ( argumentIndex == 0 ) {
 			final SqmTypedNode<?> node = arguments.get( 1 );
-			if ( node instanceof SqmExpression<?> ) {
-				return converter.determineValueMapping( (SqmExpression<?>) node );
+			if ( node instanceof SqmExpression<?> sqmExpression ) {
+				return converter.determineValueMapping( sqmExpression );
 			}
 		}
 		else if ( argumentIndex == 1 ) {
 			final SqmTypedNode<?> node = arguments.get( 0 );
-			if ( node instanceof SqmExpression<?> ) {
-				return converter.determineValueMapping( (SqmExpression<?>) node );
+			if ( node instanceof SqmExpression<?> sqmExpression ) {
+				return converter.determineValueMapping( sqmExpression );
 			}
 		}
 		return null;

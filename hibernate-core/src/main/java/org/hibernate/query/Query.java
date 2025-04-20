@@ -423,13 +423,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	QueryOptions getQueryOptions();
 
 	/**
-	 * Access to information about query parameters.
-	 *
-	 * @return information about query parameters.
-	 */
-	ParameterMetadata getParameterMetadata();
-
-	/**
 	 * Bind the given argument to a named query parameter.
 	 * <p>
 	 * If the type of the parameter cannot be inferred from the context
@@ -922,7 +915,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	Query<R> setHint(String hintName, Object value);
 
 	@Override
-	Query<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic);
+	Query<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
 
 	@Override
 	Query<R> enableFetchProfile(String profileName);

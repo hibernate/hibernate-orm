@@ -60,8 +60,8 @@ public class Helper {
 			Object scriptSourceSetting, //Reader or String URL
 			ClassLoaderService classLoaderService,
 			String charsetName ) {
-		if ( scriptSourceSetting instanceof Reader ) {
-			return new ScriptSourceInputFromReader( (Reader) scriptSourceSetting );
+		if ( scriptSourceSetting instanceof Reader reader ) {
+			return new ScriptSourceInputFromReader( reader );
 		}
 		else {
 			final String scriptSourceSettingString = scriptSourceSetting.toString();

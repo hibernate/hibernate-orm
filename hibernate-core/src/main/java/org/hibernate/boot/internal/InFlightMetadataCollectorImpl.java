@@ -22,9 +22,8 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
-import org.hibernate.boot.model.TypeDefinitionRegistryStandardImpl;
 import org.hibernate.boot.model.convert.internal.AttributeConverterManager;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterAutoApplyHandler;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterRegistry;
@@ -57,6 +56,7 @@ import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
@@ -562,27 +562,24 @@ public class InFlightMetadataCollectorImpl
 		return attributeConverterManager;
 	}
 
-	@Override
-	public void addAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
-		attributeConverterManager.addConverter(
-				new ClassBasedConverterDescriptor( converterClass, getBootstrapContext().getClassmateContext() )
-		);
+	private ClassmateContext getClassmateContext() {
+		return getBootstrapContext().getClassmateContext();
 	}
 
 	@Override
-	public void addOverridableConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
+	public void addAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
 		attributeConverterManager.addConverter(
-				new ClassBasedConverterDescriptor( converterClass, getBootstrapContext().getClassmateContext() ) {
-					@Override
-					public boolean overrideable() {
-						return true;
-					}
-				}
-		);
+				ConverterDescriptors.of( converterClass, null, false, getClassmateContext() ) );
 	}
 
 	@Override
-	public void addAttributeConverter(ConverterDescriptor descriptor) {
+	public void addOverridableConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
+		attributeConverterManager.addConverter(
+				ConverterDescriptors.of( converterClass, null, true, getClassmateContext() ) );
+	}
+
+	@Override
+	public void addAttributeConverter(ConverterDescriptor<?,?> descriptor) {
 		attributeConverterManager.addConverter( descriptor );
 	}
 
@@ -710,7 +707,7 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public void addNamedEntityGraph(NamedEntityGraphDefinition definition) {
-		final String name = definition.getRegisteredName();
+		final String name = definition.name();
 		final NamedEntityGraphDefinition previous = namedEntityGraphMap.put( name, definition );
 		if ( previous != null ) {
 			throw new DuplicateMappingException( DuplicateMappingException.Type.NAMED_ENTITY_GRAPH, name );
@@ -1203,12 +1200,10 @@ public class InFlightMetadataCollectorImpl
 				}
 			}
 
-			if ( currentTable instanceof DenormalizedTable ) {
-				currentTable = ( (DenormalizedTable) currentTable ).getIncludedTable();
-			}
-			else {
-				currentTable = null;
-			}
+			currentTable =
+					currentTable instanceof DenormalizedTable denormalizedTable
+							? denormalizedTable.getIncludedTable()
+							: null;
 		}
 
 		assert table != null;
@@ -1238,12 +1233,10 @@ public class InFlightMetadataCollectorImpl
 				}
 			}
 
-			if ( currentTable instanceof DenormalizedTable ) {
-				currentTable = ( (DenormalizedTable) currentTable ).getIncludedTable();
-			}
-			else {
-				currentTable = null;
-			}
+			currentTable =
+					currentTable instanceof DenormalizedTable denormalizedTable
+							? denormalizedTable.getIncludedTable()
+							: null;
 		}
 
 		if ( logicalName == null ) {
@@ -1836,6 +1829,11 @@ public class InFlightMetadataCollectorImpl
 			if ( sp.isInPrimaryKey() ) {
 				final String referenceEntityName = sp.getReferencedEntityName();
 				final PersistentClass classMapping = getEntityBinding( referenceEntityName );
+				if ( classMapping == null ) {
+					throw new HibernateException(
+							"Primary key referenced an unknown entity : " + referenceEntityName
+					);
+				}
 				final String dependentTable = classMapping.getTable().getQualifiedTableName().render();
 				if ( !isADependencyOf.containsKey( dependentTable ) ) {
 					isADependencyOf.put( dependentTable, new HashSet<>() );
@@ -2011,32 +2009,32 @@ public class InFlightMetadataCollectorImpl
 		}
 
 		for ( CacheRegionDefinition cacheRegionDefinition : bootstrapContext.getCacheRegionDefinitions() ) {
-			if ( cacheRegionDefinition.getRegionType() == CacheRegionDefinition.CacheRegionType.ENTITY ) {
-				final PersistentClass entityBinding = getEntityBinding( cacheRegionDefinition.getRole() );
+			if ( cacheRegionDefinition.regionType() == CacheRegionDefinition.CacheRegionType.ENTITY ) {
+				final PersistentClass entityBinding = getEntityBinding( cacheRegionDefinition.role() );
 				if ( entityBinding == null ) {
 					throw new HibernateException(
-							"Cache override referenced an unknown entity : " + cacheRegionDefinition.getRole()
+							"Cache override referenced an unknown entity : " + cacheRegionDefinition.role()
 					);
 				}
 				if ( !( entityBinding instanceof RootClass rootClass ) ) {
 					throw new HibernateException(
-							"Cache override referenced a non-root entity : " + cacheRegionDefinition.getRole()
+							"Cache override referenced a non-root entity : " + cacheRegionDefinition.role()
 					);
 				}
 				entityBinding.setCached( true );
-				rootClass.setCacheRegionName( cacheRegionDefinition.getRegion() );
-				rootClass.setCacheConcurrencyStrategy( cacheRegionDefinition.getUsage() );
-				rootClass.setLazyPropertiesCacheable( cacheRegionDefinition.isCacheLazy() );
+				rootClass.setCacheRegionName( cacheRegionDefinition.region() );
+				rootClass.setCacheConcurrencyStrategy( cacheRegionDefinition.usage() );
+				rootClass.setLazyPropertiesCacheable( cacheRegionDefinition.cacheLazy() );
 			}
-			else if ( cacheRegionDefinition.getRegionType() == CacheRegionDefinition.CacheRegionType.COLLECTION ) {
-				final Collection collectionBinding = getCollectionBinding( cacheRegionDefinition.getRole() );
+			else if ( cacheRegionDefinition.regionType() == CacheRegionDefinition.CacheRegionType.COLLECTION ) {
+				final Collection collectionBinding = getCollectionBinding( cacheRegionDefinition.role() );
 				if ( collectionBinding == null ) {
 					throw new HibernateException(
-							"Cache override referenced an unknown collection role : " + cacheRegionDefinition.getRole()
+							"Cache override referenced an unknown collection role : " + cacheRegionDefinition.role()
 					);
 				}
-				collectionBinding.setCacheRegionName( cacheRegionDefinition.getRegion() );
-				collectionBinding.setCacheConcurrencyStrategy( cacheRegionDefinition.getUsage() );
+				collectionBinding.setCacheRegionName( cacheRegionDefinition.region() );
+				collectionBinding.setCacheConcurrencyStrategy( cacheRegionDefinition.usage() );
 			}
 		}
 	}

@@ -60,16 +60,6 @@ public class EntityDeleteAction extends EntityAction {
 		this.version = version;
 		this.isCascadeDeleteEnabled = isCascadeDeleteEnabled;
 		this.state = state;
-
-		final NaturalIdMapping naturalIdMapping = persister.getNaturalIdMapping();
-		if ( naturalIdMapping != null ) {
-			naturalIdValues = session.getPersistenceContextInternal().getNaturalIdResolutions()
-					.removeLocalResolution(
-							getId(),
-							naturalIdMapping.extractNaturalIdFromEntityState( state ),
-							getPersister()
-					);
-		}
 	}
 
 	/**
@@ -124,6 +114,16 @@ public class EntityDeleteAction extends EntityAction {
 		final Object instance = getInstance();
 
 		final boolean veto = isInstanceLoaded() && preDelete();
+
+		final NaturalIdMapping naturalIdMapping = persister.getNaturalIdMapping();
+		if ( naturalIdMapping != null ) {
+			naturalIdValues = session.getPersistenceContextInternal().getNaturalIdResolutions()
+					.removeLocalResolution(
+							getId(),
+							naturalIdMapping.extractNaturalIdFromEntityState( state ),
+							getPersister()
+					);
+		}
 
 		final Object ck = lockCacheItem();
 
@@ -234,8 +234,8 @@ public class EntityDeleteAction extends EntityAction {
 	}
 
 	private static void postCommitDeleteOnUnsuccessful(PostDeleteEventListener listener, PostDeleteEvent event) {
-		if ( listener instanceof PostCommitDeleteEventListener ) {
-			( (PostCommitDeleteEventListener) listener ).onPostDeleteCommitFailed( event );
+		if ( listener instanceof PostCommitDeleteEventListener postCommitDeleteEventListener ) {
+			postCommitDeleteEventListener.onPostDeleteCommitFailed( event );
 		}
 		else {
 			//default to the legacy implementation that always fires the event

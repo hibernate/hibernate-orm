@@ -64,7 +64,7 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 		for ( int i = 0; i < valueIndexesToCacheIndexes.length; i++ ) {
 			final SqlSelection sqlSelection = sqlSelections.get( i );
 			needsResolve = needsResolve
-					|| sqlSelection instanceof SqlSelectionImpl && ( (SqlSelectionImpl) sqlSelection ).needsResolve();
+					|| sqlSelection instanceof SqlSelectionImpl selection && selection.needsResolve();
 			if ( valueIndexesToCache.get( i ) ) {
 				valueIndexesToCacheIndexes[i] = cacheIndex++;
 			}
@@ -180,8 +180,8 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 			if ( containsMultipleCollectionFetches == null ) {
 				int collectionFetchesCount = 0;
 				for ( DomainResult<?> domainResult : jdbcValuesMapping.getDomainResults() ) {
-					if ( domainResult instanceof FetchParent ) {
-						collectionFetchesCount += ( (FetchParent) domainResult ).getCollectionFetchesCount();
+					if ( domainResult instanceof FetchParent fetchParent ) {
+						collectionFetchesCount += fetchParent.getCollectionFetchesCount();
 					}
 				}
 				containsMultipleCollectionFetches = collectionFetchesCount > 1;

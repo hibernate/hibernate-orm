@@ -48,10 +48,14 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 
 import jakarta.persistence.criteria.Selection;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.query.sqm.internal.SqmUtil.determineAffectedTableName;
 
 public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T>
 		implements SqlTupleContainer, Assignable {
 	private final Expression sqlExpression;
+	private final @Nullable String affectedTableName;
 
 	public static <T> EntityValuedPathInterpretation<T> from(
 			SqmEntityValuedSimplePath<T> sqmPath,
@@ -415,13 +419,31 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			EntityValuedModelPart mapping) {
+		this( sqlExpression, navigablePath, tableGroup, mapping,
+				mapping instanceof ValuedModelPart valuedModelPart
+						? determineAffectedTableName( tableGroup, valuedModelPart )
+						: null );
+	}
+
+	public EntityValuedPathInterpretation(
+			Expression sqlExpression,
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			EntityValuedModelPart mapping,
+			@Nullable String affectedTableName) {
 		super( navigablePath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
+		this.affectedTableName = affectedTableName;
 	}
 
 	@Override
 	public Expression getSqlExpression() {
 		return sqlExpression;
+	}
+
+	@Override
+	public @Nullable String getAffectedTableName() {
+		return affectedTableName;
 	}
 
 	@Override

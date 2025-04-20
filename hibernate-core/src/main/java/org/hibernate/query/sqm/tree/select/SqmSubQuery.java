@@ -30,6 +30,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmQuery;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
@@ -646,13 +647,12 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	private void applyInferableType(Class<T> type) {
 		if ( type != null ) {
-			final EntityDomainType<T> entityDescriptor = nodeBuilder().getDomainModel().findEntityType( type );
-			if ( entityDescriptor != null ) {
-				this.expressibleType = entityDescriptor;
-			}
-			else {
-				this.expressibleType = nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type );
-			}
+			final NodeBuilder nodeBuilder = nodeBuilder();
+			final EntityDomainType<T> entityDescriptor = nodeBuilder.getDomainModel().findEntityType( type );
+			expressibleType =
+					entityDescriptor != null
+							? entityDescriptor.resolveExpressible( nodeBuilder )
+							: nodeBuilder.getTypeConfiguration().getBasicTypeForJavaType( type );
 		}
 	}
 
@@ -765,9 +765,9 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( '(' );
-		super.appendHqlString( hql );
+		super.appendHqlString( hql, context );
 		hql.append( ')' );
 	}
 

@@ -6,7 +6,7 @@ package org.hibernate.spatial.dialect.cockroachdb;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.PgJdbcHelper;
+import org.hibernate.dialect.type.PgJdbcHelper;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.FunctionKey;

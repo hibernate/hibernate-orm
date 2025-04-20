@@ -121,7 +121,7 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 	public <S extends T> SqmTreatedPluralPartJoin treatAs(EntityDomainType<S> treatTarget, String alias) {
 		final SqmTreatedPluralPartJoin treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedPluralPartJoin( this, treatTarget, alias ) );
+			return addTreat( new SqmTreatedPluralPartJoin( this, (SqmEntityDomainType<?>) treatTarget, alias ) );
 		}
 		return treat;
 	}
@@ -137,7 +137,7 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 	public <S extends T> SqmTreatedPluralPartJoin treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
 		final SqmTreatedPluralPartJoin treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedPluralPartJoin( this, treatTarget, alias ) );
+			return addTreat( new SqmTreatedPluralPartJoin( this, (SqmEntityDomainType<?>) treatTarget, alias ) );
 		}
 		return treat;
 	}

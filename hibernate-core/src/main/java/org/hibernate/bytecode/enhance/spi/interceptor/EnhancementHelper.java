@@ -10,6 +10,7 @@ import java.util.function.BiFunction;
 import org.hibernate.FlushMode;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.mapping.Collection;
@@ -39,8 +40,8 @@ public class EnhancementHelper {
 		final Value value = bootMapping.getValue();
 
 		if ( ! isEnhanced ) {
-			if ( value instanceof ToOne ) {
-				if ( ( (ToOne) value ).isUnwrapProxy() ) {
+			if ( value instanceof ToOne toOne ) {
+				if ( toOne.isUnwrapProxy() ) {
 					BytecodeInterceptorLogging.MESSAGE_LOGGER.debugf(
 							"To-one property `%s#%s` was mapped with LAZY + NO_PROXY but the class was not enhanced",
 							bootMapping.getPersistentClass().getEntityName(),
@@ -116,7 +117,7 @@ public class EnhancementHelper {
 				return true;
 			}
 
-			if ( toOne instanceof ManyToOne && ( (ManyToOne) toOne ).isIgnoreNotFound() ) {
+			if ( toOne instanceof ManyToOne manyToOne && manyToOne.isIgnoreNotFound() ) {
 				if ( unwrapExplicitlyRequested ) {
 					BytecodeInterceptorLogging.LOGGER.debugf(
 							"%s#%s specified NotFoundAction.IGNORE & LazyToOneOption.NO_PROXY; " +
@@ -139,7 +140,7 @@ public class EnhancementHelper {
 		}
 
 		return collectionsInDefaultFetchGroupEnabled && ( value instanceof Collection )
-				|| ! bootMapping.isLazy();
+			|| ! bootMapping.isLazy();
 	}
 
 	public static <T> T performWork(
@@ -281,7 +282,7 @@ public class EnhancementHelper {
 		}
 
 		final SessionFactoryImplementor sf = SessionFactoryRegistry.INSTANCE.getSessionFactory( interceptor.getSessionFactoryUuid() );
-		final SharedSessionContractImplementor session = sf.openSession();
+		final SessionImplementor session = sf.openSession();
 		session.getPersistenceContextInternal().setDefaultReadOnly( true );
 		session.setHibernateFlushMode( FlushMode.MANUAL );
 		return session;

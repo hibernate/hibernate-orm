@@ -5,7 +5,7 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import org.hibernate.annotations.NamedEntityGraph;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
@@ -21,14 +21,14 @@ public class NamedEntityGraphAnnotation implements NamedEntityGraph {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public NamedEntityGraphAnnotation(SourceModelBuildingContext modelContext) {
+	public NamedEntityGraphAnnotation(ModelsContext modelContext) {
 		name = "";
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public NamedEntityGraphAnnotation(NamedEntityGraph annotation, SourceModelBuildingContext modelContext) {
+	public NamedEntityGraphAnnotation(NamedEntityGraph annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.graph = annotation.graph();
 	}
@@ -36,7 +36,7 @@ public class NamedEntityGraphAnnotation implements NamedEntityGraph {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public NamedEntityGraphAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public NamedEntityGraphAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.graph = (String) attributeValues.get( "graph" );
 	}

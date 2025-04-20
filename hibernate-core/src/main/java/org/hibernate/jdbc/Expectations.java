@@ -55,8 +55,8 @@ public class Expectations {
 	}
 
 	static CallableStatement toCallableStatement(PreparedStatement statement) {
-		if ( statement instanceof CallableStatement ) {
-			return (CallableStatement) statement;
+		if ( statement instanceof CallableStatement callableStatement ) {
+			return callableStatement;
 		}
 		else {
 			throw new HibernateException( "Expectation.OutParameter operates exclusively on CallableStatements: "

@@ -14,6 +14,7 @@ import org.hibernate.query.criteria.JpaConflictUpdateAction;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -52,7 +53,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 		this.insertStatement = insertStatement;
 		this.excludedRoot = excludedRoot;
 		this.constraintName = constraintName;
-		this.constraintPaths = Collections.unmodifiableList( constraintPaths );
+		this.constraintPaths = constraintPaths == null ? null : Collections.unmodifiableList( constraintPaths );
 		this.updateAction = updateAction;
 	}
 
@@ -155,7 +156,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 						insertStatement.copy( context ),
 						excludedRoot.copy( context ),
 						constraintName,
-						copyOf( constraintPaths, context ),
+						constraintPaths == null ? null : copyOf( constraintPaths, context ),
 						updateAction == null ? null : updateAction.copy( context )
 				)
 		);
@@ -177,7 +178,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 		return walker.visitConflictClause( this );
 	}
 
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( " on conflict" );
 		if ( constraintName != null ) {
 			hql.append( " on constraint " );
@@ -196,7 +197,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 			hql.append( " do nothing" );
 		}
 		else {
-			updateAction.appendHqlString( hql );
+			updateAction.appendHqlString( hql, context );
 		}
 	}
 

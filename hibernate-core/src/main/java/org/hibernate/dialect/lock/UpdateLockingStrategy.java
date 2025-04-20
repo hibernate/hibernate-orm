@@ -14,7 +14,7 @@ import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.spi.EventSource;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -72,7 +72,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 			Object version,
 			Object object,
 			int timeout,
-			EventSource session) throws StaleObjectStateException, JDBCException {
+			SharedSessionContractImplementor session) throws StaleObjectStateException, JDBCException {
 		final String lockableEntityName = lockable.getEntityName();
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockableEntityName + "]" );

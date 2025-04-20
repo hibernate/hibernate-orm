@@ -8,14 +8,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Selection;
@@ -136,11 +137,11 @@ public class SqmJpaCompoundSelection<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		selectableNodes.get( 0 ).appendHqlString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		selectableNodes.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < selectableNodes.size(); i++ ) {
 			hql.append(", ");
-			selectableNodes.get( i ).appendHqlString( hql );
+			selectableNodes.get( i ).appendHqlString( hql, context );
 		}
 	}
 
@@ -150,7 +151,7 @@ public class SqmJpaCompoundSelection<T>
 	}
 
 	@Override
-	public DomainType<T> getSqmType() {
+	public SqmDomainType<T> getSqmType() {
 		return null;
 	}
 }

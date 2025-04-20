@@ -203,14 +203,14 @@ class EntityPropertyMapping {
 		}
 
 		// Create a copy of the type but with the common class
-		if ( entityType1 instanceof ManyToOneType t ) {
-			return new ManyToOneType( t, commonClass.getEntityName() );
+		if ( entityType1 instanceof ManyToOneType manyToOneType ) {
+			return new ManyToOneType( manyToOneType, commonClass.getEntityName() );
 		}
-		else if ( entityType1 instanceof SpecialOneToOneType t ) {
-			return new SpecialOneToOneType( t, commonClass.getEntityName() );
+		else if ( entityType1 instanceof SpecialOneToOneType specialOneToOneType ) {
+			return new SpecialOneToOneType( specialOneToOneType, commonClass.getEntityName() );
 		}
-		else if ( entityType1 instanceof OneToOneType t ) {
-			return new OneToOneType( t, commonClass.getEntityName() );
+		else if ( entityType1 instanceof OneToOneType oneToOneType ) {
+			return new OneToOneType( oneToOneType, commonClass.getEntityName() );
 		}
 		else {
 			throw new IllegalStateException( "Unexpected entity type: " + entityType1 );

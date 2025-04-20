@@ -23,7 +23,7 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.PostgreSQLSqlAstTranslator;
+import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -165,7 +165,7 @@ public class MultiLoadLockingTest {
 			assertNotNull(customersLoaded);
 			assertEquals(customerList.size(), customersLoaded.size());
 			customersLoaded.forEach(customer -> assertEquals(LockMode.PESSIMISTIC_READ, session.getCurrentLockMode(customer)) );
-			checkStatement( lockString );
+			checkStatement( 1, lockString );
 		} );
 		// test findMultiple
 		scope.inTransaction( session -> {
@@ -173,7 +173,7 @@ public class MultiLoadLockingTest {
 			assertNotNull(customersLoaded);
 			assertEquals(customerList.size(), customersLoaded.size());
 			customersLoaded.forEach(customer -> assertEquals(LockMode.PESSIMISTIC_READ, session.getCurrentLockMode(customer)) );
-			checkStatement( lockString );
+			checkStatement( 1, lockString );
 		} );
 		// test byMultipleNaturalId
 		scope.inTransaction( session -> {
@@ -183,7 +183,7 @@ public class MultiLoadLockingTest {
 			assertNotNull(customersLoaded);
 			assertEquals(customerList.size(), customersLoaded.size());
 			customersLoaded.forEach(customer -> assertEquals(LockMode.PESSIMISTIC_READ, session.getCurrentLockMode(customer)) );
-			checkStatement( lockString );
+			checkStatement( 1, lockString );
 		} );
 	}
 
@@ -206,7 +206,7 @@ public class MultiLoadLockingTest {
 			assertNotNull(entitiesLoaded);
 			assertEquals(entityWithAggregateIdList.size(), entitiesLoaded.size());
 			entitiesLoaded.forEach(entity -> assertEquals(LockMode.PESSIMISTIC_READ, session.getCurrentLockMode(entity)) );
-			checkStatement( lockString );
+			checkStatement( 1, lockString );
 		} );
 		// test findMultiple
 		scope.inTransaction( session -> {
@@ -220,7 +220,7 @@ public class MultiLoadLockingTest {
 			assertNotNull(entitiesLoaded);
 			assertEquals(entityWithAggregateIdList.size(), entitiesLoaded.size());
 			entitiesLoaded.forEach(entity -> assertEquals(LockMode.PESSIMISTIC_READ, session.getCurrentLockMode(entity)) );
-			checkStatement( lockString );
+			checkStatement( 1, lockString );
 		} );
 		// test byMultipleNaturalId
 		scope.inTransaction( session -> {
@@ -235,7 +235,8 @@ public class MultiLoadLockingTest {
 			assertNotNull(entitiesLoaded);
 			assertEquals(entityWithAggregateIdList.size(), entitiesLoaded.size());
 			entitiesLoaded.forEach(entity -> assertEquals(LockMode.PESSIMISTIC_READ, session.getCurrentLockMode(entity)) );
-			checkStatement( lockString );
+			// HHH-19248: multi natural-id loading checks the session (and upgrades locks) so 2 statements are expected
+			checkStatement( 2, lockString );
 		} );
 	}
 
@@ -272,7 +273,7 @@ public class MultiLoadLockingTest {
 			assertNotNull(usersLoaded);
 			assertEquals(userList.size(), usersLoaded.size());
 			usersLoaded.forEach(user -> assertEquals(LockMode.PESSIMISTIC_WRITE, session.getCurrentLockMode(user)) );
-			checkStatement( lockString );
+			checkStatement( 1, lockString );
 		} );
 		// test findMultiple
 		scope.inTransaction( session -> {
@@ -284,7 +285,7 @@ public class MultiLoadLockingTest {
 			assertNotNull(usersLoaded);
 			assertEquals(userList.size(), usersLoaded.size());
 			usersLoaded.forEach(user -> assertEquals(LockMode.PESSIMISTIC_WRITE, session.getCurrentLockMode(user)) );
-			checkStatement( lockString );
+			checkStatement( 1, lockString );
 		} );
 		// test byMultipleNaturalId
 		scope.inTransaction( session -> {
@@ -298,7 +299,8 @@ public class MultiLoadLockingTest {
 			assertNotNull(usersLoaded);
 			assertEquals(userList.size(), usersLoaded.size());
 			usersLoaded.forEach(user -> assertEquals(LockMode.PESSIMISTIC_WRITE, session.getCurrentLockMode(user)) );
-			checkStatement( lockString );
+			// HHH-19248: multi natural-id loading checks the session (and upgrades locks) so 2 statements are expected
+			checkStatement( 2,lockString );
 		} );
 	}
 
@@ -363,9 +365,11 @@ public class MultiLoadLockingTest {
 		} );
 	}
 
-	private void checkStatement(String lockString) {
-		assertEquals( 1,sqlStatementInspector.getSqlQueries().size() );
-		assertTrue( sqlStatementInspector.getSqlQueries().get( 0 ).contains( lockString ) );
+	private void checkStatement(int stmtCount, String lockString) {
+		assertEquals( stmtCount,sqlStatementInspector.getSqlQueries().size() );
+		for ( String stmt : sqlStatementInspector.getSqlQueries() ) {
+			assertTrue( stmt.contains( lockString ) );
+		}
 		sqlStatementInspector.clear();
 	}
 

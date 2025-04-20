@@ -13,7 +13,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.TimeZoneColumn;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
@@ -25,7 +25,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 
@@ -86,7 +86,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	protected abstract AttributeConversionInfo locateAttributeConversionInfo(String path);
 
 	@Override
-	public ConverterDescriptor resolveAttributeConverterDescriptor(MemberDetails attributeMember) {
+	public ConverterDescriptor<?,?> resolveAttributeConverterDescriptor(MemberDetails attributeMember, boolean autoApply) {
 		final AttributeConversionInfo info = locateAttributeConversionInfo( attributeMember );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
@@ -102,7 +102,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			}
 		}
 
-		return context.getMetadataCollector()
+		return !autoApply ? null : context.getMetadataCollector()
 				.getConverterRegistry()
 				.getAttributeConverterAutoApplyHandler()
 				.findAutoApplyConverterForAttribute( attributeMember, context );
@@ -129,13 +129,11 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		}
 	}
 
-	protected ConverterDescriptor makeAttributeConverterDescriptor(AttributeConversionInfo conversion) {
+	protected ConverterDescriptor<?,?> makeAttributeConverterDescriptor(AttributeConversionInfo conversion) {
 		try {
-			return new ClassBasedConverterDescriptor(
-					conversion.getConverterClass(),
-					false,
-					context.getBootstrapContext().getClassmateContext()
-			);
+			return ConverterDescriptors.of( conversion.getConverterClass(),
+					null, false,
+					context.getBootstrapContext().getClassmateContext() );
 		}
 		catch (Exception e) {
 			throw new AnnotationException( "Unable to create AttributeConverter instance", e );
@@ -174,7 +172,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		return context;
 	}
 
-	protected SourceModelBuildingContext getSourceModelContext() {
+	protected ModelsContext getSourceModelContext() {
 		return getContext().getBootstrapContext().getModelsContext();
 	}
 
@@ -437,7 +435,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			return result;
 		}
 
-		final SourceModelBuildingContext sourceModelContext =
+		final ModelsContext sourceModelContext =
 				context.getBootstrapContext().getModelsContext();
 		final Map<String, List<Column>> columnOverrideMap = new HashMap<>();
 
@@ -573,7 +571,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	private static Map<String, ColumnTransformer> buildColumnTransformerOverride(AnnotationTarget element, MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext = context.getBootstrapContext().getModelsContext();
+		final ModelsContext sourceModelContext = context.getBootstrapContext().getModelsContext();
 		final Map<String, ColumnTransformer> columnOverride = new HashMap<>();
 		if ( element != null ) {
 			element.forEachAnnotationUsage( ColumnTransformer.class, sourceModelContext, (usage) -> {

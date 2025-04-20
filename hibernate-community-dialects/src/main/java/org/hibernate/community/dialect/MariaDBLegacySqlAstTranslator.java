@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.MySQLSqlAstTranslator;
+import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -46,11 +46,11 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
  */
 public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	private MariaDBLegacyDialect dialect;
+	private final MariaDBLegacyDialect dialect;
 
-	public MariaDBLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public MariaDBLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, MariaDBLegacyDialect dialect) {
 		super( sessionFactory, statement );
-		this.dialect = (MariaDBLegacyDialect)super.getDialect();
+		this.dialect = dialect;
 	}
 
 	@Override
@@ -373,7 +373,7 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 
 	@Override
 	public MariaDBLegacyDialect getDialect() {
-		return this.dialect;
+		return dialect;
 	}
 
 	private boolean supportsWindowFunctions() {

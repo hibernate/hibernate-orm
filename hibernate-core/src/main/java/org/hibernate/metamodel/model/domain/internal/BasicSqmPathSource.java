@@ -5,12 +5,12 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.TerminalPathException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -35,13 +35,13 @@ public class BasicSqmPathSource<J>
 	}
 
 	@Override
-	public BasicDomainType<J> getSqmPathType() {
-		return (BasicDomainType<J>) super.getSqmPathType();
+	public String getTypeName() {
+		return super.getTypeName();
 	}
 
 	@Override
-	public DomainType<J> getSqmType() {
-		return getSqmPathType();
+	public SqmDomainType<J> getSqmType() {
+		return getPathType();
 	}
 
 	@Override

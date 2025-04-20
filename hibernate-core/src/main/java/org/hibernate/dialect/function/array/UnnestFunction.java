@@ -6,7 +6,7 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
-import org.hibernate.dialect.XmlHelper;
+import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.dialect.function.UnnestSetReturningFunctionTypeResolver;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
@@ -50,9 +50,8 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		final Expression array = (Expression) sqlAstArguments.get( 0 );
-		final @Nullable SqlTypedMapping sqlTypedMapping = array.getExpressionType() instanceof SqlTypedMapping
-				? (SqlTypedMapping) array.getExpressionType()
-				: null;
+		final @Nullable SqlTypedMapping sqlTypedMapping =
+				array.getExpressionType() instanceof SqlTypedMapping sqlTyped ? sqlTyped : null;
 		final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) array.getExpressionType().getSingleJdbcMapping();
 		final int ddlTypeCode = pluralType.getJdbcType().getDefaultSqlTypeCode();
 		if ( ddlTypeCode == SqlTypes.JSON_ARRAY ) {

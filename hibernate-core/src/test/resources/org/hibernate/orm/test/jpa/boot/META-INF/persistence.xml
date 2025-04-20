@@ -25,4 +25,9 @@
         </properties>
     </persistence-unit>
 
+    <persistence-unit name="IntentionallyMissingClass">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <class>org.hibernate.orm.test.jpa.boot.Event</class>
+    </persistence-unit>
+
 </persistence>

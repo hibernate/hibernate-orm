@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.spi;
 
 import java.util.List;
 
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -18,6 +17,8 @@ import org.hibernate.spi.NavigablePath;
 import jakarta.persistence.criteria.Predicate;
 
 import java.util.concurrent.atomic.AtomicLong;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * @author Steve Ebersole
@@ -75,7 +76,7 @@ public class SqmCreationHelper {
 	}
 
 	public static SqmPredicate combinePredicates(SqmPredicate baseRestriction, List<SqmPredicate> incomingRestrictions) {
-		if ( CollectionHelper.isEmpty( incomingRestrictions ) ) {
+		if ( isEmpty( incomingRestrictions ) ) {
 			return baseRestriction;
 		}
 
@@ -87,7 +88,7 @@ public class SqmCreationHelper {
 	}
 
 	public static SqmPredicate combinePredicates(SqmPredicate baseRestriction, JpaPredicate... incomingRestrictions) {
-		if ( CollectionHelper.isEmpty( incomingRestrictions ) ) {
+		if ( isEmpty( incomingRestrictions ) ) {
 			return baseRestriction;
 		}
 
@@ -99,7 +100,7 @@ public class SqmCreationHelper {
 	}
 
 	public static SqmPredicate combinePredicates(SqmPredicate baseRestriction, Predicate... incomingRestrictions) {
-		if ( CollectionHelper.isEmpty( incomingRestrictions ) ) {
+		if ( isEmpty( incomingRestrictions ) ) {
 			return baseRestriction;
 		}
 

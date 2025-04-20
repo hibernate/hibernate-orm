@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmWindowFunction;
@@ -115,22 +116,22 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		final List<? extends SqmTypedNode<?>> arguments = getArguments();
 		hql.append( getFunctionName() );
 		hql.append( '(' );
 		int i = 1;
 		if ( arguments.get( 0 ) instanceof SqmDistinct<?> ) {
-			arguments.get( 0 ).appendHqlString( hql );
+			arguments.get( 0 ).appendHqlString( hql, context );
 			if ( arguments.size() > 1 ) {
 				hql.append( ' ' );
-				arguments.get( 1 ).appendHqlString( hql );
+				arguments.get( 1 ).appendHqlString( hql, context );
 				i = 2;
 			}
 		}
 		for ( ; i < arguments.size(); i++ ) {
 			hql.append(", ");
-			arguments.get( i ).appendHqlString( hql );
+			arguments.get( i ).appendHqlString( hql, context );
 		}
 
 		hql.append( ')' );
@@ -152,7 +153,7 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 		}
 		if ( filter != null ) {
 			hql.append( " filter (where " );
-			filter.appendHqlString( hql );
+			filter.appendHqlString( hql, context );
 			hql.append( ')' );
 		}
 	}

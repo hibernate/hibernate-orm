@@ -51,7 +51,6 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -136,8 +135,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				creationContext
 		);
 
-		if ( compositeType instanceof CompositeTypeImplementor ) {
-			( (CompositeTypeImplementor) compositeType ).injectMappingModelPart( mappingType.getEmbeddedValueMapping(), creationProcess );
+		if ( compositeType instanceof CompositeTypeImplementor compositeTypeImplementor ) {
+			compositeTypeImplementor.injectMappingModelPart( mappingType.getEmbeddedValueMapping(), creationProcess );
 		}
 
 		creationProcess.registerInitializationCallback(
@@ -614,9 +613,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						creationProcess
 				);
 			}
-			else if ( subtype instanceof EntityType ) {
-				final EntityPersister entityPersister = creationProcess.getEntityPersister( bootDescriptor.getOwner().getEntityName() );
-
+			else if ( subtype instanceof EntityType subentityType ) {
 				attributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
@@ -624,8 +621,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						attributeIndex,
 						bootPropertyDescriptor,
 						this,
-						entityPersister,
-						(EntityType) subtype,
+						creationProcess.getEntityPersister( bootDescriptor.getOwner().getEntityName() ),
+						subentityType,
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 						compositeType.getCascadeStyle( attributeIndex ),
 						creationProcess
@@ -981,10 +978,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		if ( value == null ) {
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					continue;
+				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+					span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 				}
-				span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 			}
 			if ( isPolymorphic() ) {
 				span += discriminatorMapping.forEachJdbcValue( null, offset + span, x, y, valuesConsumer, session );
@@ -994,13 +990,15 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			final ConcreteEmbeddableType concreteEmbeddableType = findSubtypeBySubclass( value.getClass().getName() );
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					continue;
+				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+					final Object attributeValue =
+							concreteEmbeddableType == null
+								|| !concreteEmbeddableType.declaresAttribute( attributeMapping )
+									? null
+									: getValue( value, i );
+					span += attributeMapping.forEachJdbcValue( attributeValue, span + offset, x, y, valuesConsumer,
+							session );
 				}
-				final Object attributeValue = concreteEmbeddableType == null || !concreteEmbeddableType.declaresAttribute( attributeMapping )
-						? null
-						: getValue( value, i );
-				span += attributeMapping.forEachJdbcValue( attributeValue, span + offset, x, y, valuesConsumer, session );
 			}
 			if ( isPolymorphic() ) {
 				final Object d = concreteEmbeddableType == null ? null : concreteEmbeddableType.getDiscriminatorValue();

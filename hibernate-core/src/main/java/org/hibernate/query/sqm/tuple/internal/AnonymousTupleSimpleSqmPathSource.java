@@ -5,11 +5,11 @@
 package org.hibernate.query.sqm.tuple.internal;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.internal.PathHelper;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -18,12 +18,12 @@ import org.hibernate.type.descriptor.java.JavaType;
 @Incubating
 public class AnonymousTupleSimpleSqmPathSource<J> implements SqmPathSource<J> {
 	private final String localPathName;
-	private final DomainType<J> domainType;
+	private final SqmDomainType<J> domainType;
 	private final BindableType jpaBindableType;
 
 	public AnonymousTupleSimpleSqmPathSource(
 			String localPathName,
-			DomainType<J> domainType,
+			SqmDomainType<J> domainType,
 			BindableType jpaBindableType) {
 		this.localPathName = localPathName;
 		this.domainType = domainType;
@@ -41,7 +41,7 @@ public class AnonymousTupleSimpleSqmPathSource<J> implements SqmPathSource<J> {
 	}
 
 	@Override
-	public DomainType<J> getSqmPathType() {
+	public SqmDomainType<J> getPathType() {
 		return domainType;
 	}
 

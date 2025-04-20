@@ -33,22 +33,22 @@ import static java.util.Collections.unmodifiableSet;
  * @author Steve Ebersole
  */
 public class ManagedResourcesImpl implements ManagedResources {
-	private final Map<Class<? extends AttributeConverter<?,?>>, ConverterDescriptor> attributeConverterDescriptorMap = new HashMap<>();
+	private final Map<Class<? extends AttributeConverter<?,?>>, ConverterDescriptor<?,?>> attributeConverterDescriptorMap = new HashMap<>();
 	private final Set<Class<?>> annotatedClassReferences = new LinkedHashSet<>();
 	private final Set<String> annotatedClassNames = new LinkedHashSet<>();
 	private final Set<String> annotatedPackageNames = new LinkedHashSet<>();
-	private final List<Binding<JaxbBindableMappingDescriptor>> mappingFileBindings = new ArrayList<>();
+	private final List<Binding<? extends JaxbBindableMappingDescriptor>> mappingFileBindings = new ArrayList<>();
 	private Map<String, Class<?>> extraQueryImports;
 
 	public static ManagedResourcesImpl baseline(MetadataSources sources, BootstrapContext bootstrapContext) {
-		final ManagedResourcesImpl impl = new ManagedResourcesImpl();
-		bootstrapContext.getAttributeConverters().forEach( impl::addAttributeConverterDefinition );
-		impl.annotatedClassReferences.addAll( sources.getAnnotatedClasses() );
-		impl.annotatedClassNames.addAll( sources.getAnnotatedClassNames() );
-		impl.annotatedPackageNames.addAll( sources.getAnnotatedPackages() );
-		handleXmlMappings( sources, impl, bootstrapContext );
-		impl.extraQueryImports = sources.getExtraQueryImports();
-		return impl;
+		final ManagedResourcesImpl managedResources = new ManagedResourcesImpl();
+		bootstrapContext.getAttributeConverters().forEach( managedResources::addAttributeConverterDefinition );
+		managedResources.annotatedClassReferences.addAll( sources.getAnnotatedClasses() );
+		managedResources.annotatedClassNames.addAll( sources.getAnnotatedClassNames() );
+		managedResources.annotatedPackageNames.addAll( sources.getAnnotatedPackages() );
+		handleXmlMappings( sources, managedResources, bootstrapContext );
+		managedResources.extraQueryImports = sources.getExtraQueryImports();
+		return managedResources;
 	}
 
 	private static void handleXmlMappings(
@@ -70,7 +70,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 	}
 
 	@Override
-	public Collection<ConverterDescriptor> getAttributeConverterDescriptors() {
+	public Collection<ConverterDescriptor<?,?>> getAttributeConverterDescriptors() {
 		return unmodifiableCollection( attributeConverterDescriptorMap.values() );
 	}
 
@@ -90,7 +90,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 	}
 
 	@Override
-	public Collection<Binding<JaxbBindableMappingDescriptor>> getXmlMappingBindings() {
+	public Collection<Binding<? extends JaxbBindableMappingDescriptor>> getXmlMappingBindings() {
 		return Collections.unmodifiableList( mappingFileBindings );
 	}
 
@@ -104,7 +104,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 	// @Internal
 
 	@Internal
-	public void addAttributeConverterDefinition(ConverterDescriptor descriptor) {
+	public void addAttributeConverterDefinition(ConverterDescriptor<?,?> descriptor) {
 		attributeConverterDescriptorMap.put( descriptor.getAttributeConverterClass(), descriptor );
 	}
 

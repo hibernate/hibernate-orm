@@ -140,8 +140,8 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	}
 
 	protected boolean localNamesMatch(DotIdentifierSequence other) {
-		if ( other instanceof EntityIdentifierNavigablePath ) {
-			return localNamesMatch( (EntityIdentifierNavigablePath) other );
+		if ( other instanceof EntityIdentifierNavigablePath entityIdentifierNavigablePath ) {
+			return localNamesMatch( entityIdentifierNavigablePath );
 		}
 
 		return Objects.equals( getLocalName(), other.getLocalName() );

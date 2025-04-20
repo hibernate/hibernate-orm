@@ -25,7 +25,7 @@ public class SqmAnyValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 
-		assert referencedPathSource.getSqmPathType() instanceof AnyMappingDomainType;
+		assert referencedPathSource.getPathType() instanceof AnyMappingDomainType;
 	}
 
 	@SuppressWarnings("unused")
@@ -37,7 +37,7 @@ public class SqmAnyValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
 
-		assert referencedPathSource.getSqmPathType() instanceof AnyMappingDomainType;
+		assert referencedPathSource.getPathType() instanceof AnyMappingDomainType;
 	}
 
 	@Override

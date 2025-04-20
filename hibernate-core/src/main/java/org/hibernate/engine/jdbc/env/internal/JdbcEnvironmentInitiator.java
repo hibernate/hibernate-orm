@@ -172,9 +172,14 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			databaseConnectionInfo = buildInfo( configurationValues, jdbcEnvironment );
 		}
 
+		logConnectionInfo( databaseConnectionInfo );
+		return jdbcEnvironment;
+	}
+
+	// For Hibernate Reactive: it needs to disable or customize the log
+	protected void logConnectionInfo(DatabaseConnectionInfo databaseConnectionInfo) {
 		// Standardized info logging
 		ConnectionInfoLogger.INSTANCE.logConnectionInfoDetails( databaseConnectionInfo.toInfoString() );
-		return jdbcEnvironment;
 	}
 
 	private DatabaseConnectionInfo buildInfo(ServiceRegistryImplementor registry, JdbcEnvironment environment) {
@@ -324,7 +329,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		);
 	}
 
-	private JdbcEnvironmentImpl getJdbcEnvironmentUsingJdbcMetadata(
+	// Used by Hibernate Reactive
+	protected JdbcEnvironmentImpl getJdbcEnvironmentUsingJdbcMetadata(
 			Map<String, Object> configurationValues,
 			ServiceRegistryImplementor registry,
 			DialectFactory dialectFactory, String explicitDatabaseName,
@@ -454,8 +460,9 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		return isNotEmpty( explicitDatabaseName ) || isNotNullAndNotEmpty( configurationValues.get( DIALECT ) );
 	}
 
-	private static boolean isNotNullAndNotEmpty(Object o) {
-		return o != null && ( !(o instanceof String) || !((String) o).isEmpty() );
+	private static boolean isNotNullAndNotEmpty(Object object) {
+		return object != null
+			&& ( !(object instanceof String string) || !string.isEmpty() );
 	}
 
 	private JdbcConnectionAccess buildJdbcConnectionAccess(ServiceRegistryImplementor registry) {

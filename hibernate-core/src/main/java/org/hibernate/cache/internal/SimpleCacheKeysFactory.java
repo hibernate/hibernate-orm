@@ -35,12 +35,7 @@ public class SimpleCacheKeysFactory implements CacheKeysFactory {
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
 		// natural ids always need to be wrapped
-		return NaturalIdCacheKey.from(
-				naturalIdValues,
-				persister,
-				null,
-				session
-		);
+		return NaturalIdCacheKey.from( naturalIdValues, persister, null, session );
 	}
 
 	@Override

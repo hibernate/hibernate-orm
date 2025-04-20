@@ -77,9 +77,9 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 		if ( join.getPredicate() != null ) {
 			joinPredicateConsumer.accept( join.getPredicate() );
 		}
-		else if ( join.getJoinedGroup() instanceof LazyTableGroup ) {
+		else if ( join.getJoinedGroup() instanceof LazyTableGroup lazyTableGroup ) {
 			// Wait for the table group to get initialized before consuming the predicate
-			( (LazyTableGroup) join.getJoinedGroup() ).setTableGroupInitializerCallback(
+			lazyTableGroup.setTableGroupInitializerCallback(
 					tableGroup -> joinPredicateConsumer.accept( join.getPredicate() )
 			);
 		}

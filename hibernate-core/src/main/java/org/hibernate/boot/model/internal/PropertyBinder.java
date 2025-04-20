@@ -7,6 +7,7 @@ package org.hibernate.boot.model.internal;
 import jakarta.persistence.Basic;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
@@ -24,6 +25,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Temporal;
 import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -66,7 +68,7 @@ import org.hibernate.models.spi.ArrayTypeDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeVariableScope;
 import org.hibernate.usertype.CompositeUserType;
@@ -129,7 +131,7 @@ public class PropertyBinder {
 	private boolean toMany;
 	private String referencedEntityName; // only used for @MapsId or @IdClass
 
-	protected SourceModelBuildingContext getSourceModelContext() {
+	protected ModelsContext getSourceModelContext() {
 		return buildingContext.getBootstrapContext().getModelsContext();
 	}
 
@@ -266,7 +268,7 @@ public class PropertyBinder {
 				memberDetails,
 				returnedClass,
 				containerClassName,
-				holder.resolveAttributeConverterDescriptor( memberDetails )
+				holder.resolveAttributeConverterDescriptor( memberDetails, autoApplyConverters() )
 		);
 		basicValueBinder.setReferencedEntityName( referencedEntityName );
 		basicValueBinder.setAccessType( accessType );
@@ -274,6 +276,18 @@ public class PropertyBinder {
 		value = basicValueBinder.make();
 
 		return makeProperty();
+	}
+
+	private boolean autoApplyConverters() {
+		// JPA 3.2 section 3.9 says there are exceptions where to auto-apply converters, citing:
+		// The conversion of all basic types is supported except for the following:
+		// Id attributes (including the attributes of embedded ids and derived identities),
+		// version attributes, relationship attributes,
+		// and attributes explicitly annotated as Enumerated or Temporal
+		return !isId
+			&& !isVersion( memberDetails )
+			&& !memberDetails.hasDirectAnnotationUsage( Enumerated.class )
+			&& !memberDetails.hasDirectAnnotationUsage( Temporal.class );
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
@@ -638,7 +652,7 @@ public class PropertyBinder {
 		return idPropertyCounter;
 	}
 
-	private static void checkIdProperty(MemberDetails property, PropertyData propertyData, SourceModelBuildingContext context) {
+	private static void checkIdProperty(MemberDetails property, PropertyData propertyData, ModelsContext context) {
 		final boolean incomingIdProperty = hasIdAnnotation( property );
 		final MemberDetails attributeMember = propertyData.getAttributeMember();
 		final boolean existingIdProperty = hasIdAnnotation( attributeMember );
@@ -1306,7 +1320,7 @@ public class PropertyBinder {
 	private static Class<? extends CompositeUserType<?>> resolveCompositeUserType(
 			PropertyData inferredData,
 			MetadataBuildingContext buildingContext) {
-		final SourceModelBuildingContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 
 		final MemberDetails attributeMember = inferredData.getAttributeMember();
 		final TypeDetails classOrElementType = inferredData.getClassOrElementType();

@@ -15,6 +15,7 @@ import java.util.ServiceConfigurationError;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.cache.CacheException;
@@ -49,6 +50,7 @@ import static org.jboss.logging.Logger.Level.WARN;
  */
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange(min=2,max = 20000)
+@Internal
 public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
@@ -634,9 +636,14 @@ public interface CoreMessageLogger extends BasicLogger {
 	void attemptToAssociateProxyWithTwoOpenSessions(String entityName, Object id);
 
 	@LogMessage(level = WARN)
-	@Message(value = "The query: [%s] attempts to update an immutable entity: %s",
+	@Message(value = "The query [%s] updates an immutable entity: %s",
 			id = 487)
 	void immutableEntityUpdateQuery(String sourceQuery, String querySpaces);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "The query [%s] updates an immutable entity: %s",
+			id = 488)
+	void immutableEntityUpdateQueryAllowed(String sourceQuery, String querySpaces);
 
 	@LogMessage(level = INFO)
 	@Message(value = "No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)", id = 489)
@@ -698,10 +705,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "The %2$s version for [%s] is no longer supported, hence certain features may not work properly. The minimum supported version is %3$s. Check the community dialects project for available legacy versions.", id = 511)
 	void unsupportedDatabaseVersion(String databaseName, String actualVersion, String minimumVersion);
-
-	@LogMessage(level = WARN)
-	@Message(value = "The database version version for the Cockroach Dialect could not be determined. The minimum supported version (%s) has been set instead.", id = 512)
-	void unableToDetermineCockroachDatabaseVersion(String minimumVersion);
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "Unable to create the ReflectionOptimizer for [%s]: %s",

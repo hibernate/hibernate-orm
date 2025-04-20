@@ -211,6 +211,7 @@ import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.internal.util.MathHelper.ceilingPowerOfTwo;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
@@ -2269,8 +2270,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The appropriate {@code LOCK} clause string.
 	 */
 	public String getWriteLockString(String aliases, int timeout) {
-		// by default we simply return the getWriteLockString(timeout) result since
-		// the default is to say no support for "FOR UPDATE OF ..."
+		// by default, we simply return getWriteLockString(timeout),
+		// since the default is no support for "FOR UPDATE OF ..."
 		return getWriteLockString( timeout );
 	}
 
@@ -3561,7 +3562,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * The sort of {@linkplain TempTableDdlTransactionHandling transaction handling}
 	 * to use when creating or dropping temporary tables.
+	 *
+	 * @deprecated No dialect currently overrides this, so it's obsolete
 	 */
+	@Deprecated(since = "7.0")
 	public TempTableDdlTransactionHandling getTemporaryTableDdlTransactionHandling() {
 		return TempTableDdlTransactionHandling.NONE;
 	}
@@ -5840,7 +5844,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String getCheckConstraintString(CheckConstraint checkConstraint) {
 		final String constraintName = checkConstraint.getName();
-		final String constraint = constraintName == null
+		final String constraint = isBlank( constraintName )
 				? " check (" + checkConstraint.getConstraint() + ")"
 				: " constraint " + constraintName + " check (" + checkConstraint.getConstraint() + ")";
 		return appendCheckConstraintOptions( checkConstraint, constraint );

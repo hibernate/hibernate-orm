@@ -11,7 +11,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Map;
 import org.hibernate.metamodel.mapping.AssociationKey;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -66,12 +65,10 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 			MappingModelCreationProcess creationProcess) {
 		super( nature, bootCollectionDescriptor, collectionDescriptor, elementTypeDescriptor, notFoundAction, creationProcess );
 
-		if ( nature == Nature.INDEX && bootCollectionDescriptor instanceof Map ) {
-			mapKeyPropertyName = ( (Map) bootCollectionDescriptor ).getMapKeyPropertyName();
-		}
-		else {
-			mapKeyPropertyName = null;
-		}
+		mapKeyPropertyName =
+				nature == Nature.INDEX && bootCollectionDescriptor instanceof Map map
+						? map.getMapKeyPropertyName()
+						: null;
 	}
 
 	/**
@@ -131,12 +128,6 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 		return false;
 	}
 
-	@Override
-	public boolean containsTableReference(String tableExpression) {
-		return getAssociatedEntityMappingType().containsTableReference( tableExpression );
-	}
-
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TableGroupJoinProducer
 
@@ -165,10 +156,11 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 
 		// INDEX is implied if mapKeyPropertyName is not null
 		if ( mapKeyPropertyName != null ) {
-			final EntityCollectionPart elementPart = (EntityCollectionPart) getCollectionDescriptor().getAttributeMapping().getElementDescriptor();
-			final EntityMappingType elementEntity = elementPart.getAssociatedEntityMappingType();
-			final AttributeMapping mapKeyAttribute = elementEntity.findAttributeMapping( mapKeyPropertyName );
-			if ( mapKeyAttribute instanceof ToOneAttributeMapping toOne ) {
+			final EntityCollectionPart elementPart =
+					(EntityCollectionPart)
+							getCollectionDescriptor().getAttributeMapping().getElementDescriptor();
+			if ( elementPart.getAssociatedEntityMappingType().findAttributeMapping( mapKeyPropertyName )
+							instanceof ToOneAttributeMapping toOne ) {
 				final NavigablePath mapKeyPropertyPath = navigablePath.append( mapKeyPropertyName );
 				final TableGroupJoin tableGroupJoin = toOne.createTableGroupJoin(
 						mapKeyPropertyPath,
@@ -180,7 +172,8 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 						addsPredicate,
 						creationState
 				);
-				creationState.getFromClauseAccess().registerTableGroup( mapKeyPropertyPath, tableGroupJoin.getJoinedGroup() );
+				creationState.getFromClauseAccess()
+						.registerTableGroup( mapKeyPropertyPath, tableGroupJoin.getJoinedGroup() );
 				return tableGroupJoin;
 			}
 		}

@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.TreatException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
 
 /**
@@ -39,7 +40,7 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 	}
 
 	private static IdentifiableDomainType<?> pathDomainType(SqmPath<?> toOnePath) {
-		final DomainType<?> domainType = toOnePath.getReferencedPathSource().getSqmPathType();
+		final DomainType<?> domainType = toOnePath.getReferencedPathSource().getPathType();
 		if ( domainType instanceof IdentifiableDomainType<?> identifiableDomainType ) {
 			return identifiableDomainType;
 		}
@@ -54,9 +55,9 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( "fk(" );
-		getLhs().appendHqlString( hql );
+		getLhs().appendHqlString( hql, context );
 		hql.append( ')' );
 	}
 

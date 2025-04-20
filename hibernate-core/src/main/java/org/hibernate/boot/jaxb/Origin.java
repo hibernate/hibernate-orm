@@ -59,9 +59,7 @@ public class Origin implements Serializable {
 
 	@Override
 	public int hashCode() {
-		int result = type != null ? type.hashCode() : 0;
-		result = 31 * result + ( name != null ? name.hashCode() : 0 );
-		return result;
+		return Objects.hash( type, name );
 	}
 
 	@Override

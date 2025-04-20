@@ -178,29 +178,29 @@ public class JsonQueryFunction extends AbstractSqmSelfRenderingFunctionDescripto
 			JsonQueryEmptyBehavior emptyBehavior = null;
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonPathPassingClause ) {
-					passingClause = (JsonPathPassingClause) node;
+				if ( node instanceof JsonPathPassingClause jsonPathPassingClause ) {
+					passingClause = jsonPathPassingClause;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonQueryWrapMode ) {
-					wrapMode = (JsonQueryWrapMode) node;
+				if ( node instanceof JsonQueryWrapMode jsonQueryWrapMode ) {
+					wrapMode = jsonQueryWrapMode;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonQueryErrorBehavior ) {
-					errorBehavior = (JsonQueryErrorBehavior) node;
+				if ( node instanceof JsonQueryErrorBehavior jsonQueryErrorBehavior ) {
+					errorBehavior = jsonQueryErrorBehavior;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonQueryEmptyBehavior ) {
-					emptyBehavior = (JsonQueryEmptyBehavior) node;
+				if ( node instanceof JsonQueryEmptyBehavior jsonQueryEmptyBehavior ) {
+					emptyBehavior = jsonQueryEmptyBehavior;
 				}
 			}
 			final Expression jsonDocument = (Expression) sqlAstArguments.get( 0 );

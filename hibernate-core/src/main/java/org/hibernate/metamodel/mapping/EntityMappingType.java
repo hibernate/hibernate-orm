@@ -209,8 +209,8 @@ public interface EntityMappingType
 	 * @see #isTypeOrSuperType(EntityMappingType)
 	 */
 	default boolean isTypeOrSuperType(ManagedMappingType targetType) {
-		if ( targetType instanceof EntityMappingType ) {
-			return isTypeOrSuperType( (EntityMappingType) targetType );
+		if ( targetType instanceof EntityMappingType entityMappingType ) {
+			return isTypeOrSuperType( entityMappingType );
 		}
 
 		return false;

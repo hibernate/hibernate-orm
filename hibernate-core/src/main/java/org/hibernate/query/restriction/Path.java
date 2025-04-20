@@ -5,6 +5,7 @@
 package org.hibernate.query.restriction;
 
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.FetchParent;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.Incubating;
 import org.hibernate.query.range.Range;
@@ -17,9 +18,10 @@ import java.util.List;
  * A compound path is a sequence of attribute references rooted at
  * the root entity type of the query.
  * <pre>
- * session.createSelectionQuery("from Book", Book.class)
+ * SelectionSpecification.create(Book.class)
  *         .addRestriction(from(Book.class).to(Book_.publisher).to(Publisher_.name)
  *                         .equalTo("Manning"))
+ *         .createQuery(session)
  *         .getResultList()
  * </pre>
  * A compound path-based restriction has the same semantics as the
@@ -75,4 +77,6 @@ public interface Path<X,U> {
 	default Restriction<X> notNull() {
 		return restrict( Range.notNull( getType() ) );
 	}
+
+	FetchParent<?, ? extends U> fetch(Root<? extends X> root);
 }

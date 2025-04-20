@@ -40,8 +40,6 @@ stage('Configure') {
 // Don't build with HANA by default, but only do it nightly until we receive a 3rd instance
 // 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ),
 		new BuildEnvironment( node: 's390x' ),
-		new BuildEnvironment( dbName: 'tidb', node: 'tidb',
-				notificationRecipients: 'tidb_hibernate@pingcap.com' ),
 		// We want to enable preview features when testing newer builds of OpenJDK:
 		// even if we don't use these features, just enabling them can cause side effects
 		// and it's useful to test that.
@@ -64,6 +62,9 @@ stage('Configure') {
 		}
 		if ( pullRequest.labels.contains( 'sybase' ) ) {
 			this.environments.add( new BuildEnvironment( dbName: 'sybase_jconn' ) )
+		}
+		if ( pullRequest.labels.contains( 'tidb' ) ) {
+			this.environments.add( new BuildEnvironment( dbName: 'tidb', node: 'tidb', notificationRecipients: 'tidb_hibernate@pingcap.com' ) )
 		}
 	}
 
@@ -238,7 +239,7 @@ void ciBuild(buildEnv, String args) {
 
 		// On untrusted nodes, we use the same access key as for PRs:
 		// it has limited access, essentially it can only push build scans.
-		def develocityCredentialsId = buildEnv.node ? 'ge.hibernate.org-access-key-pr' : 'ge.hibernate.org-access-key'
+		def develocityCredentialsId = buildEnv.node ? 'develocity.commonhaus.dev-access-key-pr' : 'develocity.commonhaus.dev-access-key'
 
 		withCredentials([string(credentialsId: develocityCredentialsId,
 				variable: 'DEVELOCITY_ACCESS_KEY')]) {
@@ -253,7 +254,7 @@ void ciBuild(buildEnv, String args) {
 		tryFinally({
 			sh "./ci/build.sh $args"
 		}, { // Finally
-			withCredentials([string(credentialsId: 'ge.hibernate.org-access-key-pr',
+			withCredentials([string(credentialsId: 'develocity.commonhaus.dev-access-key-pr',
 					variable: 'DEVELOCITY_ACCESS_KEY')]) {
 				withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
 					// Don't fail a build if publishing fails

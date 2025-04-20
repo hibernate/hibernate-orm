@@ -9,7 +9,8 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.hibernate.internal.util.StringHelper;
+import static java.lang.Character.isJavaIdentifierStart;
+import static org.hibernate.internal.util.StringHelper.WHITESPACE;
 
 /**
  * Performs formatting of basic SQL statements (DML + query).
@@ -37,7 +38,6 @@ public class BasicFormatterImpl implements Formatter {
 		boolean afterByOrSetOrFromOrSelect;
 		int afterOn;
 		boolean afterBetween;
-		boolean afterExtract;
 		boolean afterInsert;
 		int inFunction;
 		int parensSinceSelect;
@@ -58,7 +58,7 @@ public class BasicFormatterImpl implements Formatter {
 
 			tokens = new StringTokenizer(
 					sql,
-					"()+*/-=<>'`\"[]," + StringHelper.WHITESPACE,
+					"()+*/-=<>'`\"[]," + WHITESPACE,
 					true
 			);
 		}
@@ -105,13 +105,22 @@ public class BasicFormatterImpl implements Formatter {
 						closeParen();
 						break;
 
+					case "for":
+						forUpdate();
+						break;
+
 					case "select":
 						select();
 						break;
-					case "merge":
-					case "insert":
 					case "update":
+						if ( "for".equals( lastToken ) ) {
+							out();
+							break;
+						}
+						// else fall through
+					case "insert":
 					case "delete":
+					case "merge":
 						updateOrInsertOrDelete();
 						break;
 
@@ -125,11 +134,6 @@ public class BasicFormatterImpl implements Formatter {
 
 					case "between":
 						afterBetween = true;
-						misc();
-						break;
-					case "trim":
-					case "extract":
-						afterExtract = true;
 						misc();
 						break;
 
@@ -201,6 +205,19 @@ public class BasicFormatterImpl implements Formatter {
 			return result.toString();
 		}
 
+		private void forUpdate() {
+			if ( inFunction==0 ) {
+				decrementIndent();
+				newline();
+				out();
+				incrementIndent();
+				newline();
+			}
+			else {
+				misc();
+			}
+		}
+
 		private void or() {
 			logical();
 		}
@@ -216,12 +233,11 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void from() {
-			if ( afterExtract ) {
-				misc();
-				afterExtract = false;
+			if ( inFunction == 0 ) {
+				endNewClause();
 			}
 			else {
-				endNewClause();
+				misc();
 			}
 		}
 
@@ -480,17 +496,18 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private static boolean isFunctionName(String tok) {
-			if ( tok == null || tok.length() == 0 ) {
+			if ( tok == null || tok.isEmpty() ) {
 				return false;
 			}
-
-			final char begin = tok.charAt( 0 );
-			final boolean isIdentifier = Character.isJavaIdentifierStart( begin ) || '"' == begin;
-			return isIdentifier && !NON_FUNCTION_NAMES.contains( tok );
+			else {
+				final char begin = tok.charAt( 0 );
+				final boolean isIdentifier = isJavaIdentifierStart( begin ) || '"' == begin;
+				return isIdentifier && !NON_FUNCTION_NAMES.contains( tok );
+			}
 		}
 
 		private static boolean isWhitespace(String token) {
-			return StringHelper.WHITESPACE.contains( token );
+			return WHITESPACE.contains( token );
 		}
 
 		private void newline() {
@@ -500,15 +517,15 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void appendUntilToken(String stopToken) {
-			final StringBuilder sb = new StringBuilder( this.token );
+			final StringBuilder quoted = new StringBuilder( this.token );
 			String t;
 			do {
 				t = tokens.nextToken();
-				sb.append( t );
+				quoted.append( t );
 			}
 			while ( !stopToken.equals( t ) && tokens.hasMoreTokens() );
-			this.token = sb.toString();
-			lcToken = token;
+			this.token = quoted.toString();
+			lcToken = this.token;
 		}
 	}
 

@@ -87,7 +87,7 @@ public class TypedValueParametersTest {
 						TagUserType.INSTANCE,
 						scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getTypeConfiguration()
 				);
-				q.setParameter("tags", new TypedParameterValue<>( customType, Arrays.asList("important","business")));
+				q.setParameter("tags", TypedParameterValue.of(customType, Arrays.asList("important","business")));
 			}
 		);
 	}

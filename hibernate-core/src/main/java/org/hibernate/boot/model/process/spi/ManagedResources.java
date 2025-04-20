@@ -31,7 +31,7 @@ public interface ManagedResources {
 	 *
 	 * @return The AttributeConverter definitions.
 	 */
-	Collection<ConverterDescriptor> getAttributeConverterDescriptors();
+	Collection<ConverterDescriptor<?,?>> getAttributeConverterDescriptors();
 
 	/**
 	 * Informational access to any entity and component classes in the user domain model known by Class
@@ -63,7 +63,7 @@ public interface ManagedResources {
 	 *
 	 * @return The list of bindings for all known XML mapping files.
 	 */
-	Collection<Binding<JaxbBindableMappingDescriptor>> getXmlMappingBindings();
+	Collection<Binding<? extends JaxbBindableMappingDescriptor>> getXmlMappingBindings();
 
 	Map<String,Class<?>> getExtraQueryImports();
 }

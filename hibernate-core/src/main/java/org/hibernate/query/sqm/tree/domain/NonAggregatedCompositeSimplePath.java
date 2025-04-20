@@ -27,7 +27,7 @@ public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePa
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 
-		assert referencedPathSource.getSqmPathType() instanceof EntityType;
+		assert referencedPathSource.getPathType() instanceof EntityType;
 	}
 
 	@Override

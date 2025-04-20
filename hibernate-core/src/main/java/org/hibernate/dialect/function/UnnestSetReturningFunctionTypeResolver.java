@@ -215,8 +215,8 @@ public class UnnestSetReturningFunctionTypeResolver implements SetReturningFunct
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( i );
 			final MappingType mappedType = attributeMapping.getMappedType();
-			if ( mappedType instanceof SqmExpressible<?> ) {
-				expressibles.add( (SqmExpressible<?>) mappedType );
+			if ( mappedType instanceof SqmExpressible<?> sqmExpressible ) {
+				expressibles.add( sqmExpressible );
 			}
 		}
 		return expressibles.toArray( new SqmExpressible<?>[expressibles.size() + 1] );

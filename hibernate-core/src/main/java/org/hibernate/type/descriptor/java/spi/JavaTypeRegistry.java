@@ -60,9 +60,9 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	}
 
 	private void performInjections(JavaType<?> descriptor) {
-		if ( descriptor instanceof TypeConfigurationAware ) {
+		if ( descriptor instanceof TypeConfigurationAware typeConfigurationAware ) {
 			// would be nice to make the JavaType for an entity, e.g., aware of the TypeConfiguration
-			( (TypeConfigurationAware) descriptor ).setTypeConfiguration( typeConfiguration );
+			typeConfigurationAware.setTypeConfiguration( typeConfiguration );
 		}
 	}
 
@@ -79,7 +79,7 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	}
 
 	public void addDescriptor(JavaType<?> descriptor) {
-		JavaType<?> old = descriptorsByTypeName.put( descriptor.getJavaType().getTypeName(), descriptor );
+		final JavaType<?> old = descriptorsByTypeName.put( descriptor.getJavaType().getTypeName(), descriptor );
 		if ( old != null ) {
 			log.debugf(
 					"JavaTypeRegistry entry replaced : %s -> %s (was %s)",

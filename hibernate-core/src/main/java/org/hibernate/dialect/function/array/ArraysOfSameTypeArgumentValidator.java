@@ -61,8 +61,8 @@ public class ArraysOfSameTypeArgumentValidator implements ArgumentsValidator {
 	}
 
 	private static boolean isCompatible(BasicPluralType<?,?> arrayType, DomainType<?> sqmType) {
-		return arrayType == sqmType || sqmType instanceof BasicPluralType<?, ?>
-				&& Objects.equals( arrayType.getElementType(), ( (BasicPluralType<?, ?>) sqmType ).getElementType() );
+		return arrayType == sqmType || sqmType instanceof BasicPluralType<?, ?> basicPluralType
+			&& Objects.equals( arrayType.getElementType(), basicPluralType.getElementType() );
 	}
 
 	@Override

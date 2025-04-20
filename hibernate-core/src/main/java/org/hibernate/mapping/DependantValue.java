@@ -75,12 +75,13 @@ public class DependantValue extends SimpleValue implements Resolvable, SortableV
 
 	@Override
 	public boolean isSame(SimpleValue other) {
-		return other instanceof DependantValue && isSame( (DependantValue) other );
+		return other instanceof DependantValue dependantValue
+			&& isSame( dependantValue );
 	}
 
 	public boolean isSame(DependantValue other) {
 		return super.isSame( other )
-				&& isSame( wrappedValue, other.wrappedValue );
+			&& isSame( wrappedValue, other.wrappedValue );
 	}
 
 	@Override
@@ -111,8 +112,8 @@ public class DependantValue extends SimpleValue implements Resolvable, SortableV
 	public int[] sortProperties() {
 		if ( !sorted ) {
 			sorted = true;
-			if ( wrappedValue instanceof SortableValue ) {
-				final int[] originalOrder = ( (SortableValue) wrappedValue ).sortProperties();
+			if ( wrappedValue instanceof SortableValue sortableValue ) {
+				final int[] originalOrder = sortableValue.sortProperties();
 				if ( originalOrder != null ) {
 					sortColumns( originalOrder );
 				}

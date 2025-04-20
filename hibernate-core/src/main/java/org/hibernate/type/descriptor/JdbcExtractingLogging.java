@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.Logger;
@@ -12,6 +13,7 @@ import org.jboss.logging.Logger;
 		name = JdbcExtractingLogging.NAME,
 		description = "Logging of JDBC value extraction"
 )
+@Internal
 public interface JdbcExtractingLogging {
 	String NAME = SubSystemLogging.BASE + ".jdbc.extract";
 

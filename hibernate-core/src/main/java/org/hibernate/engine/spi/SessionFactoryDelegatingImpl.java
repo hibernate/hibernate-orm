@@ -19,6 +19,7 @@ import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.Query;
 import jakarta.persistence.SynchronizationType;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -415,5 +416,10 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public EventListenerRegistry getEventListenerRegistry() {
 		return delegate.getEventListenerRegistry();
+	}
+
+	@Override
+	public <R> TypedQueryReference<R> addNamedQuery(String name, TypedQuery<R> query) {
+		return delegate.addNamedQuery( name, query );
 	}
 }

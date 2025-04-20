@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
@@ -64,16 +65,15 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
@@ -102,6 +102,7 @@ import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.AttributeConverter;
 
+import static org.hibernate.cfg.MappingSettings.XML_MAPPING_ENABLED;
 import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForDuration;
@@ -155,12 +156,9 @@ public class MetadataBuildingProcess {
 			final MetadataSources sources,
 			final BootstrapContext bootstrapContext) {
 		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline( sources, bootstrapContext );
-		final ConfigurationService configService = bootstrapContext.getConfigurationService();
-		final boolean xmlMappingEnabled = configService.getSetting(
-				AvailableSettings.XML_MAPPING_ENABLED,
-				StandardConverters.BOOLEAN,
-				true
-		);
+		final boolean xmlMappingEnabled =
+				bootstrapContext.getConfigurationService()
+						.getSetting( XML_MAPPING_ENABLED, StandardConverters.BOOLEAN, true );
 		ScanningCoordinator.INSTANCE.coordinateScan(
 				managedResources,
 				bootstrapContext,
@@ -361,7 +359,7 @@ public class MetadataBuildingProcess {
 		// 	- pre-process the XML
 		// 	- collect all known classes
 		// 	- resolve (possibly building) Jandex index
-		// 	- build the SourceModelBuildingContext
+		// 	- build the ModelsContext
 		//
 		// INPUTS:
 		//		- serviceRegistry
@@ -371,9 +369,9 @@ public class MetadataBuildingProcess {
 		// OUTPUTS:
 		//		- xmlPreProcessingResult
 		//		- allKnownClassNames (technically could be included in xmlPreProcessingResult)
-		//		- sourceModelBuildingContext
+		//		- ModelsContext
 
-		final SourceModelBuildingContext modelsContext = bootstrapContext.getModelsContext();
+		final ModelsContext modelsContext = bootstrapContext.getModelsContext();
 		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources(
 				managedResources,
 				metadataCollector.getPersistenceUnitMetadata()
@@ -406,7 +404,7 @@ public class MetadataBuildingProcess {
 		// INPUTS:
 		//		- "options" (areIdGeneratorsGlobal, etc)
 		//		- xmlPreProcessingResult
-		//		- sourceModelBuildingContext
+		//		- ModelsContext
 		//
 		// OUTPUTS
 		//		- rootEntities
@@ -572,11 +570,14 @@ public class MetadataBuildingProcess {
 			final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind( xmlStream, origin );
 
 			final JaxbBindableMappingDescriptor bindingRoot = binding.getRoot();
-			if ( bindingRoot instanceof JaxbHbmHibernateMapping ) {
-				contributeBinding( (JaxbHbmHibernateMapping) bindingRoot );
+			if ( bindingRoot instanceof JaxbHbmHibernateMapping hibernateMapping ) {
+				contributeBinding( hibernateMapping );
+			}
+			else if ( bindingRoot instanceof JaxbEntityMappingsImpl entityMappings ) {
+				contributeBinding( entityMappings );
 			}
 			else {
-				contributeBinding( (JaxbEntityMappingsImpl) bindingRoot );
+				throw new AssertionFailure( "Unexpected binding type" );
 			}
 		}
 
@@ -701,7 +702,7 @@ public class MetadataBuildingProcess {
 			}
 
 			@Override
-			public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
+			public void contributeAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
 				metadataCollector.getConverterRegistry().addAttributeConverter( converterClass );
 			}
 
@@ -723,7 +724,7 @@ public class MetadataBuildingProcess {
 			basicTypeRegistry.addTypeReferenceRegistrationKey(
 					StandardBasicTypes.BINARY_WRAPPER.getName(),
 					Byte[].class.getName(), "Byte[]"
-					);
+			);
 		}
 
 		// add Dialect contributed types
@@ -820,11 +821,8 @@ public class MetadataBuildingProcess {
 		// add explicit application registered types
 		typeConfiguration.addBasicTypeRegistrationContributions( options.getBasicTypeRegistrations() );
 		for ( CompositeUserType<?> compositeUserType : options.getCompositeUserTypes() ) {
-			//noinspection unchecked
-			metadataCollector.registerCompositeUserType(
-					compositeUserType.returnedClass(),
-					(Class<? extends CompositeUserType<?>>) compositeUserType.getClass()
-			);
+			metadataCollector.registerCompositeUserType( compositeUserType.returnedClass(),
+					ReflectHelper.getClass( compositeUserType.getClass() ) );
 		}
 
 		final JdbcType timestampWithTimeZoneOverride = getTimestampWithTimeZoneOverride( options, jdbcTypeRegistry );

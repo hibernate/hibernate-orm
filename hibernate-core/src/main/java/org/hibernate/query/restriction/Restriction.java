@@ -19,16 +19,16 @@ import org.hibernate.query.range.Range;
 import java.util.List;
 
 /**
- * A rule for restricting query results.
- * <p>
- * This allows restrictions to be added to a {@link SelectionQuery} by calling
+ * A rule for restricting query results. This allows restrictions to be added to
+ * a {@link org.hibernate.query.programmatic.SelectionSpecification} by calling
  * {@link SelectionQuery#addRestriction(Restriction)}.
  * <pre>
- * session.createSelectionQuery("from Book", Book.class)
+ * SelectionSpecification.create(Book.class)
  *         .addRestriction(Restriction.like(Book_.title, "%Hibernate%", false))
  *         .addRestriction(Restriction.greaterThan(Book_.pages, 100))
  *         .setOrder(Order.desc(Book_.title))
- *         .getResultList() );
+ *         .createQuery(session)
+ *         .getResultList();
  * </pre>
  * <p>
  * Each restriction pairs an {@linkplain SingularAttribute attribute} of the
@@ -48,7 +48,10 @@ import java.util.List;
  *          is used by Hibernate Data Repositories to implement Jakarta Data
  *          query methods.
  *
- * @see SelectionQuery#addRestriction(Restriction)
+ * @see org.hibernate.query.programmatic.SelectionSpecification
+ * @see org.hibernate.query.programmatic.MutationSpecification
+ * @see org.hibernate.query.programmatic.QuerySpecification#addRestriction(Restriction)
+ *
  * @see Path
  * @see Order
  *

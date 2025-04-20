@@ -6,7 +6,7 @@ package org.hibernate.orm.test.query;
 
 import java.util.List;
 
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;

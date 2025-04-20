@@ -84,7 +84,7 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 	// JPA
 
 	@Override
-	public EntityDomainType<T> getModel() {
+	public SqmEntityDomainType<T> getModel() {
 		// Or should we throw an exception instead?
 		return null;
 	}
@@ -95,7 +95,7 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
+	public SqmPathSource<T> getResolvedModel() {
 		return getReferencedPathSource();
 	}
 

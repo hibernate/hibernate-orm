@@ -148,7 +148,8 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			data.setInstance( instance );
 			if ( concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
 					&& isPersistentAttributeInterceptable( instance )
-					&& getAttributeInterceptor( instance ) instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor ) {
+					&& getAttributeInterceptor( instance )
+							instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor ) {
 				if ( enhancementInterceptor.isInitialized() ) {
 					data.setState( State.INITIALIZED );
 				}

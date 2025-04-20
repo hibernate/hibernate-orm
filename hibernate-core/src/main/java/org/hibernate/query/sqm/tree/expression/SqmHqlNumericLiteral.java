@@ -9,12 +9,12 @@ import java.math.BigInteger;
 import java.util.Locale;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -33,12 +33,16 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 	private final String literalValue;
 	private final NumericTypeCategory typeCategory;
+	private BasicDomainType<N> type;
 
 	public SqmHqlNumericLiteral(
 			String literalValue,
 			BasicDomainType<N> type,
 			NodeBuilder criteriaBuilder) {
-		this( literalValue, interpretCategory( literalValue, type ), type, criteriaBuilder );
+		this( literalValue,
+				interpretCategory( literalValue, type.resolveExpressible( criteriaBuilder ) ),
+				type, criteriaBuilder );
+		this.type = type;
 	}
 
 	public SqmHqlNumericLiteral(
@@ -46,9 +50,10 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 			NumericTypeCategory typeCategory,
 			BasicDomainType<N> type,
 			NodeBuilder criteriaBuilder) {
-		super( type, criteriaBuilder );
+		super( type.resolveExpressible( criteriaBuilder ), criteriaBuilder );
 		this.literalValue = literalValue;
 		this.typeCategory = typeCategory;
+		this.type = type;
 	}
 
 	public String getUnparsedLiteralValue() {
@@ -65,22 +70,12 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 	}
 
 	@Override
-	public BasicDomainType<N> getNodeType() {
-		return (BasicDomainType<N>) NullnessUtil.castNonNull( super.getNodeType() );
-	}
-
-	@Override
-	public BasicDomainType<N> getExpressible() {
-		return getNodeType();
-	}
-
-	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitHqlNumericLiteral( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( literalValue );
 
 		switch ( typeCategory ) {
@@ -109,13 +104,13 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 	@Override
 	public String asLoggableText() {
 		final StringBuilder stringBuilder = new StringBuilder();
-		appendHqlString( stringBuilder );
+		appendHqlString( stringBuilder, SqmRenderContext.simpleContext() );
 		return stringBuilder.toString();
 	}
 
 	@Override
 	public SqmHqlNumericLiteral<N> copy(SqmCopyContext context) {
-		return new SqmHqlNumericLiteral<>( literalValue, typeCategory, getExpressible(), nodeBuilder() );
+		return new SqmHqlNumericLiteral<>( literalValue, typeCategory, type, nodeBuilder() );
 	}
 
 	private static <N extends Number> NumericTypeCategory interpretCategory(String literalValue, SqmExpressible<N> type) {

@@ -31,7 +31,7 @@ The static metamodel itself is undeniably useful and elegant.
 
 And it turns out that there was quite a lot of unlocked potential there.
 Since Hibernate 6.3 the Processor has started taking on a much bigger role.
-Today, it even contains a complete implementation of the Jakarta Data specification.
+Today, it even contains a link:{doc-data-repositories-url}[complete implementation of the Jakarta Data specification].
 
 Now, you still don't have to use the Hibernate Processor with Hibernate—the APIs we just mentioned still also accept plain strings—but we find that it works well with Gradle and integrates smoothly with our IDE, and the advantage in type-safety is compelling.
 ****

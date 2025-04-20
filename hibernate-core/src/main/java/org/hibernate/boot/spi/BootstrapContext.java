@@ -20,7 +20,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
@@ -55,10 +55,10 @@ public interface BootstrapContext {
 	TypeConfiguration getTypeConfiguration();
 
 	/**
-	 * Access to the {@code hibernate-models} {@linkplain SourceModelBuildingContext}
+	 * Access to the {@code hibernate-models} {@linkplain ModelsContext}
 	 */
 	@Incubating
-	SourceModelBuildingContext getModelsContext();
+	ModelsContext getModelsContext();
 
 	/**
 	 * The {@link SqmFunctionRegistry} belonging to this {@code BootstrapContext}.
@@ -210,7 +210,7 @@ public interface BootstrapContext {
 	 *
 	 * @return The {@link ConverterDescriptor}s registered via {@code MetadataBuilder}
 	 */
-	Collection<ConverterDescriptor> getAttributeConverters();
+	Collection<ConverterDescriptor<?, ?>> getAttributeConverters();
 
 	/**
 	 * Access to all explicit cache region mappings.

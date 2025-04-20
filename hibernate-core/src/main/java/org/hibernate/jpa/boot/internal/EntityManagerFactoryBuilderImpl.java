@@ -26,12 +26,11 @@ import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
-import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
@@ -233,7 +232,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			metamodelBuilder =
 					(MetadataBuilderImplementor)
 							metadataSources.getMetadataBuilder( standardServiceRegistry );
-			applyMetamodelBuilderSettings( mergedSettings, applyMappingResources( metadataSources ) );
+			applyMappingResources( metadataSources );
+			applyMetamodelBuilderSettings( mergedSettings, getConverterDescriptors( metadataSources ) );
 			applyMetadataBuilderContributor();
 			setupMappingReferences( metadataSources );
 			managedResources =
@@ -1247,8 +1247,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return new PersistenceException( message.toString() );
 	}
 
-	@SuppressWarnings("unchecked")
-	private List<ConverterDescriptor> applyMappingResources(MetadataSources metadataSources) {
+	private void applyMappingResources(MetadataSources metadataSources) {
 		// todo : where in the heck are `org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor.getManagedClassNames` handled?!?
 
 //		final ClassLoaderService classLoaderService = ssr.getService( ClassLoaderService.class );
@@ -1292,28 +1291,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 //			}
 //		}
 
-		List<ConverterDescriptor> converterDescriptors = null;
+		addMappingFiles( metadataSources );
+	}
 
-		// add any explicit Class references passed in
-		final List<Class<? extends AttributeConverter<?,?>>> loadedAnnotatedClasses =
-				(List<Class<? extends AttributeConverter<?,?>>>)
-						configurationValues.remove( AvailableSettings.LOADED_CLASSES );
-		if ( loadedAnnotatedClasses != null ) {
-			for ( Class<? extends AttributeConverter<?,?>> cls : loadedAnnotatedClasses ) {
-				if ( AttributeConverter.class.isAssignableFrom( cls ) ) {
-					if ( converterDescriptors == null ) {
-						converterDescriptors = new ArrayList<>();
-					}
-					final ClassmateContext classmateContext =
-							metamodelBuilder.getBootstrapContext().getClassmateContext();
-					converterDescriptors.add( new ClassBasedConverterDescriptor( cls, classmateContext ) );
-				}
-				else {
-					metadataSources.addAnnotatedClass( cls );
-				}
-			}
-		}
-
+	private void addMappingFiles(MetadataSources metadataSources) {
 		// add any explicit hbm.xml references passed in
 		final String explicitHbmXmls =
 				(String) configurationValues.remove( AvailableSettings.HBM_XML_FILES );
@@ -1324,18 +1305,45 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		// add any explicit orm.xml references passed in
-		final List<String> explicitOrmXmlList =
-				(List<String>) configurationValues.remove( AvailableSettings.ORM_XML_FILES );
+		final List<?> explicitOrmXmlList =
+				(List<?>) configurationValues.remove( AvailableSettings.ORM_XML_FILES );
 		if ( explicitOrmXmlList != null ) {
-			explicitOrmXmlList.forEach( metadataSources::addResource );
+			for ( Object object : explicitOrmXmlList ) {
+				metadataSources.addResource( (String) object );
+			}
 		}
+	}
 
-		return converterDescriptors;
+	private List<ConverterDescriptor<?, ?>> getConverterDescriptors(MetadataSources metadataSources) {
+		final Object loadedClasses = configurationValues.remove( AvailableSettings.LOADED_CLASSES );
+		if ( loadedClasses instanceof List<?> loadedAnnotatedClasses) {
+			List<ConverterDescriptor<?, ?>> converterDescriptors = null;
+			for ( Object annotatedClass : loadedAnnotatedClasses ) {
+				if ( annotatedClass instanceof Class<?> converterClass ) {
+					if ( AttributeConverter.class.isAssignableFrom( converterClass ) ) {
+						if ( converterDescriptors == null ) {
+							converterDescriptors = new ArrayList<>();
+						}
+						@SuppressWarnings("unchecked") // Safe, because we just checked!
+						final var attributeConverterType = (Class<? extends AttributeConverter<?, ?>>) converterClass;
+						converterDescriptors.add( ConverterDescriptors.of( attributeConverterType,
+								metamodelBuilder.getBootstrapContext().getClassmateContext() ) );
+					}
+					else {
+						metadataSources.addAnnotatedClass( converterClass );
+					}
+				}
+			}
+			return converterDescriptors;
+		}
+		else {
+			return null;
+		}
 	}
 
 	private void applyMetamodelBuilderSettings(
 			MergedSettings mergedSettings,
-			List<ConverterDescriptor> converterDescriptors) {
+			List<ConverterDescriptor<?,?>> converterDescriptors) {
 		metamodelBuilder.getBootstrapContext().markAsJpaBootstrap();
 
 		if ( persistenceUnit.getTempClassLoader() != null ) {
@@ -1343,12 +1351,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		metamodelBuilder.applyScanEnvironment( new StandardJpaScanEnvironmentImpl( persistenceUnit ) );
-		metamodelBuilder.applyScanOptions(
-				new StandardScanOptions(
-						(String) configurationValues.get( SCANNER_DISCOVERY ),
-						persistenceUnit.isExcludeUnlistedClasses()
-				)
-		);
+		metamodelBuilder.applyScanOptions( getScanOptions() );
 
 		final List<CacheRegionDefinition> cacheRegionDefinitions = mergedSettings.getCacheRegionDefinitions();
 		if ( cacheRegionDefinitions != null ) {
@@ -1360,6 +1363,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( converterDescriptors != null ) {
 			converterDescriptors.forEach( metamodelBuilder::applyAttributeConverter );
 		}
+	}
+
+	private StandardScanOptions getScanOptions() {
+		return new StandardScanOptions(
+				(String) configurationValues.get( SCANNER_DISCOVERY ),
+				persistenceUnit.isExcludeUnlistedClasses()
+		);
 	}
 
 	private void applyTypeContributors() {

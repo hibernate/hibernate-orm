@@ -16,8 +16,8 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.Replacer;
-import org.hibernate.dialect.SQLServerCastingXmlArrayJdbcTypeConstructor;
-import org.hibernate.dialect.SQLServerCastingXmlJdbcType;
+import org.hibernate.dialect.type.SQLServerCastingXmlArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.SQLServerCastingXmlJdbcType;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.SQLServerAggregateSupport;
@@ -28,7 +28,7 @@ import org.hibernate.dialect.function.SqlServerConvertTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.SQLServer2005LimitHandler;
+import org.hibernate.community.dialect.pagination.SQLServer2005LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
@@ -649,39 +649,31 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 				lockMode = lockOptions.getLockMode();
 			}
 
-			final String writeLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? "updlock" : "updlock,holdlock";
-			final String readLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? "updlock" : "holdlock";
+			final int timeOut = lockOptions.getTimeOut();
 
-			final String noWaitStr = lockOptions.getTimeOut() == LockOptions.NO_WAIT ? ",nowait" : "";
-			final String skipLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? ",readpast" : "";
+			final String writeLockStr = timeOut == LockOptions.SKIP_LOCKED ? "updlock" : "updlock,holdlock";
+			final String readLockStr = timeOut == LockOptions.SKIP_LOCKED ? "updlock" : "holdlock";
 
-			switch ( lockMode ) {
-				case PESSIMISTIC_WRITE:
-				case WRITE:
-					return tableName + " with (" + writeLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
-				case PESSIMISTIC_READ:
-					return tableName + " with (" + readLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
-				case UPGRADE_SKIPLOCKED:
-					return tableName + " with (updlock,rowlock,readpast" + noWaitStr + ")";
-				case UPGRADE_NOWAIT:
-					return tableName + " with (updlock,holdlock,rowlock,nowait)";
-				default:
-					return tableName;
-			}
+			final String noWaitStr = timeOut == LockOptions.NO_WAIT ? ",nowait" : "";
+			final String skipLockStr = timeOut == LockOptions.SKIP_LOCKED ? ",readpast" : "";
+
+			return switch ( lockMode ) {
+				case PESSIMISTIC_WRITE, WRITE ->
+						tableName + " with (" + writeLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
+				case PESSIMISTIC_READ ->
+						tableName + " with (" + readLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
+				case UPGRADE_SKIPLOCKED -> tableName + " with (updlock,rowlock,readpast" + noWaitStr + ")";
+				case UPGRADE_NOWAIT -> tableName + " with (updlock,holdlock,rowlock,nowait)";
+				default -> tableName;
+			};
 		}
 		else {
-			switch ( lockOptions.getLockMode() ) {
-				case UPGRADE_NOWAIT:
-				case PESSIMISTIC_WRITE:
-				case WRITE:
-					return tableName + " with (updlock,rowlock)";
-				case PESSIMISTIC_READ:
-					return tableName + " with (holdlock,rowlock)";
-				case UPGRADE_SKIPLOCKED:
-					return tableName + " with (updlock,rowlock,readpast)";
-				default:
-					return tableName;
-			}
+			return switch ( lockOptions.getLockMode() ) {
+				case UPGRADE_NOWAIT, PESSIMISTIC_WRITE, WRITE -> tableName + " with (updlock,rowlock)";
+				case PESSIMISTIC_READ -> tableName + " with (holdlock,rowlock)";
+				case UPGRADE_SKIPLOCKED -> tableName + " with (updlock,rowlock,readpast)";
+				default -> tableName;
+			};
 		}
 	}
 

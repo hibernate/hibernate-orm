@@ -105,14 +105,14 @@ public final class ForeignKeys {
 			if ( value == null ) {
 				return null;
 			}
-			else if ( type instanceof EntityType ) {
-				return nullifyEntityType( value, propertyName, (EntityType) type );
+			else if ( type instanceof EntityType entityType ) {
+				return nullifyEntityType( value, propertyName, entityType );
 			}
 			else if ( type instanceof AnyType ) {
 				return isNullifiable( null, value) ? null : value;
 			}
-			else if ( type instanceof ComponentType ) {
-				return nullifyCompositeType( value, propertyName, (ComponentType) type );
+			else if ( type instanceof ComponentType componentType ) {
+				return nullifyCompositeType( value, propertyName, componentType );
 			}
 			else {
 				return value;

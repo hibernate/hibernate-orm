@@ -13,6 +13,10 @@ import org.hibernate.query.Query;
  * this one is recoverable!
  *
  * @author Gavin King
+ *
+ * @see jakarta.persistence.Query#getSingleResult
+ * @see org.hibernate.query.SelectionQuery#getSingleResult
+ * @see jakarta.persistence.NonUniqueResultException
  */
 public class NonUniqueResultException extends HibernateException {
 

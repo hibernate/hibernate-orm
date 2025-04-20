@@ -88,9 +88,10 @@ public class ColumnValueBindingBuilder {
 			ParameterUsage parameterUsage,
 			Consumer<Object> parameterConsumer) {
 		final JdbcType jdbcType = jdbcMapping.getJdbcType();
-		final EmbeddableMappingType aggregateMappingType = jdbcType instanceof AggregateJdbcType
-				? ( (AggregateJdbcType) jdbcType ).getEmbeddableMappingType()
-				: null;
+		final EmbeddableMappingType aggregateMappingType =
+				jdbcType instanceof AggregateJdbcType aggregateJdbcType
+						? aggregateJdbcType.getEmbeddableMappingType()
+						: null;
 		if ( aggregateMappingType != null && !aggregateMappingType.shouldBindAggregateMapping() ) {
 			final ColumnValueParameterList parameters = new ColumnValueParameterList(
 					mutatingTableReference,

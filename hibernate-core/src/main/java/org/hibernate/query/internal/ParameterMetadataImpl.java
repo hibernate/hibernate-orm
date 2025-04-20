@@ -5,6 +5,7 @@
 package org.hibernate.query.internal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -31,6 +32,7 @@ import jakarta.persistence.Parameter;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
@@ -156,6 +158,11 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	}
 
 	@Override
+	public Collection<QueryParameter<?>> getParameters() {
+		return unmodifiableSet( queryParameters.keySet() );
+	}
+
+	@Override
 	public QueryParameterBindings createBindings(SessionFactoryImplementor sessionFactory) {
 		return queryParameterBindingsTemplate == null
 				? QueryParameterBindingsImpl.EMPTY
@@ -197,7 +204,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 	@Override
 	public Set<QueryParameterImplementor<?>> getRegistrations() {
-		return Collections.unmodifiableSet( queryParameters.keySet() );
+		return unmodifiableSet( queryParameters.keySet() );
 	}
 
 	@Override
@@ -213,8 +220,8 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 	@Override
 	public <P> QueryParameterImplementor<P> resolve(Parameter<P> param) {
-		if ( param instanceof QueryParameterImplementor ) {
-			return (QueryParameterImplementor<P>) param;
+		if ( param instanceof QueryParameterImplementor<P> parameterImplementor ) {
+			return parameterImplementor;
 		}
 
 		final String errorMessage = "Could not resolve jakarta.persistence.Parameter '" + param + "' to org.hibernate.query.QueryParameter";

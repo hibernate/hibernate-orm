@@ -5,6 +5,8 @@
 package org.hibernate.query.restriction;
 
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.FetchParent;
+
 
 /**
  * A non-root element of a {@link Path}, using a stringly-typed
@@ -27,5 +29,10 @@ record NamedPathElement<X, U, V>(Path<? super X, U> parent, String attributeName
 												+ "' is not of type '" + attributeType.getName() + "'" );
 		}
 		return path;
+	}
+
+	@Override
+	public FetchParent<?, V> fetch(Root<? extends X> root) {
+		return parent.fetch( root ).fetch( attributeName );
 	}
 }

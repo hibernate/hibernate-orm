@@ -29,7 +29,7 @@ public class DdlTypeHelper {
 	public static BasicType<?> resolveArrayType(DomainType<?> elementType, TypeConfiguration typeConfiguration) {
 		@SuppressWarnings("unchecked") final BasicPluralJavaType<Object> arrayJavaType = (BasicPluralJavaType<Object>) typeConfiguration.getJavaTypeRegistry()
 				.getDescriptor(
-						Array.newInstance( elementType.getBindableJavaType(), 0 ).getClass()
+						Array.newInstance( elementType.getJavaType(), 0 ).getClass()
 				);
 		final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
 		return arrayJavaType.resolveType(
@@ -46,7 +46,7 @@ public class DdlTypeHelper {
 		@SuppressWarnings("unchecked") final BasicPluralJavaType<Object> arrayJavaType = (BasicPluralJavaType<Object>) typeConfiguration.getJavaTypeRegistry()
 				.getDescriptor( List.class )
 				.createJavaType(
-						new ParameterizedTypeImpl( List.class, new Type[]{ elementType.getBindableJavaType() }, null ),
+						new ParameterizedTypeImpl( List.class, new Type[]{ elementType.getJavaType() }, null ),
 						typeConfiguration
 				);
 		final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
@@ -72,8 +72,8 @@ public class DdlTypeHelper {
 	}
 
 	public static String getTypeName(JdbcMappingContainer type, Size size, TypeConfiguration typeConfiguration) {
-		if ( type instanceof SqlTypedMapping ) {
-			return AbstractSqlAstTranslator.getSqlTypeName( (SqlTypedMapping) type, typeConfiguration );
+		if ( type instanceof SqlTypedMapping sqlTypedMapping ) {
+			return AbstractSqlAstTranslator.getSqlTypeName( sqlTypedMapping, typeConfiguration );
 		}
 		else {
 			final BasicType<?> basicType = (BasicType<?>) type.getSingleJdbcMapping();
@@ -90,8 +90,8 @@ public class DdlTypeHelper {
 	}
 
 	public static String getTypeName(ReturnableType<?> type, Size size, TypeConfiguration typeConfiguration) {
-		if ( type instanceof SqlTypedMapping ) {
-			return AbstractSqlAstTranslator.getSqlTypeName( (SqlTypedMapping) type, typeConfiguration );
+		if ( type instanceof SqlTypedMapping sqlTypedMapping ) {
+			return AbstractSqlAstTranslator.getSqlTypeName( sqlTypedMapping, typeConfiguration );
 		}
 		else {
 			final BasicType<?> basicType = (BasicType<?>) ( (JdbcMappingContainer) type ).getSingleJdbcMapping();
@@ -116,8 +116,8 @@ public class DdlTypeHelper {
 	}
 
 	public static String getCastTypeName(JdbcMappingContainer type, Size size, TypeConfiguration typeConfiguration) {
-		if ( type instanceof SqlTypedMapping ) {
-			return AbstractSqlAstTranslator.getCastTypeName( (SqlTypedMapping) type, typeConfiguration );
+		if ( type instanceof SqlTypedMapping sqlTypedMapping ) {
+			return AbstractSqlAstTranslator.getCastTypeName( sqlTypedMapping, typeConfiguration );
 		}
 		else {
 			final BasicType<?> basicType = (BasicType<?>) type.getSingleJdbcMapping();
@@ -134,8 +134,8 @@ public class DdlTypeHelper {
 	}
 
 	public static String getCastTypeName(ReturnableType<?> type, Size size, TypeConfiguration typeConfiguration) {
-		if ( type instanceof SqlTypedMapping ) {
-			return AbstractSqlAstTranslator.getCastTypeName( (SqlTypedMapping) type, typeConfiguration );
+		if ( type instanceof SqlTypedMapping sqlTypedMapping ) {
+			return AbstractSqlAstTranslator.getCastTypeName( sqlTypedMapping, typeConfiguration );
 		}
 		else {
 			final BasicType<?> basicType = (BasicType<?>) ( (JdbcMappingContainer) type ).getSingleJdbcMapping();

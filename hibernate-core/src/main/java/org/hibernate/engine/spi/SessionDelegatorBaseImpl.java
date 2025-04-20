@@ -4,14 +4,23 @@
  */
 package org.hibernate.engine.spi;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.UUID;
-
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FindOption;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockOption;
+import jakarta.persistence.RefreshOption;
+import jakarta.persistence.TypedQueryReference;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
+import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.Metamodel;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
@@ -30,6 +39,7 @@ import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownProfileException;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -54,24 +64,14 @@ import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
-
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.FindOption;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.LockOption;
-import jakarta.persistence.RefreshOption;
-import jakarta.persistence.TypedQueryReference;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaSelect;
-import jakarta.persistence.criteria.CriteriaUpdate;
-import jakarta.persistence.metamodel.Metamodel;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.type.format.FormatMapper;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.UUID;
 
 /**
  * A wrapper class that delegates all method invocations to a delegate instance of
@@ -136,11 +136,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public Interceptor getInterceptor() {
 		return delegate.getInterceptor();
-	}
-
-	@Override
-	public void setAutoClear(boolean enabled) {
-		delegate.setAutoClear( enabled );
 	}
 
 	@Override
@@ -246,6 +241,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public boolean isCriteriaCopyTreeEnabled() {
 		return delegate.isCriteriaCopyTreeEnabled();
+	}
+
+	@Override
+	public boolean isCriteriaPlanCacheEnabled() {
+		return delegate.isCriteriaPlanCacheEnabled();
+	}
+
+	@Override
+	public void setCriteriaPlanCacheEnabled(boolean jpaCriteriaCacheEnabled) {
+		delegate.setCriteriaPlanCacheEnabled( jpaCriteriaCacheEnabled );
 	}
 
 	@Override
@@ -366,16 +371,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public boolean isOpenOrWaitingForAutoClose() {
 		return delegate.isOpenOrWaitingForAutoClose();
-	}
-
-	@Override
-	public boolean shouldAutoClose() {
-		return delegate.shouldAutoClose();
-	}
-
-	@Override
-	public boolean isAutoCloseSessionEnabled() {
-		return delegate.isAutoCloseSessionEnabled();
 	}
 
 	@Override
@@ -584,6 +579,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> resultType) {
 		return queryDelegate().createSelectionQuery( hqlString, resultType );
+	}
+
+	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
+		return queryDelegate().createSelectionQuery( hqlString, resultGraph );
 	}
 
 	@Override
@@ -963,7 +963,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options) {
+	public <E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options) {
 		return delegate.findMultiple( entityType, ids, options );
 	}
 
@@ -1148,6 +1148,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public void registerProcess(AfterTransactionCompletionProcess process) {
+		delegate.registerProcess( process );
+	}
+
+	@Override
 	public Object instantiate(EntityPersister persister, Object id) throws HibernateException {
 		return delegate.instantiate( persister, id );
 	}
@@ -1230,5 +1235,15 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public FormatMapper getXmlFormatMapper() {
 		return delegate.getXmlFormatMapper();
+	}
+
+	@Override
+	public Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode) {
+		return delegate.loadFromSecondLevelCache( persister, entityKey, instanceToLoad, lockMode );
+	}
+
+	@Override
+	public boolean isIdentifierRollbackEnabled() {
+		return delegate.isIdentifierRollbackEnabled();
 	}
 }

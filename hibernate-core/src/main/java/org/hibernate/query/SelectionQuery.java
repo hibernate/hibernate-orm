@@ -100,11 +100,6 @@ import org.hibernate.query.restriction.Restriction;
  * every {@link jakarta.persistence.FetchType#EAGER eager} {@code @ManyToOne} or
  * {@code @OneToOne} association belonging to an entity returned by the query.
  * <p>
- * The method {@link #addRestriction(Restriction)} allows application of additional
- * {@linkplain Restriction filtering} to the query results. The static factory
- * methods of {@code Restriction} are used to express filtering criteria of various
- * kinds.
- * <p>
  * Finally, two alternative approaches to pagination are available:
  * <ol>
  * <li>
@@ -114,10 +109,9 @@ import org.hibernate.query.restriction.Restriction;
  * {@link #setFirstResult(int)} and {@link #setMaxResults(int)}.
  * <pre>
  * session.createSelectionQuery("from Book", Book.class)
- *         .addRestriction(Restriction.contains(Book_.title, "hibernate", false))
  *         .setOrder(Order.desc(Book_.title))
  *         .setPage(Page.first(50))
- *         .getResultList() );
+ *         .getResultList();
  * </pre>
  * <li>
  * On the other hand, {@link KeyedPage} and {@link KeyedResultList}, along with
@@ -293,7 +287,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 *
 	 * @since 6.3
 	 */
-	SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic);
+	SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
 
 	/**
 	 * Enable the {@linkplain org.hibernate.annotations.FetchProfile fetch
@@ -646,6 +640,16 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * Specifies whether follow-on locking should be applied
 	 */
 	SelectionQuery<R> setFollowOnLocking(boolean enable);
+
+	/**
+	 * Set a {@link TupleTransformer}.
+	 */
+	<T> SelectionQuery<T> setTupleTransformer(TupleTransformer<T> transformer);
+
+	/**
+	 * Set a {@link ResultListTransformer}.
+	 */
+	SelectionQuery<R> setResultListTransformer(ResultListTransformer<R> transformer);
 
 	@Override
 	SelectionQuery<R> setParameter(String name, Object value);

@@ -426,18 +426,20 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				assert columnNames.size() == 1;
 				return new FetchMementoBasicStandard( navigablePath, basicPart, columnNames.get( 0 ) );
 			}
-			else if ( subPart instanceof EntityValuedFetchable ) {
-				return new FetchMementoEntityStandard( navigablePath, (EntityValuedFetchable) subPart, columnNames );
+			else if ( subPart instanceof EntityValuedFetchable entityValuedFetchable ) {
+				return new FetchMementoEntityStandard( navigablePath, entityValuedFetchable, columnNames );
 			}
-			else if( subPart instanceof EmbeddedAttributeMapping ){
-				final ModelPart subPart1 = ( (EmbeddedAttributeMapping) subPart ).findSubPart( propertyPath.substring(
+			else if( subPart instanceof EmbeddedAttributeMapping embeddedAttributeMapping ){
+				final ModelPart subPart1 = embeddedAttributeMapping.findSubPart( propertyPath.substring(
 						propertyPath.indexOf( '.' ) + 1), null );
 				return getFetchMemento( navigablePath,subPart1 );
 			}
-			throw new UnsupportedOperationException(
-					"Only support for basic-valued, entity-valued and embedded model-parts have been implemented : " + propertyPath
-							+ " [" + subPart + "]"
-			);
+			else {
+				throw new UnsupportedOperationException(
+						"Only support for basic-valued, entity-valued and embedded model-parts have been implemented : " + propertyPath
+						+ " [" + subPart + "]"
+				);
+			}
 		}
 	}
 }

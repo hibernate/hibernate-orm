@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.spi.EventSource;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.MultiIdEntityLoader;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.internal.CacheLoadHelper.PersistenceContextEntry;
@@ -78,7 +78,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 	}
 
 	@Override
-	public final <K> List<T> load(K[] ids, MultiIdLoadOptions loadOptions, EventSource session) {
+	public final <K> List<T> load(K[] ids, MultiIdLoadOptions loadOptions, SharedSessionContractImplementor session) {
 		assert ids != null;
 		return loadOptions.isOrderReturnEnabled()
 				? performOrderedMultiLoad( ids, loadOptions, session )
@@ -88,47 +88,50 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 	private List<T> performUnorderedMultiLoad(
 			Object[] ids,
 			MultiIdLoadOptions loadOptions,
-			EventSource session) {
+			SharedSessionContractImplementor session) {
 		assert !loadOptions.isOrderReturnEnabled();
 		assert ids != null;
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef( "#performUnorderedMultiLoad(`%s`, ..)", getLoadable().getEntityName() );
+			MULTI_KEY_LOAD_LOGGER.tracef( "Unordered MultiLoad starting: "
+					+ getLoadable().getEntityName() );
 		}
-		return unorderedMultiLoad( ids, loadOptions, lockOptions( loadOptions ), session );
+		return unorderedMultiLoad( ids, loadOptions, session );
 	}
 
-	protected List<T> performOrderedMultiLoad(
+	private List<T> performOrderedMultiLoad(
 			Object[] ids,
 			MultiIdLoadOptions loadOptions,
-			EventSource session) {
+			SharedSessionContractImplementor session) {
 		assert loadOptions.isOrderReturnEnabled();
 		assert ids != null;
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef( "#performOrderedMultiLoad(`%s`, ..)", getLoadable().getEntityName() );
+			MULTI_KEY_LOAD_LOGGER.tracef( "Ordered MultiLoad starting: "
+					+ getLoadable().getEntityName() );
 		}
-		return orderedMultiLoad( ids, loadOptions, lockOptions( loadOptions ), session );
+		return orderedMultiLoad( ids, loadOptions, session );
 	}
 
 	private List<T> orderedMultiLoad(
 			Object[] ids,
 			MultiIdLoadOptions loadOptions,
-			LockOptions lockOptions,
-			EventSource session) {
+			SharedSessionContractImplementor session) {
 		final boolean idCoercionEnabled = isIdCoercionEnabled();
 		final JavaType<?> idType = getLoadable().getIdentifierMapping().getJavaType();
 
 		final int maxBatchSize = maxBatchSize( ids, loadOptions );
 
-		final List<Object> result = arrayList( ids.length );
+		final List<Object> results = arrayList( ids.length );
 
 		final List<Object> idsInBatch = new ArrayList<>();
 		final List<Integer> elementPositionsLoadedByBatch = new ArrayList<>();
+
+		final LockOptions lockOptions = lockOptions( loadOptions );
 
 		for ( int i = 0; i < ids.length; i++ ) {
 			final Object id = idCoercionEnabled ? idType.coerce( ids[i], session ) : ids[i];
 			final EntityKey entityKey = new EntityKey( id, getLoadable().getEntityPersister() );
 
-			if ( !loadFromEnabledCaches( loadOptions, session, id, lockOptions, entityKey, result, i ) ) {
+			if ( !loadFromEnabledCaches( loadOptions, session, id, lockOptions, entityKey, results, i ) ) {
 				// if we did not hit any of the continues above,
 				// then we need to batch load the entity state.
 				idsInBatch.add( id );
@@ -140,7 +143,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 				}
 
 				// Save the EntityKey instance for use later
-				result.add( i, entityKey );
+				results.add( i, entityKey );
 				elementPositionsLoadedByBatch.add( i );
 			}
 		}
@@ -152,13 +155,13 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		}
 
 		// for each result where we set the EntityKey earlier, replace them
-		handleResults( loadOptions, session, elementPositionsLoadedByBatch, result );
+		handleResults( loadOptions, session, elementPositionsLoadedByBatch, results );
 
 		//noinspection unchecked
-		return (List<T>) result;
+		return (List<T>) results;
 	}
 
-	protected static LockOptions lockOptions(MultiIdLoadOptions loadOptions) {
+	private static LockOptions lockOptions(MultiIdLoadOptions loadOptions) {
 		return loadOptions.getLockOptions() == null
 				? new LockOptions( LockMode.NONE )
 				: loadOptions.getLockOptions();
@@ -166,9 +169,9 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 
 	protected abstract int maxBatchSize(Object[] ids, MultiIdLoadOptions loadOptions);
 
-	protected void handleResults(
+	private void handleResults(
 			MultiIdLoadOptions loadOptions,
-			EventSource session,
+			SharedSessionContractImplementor session,
 			List<Integer> elementPositionsLoadedByBatch,
 			List<Object> results) {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
@@ -197,11 +200,11 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			List<Object> idsInBatch,
 			LockOptions lockOptions,
 			MultiIdLoadOptions loadOptions,
-			EventSource session);
+			SharedSessionContractImplementor session);
 
-	protected boolean loadFromEnabledCaches(
+	private boolean loadFromEnabledCaches(
 			MultiIdLoadOptions loadOptions,
-			EventSource session,
+			SharedSessionContractImplementor session,
 			Object id,
 			LockOptions lockOptions,
 			EntityKey entityKey,
@@ -216,7 +219,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			EntityKey entityKey,
 			LockOptions lockOptions,
 			List<Object> results, int i,
-			EventSource session) {
+			SharedSessionContractImplementor session) {
 
 		if ( loadOptions.isSessionCheckingEnabled() ) {
 			// look for it in the Session first
@@ -250,14 +253,14 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 	protected List<T> unorderedMultiLoad(
 			Object[] ids,
 			MultiIdLoadOptions loadOptions,
-			LockOptions lockOptions,
-			EventSource session) {
-		final List<T> result = arrayList( ids.length );
+			SharedSessionContractImplementor session) {
+		final LockOptions lockOptions = lockOptions( loadOptions );
+		final List<T> results = arrayList( ids.length );
 		final Object[] unresolvableIds =
 				resolveInCachesIfEnabled( ids, loadOptions, lockOptions, session,
-						(position, entityKey, resolvedRef) -> result.add( (T) resolvedRef ) );
+						(position, entityKey, resolvedRef) -> results.add( (T) resolvedRef ) );
 		if ( !isEmpty( unresolvableIds ) ) {
-			loadEntitiesWithUnresolvedIds( loadOptions, lockOptions, session, unresolvableIds, result );
+			loadEntitiesWithUnresolvedIds( unresolvableIds, loadOptions, lockOptions, results, session );
 			final BatchFetchQueue batchFetchQueue = session.getPersistenceContextInternal().getBatchFetchQueue();
 			final EntityPersister persister = getLoadable().getEntityPersister();
 			for ( Object id : unresolvableIds ) {
@@ -269,21 +272,21 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 				}
 			}
 		}
-		return result;
+		return results;
 	}
 
 	protected abstract void loadEntitiesWithUnresolvedIds(
+			Object[] unresolvableIds,
 			MultiIdLoadOptions loadOptions,
 			LockOptions lockOptions,
-			EventSource session,
-			Object[] unresolvableIds,
-			List<T> results);
+			List<T> results,
+			SharedSessionContractImplementor session);
 
-	protected final <R> Object[] resolveInCachesIfEnabled(
+	private <R> Object[] resolveInCachesIfEnabled(
 			Object[] ids,
 			@NonNull MultiIdLoadOptions loadOptions,
 			@NonNull LockOptions lockOptions,
-			EventSource session,
+			SharedSessionContractImplementor session,
 			ResolutionConsumer<R> resolutionConsumer) {
 		return loadOptions.isSessionCheckingEnabled() || loadOptions.isSecondLevelCacheCheckingEnabled()
 				// the user requested that we exclude ids corresponding to already managed
@@ -296,11 +299,11 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 				: ids;
 	}
 
-	protected final <R> Object[] resolveInCaches(
+	private <R> Object[] resolveInCaches(
 			Object[] ids,
 			MultiIdLoadOptions loadOptions,
 			LockOptions lockOptions,
-			EventSource session,
+			SharedSessionContractImplementor session,
 			ResolutionConsumer<R> resolutionConsumer) {
 
 		final boolean idCoercionEnabled = isIdCoercionEnabled();
@@ -346,7 +349,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			Object id,
 			EntityKey entityKey,
 			List<Object> unresolvedIds, int i,
-			EventSource session) {
+			SharedSessionContractImplementor session) {
 
 		// look for it in the Session first
 		final PersistenceContextEntry entry =
@@ -383,7 +386,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		return unresolvedIds;
 	}
 
-	private Object loadFromSecondLevelCache(EntityKey entityKey, LockOptions lockOptions, EventSource session) {
+	private Object loadFromSecondLevelCache(EntityKey entityKey, LockOptions lockOptions, SharedSessionContractImplementor session) {
 		final EntityPersister persister = getLoadable().getEntityPersister();
 		return session.loadFromSecondLevelCache( persister, entityKey, null, lockOptions.getLockMode() );
 	}

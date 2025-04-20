@@ -11,8 +11,8 @@ import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
@@ -38,7 +38,6 @@ import org.hibernate.orm.test.cid.Order;
 import org.hibernate.orm.test.cid.Product;
 import org.hibernate.query.Query;
 import org.hibernate.query.SyntaxException;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -64,6 +63,8 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -81,6 +82,7 @@ import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertClassAssignability;
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests the integration of the new AST parser into the loading of query results using
@@ -1451,7 +1453,7 @@ public class ASTParserLoadingTest {
 	public void testComponentQueries(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<?> query = session.createQuery( "select h.name from Human h" );
+					final Query<?> query = session.createQuery( "select h.name from Human h" );
 					final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) query.unwrap(
 							QuerySqmImpl.class ).getSqmStatement();
 					assertThat( sqmStatement.getQuerySpec().getSelectClause().getSelections().size() ).isEqualTo( 1 );
@@ -2156,8 +2158,8 @@ public class ASTParserLoadingTest {
 		assertThat( selectedPath.getReferencedPathSource() ).isInstanceOf( EntitySqmPathSource.class );
 		final EntitySqmPathSource selectedAttr = (EntitySqmPathSource) selectedPath.getReferencedPathSource();
 		assertThat( selectedAttr.getPathName() ).isEqualTo( "zoo" );
-		assertThat( selectedAttr.getSqmPathType() ).isInstanceOf( EntityDomainType.class );
-		final EntityDomainType<?> zooType = (EntityDomainType<?>) selectedAttr.getSqmPathType();
+		assertThat( selectedAttr.getPathType() ).isInstanceOf( EntityDomainType.class );
+		final EntityDomainType<?> zooType = (EntityDomainType<?>) selectedAttr.getPathType();
 		assertThat( zooType.getHibernateEntityName() ).isEqualTo( Zoo.class.getName() );
 	}
 
@@ -2792,12 +2794,8 @@ public class ASTParserLoadingTest {
 					String str = (String) session.createQuery(
 									"select str(an.bodyWeight) from Animal an where str(an.bodyWeight) like '%1%'" )
 							.uniqueResult();
-					if ( session.getDialect() instanceof DB2Dialect ) {
-						assertThat( str ).startsWith( "1.234" );
-					}
-					else {
-						assertThat( str ).startsWith( "123.4" );
-					}
+					BigDecimal value = new BigDecimal( str, new MathContext( 4, RoundingMode.DOWN ) );
+					assertEquals( new BigDecimal( "123.4" ), value );
 
 					String dateStr1 = (String) session.createQuery( "select str(current_date) from Animal" )
 							.uniqueResult();

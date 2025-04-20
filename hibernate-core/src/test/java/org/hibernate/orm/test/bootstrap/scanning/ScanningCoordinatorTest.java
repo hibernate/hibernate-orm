@@ -191,10 +191,8 @@ public class ScanningCoordinatorTest {
 
 		when( bootstrapContext.getScanner() ).thenReturn( scanner );
 
-		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline(
-				new MetadataSources(),
-				bootstrapContext
-		);
+		final ManagedResourcesImpl managedResources =
+				ManagedResourcesImpl.baseline( new MetadataSources(), bootstrapContext );
 
 		ScanningCoordinator.INSTANCE.coordinateScan( managedResources, bootstrapContext, xmlMappingBinderAccess );
 
@@ -215,7 +213,8 @@ public class ScanningCoordinatorTest {
 	private void assertManagedResourcesAfterCoordinateScanWithScanner(final Scanner scanner, final boolean expectedIsManagedResourcesEmpty) {
 		when( bootstrapContext.getScanner() ).thenReturn( scanner );
 
-		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline( new MetadataSources(), bootstrapContext );
+		final ManagedResourcesImpl managedResources =
+				ManagedResourcesImpl.baseline( new MetadataSources(), bootstrapContext );
 
 		ScanningCoordinator.INSTANCE.coordinateScan( managedResources, bootstrapContext, xmlMappingBinderAccess );
 

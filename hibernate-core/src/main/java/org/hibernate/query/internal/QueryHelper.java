@@ -25,7 +25,7 @@ public class QueryHelper {
 			return types[0];
 		}
 
-		SqmExpressible<? extends T> highest = highestPrecedenceType2( types[0], types[1] );
+		var highest = highestPrecedenceType2( types[0], types[1] );
 		for ( int i = 2; i < types.length; i++ ) {
 			highest = highestPrecedenceType2( highest, types[i] );
 		}

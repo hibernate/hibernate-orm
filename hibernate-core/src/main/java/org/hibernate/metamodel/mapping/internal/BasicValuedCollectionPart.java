@@ -188,7 +188,8 @@ public class BasicValuedCollectionPart
 		// If the index is part of the element table group, we must use that explicitly here because the index is basic
 		// and thus there is no index table group registered. The logic in the PluralTableGroup prevents from looking
 		// into the element table group though because the element table group navigable path is not the parent of this navigable path
-		if ( nature == Nature.INDEX &&  collectionDescriptor.getAttributeMapping().getIndexMetadata().getIndexPropertyName() != null ) {
+		if ( nature == Nature.INDEX
+				&& collectionDescriptor.getAttributeMapping().getIndexMetadata().getIndexPropertyName() != null ) {
 			targetTableGroup = ( (PluralTableGroup) tableGroup ).getElementTableGroup();
 		}
 		else {
@@ -199,10 +200,7 @@ public class BasicValuedCollectionPart
 				getContainingTableExpression()
 		);
 		return exprResolver.resolveSqlSelection(
-				exprResolver.resolveSqlExpression(
-						tableReference,
-						selectableMapping
-				),
+				exprResolver.resolveSqlExpression( tableReference, selectableMapping ),
 				getJdbcMapping().getJdbcJavaType(),
 				fetchParent,
 				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
@@ -275,9 +273,9 @@ public class BasicValuedCollectionPart
 			parentNavigablePath = parentNavigablePath.getParent();
 		}
 
-		final TableGroup tableGroup = creationState.getSqlAstCreationState()
-				.getFromClauseAccess()
-				.findTableGroup( parentNavigablePath );
+		final TableGroup tableGroup =
+				creationState.getSqlAstCreationState().getFromClauseAccess()
+						.findTableGroup( parentNavigablePath );
 		final SqlSelection sqlSelection = resolveSqlSelection( fetchablePath, tableGroup, fetchParent, creationState );
 
 		return new BasicFetch<>(

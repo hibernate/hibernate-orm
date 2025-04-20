@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.Incubating;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * A named expression. Used when the name of the expression matters
@@ -54,8 +55,8 @@ public class SqmNamedExpression<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		expression.appendHqlString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		expression.appendHqlString( hql, context );
 		hql.append( " as " );
 		hql.append( name );
 	}

@@ -204,7 +204,7 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(ConverterDescriptor descriptor) {
+	public MetadataBuilder applyAttributeConverter(ConverterDescriptor<?,?> descriptor) {
 		delegate.applyAttributeConverter( descriptor );
 		return getThis();
 	}

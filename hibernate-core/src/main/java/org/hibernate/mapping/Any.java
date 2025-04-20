@@ -95,12 +95,11 @@ public class Any extends SimpleValue {
 	}
 
 	private void applySelectableToSuper(Selectable selectable) {
-		if ( selectable instanceof Column ) {
-			super.justAddColumn( (Column) selectable );
+		if ( selectable instanceof Column column ) {
+			super.justAddColumn( column );
 		}
-		else {
-			assert selectable instanceof Formula;
-			super.justAddFormula( (Formula) selectable );
+		else if ( selectable instanceof Formula formula ) {
+			super.justAddFormula( formula );
 		}
 	}
 
@@ -159,21 +158,19 @@ public class Any extends SimpleValue {
 		// note: adding column to meta or key mapping ultimately calls back into `#applySelectableToSuper`
 		//		to add the column to the ANY super.
 		if ( discriminatorDescriptor == null && getColumnSpan() == 0 ) {
-			if ( selectable instanceof Column ) {
-				metaMapping.addColumn( (Column) selectable );
+			if ( selectable instanceof Column column ) {
+				metaMapping.addColumn( column );
 			}
-			else {
-				assert selectable instanceof Formula;
-				metaMapping.addFormula( (Formula) selectable );
+			else if ( selectable instanceof Formula formula ) {
+				metaMapping.addFormula( formula );
 			}
 		}
 		else {
-			if ( selectable instanceof Column ) {
-				keyMapping.addColumn( (Column) selectable );
+			if ( selectable instanceof Column column ) {
+				keyMapping.addColumn( column );
 			}
-			else {
-				assert selectable instanceof Formula;
-				keyMapping.addFormula( (Formula) selectable );
+			else if ( selectable instanceof Formula formula ) {
+				keyMapping.addFormula( formula );
 			}
 		}
 	}
@@ -226,7 +223,7 @@ public class Any extends SimpleValue {
 
 	@Override
 	public boolean isSame(SimpleValue other) {
-		return other instanceof Any && isSame( (Any) other );
+		return other instanceof Any any && isSame( any );
 	}
 
 	public boolean isSame(Any other) {

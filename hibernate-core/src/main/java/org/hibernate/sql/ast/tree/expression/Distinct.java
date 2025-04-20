@@ -27,12 +27,12 @@ public class Distinct implements Expression, SqlExpressible, SqlAstNode {
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
-		if ( expression instanceof SqlExpressible) {
-			return ( (SqlExpressible) expression ).getJdbcMapping();
+		if ( expression instanceof SqlExpressible sqlExpressible) {
+			return sqlExpressible.getJdbcMapping();
 		}
 
-		if ( getExpressionType() instanceof SqlExpressible) {
-			return ( (SqlExpressible) getExpressionType() ).getJdbcMapping();
+		if ( getExpressionType() instanceof SqlExpressible sqlExpressible ) {
+			return sqlExpressible.getJdbcMapping();
 		}
 
 		if ( getExpressionType() != null ) {

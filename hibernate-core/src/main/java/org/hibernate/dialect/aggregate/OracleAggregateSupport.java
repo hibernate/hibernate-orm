@@ -10,8 +10,8 @@ import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.OracleArrayJdbcType;
-import org.hibernate.dialect.XmlHelper;
+import org.hibernate.dialect.type.OracleArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
@@ -35,7 +35,7 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.StructJdbcType;
+import org.hibernate.type.descriptor.jdbc.StructuredJdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -526,7 +526,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 					name -> new UserDefinedArrayType( "orm", namespace, name )
 			);
 			final ArrayJdbcType jdbcType = (ArrayJdbcType) ( (BasicType<?>) aggregateColumn.getValue().getType() ).getJdbcType();
-			final StructJdbcType elementJdbcType = (StructJdbcType) jdbcType.getElementJdbcType();
+			final StructuredJdbcType elementJdbcType = (StructuredJdbcType) jdbcType.getElementJdbcType();
 			if ( typeCode == STRUCT_ARRAY ) {
 				arrayType.setArraySqlTypeCode( ARRAY );
 				arrayType.setArrayLength( aggregateColumn.getArrayLength() == null ? 127 : aggregateColumn.getArrayLength() );

@@ -10,6 +10,7 @@ import java.util.List;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * @author Christian Beikov
@@ -65,13 +66,13 @@ public class SqmSummarization<T> extends AbstractSqmExpression<T> {
 		CUBE
 	}
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( kind );
 		hql.append( " (" );
-		groupings.get( 0 ).appendHqlString( hql );
+		groupings.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < groupings.size(); i++ ) {
 			hql.append(", ");
-			groupings.get( i ).appendHqlString( hql );
+			groupings.get( i ).appendHqlString( hql, context );
 		}
 		hql.append( ')' );
 	}

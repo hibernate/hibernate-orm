@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.id.usertype.json;
 
-import org.hibernate.dialect.PostgreSQLJsonPGObjectJsonbType;
+import org.hibernate.dialect.type.PostgreSQLJsonPGObjectJsonbType;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 
 public class JsonType extends AbstractSingleColumnStandardBasicType<Json> {

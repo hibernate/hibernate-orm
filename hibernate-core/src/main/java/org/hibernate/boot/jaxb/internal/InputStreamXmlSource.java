@@ -32,11 +32,11 @@ public class InputStreamXmlSource extends XmlSource {
 	}
 
 	@Override
-	public Binding doBind(Binder binder) {
+	public <T> Binding<T> doBind(Binder<T> binder) {
 		return doBind( binder, inputStream, getOrigin(), autoClose );
 	}
 
-	public static Binding doBind(Binder binder, InputStream inputStream, Origin origin, boolean autoClose) {
+	public static <T> Binding<T> doBind(Binder<T> binder, InputStream inputStream, Origin origin, boolean autoClose) {
 		try {
 			return binder.bind( inputStream, origin );
 		}

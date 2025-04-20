@@ -13,6 +13,7 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
@@ -24,7 +25,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
  *
  * @author Steve Ebersole
  */
-public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, BasicValuedMapping, JdbcMapping {
+public interface BasicType<T>
+		extends Type, BasicDomainType<T>, MappingType, BasicValuedMapping, JdbcMapping, SqmDomainType<T> {
 	/**
 	 * Get the names under which this type should be registered in the type registry.
 	 *
@@ -106,6 +108,11 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	default int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
+	}
+
+	@Override
+	default SqmDomainType<T> getSqmType() {
+		return this;
 	}
 
 	@Override

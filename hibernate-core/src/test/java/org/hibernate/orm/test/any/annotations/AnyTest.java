@@ -7,7 +7,7 @@ package org.hibernate.orm.test.any.annotations;
 import java.util.List;
 
 import org.hibernate.LazyInitializationException;
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -259,7 +259,7 @@ public class AnyTest {
 	public void testDefaultAnyAssociation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<PropertySet> query = session.createQuery(
+					final Query<PropertySet> query = session.createQuery(
 							"select s from PropertySet s where name = :name",
 							PropertySet.class
 					);

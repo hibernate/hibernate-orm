@@ -67,8 +67,8 @@ public class SumReturnTypeResolver implements FunctionReturnTypeResolver {
 		}
 		final ReturnableType<?> argType = extractArgumentType( arguments, 1 );
 		final BasicType<?> basicType;
-		if (argType instanceof BasicType<?>) {
-			basicType = (BasicType<?>) argType;
+		if ( argType instanceof BasicType<?> type ) {
+			basicType = type;
 		}
 		else {
 			basicType = typeConfiguration.getBasicTypeForJavaType( argType.getJavaType() );

@@ -23,7 +23,7 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
+import org.hibernate.metamodel.model.domain.internal.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -263,7 +263,7 @@ public class MetadataContext {
 			IdentifiableDomainType<X> entityType,
 			BiFunction<IdentifiableDomainType<X>, Property, PersistentAttribute<X, ?>> factoryFunction) {
 		final PersistentAttribute<X, ?> attribute;
-		final Component component = property.getValue() instanceof Component ? (Component) property.getValue() : null;
+		final Component component = property.getValue() instanceof Component comp ? comp : null;
 		if ( component != null && component.isGeneric() ) {
 			// This is an embeddable property that uses generics, we have to retrieve the generic
 			// component previously registered and create the concrete attribute

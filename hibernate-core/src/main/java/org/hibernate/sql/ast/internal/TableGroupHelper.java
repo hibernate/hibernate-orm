@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
+import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
@@ -140,7 +140,7 @@ public class TableGroupHelper extends AbstractSqlAstWalker {
 			final Expression lhs = comparisonPredicate.getLeftHandExpression();
 			final Expression rhs = comparisonPredicate.getRightHandExpression();
 			final SqlTuple lhsTuple;
-			if ( lhs instanceof SqlTupleContainer && ( lhsTuple = ( (SqlTupleContainer) lhs ).getSqlTuple() ) != null ) {
+			if ( lhs instanceof SqlTupleContainer tupleContainer && ( lhsTuple = tupleContainer.getSqlTuple() ) != null ) {
 				final SqlTuple rhsTuple = ( (SqlTupleContainer) rhs ).getSqlTuple();
 				final List<? extends Expression> lhsExpressions = lhsTuple.getExpressions();
 				final List<? extends Expression> rhsExpressions = rhsTuple.getExpressions();
@@ -225,11 +225,11 @@ public class TableGroupHelper extends AbstractSqlAstWalker {
 
 	@Override
 	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
-		if ( expression instanceof SelfRenderingSqlFragmentExpression ) {
-			checkSql( ( (SelfRenderingSqlFragmentExpression) expression ).getExpression() );
+		if ( expression instanceof SelfRenderingSqlFragmentExpression selfRenderingSqlFragmentExpression ) {
+			checkSql( selfRenderingSqlFragmentExpression.getExpression() );
 		}
-		else if ( expression instanceof CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression ) {
-			for ( TableReference usedTableReference : ( (CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression) expression ).getUsedTableReferences() ) {
+		else if ( expression instanceof CaseStatementDiscriminatorExpression caseStatementDiscriminatorExpression ) {
+			for ( TableReference usedTableReference : caseStatementDiscriminatorExpression.getUsedTableReferences() ) {
 				usedTableReference.accept( this );
 			}
 		}

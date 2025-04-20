@@ -7,6 +7,7 @@ package org.hibernate.query.range;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
+import org.hibernate.internal.util.ReflectHelper;
 
 import java.util.List;
 import java.util.Objects;
@@ -26,11 +27,11 @@ record ValueList<U>(List<U> values) implements Range<U> {
 
 	@Override
 	public Predicate toPredicate(Path<? extends U> path, CriteriaBuilder builder) {
-		return path.in( values.stream().map( builder::literal ).toList() );
+		return path.in( values );
 	}
 
-	@Override @SuppressWarnings("unchecked")
+	@Override
 	public Class<? extends U> getType() {
-		return (Class<? extends U>) values.get(0).getClass();
+		return ReflectHelper.getClass( values.get(0) );
 	}
 }

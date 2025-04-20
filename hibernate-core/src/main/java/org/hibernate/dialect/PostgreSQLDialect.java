@@ -21,7 +21,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -37,6 +36,17 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
+import org.hibernate.dialect.type.PgJdbcHelper;
+import org.hibernate.dialect.type.PostgreSQLArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.PostgreSQLCastingInetJdbcType;
+import org.hibernate.dialect.type.PostgreSQLCastingIntervalSecondJdbcType;
+import org.hibernate.dialect.type.PostgreSQLCastingJsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.PostgreSQLCastingJsonJdbcType;
+import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
+import org.hibernate.dialect.type.PostgreSQLOrdinalEnumJdbcType;
+import org.hibernate.dialect.type.PostgreSQLStructCastingJdbcType;
+import org.hibernate.dialect.type.PostgreSQLUUIDJdbcType;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -46,10 +56,10 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -105,7 +115,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
+import static java.lang.Integer.parseInt;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.type.SqlTypes.ARRAY;
@@ -1019,50 +1031,36 @@ public class PostgreSQLDialect extends Dialect {
 	 */
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
-				if ( sqlState != null ) {
-					switch ( Integer.parseInt( sqlState ) ) {
-						// CHECK VIOLATION
-						case 23514:
-							return extractUsingTemplate( "violates check constraint \"", "\"", sqle.getMessage() );
-						// UNIQUE VIOLATION
-						case 23505:
-							return extractUsingTemplate( "violates unique constraint \"", "\"", sqle.getMessage() );
-						// FOREIGN KEY VIOLATION
-						case 23503:
-							return extractUsingTemplate( "violates foreign key constraint \"", "\"", sqle.getMessage() );
+				final String sqlState = extractSqlState( sqle );
+				return sqlState == null ? null : switch ( parseInt( sqlState ) ) {
+					case 23505, 23514, 23503 ->
+						// UNIQUE, CHECK, OR FOREIGN KEY VIOLATION
+							extractUsingTemplate( "constraint \"", "\"", sqle.getMessage() );
+					case 23502 ->
 						// NOT NULL VIOLATION
-						case 23502:
-							return extractUsingTemplate(
-									"null value in column \"",
-									"\" violates not-null constraint",
-									sqle.getMessage()
-							);
-						// TODO: RESTRICT VIOLATION
-						case 23001:
-							return null;
-					}
-				}
-				return null;
+							extractUsingTemplate( "column \"", "\"", sqle.getMessage() );
+					default -> null;
+				};
 			} );
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-			if ( sqlState != null ) {
-				switch ( sqlState ) {
-					case "40P01":
-						// DEADLOCK DETECTED
-						return new LockAcquisitionException( message, sqlException, sql );
-					case "55P03":
-						// LOCK NOT AVAILABLE
-						return new PessimisticLockException( message, sqlException, sql );
-					case "57014":
-						return new QueryTimeoutException( message, sqlException, sql );
-				}
-			}
-			return null;
+			final String sqlState = extractSqlState( sqlException );
+			return sqlState == null ? null : switch ( sqlState ) {
+				case "40P01" ->
+					// DEADLOCK DETECTED
+						new LockAcquisitionException( message, sqlException, sql );
+				case "55P03" ->
+					// LOCK NOT AVAILABLE
+					//TODO: should we check that the message is "canceling statement due to lock timeout"
+					//      and return LockAcquisitionException if it is not?
+						new LockTimeoutException( message, sqlException, sql );
+				case "57014" ->
+					// QUERY CANCELLED
+						new QueryTimeoutException( message, sqlException, sql );
+				default -> null;
+			};
 		};
 	}
 
@@ -1327,6 +1325,11 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public String getReadLockString(String aliases, int timeout) {
 		return withTimeout(" for share of " + aliases, timeout );
+	}
+
+	@Override
+	public String getForUpdateString() {
+		return " for no key update";
 	}
 
 	@Override

@@ -261,8 +261,8 @@ public interface MappingSettings {
 	 * @since 6.5
 	 *
 	 * @see org.hibernate.type.SqlTypes#NAMED_ENUM
-	 * @see org.hibernate.dialect.PostgreSQLEnumJdbcType
-	 * @see org.hibernate.dialect.OracleEnumJdbcType
+	 * @see org.hibernate.dialect.type.PostgreSQLEnumJdbcType
+	 * @see org.hibernate.dialect.type.OracleEnumJdbcType
 	 */
 	@Incubating
 	String PREFER_NATIVE_ENUM_TYPES = "hibernate.type.prefer_native_enum_types";

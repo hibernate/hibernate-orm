@@ -57,6 +57,7 @@ public class NamedEntityGraphsTest {
 					EntityManager em = session.unwrap( EntityManager.class );
 					EntityGraph<?> graph = em.getEntityGraph( "name_salary_graph" );
 					assertThat( graph, notNullValue() );
+					assertThat( graph.getName(), is( "name_salary_graph" ) );
 
 					List<AttributeNode<?>> list =  graph.getAttributeNodes();
 					assertThat( list, notNullValue() );

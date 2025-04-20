@@ -220,10 +220,11 @@ public abstract sealed class PersistentClass
 		while ( superclass != null ) {
 			if ( subclass.getEntityName().equals( superclass.getEntityName() ) ) {
 				throw new MappingException(
-						"Circular inheritance mapping detected: " +
-								subclass.getEntityName() +
-								" will have itself as superclass when extending " +
-								getEntityName()
+						"Circular inheritance mapping: '"
+							+ subclass.getEntityName()
+							+ "' will have itself as superclass when extending '"
+							+ getEntityName()
+							+ "'"
 				);
 			}
 			superclass = superclass.getSuperclass();
@@ -896,8 +897,8 @@ public abstract sealed class PersistentClass
 	private boolean hasCollectionNotReferencingPK(Collection<Property> properties) {
 		for ( Property property : properties ) {
 			final Value value = property.getValue();
-			if ( value instanceof Component ) {
-				if ( hasCollectionNotReferencingPK( ( (Component) value ).getProperties() ) ) {
+			if ( value instanceof Component component ) {
+				if ( hasCollectionNotReferencingPK( component.getProperties() ) ) {
 					return true;
 				}
 			}

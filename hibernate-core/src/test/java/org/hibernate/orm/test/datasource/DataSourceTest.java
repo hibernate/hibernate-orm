@@ -52,7 +52,9 @@ public class DataSourceTest {
 		public void loggedEvent(Logger.Level level, String renderedMessage, Throwable thrown) {
 			if ( renderedMessage.contains( "Database info:" ) ) {
 				final String url = Environment.getProperties().getProperty( JdbcSettings.URL );
-				seen = renderedMessage.contains( split( ";", url )[0] );
+				final String firstUrlPart = split( "?", split( ";", url )[0])[0];
+				final String baseUrl = firstUrlPart.endsWith( "/" ) ? firstUrlPart.substring( 0, firstUrlPart.length() - 1 ) : firstUrlPart;
+				seen = renderedMessage.contains( baseUrl );
 			}
 		}
 	}

@@ -285,18 +285,18 @@ public class Builders {
 			return new ImplicitFetchBuilderEntity( fetchPath, toOneAttributeMapping, creationState );
 		}
 
-		if ( fetchable instanceof PluralAttributeMapping ) {
-			return new ImplicitFetchBuilderPlural( fetchPath, (PluralAttributeMapping) fetchable, creationState );
+		if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
+			return new ImplicitFetchBuilderPlural( fetchPath, pluralAttributeMapping, creationState );
 		}
 
-		if ( fetchable instanceof EntityCollectionPart ) {
-			return new ImplicitFetchBuilderEntityPart( fetchPath, (EntityCollectionPart) fetchable );
+		if ( fetchable instanceof EntityCollectionPart entityCollectionPart ) {
+			return new ImplicitFetchBuilderEntityPart( fetchPath, entityCollectionPart );
 		}
 
-		if ( fetchable instanceof DiscriminatedAssociationAttributeMapping ) {
+		if ( fetchable instanceof DiscriminatedAssociationAttributeMapping discriminatedAssociationAttributeMapping ) {
 			return new ImplicitFetchBuilderDiscriminatedAssociation(
 					fetchPath,
-					(DiscriminatedAssociationAttributeMapping) fetchable,
+					discriminatedAssociationAttributeMapping,
 					creationState
 			);
 		}

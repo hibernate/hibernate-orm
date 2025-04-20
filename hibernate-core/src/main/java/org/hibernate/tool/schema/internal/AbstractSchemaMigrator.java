@@ -530,8 +530,8 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			Namespace.Name physicalName = namespace.getPhysicalName();
 
 			if ( tryToCreateCatalogs ) {
-				final Identifier catalogLogicalName = logicalName.getCatalog();
-				final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.getCatalog() );
+				final Identifier catalogLogicalName = logicalName.catalog();
+				final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.catalog() );
 				if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName )
 						&& !existingDatabase.catalogExists( catalogPhysicalName ) ) {
 					applySqlStrings(
@@ -546,7 +546,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			}
 
 			if ( tryToCreateSchemas ) {
-				final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.getSchema() );
+				final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.schema() );
 				if ( schemaPhysicalName != null && !existingDatabase.schemaExists( physicalName ) ) {
 					applySqlStrings(
 							false,

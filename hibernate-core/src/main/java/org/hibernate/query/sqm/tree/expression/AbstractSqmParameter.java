@@ -31,7 +31,7 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 	public void applyInferableType(@Nullable SqmExpressible<?> type) {
 		if ( type != null ) {
 			if ( type instanceof PluralPersistentAttribute<?, ?, ?> pluralPersistentAttribute ) {
-				internalApplyInferableType( pluralPersistentAttribute.getElementType() );
+				internalApplyInferableType( (SqmExpressible<?>) pluralPersistentAttribute.getElementType() );
 			}
 			else {
 				internalApplyInferableType( type );
@@ -55,17 +55,18 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 	}
 
 	public void disallowMultiValuedBinding() {
-		this.canBeMultiValued = false;
+		canBeMultiValued = false;
 	}
 
 	@Override
 	public BindableType<T> getAnticipatedType() {
-		return this.getNodeType();
+		return getNodeType();
 	}
 
 	@Override
 	public Class<T> getParameterType() {
-		return this.getNodeType().getExpressibleJavaType().getJavaTypeClass();
+		final SqmExpressible<T> nodeType = getNodeType();
+		return nodeType == null ? null : nodeType.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override

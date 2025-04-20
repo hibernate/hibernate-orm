@@ -146,7 +146,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - rdbms: oracle_atps_tls
+          - rdbms: oracle_atps
           - rdbms: oracle_db19c
           - rdbms: oracle_db21c
           - rdbms: oracle_db23c

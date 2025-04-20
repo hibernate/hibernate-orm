@@ -17,7 +17,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -27,7 +27,7 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -174,7 +174,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		return delegate.isInitializeLazyStateOutsideTransactionsEnabled();
 	}
 
-	@Override
+	@Override @Deprecated
 	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
 		return delegate.getTempTableDdlTransactionHandling();
 	}
@@ -244,7 +244,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		return delegate.isAllowOutOfTransactionUpdateOperations();
 	}
 
-	@Override
+	@Override @Deprecated
 	public boolean isReleaseResourcesOnCloseEnabled() {
 		return delegate.isReleaseResourcesOnCloseEnabled();
 	}
@@ -294,7 +294,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		return delegate.isAutoEvictCollectionCache();
 	}
 
-	@Override
+	@Override @Deprecated
 	public SchemaAutoTooling getSchemaAutoTooling() {
 		return delegate.getSchemaAutoTooling();
 	}
@@ -394,6 +394,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		return delegate.isCriteriaCopyTreeEnabled();
 	}
 
+	@Override
+	public boolean isCriteriaPlanCacheEnabled() {
+		return delegate.isCriteriaPlanCacheEnabled();
+	}
+
 	public boolean getNativeJdbcParametersIgnored() {
 		return delegate.getNativeJdbcParametersIgnored();
 	}
@@ -411,6 +416,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 		return delegate.getImmutableEntityUpdateQueryHandlingMode();
+	}
+
+	@Override
+	public boolean allowImmutableEntityUpdate() {
+		return delegate.allowImmutableEntityUpdate();
 	}
 
 	@Override

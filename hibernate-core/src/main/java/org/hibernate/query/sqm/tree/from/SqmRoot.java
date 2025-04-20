@@ -10,6 +10,7 @@ import java.util.List;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.TreatException;
+import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
@@ -54,7 +55,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 			EntityDomainType<E> entityType,
 			String alias,
 			NodeBuilder nodeBuilder) {
-		super( navigablePath, entityType, alias, nodeBuilder );
+		super( navigablePath, (SqmEntityDomainType<E>) entityType, alias, nodeBuilder );
 		this.allowJoins = true;
 	}
 
@@ -167,8 +168,8 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	// JPA
 
 	@Override
-	public EntityDomainType<E> getModel() {
-		return (EntityDomainType<E>) getReferencedPathSource();
+	public SqmEntityDomainType<E> getModel() {
+		return (SqmEntityDomainType<E>) getReferencedPathSource();
 	}
 
 	@Override
@@ -200,12 +201,11 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 		final SqmTreatedFrom<E,E,S> treat = findTreat( treatTarget, null );
 		if ( treat == null ) {
 			//noinspection rawtypes,unchecked
-			return addTreat( (SqmTreatedFrom) new SqmTreatedRoot( this, treatTarget ) );
+			return addTreat( (SqmTreatedFrom) new SqmTreatedRoot( this, (SqmEntityDomainType) treatTarget ) );
 		}
 		return treat;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public <S extends E> SqmTreatedRoot treatAs(Class<S> treatJavaType, String alias) {
 		throw new UnsupportedOperationException( "Root treats can not be aliased" );

@@ -263,7 +263,10 @@ public interface SessionFactoryBuilder {
 	 * to transaction handling.
 	 *
 	 * @see TempTableDdlTransactionHandling
+	 *
+	 * @deprecated This has no effect and will be removed.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling);
 
 	/**
@@ -669,9 +672,12 @@ public interface SessionFactoryBuilder {
 	 * released immediately on close?
 	 * <p>
 	 * The other option is to release them as part of an after transaction callback.
+	 *
+	 * @deprecated since {@value org.hibernate.cfg.AvailableSettings#DISCARD_PC_ON_CLOSE}
+	 *             is deprecated
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable);
-
 
 	/**
 	 * @see JpaCompliance#isJpaQueryComplianceEnabled()

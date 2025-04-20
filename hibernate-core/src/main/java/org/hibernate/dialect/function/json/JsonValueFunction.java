@@ -182,29 +182,29 @@ public class JsonValueFunction extends AbstractSqmSelfRenderingFunctionDescripto
 			JsonValueEmptyBehavior emptyBehavior = null;
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof CastTarget ) {
-					castTarget = (CastTarget) node;
+				if ( node instanceof CastTarget cast ) {
+					castTarget = cast;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonPathPassingClause ) {
-					passingClause = (JsonPathPassingClause) node;
+				if ( node instanceof JsonPathPassingClause jsonPathPassingClause ) {
+					passingClause = jsonPathPassingClause;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonValueErrorBehavior ) {
-					errorBehavior = (JsonValueErrorBehavior) node;
+				if ( node instanceof JsonValueErrorBehavior jsonValueErrorBehavior ) {
+					errorBehavior = jsonValueErrorBehavior;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonValueEmptyBehavior ) {
-					emptyBehavior = (JsonValueEmptyBehavior) node;
+				if ( node instanceof JsonValueEmptyBehavior jsonValueEmptyBehavior ) {
+					emptyBehavior = jsonValueEmptyBehavior;
 				}
 			}
 			final Expression jsonDocument = (Expression) sqlAstArguments.get( 0 );

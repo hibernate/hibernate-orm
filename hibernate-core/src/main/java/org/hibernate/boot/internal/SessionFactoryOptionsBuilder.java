@@ -28,7 +28,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -63,7 +63,7 @@ import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
@@ -147,7 +147,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean autoCloseSessionEnabled;
 	private boolean jtaTransactionAccessEnabled;
 	private boolean allowOutOfTransactionUpdateOperations;
-	private boolean releaseResourcesOnCloseEnabled;
 
 	// (JTA) transaction handling
 	private boolean jtaTrackByThread;
@@ -159,7 +158,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private Supplier<? extends Interceptor> statelessInterceptorSupplier;
 	private StatementInspector statementInspector;
 	private final List<SessionFactoryObserver> sessionFactoryObserverList = new ArrayList<>();
-	private final BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;	// not exposed on builder atm
 
 	// persistence behavior
 	private CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
@@ -168,8 +166,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean identifierRollbackEnabled;
 	private boolean checkNullability;
 	private boolean initializeLazyStateOutsideTransactions;
-	private TempTableDdlTransactionHandling tempTableDdlTransactionHandling;
-	private boolean delayBatchFetchLoaderCreations;
 	private int defaultBatchFetchSize;
 	private Integer maximumFetchDepth;
 	private boolean subselectFetchEnabled;
@@ -216,9 +212,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean directReferenceCacheEntriesEnabled;
 	private boolean autoEvictCollectionCache;
 
-	// Schema tooling
-	private SchemaAutoTooling schemaAutoTooling;
-
 	// JDBC Handling
 	private boolean getGeneratedKeysEnabled;
 	private int jdbcBatchSize;
@@ -227,9 +220,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean commentsEnabled;
 	private PhysicalConnectionHandlingMode connectionHandlingMode;
 	private boolean connectionProviderDisablesAutoCommit;
-	private TimeZone jdbcTimeZone;
+	private final TimeZone jdbcTimeZone;
 	private final ValueHandlingMode criteriaValueHandlingMode;
 	private final boolean criteriaCopyTreeEnabled;
+	private final boolean criteriaPlanCacheEnabled;
 	private final boolean nativeJdbcParametersIgnored;
 	private final ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 	// These two settings cannot be modified from the builder,
@@ -258,6 +252,18 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final CacheMode initialSessionCacheMode;
 	private final FlushMode initialSessionFlushMode;
 	private final LockOptions defaultLockOptions;
+
+	// deprecated stuff
+	@Deprecated
+	private TempTableDdlTransactionHandling tempTableDdlTransactionHandling;
+	@Deprecated(forRemoval = true)
+	private final BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;
+	@Deprecated(forRemoval = true)
+	private SchemaAutoTooling schemaAutoTooling;
+	@Deprecated(forRemoval = true)
+	private boolean delayBatchFetchLoaderCreations;
+	@Deprecated(forRemoval = true)
+	private boolean releaseResourcesOnCloseEnabled;
 
 	@SuppressWarnings( "unchecked" )
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
@@ -443,6 +449,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			autoEvictCollectionCache = false;
 		}
 
+		// deprecated
 		try {
 			schemaAutoTooling = SchemaAutoTooling.interpret( (String) settings.get( AvailableSettings.HBM2DDL_AUTO ) );
 		}
@@ -450,6 +457,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			log.warn( e.getMessage() + "  Ignoring" );
 		}
 
+		// deprecated
 		final ExtractedDatabaseMetaData meta = jdbcServices.getExtractedMetaDataSupport();
 		if ( meta.doesDataDefinitionCauseTransactionCommit() ) {
 			tempTableDdlTransactionHandling =
@@ -483,11 +491,15 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		allowOutOfTransactionUpdateOperations = getBoolean( ALLOW_UPDATE_OUTSIDE_TRANSACTION, settings );
 
 		releaseResourcesOnCloseEnabled = getBoolean( DISCARD_PC_ON_CLOSE, settings );
+		if ( releaseResourcesOnCloseEnabled) {
+			DEPRECATION_LOGGER.deprecatedSetting( DISCARD_PC_ON_CLOSE );
+		}
 
 		jdbcTimeZone = getJdbcTimeZone( settings.get( JDBC_TIME_ZONE ) );
 
 		criteriaValueHandlingMode = ValueHandlingMode.interpret( settings.get( CRITERIA_VALUE_HANDLING_MODE ) );
 		criteriaCopyTreeEnabled = getBoolean( AvailableSettings.CRITERIA_COPY_TREE, settings, jpaBootstrap );
+		criteriaPlanCacheEnabled = getBoolean( AvailableSettings.CRITERIA_PLAN_CACHE_ENABLED, settings, false );
 
 		nativeJdbcParametersIgnored =
 				getBoolean( AvailableSettings.NATIVE_IGNORE_JDBC_PARAMETERS, settings, false );
@@ -936,12 +948,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return initializeLazyStateOutsideTransactions;
 	}
 
-	@Override
+	@Override @Deprecated
 	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
 		return tempTableDdlTransactionHandling;
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public boolean isDelayBatchFetchLoaderCreationsEnabled() {
 		return delayBatchFetchLoaderCreations;
 	}
@@ -1041,7 +1053,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return autoEvictCollectionCache;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SchemaAutoTooling getSchemaAutoTooling() {
 		return schemaAutoTooling;
 	}
@@ -1127,6 +1139,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	public boolean isCriteriaPlanCacheEnabled() {
+		return criteriaPlanCacheEnabled;
+	}
+
+	@Override
 	public boolean getNativeJdbcParametersIgnored() {
 		return nativeJdbcParametersIgnored;
 	}
@@ -1134,6 +1151,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 		return immutableEntityUpdateQueryHandlingMode;
+	}
+
+	@Override
+	public boolean allowImmutableEntityUpdate() {
+		return immutableEntityUpdateQueryHandlingMode != ImmutableEntityUpdateQueryHandlingMode.EXCEPTION;
 	}
 
 	@Override
@@ -1376,6 +1398,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.initializeLazyStateOutsideTransactions = enabled;
 	}
 
+	@Deprecated(forRemoval = true)
 	public void applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
 		this.tempTableDdlTransactionHandling = handling;
 	}
@@ -1496,6 +1519,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.allowOutOfTransactionUpdateOperations = allow;
 	}
 
+	@Deprecated(since = "7.0", forRemoval = true)
 	public void enableReleaseResourcesOnClose(boolean enable) {
 		this.releaseResourcesOnCloseEnabled = enable;
 	}

@@ -7,9 +7,14 @@ package org.hibernate;
 import java.sql.SQLException;
 
 /**
- * Thrown when a database query timeout occurs.
+ * A {@link JDBCException} indicating that a database query timed
+ * out on the database.
  *
  * @author Scott Marlow
+ *
+ * @see jakarta.persistence.Query#setTimeout
+ * @see org.hibernate.query.CommonQueryContract#setTimeout
+ * @see jakarta.persistence.QueryTimeoutException
  */
 public class QueryTimeoutException extends JDBCException {
 	/**

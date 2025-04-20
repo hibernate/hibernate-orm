@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -331,9 +332,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 						.breakDownJdbcValues( null, offset + span, x, y, valueConsumer, session );
 			}
 		}
-		else {
-			assert domainValue instanceof Object[];
-			final Object[] values = (Object[]) domainValue;
+		else if ( domainValue instanceof Object[] values ) {
 			assert values.length == attributes.size();
 			for ( int i = 0; i < attributes.size(); i++ ) {
 				span += attributes.get( i ).breakDownJdbcValues(
@@ -345,6 +344,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 						session
 				);
 			}
+		}
+		else {
+			throw new AssertionFailure("Unexpected domain value type");
 		}
 		return span;
 	}
@@ -386,15 +388,16 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		if ( value == null ) {
 			return null;
 		}
-		else {
-			assert value instanceof Object[];
-			final Object[] incoming = (Object[]) value;
+		else if ( value instanceof Object[] incoming ) {
 			assert incoming.length == attributes.size();
 			final Object[] outgoing = new Object[incoming.length];
 			for ( int i = 0; i < attributes.size(); i++ ) {
 				outgoing[i] = attributes.get( i ).disassemble( incoming[i], session );
 			}
 			return outgoing;
+		}
+		else {
+			throw new AssertionFailure("Unexpected value");
 		}
 	}
 
@@ -405,13 +408,14 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 				attributes.get( i ).addToCacheKey( cacheKey, null, session );
 			}
 		}
-		else {
-			assert value instanceof Object[];
-			final Object[] values = (Object[]) value;
+		else if ( value instanceof Object[] values ) {
 			assert values.length == attributes.size();
 			for ( int i = 0; i < attributes.size(); i++ ) {
 				attributes.get( i ).addToCacheKey( cacheKey, values[i], session );
 			}
+		}
+		else {
+			throw new AssertionFailure("Unexpected value");
 		}
 	}
 
@@ -437,10 +441,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 				);
 			}
 		}
-		else {
-			assert value instanceof Object[];
-
-			final Object[] incoming = (Object[]) value;
+		else if ( value instanceof Object[] incoming ) {
 			assert incoming.length == attributes.size();
 			for ( int i = 0; i < attributes.size(); i++ ) {
 				final SingularAttributeMapping attribute = attributes.get( i );
@@ -453,6 +454,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 						session
 				);
 			}
+		}
+		else {
+			throw new AssertionFailure("Unexpected value");
 		}
 		return span;
 	}
@@ -472,14 +476,15 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 				span += attribute.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 			}
 		}
-		else {
-			assert value instanceof Object[];
-			final Object[] incoming = (Object[]) value;
+		else if ( value instanceof Object[] incoming ) {
 			assert incoming.length == attributes.size();
 			for ( int i = 0; i < attributes.size(); i++ ) {
 				final SingularAttributeMapping attribute = attributes.get( i );
 				span += attribute.forEachJdbcValue( incoming[i], span + offset, x, y, valuesConsumer, session );
 			}
+		}
+		else {
+			throw new AssertionFailure("Unexpected value");
 		}
 		return span;
 	}

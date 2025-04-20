@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.ManyToAny;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -18,21 +18,21 @@ public class ManyToAnyAnnotation implements ManyToAny {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public ManyToAnyAnnotation(SourceModelBuildingContext modelContext) {
+	public ManyToAnyAnnotation(ModelsContext modelContext) {
 		this.fetch = jakarta.persistence.FetchType.EAGER;
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public ManyToAnyAnnotation(ManyToAny annotation, SourceModelBuildingContext modelContext) {
+	public ManyToAnyAnnotation(ManyToAny annotation, ModelsContext modelContext) {
 		this.fetch = annotation.fetch();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ManyToAnyAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public ManyToAnyAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.fetch = (jakarta.persistence.FetchType) attributeValues.get( "fetch" );
 	}
 

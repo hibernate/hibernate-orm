@@ -146,8 +146,8 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 	}
 
 	protected Class<?> getKeyType(ValuedModelPart keyPart) {
-		if ( keyPart instanceof NonAggregatedIdentifierMapping ) {
-			final IdClassEmbeddable idClassEmbeddable = ( (NonAggregatedIdentifierMapping) keyPart ).getIdClassEmbeddable();
+		if ( keyPart instanceof NonAggregatedIdentifierMapping nonAggregatedIdentifierMapping ) {
+			final IdClassEmbeddable idClassEmbeddable = nonAggregatedIdentifierMapping.getIdClassEmbeddable();
 			if ( idClassEmbeddable != null ) {
 				return idClassEmbeddable.getMappedJavaType().getJavaTypeClass();
 			}

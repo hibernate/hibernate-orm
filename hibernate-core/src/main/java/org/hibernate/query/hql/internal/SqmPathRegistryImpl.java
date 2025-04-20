@@ -13,9 +13,7 @@ import java.util.function.Function;
 
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
@@ -24,7 +22,6 @@ import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
@@ -229,18 +226,12 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			if ( parentRegistered != null ) {
 				// If a parent query contains the alias, we need to create a correlation on the subquery
 				final SqmSubQuery<?> selectQuery = ( SqmSubQuery<?> ) associatedProcessingState.getProcessingQuery();
-				SqmFrom<?, ?> correlated;
-				if ( parentRegistered instanceof Root<?> ) {
-					correlated = selectQuery.correlate( (Root<?>) parentRegistered );
+				final SqmFrom<?, ?> correlated;
+				if ( parentRegistered instanceof Root<?> root ) {
+					correlated = selectQuery.correlate( root );
 				}
-				else if ( parentRegistered instanceof Join<?, ?> ) {
-					correlated = selectQuery.correlate( (Join<?, ?>) parentRegistered );
-				}
-				else if ( parentRegistered instanceof SqmCrossJoin ) {
-					correlated = selectQuery.correlate( (JpaCrossJoin) parentRegistered );
-				}
-				else if ( parentRegistered instanceof SqmEntityJoin<?,?> ) {
-					correlated = selectQuery.correlate( (SqmEntityJoin<?,?>) parentRegistered );
+				else if ( parentRegistered instanceof Join<?, ?> join ) {
+					correlated = selectQuery.correlate( join );
 				}
 				else {
 					throw new UnsupportedOperationException( "Can't correlate from node: " + parentRegistered );
@@ -335,10 +326,6 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	private boolean definesAttribute(SqmPathSource<?> containerType, String name) {
 		return !( containerType.getSqmType() instanceof BasicDomainType )
 				&& containerType.findSubPathSource( name, true ) != null;
-	}
-
-	private JpaMetamodel getJpaMetamodel() {
-		return associatedProcessingState.getCreationState().getCreationContext().getJpaMetamodel();
 	}
 
 	@Override

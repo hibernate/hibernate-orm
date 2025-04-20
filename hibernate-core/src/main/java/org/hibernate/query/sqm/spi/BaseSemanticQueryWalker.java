@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.spi;
 import java.util.List;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.metamodel.model.domain.DiscriminatorSqmPath;
+import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.SemanticQueryWalker;

@@ -57,7 +57,10 @@ public class ArrayArgumentValidator implements ArgumentsValidator {
 			if ( arrayType == null ) {
 				return null;
 			}
-			else if ( !( arrayType instanceof BasicPluralType<?, ?> ) ) {
+			else if ( arrayType instanceof BasicPluralType<?, ?> basicPluralType ) {
+				return basicPluralType;
+			}
+			else {
 				throw new FunctionArgumentException(
 						String.format(
 								"Parameter %d of function '%s()' requires an array type, but argument is of type '%s'",
@@ -67,7 +70,6 @@ public class ArrayArgumentValidator implements ArgumentsValidator {
 						)
 				);
 			}
-			return (BasicPluralType<?, ?>) arrayType;
 		}
 	}
 

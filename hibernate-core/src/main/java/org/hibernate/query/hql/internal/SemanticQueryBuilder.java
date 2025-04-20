@@ -44,12 +44,12 @@ import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.internal.AnyKeyPart;
-import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PathSource;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
@@ -71,6 +71,7 @@ import org.hibernate.query.criteria.JpaJsonValueNode;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.criteria.JpaXmlTableColumnNode;
+import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
@@ -313,7 +314,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private final Stack<ParameterDeclarationContext> parameterDeclarationContextStack = new StandardStack<>();
 	private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>();
 
-	private final BasicDomainType<Integer> integerDomainType;
+	private final BasicType<Integer> integerDomainType;
 	private final JavaType<List<?>> listJavaType;
 	private final JavaType<Map<?,?>> mapJavaType;
 
@@ -629,8 +630,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			for ( HqlParser.AssignmentContext assignmentContext : setClauseContext.assignment() ) {
 				updateAction.addAssignment( visitAssignment( assignmentContext ) );
 			}
-			final SqmPredicate sqmPredicate = visitWhereClause( conflictActionContext.whereClause() );
-			updateAction.where( sqmPredicate );
+			updateAction.where( visitWhereClause( conflictActionContext.whereClause() ) );
 		}
 		return conflictClause;
 	}
@@ -916,13 +916,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private void applySearchClause(JpaCteCriteria<?> cteDefinition, HqlParser.SearchClauseContext ctx) {
-		final CteSearchClauseKind kind;
-		if ( ( (TerminalNode) ctx.getChild( 1 ) ).getSymbol().getType() == HqlParser.BREADTH ) {
-			kind = CteSearchClauseKind.BREADTH_FIRST;
-		}
-		else {
-			kind = CteSearchClauseKind.DEPTH_FIRST;
-		}
 		final String searchAttributeName = visitIdentifier( ctx.identifier() );
 		final HqlParser.SearchSpecificationsContext searchCtx = ctx.searchSpecifications();
 		final List<JpaSearchOrder> searchOrders = new ArrayList<>( ( searchCtx.getChildCount() + 1 ) >> 1 );
@@ -970,7 +963,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 			searchOrders.add( creationContext.getNodeBuilder().search( attribute, sortOrder, nullPrecedence ) );
 		}
-		cteDefinition.search( kind, searchAttributeName, searchOrders );
+		cteDefinition.search( getCteSearchClauseKind( ctx ), searchAttributeName, searchOrders );
+	}
+
+	private static CteSearchClauseKind getCteSearchClauseKind(HqlParser.SearchClauseContext ctx) {
+		return ctx.BREADTH() != null ? CteSearchClauseKind.BREADTH_FIRST : CteSearchClauseKind.DEPTH_FIRST;
 	}
 
 	@Override
@@ -1591,7 +1588,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						query );
 			}
 
-			return new SqmAliasedNodeRef( position, integerDomainType, nodeBuilder);
+			return new SqmAliasedNodeRef( position, integerDomainType.resolveExpressible( nodeBuilder ), nodeBuilder);
 		}
 		else if ( child instanceof HqlParser.IdentifierContext identifierContext ) {
 			final String identifierText = visitIdentifier( identifierContext );
@@ -1655,7 +1652,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						// This is syntactically disallowed
 						throw new SyntaxException( "'collate' is not allowed for alias-based 'order by' or 'group by' items" );
 					}
-					return new SqmAliasedNodeRef( correspondingPosition, integerDomainType, nodeBuilder );
+					return new SqmAliasedNodeRef( correspondingPosition, integerDomainType.resolveExpressible( nodeBuilder ), nodeBuilder );
 				}
 
 				final SqmFrom<?, ?> sqmFrom =
@@ -1932,9 +1929,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public EntityDomainType<?> visitEntityName(HqlParser.EntityNameContext parserEntityName) {
 		final String entityName = getEntityName( parserEntityName );
-		final EntityDomainType<?> entityReference = getCreationContext()
-				.getJpaMetamodel()
-				.getHqlEntityReference( entityName );
+		final EntityDomainType<?> entityReference = getJpaMetamodel().getHqlEntityReference( entityName );
 		if ( entityReference == null ) {
 			throw new UnknownEntityException( "Could not resolve target entity '" + entityName + "'", entityName );
 		}
@@ -2097,7 +2092,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private static SqmCteStatement<?> matchCteStatement(SqmCreationProcessingState state, String n) {
-		return state.getProcessingQuery() instanceof SqmCteContainer container ? container.getCteStatement( n ) : null;
+		return state.getProcessingQuery() instanceof SqmCteContainer container
+				? container.getCteStatement( n )
+				: null;
 	}
 
 	@Override
@@ -2153,15 +2150,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		SqmTreeCreationLogger.LOGGER.debugf( "Handling root path - %s", name );
 
-		final EntityDomainType<T> entityDescriptor = getCreationContext().getJpaMetamodel()
-				.resolveHqlEntityReference( name );
+		final EntityDomainType<T> entityDescriptor = getJpaMetamodel().resolveHqlEntityReference( name );
 
 		if ( entityDescriptor instanceof SqmPolymorphicRootDescriptor ) {
 			throw new SemanticException( "Unmapped polymorphic reference cannot be used as a target of 'cross join'",
 					query );
 		}
 		final SqmCrossJoin<T> join = new SqmCrossJoin<>(
-				entityDescriptor,
+				(SqmEntityDomainType<T>) entityDescriptor,
 				extractAlias( parserJoin.variable() ),
 				sqmRoot
 		);
@@ -2170,6 +2166,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		// CROSS joins are always added to the root
 		sqmRoot.addSqmJoin( join );
+	}
+
+	private JpaMetamodel getJpaMetamodel() {
+		return getCreationContext().getJpaMetamodel();
 	}
 
 	@Override
@@ -2397,7 +2397,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmPredicate visitNegatedPredicate(HqlParser.NegatedPredicateContext ctx) {
-		SqmPredicate predicate = (SqmPredicate) ctx.predicate().accept( this );
+		final SqmPredicate predicate = (SqmPredicate) ctx.predicate().accept( this );
 		if ( predicate instanceof SqmNegatablePredicate negatablePredicate ) {
 			negatablePredicate.negate();
 			return predicate;
@@ -2550,7 +2550,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmAnyDiscriminatorValue<>(
 				anyDiscriminatorTypeSqmPath.getNodeType().getPathName(),
 				creationContext.getJpaMetamodel().resolveHqlEntityReference( valueExpressionContext.getText() ),
-				anyDiscriminatorTypeSqmPath.getExpressible().getSqmPathType(),
+				anyDiscriminatorTypeSqmPath.getExpressible().getPathType(),
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -3131,13 +3131,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			if ( columnContext instanceof HqlParser.XmlTableQueryColumnContext queryColumnContext ) {
 				final String columnName = visitIdentifier( queryColumnContext.identifier() );
 				final TerminalNode pathNode = queryColumnContext.STRING_LITERAL();
-				final String xpath;
-				if ( pathNode == null ) {
-					xpath = null;
-				}
-				else {
-					xpath = unquoteStringLiteral( pathNode.getText() );
-				}
+				final String xpath = pathNode == null ? null : unquoteStringLiteral( pathNode.getText() );
 				final JpaXmlTableColumnNode<String> node = xmlTable.queryColumn( columnName, xpath );
 				final HqlParser.XmltableDefaultClauseContext defaultClause = queryColumnContext.xmltableDefaultClause();
 				if ( defaultClause != null ) {
@@ -3150,13 +3144,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				//noinspection unchecked
 				final SqmCastTarget<Object> castTarget = (SqmCastTarget<Object>) visitCastTarget( valueColumnContext.castTarget() );
 				final TerminalNode pathNode = valueColumnContext.STRING_LITERAL();
-				final String xpath;
-				if ( pathNode == null ) {
-					xpath = null;
-				}
-				else {
-					xpath = unquoteStringLiteral( pathNode.getText() );
-				}
+				final String xpath = pathNode == null ? null : unquoteStringLiteral( pathNode.getText() );
 				final JpaXmlTableColumnNode<Object> node = xmlTable.valueColumn( columnName, castTarget, xpath );
 				final HqlParser.XmltableDefaultClauseContext defaultClause = valueColumnContext.xmltableDefaultClause();
 				if ( defaultClause != null ) {
@@ -3474,9 +3462,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		final SqmPath<?> sqmPath = consumeDomainPath( ctx.path() );
-		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getSqmPathType();
+		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getPathType();
 		if ( sqmPathType instanceof IdentifiableDomainType<?> identifiableType ) {
-			final SqmPathSource<?> identifierDescriptor = identifiableType.getIdentifierDescriptor();
+			final PathSource<?> identifierDescriptor = identifiableType.getIdentifierDescriptor();
 			if ( identifierDescriptor == null ) {
 				// mainly for benefit of Hibernate Processor
 				throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
@@ -3502,7 +3490,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmPath<?> visitEntityVersionReference(HqlParser.EntityVersionReferenceContext ctx) {
 		final SqmPath<?> sqmPath = consumeDomainPath( ctx.path() );
-		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getSqmPathType();
+		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getPathType();
 		if ( sqmPathType instanceof IdentifiableDomainType<?> identifiableType ) {
 			if ( !identifiableType.hasVersionAttribute() ) {
 				throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
@@ -3533,7 +3521,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		final SqmPath<?> sqmPath = consumeDomainPath( ctx.path() );
 
-		if ( sqmPath.getReferencedPathSource().getSqmPathType() instanceof IdentifiableDomainType<?> identifiableType ) {
+		if ( sqmPath.getReferencedPathSource().getPathType() instanceof IdentifiableDomainType<?> identifiableType ) {
 			final List<? extends PersistentAttribute<?, ?>> attributes = identifiableType.findNaturalIdAttributes();
 			if ( attributes == null ) {
 				throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
@@ -4376,11 +4364,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			text = Integer.toString( intValue );
 		}
 
-		return new SqmHqlNumericLiteral<>(
-				text,
-				integerDomainType,
-				creationContext.getNodeBuilder()
-		);
+		return new SqmHqlNumericLiteral<>( text, integerDomainType, creationContext.getNodeBuilder() );
 	}
 
 	@SuppressWarnings("RedundantIfStatement")
@@ -5914,7 +5898,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		consumeManagedTypeReference( ctx.path() );
 
 		final String treatTargetName = ctx.simplePath().getText();
-		final String importableName = getCreationContext().getJpaMetamodel().qualifyImportableName( treatTargetName );
+		final String importableName = getJpaMetamodel().qualifyImportableName( treatTargetName );
 		if ( importableName == null ) {
 			throw new SemanticException( "Could not resolve treat target type '" + treatTargetName + "'", query );
 		}
@@ -6166,12 +6150,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private SqmPath<?> consumeManagedTypeReference(HqlParser.PathContext parserPath) {
 		final SqmPath<?> sqmPath = consumeDomainPath( parserPath );
 		final SqmPathSource<?> pathSource = sqmPath.getReferencedPathSource();
-		if ( pathSource.getSqmPathType() instanceof ManagedDomainType<?> ) {
+		if ( pathSource.getPathType() instanceof ManagedDomainType<?> ) {
 			return sqmPath;
 		}
 		else {
 			throw new PathException( "Expecting ManagedType valued path [" + sqmPath.getNavigablePath()
-					+ "], but found: " + pathSource.getSqmPathType() );
+					+ "], but found: " + pathSource.getPathType() );
 		}
 	}
 
@@ -6182,7 +6166,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		else {
 			throw new PathException( "Expecting plural attribute valued path [" + sqmPath.getNavigablePath()
-					+ "], but found: " + sqmPath.getReferencedPathSource().getSqmPathType() );
+					+ "], but found: " + sqmPath.getReferencedPathSource().getPathType() );
 		}
 	}
 

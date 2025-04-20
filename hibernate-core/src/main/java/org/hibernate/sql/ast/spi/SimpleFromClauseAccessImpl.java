@@ -108,10 +108,9 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 	}
 
 	private TableGroup getCorrelatedTableGroup(TableGroup tableGroup) {
-		if ( tableGroup instanceof CorrelatedTableGroup ) {
-			return getCorrelatedTableGroup( ( (CorrelatedTableGroup) tableGroup ).getCorrelatedTableGroup() );
-		}
-		return tableGroup;
+		return tableGroup instanceof CorrelatedTableGroup correlatedTableGroup
+				? getCorrelatedTableGroup( correlatedTableGroup.getCorrelatedTableGroup() )
+				: tableGroup;
 	}
 
 	@Override

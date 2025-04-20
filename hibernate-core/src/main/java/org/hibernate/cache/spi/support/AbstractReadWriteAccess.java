@@ -416,8 +416,9 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 			if ( o == this ) {
 				return true;
 			}
-			else if ( o instanceof SoftLockImpl ) {
-				return ( lockId == ( (SoftLockImpl) o ).lockId ) && sourceUuid.equals( ( (SoftLockImpl) o ).sourceUuid );
+			else if ( o instanceof SoftLockImpl that ) {
+				return this.lockId == that.lockId
+					&& this.sourceUuid.equals( that.sourceUuid );
 			}
 			else {
 				return false;

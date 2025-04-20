@@ -44,8 +44,8 @@ public final class SqlAstTreeHelper {
 		}
 
 		final Junction secondJunction;
-		if ( incomingRestriction instanceof Junction
-				&& ( secondJunction = (Junction) incomingRestriction ).getNature() == Junction.Nature.CONJUNCTION ) {
+		if ( incomingRestriction instanceof Junction junction
+				&& ( secondJunction = junction).getNature() == Junction.Nature.CONJUNCTION ) {
 			for ( Predicate predicate : secondJunction.getPredicates() ) {
 				combinedPredicate.add( predicate );
 			}

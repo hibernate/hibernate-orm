@@ -19,9 +19,9 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.boot.model.internal.AnnotatedJoinColumns;
@@ -101,7 +101,7 @@ public abstract class SimpleValue implements KeyValue {
 	private OnDeleteAction onDeleteAction;
 	private boolean foreignKeyEnabled = true;
 
-	private ConverterDescriptor attributeConverterDescriptor;
+	private ConverterDescriptor<?,?> attributeConverterDescriptor;
 	private Type type;
 
 	private GeneratorCreator customIdGeneratorCreator = ASSIGNED_IDENTIFIER_GENERATOR_CREATOR;
@@ -287,13 +287,13 @@ public abstract class SimpleValue implements KeyValue {
 	void setAttributeConverterDescriptor(String typeName) {
 		final String converterClassName = typeName.substring( TYPE_NAME_PREFIX.length() );
 		final MetadataBuildingContext context = getBuildingContext();
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings("unchecked") // Completely safe
 		final Class<? extends AttributeConverter<?,?>> clazz =
 				(Class<? extends AttributeConverter<?,?>>)
 						classForName( AttributeConverter.class, converterClassName,
 								context.getBootstrapContext() );
 		attributeConverterDescriptor =
-				new ClassBasedConverterDescriptor( clazz, false,
+				ConverterDescriptors.of( clazz, null, false,
 						context.getBootstrapContext().getClassmateContext() );
 	}
 
@@ -588,7 +588,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.attributeConverterDescriptor = descriptor;
 	}
 
-	protected ConverterDescriptor getAttributeConverterDescriptor() {
+	protected ConverterDescriptor<?,?> getAttributeConverterDescriptor() {
 		return attributeConverterDescriptor;
 	}
 
@@ -908,11 +908,11 @@ public abstract class SimpleValue implements KeyValue {
 		return array;
 	}
 
-	public ConverterDescriptor getJpaAttributeConverterDescriptor() {
+	public ConverterDescriptor<?,?> getJpaAttributeConverterDescriptor() {
 		return attributeConverterDescriptor;
 	}
 
-	public void setJpaAttributeConverterDescriptor(ConverterDescriptor descriptor) {
+	public void setJpaAttributeConverterDescriptor(ConverterDescriptor<?,?> descriptor) {
 		this.attributeConverterDescriptor = descriptor;
 	}
 

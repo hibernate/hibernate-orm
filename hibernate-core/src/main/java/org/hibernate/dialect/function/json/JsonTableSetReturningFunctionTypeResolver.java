@@ -48,8 +48,8 @@ public class JsonTableSetReturningFunctionTypeResolver implements SetReturningFu
 			SqmToSqlAstConverter converter) {
 		JsonTableColumnsClause columnsClause = null;
 		for ( SqlAstNode argument : arguments ) {
-			if ( argument instanceof JsonTableColumnsClause ) {
-				columnsClause = (JsonTableColumnsClause) argument;
+			if ( argument instanceof JsonTableColumnsClause jsonTableColumnsClause ) {
+				columnsClause = jsonTableColumnsClause;
 				break;
 			}
 		}

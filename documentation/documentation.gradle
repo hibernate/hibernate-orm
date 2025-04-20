@@ -738,6 +738,45 @@ def renderIntegrationGuidesTask = tasks.register( "renderIntegrationGuides" ) { 
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// What's New Guide
+
+def whatsNewGuideSourceStagingDir = layout.buildDirectory.dir( "tmp/asciidoc/whats-new" )
+
+def copyWhatsNewTask = tasks.register( "copyWhatsNew", Copy ) {task ->
+	group = "Documentation"
+	description = "Copies whats-new.adoc in preparation for rendering."
+
+	inputs.property "hibernate-version", hibernateVersion
+
+	from rootProject.layout.projectDirectory.file( "whats-new.adoc" )
+	into whatsNewGuideSourceStagingDir
+}
+
+def renderWhatsNewTask = tasks.register( "renderWhatsNew", AsciidoctorTask ) {
+	group = "Documentation"
+	description = "Renders the What's New guide in HTML format using Asciidoctor."
+
+	dependsOn copyWhatsNewTask
+	inputs.property "hibernate-version", hibernateVersion
+
+	sourceDir = whatsNewGuideSourceStagingDir
+
+	outputDir = project.layout.buildDirectory.dir( 'asciidoc/whats-new' )
+
+	attributes linkcss: true,
+			stylesheet: "css/hibernate.css"
+
+	resources {
+		from( 'src/main/style/asciidoctor' ) {
+			include 'images/**'
+		}
+		from( 'src/main/style/asciidoctor' ) {
+			include 'css/**'
+		}
+	}
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Migration Guide
 
 def migrationGuideSourceStagingDir = layout.buildDirectory.dir( "tmp/asciidoc/migration-guide" )
@@ -853,6 +892,7 @@ def buildDocsTask = tasks.register( 'buildDocs' ) { task ->
 	task.dependsOn renderTopicalGuidesTask
 	task.dependsOn generateReportsTask
 	task.dependsOn renderMigrationGuideTask
+	task.dependsOn renderWhatsNewTask
 }
 
 //noinspection GroovyUnusedAssignment

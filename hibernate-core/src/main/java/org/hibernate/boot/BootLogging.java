@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.Logger;
@@ -16,6 +17,7 @@ import org.jboss.logging.Logger;
 		name = BootLogging.NAME,
 		description = "Logging related to bootstrapping of a SessionFactory / EntityManagerFactory"
 )
+@Internal
 public interface BootLogging {
 	String NAME = SubSystemLogging.BASE + ".boot";
 	Logger BOOT_LOGGER = Logger.getLogger( NAME );

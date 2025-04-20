@@ -143,8 +143,8 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 	}
 
 	private static BytecodeProviderImpl castBytecodeProvider(BytecodeProvider bytecodeProvider) {
-		if ( bytecodeProvider instanceof BytecodeProviderImpl ) {
-			return (BytecodeProviderImpl) bytecodeProvider;
+		if ( bytecodeProvider instanceof BytecodeProviderImpl impl ) {
+			return impl;
 		}
 		else {
 			throw new IllegalStateException( "Unable to deserialize a SerializableProxy proxy: the bytecode provider is not ByteBuddy." );

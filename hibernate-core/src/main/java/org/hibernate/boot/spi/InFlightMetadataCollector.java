@@ -48,7 +48,7 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.usertype.CompositeUserType;
@@ -71,7 +71,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	 * @deprecated Use {@linkplain BootstrapContext#getModelsContext()} instead.
 	 */
 	@Deprecated
-	default SourceModelBuildingContext getSourceModelBuildingContext() {
+	default ModelsContext getModelsContext() {
 		return getBootstrapContext().getModelsContext();
 	}
 
@@ -267,7 +267,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	 * @deprecated use {@link #getConverterRegistry()}
 	 */
 	@Deprecated(since = "6.2")
-	void addAttributeConverter(ConverterDescriptor descriptor);
+	void addAttributeConverter(ConverterDescriptor<?,?> descriptor);
 
 	/**
 	 * Apply an {@link AttributeConverter}
@@ -275,7 +275,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	 * @deprecated use {@link #getConverterRegistry()}
 	 */
 	@Deprecated(since = "6.2")
-	void addAttributeConverter(Class<? extends AttributeConverter<?,?>> converterClass);
+	void addAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass);
 
 	/**
 	 * @deprecated use {@link #getConverterRegistry()}

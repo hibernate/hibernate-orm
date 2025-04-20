@@ -187,15 +187,15 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			if ( SqlTypes.isNumericType( sqlTypeCode ) ) {
 				return true;
 			}
-			if ( jdbcType instanceof ArrayJdbcType ) {
-				return isNumeric( ( (ArrayJdbcType) jdbcType ).getElementJdbcType() );
+			if ( jdbcType instanceof ArrayJdbcType arrayJdbcType ) {
+				return isNumeric( arrayJdbcType.getElementJdbcType() );
 			}
 			return false;
 		}
 
 		private static JdbcType getJdbcType(DomainType<?> domainType, TypeConfiguration typeConfiguration) {
-			if ( domainType instanceof JdbcMapping ) {
-				return ( (JdbcMapping) domainType ).getJdbcType();
+			if ( domainType instanceof JdbcMapping jdbcMapping ) {
+				return jdbcMapping.getJdbcType();
 			}
 			else {
 				final JavaType<?> javaType = domainType.getExpressibleJavaType();

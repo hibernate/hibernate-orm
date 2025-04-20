@@ -19,6 +19,7 @@ import java.util.stream.StreamSupport;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -174,9 +175,9 @@ public abstract class AbstractSelectionQuery<R>
 		assert sessionCacheMode == null;
 
 		final FlushMode effectiveFlushMode = getQueryOptions().getFlushMode();
-		if ( effectiveFlushMode != null ) {
-			sessionFlushMode = session.getHibernateFlushMode();
-			session.setHibernateFlushMode( effectiveFlushMode );
+		if ( effectiveFlushMode != null && session instanceof SessionImplementor statefulSession ) {
+			sessionFlushMode = statefulSession.getHibernateFlushMode();
+			statefulSession.setHibernateFlushMode( effectiveFlushMode );
 		}
 
 		final CacheMode effectiveCacheMode = getCacheMode();
@@ -213,8 +214,9 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	protected void afterQuery() {
-		if ( sessionFlushMode != null ) {
-			getSession().setHibernateFlushMode( sessionFlushMode );
+		if ( sessionFlushMode != null
+				&& getSession() instanceof SessionImplementor statefulSession ) {
+			statefulSession.setHibernateFlushMode( sessionFlushMode );
 			sessionFlushMode = null;
 		}
 		if ( sessionCacheMode != null ) {
@@ -372,8 +374,8 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
-		applyGraph( (RootGraphImplementor<R>) graph, semantic );
+	public SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
+		applyGraph( (RootGraphImplementor<? super R>) graph, semantic );
 		return this;
 	}
 

@@ -10,6 +10,8 @@ import org.hibernate.JDBCException;
  * Represents an error trying to apply a pessimistic {@link LockingStrategy} to an entity
  *
  * @author Steve Ebersole
+ *
+ * @see jakarta.persistence.PessimisticLockException
  */
 public class PessimisticEntityLockException extends LockingStrategyException {
 	/**

@@ -76,12 +76,13 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 		// Always determine the recommended type to make sure this is a valid basic java type
 		// (even though we only use this inside the if block, we want it to throw here if something wrong)
 		final JdbcType recommendedComponentJdbcType = componentJavaType.getRecommendedJdbcType( indicators );
-		return indicators.getTypeConfiguration().getJdbcTypeRegistry().resolveTypeConstructorDescriptor(
-				indicators.getPreferredSqlTypeCodeForArray( recommendedComponentJdbcType.getDefaultSqlTypeCode() ),
-				indicators.getTypeConfiguration().getBasicTypeRegistry().resolve(
-						componentJavaType, recommendedComponentJdbcType ),
-				ColumnTypeInformation.EMPTY
-		);
+		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		return typeConfiguration.getJdbcTypeRegistry()
+				.resolveTypeConstructorDescriptor(
+						indicators.getPreferredSqlTypeCodeForArray( recommendedComponentJdbcType.getDefaultSqlTypeCode() ),
+						typeConfiguration.getBasicTypeRegistry().resolve( componentJavaType, recommendedComponentJdbcType ),
+						ColumnTypeInformation.EMPTY
+				);
 	}
 
 	public CollectionSemantics<C, E> getSemantics() {
@@ -407,16 +408,15 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			}
 			return wrapped;
 		}
-		else if ( value instanceof byte[] ) {
+		else if ( value instanceof byte[] bytes ) {
 			// When the value is a byte[], this is a deserialization request
 			//noinspection unchecked
-			return fromCollection( (ArrayList<E>) SerializationHelper.deserialize( (byte[]) value ), options );
+			return fromCollection( (ArrayList<E>) SerializationHelper.deserialize( bytes ), options );
 		}
-		else if ( value instanceof BinaryStream ) {
+		else if ( value instanceof BinaryStream stream ) {
 			// When the value is a BinaryStream, this is a deserialization request
 			//noinspection unchecked
-			return fromCollection( (ArrayList<E>) SerializationHelper.deserialize( ( (BinaryStream) value ).getBytes() ),
-					options );
+			return fromCollection( (ArrayList<E>) SerializationHelper.deserialize( stream.getBytes() ), options );
 		}
 		else if ( value instanceof Collection<?> ) {
 			//noinspection unchecked

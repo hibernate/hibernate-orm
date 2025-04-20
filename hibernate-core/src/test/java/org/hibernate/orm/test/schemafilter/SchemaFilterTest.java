@@ -156,7 +156,7 @@ public class SchemaFilterTest extends BaseUnitTestCase {
 		@Override
 		public boolean includeNamespace(Namespace namespace) {
 			// exclude schema "the_schema_2"
-			Identifier identifier = namespace.getName().getSchema();
+			Identifier identifier = namespace.getName().schema();
 			if ( identifier != null ) {
 				return !"the_schema_2".equals( identifier.getText() );
 			}

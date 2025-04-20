@@ -428,15 +428,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 				}
 			}
 			for ( UserDefinedType userDefinedType : namespace.getUserDefinedTypes() ) {
-				if ( userDefinedType instanceof UserDefinedObjectType objectType ) {
-					if ( objectType.getColumns().size() > 1 ) {
-						final List<Column> objectTypeColumns = columnOrderingStrategy.orderUserDefinedTypeColumns(
-								objectType,
-								this
-						);
-						if ( objectTypeColumns != null ) {
-							objectType.reorderColumns( objectTypeColumns );
-						}
+				if ( userDefinedType instanceof UserDefinedObjectType objectType
+						&& objectType.getColumns().size() > 1 ) {
+					final List<Column> objectTypeColumns =
+							columnOrderingStrategy.orderUserDefinedTypeColumns( objectType, this );
+					if ( objectTypeColumns != null ) {
+						objectType.reorderColumns( objectTypeColumns );
 					}
 				}
 			}

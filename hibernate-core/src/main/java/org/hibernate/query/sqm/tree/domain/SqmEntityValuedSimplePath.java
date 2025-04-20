@@ -64,7 +64,7 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	@Override
 	public SqmPathSource<T> getNodeType() {
 		//noinspection unchecked
-		return (SqmPathSource<T>) getReferencedPathSource().getSqmPathType();
+		return (SqmPathSource<T>) getReferencedPathSource().getPathType();
 	}
 // We can't expose that the type is a EntityDomainType because it could also be a MappedSuperclass
 // Ideally, we would specify the return type to be IdentifiableDomainType, but that does not implement SqmPathSource yet

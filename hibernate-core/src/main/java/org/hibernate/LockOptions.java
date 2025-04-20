@@ -132,7 +132,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 * @see #getTimeOut()
 	 * @deprecated use {@link LockMode#UPGRADE_SKIPLOCKED}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.2", forRemoval = true)
 	public static final int SKIP_LOCKED = -2;
 
 	private final boolean immutable;

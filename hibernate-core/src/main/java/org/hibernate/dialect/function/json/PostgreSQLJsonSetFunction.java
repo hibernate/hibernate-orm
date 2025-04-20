@@ -54,8 +54,8 @@ public class PostgreSQLJsonSetFunction extends AbstractJsonSetFunction {
 			if ( pathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
 				sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
 			}
-			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
-				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) pathElement ).parameterName();
+			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess parameterIndexAccess ) {
+				final String parameterName = parameterIndexAccess.parameterName();
 				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
 			}
 			else {
@@ -66,7 +66,7 @@ public class PostgreSQLJsonSetFunction extends AbstractJsonSetFunction {
 			separator = ',';
 		}
 		sqlAppender.appendSql( "]::text[]," );
-		if ( value instanceof Literal && ( (Literal) value ).getLiteralValue() == null ) {
+		if ( value instanceof Literal literal && literal.getLiteralValue() == null ) {
 			sqlAppender.appendSql( "null::jsonb" );
 		}
 		else {

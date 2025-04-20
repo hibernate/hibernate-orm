@@ -8,16 +8,17 @@ import java.util.Collection;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.query.sqm.SqmExpressible;
 
 import jakarta.persistence.metamodel.ManagedType;
+import org.hibernate.query.BindableType;
 
 /**
  * Extensions to the JPA-defined {@link ManagedType} contract.
  *
  * @author Steve Ebersole
  */
-public interface ManagedDomainType<J> extends SqmExpressible<J>, DomainType<J>, ManagedType<J> {
+public interface ManagedDomainType<J>
+		extends DomainType<J>, ManagedType<J>, BindableType<J> {
 	/**
 	 * Get the type name.
 	 *
@@ -34,6 +35,11 @@ public interface ManagedDomainType<J> extends SqmExpressible<J>, DomainType<J>, 
 	JpaMetamodel getMetamodel();
 
 	RepresentationMode getRepresentationMode();
+
+	@Override
+	default Class<J> getJavaType() {
+		return getExpressibleJavaType().getJavaTypeClass();
+	}
 
 	/**
 	 * The descriptor of the supertype of this type.

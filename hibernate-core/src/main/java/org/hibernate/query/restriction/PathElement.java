@@ -5,6 +5,7 @@
 package org.hibernate.query.restriction;
 
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.FetchParent;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
@@ -22,5 +23,10 @@ record PathElement<X, U, V>(Path<? super X, U> parent, SingularAttribute<? super
 	@Override
 	public jakarta.persistence.criteria.Path<V> path(Root<? extends X> root) {
 		return parent.path( root ).get( attribute );
+	}
+
+	@Override
+	public FetchParent<?, V> fetch(Root<? extends X> root) {
+		return parent.fetch( root ).fetch( attribute );
 	}
 }

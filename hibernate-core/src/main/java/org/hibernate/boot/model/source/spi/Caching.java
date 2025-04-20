@@ -75,12 +75,11 @@ public class Caching {
 	public void overlay(CacheRegionDefinition overrides) {
 		if ( overrides != null ) {
 			requested = true;
-			accessType = AccessType.fromExternalName( overrides.getUsage() );
-			if ( isEmpty( overrides.getRegion() ) ) {
-				region = overrides.getRegion();
+			accessType = AccessType.fromExternalName( overrides.usage() );
+			if ( !isEmpty( overrides.region() ) ) {
+				region = overrides.region();
 			}
-			// ugh, primitive boolean
-			cacheLazyProperties = overrides.isCacheLazy();
+			cacheLazyProperties = overrides.cacheLazy();
 		}
 	}
 

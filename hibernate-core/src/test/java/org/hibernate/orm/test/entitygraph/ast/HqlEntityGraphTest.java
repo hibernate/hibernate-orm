@@ -22,8 +22,8 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.Query;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
@@ -391,10 +391,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 
 		final LoadQueryInfluencers loadQueryInfluencers = new LoadQueryInfluencers( session.getSessionFactory() );
 
-		final QueryImplementor<T> query = session.createQuery(
-				hql,
-				entityType
-		);
+		final Query<T> query = session.createQuery( hql, entityType );
 		final SqmQueryImplementor<String> hqlQuery = (SqmQueryImplementor<String>) query;
 		hqlQuery.applyGraph( entityGraph, mode );
 
@@ -404,7 +401,7 @@ public class HqlEntityGraphTest implements SessionFactoryScopeAware {
 				sqmStatement,
 				hqlQuery.getQueryOptions(),
 				( (QuerySqmImpl<?>) hqlQuery ).getDomainParameterXref(),
-				query.getParameterBindings(),
+				hqlQuery.getParameterBindings(),
 				loadQueryInfluencers,
 				session.getSessionFactory().getSqlTranslationEngine(),
 				true

@@ -115,6 +115,13 @@ pipeline {
 					def releaseVersion
 					def developmentVersion
 
+					def lastCommitter = sh(script: 'git show -s --format=\'%an\'', returnStdout: true).trim()
+					def secondLastCommitter = sh(script: 'git show -s --format=\'%an\' HEAD~1', returnStdout: true).trim()
+					def isCiLastCommiter = lastCommitter == 'Hibernate-CI' && secondLastCommitter == 'Hibernate-CI'
+
+					echo "Last two commits were performed by '${lastCommitter}'/'${secondLastCommitter}'."
+					echo "Is 'Hibernate-CI' the last commiter: '${isCiLastCommiter}'."
+
 					if ( manualRelease ) {
 						echo "Release was requested manually"
 
@@ -133,9 +140,8 @@ pipeline {
 						echo "Release was triggered automatically"
 
 						// Avoid doing an automatic release for commits from a release
-						def lastCommitter = sh(script: 'git show -s --format=\'%an\'', returnStdout: true)
-						def secondLastCommitter = sh(script: 'git show -s --format=\'%an\' HEAD~1', returnStdout: true)
-						if (lastCommitter == 'Hibernate-CI' && secondLastCommitter == 'Hibernate-CI') {
+
+						if (isCiLastCommiter) {
 							print "INFO: Automatic release skipped because last commits were for the previous release"
 							currentBuild.getRawBuild().getExecutor().interrupt(Result.NOT_BUILT)
 							sleep(1)   // Interrupt is not blocking and does not take effect immediately.

@@ -157,15 +157,15 @@ public class JsonExistsFunction extends AbstractSqmSelfRenderingFunctionDescript
 			JsonExistsErrorBehavior errorBehavior = null;
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonPathPassingClause ) {
-					passingClause = (JsonPathPassingClause) node;
+				if ( node instanceof JsonPathPassingClause pathPassingClause ) {
+					passingClause = pathPassingClause;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonExistsErrorBehavior ) {
-					errorBehavior = (JsonExistsErrorBehavior) node;
+				if ( node instanceof JsonExistsErrorBehavior existsErrorBehavior ) {
+					errorBehavior = existsErrorBehavior;
 					nextIndex++;
 				}
 			}

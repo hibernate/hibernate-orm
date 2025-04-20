@@ -5,7 +5,7 @@
 package org.hibernate.dialect.function.array;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.dialect.XmlHelper;
+import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;

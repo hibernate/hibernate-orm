@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
+import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmSingularValuedJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedEntityJoin;
@@ -32,7 +33,9 @@ import jakarta.persistence.metamodel.EntityType;
 /**
  * @author Steve Ebersole
  */
-public class SqmEntityJoin<L,R> extends AbstractSqmJoin<L,R> implements SqmSingularValuedJoin<L,R>, JpaEntityJoin<L,R> {
+public class SqmEntityJoin<L,R>
+		extends AbstractSqmJoin<L,R>
+		implements SqmSingularValuedJoin<L,R>, JpaEntityJoin<L,R> {
 	private final SqmRoot<L> sqmRoot;
 
 	public SqmEntityJoin(
@@ -55,7 +58,7 @@ public class SqmEntityJoin<L,R> extends AbstractSqmJoin<L,R> implements SqmSingu
 			String alias,
 			SqmJoinType joinType,
 			SqmRoot<L> sqmRoot) {
-		super( navigablePath, joinedEntityDescriptor, sqmRoot, alias, joinType, sqmRoot.nodeBuilder() );
+		super( navigablePath, (SqmEntityDomainType<R>) joinedEntityDescriptor, sqmRoot, alias, joinType, sqmRoot.nodeBuilder() );
 		this.sqmRoot = sqmRoot;
 	}
 
@@ -120,8 +123,8 @@ public class SqmEntityJoin<L,R> extends AbstractSqmJoin<L,R> implements SqmSingu
 	}
 
 	@Override
-	public EntityDomainType<R> getModel() {
-		return (EntityDomainType<R>) super.getModel();
+	public SqmEntityDomainType<R> getModel() {
+		return (SqmEntityDomainType<R>) super.getModel();
 	}
 
 	@Override
@@ -131,8 +134,8 @@ public class SqmEntityJoin<L,R> extends AbstractSqmJoin<L,R> implements SqmSingu
 	}
 
 	@Override
-	public EntityDomainType<R> getReferencedPathSource() {
-		return (EntityDomainType<R>) super.getReferencedPathSource();
+	public SqmEntityDomainType<R> getReferencedPathSource() {
+		return (SqmEntityDomainType<R>) super.getReferencedPathSource();
 	}
 
 	public String getEntityName() {
@@ -177,9 +180,11 @@ public class SqmEntityJoin<L,R> extends AbstractSqmJoin<L,R> implements SqmSingu
 	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(EntityDomainType<S> treatAsType) {
 		final SqmTreatedEntityJoin<L,R,S> treat = findTreat( treatAsType, null );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedEntityJoin<>( this, treatAsType, null ) );
+			return addTreat( new SqmTreatedEntityJoin<>( this, (SqmEntityDomainType<S>) treatAsType, null ) );
 		}
-		return treat;
+		else {
+			return treat;
+		}
 	}
 
 	@Override

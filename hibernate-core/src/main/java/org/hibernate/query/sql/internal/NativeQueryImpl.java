@@ -21,6 +21,8 @@ import java.util.function.Supplier;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.spi.NativeQueryConstructorTransformer;
 import org.hibernate.jpa.spi.NativeQueryListTransformer;
 import org.hibernate.jpa.spi.NativeQueryMapTransformer;
@@ -50,7 +52,6 @@ import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Order;
-import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.PathException;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
@@ -105,8 +106,6 @@ import org.hibernate.type.BasicTypeReference;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
@@ -137,6 +136,9 @@ import static org.hibernate.query.sqm.internal.SqmUtil.isResultTypeAlwaysAllowed
 public class NativeQueryImpl<R>
 		extends AbstractQuery<R>
 		implements NativeQueryImplementor<R>, DomainQueryExecutionContext, ResultSetMappingResolutionContext {
+
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( NativeQueryImpl.class );
+
 	private final String sqlString;
 	private final String originalSqlString;
 	private final ParameterMetadataImplementor parameterMetadata;
@@ -518,7 +520,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NamedNativeQueryMemento<?> toMemento(String name) {
+	public NamedNativeQueryMemento<R> toMemento(String name) {
 		return new NamedNativeQueryMementoImpl<>(
 				name,
 				resultType != null ? resultType : extractResultClass( resultSetMapping ),
@@ -645,7 +647,8 @@ public class NativeQueryImpl<R>
 
 	@Override
 	protected void prepareForExecution() {
-		if ( getSynchronizedQuerySpaces() == null || getSynchronizedQuerySpaces().isEmpty() ) {
+		final Collection<String> spaces = getSynchronizedQuerySpaces();
+		if ( spaces == null || spaces.isEmpty() ) {
 			// We need to flush. The query itself is not required to execute in a
 			// transaction; if there is no transaction, the flush would throw a
 			// TransactionRequiredException which would potentially break existing
@@ -716,7 +719,8 @@ public class NativeQueryImpl<R>
 			mapping = resultSetMapping;
 		}
 		return isCacheableQuery()
-				? getInterpretationCache().resolveSelectQueryPlan( selectInterpretationsKey( mapping ), () -> createQueryPlan( mapping ) )
+				? getInterpretationCache()
+						.resolveSelectQueryPlan( selectInterpretationsKey( mapping ), () -> createQueryPlan( mapping ) )
 				: createQueryPlan( mapping );
 	}
 
@@ -800,111 +804,114 @@ public class NativeQueryImpl<R>
 		}
 		// HHH-1123
 		// Some DBs limit number of IN expressions.  For now, warn...
-		final SessionFactoryImplementor sessionFactory = getSessionFactory();
-		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
-		final boolean paddingEnabled = sessionFactory.getSessionFactoryOptions().inClauseParameterPaddingEnabled();
+		final SessionFactoryImplementor factory = getSessionFactory();
+		final Dialect dialect = factory.getJdbcServices().getDialect();
+		final boolean paddingEnabled = factory.getSessionFactoryOptions().inClauseParameterPaddingEnabled();
 		final int inExprLimit = dialect.getInExpressionCountLimit();
 
-		StringBuilder sb = null;
+		StringBuilder sql = null;
 
 		// Handle parameter lists
 		int offset = 0;
 		for ( ParameterOccurrence occurrence : parameterOccurrences ) {
-			final QueryParameterImplementor<?> queryParameter = occurrence.getParameter();
+			final QueryParameterImplementor<?> queryParameter = occurrence.parameter();
 			final QueryParameterBinding<?> binding = parameterBindings.getBinding( queryParameter );
-			if ( !binding.isMultiValued() ) {
-				continue;
+			if ( binding.isMultiValued() ) {
+				final int bindValueCount = binding.getBindValues().size();
+				logTooManyExpressions( inExprLimit, bindValueCount, dialect, queryParameter );
+				final int sourcePosition = occurrence.sourcePosition();
+				if ( sourcePosition >= 0 ) {
+					// check if placeholder is already immediately enclosed in parentheses
+					// (ignoring whitespace)
+					final boolean isEnclosedInParens = isEnclosedInParens( sourcePosition );
+					// short-circuit for performance when only 1 value and the
+					// placeholder is already enclosed in parentheses...
+					if ( bindValueCount != 1 || !isEnclosedInParens ) {
+						if ( sql == null ) {
+							sql = new StringBuilder( sqlString.length() + 20 );
+							sql.append( sqlString );
+						}
+						final int bindValueMaxCount =
+								determineBindValueMaxCount( paddingEnabled, inExprLimit, bindValueCount );
+						final String expansionListAsString =
+								expandList( bindValueMaxCount, isEnclosedInParens );
+						final int start = sourcePosition + offset;
+						final int end = start + 1;
+						sql.replace( start, end, expansionListAsString );
+						offset += expansionListAsString.length() - 1;
+					}
+				}
 			}
-			final Collection<?> bindValues = binding.getBindValues();
+		}
+		return sql == null ? sqlString : sql.toString();
+	}
 
-			final int bindValueCount = bindValues.size();
-			final int bindValueMaxCount = determineBindValueMaxCount( paddingEnabled, inExprLimit, bindValueCount );
+	private static void logTooManyExpressions(
+			int inExprLimit, int bindValueCount,
+			Dialect dialect, QueryParameterImplementor<?> queryParameter) {
+		if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
+			log.tooManyInExpressions(
+					dialect.getClass().getName(),
+					inExprLimit,
+					queryParameter.getName() == null
+							? queryParameter.getPosition().toString()
+							: queryParameter.getName(),
+					bindValueCount
+			);
+		}
+	}
 
-			if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
-				log.tooManyInExpressions(
-						dialect.getClass().getName(),
-						inExprLimit,
-						queryParameter.getName() == null
-								? queryParameter.getPosition().toString()
-								: queryParameter.getName(),
-						bindValueCount
-				);
+	private static String expandList(int bindValueMaxCount, boolean isEnclosedInParens) {
+		// HHH-8901
+		if ( bindValueMaxCount == 0 ) {
+			return isEnclosedInParens ? "null" : "(null)";
+		}
+		else {
+			// Shift 1 bit instead of multiplication by 2
+			final char[] chars;
+			if ( isEnclosedInParens ) {
+				chars = new char[(bindValueMaxCount << 1) - 1];
+				chars[0] = '?';
+				for ( int i = 1; i < bindValueMaxCount; i++ ) {
+					final int index = i << 1;
+					chars[index - 1] = ',';
+					chars[index] = '?';
+				}
 			}
-
-			final int sourcePosition = occurrence.getSourcePosition();
-			if ( sourcePosition < 0 ) {
-				continue;
+			else {
+				chars = new char[(bindValueMaxCount << 1) + 1];
+				chars[0] = '(';
+				chars[1] = '?';
+				for ( int i = 1; i < bindValueMaxCount; i++ ) {
+					final int index = i << 1;
+					chars[index] = ',';
+					chars[index + 1] = '?';
+				}
+				chars[chars.length - 1] = ')';
 			}
+			return new String( chars );
+		}
+	}
 
-			// check if placeholder is already immediately enclosed in parentheses
-			// (ignoring whitespace)
-			boolean isEnclosedInParens = true;
-			for ( int i = sourcePosition - 1; i >= 0; i-- ) {
+	private boolean isEnclosedInParens(int sourcePosition) {
+		boolean isEnclosedInParens = true;
+		for ( int i = sourcePosition - 1; i >= 0; i-- ) {
+			final char ch = sqlString.charAt( i );
+			if ( !isWhitespace( ch ) ) {
+				isEnclosedInParens = ch == '(';
+				break;
+			}
+		}
+		if ( isEnclosedInParens ) {
+			for ( int i = sourcePosition + 1; i < sqlString.length(); i++ ) {
 				final char ch = sqlString.charAt( i );
 				if ( !isWhitespace( ch ) ) {
-					isEnclosedInParens = ch == '(';
+					isEnclosedInParens = ch == ')';
 					break;
 				}
 			}
-			if ( isEnclosedInParens ) {
-				for ( int i = sourcePosition + 1; i < sqlString.length(); i++ ) {
-					final char ch = sqlString.charAt( i );
-					if ( !isWhitespace( ch ) ) {
-						isEnclosedInParens = ch == ')';
-						break;
-					}
-				}
-			}
-
-			if ( bindValueCount == 1 && isEnclosedInParens ) {
-				// short-circuit for performance when only 1 value and the
-				// placeholder is already enclosed in parentheses...
-				continue;
-			}
-
-			if ( sb == null ) {
-				sb = new StringBuilder( sqlString.length() + 20 );
-				sb.append( sqlString );
-			}
-
-			final String expansionListAsString;
-			// HHH-8901
-			if ( bindValueMaxCount == 0 ) {
-				expansionListAsString = isEnclosedInParens ? "null" : "(null)";
-			}
-			else {
-				// Shift 1 bit instead of multiplication by 2
-				final char[] chars;
-				if ( isEnclosedInParens ) {
-					chars = new char[( bindValueMaxCount << 1 ) - 1];
-					chars[0] = '?';
-					for ( int i = 1; i < bindValueMaxCount; i++ ) {
-						final int index = i << 1;
-						chars[index - 1] = ',';
-						chars[index] = '?';
-					}
-				}
-				else {
-					chars = new char[( bindValueMaxCount << 1 ) + 1];
-					chars[0] = '(';
-					chars[1] = '?';
-					for ( int i = 1; i < bindValueMaxCount; i++ ) {
-						final int index = i << 1;
-						chars[index] = ',';
-						chars[index + 1] = '?';
-					}
-					chars[chars.length - 1] = ')';
-				}
-
-				expansionListAsString = new String(chars);
-			}
-
-			final int start = sourcePosition + offset;
-			final int end = start + 1;
-			sb.replace( start, end, expansionListAsString );
-			offset += expansionListAsString.length() - 1;
 		}
-		return sb == null ? sqlString : sb.toString();
+		return isEnclosedInParens;
 	}
 
 	public static int determineBindValueMaxCount(boolean paddingEnabled, int inExprLimit, int bindValueCount) {
@@ -1115,8 +1122,8 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> addEntity(String tableAlias, String entityName) {
-		final DynamicResultBuilderEntityCalculated builder = Builders.entityCalculated( tableAlias, entityName,
-				getSessionFactory() );
+		final DynamicResultBuilderEntityCalculated builder =
+				Builders.entityCalculated( tableAlias, entityName, getSessionFactory() );
 		entityMappingTypeByTableAlias.put( tableAlias, builder.getEntityMapping() );
 		registerBuilder( builder );
 		return this;
@@ -1124,8 +1131,8 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NativeQueryImplementor<R> addEntity(String tableAlias, String entityName, LockMode lockMode) {
-		final DynamicResultBuilderEntityCalculated builder = Builders.entityCalculated( tableAlias, entityName, lockMode,
-				getSessionFactory() );
+		final DynamicResultBuilderEntityCalculated builder =
+				Builders.entityCalculated( tableAlias, entityName, lockMode, getSessionFactory() );
 		entityMappingTypeByTableAlias.put( tableAlias, builder.getEntityMapping() );
 		registerBuilder( builder );
 		return this;
@@ -1162,8 +1169,7 @@ public class NativeQueryImpl<R>
 
 	private void addEntityMappingType(String tableAlias, ModelPart part) {
 		if ( part instanceof PluralAttributeMapping pluralAttributeMapping ) {
-			final MappingType partMappingType = pluralAttributeMapping.getElementDescriptor()
-					.getPartMappingType();
+			final MappingType partMappingType = pluralAttributeMapping.getElementDescriptor().getPartMappingType();
 			if ( partMappingType instanceof EntityMappingType entityMappingType ) {
 				entityMappingTypeByTableAlias.put( tableAlias, entityMappingType );
 			}
@@ -1328,29 +1334,32 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> T unwrap(Class<T> javaType) {
-		if ( javaType.isAssignableFrom( getClass() ) ) {
-			return (T) this;
+	public <T> T unwrap(Class<T> type) {
+		if ( type.isInstance( this ) ) {
+			return type.cast( this );
 		}
 
-		if ( javaType.isAssignableFrom( ParameterMetadata.class ) ) {
-			return (T) parameterMetadata;
+		if ( type.isInstance( parameterMetadata ) ) {
+			return type.cast( parameterMetadata );
 		}
 
-		if ( javaType.isAssignableFrom( QueryParameterBindings.class ) ) {
-			return (T) parameterBindings;
+		if ( type.isInstance( parameterBindings ) ) {
+			return type.cast( parameterBindings );
 		}
 
-		if ( javaType.isAssignableFrom( EntityManager.class ) ) {
-			return (T) getSession();
+		if ( type.isInstance( getQueryOptions() ) ) {
+			return type.cast( getQueryOptions() );
 		}
 
-		if ( javaType.isAssignableFrom( EntityManagerFactory.class ) ) {
-			return (T) getSession().getFactory();
+		if ( type.isInstance( getQueryOptions().getAppliedGraph() ) ) {
+			return type.cast( getQueryOptions().getAppliedGraph() );
 		}
 
-		throw new PersistenceException( "Unrecognized unwrap type [" + javaType.getName() + "]" );
+		if ( type.isInstance( getSession() ) ) {
+			return type.cast( getSession() );
+		}
+
+		throw new PersistenceException( "Unrecognized unwrap type [" + type.getName() + "]" );
 	}
 
 	@Override

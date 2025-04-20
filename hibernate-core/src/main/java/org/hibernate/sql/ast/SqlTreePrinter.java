@@ -86,11 +86,14 @@ public class SqlTreePrinter {
 	}
 
 	private void visitQueryPart(QueryPart queryPart) {
-		if ( queryPart instanceof QueryGroup ) {
-			visitQueryGroup( (QueryGroup) queryPart );
+		if ( queryPart instanceof QueryGroup queryGroup ) {
+			visitQueryGroup( queryGroup );
+		}
+		else if ( queryPart instanceof QuerySpec querySpec ) {
+			visitQuerySpec( querySpec );
 		}
 		else {
-			visitQuerySpec( (QuerySpec) queryPart );
+			throw new IllegalArgumentException( "Unexpected query part" );
 		}
 	}
 

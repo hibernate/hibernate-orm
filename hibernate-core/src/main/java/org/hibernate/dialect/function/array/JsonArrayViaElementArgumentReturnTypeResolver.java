@@ -81,7 +81,7 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 
 	@AllowReflection
 	public static <T> BasicType<?> resolveJsonArrayType(DomainType<T> elementType, TypeConfiguration typeConfiguration) {
-		final Class<?> arrayClass = Array.newInstance( elementType.getBindableJavaType(), 0 ).getClass();
+		final Class<?> arrayClass = Array.newInstance( elementType.getJavaType(), 0 ).getClass();
 		@SuppressWarnings("unchecked")
 		final BasicPluralJavaType<T> arrayJavaType =
 				(BasicPluralJavaType<T>)

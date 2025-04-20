@@ -77,7 +77,7 @@ import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.spi.NavigablePath;
 
@@ -89,6 +89,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static jakarta.persistence.InheritanceType.SINGLE_TABLE;
@@ -118,7 +119,6 @@ import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultC
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 import static org.hibernate.internal.util.StringHelper.isBlank;
-import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.unqualify;
@@ -143,8 +143,6 @@ public class EntityBinder {
 	private String name;
 	private ClassDetails annotatedClass;
 	private PersistentClass persistentClass;
-	private boolean lazy;
-	private ClassDetails proxyClass;
 	private String where;
 	// todo : we should defer to InFlightMetadataCollector.EntityTableXref for secondary table tracking;
 	//		atm we use both from here; HBM binding solely uses InFlightMetadataCollector.EntityTableXref
@@ -166,7 +164,7 @@ public class EntityBinder {
 	private String naturalIdCacheRegion;
 	private CacheLayout queryCacheLayout;
 
-	private SourceModelBuildingContext modelsContext() {
+	private ModelsContext modelsContext() {
 		return context.getBootstrapContext().getModelsContext();
 	}
 
@@ -186,7 +184,7 @@ public class EntityBinder {
 		}
 
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
-		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
 
 		//TODO: be more strict with secondary table allowance (not for ids, not for secondary table join columns etc)
 
@@ -236,7 +234,7 @@ public class EntityBinder {
 		handleSecondaryTables();
 	}
 
-	private static void checkOverrides(ClassDetails clazzToProcess, PersistentClass superEntity, SourceModelBuildingContext sourceModelContext) {
+	private static void checkOverrides(ClassDetails clazzToProcess, PersistentClass superEntity, ModelsContext sourceModelContext) {
 		if ( superEntity != null ) {
 			//TODO: correctly handle compound paths (embeddables)
 			clazzToProcess.forEachAnnotationUsage( AttributeOverride.class, sourceModelContext, (usage) -> checkOverride(
@@ -290,7 +288,7 @@ public class EntityBinder {
 	}
 
 	private static SoftDelete extractSoftDelete(ClassDetails classDetails, MetadataBuildingContext context) {
-		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
 		final SoftDelete fromClass = classDetails.getAnnotationUsage( SoftDelete.class, modelsContext );
 		if ( fromClass != null ) {
 			return fromClass;
@@ -1119,7 +1117,7 @@ public class EntityBinder {
 		final AnnotatedJoinColumns joinColumns = new AnnotatedJoinColumns();
 		joinColumns.setBuildingContext( context );
 
-		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
 		final PrimaryKeyJoinColumns primaryKeyJoinColumns =
 				clazzToProcess.getAnnotationUsage( PrimaryKeyJoinColumns.class, modelsContext );
 		if ( primaryKeyJoinColumns != null ) {
@@ -1259,9 +1257,8 @@ public class EntityBinder {
 		bindEntityAnnotation();
 		bindRowManagement();
 		bindOptimisticLocking();
-		bindProxy();
 		bindConcreteProxy();
-		bindWhere();
+		bindSqlRestriction();
 		bindCache();
 		bindNaturalIdCache();
 		bindFiltersInHierarchy();
@@ -1271,11 +1268,9 @@ public class EntityBinder {
 		persistentClass.setJpaEntityName( name );
 		persistentClass.setEntityName( annotatedClass.getName() );
 		persistentClass.setCached( isCached );
-		persistentClass.setLazy( lazy );
+		persistentClass.setLazy( true );
 		persistentClass.setQueryCacheLayout( queryCacheLayout );
-		if ( proxyClass != null && proxyClass != ClassDetails.VOID_CLASS_DETAILS ) {
-			persistentClass.setProxyInterfaceName( proxyClass.getName() );
-		}
+		persistentClass.setProxyInterfaceName( annotatedClass.getName() );
 
 		if ( persistentClass instanceof RootClass ) {
 			bindRootEntity();
@@ -1435,21 +1430,16 @@ public class EntityBinder {
 				annotatedClass.getRepeatedAnnotationUsages( overrideAnnotation, modelsContext() );
 		if ( isNotEmpty( dialectOverrides ) ) {
 			final Dialect dialect = getMetadataCollector().getDatabase().getDialect();
-			for ( int i = 0; i < dialectOverrides.length; i++ ) {
+			for ( Annotation annotation : dialectOverrides ) {
 				//noinspection unchecked
-				final DialectOverrider<A> dialectOverride = (DialectOverrider<A>) dialectOverrides[i];
-				if ( !dialectOverride.matches( dialect ) ) {
-					continue;
-				}
-
-				final A override = dialectOverride.override();
-				if ( isBlank( tableName )
-						&& isEmpty( ( (CustomSqlDetails) override ).table() ) ) {
-					return override;
-				}
-				else if ( isNotBlank( tableName )
-						&& tableName.equals( ( (CustomSqlDetails) override ).table() ) ) {
-					return override;
+				final DialectOverrider<A> dialectOverride = (DialectOverrider<A>) annotation;
+				if ( dialectOverride.matches( dialect ) ) {
+					final A override = dialectOverride.override();
+					final String table = ((CustomSqlDetails) override).table();
+					if ( isBlank( tableName ) && isBlank( table )
+							|| Objects.equals( tableName, table ) ) {
+						return override;
+					}
 				}
 			}
 		}
@@ -1530,15 +1520,34 @@ public class EntityBinder {
 	private void processNamedEntityGraph(NamedEntityGraph annotation) {
 		if ( annotation != null ) {
 			getMetadataCollector()
-					.addNamedEntityGraph( new NamedEntityGraphDefinition( annotation, name, persistentClass.getEntityName() ) );
+					.addNamedEntityGraph( namedEntityGraphDefinition( annotation ) );
 		}
+	}
+
+	private NamedEntityGraphDefinition namedEntityGraphDefinition(NamedEntityGraph annotation) {
+		final String explicitName = annotation.name();
+		return new NamedEntityGraphDefinition(
+				StringHelper.isNotEmpty( explicitName ) ? explicitName : name,
+				persistentClass.getEntityName(),
+				NamedEntityGraphDefinition.Source.JPA,
+				new NamedGraphCreatorJpa( annotation, name ) );
 	}
 
 	private void processParsedNamedEntityGraph(org.hibernate.annotations.NamedEntityGraph annotation) {
 		if ( annotation != null ) {
 			getMetadataCollector()
-					.addNamedEntityGraph( new NamedEntityGraphDefinition( annotation, persistentClass ) );
+					.addNamedEntityGraph( namedEntityGraphDefinition( annotation ) );
 		}
+	}
+
+	private NamedEntityGraphDefinition namedEntityGraphDefinition(org.hibernate.annotations.NamedEntityGraph annotation) {
+		final String explicitName = annotation.name();
+		return new NamedEntityGraphDefinition(
+				StringHelper.isNotEmpty( explicitName ) ? explicitName : persistentClass.getJpaEntityName(),
+				persistentClass.getEntityName(),
+				NamedEntityGraphDefinition.Source.PARSED,
+				new NamedGraphCreatorParsed( persistentClass.getMappedClass(), annotation )
+		);
 	}
 
 	private void bindDiscriminatorValue() {
@@ -1568,12 +1577,6 @@ public class EntityBinder {
 		}
 	}
 
-	private void bindProxy() {
-		//needed to allow association lazy loading.
-		lazy = true;
-		proxyClass = annotatedClass;
-	}
-
 	private void bindConcreteProxy() {
 		final ConcreteProxy annotationUsage =
 				annotatedClass.getAnnotationUsage( ConcreteProxy.class, modelsContext() );
@@ -1586,19 +1589,20 @@ public class EntityBinder {
 		}
 	}
 
-	private void bindWhere() {
-		final SQLRestriction restriction = extractSQLRestriction( annotatedClass, context );
+	private void bindSqlRestriction() {
+		final SQLRestriction restriction = extractSQLRestriction( annotatedClass );
 		if ( restriction != null ) {
-			this.where = restriction.value();
+			where = restriction.value();
 		}
 	}
 
-	private static SQLRestriction extractSQLRestriction(ClassDetails classDetails, MetadataBuildingContext context) {
-		final SourceModelBuildingContext modelsContext = context.getBootstrapContext().getModelsContext();
+	private SQLRestriction extractSQLRestriction(ClassDetails classDetails) {
+		final ModelsContext modelsContext = modelsContext();
 		final SQLRestriction fromClass = getOverridableAnnotation( classDetails, SQLRestriction.class, context );
 		if ( fromClass != null ) {
 			return fromClass;
 		}
+		// as a special favor to users, we allow @SQLRestriction to be declared on a @MappedSuperclass
 		ClassDetails classToCheck = classDetails.getSuperClass();
 		while ( classToCheck != null
 				&& classToCheck.hasAnnotationUsage( jakarta.persistence.MappedSuperclass.class, modelsContext ) ) {
@@ -1667,7 +1671,7 @@ public class EntityBinder {
 	}
 
 	private void bindRootClassCache() {
-		final SourceModelBuildingContext sourceModelContext = modelsContext();
+		final ModelsContext sourceModelContext = modelsContext();
 
 		final Cache cache = annotatedClass.getAnnotationUsage( Cache.class, sourceModelContext );
 		final Cacheable cacheable = annotatedClass.getAnnotationUsage( Cacheable.class, sourceModelContext );

@@ -19,7 +19,7 @@ import java.util.Set;
 
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -1499,5 +1499,8 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	JpaCompliance getJpaCompliance();
 
+	@Deprecated(since = "7.0", forRemoval = true)
 	ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode();
+
+	boolean allowImmutableEntityUpdate();
 }

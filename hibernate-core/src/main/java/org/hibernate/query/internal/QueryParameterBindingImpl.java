@@ -141,9 +141,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	private boolean handleAsMultiValue(T value, BindableType<T> bindableType) {
 		if ( queryParameter.allowsMultiValuedBinding()
 				&& value instanceof Collection
-				&& ( bindableType == null
-					? !isRegisteredAsBasicType( value.getClass() )
-					: !bindableType.getBindableJavaType().isInstance( value ) ) ) {
+				&& !( bindableType == null
+					? isRegisteredAsBasicType( value.getClass() )
+					: bindableType.getBindableJavaType().isInstance( value ) ) ) {
 			//noinspection unchecked
 			setBindValues( (Collection<T>) value );
 			return true;

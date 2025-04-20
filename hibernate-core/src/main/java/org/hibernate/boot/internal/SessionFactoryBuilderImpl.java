@@ -192,7 +192,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
 		this.optionsBuilder.applyTempTableDdlTransactionHandling( handling );
 		return this;
@@ -372,7 +372,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable) {
 		this.optionsBuilder.enableReleaseResourcesOnClose( enable );
 		return this;

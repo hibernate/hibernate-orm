@@ -273,7 +273,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		assert fromSide == Nature.TARGET
-				? targetTableGroup.getTableReference( navigablePath, associationKey.getTable(), false ) != null
+				? targetTableGroup.getTableReference( navigablePath, associationKey.table(), false ) != null
 				: isTargetTableGroup( targetTableGroup );
 		return createDomainResult(
 				navigablePath.append( ForeignKeyDescriptor.PART_NAME ),
@@ -318,14 +318,10 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	private boolean isTargetTableGroup(TableGroup tableGroup) {
 		tableGroup = getUnderlyingTableGroup( tableGroup );
-		final TableGroupProducer tableGroupProducer;
-		if ( tableGroup instanceof OneToManyTableGroup ) {
-			tableGroupProducer = (TableGroupProducer) ( (OneToManyTableGroup) tableGroup ).getElementTableGroup()
-					.getModelPart();
-		}
-		else {
-			tableGroupProducer = (TableGroupProducer) tableGroup.getModelPart();
-		}
+		final TableGroupProducer tableGroupProducer =
+				tableGroup instanceof OneToManyTableGroup oneToManyTableGroup
+						? (TableGroupProducer) oneToManyTableGroup.getElementTableGroup().getModelPart()
+						: (TableGroupProducer) tableGroup.getModelPart();
 		return tableGroupProducer.containsTableReference( targetSide.getModelPart().getContainingTableExpression() );
 	}
 
@@ -440,15 +436,18 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		}
 		final Expression lhsExpr = comparisonPredicate.getLeftHandExpression();
 		final Expression rhsExpr = comparisonPredicate.getRightHandExpression();
-		if ( !( lhsExpr instanceof ColumnReference ) || !( rhsExpr instanceof ColumnReference ) ) {
+		if ( lhsExpr instanceof ColumnReference lhsColumnRef
+				&& rhsExpr instanceof ColumnReference rhsColumnRef ) {
+			final String lhs = lhsColumnRef.getColumnExpression();
+			final String rhs = rhsColumnRef.getColumnExpression();
+			final String keyExpression = keySide.getModelPart().getSelectionExpression();
+			final String targetExpression = targetSide.getModelPart().getSelectionExpression();
+			return lhs.equals( keyExpression ) && rhs.equals( targetExpression )
+				|| lhs.equals( targetExpression ) && rhs.equals( keyExpression );
+		}
+		else {
 			return false;
 		}
-		final String lhs = ( (ColumnReference) lhsExpr ).getColumnExpression();
-		final String rhs = ( (ColumnReference) rhsExpr ).getColumnExpression();
-		final String keyExpression = keySide.getModelPart().getSelectionExpression();
-		final String targetExpression = targetSide.getModelPart().getSelectionExpression();
-		return ( lhs.equals( keyExpression ) && rhs.equals( targetExpression ) )
-				|| ( lhs.equals( targetExpression ) && rhs.equals( keyExpression ) );
 	}
 
 	@Override

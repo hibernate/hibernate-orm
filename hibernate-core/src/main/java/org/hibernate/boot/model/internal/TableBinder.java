@@ -572,11 +572,11 @@ public class TableBinder {
 			// if columns are implicit, then create the columns based
 			// on the referenced entity id columns
 			bindImplicitColumns( referencedEntity, joinColumns, value );
-			if ( value instanceof ToOne ) {
+			if ( value instanceof ToOne toOne ) {
 				// in the case of implicit foreign-keys, make sure the columns making up
 				// the foreign-key do not get resorted since the order is already properly
 				// ascertained from the referenced identifier
-				( (ToOne) value ).setSorted( true );
+				toOne.setSorted( true );
 			}
 		}
 		else {
@@ -627,8 +627,8 @@ public class TableBinder {
 				joinColumns,
 				value
 		);
-		if ( value instanceof SortableValue ) {
-			( (SortableValue) value).sortProperties();
+		if ( value instanceof SortableValue sortableValue ) {
+			sortableValue.sortProperties();
 		}
 	}
 
@@ -641,8 +641,8 @@ public class TableBinder {
 		// ensure the composite key is sorted so that we can simply
 		// set sorted to true on the ToOne (below)
 		final KeyValue key = referencedEntity.getKey();
-		if ( key instanceof Component ) {
-			( (Component) key).sortProperties();
+		if ( key instanceof Component component ) {
+			component.sortProperties();
 		}
 		// works because the pk has to be on the primary table
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
@@ -657,11 +657,11 @@ public class TableBinder {
 				);
 			}
 		}
-		if ( value instanceof ToOne ) {
-			( (ToOne) value ).setSorted( true );
+		if ( value instanceof ToOne toOne ) {
+			toOne.setSorted( true );
 		}
-		else if ( value instanceof DependantValue ) {
-			( (DependantValue) value ).setSorted( true );
+		else if ( value instanceof DependantValue dependantValue ) {
+			dependantValue.setSorted( true );
 		}
 		else {
 			throw new AssertionError(
@@ -726,8 +726,8 @@ public class TableBinder {
 			AnnotatedJoinColumns joinColumns,
 			SimpleValue value) {
 		final String referencedPropertyName;
-		if ( value instanceof ToOne ) {
-			referencedPropertyName = ( (ToOne) value).getReferencedPropertyName();
+		if ( value instanceof ToOne toOne ) {
+			referencedPropertyName = toOne.getReferencedPropertyName();
 		}
 		else if ( value instanceof DependantValue ) {
 			final String propertyName = joinColumns.getPropertyName();
@@ -784,10 +784,10 @@ public class TableBinder {
 				}
 			}
 		}
-		if ( keyValue instanceof Component
-				&& ( (Component) keyValue ).isSorted()
-				&& value instanceof DependantValue ) {
-			( (DependantValue) value ).setSorted( true );
+		if ( keyValue instanceof Component component
+				&& component.isSorted()
+				&& value instanceof DependantValue dependantValue ) {
+			dependantValue.setSorted( true );
 		}
 	}
 
@@ -805,16 +805,16 @@ public class TableBinder {
 
 	private static List<Column> mappedByColumns(PersistentClass associatedClass, String mappedByProperty) {
 		final Value value = associatedClass.getRecursiveProperty( mappedByProperty ).getValue();
-		if ( value instanceof Collection ) {
-			final Value element = ((Collection) value).getElement();
+		if ( value instanceof Collection collection ) {
+			final Value element = collection.getElement();
 			if ( element == null ) {
 				throw new AnnotationException( "Both sides of the bidirectional association '"
 						+ associatedClass.getEntityName() + "." + mappedByProperty + "' specify 'mappedBy'" );
 			}
 			return element.getColumns();
 		}
-		else if (value instanceof Any) {
-			return ( (Any) value ).getKeyDescriptor().getColumns();
+		else if ( value instanceof Any any ) {
+			return any.getKeyDescriptor().getColumns();
 		}
 		else {
 			return value.getColumns();

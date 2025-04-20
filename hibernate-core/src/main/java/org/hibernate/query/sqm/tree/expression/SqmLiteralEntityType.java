@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.HqlInterpretationException;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -12,7 +11,9 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 import static org.hibernate.persister.entity.DiscriminatorHelper.getDiscriminatorType;
@@ -29,9 +30,9 @@ import static org.hibernate.persister.entity.DiscriminatorHelper.getDiscriminato
 public class SqmLiteralEntityType<T>
 		extends AbstractSqmExpression<T>
 		implements SqmSelectableNode<T>, SemanticPathPart {
-	private final EntityDomainType<T> entityType;
+	private final SqmEntityDomainType<T> entityType;
 
-	public SqmLiteralEntityType(EntityDomainType<T> entityType, NodeBuilder nodeBuilder) {
+	public SqmLiteralEntityType(SqmEntityDomainType<T> entityType, NodeBuilder nodeBuilder) {
 		super( getDiscriminatorType( entityType, nodeBuilder ), nodeBuilder );
 		this.entityType = entityType;
 	}
@@ -42,19 +43,15 @@ public class SqmLiteralEntityType<T>
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmLiteralEntityType<T> expression = context.registerCopy(
-				this,
-				new SqmLiteralEntityType<>(
-						entityType,
-						nodeBuilder()
-				)
-		);
+		final SqmLiteralEntityType<T> expression =
+				context.registerCopy( this,
+						new SqmLiteralEntityType<>( entityType, nodeBuilder() ) );
 		copyTo( expression, context );
 		return expression;
 	}
 
 	@Override
-	public EntityDomainType<T> getNodeType() {
+	public SqmEntityDomainType<T> getNodeType() {
 		return entityType;
 	}
 
@@ -98,7 +95,7 @@ public class SqmLiteralEntityType<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( entityType.getName() );
 	}
 

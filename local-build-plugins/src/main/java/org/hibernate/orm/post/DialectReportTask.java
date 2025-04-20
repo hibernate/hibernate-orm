@@ -192,10 +192,6 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 		}
 
 		public DialectDelegate createDialectDelegate(String dialectImplClassName) {
-			if ( dialectImplClassName.endsWith( "DialectDelegateWrapper" ) ) {
-				return null;
-			}
-
 			try {
 				final Class<?> dialectImplClass;
 				try {

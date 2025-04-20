@@ -260,6 +260,10 @@ public final class TypeUtils {
 		return false;
 	}
 
+	public static @Nullable AnnotationValue getAnnotationValue(AnnotationMirror annotationMirror) {
+		return getAnnotationValue( annotationMirror, DEFAULT_ANNOTATION_PARAMETER_NAME );
+	}
+
 	public static @Nullable AnnotationValue getAnnotationValue(AnnotationMirror annotationMirror, String member) {
 		assert annotationMirror != null;
 		assert member != null;
@@ -474,7 +478,7 @@ public final class TypeUtils {
 	public static @Nullable AccessType determineAnnotationSpecifiedAccessType(Element element) {
 		final AnnotationMirror mirror = getAnnotationMirror( element, ACCESS );
 		if ( mirror != null ) {
-			final AnnotationValue accessType = getAnnotationValue( mirror, DEFAULT_ANNOTATION_PARAMETER_NAME );
+			final AnnotationValue accessType = getAnnotationValue( mirror );
 			if ( accessType != null ) {
 				final VariableElement enumValue = (VariableElement) accessType.getValue();
 				final Name enumValueName = enumValue.getSimpleName();

@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -81,19 +82,26 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 		if ( existing != null ) {
 			return existing;
 		}
-		return context.registerCopy(
-				this,
-				new SqmInsertSelectStatement<>(
-						nodeBuilder(),
-						context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
-						copyParameters( context ),
-						copyCteStatements( context ),
-						getTarget().copy( context ),
-						copyInsertionTargetPaths( context ),
-						getConflictClause() == null ? null : getConflictClause().copy( context ),
-						selectQueryPart.copy( context )
-				)
+		final SqmInsertSelectStatement<T> sqmInsertSelectStatementCopy = new SqmInsertSelectStatement<>(
+				nodeBuilder(),
+				context.getQuerySource() == null ? getQuerySource() : context.getQuerySource(),
+				copyParameters( context ),
+				copyCteStatements( context ),
+				getTarget().copy( context ),
+				null,
+				null,
+				selectQueryPart.copy( context )
 		);
+
+		context.registerCopy( this, sqmInsertSelectStatementCopy );
+
+		sqmInsertSelectStatementCopy.setInsertionTargetPaths( copyInsertionTargetPaths( context ) );
+
+		if ( getConflictClause() != null ) {
+			sqmInsertSelectStatementCopy.setConflictClause( getConflictClause().copy( context ) );
+		}
+
+		return sqmInsertSelectStatementCopy;
 	}
 
 	@Override
@@ -171,13 +179,13 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		super.appendHqlString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		super.appendHqlString( hql, context );
 		hql.append( ' ' );
-		selectQueryPart.appendHqlString( hql );
-		final SqmConflictClause conflictClause = getConflictClause();
+		selectQueryPart.appendHqlString( hql, context );
+		final SqmConflictClause<?> conflictClause = getConflictClause();
 		if ( conflictClause != null ) {
-			conflictClause.appendHqlString( hql );
+			conflictClause.appendHqlString( hql, context );
 		}
 	}
 }

@@ -377,6 +377,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	public <T> T getJavaConstant(String className, String fieldName) {
 		try {
 			final Field referencedField = getJavaField( className, fieldName );
+			//noinspection unchecked
 			return (T) referencedField.get( null );
 		}
 		catch (NoSuchFieldException | IllegalAccessException e) {
@@ -495,11 +496,11 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		for ( NamedEntityGraphDefinition definition : namedEntityGraphs ) {
 			log.debugf(
 					"Applying named entity graph [name=%s, source=%s]",
-					definition.getRegisteredName(),
-					definition.getSource()
+					definition.name(),
+					definition.source()
 			);
 
-			final RootGraphImplementor<?> graph = definition.getGraphCreator().createEntityGraph(
+			final RootGraphImplementor<?> graph = definition.graphCreator().createEntityGraph(
 					(entityClass) -> {
 						final ManagedDomainType<?> managedDomainType = managedTypeByClass.get( entityClass );
 						if ( managedDomainType instanceof EntityDomainType<?> match ) {
@@ -518,7 +519,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 						throw new IllegalArgumentException( "Cannot resolve entity name : " + jpaEntityName );
 					}
 			);
-			entityGraphMap.put( definition.getRegisteredName(), graph );
+			entityGraphMap.put( definition.name(), graph );
 		}
 	}
 
@@ -690,8 +691,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				-> injectTypedQueryReference( definition, namedQueryMetamodelClass( definition, context ) ) );
 		bootMetamodel.visitNamedNativeQueryDefinitions( definition
 				-> injectTypedQueryReference( definition, namedQueryMetamodelClass( definition, context ) ) );
-		bootMetamodel.getNamedEntityGraphs().values().stream().filter( (definition) -> definition.getEntityName() != null ).forEach( definition
-				-> injectEntityGraph( definition, graphMetamodelClass( definition, context ), this ) );
+		bootMetamodel.getNamedEntityGraphs().values().stream().filter( (definition) -> definition.entityName() != null )
+				.forEach( definition -> injectEntityGraph( definition, graphMetamodelClass( definition, context ), this ) );
 	}
 
 	private Class<?> namedQueryMetamodelClass(NamedQueryDefinition<?> definition, MetadataContext context) {
@@ -700,7 +701,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	private Class<?> graphMetamodelClass(NamedEntityGraphDefinition definition, MetadataContext context) {
-		return context.metamodelClass( managedTypeByName.get( definition.getEntityName() ) );
+		return context.metamodelClass( managedTypeByName.get( definition.entityName() ) );
 	}
 
 	public static void addAllowedEnumLiteralsToEnumTypesMap(

@@ -4,6 +4,7 @@
  */
 package org.hibernate.internal.log;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 
 import org.jboss.logging.BasicLogger;
@@ -26,6 +27,7 @@ import static org.jboss.logging.Logger.Level.INFO;
 		name = ConnectionAccessLogger.LOGGER_NAME,
 		description = "Used to log details around use of `JdbcConnectionAccess`"
 )
+@Internal
 public interface ConnectionAccessLogger extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".connections.access";
 

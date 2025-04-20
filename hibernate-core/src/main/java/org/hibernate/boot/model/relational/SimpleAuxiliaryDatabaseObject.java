@@ -55,8 +55,8 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 			boolean beforeTables) {
 		this(
 				dialectScopes,
-				extractName( namespace.getPhysicalName().getCatalog() ),
-				extractName( namespace.getPhysicalName().getSchema() ),
+				extractName( namespace.getPhysicalName().catalog() ),
+				extractName( namespace.getPhysicalName().schema() ),
 				createStrings,
 				dropStrings,
 				beforeTables
@@ -83,8 +83,8 @@ public class SimpleAuxiliaryDatabaseObject extends AbstractAuxiliaryDatabaseObje
 			Set<String> dialectScopes) {
 		this(
 				dialectScopes,
-				extractName( namespace.getPhysicalName().getCatalog() ),
-				extractName( namespace.getPhysicalName().getSchema() ),
+				extractName( namespace.getPhysicalName().catalog() ),
+				extractName( namespace.getPhysicalName().schema() ),
 				createStrings,
 				dropStrings
 		);

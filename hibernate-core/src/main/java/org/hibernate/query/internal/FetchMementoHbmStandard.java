@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -78,8 +79,11 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 		if ( fetchable instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			return resolve( pluralAttributeMapping, querySpaceConsumer, context );
 		}
+		else if ( fetchable instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+			return resolve( toOneAttributeMapping, querySpaceConsumer, context );
+		}
 		else {
-			return resolve( (ToOneAttributeMapping) fetchable, querySpaceConsumer, context );
+			throw new AssertionFailure( "Unexpected fetchable type" );
 		}
 	}
 

@@ -28,6 +28,7 @@ import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmNode;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
@@ -527,7 +528,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	private void collectSelectedFromSet(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> sqmFrom) {
 		selectedFromSet.add( sqmFrom );
 		for ( SqmJoin<?, ?> sqmJoin : sqmFrom.getSqmJoins() ) {
-			if ( sqmJoin.getReferencedPathSource().getSqmPathType() instanceof EmbeddableDomainType<?> ) {
+			if ( sqmJoin.getReferencedPathSource().getPathType() instanceof EmbeddableDomainType<?> ) {
 				collectSelectedFromSet( selectedFromSet, sqmJoin );
 			}
 		}
@@ -587,41 +588,41 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		if ( selectClause != null ) {
 			hql.append( "select " );
 			if ( selectClause.isDistinct() ) {
 				hql.append( "distinct " );
 			}
 			final List<SqmSelection<?>> selections = selectClause.getSelections();
-			selections.get( 0 ).appendHqlString( hql );
+			selections.get( 0 ).appendHqlString( hql, context );
 			for ( int i = 1; i < selections.size(); i++ ) {
 				hql.append( ", " );
-				selections.get( i ).appendHqlString( hql );
+				selections.get( i ).appendHqlString( hql, context );
 			}
 		}
 		if ( fromClause != null ) {
 			hql.append( " from" );
-			fromClause.appendHqlString( hql );
+			fromClause.appendHqlString( hql, context );
 		}
 		if ( whereClause != null && whereClause.getPredicate() != null ) {
 			hql.append( " where " );
-			whereClause.getPredicate().appendHqlString( hql );
+			whereClause.getPredicate().appendHqlString( hql, context );
 		}
 		if ( !groupByClauseExpressions.isEmpty() ) {
 			hql.append( " group by " );
-			groupByClauseExpressions.get( 0 ).appendHqlString( hql );
+			groupByClauseExpressions.get( 0 ).appendHqlString( hql, context );
 			for ( int i = 1; i < groupByClauseExpressions.size(); i++ ) {
 				hql.append( ", " );
-				groupByClauseExpressions.get( i ).appendHqlString( hql );
+				groupByClauseExpressions.get( i ).appendHqlString( hql, context );
 			}
 		}
 		if ( havingClausePredicate != null ) {
 			hql.append( " having " );
-			havingClausePredicate.appendHqlString( hql );
+			havingClausePredicate.appendHqlString( hql, context );
 		}
 
-		super.appendHqlString( hql );
+		super.appendHqlString( hql, context );
 	}
 
 	@Internal

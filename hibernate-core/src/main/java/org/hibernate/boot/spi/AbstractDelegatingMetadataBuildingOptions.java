@@ -7,7 +7,7 @@ package org.hibernate.boot.spi;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
@@ -137,8 +137,8 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 
 	@Override
 	public void apply(JpaOrmXmlPersistenceUnitDefaults jpaOrmXmlPersistenceUnitDefaults) {
-		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware ) {
-			( (JpaOrmXmlPersistenceUnitDefaultAware) delegate ).apply( jpaOrmXmlPersistenceUnitDefaults );
+		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware persistenceUnitDefaultAware ) {
+			persistenceUnitDefaultAware.apply( jpaOrmXmlPersistenceUnitDefaults );
 		}
 		else {
 			throw new HibernateException(
@@ -151,8 +151,8 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 
 	@Override
 	public void apply(PersistenceUnitMetadata persistenceUnitMetadata) {
-		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware ) {
-			( (JpaOrmXmlPersistenceUnitDefaultAware) delegate ).apply( persistenceUnitMetadata );
+		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware persistenceUnitDefaultAware ) {
+			persistenceUnitDefaultAware.apply( persistenceUnitMetadata );
 		}
 		else {
 			throw new HibernateException(

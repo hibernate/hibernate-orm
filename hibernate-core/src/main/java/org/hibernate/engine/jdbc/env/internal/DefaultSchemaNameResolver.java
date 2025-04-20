@@ -24,7 +24,13 @@ public class DefaultSchemaNameResolver implements SchemaNameResolver {
 
 	@Override
 	public String resolveSchemaName(Connection connection, Dialect dialect) throws SQLException {
-		return connection.getSchema();
+		try {
+			return connection.getSchema();
+		}
+		catch (AbstractMethodError ignore) {
+			// jConnect and jTDS report that they "support" schemas, but they don't really
+			return null;
+		}
 	}
 
 }

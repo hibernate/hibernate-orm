@@ -13,8 +13,8 @@ import org.hibernate.IrrelevantEntity;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.spi.ClassmateContext;
-import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -116,7 +116,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 					.getJdbcTypeRegistry();
 			final BasicValue basicValue = new BasicValue( buildingContext );
 			basicValue.setJpaAttributeConverterDescriptor(
-					new InstanceBasedConverterDescriptor(
+					ConverterDescriptors.of(
 							new StringClobConverter(),
 							new ClassmateContext()
 					)

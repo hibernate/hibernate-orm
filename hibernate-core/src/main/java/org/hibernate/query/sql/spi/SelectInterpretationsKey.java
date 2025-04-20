@@ -84,15 +84,13 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if ( !(o instanceof SelectInterpretationsKey that) ) {
 			return false;
 		}
-
-		final SelectInterpretationsKey that = (SelectInterpretationsKey) o;
 		return sql.equals( that.sql )
-				&& Objects.equals( jdbcValuesMappingProducer, that.jdbcValuesMappingProducer )
-				&& Objects.equals( querySpaces, that.querySpaces )
-				&& Objects.equals( tupleTransformer, that.tupleTransformer )
-				&& Objects.equals( resultListTransformer, that.resultListTransformer );
+			&& Objects.equals( jdbcValuesMappingProducer, that.jdbcValuesMappingProducer )
+			&& Objects.equals( querySpaces, that.querySpaces )
+			&& Objects.equals( tupleTransformer, that.tupleTransformer )
+			&& Objects.equals( resultListTransformer, that.resultListTransformer );
 	}
 }

@@ -136,7 +136,7 @@ import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.MutableClassDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.type.SqlTypes;
 
 import jakarta.persistence.AssociationOverride;
@@ -178,6 +178,7 @@ import static org.hibernate.boot.models.xml.internal.UserTypeCasesStandard.STAND
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * Helper for creating annotation from equivalent JAXB
@@ -330,8 +331,8 @@ public class XmlAnnotationHelper {
 
 	public static Parameter[] collectParameters(
 			List<JaxbConfigurationParameterImpl> jaxbParameters,
-			SourceModelBuildingContext sourceModelContext) {
-		if ( CollectionHelper.isEmpty( jaxbParameters ) ) {
+			ModelsContext sourceModelContext) {
+		if ( isEmpty( jaxbParameters ) ) {
 			return NO_PARAMETERS;
 		}
 
@@ -604,7 +605,7 @@ public class XmlAnnotationHelper {
 		generatorAnn.strategy( jaxbGenerator.getClazz() );
 
 		final List<JaxbConfigurationParameterImpl> jaxbParameters = jaxbGenerator.getParameters();
-		if ( CollectionHelper.isEmpty( jaxbParameters ) ) {
+		if ( isEmpty( jaxbParameters ) ) {
 			generatorAnn.parameters( NO_PARAMETERS );
 		}
 		else {
@@ -624,11 +625,12 @@ public class XmlAnnotationHelper {
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		final List<JaxbAttributeOverrideImpl> jaxbMapKeyOverrides = pluralAttribute.getMapKeyAttributeOverrides();
-		final List<JaxbAttributeOverrideImpl> jaxbElementOverrides = pluralAttribute instanceof JaxbElementCollectionImpl
-				? ( (JaxbElementCollectionImpl) pluralAttribute ).getAttributeOverrides()
-				: emptyList();
+		final List<JaxbAttributeOverrideImpl> jaxbElementOverrides =
+				pluralAttribute instanceof JaxbElementCollectionImpl elementCollection
+						? elementCollection.getAttributeOverrides()
+						: emptyList();
 
-		if ( CollectionHelper.isEmpty( jaxbMapKeyOverrides ) && CollectionHelper.isEmpty( jaxbElementOverrides ) ) {
+		if ( isEmpty( jaxbMapKeyOverrides ) && isEmpty( jaxbElementOverrides ) ) {
 			return;
 		}
 
@@ -662,7 +664,7 @@ public class XmlAnnotationHelper {
 			}
 		}
 		else {
-			assert CollectionHelper.isEmpty( jaxbMapKeyOverrides );
+			assert isEmpty( jaxbMapKeyOverrides );
 			for ( int i = 0; i < jaxbElementOverrides.size(); i++ ) {
 				overrideUsages[i] = createAttributeOverrideUsage(
 						jaxbElementOverrides.get(i),
@@ -679,7 +681,7 @@ public class XmlAnnotationHelper {
 			String namePrefix,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 
 		final AttributeOverrideJpaAnnotation overrideUsage = ATTRIBUTE_OVERRIDE.createUsage( modelBuildingContext );
 
@@ -704,7 +706,7 @@ public class XmlAnnotationHelper {
 			MutableAnnotationTarget target,
 			String namePrefix,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbOverrides ) ) {
+		if ( isEmpty( jaxbOverrides ) ) {
 			return;
 		}
 
@@ -731,7 +733,7 @@ public class XmlAnnotationHelper {
 			List<JaxbAssociationOverrideImpl> jaxbOverrides,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbOverrides ) ) {
+		if ( isEmpty( jaxbOverrides ) ) {
 			return;
 		}
 
@@ -801,7 +803,7 @@ public class XmlAnnotationHelper {
 			String namePrefix,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbConverts ) ) {
+		if ( isEmpty( jaxbConverts ) ) {
 			return;
 		}
 
@@ -1097,7 +1099,7 @@ public class XmlAnnotationHelper {
 			List<JaxbFilterImpl> jaxbFilters,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbFilters ) ) {
+		if ( isEmpty( jaxbFilters ) ) {
 			return;
 		}
 
@@ -1121,7 +1123,7 @@ public class XmlAnnotationHelper {
 			List<JaxbFilterImpl> jaxbFilters,
 			MutableAnnotationTarget target,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbFilters ) ) {
+		if ( isEmpty( jaxbFilters ) ) {
 			return;
 		}
 
@@ -1239,7 +1241,7 @@ public class XmlAnnotationHelper {
 			JaxbEntityOrMappedSuperclass jaxbClass,
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 
 		if ( jaxbClass.getExcludeDefaultListeners() != null ) {
 			classDetails.applyAnnotationUsage( EXCLUDE_DEFAULT_LISTENERS, modelBuildingContext );
@@ -1581,7 +1583,7 @@ public class XmlAnnotationHelper {
 	public static CheckConstraint[] collectCheckConstraints(
 			List<JaxbCheckConstraintImpl> jaxbChecks,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbChecks ) ) {
+		if ( isEmpty( jaxbChecks ) ) {
 			return NO_CHECK_CONSTRAINTS;
 		}
 
@@ -1606,8 +1608,8 @@ public class XmlAnnotationHelper {
 
 	public static UniqueConstraint[] collectUniqueConstraints(
 			List<JaxbUniqueConstraintImpl> jaxbUniqueConstraints,
-			SourceModelBuildingContext modelContext) {
-		if ( CollectionHelper.isEmpty( jaxbUniqueConstraints ) ) {
+			ModelsContext modelContext) {
+		if ( isEmpty( jaxbUniqueConstraints ) ) {
 			return NO_UNIQUE_CONSTRAINTS;
 		}
 
@@ -1633,8 +1635,8 @@ public class XmlAnnotationHelper {
 
 	public static Index[] collectIndexes(
 			List<JaxbIndexImpl> jaxbIndexes,
-			SourceModelBuildingContext sourceModelContext) {
-		if ( CollectionHelper.isEmpty( jaxbIndexes ) ) {
+			ModelsContext sourceModelContext) {
+		if ( isEmpty( jaxbIndexes ) ) {
 			return NO_INDICES;
 		}
 
@@ -1660,11 +1662,11 @@ public class XmlAnnotationHelper {
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		List<JaxbPrimaryKeyJoinColumnImpl> jaxbColumns = jaxbEntity.getPrimaryKeyJoinColumns();
-		if ( CollectionHelper.isEmpty( jaxbColumns ) ) {
+		if ( isEmpty( jaxbColumns ) ) {
 			return;
 		}
 
-		final SourceModelBuildingContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
 		final PrimaryKeyJoinColumnsJpaAnnotation columnsAnn = (PrimaryKeyJoinColumnsJpaAnnotation) classDetails.replaceAnnotationUsage(
 				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
 				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMNS,

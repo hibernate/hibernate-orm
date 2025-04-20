@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 
@@ -36,6 +37,17 @@ public interface StatementPreparer {
 	 * @return the prepared statement
 	 */
 	PreparedStatement prepareStatement(String sql);
+
+	/**
+	 * Prepare a statement.
+	 *
+	 * @param sql The SQL the statement to be prepared
+	 *
+	 * @return the prepared statement
+	 *
+	 * @since 7.0
+	 */
+	CallableStatement prepareCallableStatement(String sql);
 
 	/**
 	 * Prepare a statement.

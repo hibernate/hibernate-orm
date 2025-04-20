@@ -23,6 +23,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sequence.HANASequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.HANASqlAstTranslator;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -39,11 +40,13 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -126,6 +129,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.hibernate.dialect.HANAServerConfiguration.MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE;
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -306,7 +311,7 @@ public class HANADialect extends Dialect {
 		return defaultTableTypeColumn;
 	}
 
-	protected boolean isCloud() {
+	public boolean isCloud() {
 		return getVersion().isSameOrAfter( 4 );
 	}
 
@@ -587,59 +592,58 @@ public class HANADialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return (sqlException, message, sql) -> {
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+		return (sqlException, message, sql) ->
+				switch ( extractErrorCode( sqlException ) ) {
+					case 131 ->
+						// 131 - Transaction rolled back by lock wait timeout
+							new LockTimeoutException( message, sqlException, sql );
+					case 146 ->
+						// 146 - Resource busy and acquire with NOWAIT specified
+							new LockTimeoutException( message, sqlException, sql );
+					case 132 ->
+						// 132 - Transaction rolled back due to unavailable resource
+							new LockAcquisitionException( message, sqlException, sql );
+					case 133 ->
+						// 133 - Transaction rolled back by detected deadlock
+							new LockAcquisitionException( message, sqlException, sql );
+					case 257, 259, 260, 261, 262, 263 ->
+						// 259 - Invalid table name
+						// 260 - Invalid column name
+						// 261 - Invalid index name
+						// 262 - Invalid query name
+						// 263 - Invalid alias name
+							new SQLGrammarException( message, sqlException, sql );
+					case 301 ->
+						// 301 - Unique constraint violated
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case 287 ->
+						// 287 - Cannot insert NULL or update to NULL
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case 461, 462 ->
+						// 461 - foreign key constraint violation
+						// 462 - failed on update or delete by foreign key constraint violation
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.FOREIGN_KEY,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case 677 ->
+						// 677 - Check constraint violation
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.CHECK,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 
-			if ( errorCode == 131 ) {
-				// 131 - Transaction rolled back by lock wait timeout
-				return new LockTimeoutException( message, sqlException, sql );
-			}
+					default -> null;
+				};
+	}
 
-			if ( errorCode == 146 ) {
-				// 146 - Resource busy and acquire with NOWAIT specified
-				return new LockTimeoutException( message, sqlException, sql );
-			}
-
-			if ( errorCode == 132 ) {
-				// 132 - Transaction rolled back due to unavailable resource
-				return new LockAcquisitionException( message, sqlException, sql );
-			}
-
-			if ( errorCode == 133 ) {
-				// 133 - Transaction rolled back by detected deadlock
-				return new LockAcquisitionException( message, sqlException, sql );
-			}
-
-			// 259 - Invalid table name
-			// 260 - Invalid column name
-			// 261 - Invalid index name
-			// 262 - Invalid query name
-			// 263 - Invalid alias name
-			if ( errorCode == 257 || ( errorCode >= 259 && errorCode <= 263 ) ) {
-				return new SQLGrammarException( message, sqlException, sql );
-			}
-
-			// 257 - Cannot insert NULL or update to NULL
-			// 301 - Unique constraint violated
-			// 461 - foreign key constraint violation
-			// 462 - failed on update or delete by foreign key constraint violation
-			if ( errorCode == 287 || errorCode == 301 || errorCode == 461 || errorCode == 462 ) {
-				final String constraintName = getViolatedConstraintNameExtractor()
-						.extractConstraintName( sqlException );
-
-				return new ConstraintViolationException(
-						message,
-						sqlException,
-						sql,
-						errorCode == 301
-								? ConstraintViolationException.ConstraintKind.UNIQUE
-								: ConstraintViolationException.ConstraintKind.OTHER,
-						constraintName
-				);
-			}
-
-			return null;
-		};
+	@Override
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
+		return new TemplatedViolatedConstraintNameExtractor( sqlException ->
+				switch ( extractErrorCode( sqlException ) ) {
+					case 301 -> extractUsingTemplate(" Index(", ") ", sqlException.getMessage() );
+					case 287 -> extractUsingTemplate(" NULL: ", ": ", sqlException.getMessage() );
+					case 677 -> extractUsingTemplate(" violation: ", ": ", sqlException.getMessage() );
+					default -> null;
+				} );
 	}
 
 	@Override
@@ -690,26 +694,14 @@ public class HANADialect extends Dialect {
 		return getForUpdateString( aliases, lockMode, lockOptions.getTimeOut() );
 	}
 
-	@SuppressWarnings({ "deprecation" })
 	private String getForUpdateString(String aliases, LockMode lockMode, int timeout) {
-		switch ( lockMode ) {
-			case PESSIMISTIC_READ: {
-				return getReadLockString( aliases, timeout );
-			}
-			case PESSIMISTIC_WRITE: {
-				return getWriteLockString( aliases, timeout );
-			}
-			case UPGRADE_NOWAIT:
-			case PESSIMISTIC_FORCE_INCREMENT: {
-				return getForUpdateNowaitString( aliases );
-			}
-			case UPGRADE_SKIPLOCKED: {
-				return getForUpdateSkipLockedString( aliases );
-			}
-			default: {
-				return "";
-			}
-		}
+		return switch ( lockMode ) {
+			case PESSIMISTIC_READ -> getReadLockString( aliases, timeout );
+			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, timeout );
+			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
+			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
+			default -> "";
+		};
 	}
 
 	@Override

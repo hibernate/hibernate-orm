@@ -278,6 +278,38 @@ public interface StatelessSession extends SharedSessionContract {
 
 	/**
 	 * Retrieve a record, fetching associations specified by the
+	 * given {@link EntityGraph}, which is interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}.
+	 *
+	 * @param graph The {@link EntityGraph}, interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}
+	 * @param id The id of the entity to retrieve
+	 *
+	 * @return a detached entity instance
+	 *
+	 * @since 7.0
+	 */
+	<T> T get(EntityGraph<T> graph, Object id);
+
+	/**
+	 * Retrieve a record, fetching associations specified by the
+	 * given {@link EntityGraph}, which is interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph},
+	 * and obtaining the specified lock mode.
+	 *
+	 * @param graph The {@link EntityGraph}, interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}
+	 * @param id The id of the entity to retrieve
+	 * @param lockMode The lock mode to apply to the entity
+	 *
+	 * @return a detached entity instance
+	 *
+	 * @since 7.0
+	 */
+	<T> T get(EntityGraph<T> graph, Object id, LockMode lockMode);
+
+	/**
+	 * Retrieve a record, fetching associations specified by the
 	 * given {@link EntityGraph}.
 	 *
 	 * @param graph The {@link EntityGraph}
@@ -321,7 +353,24 @@ public interface StatelessSession extends SharedSessionContract {
 	 *         null elements representing missing entities
 	 * @since 7.0
 	 */
-	<T> List<T> getMultiple(Class<T> entityClass, List<Object> ids);
+	<T> List<T> getMultiple(Class<T> entityClass, List<?> ids);
+
+	/**
+	 * Retrieve multiple rows, obtaining the specified lock mode,
+	 * and returning entity instances in a list where the position
+	 * of an instance in the list matches the position of its
+	 * identifier in the given array, and the list contains a null
+	 * value if there is no persistent instance matching a given
+	 * identifier.
+	 *
+	 * @param entityClass The class of the entity to retrieve
+	 * @param ids         The ids of the entities to retrieve
+	 * @param lockMode    The lock mode to apply to the entities
+	 * @return an ordered list of detached entity instances, with
+	 *         null elements representing missing entities
+	 * @since 7.0
+	 */
+	<T> List<T> getMultiple(Class<T> entityClass, List<?> ids, LockMode lockMode);
 
 	/**
 	 * Refresh the entity instance state from the database.

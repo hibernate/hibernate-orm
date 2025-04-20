@@ -55,7 +55,6 @@ import org.hibernate.usertype.CompositeUserType;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
-import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
 import static org.hibernate.mapping.MappingHelper.classForName;
@@ -456,7 +455,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	@Override
 	public boolean isSame(SimpleValue other) {
-		return other instanceof Component && isSame( (Component) other );
+		return other instanceof Component component && isSame( component );
 	}
 
 	public boolean isSame(Component other) {
@@ -790,13 +789,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		}
 
 		@Override
-		public Object execute(SharedSessionContractImplementor session, Object incomingObject) {
-			if ( generator.generatedBeforeExecution( incomingObject, session ) ) {
-				return generator.generate( session, incomingObject, null, INSERT );
-			}
-			else {
-				throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );
-			}
+		public BeforeExecutionGenerator getGenerator() {
+			return generator;
 		}
 
 		@Override
@@ -892,8 +886,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 				columns.clear();
 				for ( Property property : properties ) {
 					for ( Selectable selectable : property.getSelectables() ) {
-						if ( selectable instanceof Column ) {
-							columns.add( (Column) selectable );
+						if ( selectable instanceof Column column ) {
+							columns.add( column );
 						}
 					}
 				}

@@ -7,13 +7,13 @@ package org.hibernate.metamodel.model.domain.internal;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
-import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmMappedSuperclassDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -22,7 +22,9 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public class MappedSuperclassTypeImpl<J> extends AbstractIdentifiableType<J> implements MappedSuperclassDomainType<J> {
+public class MappedSuperclassTypeImpl<J>
+		extends AbstractIdentifiableType<J>
+		implements SqmMappedSuperclassDomainType<J>, SqmPathSource<J> {
 
 	public MappedSuperclassTypeImpl(
 			String name,
@@ -61,12 +63,17 @@ public class MappedSuperclassTypeImpl<J> extends AbstractIdentifiableType<J> imp
 	}
 
 	@Override
+	public SqmMappedSuperclassDomainType<J> getSqmType() {
+		return this;
+	}
+
+	@Override
 	public String getPathName() {
 		return getTypeName();
 	}
 
 	@Override
-	public MappedSuperclassDomainType<J> getSqmPathType() {
+	public SqmMappedSuperclassDomainType<J> getPathType() {
 		return this;
 	}
 
@@ -76,28 +83,31 @@ public class MappedSuperclassTypeImpl<J> extends AbstractIdentifiableType<J> imp
 		if ( attribute != null ) {
 			return (SqmPathSource<?>) attribute;
 		}
-
-		if ( "id".equalsIgnoreCase( name ) ) {
-			if ( hasIdClass() ) {
-				return getIdentifierDescriptor();
-			}
+		else if ( "id".equalsIgnoreCase( name ) ) {
+			return hasIdClass() ? getIdentifierDescriptor() : null;
 		}
-
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	@Override
-	public PersistentAttribute<? super J, ?> findAttribute(String name) {
-		final PersistentAttribute<? super J, ?> attribute = super.findAttribute( name );
+	public SqmPathSource<?> getIdentifierDescriptor() {
+		return (SqmPathSource<?>) super.getIdentifierDescriptor();
+	}
+
+	@Override
+	public SqmPersistentAttribute<? super J, ?> findAttribute(String name) {
+		final var attribute = super.findAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
 		}
-
-		if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
+		else if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
 			return findIdAttribute();
 		}
-
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	@Override

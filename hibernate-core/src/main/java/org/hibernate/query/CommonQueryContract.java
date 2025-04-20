@@ -19,9 +19,14 @@ import jakarta.persistence.TemporalType;
 
 /**
  * Defines the aspects of query execution and parameter binding that apply to all
- * forms of querying: HQL/JPQL queries, native SQL queries,
- * {@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria queries}, and
- * {@linkplain org.hibernate.procedure.ProcedureCall stored procedure calls}.
+ * forms of querying:
+ * <ul>
+ * <li>queries written in HQL or JPQL,
+ * <li>queries written in the native SQL dialect of the database,
+ * <li>{@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria queries},
+ *     and
+ * <li>{@linkplain org.hibernate.procedure.ProcedureCall stored procedure calls}.
+ * </ul>
  * <p>
  * Queries may have <em>parameters</em>, either ordinal or named, and the various
  * {@code setParameter()} operations of this interface allow an argument to be
@@ -29,15 +34,15 @@ import jakarta.persistence.TemporalType;
  * of an argument, but in rare cases where this is needed, {@link TypedParameterValue}
  * may be used.
  * <p>
- * The operation {@link #setFlushMode(FlushModeType)} allows a temporary flush
+ * The operation {@link #setQueryFlushMode(QueryFlushMode)} allows a temporary flush
  * mode to be specified, which is in effect only during the execution of this query.
- * Setting the {@linkplain FlushMode flush mode} at the query level does not affect
- * the flush mode of other operations performed via the parent {@linkplain Session
- * session}. This operation is usually used as follows:
+ * Setting the {@linkplain QueryFlushMode query flush mode} does not affect the flush
+ * mode of other operations performed via the parent {@linkplain Session session}.
+ * This operation is usually used as follows:
  * <p>
- * <pre>query.setFlushMode(COMMIT).getResultList()</pre>
+ * <pre>query.setQueryFlushMode(NO_FLUSH).getResultList()</pre>
  * <p>
- * The call to {@code setFlushMode(COMMIT)} disables the usual automatic flush
+ * The call to {@code setQueryFlushMode(NO_FLUSH)} disables the usual automatic flush
  * operation that occurs before query execution.
  *
  * @author Steve Ebersole
@@ -193,13 +198,24 @@ public interface CommonQueryContract {
 	CommonQueryContract setHint(String hintName, Object value);
 
 	/**
+	 * Get the {@link ParameterMetadata} object representing the parameters
+	 * of this query, and providing access to the {@link QueryParameter}s.
+	 *
+	 * @since 7.0
+	 */
+	ParameterMetadata getParameterMetadata();
+
+	/**
 	 * Bind the given argument to a named query parameter.
 	 * <p>
 	 * If the type of the parameter cannot be inferred from the context in
-	 * which it occurs, use one of the forms which accepts a "type".
+	 * which it occurs, use one of the overloads which accepts a "type",
+	 * or pass a {@link TypedParameterValue}.
 	 *
 	 * @see #setParameter(String, Object, Class)
 	 * @see #setParameter(String, Object, BindableType)
+	 *
+	 * @see TypedParameterValue
 	 */
 	CommonQueryContract setParameter(String parameter, Object value);
 
@@ -247,11 +263,14 @@ public interface CommonQueryContract {
 	/**
 	 * Bind the given argument to an ordinal query parameter.
 	 * <p>
-	 * If the type of the parameter cannot be inferred from the context in which
-	 * it occurs, use one of the forms which accepts a "type".
+	 * If the type of the parameter cannot be inferred from the context in
+	 * which it occurs, use one of the overloads which accepts a "type",
+	 * or pass a {@link TypedParameterValue}.
 	 *
 	 * @see #setParameter(int, Object, Class)
 	 * @see #setParameter(int, Object, BindableType)
+	 *
+	 * @see TypedParameterValue
 	 */
 	CommonQueryContract setParameter(int parameter, Object value);
 
@@ -300,8 +319,8 @@ public interface CommonQueryContract {
 	 * Bind an argument to the query parameter represented by the given
 	 * {@link QueryParameter}.
 	 * <p>
-	 * If the type of the parameter cannot be inferred from the context in which
-	 * it occurs, use one of the forms which accepts a "type".
+	 * If the type of the parameter cannot be inferred from the context in
+	 * which it occurs, use one of the overloads which accepts a "type".
 	 *
 	 * @see #setParameter(QueryParameter, Object, BindableType)
 	 *

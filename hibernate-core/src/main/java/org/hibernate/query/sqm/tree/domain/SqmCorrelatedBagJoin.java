@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -36,7 +35,7 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 
 	private SqmCorrelatedBagJoin(
 			SqmFrom<?, O> lhs,
-			BagPersistentAttribute<O, T> attribute,
+			SqmBagPersistentAttribute<O, T> attribute,
 			String alias,
 			SqmJoinType sqmJoinType,
 			boolean fetched,

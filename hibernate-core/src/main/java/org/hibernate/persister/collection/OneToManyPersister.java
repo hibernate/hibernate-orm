@@ -22,7 +22,7 @@ import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterAliasGenerator;
-import org.hibernate.jdbc.Expectations;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -350,7 +350,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				null,
 				parameterBinders,
 				sqlWhereString,
-				Expectations.NONE
+				Expectation.None.INSTANCE
 		);
 	}
 

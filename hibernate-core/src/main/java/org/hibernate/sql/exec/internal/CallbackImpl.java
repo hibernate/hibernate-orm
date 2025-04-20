@@ -20,7 +20,7 @@ public class CallbackImpl implements Callback {
 	private final List<AfterLoadAction> afterLoadActions;
 
 	public CallbackImpl() {
-		this.afterLoadActions = new ArrayList<>( 1 );
+		afterLoadActions = new ArrayList<>( 1 );
 	}
 
 	@Override

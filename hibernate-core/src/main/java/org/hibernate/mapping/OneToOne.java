@@ -173,7 +173,8 @@ public final class OneToOne extends ToOne {
 
 	@Override
 	public boolean isSame(ToOne other) {
-		return other instanceof OneToOne && isSame( (OneToOne) other );
+		return other instanceof OneToOne oneToOne
+			&& isSame( oneToOne );
 	}
 
 	public boolean isSame(OneToOne other) {

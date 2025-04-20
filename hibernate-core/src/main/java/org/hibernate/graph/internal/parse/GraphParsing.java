@@ -6,6 +6,7 @@ package org.hibernate.graph.internal.parse;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.grammars.graph.GraphLanguageLexer;
 import org.hibernate.grammars.graph.GraphLanguageParser;
@@ -120,7 +121,15 @@ public class GraphParsing {
 			EntityDomainType<T> rootType,
 			GraphLanguageParser.AttributeListContext attributeListContext,
 			EntityNameResolver entityNameResolver) {
-		final RootGraphImpl<T> targetGraph = new RootGraphImpl<>( null, rootType );
+		return parse( null, rootType, attributeListContext, entityNameResolver );
+	}
+
+	public static <T> RootGraphImplementor<T> parse(
+			@Nullable String name,
+			EntityDomainType<T> rootType,
+			GraphLanguageParser.AttributeListContext attributeListContext,
+			EntityNameResolver entityNameResolver) {
+		final RootGraphImpl<T> targetGraph = new RootGraphImpl<>( name, rootType );
 
 		final GraphParser visitor = new GraphParser( entityNameResolver );
 		visitor.getGraphStack().push( targetGraph );

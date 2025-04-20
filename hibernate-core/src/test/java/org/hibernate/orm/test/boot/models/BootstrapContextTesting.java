@@ -26,7 +26,7 @@ import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
@@ -77,10 +77,10 @@ public class BootstrapContextTesting implements BootstrapContext {
 
 	private HashMap<String, SqmFunctionDescriptor> sqlFunctionMap;
 	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-	private HashMap<Class<?>, ConverterDescriptor> attributeConverterDescriptorMap;
+	private HashMap<Class<?>, ConverterDescriptor<?,?>> attributeConverterDescriptorMap;
 	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
 	private final ManagedTypeRepresentationResolver representationStrategySelector;
-	private SourceModelBuildingContext modelsContext;
+	private ModelsContext modelsContext;
 
 	public BootstrapContextTesting(
 			IndexView jandexIndex,
@@ -137,7 +137,7 @@ public class BootstrapContextTesting implements BootstrapContext {
 	}
 
 	@Override
-	public SourceModelBuildingContext getModelsContext() {
+	public ModelsContext getModelsContext() {
 		return modelsContext;
 	}
 
@@ -232,7 +232,7 @@ public class BootstrapContextTesting implements BootstrapContext {
 	}
 
 	@Override
-	public Collection<ConverterDescriptor> getAttributeConverters() {
+	public Collection<ConverterDescriptor<?, ?>> getAttributeConverters() {
 		return attributeConverterDescriptorMap != null
 				? attributeConverterDescriptorMap.values()
 				: Collections.emptyList();

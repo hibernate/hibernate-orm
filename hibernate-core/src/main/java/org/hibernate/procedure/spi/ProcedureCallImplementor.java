@@ -31,7 +31,7 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 
 	ParameterStrategy getParameterStrategy();
 
-	FunctionReturnImplementor getFunctionReturn();
+	FunctionReturnImplementor<R> getFunctionReturn();
 
 	@Override
 	ProcedureParameterMetadataImplementor getParameterMetadata();
@@ -88,9 +88,9 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 	ProcedureCallImplementor<R> setTimeout(Integer timeout);
 
 	@Override
-	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class type, ParameterMode mode);
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class<?> type, ParameterMode mode);
 
 	@Override
-	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class type, ParameterMode mode);
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class<?> type, ParameterMode mode);
 
 }

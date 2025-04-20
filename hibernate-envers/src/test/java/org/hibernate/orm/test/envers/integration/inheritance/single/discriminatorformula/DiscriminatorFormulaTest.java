@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.envers.integration.inheritance.single.discriminatorformula;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import jakarta.persistence.EntityManager;
 
@@ -94,11 +93,8 @@ public class DiscriminatorFormulaTest extends BaseEnversJPAFunctionalTestCase {
 	@Test
 	public void testDiscriminatorFormulaInAuditTable() {
 		assert parentAudit.getDiscriminator().hasFormula();
-		Iterator iterator = parentAudit.getDiscriminator().getSelectables().iterator();
-		while ( iterator.hasNext() ) {
-			Object o = iterator.next();
-			if ( o instanceof Formula ) {
-				Formula formula = (Formula) o;
+		for ( Object o : parentAudit.getDiscriminator().getSelectables() ) {
+			if ( o instanceof Formula formula ) {
 				Assert.assertEquals( ParentEntity.DISCRIMINATOR_QUERY, formula.getText() );
 				return;
 			}

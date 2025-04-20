@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 
 import jakarta.persistence.criteria.Expression;
@@ -115,13 +116,13 @@ public class SqmXmlElementExpression extends SelfRenderingSqmFunction<String> im
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		final List<? extends SqmTypedNode<?>> arguments = getArguments();
 		hql.append( "xmlelement(name " );
-		arguments.get( 0 ).appendHqlString( hql );
+		arguments.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < arguments.size(); i++ ) {
 			hql.append( ',' );
-			arguments.get( i ).appendHqlString( hql );
+			arguments.get( i ).appendHqlString( hql, context );
 		}
 		hql.append( ')' );
 	}

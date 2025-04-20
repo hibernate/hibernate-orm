@@ -11,6 +11,7 @@ import org.hibernate.Internal;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -76,10 +77,13 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		int count = 0;
 		for (SqmTypedNode<?> argument : arguments) {
 //			JdbcTypeIndicators indicators = typeConfiguration.getCurrentBaseSqlTypeIndicators();
-			SqmExpressible<?> nodeType = argument.getNodeType();
-			FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
+			final SqmExpressible<?> nodeType = argument.getNodeType();
+			final FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
 			if ( nodeType != null && type != FunctionParameterType.ANY ) {
-				JavaType<?> javaType = nodeType.getRelationalJavaType();
+				if ( nodeType instanceof TupleType<?> ) {
+					throwTupleError(type, functionName, count);
+				}
+				final JavaType<?> javaType = nodeType.getRelationalJavaType();
 				if (javaType != null) {
 					checkArgumentType( functionName, count, argument, type, javaType );
 				}
@@ -287,6 +291,18 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 					)
 			);
 		}
+	}
+
+	private static void throwTupleError(
+			FunctionParameterType type, String functionName, int paramNumber) {
+		throw new FunctionArgumentException(
+				String.format(
+						"Parameter %d of function '%s()' has type '%s', but argument is a tuple",
+						paramNumber,
+						functionName,
+						type
+				)
+		);
 	}
 
 	@Override

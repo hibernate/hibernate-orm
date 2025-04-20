@@ -63,21 +63,21 @@ public class GenericsHelper {
 	}
 
 	public static Class<?> extractClass(Type type) {
-		if ( type instanceof Class ) {
-			return (Class<?>) type;
+		if ( type instanceof Class<?> clazz ) {
+			return clazz;
 		}
-		else if ( type instanceof ParameterizedType ) {
-			return extractClass( ( (ParameterizedType) type ).getRawType() );
+		else if ( type instanceof ParameterizedType parameterizedType ) {
+			return extractClass( parameterizedType.getRawType() );
 		}
 		return null;
 	}
 
 	private static Type resolveType(Type target, Type context) {
-		if ( target instanceof ParameterizedType ) {
-			return resolveParameterizedType( (ParameterizedType) target, context );
+		if ( target instanceof ParameterizedType parameterizedType ) {
+			return resolveParameterizedType( parameterizedType, context );
 		}
-		else if ( target instanceof TypeVariable ) {
-			return resolveTypeVariable( (TypeVariable<?>) target, (ParameterizedType) context );
+		else if ( target instanceof TypeVariable<?> typeVariable ) {
+			return resolveTypeVariable( typeVariable, (ParameterizedType) context );
 		}
 		return target;
 	}

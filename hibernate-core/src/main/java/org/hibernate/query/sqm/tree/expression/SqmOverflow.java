@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * @author Christian Beikov
@@ -59,15 +60,15 @@ public class SqmOverflow<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		separatorExpression.appendHqlString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		separatorExpression.appendHqlString( hql, context );
 		hql.append( " on overflow " );
 		if ( fillerExpression == null ) {
 			hql.append( "error" );
 		}
 		else {
 			hql.append( "truncate " );
-			fillerExpression.appendHqlString( hql );
+			fillerExpression.appendHqlString( hql, context );
 			if ( withCount ) {
 				hql.append( " with count" );
 			}

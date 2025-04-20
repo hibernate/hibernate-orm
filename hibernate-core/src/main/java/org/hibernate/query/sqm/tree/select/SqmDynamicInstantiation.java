@@ -9,14 +9,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -272,7 +273,7 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( "new " );
 		if ( instantiationTarget.getNature() == LIST ) {
 			hql.append( "list" );
@@ -284,10 +285,10 @@ public class SqmDynamicInstantiation<T>
 			hql.append( instantiationTarget.getTargetTypeDescriptor().getJavaTypeClass().getTypeName() );
 		}
 		hql.append( '(' );
-		arguments.get( 0 ).appendHqlString( hql );
+		arguments.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < arguments.size(); i++ ) {
 			hql.append(", ");
-			arguments.get( i ).appendHqlString( hql );
+			arguments.get( i ).appendHqlString( hql, context );
 		}
 
 		hql.append( ')' );
@@ -329,7 +330,7 @@ public class SqmDynamicInstantiation<T>
 		}
 
 		@Override
-		public DomainType<T> getSqmType() {
+		public SqmDomainType<T> getSqmType() {
 			return null;
 		}
 	}

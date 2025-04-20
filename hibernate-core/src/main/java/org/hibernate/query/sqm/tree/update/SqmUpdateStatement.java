@@ -10,10 +10,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCriteriaUpdate;
 import org.hibernate.query.criteria.JpaRoot;
@@ -24,6 +24,7 @@ import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmRestrictedDmlStatement;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
@@ -133,17 +134,20 @@ public class SqmUpdateStatement<T>
 		final EntityPersister persister =
 				nodeBuilder().getMappingMetamodel().getEntityDescriptor( getTarget().getEntityName() );
 		if ( !persister.isMutable() ) {
-			final ImmutableEntityUpdateQueryHandlingMode mode =
-					nodeBuilder().getImmutableEntityUpdateQueryHandlingMode();
 			final String querySpaces = Arrays.toString( persister.getQuerySpaces() );
-			switch ( mode ) {
+			switch ( nodeBuilder().getImmutableEntityUpdateQueryHandlingMode() ) {
+				case ALLOW :
+					LOG.immutableEntityUpdateQueryAllowed( hql, querySpaces );
+					break;
 				case WARNING:
 					LOG.immutableEntityUpdateQuery( hql, querySpaces );
 					break;
 				case EXCEPTION:
-					throw new HibernateException( "The query attempts to update an immutable entity: " + querySpaces );
-				default:
-					throw new UnsupportedOperationException( "The " + mode + " is not supported" );
+					throw new HibernateException( "The query attempts to update an immutable entity: "
+												+ querySpaces
+												+ " (set '"
+												+ AvailableSettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE
+												+ "' to suppress)");
 			}
 		}
 	}
@@ -271,19 +275,19 @@ public class SqmUpdateStatement<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
-		appendHqlCteString( hql );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		appendHqlCteString( hql, context );
 		hql.append( "update " );
 		if ( versioned ) {
 			hql.append( "versioned " );
 		}
 		final SqmRoot<T> root = getTarget();
 		hql.append( root.getEntityName() );
-		hql.append( ' ' ).append( root.resolveAlias() );
-		SqmFromClause.appendJoins( root, hql );
-		SqmFromClause.appendTreatJoins( root, hql );
-		setClause.appendHqlString( hql );
+		hql.append( ' ' ).append( root.resolveAlias( context ) );
+		SqmFromClause.appendJoins( root, hql, context );
+		SqmFromClause.appendTreatJoins( root, hql, context );
+		setClause.appendHqlString( hql, context );
 
-		super.appendHqlString( hql );
+		super.appendHqlString( hql, context );
 	}
 }

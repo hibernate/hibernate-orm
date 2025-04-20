@@ -5,20 +5,21 @@
 package org.hibernate.engine.spi;
 
 import jakarta.persistence.EntityGraph;
-import jakarta.persistence.FlushModeType;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -145,6 +146,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> resultType) {
 		return queryDelegate().createSelectionQuery( hqlString, resultType );
+	}
+
+	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
+		return queryDelegate().createSelectionQuery( hqlString, resultGraph );
 	}
 
 	@Override
@@ -412,11 +418,6 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public void setAutoClear(boolean enabled) {
-		delegate.setAutoClear( enabled );
-	}
-
-	@Override
 	public void initializeCollection(PersistentCollection<?> collection, boolean writing) throws HibernateException {
 		delegate.initializeCollection( collection, writing );
 	}
@@ -492,6 +493,16 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
+	public boolean isCriteriaPlanCacheEnabled() {
+		return delegate.isCriteriaPlanCacheEnabled();
+	}
+
+	@Override
+	public void setCriteriaPlanCacheEnabled(boolean jpaCriteriaCacheEnabled) {
+		delegate.setCriteriaPlanCacheEnabled( jpaCriteriaCacheEnabled );
+	}
+
+	@Override
 	public boolean getNativeJdbcParametersIgnored() {
 		return delegate.getNativeJdbcParametersIgnored();
 	}
@@ -499,16 +510,6 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public void setNativeJdbcParametersIgnored(boolean nativeJdbcParametersIgnored) {
 		delegate.setNativeJdbcParametersIgnored( nativeJdbcParametersIgnored );
-	}
-
-	@Override
-	public FlushModeType getFlushMode() {
-		return delegate.getFlushMode();
-	}
-
-	@Override
-	public void setHibernateFlushMode(FlushMode flushMode) {
-		delegate.setHibernateFlushMode( flushMode );
 	}
 
 	@Override
@@ -524,16 +525,6 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public void afterScrollOperation() {
 		delegate.afterScrollOperation();
-	}
-
-	@Override
-	public boolean shouldAutoClose() {
-		return delegate.shouldAutoClose();
-	}
-
-	@Override
-	public boolean isAutoCloseSessionEnabled() {
-		return delegate.isAutoCloseSessionEnabled();
 	}
 
 	@Override
@@ -685,5 +676,25 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public FormatMapper getXmlFormatMapper() {
 		return delegate.getXmlFormatMapper();
+	}
+
+	@Override
+	public void lock(String entityName, Object child, LockOptions lockOptions) {
+		delegate.lock( entityName, child, lockOptions );
+	}
+
+	@Override
+	public void registerProcess(AfterTransactionCompletionProcess process) {
+		delegate.registerProcess( process );
+	}
+
+	@Override
+	public Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode) {
+		return delegate.loadFromSecondLevelCache( persister, entityKey, instanceToLoad, lockMode );
+	}
+
+	@Override
+	public boolean isIdentifierRollbackEnabled() {
+		return delegate.isIdentifierRollbackEnabled();
 	}
 }

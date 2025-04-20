@@ -9,7 +9,7 @@ import jakarta.persistence.Query;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.HibernateHints;
-import org.hibernate.query.sql.spi.NativeQueryImplementor;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -56,7 +56,7 @@ public class NativeQueryLockingTests {
 		sqlCollector.clear();
 
 		sessions.inTransaction( (session) -> {
-			final NativeQueryImplementor<SimpleEntity> query = session.createNativeQuery( QUERY_STRING, SimpleEntity.class );
+			final NativeQuery<SimpleEntity> query = session.createNativeQuery( QUERY_STRING, SimpleEntity.class );
 			query.setHibernateLockMode( LockMode.PESSIMISTIC_WRITE );
 			query.list();
 

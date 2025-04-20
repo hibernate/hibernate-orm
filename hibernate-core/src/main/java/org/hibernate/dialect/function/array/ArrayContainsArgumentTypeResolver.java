@@ -27,8 +27,8 @@ public class ArrayContainsArgumentTypeResolver extends AbstractFunctionArgumentT
 	public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
 		if ( argumentIndex == 0 ) {
 			final SqmTypedNode<?> node = arguments.get( 1 );
-			if ( node instanceof SqmExpression<?> ) {
-				final MappingModelExpressible<?> expressible = converter.determineValueMapping( (SqmExpression<?>) node );
+			if ( node instanceof SqmExpression<?> sqmExpression ) {
+				final MappingModelExpressible<?> expressible = converter.determineValueMapping( sqmExpression );
 				if ( expressible != null ) {
 					if ( expressible.getSingleJdbcMapping() instanceof BasicPluralType<?, ?> ) {
 						return expressible;
@@ -49,8 +49,8 @@ public class ArrayContainsArgumentTypeResolver extends AbstractFunctionArgumentT
 				return null;
 			}
 			final SqmTypedNode<?> node = arguments.get( 0 );
-			if ( node instanceof SqmExpression<?> ) {
-				final MappingModelExpressible<?> expressible = converter.determineValueMapping( (SqmExpression<?>) node );
+			if ( node instanceof SqmExpression<?> sqmExpression ) {
+				final MappingModelExpressible<?> expressible = converter.determineValueMapping( sqmExpression );
 				if ( expressible instanceof BasicPluralType<?, ?> ) {
 					return expressible;
 				}

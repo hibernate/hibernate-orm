@@ -63,25 +63,25 @@ public enum OnDeleteAction {
 		if ( value == null ) {
 			return null;
 		}
-
-		if ( value instanceof OnDeleteAction onDeleteAction ) {
+		else if ( value instanceof OnDeleteAction onDeleteAction ) {
 			return onDeleteAction;
 		}
-
-		final String valueString = value.toString();
-		try {
-			return valueOf( valueString );
-		}
-		catch (IllegalArgumentException e) {
-			// the name did not match the enum value name...
-		}
-
-		for ( OnDeleteAction checkAction : values() ) {
-			if ( checkAction.getAlternativeName().equalsIgnoreCase( valueString ) ) {
-				return checkAction;
+		else {
+			final String valueString = value.toString();
+			try {
+				return valueOf( valueString );
 			}
-		}
+			catch (IllegalArgumentException e) {
+				// the name did not match the enum value name...
+			}
 
-		return null;
+			for ( OnDeleteAction checkAction : values() ) {
+				if ( checkAction.getAlternativeName().equalsIgnoreCase( valueString ) ) {
+					return checkAction;
+				}
+			}
+
+			return null;
+		}
 	}
 }

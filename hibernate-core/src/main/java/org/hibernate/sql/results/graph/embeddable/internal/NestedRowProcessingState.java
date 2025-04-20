@@ -34,10 +34,10 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	public static NestedRowProcessingState wrap(
 			AggregateEmbeddableInitializerImpl aggregateEmbeddableInitializer,
 			RowProcessingState processingState) {
-		if ( processingState instanceof NestedRowProcessingState ) {
+		if ( processingState instanceof NestedRowProcessingState nestedRowProcessingState ) {
 			return new NestedRowProcessingState(
 					aggregateEmbeddableInitializer,
-					( (NestedRowProcessingState) processingState ).processingState
+					nestedRowProcessingState.processingState
 			);
 		}
 		return new NestedRowProcessingState( aggregateEmbeddableInitializer, processingState );

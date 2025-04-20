@@ -10,7 +10,7 @@ import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.internal.DefaultCustomEntityDirtinessStrategy;
 import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.internal.StandardEntityNotFoundDelegate;
@@ -58,12 +58,9 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.internal.AbstractAttribute;
 import org.hibernate.metamodel.model.domain.internal.AbstractPluralAttribute;
 import org.hibernate.metamodel.model.domain.internal.BagAttributeImpl;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
@@ -86,12 +83,14 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.internal.NamedObjectRepositoryImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.named.NamedObjectRepository;
+import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.sql.internal.SqlTranslationEngineImpl;
@@ -102,6 +101,10 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
+import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
+import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
 import org.hibernate.stat.internal.StatisticsImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BagType;
@@ -444,6 +447,11 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	public ValueHandlingMode getCriteriaValueHandlingMode() {
+		return ValueHandlingMode.BIND;
+	}
+
+	@Override
 	public void close() {}
 
 	@Override
@@ -577,6 +585,16 @@ public abstract class MockSessionFactory
 	@Override
 	public Integer getMaximumFetchDepth() {
 		return null;
+	}
+
+	@Override
+	public boolean allowImmutableEntityUpdate() {
+		return true;
+	}
+
+	@Override
+	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
+		return ImmutableEntityUpdateQueryHandlingMode.ALLOW;
 	}
 
 	@Override
@@ -906,7 +924,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public PersistentAttribute<X,?> findDeclaredAttribute(String name) {
+		public SqmPersistentAttribute<X,?> findDeclaredAttribute(String name) {
 			final String typeName = getTypeName();
 			return isFieldDefined(typeName, name)
 					? createAttribute(name, typeName, propertyType(typeName, name), this)
@@ -927,7 +945,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public SingularPersistentAttribute<? super X, ?> findVersionAttribute() {
+		public SqmSingularPersistentAttribute<? super X, ?> findVersionAttribute() {
 			final BasicType<?> type = getVersionType(getHibernateEntityName());
 			if (type == null) {
 				return null;
@@ -957,10 +975,7 @@ public abstract class MockSessionFactory
 		@Override
 		public SqmPathSource<?> getIdentifierDescriptor() {
 			final Type type = getIdentifierType(getHibernateEntityName());
-			if (type == null) {
-				return null;
-			}
-			else if (type instanceof BasicDomainType<?> basicDomainType) {
+			if (type instanceof BasicDomainType<?> basicDomainType) {
 				return new BasicSqmPathSource<>(
 						EntityIdentifierMapping.ID_ROLE_NAME,
 						null,
@@ -970,7 +985,7 @@ public abstract class MockSessionFactory
 						false
 				);
 			}
-			else if (type instanceof EmbeddableDomainType<?> embeddableDomainType) {
+			else if (type instanceof SqmEmbeddableDomainType<?> embeddableDomainType) {
 				return new EmbeddedSqmPathSource<>(
 						EntityIdentifierMapping.ID_ROLE_NAME,
 						null,
@@ -1020,8 +1035,8 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public PersistentAttribute<? super X, ?> findAttribute(String name) {
-			final PersistentAttribute<? super X, ?> attribute = super.findAttribute(name);
+		public SqmPersistentAttribute<? super X, ?> findAttribute(String name) {
+			final var attribute = super.findAttribute(name);
 			if (attribute != null) {
 				return attribute;
 			}
@@ -1032,7 +1047,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public PersistentAttribute<X,?> findDeclaredAttribute(String name) {
+		public SqmPersistentAttribute<X,?> findDeclaredAttribute(String name) {
 			final String entityName = getHibernateEntityName();
 			return isAttributeDefined(entityName, name)
 					? createAttribute(name, entityName, getReferencedPropertyType(entityName, name), this)
@@ -1042,7 +1057,7 @@ public abstract class MockSessionFactory
 
 	protected abstract String getJpaEntityName(String typeName);
 
-	private <T> AbstractAttribute<T,?,?> createAttribute(String name, String entityName, Type type, ManagedDomainType<T> owner) {
+	private <T> SqmPersistentAttribute<T,?> createAttribute(String name, String entityName, Type type, ManagedDomainType<T> owner) {
 		if (type==null) {
 			throw new UnsupportedOperationException(entityName + "." + name);
 		}
@@ -1086,7 +1101,7 @@ public abstract class MockSessionFactory
 					owner,
 					name,
 					AttributeClassification.BASIC,
-					(DomainType<?>) type,
+					(SqmDomainType<?>) type,
 					type instanceof JdbcMapping jdbcMapping
 							? jdbcMapping.getJavaTypeDescriptor()
 							: null,
@@ -1100,7 +1115,7 @@ public abstract class MockSessionFactory
 		}
 	}
 
-	private DomainType<?> getElementDomainType(String entityName, CollectionType collectionType, ManagedDomainType<?> owner) {
+	private SqmDomainType<?> getElementDomainType(String entityName, CollectionType collectionType, ManagedDomainType<?> owner) {
 		final Type elementType = collectionType.getElementType(MockSessionFactory.this);
 		return getDomainType(entityName, collectionType, owner, elementType);
 	}
@@ -1110,7 +1125,7 @@ public abstract class MockSessionFactory
 		return getDomainType(entityName, collectionType, owner, keyType);
 	}
 
-	private DomainType<?> getDomainType(
+	private SqmDomainType<?> getDomainType(
 			String entityName, CollectionType collectionType, ManagedDomainType<?> owner, Type elementType) {
 		if ( elementType.isEntityType() ) {
 			final String associatedEntityName = collectionType.getAssociatedEntityName(this);
@@ -1120,7 +1135,7 @@ public abstract class MockSessionFactory
 			final CompositeType compositeType = (CompositeType) elementType;
 			return createEmbeddableDomainType(entityName, compositeType, owner);
 		}
-		else if ( elementType instanceof DomainType<?> domainType ) {
+		else if ( elementType instanceof SqmDomainType<?> domainType ) {
 			return domainType;
 		}
 		else {
@@ -1138,7 +1153,7 @@ public abstract class MockSessionFactory
 		final JavaType<?> collectionJavaType =
 				typeConfiguration.getJavaTypeRegistry()
 						.getDescriptor(collectionType.getReturnedClass());
-		final DomainType<?> elementDomainType = getElementDomainType(entityName, collectionType, owner);
+		final SqmDomainType<?> elementDomainType = getElementDomainType(entityName, collectionType, owner);
 		final CollectionClassification classification = collectionType.getCollectionClassification();
 		return switch ( classification ) {
 			case LIST -> new ListAttributeImpl(
@@ -1206,7 +1221,7 @@ public abstract class MockSessionFactory
 		final JavaType<T> javaType = new UnknownBasicJavaType<>(null, compositeType.getReturnedClassName());
 		return new EmbeddableTypeImpl<>( javaType, null, null, true, metamodel.getJpaMetamodel() ) {
 			@Override
-			public PersistentAttribute<T, ?> findAttribute(String name) {
+			public SqmPersistentAttribute<T, ?> findAttribute(String name) {
 				return createAttribute(
 						name,
 						entityName,

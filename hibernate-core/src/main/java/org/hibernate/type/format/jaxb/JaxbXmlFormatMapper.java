@@ -19,7 +19,7 @@ import java.util.Map;
 import javax.xml.namespace.QName;
 
 import jakarta.xml.bind.annotation.XmlElement;
-import org.hibernate.dialect.XmlHelper;
+import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -83,8 +83,8 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 				final JAXBContext context;
 				final Class<Object> keyClass;
 				final Class<Object> valueClass;
-				if ( javaType.getJavaType() instanceof ParameterizedType ) {
-					final Type[] typeArguments = ( (ParameterizedType) javaType.getJavaType() ).getActualTypeArguments();
+				if ( javaType.getJavaType() instanceof ParameterizedType parameterizedType ) {
+					final Type[] typeArguments = parameterizedType.getActualTypeArguments();
 					keyClass = ReflectHelper.getClass( typeArguments[0] );
 					valueClass = ReflectHelper.getClass( typeArguments[1] );
 					if ( legacyFormat ) {
@@ -167,8 +167,8 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 			else if ( Collection.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
 				final JAXBContext context;
 				final Class<Object> valueClass;
-				if ( javaType.getJavaType() instanceof ParameterizedType ) {
-					final Type[] typeArguments = ( (ParameterizedType) javaType.getJavaType() ).getActualTypeArguments();
+				if ( javaType.getJavaType() instanceof ParameterizedType parameterizedType ) {
+					final Type[] typeArguments = parameterizedType.getActualTypeArguments();
 					valueClass = ReflectHelper.getClass( typeArguments[0] );
 					context = JAXBContext.newInstance( CollectionWrapper.class, valueClass );
 				}
@@ -283,11 +283,11 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 			final StringBuilderSqlAppender appender = new StringBuilderSqlAppender();
 			if ( Map.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
 				final JAXBContext context;
-				final Class<Object> keyClass;
-				final Class<Object> valueClass;
+				final Class<?> keyClass;
+				final Class<?> valueClass;
 				final Map<?, ?> map = (Map<?, ?>) value;
-				if ( javaType.getJavaType() instanceof ParameterizedType ) {
-					final Type[] typeArguments = ( (ParameterizedType) javaType.getJavaType() ).getActualTypeArguments();
+				if ( javaType.getJavaType() instanceof ParameterizedType parameterizedType ) {
+					final Type[] typeArguments = parameterizedType.getActualTypeArguments();
 					keyClass = ReflectHelper.getClass( typeArguments[0] );
 					valueClass = ReflectHelper.getClass( typeArguments[1] );
 					if ( legacyFormat ) {
@@ -301,25 +301,17 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 					if ( map.isEmpty() ) {
 						keyClass = Object.class;
 						valueClass = Object.class;
-						if ( legacyFormat ) {
-							context = JAXBContext.newInstance( LegacyMapWrapper.class );
-						}
-						else {
-							context = JAXBContext.newInstance( MapWrapper.class, EntryWrapper.class );
-						}
+						context = legacyFormat
+								? JAXBContext.newInstance( LegacyMapWrapper.class )
+								: JAXBContext.newInstance( MapWrapper.class, EntryWrapper.class );
 					}
 					else {
 						final Map.Entry<?, ?> firstEntry = map.entrySet().iterator().next();
-						//noinspection unchecked
-						keyClass = (Class<Object>) firstEntry.getKey().getClass();
-						//noinspection unchecked
-						valueClass = (Class<Object>) firstEntry.getValue().getClass();
-						if ( legacyFormat ) {
-							context = JAXBContext.newInstance( LegacyMapWrapper.class, keyClass, valueClass );
-						}
-						else {
-							context = JAXBContext.newInstance( MapWrapper.class, EntryWrapper.class, keyClass, valueClass );
-						}
+						keyClass = firstEntry.getKey().getClass();
+						valueClass = firstEntry.getValue().getClass();
+						context = legacyFormat
+								? JAXBContext.newInstance( LegacyMapWrapper.class, keyClass, valueClass )
+								: JAXBContext.newInstance( MapWrapper.class, EntryWrapper.class, keyClass, valueClass );
 					}
 				}
 				final ManagedMapWrapper managedMapWrapper = legacyFormat ? new LegacyMapWrapper() : new MapWrapper();
@@ -382,8 +374,8 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 				final JAXBContext context;
 				final Class<Object> valueClass;
 				final Collection<?> collection = (Collection<?>) value;
-				if ( javaType.getJavaType() instanceof ParameterizedType ) {
-					final Type[] typeArguments = ( (ParameterizedType) javaType.getJavaType() ).getActualTypeArguments();
+				if ( javaType.getJavaType() instanceof ParameterizedType parameterizedType ) {
+					final Type[] typeArguments = parameterizedType.getActualTypeArguments();
 					valueClass = ReflectHelper.getClass( typeArguments[0] );
 					context = JAXBContext.newInstance( CollectionWrapper.class, valueClass );
 				}
@@ -393,8 +385,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 						context = JAXBContext.newInstance( CollectionWrapper.class );
 					}
 					else {
-						//noinspection unchecked
-						valueClass = (Class<Object>) collection.iterator().next().getClass();
+						valueClass = ReflectHelper.getClass( collection.iterator().next() );
 						context = JAXBContext.newInstance( CollectionWrapper.class, valueClass );
 					}
 				}
@@ -412,10 +403,10 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 						}
 					}
 					final JAXBElementTransformer valueTransformer;
-					if ( javaType instanceof BasicPluralJavaType<?> ) {
+					if ( javaType instanceof BasicPluralJavaType<?> pluralJavaType ) {
 						valueTransformer = createTransformer(
 								appender,
-								( (BasicPluralJavaType<?>) javaType ).getElementJavaType(),
+								pluralJavaType.getElementJavaType(),
 								collectionElementTagName,
 								exampleValue,
 								context.createJAXBIntrospector(),
@@ -454,10 +445,10 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 						}
 					}
 					final JAXBElementTransformer transformer;
-					if ( javaType instanceof BasicPluralJavaType<?> ) {
+					if ( javaType instanceof BasicPluralJavaType<?> pluralJavaType ) {
 						transformer = createTransformer(
 								appender,
-								( (BasicPluralJavaType<?>) javaType ).getElementJavaType(),
+								pluralJavaType.getElementJavaType(),
 								collectionElementTagName,
 								exampleElement,
 								context.createJAXBIntrospector(),
@@ -661,16 +652,11 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 		}
 
 		@Override
-		public Object fromJAXBElement(Object element, Unmarshaller unmarshaller) throws JAXBException {
-			final Object valueElement = unmarshaller.unmarshal( (Node) element, elementClass ).getValue();
-			final Object value;
-			if ( valueElement instanceof Element ) {
-				value = ( (Element) valueElement ).getFirstChild().getTextContent();
-			}
-			else {
-				value = valueElement;
-			}
-			return value;
+		public Object fromJAXBElement(Object object, Unmarshaller unmarshaller) throws JAXBException {
+			final Object valueElement = unmarshaller.unmarshal( (Node) object, elementClass ).getValue();
+			return valueElement instanceof Element element
+					? element.getFirstChild().getTextContent()
+					: valueElement;
 		}
 
 		@Override

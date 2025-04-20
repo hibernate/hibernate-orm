@@ -130,26 +130,24 @@ public class MetadataSources implements Serializable {
 	/**
 	 * @deprecated Prefer {@linkplain #getMappingXmlBindings()} and/or {@linkplain #getHbmXmlBindings()}
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Deprecated(since = "7.0")
-	public List<Binding<JaxbBindableMappingDescriptor>> getXmlBindings() {
+	public List<? extends Binding<? extends JaxbBindableMappingDescriptor>> getXmlBindings() {
 		if ( mappingXmlBindings == null && hbmXmlBindings == null ) {
 			return emptyList();
 		}
-
-		if ( hbmXmlBindings == null ) {
-			return (List) mappingXmlBindings;
+		else if ( hbmXmlBindings == null ) {
+			return mappingXmlBindings;
 		}
-
-		if ( mappingXmlBindings == null ) {
-			return (List) hbmXmlBindings;
+		else if ( mappingXmlBindings == null ) {
+			return hbmXmlBindings;
 		}
-
-		final ArrayList<Binding<JaxbBindableMappingDescriptor>> combined =
-				arrayList( mappingXmlBindings.size() + hbmXmlBindings.size() );
-		combined.addAll( (List) mappingXmlBindings );
-		combined.addAll( (List) hbmXmlBindings );
-		return combined;
+		else {
+			final ArrayList<Binding<? extends JaxbBindableMappingDescriptor>> combined =
+					arrayList( mappingXmlBindings.size() + hbmXmlBindings.size() );
+			combined.addAll( mappingXmlBindings );
+			combined.addAll( hbmXmlBindings );
+			return combined;
+		}
 	}
 
 	public List<Binding<JaxbEntityMappingsImpl>> getMappingXmlBindings() {
@@ -205,7 +203,7 @@ public class MetadataSources implements Serializable {
 	 */
 	private MetadataBuilder getCustomBuilderOrDefault(MetadataBuilderImpl defaultBuilder) {
 
-		Collection<MetadataBuilderFactory> discoveredBuilderFactories =
+		final Collection<MetadataBuilderFactory> discoveredBuilderFactories =
 				serviceRegistry.requireService( ClassLoaderService.class )
 						.loadJavaServices( MetadataBuilderFactory.class );
 
@@ -309,9 +307,7 @@ public class MetadataSources implements Serializable {
 		if ( extraQueryImports == null ) {
 			extraQueryImports = new HashMap<>();
 		}
-
 		extraQueryImports.put( importedName, target );
-
 		return this;
 	}
 

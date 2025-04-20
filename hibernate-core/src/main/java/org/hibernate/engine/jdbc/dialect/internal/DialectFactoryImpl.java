@@ -111,9 +111,9 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 		}
 		else {
 			// the referenced value is not null
-			return dialectReference instanceof String
+			return dialectReference instanceof String string
 				// if it is a String, it might still be empty though...
-				&& StringHelper.isEmpty((String) dialectReference);
+				&& StringHelper.isEmpty( string );
 		}
 	}
 

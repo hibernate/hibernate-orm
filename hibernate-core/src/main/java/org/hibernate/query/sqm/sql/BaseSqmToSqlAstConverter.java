@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.sql;
 
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.metamodel.SingularAttribute;
-import jakarta.persistence.metamodel.Type;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -41,7 +40,7 @@ import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.metamodel.model.domain.DiscriminatorSqmPath;
+import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -858,36 +857,56 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final SqmExpression<?> assignmentValue = sqmAssignment.getValue();
 				final SqmParameter<?> assignmentValueParameter = getSqmParameter( assignmentValue );
 				final Expression pathSqlExpression = assignedPathInterpretation.getSqlExpression();
-				final List<? extends Expression> targetColumnReferences =
-						pathSqlExpression instanceof SqlTuple sqlTuple
-								? sqlTuple.getExpressions()
+				final List<ColumnReference> targetColumnReferences =
+						pathSqlExpression instanceof SqlTupleContainer sqlTupleContainer
+								? sqlTupleContainer.getSqlTuple().getColumnReferences()
 								: pathSqlExpression.getColumnReference().getColumnReferences();
 				if ( assignmentValueParameter != null ) {
+					final ArrayList<Expression> expressions = new ArrayList<>( targetColumnReferences.size() );
 					consumeSqmParameter(
 							assignmentValueParameter,
 							assignedPathInterpretation.getExpressionType(),
-							(index, jdbcParameter) -> addAssignment(
-									assignments,
-									aggregateColumnAssignmentHandler,
-									targetColumnReferences.get( index ),
-									jdbcParameter
-							)
+							(index, jdbcParameter) -> expressions.add( jdbcParameter )
 					);
-				}
-				else if ( assignmentValue instanceof SqmLiteralNull<?> ) {
-					for ( Expression columnReference : targetColumnReferences ) {
+					if ( pathSqlExpression instanceof SqlTupleContainer ) {
 						addAssignment(
 								assignments,
 								aggregateColumnAssignmentHandler,
-								columnReference,
-								new QueryLiteral<>( null, (BasicValuedMapping) columnReference.getExpressionType() )
+								(Assignable) assignedPathInterpretation,
+								targetColumnReferences,
+								new SqlTuple( expressions, assignedPathInterpretation.getExpressionType() )
 						);
 					}
+					else {
+						assert expressions.size() == 1;
+						addAssignment(
+								assignments,
+								aggregateColumnAssignmentHandler,
+								(Assignable) assignedPathInterpretation,
+								targetColumnReferences,
+								expressions.get( 0 )
+						);
+					}
+				}
+				else if ( pathSqlExpression instanceof SqlTupleContainer
+						&& assignmentValue instanceof SqmLiteralNull<?> ) {
+					final ArrayList<Expression> expressions = new ArrayList<>( targetColumnReferences.size() );
+					for ( ColumnReference targetColumnReference : targetColumnReferences ) {
+						expressions.add( new QueryLiteral<>( null,
+								(SqlExpressible) targetColumnReference.getExpressionType() ) );
+					}
+					addAssignment(
+							assignments,
+							aggregateColumnAssignmentHandler,
+							(Assignable) assignedPathInterpretation,
+							targetColumnReferences,
+							new SqlTuple( expressions, assignedPathInterpretation.getExpressionType() )
+					);
 				}
 				else {
 					addAssignments(
 							(Expression) assignmentValue.accept( this ),
-							assignedPathInterpretation.getExpressionType(),
+							assignedPathInterpretation,
 							targetColumnReferences,
 							assignments,
 							aggregateColumnAssignmentHandler
@@ -909,35 +928,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private void addAssignments(
 			Expression valueExpression,
-			ModelPart assignedPathType,
-			List<? extends Expression> targetColumnReferences,
+			SqmPathInterpretation<?> assignedPathInterpretation,
+			List<ColumnReference> targetColumnReferences,
 			ArrayList<Assignment> assignments,
-			AggregateColumnAssignmentHandler assignmentHandler) {
-		checkAssignment( valueExpression, assignedPathType );
-		if ( valueExpression instanceof SqlTuple sqlTuple ) {
-			addTupleAssignments( targetColumnReferences, assignments, assignmentHandler, sqlTuple );
-		}
-		else if ( valueExpression instanceof EmbeddableValuedPathInterpretation<?> embeddable ) {
-			addTupleAssignments( targetColumnReferences, assignments, assignmentHandler, embeddable.getSqlTuple() );
-		}
-		else {
-			for ( Expression columnReference : targetColumnReferences ) {
-				addAssignment( assignments, assignmentHandler, columnReference, valueExpression );
-			}
-		}
-	}
-
-	private void addTupleAssignments(
-			List<? extends Expression> targetColumnReferences,
-			ArrayList<Assignment> assignments,
-			AggregateColumnAssignmentHandler aggregateColumnAssignmentHandler,
-			SqlTuple sqlTuple) {
-		final List<? extends Expression> expressions = sqlTuple.getExpressions();
-		assert targetColumnReferences.size() == expressions.size();
-		for ( int i = 0; i < targetColumnReferences.size(); i++ ) {
-			final ColumnReference columnReference = (ColumnReference) targetColumnReferences.get( i );
-			addAssignment( assignments, aggregateColumnAssignmentHandler, columnReference, expressions.get( i ) );
-		}
+			AggregateColumnAssignmentHandler aggregateColumnAssignmentHandler) {
+		checkAssignment( valueExpression, assignedPathInterpretation.getExpressionType() );
+		addAssignment(
+				assignments,
+				aggregateColumnAssignmentHandler,
+				(Assignable) assignedPathInterpretation,
+				targetColumnReferences,
+				valueExpression
+		);
 	}
 
 	private void checkAssignment(Expression valueExpression, ModelPart assignedPathType) {
@@ -958,12 +960,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private void addAssignment(
 			List<Assignment> assignments,
 			AggregateColumnAssignmentHandler aggregateColumnAssignmentHandler,
-			Expression columnReference,
+			Assignable assignable,
+			List<ColumnReference> targetColumnReferences,
 			Expression valueExpression) {
 		if ( aggregateColumnAssignmentHandler != null ) {
-			aggregateColumnAssignmentHandler.addAssignment( assignments.size(), (ColumnReference) columnReference );
+			for ( ColumnReference targetColumnReference : targetColumnReferences ) {
+				aggregateColumnAssignmentHandler.addAssignment( assignments.size(), targetColumnReference );
+			}
 		}
-		assignments.add( new Assignment( (ColumnReference) columnReference, valueExpression ) );
+		assignments.add( new Assignment( assignable, valueExpression ) );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2858,7 +2863,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				);
 			}
 		}
-		else if ( projectedPath.getNodeType().getSqmPathType() instanceof EntityDomainType<?> entityDomainType ) {
+		else if ( projectedPath.getNodeType().getPathType() instanceof EntityDomainType<?> entityDomainType ) {
 			treatedType = entityDomainType;
 			registerEntityNameUsage( tableGroup, EntityNameUse.PROJECTION, treatedType.getTypeName(), true );
 			if ( projectedPath instanceof SqmFrom<?, ?> sqmFrom ) {
@@ -3057,8 +3062,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			for ( EntityMappingType subType : persister.getSubMappingTypes() ) {
 				entityNameUses.compute( subType.getEntityName(),
 						(s, existingUse) -> finalEntityNameUse.stronger( existingUse ) );
-				actualTableGroup.resolveTableReference( null,
-						subType.getEntityPersister().getMappedTableDetails().getTableName() );
 			}
 		}
 	}
@@ -3280,7 +3283,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		registerPathAttributeEntityNameUsage( sqmJoin, ownerTableGroup );
 		if ( !sqmJoin.hasTreats()
-				&& sqmJoin.getNodeType().getSqmPathType() instanceof EntityDomainType<?> entityDomainType ) {
+				&& sqmJoin.getNodeType().getPathType() instanceof EntityDomainType<?> entityDomainType ) {
 			final TableGroup elementTableGroup =
 					joinedTableGroup instanceof PluralTableGroup pluralTableGroup
 							? pluralTableGroup.getElementTableGroup()
@@ -5499,7 +5502,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				return new QueryLiteral<>(
 						literal.getLiteralValue(),
 						creationContext.getTypeConfiguration().getBasicTypeRegistry()
-								.getRegisteredType( nodeType.getSqmPathType().getJavaType().getName() )
+								.getRegisteredType( nodeType.getPathType().getTypeName() )
 				);
 			}
 		}
@@ -5904,8 +5907,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		if ( sqmExpression instanceof SelfRenderingSqmFunction<?> selfRenderingSqmFunction ) {
+			final ReturnableType<?> returnableType = selfRenderingSqmFunction.resolveResultType( this );
 			return domainModel.resolveMappingExpressible(
-					selfRenderingSqmFunction.resolveResultType( this ),
+					returnableType == null ? null : returnableType.resolveExpressible( getCreationContext() ),
 					this::findTableGroupByPath
 			);
 		}
@@ -5967,8 +5971,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	protected MappingModelExpressible<?> getInferredValueMapping() {
 		final MappingModelExpressible<?> inferredMapping = resolveInferredType();
 		if ( inferredMapping != null ) {
-			if ( inferredMapping instanceof PluralAttributeMapping ) {
-				return ( (PluralAttributeMapping) inferredMapping ).getElementDescriptor();
+			if ( inferredMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
+				return pluralAttributeMapping.getElementDescriptor();
 			}
 			else if ( !( inferredMapping instanceof JavaObjectType ) ) {
 				// Never report back the "object type" as inferred type and instead rely on the value type
@@ -5980,13 +5984,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	protected MappingModelExpressible<?> determineValueMapping(SqmParameter<?> sqmParameter) {
 		log.debugf( "Determining mapping-model type for SqmParameter : %s", sqmParameter );
-
 		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
 		final QueryParameterBinding<?> binding = domainParameterBindings.getBinding( queryParameter );
-
+		final boolean bindingTypeExplicit = binding.getExplicitTemporalPrecision() != null;
 		BindableType<?> paramType = binding.getBindType();
-		final boolean bindingTypeExplicit;
-		bindingTypeExplicit = binding.getExplicitTemporalPrecision() != null;
 		if ( paramType == null ) {
 			paramType = queryParameter.getHibernateType();
 			if ( paramType == null ) {
@@ -5997,14 +5998,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else {
 //			bindingTypeExplicit = binding.getExplicitTemporalPrecision() != null;
 		}
+		return determineValueMapping( sqmParameter, paramType, bindingTypeExplicit );
+	}
 
+	private MappingModelExpressible<?> determineValueMapping
+			(SqmParameter<?> sqmParameter, BindableType<?> paramType, boolean bindingTypeExplicit) {
 		if ( paramType == null ) {
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
-			if ( inferredValueMapping != null ) {
-				return resolveInferredValueMappingForParameter( inferredValueMapping );
-			}
-			// Default to the Object type
-			return basicType( Object.class );
+			return inferredValueMapping != null
+					? resolveInferredValueMappingForParameter( inferredValueMapping )
+					: basicType( Object.class ); // Default to the Object type
 		}
 		else if ( paramType instanceof MappingModelExpressible<?> paramModelType ) {
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
@@ -6041,8 +6044,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 
-		final SqmExpressible<?> paramSqmType = paramType.resolveExpressible( creationContext );
+		return determineValueMapping( sqmParameter, paramType );
+	}
 
+	private MappingModelExpressible<?> determineValueMapping(SqmParameter<?> sqmParameter, BindableType<?> paramType) {
+		final SqmExpressible<?> paramSqmType = paramType.resolveExpressible( creationContext );
 		if ( paramSqmType instanceof SqmPath<?> sqmPath ) {
 			final MappingModelExpressible<?> modelPart = determineValueMapping( sqmPath );
 			if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
@@ -6050,61 +6056,57 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			return modelPart;
 		}
-
-		if ( paramSqmType instanceof BasicValuedMapping basicValuedMapping ) {
+		else if ( paramSqmType instanceof BasicValuedMapping basicValuedMapping ) {
 			return basicValuedMapping;
 		}
-
-		if ( paramSqmType instanceof CompositeSqmPathSource || paramSqmType instanceof EmbeddableDomainType<?> ) {
+		else if ( paramSqmType instanceof CompositeSqmPathSource || paramSqmType instanceof EmbeddableDomainType<?> ) {
 			// Try to infer the value mapping since the other side apparently is a path source
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
 			if ( inferredValueMapping != null ) {
 				return resolveInferredValueMappingForParameter( inferredValueMapping );
 			}
-			throw new UnsupportedOperationException( "Support for embedded-valued parameters not yet implemented" );
+			else {
+				throw new UnsupportedOperationException( "Support for embedded-valued parameters not yet implemented" );
+			}
 		}
-
-		if ( paramSqmType instanceof AnyDiscriminatorSqmPathSource ) {
-			return (MappingModelExpressible<?>) ((AnyDiscriminatorSqmPathSource<?>) paramSqmType).getSqmPathType();
+		else if ( paramSqmType instanceof AnyDiscriminatorSqmPathSource<?> anyDiscriminatorSqmPathSource ) {
+			return (MappingModelExpressible<?>) anyDiscriminatorSqmPathSource.getPathType();
 		}
-
-		if ( paramSqmType instanceof SqmPathSource<?> || paramSqmType instanceof BasicDomainType<?> ) {
+		else if ( paramSqmType instanceof SqmPathSource<?> || paramSqmType instanceof BasicDomainType<?> ) {
 			// Try to infer the value mapping since the other side apparently is a path source
 			final MappingModelExpressible<?> inferredMapping = resolveInferredType();
-			if ( inferredMapping != null ) {
-				if ( inferredMapping instanceof PluralAttributeMapping ) {
-					return resolveInferredValueMappingForParameter( ( (PluralAttributeMapping) inferredMapping ).getElementDescriptor() );
-				}
-				else if ( !( inferredMapping instanceof JavaObjectType ) ) {
-					// Do not report back the "object type" as inferred type and instead try to rely on the paramSqmType.getExpressibleJavaType()
-					return resolveInferredValueMappingForParameter( inferredMapping );
-				}
+			if ( inferredMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
+				return resolveInferredValueMappingForParameter( pluralAttributeMapping.getElementDescriptor() );
 			}
-
-			final Class<?> parameterJavaType = paramSqmType.getExpressibleJavaType().getJavaTypeClass();
-
-			final BasicType<?> basicTypeForJavaType = getTypeConfiguration().getBasicTypeForJavaType(
-					parameterJavaType
-			);
-
-			if ( basicTypeForJavaType == null ) {
-				if ( paramSqmType instanceof EntityDomainType ) {
-					return resolveEntityPersister( (EntityDomainType<?>) paramSqmType );
+			else if ( inferredMapping != null && !( inferredMapping instanceof JavaObjectType ) ) {
+				// Do not report back the "object type" as inferred type and instead try to rely on the paramSqmType.getExpressibleJavaType()
+				return resolveInferredValueMappingForParameter( inferredMapping );
+			}
+			else {
+				final Class<?> parameterJavaType = paramSqmType.getExpressibleJavaType().getJavaTypeClass();
+				final BasicType<?> basicTypeForJavaType =
+						getTypeConfiguration()
+								.getBasicTypeForJavaType( parameterJavaType );
+				if ( basicTypeForJavaType != null ) {
+					return basicTypeForJavaType;
 				}
-				else if ( paramSqmType instanceof SingularAttribute ) {
-					final Type<?> type = ( (SingularAttribute<?, ?>) paramSqmType ).getType();
-					if ( type instanceof EntityDomainType ) {
-						return resolveEntityPersister( (EntityDomainType<?>) type );
+				else {
+					if ( paramSqmType instanceof EntityDomainType<?> entityDomainType ) {
+						return resolveEntityPersister( entityDomainType );
 					}
-				}
-				if ( inferredMapping != null ) {
-					// inferredMapping is JavaObjectType and we cannot deduct the type
+					else if ( paramSqmType instanceof SingularAttribute<?, ?> singularAttribute ) {
+						if ( singularAttribute.getType() instanceof EntityDomainType<?> entityDomainType ) {
+							return resolveEntityPersister( entityDomainType );
+						}
+					}
+					// inferredMapping is null or JavaObjectType and we cannot deduct the type
 					return inferredMapping;
 				}
 			}
-			return basicTypeForJavaType;
 		}
-		throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );
+		else {
+			throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );
+		}
 	}
 
 	private static boolean canUseInferredType(JdbcMapping bindJdbcMapping, JdbcMapping inferredJdbcMapping) {
@@ -6112,18 +6114,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final JdbcType inferredJdbcType = inferredJdbcMapping.getJdbcType();
 		// If the bind type has a different JDBC type, we prefer that over the inferred type.
 		return bindJdbcType == inferredJdbcType
-				|| bindJdbcType instanceof ArrayJdbcType && inferredJdbcType instanceof ArrayJdbcType
-				&& ( (ArrayJdbcType) bindJdbcType ).getElementJdbcType() == ( (ArrayJdbcType) inferredJdbcType ).getElementJdbcType();
+			|| bindJdbcType instanceof ArrayJdbcType bindArrayType && inferredJdbcType instanceof ArrayJdbcType inferredArrayType
+				&& bindArrayType.getElementJdbcType() == inferredArrayType.getElementJdbcType();
 	}
 
 	private MappingModelExpressible<?> resolveInferredValueMappingForParameter(MappingModelExpressible<?> inferredValueMapping) {
-		if ( inferredValueMapping instanceof PluralAttributeMapping ) {
+		if ( inferredValueMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			// For parameters, we resolve to the element descriptor
-			inferredValueMapping = ( (PluralAttributeMapping) inferredValueMapping ).getElementDescriptor();
+			inferredValueMapping = pluralAttributeMapping.getElementDescriptor();
 		}
-		if ( inferredValueMapping instanceof EntityCollectionPart ) {
+		if ( inferredValueMapping instanceof EntityCollectionPart entityCollectionPart ) {
 			// For parameters, we resolve to the entity mapping type to bind the primary key
-			return ( (EntityCollectionPart) inferredValueMapping ).getAssociatedEntityMappingType();
+			return entityCollectionPart.getAssociatedEntityMappingType();
 		}
 		return inferredValueMapping;
 	}
@@ -6265,23 +6267,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final List<SqmExpression<?>> groupedExpressions = sqmTuple.getGroupedExpressions();
 		final int size = groupedExpressions.size();
 		final List<Expression> expressions = new ArrayList<>( size );
-		final MappingModelExpressible<?> mappingModelExpressible = resolveInferredType();
-		final EmbeddableMappingType embeddableMappingType =
-				mappingModelExpressible instanceof ValueMapping valueMapping
-						? (EmbeddableMappingType) valueMapping.getMappedType()
-						: null;
-		if ( embeddableMappingType == null ) {
-			try {
-				inferrableTypeAccessStack.push( () -> null );
-				for ( int i = 0; i < size; i++ ) {
-					expressions.add( (Expression) groupedExpressions.get( i ).accept( this ) );
-				}
-			}
-			finally {
-				inferrableTypeAccessStack.pop();
-			}
-		}
-		else {
+		if ( resolveInferredType() instanceof ValueMapping valueMapping
+			&& valueMapping.getMappedType() instanceof EmbeddableMappingType embeddableMappingType ) {
 			for ( int i = 0; i < size; i++ ) {
 				final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( i );
 				inferrableTypeAccessStack.push( () -> attributeMapping );
@@ -6293,17 +6280,31 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 			}
 		}
-		final MappingModelExpressible<?> valueMapping;
-		if ( mappingModelExpressible != null ) {
-			valueMapping = mappingModelExpressible;
+		else {
+			try {
+				inferrableTypeAccessStack.push( () -> null );
+				for ( int i = 0; i < size; i++ ) {
+					expressions.add( (Expression) groupedExpressions.get( i ).accept( this ) );
+				}
+			}
+			finally {
+				inferrableTypeAccessStack.pop();
+			}
+		}
+		return new SqlTuple( expressions, tupleValueMapping( sqmTuple ) );
+	}
+
+	private MappingModelExpressible<?> tupleValueMapping(SqmTuple<?> sqmTuple) {
+		final MappingModelExpressible<?> inferredType = resolveInferredType();
+		if ( inferredType != null ) {
+			return inferredType;
+		}
+		else if ( sqmTuple.getExpressible() instanceof MappingModelExpressible<?> modelExpressible ) {
+			return modelExpressible;
 		}
 		else {
-			valueMapping =
-					sqmTuple.getExpressible() instanceof MappingModelExpressible<?> modelExpressible
-							? modelExpressible
-							: null;
+			return null;
 		}
-		return new SqlTuple( expressions, valueMapping );
 	}
 
 	@Override
@@ -7023,6 +7024,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			inferrableTypeAccessStack.push( () -> fixtureType );
 			final Expression checkValue = (Expression) whenFragment.getCheckValue().accept( this );
 			inferrableTypeAccessStack.pop();
+			handleTypeInCaseExpression( fixture, checkValue );
+
 			final MappingModelExpressible<?> alreadyKnown = resolved;
 			inferrableTypeAccessStack.push(
 					() -> alreadyKnown == null && inferenceSupplier != null ? inferenceSupplier.get() : alreadyKnown
@@ -7056,6 +7059,40 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				whenFragments,
 				otherwise
 		);
+	}
+
+	private void handleTypeInCaseExpression(Expression fixture, Expression checkValue) {
+		if ( fixture instanceof DiscriminatorPathInterpretation<?> typeExpression ) {
+			final TableGroup tableGroup = getFromClauseIndex().getTableGroup( typeExpression.getNavigablePath().getParent() );
+			final MappingType partMappingType = tableGroup.getModelPart().getPartMappingType();
+			if ( !(partMappingType instanceof EntityMappingType entityMappingType) ) {
+				return;
+			}
+			if ( entityMappingType.getDiscriminatorMapping().hasPhysicalColumn() ) {
+				// If the entity type has a physical type column we only need to register an expression
+				// usage for the root type to prevent pruning the table where the discriminator is found
+				registerEntityNameUsage(
+						tableGroup,
+						EntityNameUse.EXPRESSION,
+						entityMappingType.getRootEntityDescriptor().getEntityName()
+				);
+			}
+			else if ( checkValue instanceof EntityTypeLiteral typeLiteral ) {
+				// Register an expression type usage for the literal subtype to prevent pruning its table group
+				registerEntityNameUsage(
+						tableGroup,
+						EntityNameUse.EXPRESSION,
+						typeLiteral.getEntityTypeDescriptor().getEntityName()
+				);
+			}
+			else {
+				// We have to assume all types are possible and can't do optimizations
+				registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION, entityMappingType.getEntityName() );
+				for ( EntityMappingType subMappingType : entityMappingType.getSubMappingTypes() ) {
+					registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION, subMappingType.getEntityName() );
+				}
+			}
+		}
 	}
 
 	@Override
@@ -7701,7 +7738,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			DiscriminatorPathInterpretation<?> typeExpression,
 			List<EntityTypeLiteral> literalExpressions,
 			boolean inclusive) {
-		final TableGroup tableGroup = getFromClauseIndex().getTableGroup( typeExpression.getNavigablePath().getParent() );
+		final TableGroup tableGroup =
+				getFromClauseIndex().getTableGroup( typeExpression.getNavigablePath().getParent() );
 		final MappingType partMappingType = tableGroup.getModelPart().getPartMappingType();
 		if ( !(partMappingType instanceof EntityMappingType entityMappingType) ) {
 			return;
@@ -8332,6 +8370,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							}
 							else {
 								tableGroup = compatibleTableGroup;
+
+								if ( joinProducer instanceof PluralAttributeMapping attributeMapping ) {
+									if ( attributeMapping.getOrderByFragment() != null ) {
+										applyOrdering( tableGroup, attributeMapping.getOrderByFragment() );
+									}
+									if ( attributeMapping.getManyToManyOrderByFragment() != null ) {
+										applyOrdering( tableGroup, attributeMapping.getManyToManyOrderByFragment() );
+									}
+								}
 							}
 
 							// and return the joined group

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.QueryException;
-import org.hibernate.dialect.XmlHelper;
+import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.dialect.function.json.ExpressionTypeHelper;
 import org.hibernate.dialect.function.json.HANAJsonValueFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;

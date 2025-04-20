@@ -9,6 +9,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.FindOption;
 import jakarta.persistence.SynchronizationType;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.TypedQueryReference;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -556,6 +558,27 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	default boolean containsFetchProfileDefinition(String name) {
 		return getDefinedFilterNames().contains( name );
 	}
+
+	/**
+	 * Add or override the definition of a named query, returning
+	 * a {@linkplain TypedQueryReference reference} to the query.
+	 * Settings such as first and max results, hints, flush mode,
+	 * cache mode, timeout, and lock options are preserved as part
+	 * of the named query definition. Any arguments bound to query
+	 * parameters are discarded.
+	 *
+	 * @param name the name to be assigned to the query
+	 * @param query the query, including first and max results, hints,
+	 *              flush mode, cache mode, timeout, and lock options
+	 *
+	 * @see #addNamedQuery(String, jakarta.persistence.Query)
+	 * @see org.hibernate.query.QueryProducer#createQuery(TypedQueryReference)
+	 * @see org.hibernate.query.QueryProducer#createSelectionQuery(String, Class)
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	<R> TypedQueryReference<R> addNamedQuery(String name, TypedQuery<R> query);
 
 	/**
 	 * The name assigned to this {@code SessionFactory}, if any.

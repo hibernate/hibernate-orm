@@ -24,6 +24,7 @@ import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.spi.TypedValue;
@@ -316,7 +317,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			throwLazyInitializationException( "SessionFactory UUID not known to create temporary Session for loading" );
 		}
 
-		final SharedSessionContractImplementor session =
+		final SessionImplementor session =
 				SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid ).openSession();
 		session.getPersistenceContextInternal().setDefaultReadOnly( true );
 		session.setHibernateFlushMode( FlushMode.MANUAL );
@@ -545,8 +546,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	 */
 	public final void replaceQueuedOperationValues(CollectionPersister persister, Map<Object,Object> copyCache) {
 		for ( DelayedOperation<?> operation : operationQueue ) {
-			if ( operation instanceof ValueDelayedOperation ) {
-				( (ValueDelayedOperation<?>) operation ).replace( persister, copyCache );
+			if ( operation instanceof ValueDelayedOperation<?> valueDelayedOperation ) {
+				valueDelayedOperation.replace( persister, copyCache );
 			}
 		}
 	}
@@ -1061,13 +1062,11 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		}
 
 		@Override
-		public final boolean equals(Object o) {
-			if ( o == this ) {
-				return true;
-			}
-			return o instanceof Set<?> s
-				&& s.size() == size()
-				&& containsAll( s );
+		public final boolean equals(Object object) {
+			return object == this
+				|| object instanceof Set<?> that
+				&& that.size() == this.size()
+				&& containsAll( that );
 		}
 
 		@Override

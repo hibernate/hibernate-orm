@@ -7,7 +7,7 @@ package org.hibernate.boot.model.process.internal;
 import java.util.function.Function;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;

@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmOrderedSetAggregateFunction;
@@ -133,39 +134,39 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		final List<? extends SqmTypedNode<?>> arguments = getArguments();
 		hql.append( getFunctionName() );
 		hql.append( '(' );
 		int i = 1;
 		if ( arguments.get( 0 ) instanceof SqmDistinct<?> ) {
-			arguments.get( 0 ).appendHqlString( hql );
+			arguments.get( 0 ).appendHqlString( hql, context );
 			if ( arguments.size() > 1 ) {
 				hql.append( ' ' );
-				arguments.get( 1 ).appendHqlString( hql );
+				arguments.get( 1 ).appendHqlString( hql, context );
 				i = 2;
 			}
 		}
 		for ( ; i < arguments.size(); i++ ) {
 			hql.append(", ");
-			arguments.get( i ).appendHqlString( hql );
+			arguments.get( i ).appendHqlString( hql, context );
 		}
 
 		hql.append( ')' );
 		if ( withinGroup != null ) {
 			hql.append( " within group (order by " );
 			final List<SqmSortSpecification> sortSpecifications = withinGroup.getSortSpecifications();
-			sortSpecifications.get( 0 ).appendHqlString( hql );
+			sortSpecifications.get( 0 ).appendHqlString( hql, context );
 			for ( int j = 1; j < sortSpecifications.size(); j++ ) {
 				hql.append( ", " );
-				sortSpecifications.get( j ).appendHqlString( hql );
+				sortSpecifications.get( j ).appendHqlString( hql, context );
 			}
 			hql.append( ')' );
 		}
 
 		if ( getFilter() != null ) {
 			hql.append( " filter (where " );
-			getFilter().appendHqlString( hql );
+			getFilter().appendHqlString( hql, context );
 			hql.append( ')' );
 		}
 	}

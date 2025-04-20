@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -39,7 +39,7 @@ public class ArrayTests {
 		statistics.clear();
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<Employee> query = session.createQuery(
+					final Query<Employee> query = session.createQuery(
 							"select e from Employee e",
 							Employee.class
 					);
@@ -69,7 +69,7 @@ public class ArrayTests {
 		statistics.clear();
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<Employee> query = session.createQuery(
+					final Query<Employee> query = session.createQuery(
 							"select e from Employee e where e.id = :id",
 							Employee.class
 					);
@@ -86,7 +86,7 @@ public class ArrayTests {
 		statistics.clear();
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<Employee> query = session.createQuery(
+					final Query<Employee> query = session.createQuery(
 							"select e from Employee e ",
 							Employee.class
 					);

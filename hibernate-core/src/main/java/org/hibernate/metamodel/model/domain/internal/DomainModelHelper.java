@@ -11,7 +11,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
-import static org.hibernate.metamodel.mapping.MappingModelHelper.isCompatibleModelPart;
+import static org.hibernate.metamodel.mapping.internal.MappingModelHelper.isCompatibleModelPart;
 
 /**
  * Helper containing utilities useful for domain model handling

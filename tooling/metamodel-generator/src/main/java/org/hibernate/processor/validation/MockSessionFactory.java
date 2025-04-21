@@ -21,11 +21,12 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.boot.registry.selector.internal.StrategySelectorImpl;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.MappingDefaults;
@@ -186,7 +187,13 @@ public abstract class MockSessionFactory
 			}
 		};
 		serviceRegistry = StandardServiceRegistryImpl.create(
-				new BootstrapServiceRegistryBuilder().applyClassLoaderService( classLoaderService ).build(),
+				new BootstrapServiceRegistryImpl(
+						true,
+						classLoaderService,
+						new StrategySelectorImpl( classLoaderService ),
+						() -> emptyList()
+				),
+//				new BootstrapServiceRegistryBuilder().applyClassLoaderService( classLoaderService ).build(),
 				singletonList(MockJdbcServicesInitiator.INSTANCE),
 				emptyList(),
 				emptyMap()

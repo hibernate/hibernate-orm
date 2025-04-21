@@ -17,7 +17,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * GaussDB json_replace function.
  *
  * @author liubao
- *
+ * <p>
  * Notes: Original code of this class is based on PostgreSQLJsonSetFunction.
  */
 public class GaussDBJsonReplaceFunction extends AbstractJsonReplaceFunction {

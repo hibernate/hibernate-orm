@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
+
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
@@ -381,10 +382,14 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = GaussDBDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312",
+			comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = GaussDBDialect.class, jiraKey = "HHH-10312",
+			comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312",
+			comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312",
+			comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	public void testNativeQueryNullPositionalParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -403,7 +408,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
 			q = em.createNativeQuery( "select * from Item i where i.int_val is null or i.int_val = ?" );
-			q.setParameter(1, null );
+			q.setParameter( 1, null );
 			results = q.getResultList();
 			assertEquals( 1, results.size() );
 		}
@@ -417,10 +422,14 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-10161")
-	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = GaussDBDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312",
+			comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = GaussDBDialect.class, jiraKey = "HHH-10312",
+			comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312",
+			comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312",
+			comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	public void testNativeQueryNullPositionalParameterParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -469,10 +478,14 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = GaussDBDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312",
+			comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = GaussDBDialect.class, jiraKey = "HHH-10312",
+			comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312",
+			comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312",
+			comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	public void testNativeQueryNullNamedParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -505,10 +518,14 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-10161")
-	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = GaussDBDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
-	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312",
+			comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = GaussDBDialect.class, jiraKey = "HHH-10312",
+			comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312",
+			comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312",
+			comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	public void testNativeQueryNullNamedParameterParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -563,10 +580,10 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		try {
 			em.persist( new Item( "Mouse;", "Micro$oft mouse" ) );
 
-			Query q = em.createQuery( "from Item where name like '%;%'" ).setMaxResults(10);
+			Query q = em.createQuery( "from Item where name like '%;%'" ).setMaxResults( 10 );
 			assertEquals( 1, q.getResultList().size() );
 
-			q = em.createQuery( "from Item where name like '%;%' " ).setMaxResults(10);
+			q = em.createQuery( "from Item where name like '%;%' " ).setMaxResults( 10 );
 			assertEquals( 1, q.getResultList().size() );
 		}
 		finally {
@@ -586,10 +603,10 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		try {
 			em.persist( new Item( "Mouse;", "Micro$oft mouse" ) );
 
-			Query q = em.createNativeQuery( "select * from Item where name like '%;%'" ).setMaxResults(10);
+			Query q = em.createNativeQuery( "select * from Item where name like '%;%'" ).setMaxResults( 10 );
 			assertEquals( 1, q.getResultList().size() );
 
-			q = em.createNativeQuery( "select * from Item where name like '%;%' " ).setMaxResults(10);
+			q = em.createNativeQuery( "select * from Item where name like '%;%' " ).setMaxResults( 10 );
 			assertEquals( 1, q.getResultList().size() );
 		}
 		finally {
@@ -613,10 +630,10 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		try {
 			em.persist( new Item( "Mouse;", "Micro$oft mouse" ) );
 
-			Query q = em.createNativeQuery( "select * from Item where name like '%;%';" ).setMaxResults(10);
+			Query q = em.createNativeQuery( "select * from Item where name like '%;%';" ).setMaxResults( 10 );
 			assertEquals( 1, q.getResultList().size() );
 
-			q = em.createNativeQuery( "select * from Item where name like '%;%' ; " ).setMaxResults(10);
+			q = em.createNativeQuery( "select * from Item where name like '%;%' ; " ).setMaxResults( 10 );
 			assertEquals( 1, q.getResultList().size() );
 		}
 		finally {
@@ -707,7 +724,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.remove( em.getReference( Item.class, item2.getName() ) );
 			em.getTransaction().commit();
 		}
-		catch (Exception e){
+		catch (Exception e) {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
@@ -744,7 +761,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 			em.getTransaction().commit();
 		}
-		catch (Exception e){
+		catch (Exception e) {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
@@ -768,7 +785,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 			em.getTransaction().commit();
 		}
-		catch (Exception e){
+		catch (Exception e) {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
@@ -792,7 +809,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			Query q = entityManager.createQuery( "select item from Item item where item.name in ?1 and item.descr = ?2" );
+			Query q = entityManager.createQuery(
+					"select item from Item item where item.name in ?1 and item.descr = ?2" );
 			List params = new ArrayList();
 			params.add( item.getName() );
 			params.add( item2.getName() );
@@ -904,7 +922,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.remove( result.get( 1 ) );
 			em.getTransaction().commit();
 		}
-		catch (Exception e){
+		catch (Exception e) {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
@@ -966,7 +984,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.remove( result.get( 1 ) );
 			em.getTransaction().commit();
 		}
-		catch (Exception e){
+		catch (Exception e) {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
@@ -978,7 +996,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@Jira( "https://hibernate.atlassian.net/browse/HHH-17490" )
+	@Jira("https://hibernate.atlassian.net/browse/HHH-17490")
 	public void testEmptyParameterList() throws Exception {
 		final Item item = new Item( "Mouse", "Micro$oft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
@@ -1014,7 +1032,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.remove( result.get( 1 ) );
 			em.getTransaction().commit();
 		}
-		catch (Exception e){
+		catch (Exception e) {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
@@ -1039,7 +1057,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.getTransaction().commit();
 
 			em.getTransaction().begin();
-			Query q = em.createQuery( "select item from Item item where item.descr like 'Microk_oft mouse' escape 'k' " );
+			Query q = em.createQuery(
+					"select item from Item item where item.descr like 'Microk_oft mouse' escape 'k' " );
 			List result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 1, result.size() );
@@ -1047,7 +1066,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals( 2, deleted );
 			em.getTransaction().commit();
 		}
-		catch (Exception e){
+		catch (Exception e) {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
@@ -1081,7 +1100,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.remove( item );
 			em.getTransaction().commit();
 		}
-		catch (Exception e){
+		catch (Exception e) {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
@@ -1105,16 +1124,16 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 			em.getTransaction().begin();
 			item = (Item) em.createNativeQuery(
-					"select name as itemname, descr as itemdescription from Item",
-					"getItem"
-			)
+							"select name as itemname, descr as itemdescription from Item",
+							"getItem"
+					)
 					.getSingleResult();
 			assertNotNull( item );
 			assertEquals( "Micro$oft mouse", item.getDescr() );
 			em.remove( item );
 			em.getTransaction().commit();
 		}
-		catch (Exception e){
+		catch (Exception e) {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
@@ -1150,7 +1169,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.remove( w );
 			em.getTransaction().commit();
 		}
-		catch (Exception e){
+		catch (Exception e) {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
@@ -1166,7 +1185,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		try {
-			Query query = em.createQuery( "select w from " + Wallet.class.getName() + " w where w.marketEntrance = :me" );
+			Query query = em.createQuery(
+					"select w from " + Wallet.class.getName() + " w where w.marketEntrance = :me" );
 			Parameter parameter = query.getParameter( "me", Date.class );
 			assertEquals( parameter.getParameterType(), java.sql.Timestamp.class );
 
@@ -1176,7 +1196,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 			em.getTransaction().commit();
 		}
-		catch (Exception e){
+		catch (Exception e) {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
@@ -1217,7 +1237,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			em.remove( w );
 			em.getTransaction().commit();
 		}
-		catch (Exception e){
+		catch (Exception e) {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
@@ -1245,7 +1265,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 				Query jpaQuery = em.createQuery( "select w from Wallet w where w.brand = ?1 and w.model = ?3" );
 				fail( "expecting error regarding gap in positional param labels" );
 			}
-			catch ( IllegalArgumentException e ) {
+			catch (IllegalArgumentException e) {
 				assertNotNull( e.getCause() );
 				assertTyping( QueryException.class, e.getCause() );
 				assertTrue( e.getCause().getMessage().contains( "Gap" ) );
@@ -1526,7 +1546,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 			assertNull(
 					"entity should not of been saved to database since IllegalArgumentException should of" +
-							"caused transaction to be marked for rollback only", em.find( Item.class, item.getName() )
+					"caused transaction to be marked for rollback only", em.find( Item.class, item.getName() )
 			);
 		}
 		finally {
@@ -1623,7 +1643,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 					// expected
 				}
 			}
-		}finally {
+		}
+		finally {
 			entityManager.close();
 		}
 
@@ -1632,12 +1653,12 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@JiraKey(value = "HHH-10833")
 	public void testGetSingleResultWithNoResultException() {
-		final EntityManager entityManager  = getOrCreateEntityManager();
+		final EntityManager entityManager = getOrCreateEntityManager();
 		try {
 			entityManager.createQuery( "FROM Item WHERE name = 'bozo'" ).getSingleResult();
 			fail( "Expected NoResultException" );
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			assertTyping( NoResultException.class, e );
 		}
 		finally {
@@ -1647,7 +1668,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void testGetSingleResultWithManyResultsException() {
-		final EntityManager entityManager  = getOrCreateEntityManager();
+		final EntityManager entityManager = getOrCreateEntityManager();
 		try {
 			entityManager.getTransaction().begin();
 			entityManager.persist( new Item( "1", "1" ) );
@@ -1655,7 +1676,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.createQuery( "FROM Item" ).getSingleResult();
 			fail( "Expected NoResultException" );
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			assertTyping( NonUniqueResultException.class, e );
 		}
 		finally {

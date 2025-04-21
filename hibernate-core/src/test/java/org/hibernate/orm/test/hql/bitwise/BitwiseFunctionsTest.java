@@ -21,34 +21,35 @@ import static org.junit.Assert.assertEquals;
 @SessionFactory
 public class BitwiseFunctionsTest {
 
-	@Test @SkipForDialect(dialectClass = DerbyDialect.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@Test
+	@SkipForDialect(dialectClass = DerbyDialect.class)
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "not support")
 	public void test(SessionFactoryScope scope) {
 		IntEntity five = new IntEntity();
-		five.setIntValue(5);
-		scope.inTransaction(session -> session.persist(five));
+		five.setIntValue( 5 );
+		scope.inTransaction( session -> session.persist( five ) );
 
 		scope.inTransaction(
 				session -> {
-					assertEquals(session.createSelectionQuery(
+					assertEquals( session.createSelectionQuery(
 									"select bitand(intValue,0) from IntEntity", Integer.class )
 							.uniqueResult().intValue(), 0 );
-					assertEquals(session.createSelectionQuery(
+					assertEquals( session.createSelectionQuery(
 									"select bitand(intValue,2) from IntEntity", Integer.class )
 							.uniqueResult().intValue(), 0 );
-					assertEquals(session.createSelectionQuery(
+					assertEquals( session.createSelectionQuery(
 									"select bitand(intValue,3) from IntEntity", Integer.class )
 							.uniqueResult().intValue(), 1 );
-					assertEquals(session.createSelectionQuery(
+					assertEquals( session.createSelectionQuery(
 									"select bitor(intValue,0) from IntEntity", Integer.class )
 							.uniqueResult().intValue(), 5 );
-					assertEquals(session.createSelectionQuery(
+					assertEquals( session.createSelectionQuery(
 									"select bitor(intValue,2) from IntEntity", Integer.class )
 							.uniqueResult().intValue(), 7 );
-					assertEquals(session.createSelectionQuery(
+					assertEquals( session.createSelectionQuery(
 									"select bitor(intValue,3) from IntEntity", Integer.class )
 							.uniqueResult().intValue(), 7 );
-					assertEquals(session.createSelectionQuery(
+					assertEquals( session.createSelectionQuery(
 									"select bitxor(intValue,3) from IntEntity", Integer.class )
 							.uniqueResult().intValue(), 6 );
 				}

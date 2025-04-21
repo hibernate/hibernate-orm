@@ -258,42 +258,42 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private static final int MAX_RECURSION_DEPTH_ESTIMATE = 1000;
 	/* The following are size estimates for various temporal types */
 	private static final int DATE_CHAR_SIZE_ESTIMATE =
-					// year
-					4 +
-					// separator
-					1 +
-					// month
-					2 +
-					// separator
-					1 +
-					// day
-					2;
+			// year
+			4 +
+			// separator
+			1 +
+			// month
+			2 +
+			// separator
+			1 +
+			// day
+			2;
 	private static final int TIME_CHAR_SIZE_ESTIMATE =
-					// hour
-					2 +
-					// separator
-					1 +
-					// minute
-					2 +
-					// separator
-					1 +
-					// second
-					2;
+			// hour
+			2 +
+			// separator
+			1 +
+			// minute
+			2 +
+			// separator
+			1 +
+			// second
+			2;
 	private static final int TIMESTAMP_CHAR_SIZE_ESTIMATE =
-					DATE_CHAR_SIZE_ESTIMATE +
-					// separator
-					1 +
-					TIME_CHAR_SIZE_ESTIMATE +
-					// separator
-					1 +
-					// nanos
-					9;
+			DATE_CHAR_SIZE_ESTIMATE +
+			// separator
+			1 +
+			TIME_CHAR_SIZE_ESTIMATE +
+			// separator
+			1 +
+			// nanos
+			9;
 	private static final int OFFSET_TIMESTAMP_CHAR_SIZE_ESTIMATE =
-					TIMESTAMP_CHAR_SIZE_ESTIMATE +
-					// separator
-					1 +
-					// zone offset
-					6;
+			TIMESTAMP_CHAR_SIZE_ESTIMATE +
+			// separator
+			1 +
+			// zone offset
+			6;
 
 	// pre-req state
 	private final SessionFactoryImplementor sessionFactory;
@@ -533,7 +533,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			final JdbcMapping bindType = binding.getBindType();
 			//noinspection unchecked
-			final Object value = ( (JavaType<Object>) bindType.getJdbcJavaType() )
+			final Object value = ((JavaType<Object>) bindType.getJdbcJavaType())
 					.getMutabilityPlan()
 					.deepCopy( binding.getBindValue() );
 			appliedParameterBindings.put( parameter, new JdbcParameterBindingImpl( bindType, value ) );
@@ -566,12 +566,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected boolean hasLimit(QueryPart queryPart) {
 		return queryPart.isRoot() && hasLimit() && limit.getMaxRows() != null
-			|| queryPart.getFetchClauseExpression() != null;
+			   || queryPart.getFetchClauseExpression() != null;
 	}
 
 	protected boolean hasOffset(QueryPart queryPart) {
 		return queryPart.isRoot() && hasLimit() && limit.getFirstRow() != null
-			|| queryPart.getOffsetClauseExpression() != null;
+			   || queryPart.getOffsetClauseExpression() != null;
 	}
 
 	protected boolean useOffsetFetchClause(QueryPart queryPart) {
@@ -580,8 +580,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected boolean isRowsOnlyFetchClauseType(QueryPart queryPart) {
 		return queryPart.isRoot() && hasLimit()
-			|| queryPart.getFetchClauseType() == null
-			|| queryPart.getFetchClauseType() == FetchClauseType.ROWS_ONLY;
+			   || queryPart.getFetchClauseType() == null
+			   || queryPart.getFetchClauseType() == FetchClauseType.ROWS_ONLY;
 	}
 
 	protected JdbcParameter getOffsetParameter() {
@@ -612,13 +612,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else if ( expression instanceof JdbcParameter jdbcParameter ) {
 			if ( jdbcParameterBindings == null ) {
-				throw new IllegalArgumentException( "Can't interpret expression because no parameter bindings are available" );
+				throw new IllegalArgumentException(
+						"Can't interpret expression because no parameter bindings are available" );
 			}
 			return (R) getParameterBindValue( jdbcParameter );
 		}
 		else if ( expression instanceof SqmParameterInterpretation parameterInterpretation ) {
 			if ( jdbcParameterBindings == null ) {
-				throw new IllegalArgumentException( "Can't interpret expression because no parameter bindings are available" );
+				throw new IllegalArgumentException(
+						"Can't interpret expression because no parameter bindings are available" );
 			}
 			return (R) getParameterBindValue( (JdbcParameter) parameterInterpretation.getResolvedExpression() );
 		}
@@ -646,14 +648,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else if ( expression instanceof JdbcParameter parameter ) {
 			if ( jdbcParameterBindings == null ) {
-				throw new IllegalArgumentException( "Can't interpret expression because no parameter bindings are available" );
+				throw new IllegalArgumentException(
+						"Can't interpret expression because no parameter bindings are available" );
 			}
 			renderAsLiteral( parameter, getParameterBindValue( parameter ) );
 			return;
 		}
 		else if ( expression instanceof SqmParameterInterpretation parameterInterpretation ) {
 			if ( jdbcParameterBindings == null ) {
-				throw new IllegalArgumentException( "Can't interpret expression because no parameter bindings are available" );
+				throw new IllegalArgumentException(
+						"Can't interpret expression because no parameter bindings are available" );
 			}
 			final JdbcParameter parameter = (JdbcParameter) parameterInterpretation.getResolvedExpression();
 			renderAsLiteral( parameter, getParameterBindValue( parameter ) );
@@ -694,7 +698,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private static Boolean matchOverOrWithinGroupClauses(final Clause clause) {
-		return switch (clause) {
+		return switch ( clause ) {
 			case OVER, WITHIN_GROUP -> Boolean.TRUE;
 			default -> null;
 		};
@@ -736,7 +740,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private static CteContainer matchCteContainerByStatement(final Statement stmt, final String cteName) {
 		return stmt instanceof CteContainer cteContainer
-			&& cteContainer.getCteStatement( cteName ) != null
+			   && cteContainer.getCteStatement( cteName ) != null
 				? cteContainer
 				: null;
 	}
@@ -766,7 +770,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( statement instanceof DeleteStatement deleteStatement ) {
 			return translateDelete( deleteStatement );
 		}
-		else if ( statement instanceof UpdateStatement updateStatement) {
+		else if ( statement instanceof UpdateStatement updateStatement ) {
 			return translateUpdate( updateStatement );
 		}
 		else if ( statement instanceof InsertSelectStatement insertSelectStatement ) {
@@ -809,7 +813,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				getSql(),
 				getParameterBinders(),
 				getAffectedTableNames(),
-				getUniqueConstraintNameThatMayFail(sqlAst)
+				getUniqueConstraintNameThatMayFail( sqlAst )
 		);
 	}
 
@@ -820,8 +824,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else {
 			if ( sqlAst.getSourceSelectStatement() != null && !isFetchFirstRowOnly( sqlAst.getSourceSelectStatement() )
-					|| sqlAst.getValuesList().size() > 1 ) {
-				throw new IllegalQueryOperationException( "Can't emulate conflict clause with constraint name for more than one row to insert" );
+				 || sqlAst.getValuesList().size() > 1 ) {
+				throw new IllegalQueryOperationException(
+						"Can't emulate conflict clause with constraint name for more than one row to insert" );
 			}
 			return conflictClause.getConstraintName() == null ? "" : conflictClause.getConstraintName();
 		}
@@ -1073,7 +1078,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected static boolean hasNonTrivialFromClause(FromClause fromClause) {
 		return fromClause != null && !fromClause.getRoots().isEmpty()
-				&& ( fromClause.getRoots().size() > 1 || fromClause.getRoots().get( 0 ).hasRealJoins() );
+			   && (fromClause.getRoots().size() > 1 || fromClause.getRoots().get( 0 ).hasRealJoins());
 	}
 
 	protected Predicate determineWhereClauseRestrictionWithJoinEmulation(AbstractUpdateOrDeleteStatement statement) {
@@ -1184,7 +1189,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else {
 			assert assignedValue instanceof SqlTupleContainer;
-			final List<? extends Expression> expressions = ( (SqlTupleContainer) assignedValue ).getSqlTuple().getExpressions();
+			final List<? extends Expression> expressions = ((SqlTupleContainer) assignedValue).getSqlTuple()
+					.getExpressions();
 			columnReferences.get( 0 ).appendColumnForWrite( this, null );
 			appendSql( '=' );
 			expressions.get( 0 ).accept( this );
@@ -1252,8 +1258,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( expressionType instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 			final EmbeddableMappingType embeddableMappingType = embeddableValuedModelPart.getEmbeddableTypeDescriptor();
 			return embeddableMappingType.getAggregateMapping() != null
-				&& embeddableMappingType.getAggregateMapping().getJdbcMapping().getJdbcType()
-						.getDefaultSqlTypeCode() == SqlTypes.STRUCT;
+				   && embeddableMappingType.getAggregateMapping().getJdbcMapping().getJdbcType()
+							  .getDefaultSqlTypeCode() == SqlTypes.STRUCT;
 		}
 		else if ( expressionType instanceof BasicValuedMapping basicValuedMapping ) {
 			return basicValuedMapping.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() == SqlTypes.STRUCT;
@@ -1274,8 +1280,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			renderImplicitTargetColumnSpec();
 		}
 		else {
-			for (ColumnReference targetColumnReference : targetColumnReferences) {
-				if (firstPass) {
+			for ( ColumnReference targetColumnReference : targetColumnReferences ) {
+				if ( firstPass ) {
 					firstPass = false;
 				}
 				else {
@@ -1296,8 +1302,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected boolean isIntegerDivisionEmulationRequired(BinaryArithmeticExpression expression) {
 		return expression.getOperator() == DIVIDE_PORTABLE
-			&& jdbcType( expression.getLeftHandOperand() ).isInteger()
-			&& jdbcType( expression.getRightHandOperand() ).isInteger();
+			   && jdbcType( expression.getLeftHandOperand() ).isInteger()
+			   && jdbcType( expression.getRightHandOperand() ).isInteger();
 	}
 
 	private JdbcType jdbcType(Expression expression) {
@@ -1326,7 +1332,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		clauseStack.push( Clause.MERGE );
 		renderNamedTableReference( statement.getTargetTable(), LockMode.NONE );
 		clauseStack.pop();
-		appendSql(" using " );
+		appendSql( " using " );
 
 		final List<ColumnReference> targetColumnReferences = statement.getTargetColumns();
 		final List<String> columnNames = new ArrayList<>( targetColumnReferences.size() );
@@ -1649,7 +1655,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( valuesList.size() != 1 && !dialect.supportsValuesListForInsert() ) {
 			throw new IllegalQueryOperationException( "Dialect does not support values lists for insert statements" );
 		}
-		appendSql("values");
+		appendSql( "values" );
 		final Stack<Clause> clauseStack = getClauseStack();
 		try {
 			clauseStack.push( Clause.VALUES );
@@ -1692,7 +1698,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void visitForUpdateClause(QuerySpec querySpec) {
 		if ( querySpec.isRoot() ) {
 			if ( forUpdate != null ) {
-				final Boolean followOnLocking = getLockOptions() == null ? Boolean.FALSE : getLockOptions().getFollowOnLocking();
+				final Boolean followOnLocking =
+						getLockOptions() == null ? Boolean.FALSE : getLockOptions().getFollowOnLocking();
 				if ( Boolean.TRUE.equals( followOnLocking ) ) {
 					lockOptions = null;
 				}
@@ -1907,8 +1914,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							final TableGroup group = tableGroupJoin.getJoinedGroup();
 							if ( forUpdateClause.hasAlias( group.getSourceAlias() ) ) {
 								if ( tableGroupJoin.isInitialized()
-										&& tableGroupJoin.getJoinType() != SqlAstJoinType.INNER
-										&& !group.isVirtual() ) {
+									 && tableGroupJoin.getJoinType() != SqlAstJoinType.INNER
+									 && !group.isVirtual() ) {
 									if ( Boolean.FALSE.equals( followOnLocking ) ) {
 										throw new IllegalQueryOperationException(
 												"Locking with OUTER joins is not supported" );
@@ -1927,8 +1934,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				if ( querySpec.getFromClause().queryTableJoins(
 						tableJoin -> {
 							if ( tableJoin.isInitialized()
-									&& tableJoin.getJoinType() != SqlAstJoinType.INNER
-									&& !( tableJoin.getJoinedNode() instanceof VirtualTableGroup ) ) {
+								 && tableJoin.getJoinType() != SqlAstJoinType.INNER
+								 && !(tableJoin.getJoinedNode() instanceof VirtualTableGroup) ) {
 								if ( Boolean.FALSE.equals( followOnLocking ) ) {
 									throw new IllegalQueryOperationException(
 											"Locking with OUTER joins is not supported" );
@@ -1955,7 +1962,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( conflictClause != null ) {
 			// By default, we only support do nothing with an optional constraint name
 			if ( !conflictClause.getConstraintColumnNames().isEmpty() ) {
-				throw new IllegalQueryOperationException( "Insert conflict clause with constraint column names is not supported" );
+				throw new IllegalQueryOperationException(
+						"Insert conflict clause with constraint column names is not supported" );
 			}
 			if ( conflictClause.isDoUpdate() ) {
 				throw new IllegalQueryOperationException( "Insert conflict do update clause is not supported" );
@@ -2016,7 +2024,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final String constraintName = conflictClause.getConstraintName();
 		if ( constraintName != null ) {
 			if ( conflictClause.isDoUpdate() ) {
-				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
+				throw new IllegalQueryOperationException(
+						"Insert conflict 'do update' clause with constraint name is not supported" );
 			}
 			else {
 				return;
@@ -2075,7 +2084,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					else {
 						assert assignedValue instanceof SqlTupleContainer;
 						final List<? extends Expression> expressions =
-								( (SqlTupleContainer) assignedValue ).getSqlTuple().getExpressions();
+								((SqlTupleContainer) assignedValue).getSqlTuple().getExpressions();
 						final List<Expression> tupleExpressions = new ArrayList<>( expressions.size() );
 						for ( int i = 0; i < expressions.size(); i++ ) {
 							tupleExpressions.add(
@@ -2148,7 +2157,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			// This should be unreachable, because #needsCteInlining() must return true if org.hibernate.dialect.Dialect#supportsWithClause() returns false,
 			// and hence the cteStatements should either contain a recursive CTE or be empty
-			throw new IllegalStateException( "Non-recursive CTEs found that need inlining, but were collected: " + cteStatements );
+			throw new IllegalStateException(
+					"Non-recursive CTEs found that need inlining, but were collected: " + cteStatements );
 		}
 		final boolean renderRecursiveKeyword = needsRecursiveKeywordInWithClause() && isRecursive( cteStatements );
 		if ( renderRecursiveKeyword && !dialect.supportsRecursiveCTE() ) {
@@ -2162,9 +2172,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else {
 			pushToTopLevel = !dialect.supportsNestedWithClause()
-					|| !dialect.supportsWithClauseInSubquery() && isInSubquery();
+							 || !dialect.supportsWithClauseInSubquery() && isInSubquery();
 		}
-		final boolean inNestedWithClause = clauseStack.findCurrentFirst( AbstractSqlAstTranslator::matchWithClause ) != null;
+		final boolean inNestedWithClause = clauseStack.findCurrentFirst(
+				AbstractSqlAstTranslator::matchWithClause ) != null;
 		clauseStack.push( Clause.WITH );
 		if ( !pushToTopLevel ) {
 			appendSql( "with " );
@@ -2219,7 +2230,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				// When we get here, we know that there is a top level WITH clause,
 				// and that at least one of the CTEs that need to be pushed to the top level needs the recursive keyword,
 				final String recursiveKeyword = "recursive ";
-				if ( !sqlBuffer.substring( withClauseRecursiveIndex, recursiveKeyword.length() ).equals( recursiveKeyword ) ) {
+				if ( !sqlBuffer.substring( withClauseRecursiveIndex, recursiveKeyword.length() )
+						.equals( recursiveKeyword ) ) {
 					// If the buffer doesn't contain the keyword at the expected index, we have to add it
 					sqlBuffer.insert( withClauseRecursiveIndex, recursiveKeyword );
 					// and also adjust the index at which CTEs have to be inserted
@@ -2279,8 +2291,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			renderMaterializationHint( cte.getMaterialization() );
 		}
 
-		final boolean needsParenthesis = !( cte.getCteDefinition() instanceof SelectStatement )
-				|| ( (SelectStatement) cte.getCteDefinition() ).getQueryPart().isRoot();
+		final boolean needsParenthesis = !(cte.getCteDefinition() instanceof SelectStatement)
+										 || ((SelectStatement) cte.getCteDefinition()).getQueryPart().isRoot();
 		if ( needsParenthesis ) {
 			appendSql( OPEN_PARENTHESIS );
 		}
@@ -2353,7 +2365,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 			}
 			if ( cte.getCycleMarkColumn() != null && !dialect.supportsRecursiveCycleClause()
-					|| cte.getCyclePathColumn() != null && !dialect.supportsRecursiveCycleUsingClause() ) {
+				 || cte.getCyclePathColumn() != null && !dialect.supportsRecursiveCycleUsingClause() ) {
 				appendSql( COMMA_SEPARATOR );
 				appendSql( determineCyclePathColumnName( cte ) );
 			}
@@ -2362,7 +2374,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private String determineDepthColumnName(CteStatement cte) {
 		String baseName = "depth";
-		OUTER: for ( int tries = 0; tries < 5; tries++ ) {
+		OUTER:
+		for ( int tries = 0; tries < 5; tries++ ) {
 			final String name = tries == 0 ? baseName : (baseName + "_" + tries);
 			for ( CteColumn cteColumn : cte.getCteTable().getCteColumns() ) {
 				if ( name.equals( cteColumn.getColumnExpression() ) ) {
@@ -2390,7 +2403,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			return cyclePathColumn.getColumnExpression();
 		}
 		String baseName = "path";
-		OUTER: for ( int tries = 0; tries < 5; tries++ ) {
+		OUTER:
+		for ( int tries = 0; tries < 5; tries++ ) {
 			final String name = tries == 0 ? baseName : (baseName + "_" + tries);
 			for ( CteColumn cteColumn : cte.getCteTable().getCteColumns() ) {
 				if ( name.equals( cteColumn.getColumnExpression() ) ) {
@@ -2398,11 +2412,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 			}
 			if ( cte.getSearchColumn() != null
-					&& name.equals( cte.getSearchColumn().getColumnExpression() ) ) {
+				 && name.equals( cte.getSearchColumn().getColumnExpression() ) ) {
 				continue;
 			}
 			if ( cte.getCycleMarkColumn() != null
-					&& name.equals( cte.getCycleMarkColumn().getColumnExpression() ) ) {
+				 && name.equals( cte.getCycleMarkColumn().getColumnExpression() ) ) {
 				continue;
 			}
 
@@ -2413,15 +2427,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected boolean isInRecursiveQueryPart() {
 		return currentCteStatement != null
-			&& currentCteStatement.isRecursive()
-			&& ( (QueryGroup) ( (SelectStatement) currentCteStatement.getCteDefinition() ).getQueryPart() )
-					.getQueryParts().get( 1 ) == getCurrentQueryPart();
+			   && currentCteStatement.isRecursive()
+			   && ((QueryGroup) ((SelectStatement) currentCteStatement.getCteDefinition()).getQueryPart())
+						  .getQueryParts().get( 1 ) == getCurrentQueryPart();
 	}
 
 	protected boolean isInSubquery() {
 		return statementStack.depth() > 1
-			&& statementStack.getCurrent() instanceof SelectStatement selectStatement
-			&& !selectStatement.getQueryPart().isRoot();
+			   && statementStack.getCurrent() instanceof SelectStatement selectStatement
+			   && !selectStatement.getQueryPart().isRoot();
 	}
 
 	protected void visitCteDefinition(CteStatement cte) {
@@ -2439,7 +2453,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 */
 	protected boolean needsCteInlining() {
 		return !dialect.supportsWithClause()
-			|| !dialect.supportsWithClauseInSubquery() && isInSubquery();
+			   || !dialect.supportsWithClauseInSubquery() && isInSubquery();
 	}
 
 	/**
@@ -2447,12 +2461,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 */
 	protected boolean shouldInlineCte(TableGroup tableGroup) {
 		if ( tableGroup instanceof CteTableGroup ) {
-			if (!dialect.supportsWithClause()) {
+			if ( !dialect.supportsWithClause() ) {
 				return true;
 			}
 			if ( !dialect.supportsWithClauseInSubquery() && isInSubquery() ) {
 				final String cteName = tableGroup.getPrimaryTableReference().getTableId();
-				final CteContainer cteOwner = statementStack.findCurrentFirstWithParameter( cteName, AbstractSqlAstTranslator::matchCteContainerByStatement );
+				final CteContainer cteOwner = statementStack.findCurrentFirstWithParameter( cteName,
+						AbstractSqlAstTranslator::matchCteContainerByStatement );
 				// If the CTE is owned by the root statement, it will be rendered as CTE, so we can refer to it
 				return cteOwner != statementStack.getRoot() && !cteOwner.getCteStatement( cteName ).isRecursive();
 			}
@@ -2471,9 +2486,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * Whether the recursive search and cycle clause emulations based on the array and row constructor is supported.
 	 */
 	protected boolean supportsRecursiveClauseArrayAndRowEmulation() {
-		return ( dialect.supportsRowConstructor() || currentCteStatement.getSearchClauseKind() == CteSearchClauseKind.DEPTH_FIRST
-				&& currentCteStatement.getSearchBySpecifications().size() == 1 )
-				&& dialect.supportsArrayConstructor();
+		return (dialect.supportsRowConstructor() || currentCteStatement.getSearchClauseKind() == CteSearchClauseKind.DEPTH_FIRST
+													&& currentCteStatement.getSearchBySpecifications().size() == 1)
+			   && dialect.supportsArrayConstructor();
 	}
 
 	protected void renderMaterializationHint(CteMaterialization materialization) {
@@ -2508,7 +2523,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						nullPrecedence = sessionFactory.getSessionFactoryOptions().getDefaultNullPrecedence();
 					}
 					final boolean renderNullPrecedence = nullPrecedence != null
-							&& !NullPrecedenceHelper.isDefaultOrdering( nullPrecedence, sortOrder, dialect.getNullOrdering() );
+														 && !NullPrecedenceHelper.isDefaultOrdering( nullPrecedence,
+							sortOrder, dialect.getNullOrdering() );
 					if ( sortOrder == SortDirection.DESCENDING ) {
 						appendSql( " desc" );
 					}
@@ -2589,8 +2605,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								currentCteStatement.getCycleMarkColumn().getJdbcMapping()
 						);
 						if ( currentCteStatement.getCycleValue().getJdbcMapping() == getBooleanType()
-								&& currentCteStatement.getCycleValue().getLiteralValue() == Boolean.TRUE
-								&& currentCteStatement.getNoCycleValue().getLiteralValue() == Boolean.FALSE ) {
+							 && currentCteStatement.getCycleValue().getLiteralValue() == Boolean.TRUE
+							 && currentCteStatement.getNoCycleValue().getLiteralValue() == Boolean.FALSE ) {
 							addAdditionalWherePredicate(
 									new BooleanExpressionPredicate(
 											cycleColumnReference,
@@ -2638,10 +2654,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
-						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
+						throw new IllegalArgumentException(
+								"Can't emulate search clause for descending search specifications" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
-						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
+						throw new IllegalArgumentException(
+								"Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
 							.getCteColumns()
@@ -2670,10 +2688,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				String separator = NO_SEPARATOR;
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
-						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
+						throw new IllegalArgumentException(
+								"Can't emulate search clause for descending search specifications" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
-						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
+						throw new IllegalArgumentException(
+								"Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
 							.getCteColumns()
@@ -2697,10 +2717,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
-						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
+						throw new IllegalArgumentException(
+								"Can't emulate search clause for descending search specifications" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
-						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
+						throw new IllegalArgumentException(
+								"Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
 							.getCteColumns()
@@ -2719,10 +2741,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				String separator = NO_SEPARATOR;
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
-						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
+						throw new IllegalArgumentException(
+								"Can't emulate search clause for descending search specifications" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
-						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
+						throw new IllegalArgumentException(
+								"Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
 							.getCteColumns()
@@ -2746,7 +2770,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * but we try our best to avoid issues with that by formatting data in a certain format.
 	 * To support multiple search clause attributes, we also depend on the fact that regular data columns
 	 * will not contain the NULL character represented by '\0', which is used as separator for column values.
-	 *
+	 * <p>
 	 * We serialize attributes to a string by concatenating them with each other, separated by '\0'.
 	 * The mappings are implemented in {@link #wrapRowComponentAsOrderPreservingConcatArgument(Expression)}.
 	 */
@@ -2756,7 +2780,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final BasicType<String> stringType = getStringType();
 		final BasicType<Integer> integerType = getIntegerType();
 		// Shift by 1 bit instead of multiplying by 2
-		final List<SqlAstNode> arguments = new ArrayList<>( currentCteStatement.getSearchBySpecifications().size() << 1 );
+		final List<SqlAstNode> arguments = new ArrayList<>(
+				currentCteStatement.getSearchBySpecifications().size() << 1 );
 		final Expression nullSeparator = createNullSeparator();
 
 		if ( isInRecursiveQueryPart() ) {
@@ -2780,10 +2805,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				arguments.add( nullSeparator );
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
-						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
+						throw new IllegalArgumentException(
+								"Can't emulate search clause for descending search specifications" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
-						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
+						throw new IllegalArgumentException(
+								"Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
 							.getCteColumns()
@@ -2818,10 +2845,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				);
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
-						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
+						throw new IllegalArgumentException(
+								"Can't emulate search clause for descending search specifications" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
-						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
+						throw new IllegalArgumentException(
+								"Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
 							.getCteColumns()
@@ -2857,10 +2886,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				columnSizeEstimate += 11;
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
-						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
+						throw new IllegalArgumentException(
+								"Can't emulate search clause for descending search specifications" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
-						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
+						throw new IllegalArgumentException(
+								"Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
 							.getCteColumns()
@@ -2880,7 +2911,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							)
 					);
 					arguments.add( nullSeparator );
-					columnSizeEstimate += wrapRowComponentAsOrderPreservingConcatArgumentSizeEstimate( selectionExpression ) + 1;
+					columnSizeEstimate += wrapRowComponentAsOrderPreservingConcatArgumentSizeEstimate(
+							selectionExpression ) + 1;
 				}
 				visitRecursivePath(
 						new SelfRenderingFunctionSqlAstExpression<>(
@@ -2896,10 +2928,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			else {
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
-						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
+						throw new IllegalArgumentException(
+								"Can't emulate search clause for descending search specifications" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
-						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
+						throw new IllegalArgumentException(
+								"Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
 							.getCteColumns()
@@ -2919,7 +2953,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							)
 					);
 					arguments.add( nullSeparator );
-					columnSizeEstimate += wrapRowComponentAsOrderPreservingConcatArgumentSizeEstimate( selectionExpression ) + 1;
+					columnSizeEstimate += wrapRowComponentAsOrderPreservingConcatArgumentSizeEstimate(
+							selectionExpression ) + 1;
 				}
 				arguments.add( nullSeparator );
 				columnSizeEstimate += 1;
@@ -3080,7 +3115,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * but we try our best to avoid issues with that by formatting data in a certain format.
 	 * To support multiple cycle clause attributes, we also depend on the fact that regular data columns
 	 * will not contain the NULL character represented by '\0', which is used as separator for column values.
-	 *
+	 * <p>
 	 * We serialize attributes to a string by concatenating them with each other, separated by '\0'.
 	 * The mappings are implemented in {@link #wrapRowComponentAsEqualityPreservingConcatArgument(Expression)}.
 	 */
@@ -3182,7 +3217,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						)
 				);
 				arguments.add( nullSeparator );
-				columnSizeEstimate += wrapRowComponentAsEqualityPreservingConcatArgumentSizeEstimate( selectionExpression ) + 1;
+				columnSizeEstimate += wrapRowComponentAsEqualityPreservingConcatArgumentSizeEstimate(
+						selectionExpression ) + 1;
 			}
 			arguments.add( nullSeparator );
 			visitRecursivePath(
@@ -3217,7 +3253,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * - Boolean types are casted to strings, which will produce `true`/`false` which is ordered correctly
 	 * - Integral types are left padded by 0 to lengths 19, as that is the maximum number of digits in a 64 bit number
 	 * - Numeric/Decimal types are left padded by 0 to the length of `precision`, and if that isn't available will fail
-	 *
+	 * <p>
 	 * Encounters of data types other than character types will result in an exception to be thrown.
 	 * This is because the translation from the types to strings is not guaranteed to result in the same ordering.
 	 */
@@ -3286,14 +3322,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	/**
 	 * Wraps the given expression so that it produces a string, but preserves equality with respect to what the original value was.
-	 *
+	 * <p>
 	 * The following data types are supported and simply concatenated, with optional casting:
 	 * - String types
 	 * - Boolean types
 	 * - Integral types
 	 * - Numeric/Decimal types
 	 * - Temporal types
-	 *
+	 * <p>
 	 * Encounters of other data types will result in an exception to be thrown.
 	 * This is because the translation from the types to strings is not guaranteed to preserve equality.
 	 */
@@ -3431,8 +3467,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				),
 				new QueryLiteral<>( "-", stringType )
 		);
-		signExpression.otherwise( new QueryLiteral<>( "-", stringType )  );
-		final int stringLength = precision + ( scale > 0 ? ( scale + 1 ) : 0 );
+		signExpression.otherwise( new QueryLiteral<>( "-", stringType ) );
+		final int stringLength = precision + (scale > 0 ? (scale + 1) : 0);
 		return new SelfRenderingFunctionSqlAstExpression<>(
 				"concat",
 				concat,
@@ -3494,7 +3530,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			// If we are row numbering the current query group, this means that we can't render the
 			// order by and offset fetch clause, so we must do row counting on the query group level
 			final boolean needsRowNumberingWrapper = queryPartForRowNumbering == queryGroup
-					|| additionalWherePredicate != null && !additionalWherePredicate.isEmpty();
+													 || additionalWherePredicate != null && !additionalWherePredicate.isEmpty();
 			final boolean needsQueryGroupWrapper =
 					currentQueryPart instanceof QueryGroup && !dialect.supportsSimpleQueryGrouping();
 			final boolean needsParenthesis;
@@ -3598,8 +3634,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			// We want the row numbering to happen on the query group level, not on the query spec level, so we reset
 			final QueryPart currentQueryPart = queryPartStack.getCurrent();
 			if ( currentQueryPart != null
-					&& ( queryPartForRowNumbering instanceof QueryGroup
-							|| queryPartForRowNumberingClauseDepth != clauseStack.depth() ) ) {
+				 && (queryPartForRowNumbering instanceof QueryGroup
+					 || queryPartForRowNumberingClauseDepth != clauseStack.depth()) ) {
 				this.queryPartForRowNumbering = null;
 				this.queryPartForRowNumberingClauseDepth = -1;
 			}
@@ -3611,10 +3647,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					queryGroupAlias = "";
 					// If the parent is a query group with a fetch clause we must use a select wrapper,
 					// or if the database does not support simple query grouping, we must use a select wrapper
-					if ( ( !dialect.supportsSimpleQueryGrouping() || currentQueryPart.hasOffsetOrFetchClause() )
-							// We can skip it though if this query spec is being row numbered,
-							// because then we already have a wrapper
-							&& queryPartForRowNumbering != querySpec ) {
+					if ( (!dialect.supportsSimpleQueryGrouping() || currentQueryPart.hasOffsetOrFetchClause())
+						 // We can skip it though if this query spec is being row numbered,
+						 // because then we already have a wrapper
+						 && queryPartForRowNumbering != querySpec ) {
 						queryGroupAlias = " grp_" + queryGroupAliasCounter + '_';
 						queryGroupAliasCounter++;
 						appendSql( "select" );
@@ -3675,7 +3711,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected final void visitWhereClause(Predicate whereClauseRestrictions) {
 		final Predicate additionalWherePredicate = this.additionalWherePredicate;
 		if ( whereClauseRestrictions != null && !whereClauseRestrictions.isEmpty()
-				|| additionalWherePredicate != null ) {
+			 || additionalWherePredicate != null ) {
 			appendSql( " where " );
 
 			clauseStack.push( Clause.WHERE );
@@ -3703,7 +3739,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// This can happen when using window functions for emulating the offset/fetch clause of a query group
 		// But in that case we always use a SqlSelectionExpression anyway, so this is fine as it doesn't need resolving
 		if ( queryPartStack.getCurrent() == null ) {
-			return ( (SqlSelectionExpression) expression ).getSelection().getExpression();
+			return ((SqlSelectionExpression) expression).getSelection().getExpression();
 		}
 		return resolveAliasedExpression(
 				queryPartStack.getCurrent().getFirstQuerySpec().getSelectClause().getSqlSelections(),
@@ -3721,7 +3757,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			return selectionExpression.getSelection().getExpression();
 		}
 		else if ( expression instanceof SqmPathInterpretation<?> pathInterpretation
-					&& pathInterpretation.getSqlExpression() instanceof SqlSelectionExpression selectionExpression ) {
+				  && pathInterpretation.getSqlExpression() instanceof SqlSelectionExpression selectionExpression ) {
 			return selectionExpression.getSelection().getExpression();
 		}
 		else {
@@ -3735,7 +3771,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			index = selectionExpression.getSelection().getValuesArrayPosition();
 		}
 		else if ( expression instanceof SqmPathInterpretation<?> pathInterpretation
-					&& pathInterpretation.getSqlExpression() instanceof SqlSelectionExpression selectionExpression ) {
+				  && pathInterpretation.getSqlExpression() instanceof SqlSelectionExpression selectionExpression ) {
 			index = selectionExpression.getSelection().getValuesArrayPosition();
 		}
 		else {
@@ -4287,7 +4323,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			nullPrecedence = sessionFactory.getSessionFactoryOptions().getDefaultNullPrecedence();
 		}
 		final boolean renderNullPrecedence = nullPrecedence != null
-				&& !NullPrecedenceHelper.isDefaultOrdering( nullPrecedence, sortOrder, dialect.getNullOrdering() );
+											 && !NullPrecedenceHelper.isDefaultOrdering( nullPrecedence, sortOrder,
+				dialect.getNullOrdering() );
 		final boolean supportsNullPrecedence = renderNullPrecedence && dialect.supportsNullPrecedence();
 		if ( renderNullPrecedence && !supportsNullPrecedence ) {
 			emulateSortSpecificationNullPrecedence( sortExpression, nullPrecedence );
@@ -4660,7 +4697,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			);
 			// We don't register and bind the special OffsetJdbcParameter as that comes from the query options
 			// And in this case, we only want to bind a single JDBC parameter
-			if ( !( offsetParameter instanceof OffsetJdbcParameter ) ) {
+			if ( !(offsetParameter instanceof OffsetJdbcParameter) ) {
 				jdbcParameters.addParameter( offsetParameter );
 				parameterBinders.add(
 						(statement, startPosition, jdbcParameterBindings, executionContext) -> {
@@ -4973,17 +5010,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			// We always need query wrapping if we are in a query group and the query part has a fetch clause
 			final boolean needsParenthesis =
 					queryPart instanceof QueryGroup && queryPart.hasOffsetOrFetchClause()
-							&& !queryPart.isRoot();
+					&& !queryPart.isRoot();
 			if ( needsParenthesis ) {
 				appendSql( OPEN_PARENTHESIS );
 			}
 			appendSql( "select " );
 			// When we emulate a root statement, we don't need to select the select items
 			// to filter out the row number column we introduce, because we will simply ignore it anyway
-			if ( getClauseStack().isEmpty() && !( getStatement() instanceof InsertSelectStatement )
-					// If the query part is a child of a query group, we have can't do that,
-					// since we need the select items to properly align in query group parts
-					&& !( getCurrentQueryPart() instanceof QueryGroup ) ) {
+			if ( getClauseStack().isEmpty() && !(getStatement() instanceof InsertSelectStatement)
+				 // If the query part is a child of a query group, we have can't do that,
+				 // since we need the select items to properly align in query group parts
+				 && !(getCurrentQueryPart() instanceof QueryGroup) ) {
 				appendSql( '*' );
 			}
 			else if ( columnAliases != null ) {
@@ -5027,7 +5064,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								offsetExpression.accept( this );
 								appendSql( '+' );
 							}
-							appendSql( "ceil(");
+							appendSql( "ceil(" );
 							appendSql( alias );
 							appendSql( ".cnt*" );
 							fetchExpression.accept( this );
@@ -5049,7 +5086,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								offsetExpression.accept( this );
 								appendSql( '+' );
 							}
-							appendSql( "ceil(");
+							appendSql( "ceil(" );
 							appendSql( alias );
 							appendSql( ".cnt*" );
 							fetchExpression.accept( this );
@@ -5303,11 +5340,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final SqlTuple sqlTuple = getSqlTuple( expression );
 		if ( sqlTuple != null ) {
 			for ( Expression elementExpression : sqlTuple.getExpressions() ) {
-				if ( elementExpression instanceof SqlSelectionExpression selection) {
+				if ( elementExpression instanceof SqlSelectionExpression selection ) {
 					return selection;
 				}
 				else if ( elementExpression instanceof SqmPathInterpretation<?> pathInterpretation
-							&& pathInterpretation.getSqlExpression() instanceof SqlSelectionExpression selection ) {
+						  && pathInterpretation.getSqlExpression() instanceof SqlSelectionExpression selection ) {
 					return selection;
 				}
 			}
@@ -5316,7 +5353,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			return selection;
 		}
 		else if ( expression instanceof SqmPathInterpretation<?> pathInterpretation
-					&& pathInterpretation.getSqlExpression() instanceof SqlSelectionExpression selection ) {
+				  && pathInterpretation.getSqlExpression() instanceof SqlSelectionExpression selection ) {
 			return selection;
 		}
 		return null;
@@ -5368,8 +5405,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		overExpression.accept( this );
 		final boolean orderedSetAggregate =
 				overExpression instanceof OrderedSetAggregateFunctionExpression expression
-						&& expression.getWithinGroup() != null
-						&& !expression.getWithinGroup().isEmpty();
+				&& expression.getWithinGroup() != null
+				&& !expression.getWithinGroup().isEmpty();
 		visitOverClause(
 				over.getPartitions(),
 				over.getOrderList(),
@@ -5417,7 +5454,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				renderOrderBy( !partitionExpressions.isEmpty(), sortSpecifications );
 			}
 			if ( mode == FrameMode.RANGE && startKind == FrameKind.UNBOUNDED_PRECEDING
-					&& endKind == FrameKind.CURRENT_ROW && exclusion == FrameExclusion.NO_OTHERS ) {
+				 && endKind == FrameKind.CURRENT_ROW && exclusion == FrameExclusion.NO_OTHERS ) {
 				// This is the default, so we don't need to render anything
 			}
 			else {
@@ -5499,7 +5536,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	public static boolean isParameter(Expression expression) {
 		return expression instanceof JdbcParameter
-			|| expression instanceof SqmParameterInterpretation;
+			   || expression instanceof SqmParameterInterpretation;
 	}
 
 	protected final boolean isLiteral(Expression expression) {
@@ -5561,7 +5598,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				if ( sortExpression instanceof SqlSelectionExpression selectionExpression ) {
 					position = selectionExpression.getSelection().getValuesArrayPosition();
 				}
-				else if ( sortExpression instanceof QueryLiteral<?> queryLiteral )  {
+				else if ( sortExpression instanceof QueryLiteral<?> queryLiteral ) {
 					assert queryLiteral.getLiteralValue() instanceof Integer;
 					position = (Integer) queryLiteral.getLiteralValue();
 				}
@@ -5640,7 +5677,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else if ( isParameter( expression ) ) {
 			final SqlAstNodeRenderingMode parameterRenderingMode = getParameterRenderingMode();
 			if ( parameterRenderingMode == SqlAstNodeRenderingMode.INLINE_PARAMETERS
-					|| parameterRenderingMode == SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS ) {
+				 || parameterRenderingMode == SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS ) {
 				renderExpressionAsLiteral( expression, getJdbcParameterBindings() );
 			}
 			else {
@@ -5691,7 +5728,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// If we encounter a plain literal in the select clause which has no literal formatter, we must render it as parameter
 		if ( literalFormatter == null ) {
 			parameterBinders.add( literal );
-			final String marker = parameterMarkerStrategy.createMarker( parameterBinders.size(), literal.getJdbcMapping().getJdbcType() );
+			final String marker = parameterMarkerStrategy.createMarker( parameterBinders.size(),
+					literal.getJdbcMapping().getJdbcType() );
 			final LiteralAsParameter<Object> jdbcParameter = new LiteralAsParameter<>( literal, marker );
 			if ( castParameter ) {
 				renderCasted( jdbcParameter );
@@ -5826,7 +5864,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void renderDmlTargetTableGroup(TableGroup tableGroup) {
 		assert getStatementStack().getCurrent() instanceof UpdateStatement updateStatement
-			&& updateStatement.getTargetTable() == tableGroup.getPrimaryTableReference();
+			   && updateStatement.getTargetTable() == tableGroup.getPrimaryTableReference();
 		appendSql( getDual() );
 		renderTableReferenceJoins( tableGroup );
 		processNestedTableGroupJoins( tableGroup, null );
@@ -5922,7 +5960,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					swappedJoinIndex = referenceJoinIndexForPredicateSwap;
 
 					// Render the table reference of the table reference join first
-					final TableReferenceJoin tableReferenceJoin = tableGroup.getTableReferenceJoins().get( swappedJoinIndex );
+					final TableReferenceJoin tableReferenceJoin = tableGroup.getTableReferenceJoins()
+							.get( swappedJoinIndex );
 					renderNamedTableReference( tableReferenceJoin.getJoinedTableReference(), LockMode.NONE );
 					// along with the predicate for the table group
 					if ( predicate != null ) {
@@ -6027,7 +6066,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected boolean needsLocking(QuerySpec querySpec) {
 		return querySpec.getFromClause().queryTableGroups(
 				tableGroup -> {
-					if ( LockMode.READ.lessThan( getEffectiveLockMode( tableGroup.getSourceAlias(), querySpec.isRoot() ) ) ) {
+					if ( LockMode.READ.lessThan(
+							getEffectiveLockMode( tableGroup.getSourceAlias(), querySpec.isRoot() ) ) ) {
 						return true;
 					}
 					return null;
@@ -6079,11 +6119,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				tableReference.accept( this );
 			}
 			else if ( tableReference instanceof QueryPartTableReference queryPartTableReference ) {
-				final SelectStatement emulationStatement = stripToSelectClause( queryPartTableReference.getStatement() );
+				final SelectStatement emulationStatement = stripToSelectClause(
+						queryPartTableReference.getStatement() );
 				final QueryPart queryPart = queryPartTableReference.getStatement().getQueryPart();
 				final QueryPart emulationQueryPart = emulationStatement.getQueryPart();
 				final List<String> columnNames;
-				if ( queryPart instanceof QuerySpec querySpec && needsLateralSortExpressionVirtualSelections( querySpec ) ) {
+				if ( queryPart instanceof QuerySpec querySpec && needsLateralSortExpressionVirtualSelections(
+						querySpec ) ) {
 					// One of our lateral emulations requires that sort expressions are present in the select clause
 					// when the query spec use limit/offset. So we add selections for these, if necessary
 					columnNames = new ArrayList<>( queryPartTableReference.getColumnNames() );
@@ -6160,7 +6202,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected boolean isCorrelated(CteStatement cteStatement) {
 		// Assume that a CTE is correlated/lateral when the CTE is defined in a subquery
 		return statementStack.getCurrent() instanceof SelectStatement selectStatement
-			&& !selectStatement.getQueryPart().isRoot();
+			   && !selectStatement.getQueryPart().isRoot();
 	}
 
 	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
@@ -6205,7 +6247,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		if ( tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null ) != null ) {
 			if ( dialect.getDefaultOrdinalityColumnName() == null ) {
-				throw new UnsupportedOperationException( "Database does not support the 'with ordinality' syntax for custom set-returning functions" );
+				throw new UnsupportedOperationException(
+						"Database does not support the 'with ordinality' syntax for custom set-returning functions" );
 			}
 			appendSql( " with ordinality" );
 		}
@@ -6355,7 +6398,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void processNestedTableGroupJoins(TableGroup source, List<TableGroupJoin> tableGroupJoinCollector) {
-		source.visitNestedTableGroupJoins( tableGroupJoin -> processTableGroupJoin( tableGroupJoin, tableGroupJoinCollector ) );
+		source.visitNestedTableGroupJoins(
+				tableGroupJoin -> processTableGroupJoin( tableGroupJoin, tableGroupJoinCollector ) );
 	}
 
 	protected void processTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
@@ -6431,8 +6475,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 
 			// The following optimization only makes sense if the necessary features are supported natively
-			if ( ( columnReferences.size() == 1 || dialect.supportsRowValueConstructorSyntax() )
-					&& dialect.supportsRowValueConstructorDistinctFromSyntax() ) {
+			if ( (columnReferences.size() == 1 || dialect.supportsRowValueConstructorSyntax())
+				 && dialect.supportsRowValueConstructorDistinctFromSyntax() ) {
 				// Special case for limit 1 sub-queries to avoid double nested sub-query
 				// ... x(c) on x.c is not distinct from (... fetch first 1 rows only)
 				if ( isFetchFirstRowOnly( statement.getQueryPart() ) ) {
@@ -6506,13 +6550,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				);
 
 				return new ExistsPredicate(
-					new SelectStatement(
-							statement,
-							existsQuery,
-							emptyList()
-					),
-					false,
-					getBooleanType()
+						new SelectStatement(
+								statement,
+								existsQuery,
+								emptyList()
+						),
+						false,
+						getBooleanType()
 				);
 			}
 			final QueryPart queryPart = statement.getQueryPart();
@@ -6570,7 +6614,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			// Essentially, the subquery determines how many rows come before the current row (including that),
 			// and we check if the count value is between offset and (offset+limit)
 
-			final QuerySpec countQuery = new QuerySpec( querySpec.isRoot(), querySpec.getFromClause().getRoots().size() );
+			final QuerySpec countQuery = new QuerySpec( querySpec.isRoot(),
+					querySpec.getFromClause().getRoots().size() );
 			countQuery.getFromClause().getRoots().addAll( querySpec.getFromClause().getRoots() );
 			countQuery.applyPredicate( querySpec.getWhereClauseRestrictions() );
 			countQuery.setGroupByClauseExpressions( querySpec.getGroupByClauseExpressions() );
@@ -6579,7 +6624,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					new SqlSelectionImpl(
 							new SelfRenderingAggregateFunctionSqlAstExpression<>(
 									"count",
-									(sqlAppender, sqlAstArguments, returnType, walker) -> sqlAppender.append( "count(*)" ),
+									(sqlAppender, sqlAstArguments, returnType, walker) -> sqlAppender.append(
+											"count(*)" ),
 									List.of( Star.INSTANCE ),
 									null,
 									getIntegerType(),
@@ -6608,7 +6654,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				else {
 					currentRowColumnReference = columnReferences.get( sortSelectionIndex );
-					sortExpression = querySpec.getSelectClause().getSqlSelections().get( sortSelectionIndex ).getExpression();
+					sortExpression = querySpec.getSelectClause().getSqlSelections().get( sortSelectionIndex )
+							.getExpression();
 				}
 				// The following filter predicate will use <= for ascending and >= for descending sorting,
 				// since the goal is to match all rows that come "before" the current row (including that).
@@ -6707,14 +6754,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			nullPrecedence = switch ( dialect.getNullOrdering() ) {
 				case FIRST -> Nulls.FIRST;
 				case LAST -> Nulls.LAST;
-				case SMALLEST ->
-						sortSpecification.getSortOrder() == SortDirection.ASCENDING
-								? Nulls.FIRST
-								: Nulls.LAST;
-				case GREATEST ->
-						sortSpecification.getSortOrder() == SortDirection.DESCENDING
-								? Nulls.FIRST
-								: Nulls.LAST;
+				case SMALLEST -> sortSpecification.getSortOrder() == SortDirection.ASCENDING
+						? Nulls.FIRST
+						: Nulls.LAST;
+				case GREATEST -> sortSpecification.getSortOrder() == SortDirection.DESCENDING
+						? Nulls.FIRST
+						: Nulls.LAST;
 			};
 		}
 		return nullPrecedence == Nulls.FIRST;
@@ -6739,8 +6784,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private boolean isFetchFirstRowOnly(QueryPart queryPart) {
 		return queryPart.getFetchClauseType() == FetchClauseType.ROWS_ONLY
-			&& queryPart.getFetchClauseExpression() != null
-			&& Integer.valueOf( 1 ).equals( getLiteralValue( queryPart.getFetchClauseExpression() ) );
+			   && queryPart.getFetchClauseExpression() != null
+			   && Integer.valueOf( 1 ).equals( getLiteralValue( queryPart.getFetchClauseExpression() ) );
 	}
 
 	private SelectStatement stripToSelectClause(SelectStatement statement) {
@@ -6755,7 +6800,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( queryPart instanceof QueryGroup queryGroup ) {
 			return stripToSelectClause( queryGroup );
 		}
-		else if ( queryPart instanceof QuerySpec querySpec) {
+		else if ( queryPart instanceof QuerySpec querySpec ) {
 			return stripToSelectClause( querySpec );
 		}
 		else {
@@ -6785,7 +6830,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		for ( SqlSelection selection : querySpec.getSelectClause().getSqlSelections() ) {
 			if ( AggregateFunctionChecker.hasAggregateFunctions( selection.getExpression() ) ) {
-				throw new UnsupportedOperationException( "Can't emulate lateral join for query spec with aggregate function" );
+				throw new UnsupportedOperationException(
+						"Can't emulate lateral join for query spec with aggregate function" );
 			}
 			newQuerySpec.getSelectClause().addSqlSelection( selection );
 		}
@@ -6793,25 +6839,27 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private boolean needsLateralSortExpressionVirtualSelections(QuerySpec querySpec) {
-		return !( ( querySpec.getSelectClause().getSqlSelections().size() == 1
-				|| dialect.supportsRowValueConstructorSyntax() )
-				&& dialect.supportsDistinctFromPredicate()
-				&& isFetchFirstRowOnly( querySpec ) )
-				&& !shouldEmulateLateralWithIntersect( querySpec )
-				&& !dialect.supportsNestedSubqueryCorrelation()
-				&& querySpec.hasOffsetOrFetchClause();
+		return !((querySpec.getSelectClause().getSqlSelections().size() == 1
+				  || dialect.supportsRowValueConstructorSyntax())
+				 && dialect.supportsDistinctFromPredicate()
+				 && isFetchFirstRowOnly( querySpec ))
+			   && !shouldEmulateLateralWithIntersect( querySpec )
+			   && !dialect.supportsNestedSubqueryCorrelation()
+			   && querySpec.hasOffsetOrFetchClause();
 	}
 
 	@Override
 	public void visitTableGroup(TableGroup tableGroup) {
 		// TableGroup and TableGroup handling should be performed as part of `#visitFromClause`...
-		throw new UnsupportedOperationException( "This should never be invoked as org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter.visitTableGroup should handle this" );
+		throw new UnsupportedOperationException(
+				"This should never be invoked as org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter.visitTableGroup should handle this" );
 	}
 
 	@Override
 	public void visitTableGroupJoin(TableGroupJoin tableGroupJoin) {
 		// TableGroup and TableGroupJoin handling should be performed as part of `#visitFromClause`...
-		throw new UnsupportedOperationException( "This should never be invoked as org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter.visitTableGroup should handle this" );
+		throw new UnsupportedOperationException(
+				"This should never be invoked as org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter.visitTableGroup should handle this" );
 	}
 
 	@Override
@@ -6856,7 +6904,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final String readExpression = nestedColumnReference.getReadExpression();
 		int start = 0;
 		int idx;
-		while ( ( idx = readExpression.indexOf( Template.TEMPLATE, start ) ) != -1 ) {
+		while ( (idx = readExpression.indexOf( Template.TEMPLATE, start )) != -1 ) {
 			append( readExpression, start, idx );
 			nestedColumnReference.getBaseExpression().accept( this );
 			start = idx + Template.TEMPLATE.length();
@@ -6878,9 +6926,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final MutationStatement currentDmlStatement;
 		final String dmlAlias;
 		if ( qualifierSupport == DmlTargetColumnQualifierSupport.TABLE_ALIAS
-				|| ( currentDmlStatement = getCurrentDmlStatement() ) == null
-				|| ( dmlAlias = currentDmlStatement.getTargetTable().getIdentificationVariable() ) == null
-				|| !dmlAlias.equals( columnReference.getQualifier() ) ) {
+			 || (currentDmlStatement = getCurrentDmlStatement()) == null
+			 || (dmlAlias = currentDmlStatement.getTargetTable().getIdentificationVariable()) == null
+			 || !dmlAlias.equals( columnReference.getQualifier() ) ) {
 			return columnReference.getQualifier();
 		}
 		// Qualify the column reference with the table expression also when in subqueries
@@ -7170,7 +7218,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		appendSql( expression.getEntityTypeDescriptor().getDiscriminatorSQLValue() );
 	}
 
-	@SuppressWarnings( { "rawtypes", "unchecked" } )
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	@Override
 	public void visitEmbeddableTypeLiteral(EmbeddableTypeLiteral expression) {
 		final BasicValueConverter valueConverter = expression.getJdbcMapping().getValueConverter();
@@ -7233,7 +7281,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			case WEEK -> DAY;
 			case QUARTER -> MONTH;
 			case DATE, TIME, EPOCH, DAY_OF_MONTH, DAY_OF_WEEK, DAY_OF_YEAR, WEEK_OF_MONTH, WEEK_OF_YEAR, OFFSET,
-				TIMEZONE_HOUR, TIMEZONE_MINUTE, NATIVE ->
+				 TIMEZONE_HOUR, TIMEZONE_MINUTE, NATIVE ->
 					throw new IllegalArgumentException( "Invalid duration unit: " + unit );
 		};
 		appendSql( targetResolution.toString() );
@@ -7256,7 +7304,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			case YEAR -> Period.ofYears( value.intValue() );
 			case QUARTER -> Period.ofMonths( value.intValue() * 3 );
 			case DATE, TIME, EPOCH, DAY_OF_MONTH, DAY_OF_WEEK, DAY_OF_YEAR, WEEK_OF_MONTH, WEEK_OF_YEAR, OFFSET,
-				TIMEZONE_HOUR, TIMEZONE_MINUTE, NATIVE ->
+				 TIMEZONE_HOUR, TIMEZONE_MINUTE, NATIVE ->
 					throw new IllegalArgumentException( "Invalid duration unit: " + unit );
 		} );
 	}
@@ -7289,7 +7337,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final SqlAstNodeRenderingMode original = this.parameterRenderingMode;
 		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
 			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS
-					&& original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
+				 && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 			}
 			appendSql( " when " );
@@ -7318,7 +7366,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final CaseSearchedExpression.WhenFragment whenFragment = whenFragments.get( i );
 			Predicate predicate = whenFragment.getPredicate();
 			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS
-					&& original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
+				 && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 			}
 			if ( i != 0 ) {
@@ -7596,7 +7644,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final JdbcMapping valueMapping = parameter.getValueMapping();
 
 		if ( value instanceof Iterable<?> iterable
-				&& !valueMapping.getJavaTypeDescriptor().isInstance( value ) ) {
+			 && !valueMapping.getJavaTypeDescriptor().isInstance( value ) ) {
 			processIterableFilterParameterValue( valueMapping, iterable.iterator() );
 		}
 		else {
@@ -7638,13 +7686,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitInListPredicate(InListPredicate inListPredicate) {
 		final List<Expression> listExpressions = inListPredicate.getListExpressions();
 		if ( listExpressions.isEmpty() ) {
-			appendSql( "1=" + ( inListPredicate.isNegated() ? "1" : "0" ) );
+			appendSql( "1=" + (inListPredicate.isNegated() ? "1" : "0") );
 			return;
 		}
 
 		Function<Expression, Expression> itemAccessor = Function.identity();
 		final SqlTuple lhsTuple;
-		if ( ( lhsTuple = getSqlTuple( inListPredicate.getTestExpression() ) ) != null ) {
+		if ( (lhsTuple = getSqlTuple( inListPredicate.getTestExpression() )) != null ) {
 			if ( lhsTuple.getExpressions().size() == 1 ) {
 				// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
 				itemAccessor = listExpression ->
@@ -7701,7 +7749,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		final boolean parenthesis = !inListPredicate.isNegated()
-				&& inExprLimit > 0 && listExpressions.size() > inExprLimit;
+									&& inExprLimit > 0 && listExpressions.size() > inExprLimit;
 		if ( parenthesis ) {
 			appendSql( OPEN_PARENTHESIS );
 		}
@@ -7736,7 +7784,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 			// If we encounter an expression that is not a parameter or literal, we reset the inExprLimit and
 			// bindValueMaxCount and just render through the in list expressions as they are without padding/splitting
-			if ( !( listExpression instanceof JdbcParameter || listExpression instanceof SqmParameterInterpretation || listExpression instanceof Literal ) ) {
+			if ( !(listExpression instanceof JdbcParameter || listExpression instanceof SqmParameterInterpretation || listExpression instanceof Literal) ) {
 				inExprLimit = 0;
 				bindValueCountWithPadding = bindValueCount;
 			}
@@ -7783,7 +7831,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
 		final SqlTuple lhsTuple;
-		if ( ( lhsTuple = getSqlTuple( inSubQueryPredicate.getTestExpression() ) ) != null ) {
+		if ( (lhsTuple = getSqlTuple( inSubQueryPredicate.getTestExpression() )) != null ) {
 			if ( lhsTuple.getExpressions().size() == 1 ) {
 				// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
 				lhsTuple.getExpressions().get( 0 ).accept( this );
@@ -7832,8 +7880,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final QueryPart queryPart = selectStatement.getQueryPart();
 		final QuerySpec subQuery;
 		if ( queryPart instanceof QuerySpec querySpec
-				&& queryPart.getFetchClauseExpression() == null
-				&& queryPart.getOffsetClauseExpression() == null ) {
+			 && queryPart.getFetchClauseExpression() == null
+			 && queryPart.getOffsetClauseExpression() == null ) {
 			subQuery = querySpec;
 			// We can only emulate the tuple subquery predicate as exists predicate when there are no limit/offsets
 			if ( negated ) {
@@ -7850,7 +7898,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				queryPartStack.push( subQuery );
 				appendSql( "exists (" );
 				if ( !subQuery.getGroupByClauseExpressions().isEmpty()
-						|| subQuery.getHavingClauseRestrictions() != null ) {
+					 || subQuery.getHavingClauseRestrictions() != null ) {
 					// If we have a group by or having clause, we have to move the tuple comparison emulation to the HAVING clause.
 					// Also, we need to explicitly include the selections to avoid 'invalid HAVING clause' errors
 					visitSelectClause( subQuery.getSelectClause() );
@@ -7912,7 +7960,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else {
 			// TODO: We could use nested queries and use row numbers to emulate this
-			throw new IllegalArgumentException( "Can't emulate IN predicate with tuples and limit/offset or set operations: " + predicate );
+			throw new IllegalArgumentException(
+					"Can't emulate IN predicate with tuples and limit/offset or set operations: " + predicate );
 		}
 	}
 
@@ -7932,8 +7981,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final QueryPart queryPart = selectStatement.getQueryPart();
 		final QuerySpec subQuery;
 		if ( queryPart instanceof QuerySpec querySpec
-				&& queryPart.getFetchClauseExpression() == null
-				&& queryPart.getOffsetClauseExpression() == null ) {
+			 && queryPart.getFetchClauseExpression() == null
+			 && queryPart.getOffsetClauseExpression() == null ) {
 			subQuery = querySpec;
 			// We can only emulate the tuple subquery predicate comparing against the top element when there are no limit/offsets
 			lhsTuple.accept( this );
@@ -7958,7 +8007,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				final List<SqlSelection> sqlSelections = subQuery.getSelectClause().getSqlSelections();
 				final String order;
 				if ( tupleComparisonOperator == ComparisonOperator.LESS_THAN
-						|| tupleComparisonOperator == ComparisonOperator.LESS_THAN_OR_EQUAL ) {
+					 || tupleComparisonOperator == ComparisonOperator.LESS_THAN_OR_EQUAL ) {
 					// Default order is asc so we don't need to specify the order explicitly
 					order = "";
 				}
@@ -7988,7 +8037,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else {
 			// TODO: We could use nested queries and use row numbers to emulate this
-			throw new IllegalArgumentException( "Can't emulate in predicate with tuples and limit/offset or set operations: " + predicate );
+			throw new IllegalArgumentException(
+					"Can't emulate in predicate with tuples and limit/offset or set operations: " + predicate );
 		}
 	}
 
@@ -8065,7 +8115,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 			}
 			else {
-				renderCaseInsensitiveLikeEmulation(likePredicate.getMatchExpression(), likePredicate.getPattern(), likePredicate.getEscapeCharacter(), likePredicate.isNegated());
+				renderCaseInsensitiveLikeEmulation( likePredicate.getMatchExpression(), likePredicate.getPattern(),
+						likePredicate.getEscapeCharacter(), likePredicate.isNegated() );
 			}
 		}
 	}
@@ -8170,12 +8221,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final Expression expression = nullnessPredicate.getExpression();
 		final String predicateValue = nullnessPredicate.isNegated() ? " is not null" : " is null";
 		final SqlTuple tuple;
-		if ( ( tuple = getSqlTuple( expression ) ) != null ) {
+		if ( (tuple = getSqlTuple( expression )) != null ) {
 			String separator = NO_SEPARATOR;
 			// HQL has different semantics for the not null check on embedded attribute mappings
 			// as the embeddable is not considered as null, if at least one sub-part is not null
 			if ( nullnessPredicate.isNegated()
-					&& expression.getExpressionType() instanceof AttributeMapping ) {
+				 && expression.getExpressionType() instanceof AttributeMapping ) {
 				appendSql( '(' );
 				for ( Expression exp : tuple.getExpressions() ) {
 					appendSql( separator );
@@ -8205,30 +8256,30 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitThruthnessPredicate(ThruthnessPredicate thruthnessPredicate) {
 		if ( dialect.supportsIsTrue() ) {
 			thruthnessPredicate.getExpression().accept( this );
-			appendSql(" is ");
+			appendSql( " is " );
 			if ( thruthnessPredicate.isNegated() ) {
-				appendSql("not ");
+				appendSql( "not " );
 			}
 			appendSql( thruthnessPredicate.getBooleanValue() );
 		}
 		else {
-			String literalTrue = dialect.toBooleanValueString(true);
-			String literalFalse = dialect.toBooleanValueString(false);
-			appendSql("(case ");
-			thruthnessPredicate.getExpression().accept(this);
-			appendSql(" when ");
-			appendSql(thruthnessPredicate.getBooleanValue() ? literalTrue : literalFalse);
-			appendSql(" then ");
-			appendSql(thruthnessPredicate.isNegated()? literalFalse : literalTrue);
-			appendSql(" when ");
-			appendSql(thruthnessPredicate.getBooleanValue() ? literalFalse : literalTrue);
-			appendSql(" then ");
-			appendSql(thruthnessPredicate.isNegated()? literalTrue : literalFalse);
-			appendSql(" else ");
-			appendSql(thruthnessPredicate.isNegated()? literalTrue : literalFalse);
-			appendSql(" end = ");
-			appendSql(literalTrue);
-			appendSql(")");
+			String literalTrue = dialect.toBooleanValueString( true );
+			String literalFalse = dialect.toBooleanValueString( false );
+			appendSql( "(case " );
+			thruthnessPredicate.getExpression().accept( this );
+			appendSql( " when " );
+			appendSql( thruthnessPredicate.getBooleanValue() ? literalTrue : literalFalse );
+			appendSql( " then " );
+			appendSql( thruthnessPredicate.isNegated() ? literalFalse : literalTrue );
+			appendSql( " when " );
+			appendSql( thruthnessPredicate.getBooleanValue() ? literalFalse : literalTrue );
+			appendSql( " then " );
+			appendSql( thruthnessPredicate.isNegated() ? literalTrue : literalFalse );
+			appendSql( " else " );
+			appendSql( thruthnessPredicate.isNegated() ? literalTrue : literalFalse );
+			appendSql( " end = " );
+			appendSql( literalTrue );
+			appendSql( ")" );
 		}
 	}
 
@@ -8246,7 +8297,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		final SqlTuple lhsTuple;
 		final SqlTuple rhsTuple;
-		if ( ( lhsTuple = getSqlTuple( comparisonPredicate.getLeftHandExpression() ) ) != null ) {
+		if ( (lhsTuple = getSqlTuple( comparisonPredicate.getLeftHandExpression() )) != null ) {
 			final Expression rhsExpression = comparisonPredicate.getRightHandExpression();
 			final boolean all;
 			final SelectStatement subquery;
@@ -8326,8 +8377,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				rhsTuple = getSqlTuple( rhsExpression );
 				assert rhsTuple != null;
 				// If the DB supports tuples in the IN list predicate, use that syntax as it's more concise
-				if ( ( operator == ComparisonOperator.EQUAL || operator == ComparisonOperator.NOT_EQUAL )
-						&& dialect.supportsRowValueConstructorSyntaxInInList() ) {
+				if ( (operator == ComparisonOperator.EQUAL || operator == ComparisonOperator.NOT_EQUAL)
+					 && dialect.supportsRowValueConstructorSyntaxInInList() ) {
 					comparisonPredicate.getLeftHandExpression().accept( this );
 					if ( operator == ComparisonOperator.NOT_EQUAL ) {
 						appendSql( " not" );
@@ -8349,12 +8400,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				renderComparison( comparisonPredicate.getLeftHandExpression(), operator, rhsExpression );
 			}
 		}
-		else if ( ( rhsTuple = getSqlTuple( comparisonPredicate.getRightHandExpression() ) ) != null ) {
+		else if ( (rhsTuple = getSqlTuple( comparisonPredicate.getRightHandExpression() )) != null ) {
 			final Expression lhsExpression = comparisonPredicate.getLeftHandExpression();
 
 			if ( lhsExpression instanceof SqlTupleContainer
-					|| lhsExpression instanceof SelectStatement selectStatement
-							&& selectStatement.getQueryPart() instanceof QueryGroup ) {
+				 || lhsExpression instanceof SelectStatement selectStatement
+					&& selectStatement.getQueryPart() instanceof QueryGroup ) {
 				if ( rhsTuple.getExpressions().size() == 1 ) {
 					// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
 					renderComparison(
@@ -8400,11 +8451,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( !dialect.supportsRowValueConstructorSyntax() ) {
 			return true;
 		}
-		return switch (operator) {
+		return switch ( operator ) {
 			case LESS_THAN, LESS_THAN_OR_EQUAL, GREATER_THAN, GREATER_THAN_OR_EQUAL ->
 					!dialect.supportsRowValueConstructorGtLtSyntax();
-			case DISTINCT_FROM, NOT_DISTINCT_FROM ->
-					!dialect.supportsRowValueConstructorDistinctFromSyntax();
+			case DISTINCT_FROM, NOT_DISTINCT_FROM -> !dialect.supportsRowValueConstructorDistinctFromSyntax();
 			default -> false;
 		};
 	}
@@ -8755,7 +8805,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					sqlBuffer.append( " and " );
 					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
 					if ( columnValueBinding.getValueExpression() == null
-							|| columnValueBinding.getValueExpression().getFragment() == null ) {
+						 || columnValueBinding.getValueExpression().getFragment() == null ) {
 						sqlBuffer.append( " is null" );
 					}
 					else {
@@ -8864,7 +8914,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// if there are no parameters or if we are using the standard parameter renderer
 		//		- the rendering is pretty simple
 		if ( CollectionHelper.isEmpty( columnWriteFragment.getParameters() )
-				|| ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
+			 || ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
 			simpleColumnWriteFragmentRendering( columnWriteFragment );
 			return;
 		}

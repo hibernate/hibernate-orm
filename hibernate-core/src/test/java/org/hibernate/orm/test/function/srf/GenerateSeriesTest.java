@@ -39,7 +39,7 @@ public class GenerateSeriesTest {
 	@BeforeAll
 	public void setup(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.persist( new Book(2, "Test") );
+			session.persist( new Book( 2, "Test" ) );
 		} );
 	}
 
@@ -54,7 +54,8 @@ public class GenerateSeriesTest {
 	public void testGenerateSeries(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-set-returning-function-generate-series-example[]
-			List<Integer> resultList = em.createQuery( "select e from generate_series(1, 2) e order by e", Integer.class )
+			List<Integer> resultList = em.createQuery( "select e from generate_series(1, 2) e order by e",
+							Integer.class )
 					.getResultList();
 			//end::hql-set-returning-function-generate-series-example[]
 
@@ -68,7 +69,7 @@ public class GenerateSeriesTest {
 	public void testNodeBuilderGenerateSeries(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
-			final JpaCriteriaQuery<Integer> cq = cb.createQuery(Integer.class);
+			final JpaCriteriaQuery<Integer> cq = cb.createQuery( Integer.class );
 			final JpaFunctionRoot<Integer> root = cq.from( cb.generateSeries( 1, 2 ) );
 			cq.select( root );
 			cq.orderBy( cb.asc( root ) );
@@ -81,7 +82,7 @@ public class GenerateSeriesTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.not support index")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.not support index")
 	public void testGenerateSeriesOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-set-returning-function-generate-series-ordinality-example[]
@@ -101,7 +102,7 @@ public class GenerateSeriesTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.not support index")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.not support index")
 	public void testNodeBuilderGenerateSeriesOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -123,20 +124,22 @@ public class GenerateSeriesTest {
 	public void testGenerateTimeSeries(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-set-returning-function-generate-series-temporal-example[]
-			List<LocalDate> resultList = em.createQuery( "select e from generate_series(local date 2020-01-31, local date 2020-01-01, -1 day) e order by e", LocalDate.class )
+			List<LocalDate> resultList = em.createQuery(
+							"select e from generate_series(local date 2020-01-31, local date 2020-01-01, -1 day) e order by e",
+							LocalDate.class )
 					.getResultList();
 			//end::hql-set-returning-function-generate-series-temporal-example[]
 
 			assertEquals( 31, resultList.size() );
 			for ( int i = 0; i < resultList.size(); i++ ) {
-				assertEquals( LocalDate.of( 2020, Month.JANUARY, i +  1 ), resultList.get( i ) );
+				assertEquals( LocalDate.of( 2020, Month.JANUARY, i + 1 ), resultList.get( i ) );
 			}
 		} );
 	}
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase bug?")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.not support index")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.not support index")
 	public void testGenerateSeriesCorrelation(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<Integer> resultList = em.createQuery(
@@ -150,7 +153,8 @@ public class GenerateSeriesTest {
 	@Test
 	public void testGenerateSeriesNegative(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			List<Integer> resultList = em.createQuery( "select e from generate_series(2, 1, -1) e order by e", Integer.class )
+			List<Integer> resultList = em.createQuery( "select e from generate_series(2, 1, -1) e order by e",
+							Integer.class )
 					.getResultList();
 
 			assertEquals( 2, resultList.size() );
@@ -170,7 +174,7 @@ public class GenerateSeriesTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.not support index")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.not support index")
 	public void testGenerateSeriesNoProgressionOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<Tuple> resultList = em.createQuery( "select index(e), e from generate_series(2, 1, 1) e", Tuple.class )

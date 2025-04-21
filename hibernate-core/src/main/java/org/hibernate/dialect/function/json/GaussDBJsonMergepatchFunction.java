@@ -16,7 +16,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * GaussDB json_mergepatch function.
  *
  * @author liubao
- *
+ * <p>
  * Notes: Original code of this class is based on PostgreSQLJsonMergepatchFunction.
  */
 public class GaussDBJsonMergepatchFunction extends AbstractJsonMergepatchFunction {

@@ -15,13 +15,15 @@ import org.hibernate.type.spi.TypeConfiguration;
  * Factory for {@link GaussDBCastingJsonArrayJdbcType}.
  *
  * @author liubao
- *
+ * <p>
  * Notes: Original code of this class is based on PostgreSQLCastingJsonArrayJdbcTypeConstructor.
  */
 public class GaussDBCastingJsonArrayJdbcTypeConstructor implements JdbcTypeConstructor {
 
-	public static final GaussDBCastingJsonArrayJdbcTypeConstructor JSONB_INSTANCE = new GaussDBCastingJsonArrayJdbcTypeConstructor( true );
-	public static final GaussDBCastingJsonArrayJdbcTypeConstructor JSON_INSTANCE = new GaussDBCastingJsonArrayJdbcTypeConstructor( false );
+	public static final GaussDBCastingJsonArrayJdbcTypeConstructor JSONB_INSTANCE = new GaussDBCastingJsonArrayJdbcTypeConstructor(
+			true );
+	public static final GaussDBCastingJsonArrayJdbcTypeConstructor JSON_INSTANCE = new GaussDBCastingJsonArrayJdbcTypeConstructor(
+			false );
 
 	private final boolean jsonb;
 

@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @DomainModel(annotatedClasses = EntityWithArrays.class)
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayTrim.class)
 // Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 @BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
@@ -49,8 +49,8 @@ public class ArrayTrimTest {
 	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-			em.persist( new EntityWithArrays( 1L, new String[]{} ) );
-			em.persist( new EntityWithArrays( 2L, new String[]{ "abc", null, "def" } ) );
+			em.persist( new EntityWithArrays( 1L, new String[] {} ) );
+			em.persist( new EntityWithArrays( 2L, new String[] {"abc", null, "def"} ) );
 			em.persist( new EntityWithArrays( 3L, null ) );
 		} );
 	}
@@ -66,19 +66,21 @@ public class ArrayTrimTest {
 	public void testTrimOne(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-array-trim-example[]
-			List<Tuple> results = em.createQuery( "select e.id, array_trim(e.theArray, 1) from EntityWithArrays e where e.id = 2", Tuple.class )
+			List<Tuple> results = em.createQuery(
+							"select e.id, array_trim(e.theArray, 1) from EntityWithArrays e where e.id = 2", Tuple.class )
 					.getResultList();
 			//end::hql-array-trim-example[]
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).get( 0 ) );
-			assertArrayEquals( new String[] { "abc", null }, results.get( 0 ).get( 1, String[].class ) );
+			assertArrayEquals( new String[] {"abc", null}, results.get( 0 ).get( 1, String[].class ) );
 		} );
 	}
 
 	@Test
 	public void testTrimAll(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			List<Tuple> results = em.createQuery( "select e.id, array_trim(e.theArray, 3) from EntityWithArrays e where e.id = 2", Tuple.class )
+			List<Tuple> results = em.createQuery(
+							"select e.id, array_trim(e.theArray, 3) from EntityWithArrays e where e.id = 2", Tuple.class )
 					.getResultList();
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).get( 0 ) );
@@ -87,9 +89,10 @@ public class ArrayTrimTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 13, matchSubTypes = true, reason = "The PostgreSQL emulation for version < 14 doesn't throw an error")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 13, matchSubTypes = true,
+			reason = "The PostgreSQL emulation for version < 14 doesn't throw an error")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "The Cockroach emulation doesn't throw an error")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.gaussdb has different behavior")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.gaussdb has different behavior")
 	public void testTrimOutOfRange(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			try {

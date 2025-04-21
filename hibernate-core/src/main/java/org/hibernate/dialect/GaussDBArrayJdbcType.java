@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * Descriptor for {@link Types#ARRAY ARRAY} handling.
  *
  * @author liubao
- *
+ * <p>
  * Notes: Original code of this class is based on PostgreSQLArrayJdbcType.
  */
 public class GaussDBArrayJdbcType extends ArrayJdbcType {
@@ -35,13 +35,14 @@ public class GaussDBArrayJdbcType extends ArrayJdbcType {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		@SuppressWarnings("unchecked")
-		final BasicPluralJavaType<X> pluralJavaType = (BasicPluralJavaType<X>) javaTypeDescriptor;
+		@SuppressWarnings(
+				"unchecked") final BasicPluralJavaType<X> pluralJavaType = (BasicPluralJavaType<X>) javaTypeDescriptor;
 		final ValueBinder<X> elementBinder = getElementJdbcType().getBinder( pluralJavaType.getElementJavaType() );
 		return new BasicBinder<>( javaTypeDescriptor, this ) {
 
 			@Override
-			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
+			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+					throws SQLException {
 				st.setArray( index, getArray( value, options ) );
 			}
 
@@ -53,13 +54,14 @@ public class GaussDBArrayJdbcType extends ArrayJdbcType {
 					st.setObject( name, arr, java.sql.Types.ARRAY );
 				}
 				catch (SQLException ex) {
-					throw new HibernateException( "JDBC driver does not support named parameters for setArray. Use positional.", ex );
+					throw new HibernateException(
+							"JDBC driver does not support named parameters for setArray. Use positional.", ex );
 				}
 			}
 
 			@Override
 			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
-				return ( (GaussDBArrayJdbcType) getJdbcType() ).getArray( this, elementBinder, value, options );
+				return ((GaussDBArrayJdbcType) getJdbcType()).getArray( this, elementBinder, value, options );
 			}
 
 			private java.sql.Array getArray(X value, WrapperOptions options) throws SQLException {

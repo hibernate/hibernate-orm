@@ -17,11 +17,11 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * PostgreSQL json_query function.
+ * GaussDB json_query function.
  */
-public class GaussdbJsonQueryFunction extends JsonQueryFunction {
+public class GaussDBJsonQueryFunction extends JsonQueryFunction {
 
-	public GaussdbJsonQueryFunction(TypeConfiguration typeConfiguration) {
+	public GaussDBJsonQueryFunction(TypeConfiguration typeConfiguration) {
 		super( typeConfiguration, true, true );
 	}
 
@@ -44,11 +44,13 @@ public class GaussdbJsonQueryFunction extends JsonQueryFunction {
 			final Map<String, Expression> passingExpressions = passingClause.getPassingExpressions();
 			final Iterator<Map.Entry<String, Expression>> iterator = passingExpressions.entrySet().iterator();
 			Map.Entry<String, Expression> entry = iterator.next();
-			literalValue = literalValue.replace( "$"+entry.getKey(), walker.getLiteralValue( entry.getValue()).toString() );
+			literalValue = literalValue.replace( "$" + entry.getKey(),
+					walker.getLiteralValue( entry.getValue() ).toString() );
 			while ( iterator.hasNext() ) {
 				entry = iterator.next();
 				sqlAppender.appendSql( ',' );
-				literalValue = literalValue.replace( "$"+entry.getKey(), walker.getLiteralValue( entry.getValue()).toString() );
+				literalValue = literalValue.replace( "$" + entry.getKey(),
+						walker.getLiteralValue( entry.getValue() ).toString() );
 			}
 		}
 

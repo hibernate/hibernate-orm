@@ -39,11 +39,12 @@ import static org.junit.Assert.assertNotNull;
 public class IdentityInsertSoleColumnTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Animal.class };
+		return new Class<?>[] {Animal.class};
 	}
 
 	@Test
-	@org.hibernate.testing.orm.junit.SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
+	@org.hibernate.testing.orm.junit.SkipForDialect(dialectClass = GaussDBDialect.class,
+			reason = "opengauss don't support")
 	public void testEntityInsertWithSingleIdentityAttributeColumn() {
 		// insert the entity
 		final Integer entityId = doInJPA(

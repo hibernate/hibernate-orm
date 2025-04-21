@@ -57,7 +57,7 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 		Editor editor = new Editor();
 		editor.setName( "O'Reilly" );
 		book.setEditor( editor );
-		book.setCode2( new char[] { 'r' } );
+		book.setCode2( new char[] {'r'} );
 
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -88,8 +88,8 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 		B book = createBook();
 		book.setShortDescription( "Hibernate Bible" );
 		book.setFullText( "Hibernate in Action aims to..." );
-		book.setCode( new Character[] { 'a', 'b', 'c' } );
-		book.setCode2( new char[] { 'a', 'b', 'c' } );
+		book.setCode( new Character[] {'a', 'b', 'c'} );
+		book.setCode2( new char[] {'a', 'b', 'c'} );
 
 		doInHibernate(
 				this::sessionFactory, session -> {
@@ -109,7 +109,8 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 	}
 
 	@Test
-	@org.hibernate.testing.orm.junit.SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
+	@org.hibernate.testing.orm.junit.SkipForDialect(dialectClass = GaussDBDialect.class,
+			reason = "opengauss don't support")
 	public void testBlob() throws Exception {
 
 		C cc = createCompiledCode();
@@ -120,7 +121,7 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 		int codeSize = 5;
 		byte[] full = new byte[codeSize];
 		for ( int i = 0; i < codeSize; i++ ) {
-			full[i] = (byte) ( 1 + i );
+			full[i] = (byte) (1 + i);
 		}
 		cc.setFullCode( full );
 

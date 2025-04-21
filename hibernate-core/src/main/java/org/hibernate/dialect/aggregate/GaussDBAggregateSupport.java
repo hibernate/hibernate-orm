@@ -45,7 +45,7 @@ import static org.hibernate.type.SqlTypes.XML_ARRAY;
 
 /**
  * @author liubao
- *
+ * <p>
  * Notes: Original code of this class is based on PostgreSQLAggregateSupport.
  */
 public class GaussDBAggregateSupport extends AggregateSupportImpl {
@@ -133,16 +133,21 @@ public class GaussDBAggregateSupport extends AggregateSupportImpl {
 					case SQLXML:
 						return template.replace(
 								placeholder,
-								XML_EXTRACT_START + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/*" ) + XML_EXTRACT_END
+								XML_EXTRACT_START + xmlExtractArguments( aggregateParentReadExpression,
+										columnExpression + "/*" ) + XML_EXTRACT_END
 						);
 					case XML_ARRAY:
-						if ( typeConfiguration.getCurrentBaseSqlTypeIndicators().isXmlFormatMapperLegacyFormatEnabled() ) {
-							throw new IllegalArgumentException( "XML array '" + columnExpression + "' in '" + aggregateParentReadExpression + "' is not supported with legacy format enabled." );
+						if ( typeConfiguration.getCurrentBaseSqlTypeIndicators()
+								.isXmlFormatMapperLegacyFormatEnabled() ) {
+							throw new IllegalArgumentException(
+									"XML array '" + columnExpression + "' in '" + aggregateParentReadExpression + "' is not supported with legacy format enabled." );
 						}
 						else {
 							return template.replace(
 									placeholder,
-									"xmlelement(name \"Collection\",(select xmlagg(t.v order by t.i) from xmltable(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/*" ) + " columns v xml path '.', i for ordinality)t))"
+									"xmlelement(name \"Collection\",(select xmlagg(t.v order by t.i) from xmltable(" + xmlExtractArguments(
+											aggregateParentReadExpression,
+											columnExpression + "/*" ) + " columns v xml path '.', i for ordinality)t))"
 							);
 						}
 					case BINARY:
@@ -151,14 +156,18 @@ public class GaussDBAggregateSupport extends AggregateSupportImpl {
 						// We encode binary data as hex, so we have to decode here
 						return template.replace(
 								placeholder,
-								"decode((select t.v from xmltable(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression )+ " columns v text path '.') t),'hex')"
+								"decode((select t.v from xmltable(" + xmlExtractArguments(
+										aggregateParentReadExpression,
+										columnExpression ) + " columns v text path '.') t),'hex')"
 						);
 					case ARRAY:
-						throw new UnsupportedOperationException( "Transforming XML_ARRAY to native arrays is not supported on GaussDB!" );
+						throw new UnsupportedOperationException(
+								"Transforming XML_ARRAY to native arrays is not supported on GaussDB!" );
 					default:
 						return template.replace(
 								placeholder,
-								"(select t.v from xmltable(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression ) + " columns v " + column.getColumnDefinition() + " path '.') t)"
+								"(select t.v from xmltable(" + xmlExtractArguments( aggregateParentReadExpression,
+										columnExpression ) + " columns v " + column.getColumnDefinition() + " path '.') t)"
 						);
 				}
 			case STRUCT:
@@ -173,23 +182,27 @@ public class GaussDBAggregateSupport extends AggregateSupportImpl {
 		final String extractArguments;
 		int separatorIndex;
 		if ( aggregateParentReadExpression.startsWith( XML_EXTRACT_START )
-				&& aggregateParentReadExpression.endsWith( XML_EXTRACT_END )
-				&& (separatorIndex = aggregateParentReadExpression.indexOf( XML_EXTRACT_SEPARATOR )) != -1 ) {
-			final StringBuilder sb = new StringBuilder( aggregateParentReadExpression.length() - XML_EXTRACT_START.length() + xpathFragment.length() );
+			 && aggregateParentReadExpression.endsWith( XML_EXTRACT_END )
+			 && (separatorIndex = aggregateParentReadExpression.indexOf( XML_EXTRACT_SEPARATOR )) != -1 ) {
+			final StringBuilder sb = new StringBuilder(
+					aggregateParentReadExpression.length() - XML_EXTRACT_START.length() + xpathFragment.length() );
 			sb.append( aggregateParentReadExpression, XML_EXTRACT_START.length(), separatorIndex );
 			sb.append( '/' );
 			sb.append( xpathFragment );
-			sb.append( aggregateParentReadExpression, separatorIndex + 2, aggregateParentReadExpression.length() - XML_EXTRACT_END.length() );
+			sb.append( aggregateParentReadExpression, separatorIndex + 2,
+					aggregateParentReadExpression.length() - XML_EXTRACT_END.length() );
 			extractArguments = sb.toString();
 		}
 		else if ( aggregateParentReadExpression.startsWith( XML_QUERY_START )
-				&& aggregateParentReadExpression.endsWith( XML_QUERY_END )
-				&& (separatorIndex = aggregateParentReadExpression.indexOf( XML_QUERY_SEPARATOR )) != -1 ) {
-			final StringBuilder sb = new StringBuilder( aggregateParentReadExpression.length() - XML_QUERY_START.length() + xpathFragment.length() );
+				  && aggregateParentReadExpression.endsWith( XML_QUERY_END )
+				  && (separatorIndex = aggregateParentReadExpression.indexOf( XML_QUERY_SEPARATOR )) != -1 ) {
+			final StringBuilder sb = new StringBuilder(
+					aggregateParentReadExpression.length() - XML_QUERY_START.length() + xpathFragment.length() );
 			sb.append( aggregateParentReadExpression, XML_QUERY_START.length(), separatorIndex );
 			sb.append( '/' );
 			sb.append( xpathFragment );
-			sb.append( aggregateParentReadExpression, separatorIndex, aggregateParentReadExpression.length() - XML_QUERY_END.length() );
+			sb.append( aggregateParentReadExpression, separatorIndex,
+					aggregateParentReadExpression.length() - XML_QUERY_END.length() );
 			extractArguments = sb.toString();
 		}
 		else {
@@ -305,6 +318,7 @@ public class GaussDBAggregateSupport extends AggregateSupportImpl {
 				SqlAstTranslator<?> translator,
 				AggregateColumnWriteExpression expression);
 	}
+
 	private static class AggregateJsonWriteExpression implements JsonWriteExpression {
 		private final LinkedHashMap<String, JsonWriteExpression> subExpressions = new LinkedHashMap<>();
 
@@ -395,6 +409,7 @@ public class GaussDBAggregateSupport extends AggregateSupportImpl {
 			append( sqlAppender, basePath, translator, aggregateColumnWriteExpression );
 		}
 	}
+
 	private static class BasicJsonWriteExpression implements JsonWriteExpression {
 
 		private final SelectableMapping selectableMapping;
@@ -440,6 +455,7 @@ public class GaussDBAggregateSupport extends AggregateSupportImpl {
 				SqlAstTranslator<?> translator,
 				AggregateColumnWriteExpression expression);
 	}
+
 	private static class AggregateXmlWriteExpression implements XmlWriteExpression {
 
 		private final SelectableMapping selectableMapping;
@@ -457,12 +473,15 @@ public class GaussDBAggregateSupport extends AggregateSupportImpl {
 				final SelectablePath[] parts = selectablePath.getParts();
 				AggregateXmlWriteExpression currentAggregate = this;
 				for ( int i = 1; i < parts.length - 1; i++ ) {
-					final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) currentAggregate.selectableMapping.getJdbcMapping().getJdbcType();
+					final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) currentAggregate.selectableMapping.getJdbcMapping()
+							.getJdbcType();
 					final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
-					final int selectableIndex = embeddableMappingType.getSelectableIndex( parts[i].getSelectableName() );
+					final int selectableIndex = embeddableMappingType.getSelectableIndex(
+							parts[i].getSelectableName() );
 					currentAggregate = (AggregateXmlWriteExpression) currentAggregate.subExpressions.computeIfAbsent(
 							parts[i].getSelectableName(),
-							k -> new AggregateXmlWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ), columnDefinition )
+							k -> new AggregateXmlWriteExpression(
+									embeddableMappingType.getJdbcValueSelectable( selectableIndex ), columnDefinition )
 					);
 				}
 				final String customWriteExpression = column.getWriteExpression();
@@ -478,13 +497,15 @@ public class GaussDBAggregateSupport extends AggregateSupportImpl {
 		}
 
 		protected void passThroughUnsetSubExpressions(SelectableMapping aggregateColumn) {
-			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) aggregateColumn.getJdbcMapping().getJdbcType();
+			final AggregateJdbcType aggregateJdbcType = (AggregateJdbcType) aggregateColumn.getJdbcMapping()
+					.getJdbcType();
 			final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 			final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 			for ( int i = 0; i < jdbcValueCount; i++ ) {
 				final SelectableMapping selectableMapping = embeddableMappingType.getJdbcValueSelectable( i );
 
-				final XmlWriteExpression xmlWriteExpression = subExpressions.get( selectableMapping.getSelectableName() );
+				final XmlWriteExpression xmlWriteExpression = subExpressions.get(
+						selectableMapping.getSelectableName() );
 				if ( xmlWriteExpression == null ) {
 					subExpressions.put(
 							selectableMapping.getSelectableName(),
@@ -516,7 +537,8 @@ public class GaussDBAggregateSupport extends AggregateSupportImpl {
 
 				final XmlWriteExpression value = entry.getValue();
 				if ( value instanceof AggregateXmlWriteExpression ) {
-					final String subPath = XML_QUERY_START + xmlExtractArguments( path, entry.getKey() ) + XML_QUERY_END;
+					final String subPath = XML_QUERY_START + xmlExtractArguments( path,
+							entry.getKey() ) + XML_QUERY_END;
 					value.append( sb, subPath, translator, expression );
 				}
 				else {
@@ -556,9 +578,11 @@ public class GaussDBAggregateSupport extends AggregateSupportImpl {
 			else {
 				basePath = qualifier + "." + path;
 			}
-			append( sqlAppender, XML_QUERY_START + "'/" + getTagName() + "' passing " + basePath + XML_QUERY_END, translator, aggregateColumnWriteExpression );
+			append( sqlAppender, XML_QUERY_START + "'/" + getTagName() + "' passing " + basePath + XML_QUERY_END,
+					translator, aggregateColumnWriteExpression );
 		}
 	}
+
 	private static class BasicXmlWriteExpression implements XmlWriteExpression {
 
 		private final SelectableMapping selectableMapping;
@@ -567,7 +591,7 @@ public class GaussDBAggregateSupport extends AggregateSupportImpl {
 		BasicXmlWriteExpression(SelectableMapping selectableMapping, String customWriteExpression) {
 			this.selectableMapping = selectableMapping;
 			if ( customWriteExpression.equals( "?" ) ) {
-				this.customWriteExpressionParts = new String[]{ "", "" };
+				this.customWriteExpressionParts = new String[] {"", ""};
 			}
 			else {
 				assert !customWriteExpression.startsWith( "?" );
@@ -597,7 +621,8 @@ public class GaussDBAggregateSupport extends AggregateSupportImpl {
 				// We use NO_UNTYPED here so that expressions which require type inference are casted explicitly,
 				// since we don't know how the custom write expression looks like where this is embedded,
 				// so we have to be pessimistic and avoid ambiguities
-				translator.render( expression.getValueExpression( selectableMapping ), SqlAstNodeRenderingMode.NO_UNTYPED );
+				translator.render( expression.getValueExpression( selectableMapping ),
+						SqlAstNodeRenderingMode.NO_UNTYPED );
 				sb.append( customWriteExpressionParts[i] );
 			}
 			if ( isArray ) {

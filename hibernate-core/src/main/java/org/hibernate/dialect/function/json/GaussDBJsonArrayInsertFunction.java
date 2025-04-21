@@ -17,7 +17,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * GaussDB json_array_insert function.
  *
  * @author liubao
- *
+ * <p>
  * Notes: Original code of this class is based on PostgreSQLJsonArrayInsertFunction.
  */
 public class GaussDBJsonArrayInsertFunction extends AbstractJsonArrayInsertFunction {

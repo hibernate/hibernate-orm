@@ -53,7 +53,7 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 )
 @SessionFactory
 @BytecodeEnhanced
-@CustomEnhancementContext({ DirtyCheckEnhancementContext.class })
+@CustomEnhancementContext({DirtyCheckEnhancementContext.class})
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class DirtyCheckPrivateUnMappedCollectionTest {
 

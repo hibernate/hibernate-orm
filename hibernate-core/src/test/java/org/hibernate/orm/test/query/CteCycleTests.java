@@ -39,19 +39,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class CteCycleTests {
 
 	@Test
-	@JiraKey( "HHH-16465" )
+	@JiraKey("HHH-16465")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsRecursiveCtes.class)
 	public void testRecursiveCycleClause(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					final Query<Tuple> query = session.createQuery(
 							"with alternativeContacts as (" +
-									"select c.alternativeContact alt from Contact c where c.id = :param " +
-									"union all " +
-									"select c.alt.alternativeContact alt from alternativeContacts c" +
-									")" +
-									"cycle alt set isCycle to true default false " +
-									"select ac, c.isCycle from alternativeContacts c join c.alt ac order by ac.id, c.isCycle",
+							"select c.alternativeContact alt from Contact c where c.id = :param " +
+							"union all " +
+							"select c.alt.alternativeContact alt from alternativeContacts c" +
+							")" +
+							"cycle alt set isCycle to true default false " +
+							"select ac, c.isCycle from alternativeContacts c join c.alt ac order by ac.id, c.isCycle",
 							Tuple.class
 					);
 					List<Tuple> list = query.setParameter( "param", 1 ).getResultList();

@@ -42,11 +42,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @SkipForDialect(dialectClass = OracleDialect.class, reason = "HHH-6834")
 @SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "HHH-6834")
-@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "jConnect reports the type code 11 for bigdatetime columns, which is an unknown type code..")
+@SkipForDialect(dialectClass = SybaseASEDialect.class,
+		reason = "jConnect reports the type code 11 for bigdatetime columns, which is an unknown type code..")
 @SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase reports the type code 93 for date columns")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class, jiraKey = "HHH-6834")
 @DomainModel(
-		annotatedClasses = { SomeEntity.class, SomeOtherEntity.class }
+		annotatedClasses = {SomeEntity.class, SomeOtherEntity.class}
 )
 @SessionFactory
 @ServiceRegistry(
@@ -68,7 +69,7 @@ public class BasicOperationsTest {
 				session -> {
 
 					Dialect dialect = session.getJdbcServices().getDialect();
-					if ( !(dialect instanceof GaussDBDialect ) ) {
+					if ( !(dialect instanceof GaussDBDialect) ) {
 						session.doWork( new ValidateSomeEntityColumns( session ) );
 					}
 					session.doWork( new ValidateRowCount( session, SOME_ENTITY_TABLE_NAME, 0 ) );
@@ -132,10 +133,12 @@ public class BasicOperationsTest {
 			String columnNamePattern = generateFinalNamePattern( meta, columnName );
 
 			ResultSet columnInfo = meta.getColumns( null, null, tableNamePattern, columnNamePattern );
-			s.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().register( columnInfo, columnInfo.getStatement() );
+			s.getJdbcCoordinator().getLogicalConnection().getResourceRegistry()
+					.register( columnInfo, columnInfo.getStatement() );
 			assertTrue( columnInfo.next() );
 			int dataType = columnInfo.getInt( "DATA_TYPE" );
-			s.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( columnInfo, columnInfo.getStatement() );
+			s.getJdbcCoordinator().getLogicalConnection().getResourceRegistry()
+					.release( columnInfo, columnInfo.getStatement() );
 			assertEquals(
 					JdbcTypeNameMapper.getTypeName( expectedJdbcTypeCode ),
 					JdbcTypeNameMapper.getTypeName( dataType ),

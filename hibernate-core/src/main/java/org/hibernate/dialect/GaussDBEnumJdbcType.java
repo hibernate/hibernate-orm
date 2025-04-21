@@ -40,13 +40,12 @@ import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnu
  * &#64;JdbcTypeCode(SqlTypes.NAMED_ENUM)
  * </pre>
  *
+ * @author liubao
+ * <p>
+ * Notes: Original code of this class is based on PostgreSQLEnumJdbcType.
  * @see org.hibernate.type.SqlTypes#NAMED_ENUM
  * @see GaussDBDialect#getEnumTypeDeclaration(String, String[])
  * @see GaussDBDialect#getCreateEnumTypeCommand(String, String[])
- *
- * @author liubao
- *
- * Notes: Original code of this class is based on PostgreSQLEnumJdbcType.
  */
 public class GaussDBEnumJdbcType implements JdbcType {
 
@@ -64,8 +63,8 @@ public class GaussDBEnumJdbcType implements JdbcType {
 
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
-		@SuppressWarnings("unchecked")
-		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
+		@SuppressWarnings(
+				"unchecked") final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
 		return (appender, value, dialect, wrapperOptions) -> {
 			appender.appendSql( "'" );
 			appender.appendSql( ((Enum<?>) value).name() );
@@ -125,7 +124,8 @@ public class GaussDBEnumJdbcType implements JdbcType {
 			}
 
 			@Override
-			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
+					throws SQLException {
 				return getJavaType().wrap( statement.getObject( name ), options );
 			}
 		};
@@ -138,13 +138,12 @@ public class GaussDBEnumJdbcType implements JdbcType {
 			Size columnSize,
 			Database database,
 			JdbcTypeIndicators context) {
-		@SuppressWarnings("unchecked")
-		final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
-		@SuppressWarnings("unchecked")
-		final String[] enumeratedValues =
+		@SuppressWarnings(
+				"unchecked") final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) javaType.getJavaType();
+		@SuppressWarnings("unchecked") final String[] enumeratedValues =
 				valueConverter == null
 						? getEnumeratedValues( enumClass )
-						: getEnumeratedValues( enumClass, (BasicValueConverter<Enum<?>,?>) valueConverter ) ;
+						: getEnumeratedValues( enumClass, (BasicValueConverter<Enum<?>, ?>) valueConverter );
 		if ( getDefaultSqlTypeCode() == NAMED_ENUM ) {
 			Arrays.sort( enumeratedValues );
 		}

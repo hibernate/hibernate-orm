@@ -28,7 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Vlad Mihalcea
  */
 @RequiresDialectFeature(feature = SupportsIdentityColumns.class, jiraKey = "HHH-9271")
-@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 12, matchSubTypes = true, reason = "Oracle and identity column: java.sql.Connection#prepareStatement(String sql, int columnIndexes[]) does not work with quoted table names and/or quoted columnIndexes")
+@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 12, matchSubTypes = true,
+		reason = "Oracle and identity column: java.sql.Connection#prepareStatement(String sql, int columnIndexes[]) does not work with quoted table names and/or quoted columnIndexes")
 @DomainModel(
 		annotatedClasses = {
 				QuotedIdentifierTest.QuotedIdentifier.class

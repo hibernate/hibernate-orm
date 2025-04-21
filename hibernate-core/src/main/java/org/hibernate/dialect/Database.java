@@ -17,7 +17,7 @@ import static org.hibernate.cfg.DialectSpecificSettings.COCKROACH_VERSION_STRING
 
 /**
  * A list of relational database systems for which Hibernate can resolve a {@link Dialect}.
- *
+ * <p>
  * However, Hibernate can work with other database systems that are not listed by the {@link Database}
  * enumeration, as long as a {@link Dialect} implementation class is provided via the {@code hibernate.dialect}
  * configuration property.
@@ -50,10 +50,12 @@ public enum Database {
 
 			return new DB2Dialect( info );
 		}
+
 		@Override
 		public boolean productNameMatches(String databaseName) {
 			return databaseName.startsWith( "DB2" );
 		}
+
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "com.ibm.db2.jcc.DB2Driver";
@@ -65,14 +67,17 @@ public enum Database {
 		public Dialect createDialect(DialectResolutionInfo info) {
 			return new PostgresPlusDialect( info );
 		}
+
 		@Override
 		public boolean productNameMatches(String databaseName) {
 			return "EnterpriseDB".equals( databaseName );
 		}
+
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "com.edb.Driver";
 		}
+
 		@Override
 		public String getUrlPrefix() {
 			return "jdbc:edb:";
@@ -82,12 +87,14 @@ public enum Database {
 	GAUSSDB {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new GaussDBDialect(info);
+			return new GaussDBDialect( info );
 		}
+
 		@Override
 		public boolean productNameMatches(String databaseName) {
 			return "GaussDB".equals( databaseName );
 		}
+
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "com.huawei.gaussdb.jdbc.Driver";
@@ -99,10 +106,12 @@ public enum Database {
 		public Dialect createDialect(DialectResolutionInfo info) {
 			return new H2Dialect( info );
 		}
+
 		@Override
 		public boolean productNameMatches(String databaseName) {
 			return "H2".equals( databaseName );
 		}
+
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "org.h2.Driver";
@@ -114,14 +123,17 @@ public enum Database {
 		public Dialect createDialect(DialectResolutionInfo info) {
 			return new HSQLDialect( info );
 		}
+
 		@Override
 		public boolean productNameMatches(String databaseName) {
 			return "HSQL Database Engine".equals( databaseName );
 		}
+
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "org.hsqldb.jdbc.JDBCDriver";
 		}
+
 		@Override
 		public String getUrlPrefix() {
 			return "jdbc:hsqldb:";
@@ -133,14 +145,17 @@ public enum Database {
 		public Dialect createDialect(DialectResolutionInfo info) {
 			return new HANADialect( info );
 		}
+
 		@Override
 		public boolean productNameMatches(String databaseName) {
 			return "HDB".equals( databaseName );
 		}
+
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "com.sap.db.jdbc.Driver";
 		}
+
 		@Override
 		public String getUrlPrefix() {
 			return "jdbc:sap:";
@@ -159,14 +174,17 @@ public enum Database {
 				return driverName != null && driverName.startsWith( "MariaDB" );
 			}
 		}
+
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
 			return new MariaDBDialect( info );
 		}
+
 		@Override
 		public boolean productNameMatches(String productName) {
 			return "MariaDB".equals( productName );
 		}
+
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "org.mariadb.jdbc.Driver";
@@ -178,10 +196,12 @@ public enum Database {
 		public Dialect createDialect(DialectResolutionInfo info) {
 			return new MySQLDialect( info );
 		}
+
 		@Override
 		public boolean productNameMatches(String databaseName) {
 			return "MySQL".equals( databaseName );
 		}
+
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "com.mysql.cj.jdbc.Driver";
@@ -193,6 +213,7 @@ public enum Database {
 		public Dialect createDialect(DialectResolutionInfo info) {
 			return new OracleDialect( info );
 		}
+
 		@Override
 		public boolean productNameMatches(String databaseName) {
 			return "Oracle".equals( databaseName );
@@ -212,18 +233,21 @@ public enum Database {
 			}
 			return new PostgreSQLDialect( info );
 		}
+
 		@Override
 		public boolean productNameMatches(String databaseName) {
 			return "PostgreSQL".equals( databaseName );
 		}
+
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "org.postgresql.Driver";
 		}
+
 		private String getVersion(DialectResolutionInfo info) {
 			final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 			if ( databaseMetaData != null ) {
-				try ( Statement statement = databaseMetaData.getConnection().createStatement() ) {
+				try (Statement statement = databaseMetaData.getConnection().createStatement()) {
 					final ResultSet rs = statement.executeQuery( "select version()" );
 					if ( rs.next() ) {
 						return rs.getString( 1 );
@@ -244,10 +268,12 @@ public enum Database {
 		public Dialect createDialect(DialectResolutionInfo info) {
 			return new SpannerDialect( info );
 		}
+
 		@Override
 		public boolean productNameMatches(String databaseName) {
 			return databaseName.startsWith( "Google Cloud Spanner" );
 		}
+
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "com.google.cloud.spanner.jdbc.JdbcDriver";
@@ -259,10 +285,12 @@ public enum Database {
 		public Dialect createDialect(DialectResolutionInfo info) {
 			return new SQLServerDialect( info );
 		}
+
 		@Override
 		public boolean productNameMatches(String databaseName) {
 			return databaseName.startsWith( "Microsoft SQL Server" );
 		}
+
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "com.microsoft.sqlserver.jdbc.SQLServerDriver";
@@ -278,19 +306,22 @@ public enum Database {
 			}
 			return null;
 		}
+
 		private boolean isASE(String databaseName) {
 			return "Sybase SQL Server".equals( databaseName )
-				|| "Adaptive Server Enterprise".equals( databaseName )
-					|| "ASE".equals( databaseName );
+				   || "Adaptive Server Enterprise".equals( databaseName )
+				   || "ASE".equals( databaseName );
 		}
+
 		@Override
 		public boolean productNameMatches(String productName) {
 			return isASE( productName );
 		}
+
 		@Override
 		public boolean matchesUrl(String jdbcUrl) {
 			return jdbcUrl.startsWith( "jdbc:sybase:" )
-					|| jdbcUrl.startsWith( "jdbc:sqlanywhere:" );
+				   || jdbcUrl.startsWith( "jdbc:sqlanywhere:" );
 		}
 	};
 

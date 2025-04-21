@@ -56,7 +56,7 @@ public class JsonTableTest {
 			entity.getJson().put( "theString", "abc" );
 			entity.getJson().put( "theBoolean", true );
 			entity.getJson().put( "theNull", null );
-			entity.getJson().put( "theArray", new String[] { "a", "b", "c" } );
+			entity.getJson().put( "theArray", new String[] {"a", "b", "c"} );
 			entity.getJson().put( "theObject", new HashMap<>( entity.getJson() ) );
 			em.persist( entity );
 		} );

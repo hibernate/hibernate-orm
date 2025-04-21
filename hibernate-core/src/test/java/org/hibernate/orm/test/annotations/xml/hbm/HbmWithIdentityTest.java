@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
  */
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @DomainModel(
-		annotatedClasses = { Sky.class, ZImpl.class },
+		annotatedClasses = {Sky.class, ZImpl.class},
 		xmlMappings = {
 				"org/hibernate/orm/test/annotations/xml/hbm/A.hbm.xml",
 				"org/hibernate/orm/test/annotations/xml/hbm/B.hbm.xml",
@@ -31,7 +31,8 @@ import org.junit.jupiter.api.Test;
 @SessionFactory
 public class HbmWithIdentityTest {
 	@Test
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true,
+			reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testManyToOneAndInterface(SessionFactoryScope scope) {
 		scope.inTransaction(

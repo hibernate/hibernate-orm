@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
-@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resovling.not support")
+@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resovling.not support")
 public class SubQueryInFromIdClassTests {
 
 	@Test
@@ -67,18 +67,19 @@ public class SubQueryInFromIdClassTests {
 
 					final JpaDerivedJoin<Tuple> a = root.joinLateral( subquery, JoinType.LEFT );
 
-					cq.multiselect( root.get( "name" ), a.get( "contact" ).get( "id1" ), a.get( "contact" ).get( "id2" ) );
+					cq.multiselect( root.get( "name" ), a.get( "contact" ).get( "id1" ),
+							a.get( "contact" ).get( "id2" ) );
 					cq.orderBy( cb.asc( root.get( "id1" ) ) );
 
 					final Query<Tuple> query = session.createQuery(
 							"select c.name, a.contact.id1, a.contact.id2 from Contact c " +
-									"left join lateral (" +
-									"select alt as contact " +
-									"from c.alternativeContact alt " +
-									"order by alt.name.first " +
-									"limit 1" +
-									") a " +
-									"order by c.id1",
+							"left join lateral (" +
+							"select alt as contact " +
+							"from c.alternativeContact alt " +
+							"order by alt.name.first " +
+							"limit 1" +
+							") a " +
+							"order by c.id1",
 							Tuple.class
 					);
 					verifySame(
@@ -86,13 +87,19 @@ public class SubQueryInFromIdClassTests {
 							query.getResultList(),
 							list -> {
 								assertEquals( 3, list.size() );
-								assertEquals( "John", list.get( 0 ).get( 0, SubQueryInFromIdClassTests.Contact.Name.class ).getFirst() );
+								assertEquals( "John",
+										list.get( 0 ).get( 0, SubQueryInFromIdClassTests.Contact.Name.class )
+												.getFirst() );
 								assertEquals( 2, list.get( 0 ).get( 1, Integer.class ) );
 								assertEquals( 2, list.get( 0 ).get( 2, Integer.class ) );
-								assertEquals( "Jane", list.get( 1 ).get( 0, SubQueryInFromIdClassTests.Contact.Name.class ).getFirst() );
+								assertEquals( "Jane",
+										list.get( 1 ).get( 0, SubQueryInFromIdClassTests.Contact.Name.class )
+												.getFirst() );
 								assertEquals( 3, list.get( 1 ).get( 1, Integer.class ) );
 								assertEquals( 3, list.get( 1 ).get( 2, Integer.class ) );
-								assertEquals( "Granny", list.get( 2 ).get( 0, SubQueryInFromIdClassTests.Contact.Name.class ).getFirst() );
+								assertEquals( "Granny",
+										list.get( 2 ).get( 0, SubQueryInFromIdClassTests.Contact.Name.class )
+												.getFirst() );
 								assertNull( list.get( 2 ).get( 1, Integer.class ) );
 								assertNull( list.get( 2 ).get( 2, Integer.class ) );
 							}
@@ -124,14 +131,14 @@ public class SubQueryInFromIdClassTests {
 
 					final Query<Tuple> query = session.createQuery(
 							"select c.name, alt.name from Contact c " +
-									"left join lateral (" +
-									"select alt as contact " +
-									"from c.alternativeContact alt " +
-									"order by alt.name.first desc " +
-									"limit 1" +
-									") a " +
-									"join a.contact alt " +
-									"order by c.id1",
+							"left join lateral (" +
+							"select alt as contact " +
+							"from c.alternativeContact alt " +
+							"order by alt.name.first desc " +
+							"limit 1" +
+							") a " +
+							"join a.contact alt " +
+							"order by c.id1",
 							Tuple.class
 					);
 					verifySame(
@@ -139,10 +146,18 @@ public class SubQueryInFromIdClassTests {
 							query.getResultList(),
 							list -> {
 								assertEquals( 2, list.size() );
-								assertEquals( "John", list.get( 0 ).get( 0, SubQueryInFromIdClassTests.Contact.Name.class ).getFirst() );
-								assertEquals( "Jane", list.get( 0 ).get( 1, SubQueryInFromIdClassTests.Contact.Name.class ).getFirst() );
-								assertEquals( "Jane", list.get( 1 ).get( 0, SubQueryInFromIdClassTests.Contact.Name.class ).getFirst() );
-								assertEquals( "Granny", list.get( 1 ).get( 1, SubQueryInFromIdClassTests.Contact.Name.class ).getFirst() );
+								assertEquals( "John",
+										list.get( 0 ).get( 0, SubQueryInFromIdClassTests.Contact.Name.class )
+												.getFirst() );
+								assertEquals( "Jane",
+										list.get( 0 ).get( 1, SubQueryInFromIdClassTests.Contact.Name.class )
+												.getFirst() );
+								assertEquals( "Jane",
+										list.get( 1 ).get( 0, SubQueryInFromIdClassTests.Contact.Name.class )
+												.getFirst() );
+								assertEquals( "Granny",
+										list.get( 1 ).get( 1, SubQueryInFromIdClassTests.Contact.Name.class )
+												.getFirst() );
 							}
 					);
 				}
@@ -171,13 +186,13 @@ public class SubQueryInFromIdClassTests {
 
 					final Query<Tuple> query = session.createQuery(
 							"select c.name, a.contact.name from Contact c " +
-									"left join lateral (" +
-									"select alt as contact " +
-									"from c.alternativeContact alt " +
-									"order by alt.name.first desc " +
-									"limit 1" +
-									") a " +
-									"order by c.id1",
+							"left join lateral (" +
+							"select alt as contact " +
+							"from c.alternativeContact alt " +
+							"order by alt.name.first desc " +
+							"limit 1" +
+							") a " +
+							"order by c.id1",
 							Tuple.class
 					);
 					verifySame(
@@ -185,10 +200,18 @@ public class SubQueryInFromIdClassTests {
 							query.getResultList(),
 							list -> {
 								assertEquals( 2, list.size() );
-								assertEquals( "John", list.get( 0 ).get( 0, SubQueryInFromIdClassTests.Contact.Name.class ).getFirst() );
-								assertEquals( "Jane", list.get( 0 ).get( 1, SubQueryInFromIdClassTests.Contact.Name.class ).getFirst() );
-								assertEquals( "Jane", list.get( 1 ).get( 0, SubQueryInFromIdClassTests.Contact.Name.class ).getFirst() );
-								assertEquals( "Granny", list.get( 1 ).get( 1, SubQueryInFromIdClassTests.Contact.Name.class ).getFirst() );
+								assertEquals( "John",
+										list.get( 0 ).get( 0, SubQueryInFromIdClassTests.Contact.Name.class )
+												.getFirst() );
+								assertEquals( "Jane",
+										list.get( 0 ).get( 1, SubQueryInFromIdClassTests.Contact.Name.class )
+												.getFirst() );
+								assertEquals( "Jane",
+										list.get( 1 ).get( 0, SubQueryInFromIdClassTests.Contact.Name.class )
+												.getFirst() );
+								assertEquals( "Granny",
+										list.get( 1 ).get( 1, SubQueryInFromIdClassTests.Contact.Name.class )
+												.getFirst() );
 							}
 					);
 				}
@@ -234,9 +257,9 @@ public class SubQueryInFromIdClassTests {
 	/**
 	 * @author Steve Ebersole
 	 */
-	@Entity( name = "Contact")
-	@Table( name = "contacts" )
-	@SecondaryTable( name="contact_supp" )
+	@Entity(name = "Contact")
+	@Table(name = "contacts")
+	@SecondaryTable(name = "contact_supp")
 	public static class Contact {
 		private Integer id1;
 		private Integer id2;

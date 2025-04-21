@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * Gaussdb array_trim function.
- *
+ * <p>
  * Notes: Original code of this class is based on PostgreSQLArrayTrimEmulation.
  */
 public class GaussDBArrayTrimFunction extends AbstractArrayTrimFunction {
@@ -29,11 +29,11 @@ public class GaussDBArrayTrimFunction extends AbstractArrayTrimFunction {
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression lengthExpression = (Expression) sqlAstArguments.get( 1 );
 
-		sqlAppender.append( "array_trim(");
+		sqlAppender.append( "array_trim(" );
 		arrayExpression.accept( walker );
-		sqlAppender.append( ",");
+		sqlAppender.append( "," );
 		lengthExpression.accept( walker );
-		sqlAppender.append( ")");
+		sqlAppender.append( ")" );
 
 	}
 }

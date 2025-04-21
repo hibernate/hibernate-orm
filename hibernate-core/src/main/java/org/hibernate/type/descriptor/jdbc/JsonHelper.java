@@ -146,7 +146,9 @@ public class JsonHelper {
 				}
 			}
 			else {
-				throw new UnsupportedOperationException( "Support for attribute mapping type not yet implemented: " + attributeMapping.getClass().getName() );
+				throw new UnsupportedOperationException(
+						"Support for attribute mapping type not yet implemented: " + attributeMapping.getClass()
+								.getName() );
 			}
 			separator = ',';
 		}
@@ -165,7 +167,8 @@ public class JsonHelper {
 			convertedBasicValueToString( basicType.convertToRelationalValue( value ), options, appender, basicType );
 		}
 		else {
-			throw new UnsupportedOperationException( "Support for mapping type not yet implemented: " + mappedType.getClass().getName() );
+			throw new UnsupportedOperationException(
+					"Support for mapping type not yet implemented: " + mappedType.getClass().getName() );
 		}
 	}
 
@@ -319,8 +322,8 @@ public class JsonHelper {
 				appender.append( '[' );
 				if ( length != 0 ) {
 					//noinspection unchecked
-					final JavaType<Object> elementJavaType = ( (BasicPluralJavaType<Object>) javaType ).getElementJavaType();
-					final JdbcType elementJdbcType = ( (ArrayJdbcType) jdbcType ).getElementJdbcType();
+					final JavaType<Object> elementJavaType = ((BasicPluralJavaType<Object>) javaType).getElementJavaType();
+					final JdbcType elementJdbcType = ((ArrayJdbcType) jdbcType).getElementJdbcType();
 					Object arrayElement = Array.get( value, 0 );
 					convertedValueToString( elementJavaType, elementJdbcType, arrayElement, options, appender );
 					for ( int i = 1; i < length; i++ ) {
@@ -346,8 +349,9 @@ public class JsonHelper {
 		}
 
 		final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
-		final Object[] values = new Object[jdbcValueCount + ( embeddableMappingType.isPolymorphic() ? 1 : 0 )];
-		final int end = fromString( embeddableMappingType, string, 0, string.length(), values, returnEmbeddable, options );
+		final Object[] values = new Object[jdbcValueCount + (embeddableMappingType.isPolymorphic() ? 1 : 0)];
+		final int end = fromString( embeddableMappingType, string, 0, string.length(), values, returnEmbeddable,
+				options );
 		assert string.substring( end ).isBlank();
 		if ( returnEmbeddable ) {
 			final StructAttributeValues attributeValues = StructHelper.getAttributeValues(
@@ -378,7 +382,8 @@ public class JsonHelper {
 			jdbcJavaType = elementJavaType;
 		}
 		else {
-			jdbcJavaType = options.getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( preferredJavaTypeClass );
+			jdbcJavaType = options.getTypeConfiguration().getJavaTypeRegistry()
+					.resolveDescriptor( preferredJavaTypeClass );
 		}
 		final CustomArrayList arrayList = new CustomArrayList();
 		final int i = fromArrayString(
@@ -502,7 +507,7 @@ public class JsonHelper {
 							final SelectableMapping selectable = embeddableMappingType.getJdbcValueSelectable(
 									selectableIndex
 							);
-							if ( !( selectable.getJdbcMapping().getJdbcType()
+							if ( !(selectable.getJdbcMapping().getJdbcType()
 									instanceof AggregateJdbcType aggregateJdbcType) ) {
 								throw new IllegalArgumentException(
 										String.format(
@@ -516,7 +521,7 @@ public class JsonHelper {
 							final EmbeddableMappingType subMappingType = aggregateJdbcType.getEmbeddableMappingType();
 							// This encoding is only possible if the JDBC type is JSON again
 							assert aggregateJdbcType.getJdbcTypeCode() == SqlTypes.JSON
-									|| aggregateJdbcType.getDefaultSqlTypeCode() == SqlTypes.JSON;
+								   || aggregateJdbcType.getDefaultSqlTypeCode() == SqlTypes.JSON;
 							final Object[] subValues = new Object[subMappingType.getJdbcValueCount()];
 							i = fromString( subMappingType, string, i, end, subValues, returnEmbeddable, options ) - 1;
 							assert string.charAt( i ) == '}';
@@ -824,7 +829,8 @@ public class JsonHelper {
 			}
 		}
 
-		throw new IllegalArgumentException( "JSON not properly formed: " + string.subSequence( start, string.length() ) );
+		throw new IllegalArgumentException(
+				"JSON not properly formed: " + string.subSequence( start, string.length() ) );
 	}
 
 	private static int consumeLiteral(
@@ -863,15 +869,15 @@ public class JsonHelper {
 			case 'n':
 				// only null is possible
 				values[selectableIndex] = null;
-				return consume(string, start, "null");
+				return consume( string, start, "null" );
 			case 'f':
 				// only false is possible
 				values[selectableIndex] = false;
-				return consume(string, start, "false");
+				return consume( string, start, "false" );
 			case 't':
 				// only false is possible
 				values[selectableIndex] = true;
-				return consume(string, start, "true");
+				return consume( string, start, "true" );
 			case '0':
 				switch ( string.charAt( start + 1 ) ) {
 					case '.':
@@ -933,7 +939,7 @@ public class JsonHelper {
 				// minus = %x2D               ; -
 				// plus = %x2B                ; +
 				// zero = %x30                ; 0
-				for (int i = start + 1; i < string.length(); i++) {
+				for ( int i = start + 1; i < string.length(); i++ ) {
 					final char digit = string.charAt( i );
 					switch ( digit ) {
 						case '.':
@@ -1004,7 +1010,7 @@ public class JsonHelper {
 			int selectableIndex,
 			boolean returnEmbeddable,
 			WrapperOptions options) throws SQLException {
-		for (int i = dotIndex + 1; i < string.length(); i++) {
+		for ( int i = dotIndex + 1; i < string.length(); i++ ) {
 			final char digit = string.charAt( i );
 			switch ( digit ) {
 				case 'E':
@@ -1067,7 +1073,7 @@ public class JsonHelper {
 				i++;
 				break;
 		}
-		for (; i < string.length(); i++) {
+		for ( ; i < string.length(); i++ ) {
 			final char digit = string.charAt( i );
 			switch ( digit ) {
 				case '0':
@@ -1217,9 +1223,9 @@ public class JsonHelper {
 			case SqlTypes.LONG32VARBINARY:
 				return jdbcJavaType.wrap(
 						PrimitiveByteArrayJavaType.INSTANCE.fromEncodedString(
-							string,
-							start,
-							end
+								string,
+								start,
+								end
 						),
 						options
 				);
@@ -1301,7 +1307,7 @@ public class JsonHelper {
 								subValues,
 								options
 						);
-						return instantiate( aggregateJdbcType.getEmbeddableMappingType(), subAttributeValues ) ;
+						return instantiate( aggregateJdbcType.getEmbeddableMappingType(), subAttributeValues );
 					}
 					return subValues;
 				}
@@ -1455,7 +1461,7 @@ public class JsonHelper {
 		public void write(int v) {
 			final String hex = Integer.toHexString( v );
 			sb.ensureCapacity( sb.length() + hex.length() + 1 );
-			if ( ( hex.length() & 1 ) == 1 ) {
+			if ( (hex.length() & 1) == 1 ) {
 				sb.append( '0' );
 			}
 			sb.append( hex );
@@ -1463,12 +1469,12 @@ public class JsonHelper {
 
 		@Override
 		public void write(byte[] bytes) {
-			write(bytes, 0, bytes.length);
+			write( bytes, 0, bytes.length );
 		}
 
 		@Override
 		public void write(byte[] bytes, int off, int len) {
-			sb.ensureCapacity( sb.length() + ( len << 1 ) );
+			sb.ensureCapacity( sb.length() + (len << 1) );
 			for ( int i = 0; i < len; i++ ) {
 				final int v = bytes[off + i] & 0xFF;
 				sb.append( HEX_ARRAY[v >>> 4] );
@@ -1486,12 +1492,12 @@ public class JsonHelper {
 				case 5:
 				case 6:
 				case 7:
-				//   8 is '\b'
-				//   9 is '\t'
-				//   10 is '\n'
+					//   8 is '\b'
+					//   9 is '\t'
+					//   10 is '\n'
 				case 11:
-				//   12 is '\f'
-				//   13 is '\r'
+					//   12 is '\f'
+					//   13 is '\r'
 				case 14:
 				case 15:
 				case 16:
@@ -1513,19 +1519,19 @@ public class JsonHelper {
 					sb.append( "\\u" ).append( Integer.toHexString( fragment ) );
 					break;
 				case '\b':
-					sb.append("\\b");
+					sb.append( "\\b" );
 					break;
 				case '\t':
-					sb.append("\\t");
+					sb.append( "\\t" );
 					break;
 				case '\n':
-					sb.append("\\n");
+					sb.append( "\\n" );
 					break;
 				case '\f':
-					sb.append("\\f");
+					sb.append( "\\f" );
 					break;
 				case '\r':
-					sb.append("\\r");
+					sb.append( "\\r" );
 					break;
 				case '"':
 					sb.append( "\\\"" );
@@ -1548,7 +1554,7 @@ public class JsonHelper {
 		public void ensureCapacity(int minCapacity) {
 			int oldCapacity = array.length;
 			if ( minCapacity > oldCapacity ) {
-				int newCapacity = oldCapacity + ( oldCapacity >> 1 );
+				int newCapacity = oldCapacity + (oldCapacity >> 1);
 				newCapacity = Math.max( Math.max( newCapacity, minCapacity ), 10 );
 				array = Arrays.copyOf( array, newCapacity );
 			}
@@ -1580,7 +1586,7 @@ public class JsonHelper {
 		@Override
 		public boolean contains(Object o) {
 			for ( int i = 0; i < size; i++ ) {
-				if ( Objects.equals(o, array[i] ) ) {
+				if ( Objects.equals( o, array[i] ) ) {
 					return true;
 				}
 			}
@@ -1591,6 +1597,7 @@ public class JsonHelper {
 		public Iterator<Object> iterator() {
 			return new Iterator<>() {
 				int index;
+
 				@Override
 				public boolean hasNext() {
 					return index != size;
@@ -1618,7 +1625,7 @@ public class JsonHelper {
 			final T[] r = a.length >= size
 					? a
 					: (T[]) java.lang.reflect.Array.newInstance( a.getClass().getComponentType(), size );
-			for (int i = 0; i < size; i++) {
+			for ( int i = 0; i < size; i++ ) {
 				//noinspection unchecked
 				r[i] = (T) array[i];
 			}
@@ -1627,29 +1634,29 @@ public class JsonHelper {
 	}
 
 	public static String parseJsonPath(String path) {
-		if (path == null || !path.startsWith("$")) {
-			throw new IllegalArgumentException("Invalid JSON path");
+		if ( path == null || !path.startsWith( "$" ) ) {
+			throw new IllegalArgumentException( "Invalid JSON path" );
 		}
 
 		List<String> result = new ArrayList<>();
-		String[] parts = path.substring(1).split("\\.");
+		String[] parts = path.substring( 1 ).split( "\\." );
 
-		for (String part : parts) {
-			while (part.contains("[")) {
-				int start = part.indexOf("[");
-				int end = part.indexOf("]", start);
-				if (end == -1) {
-					throw new IllegalArgumentException("Invalid JSON path format");
+		for ( String part : parts ) {
+			while ( part.contains( "[" ) ) {
+				int start = part.indexOf( "[" );
+				int end = part.indexOf( "]", start );
+				if ( end == -1 ) {
+					throw new IllegalArgumentException( "Invalid JSON path format" );
 				}
-				result.add(part.substring(0, start));
-				result.add(part.substring(start + 1, end));
-				part = part.substring(end + 1);
+				result.add( part.substring( 0, start ) );
+				result.add( part.substring( start + 1, end ) );
+				part = part.substring( end + 1 );
 			}
-			if (!part.isEmpty()) {
-				result.add(part);
+			if ( !part.isEmpty() ) {
+				result.add( part );
 			}
 		}
 
-		return String.join(",", result);
+		return String.join( ",", result );
 	}
 }

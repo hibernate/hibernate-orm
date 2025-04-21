@@ -27,9 +27,9 @@ public class GaussDBArrayRemoveFunction extends AbstractArrayRemoveFunction {
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression indexExpression = (Expression) sqlAstArguments.get( 1 );
 
-		sqlAppender.append( "CASE WHEN ");
+		sqlAppender.append( "CASE WHEN " );
 		arrayExpression.accept( walker );
-		sqlAppender.append( " IS NULL THEN NULL ELSE COALESCE(( SELECT array_agg(val) FROM unnest(");
+		sqlAppender.append( " IS NULL THEN NULL ELSE COALESCE(( SELECT array_agg(val) FROM unnest(" );
 		arrayExpression.accept( walker );
 		sqlAppender.append( ") AS val" );
 
@@ -51,6 +51,7 @@ public class GaussDBArrayRemoveFunction extends AbstractArrayRemoveFunction {
 
 	/**
 	 * can not get value if type like string
+	 *
 	 * @param sqlAppender
 	 * @param walker
 	 * @param indexExpression

@@ -85,16 +85,16 @@ public class CommonFunctionFactory {
 		typeConfiguration = functionContributions.getTypeConfiguration();
 
 		BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		dateType = basicTypeRegistry.resolve(StandardBasicTypes.DATE);
-		timeType = basicTypeRegistry.resolve(StandardBasicTypes.TIME);
-		timestampType = basicTypeRegistry.resolve(StandardBasicTypes.TIMESTAMP);
-		longType = basicTypeRegistry.resolve(StandardBasicTypes.LONG);
-		characterType = basicTypeRegistry.resolve(StandardBasicTypes.CHARACTER);
-		booleanType = basicTypeRegistry.resolve(StandardBasicTypes.BOOLEAN);
-		stringType = basicTypeRegistry.resolve(StandardBasicTypes.STRING);
-		binaryType = basicTypeRegistry.resolve(StandardBasicTypes.BINARY);
-		integerType = basicTypeRegistry.resolve(StandardBasicTypes.INTEGER);
-		doubleType = basicTypeRegistry.resolve(StandardBasicTypes.DOUBLE);
+		dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
+		timeType = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
+		timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
+		longType = basicTypeRegistry.resolve( StandardBasicTypes.LONG );
+		characterType = basicTypeRegistry.resolve( StandardBasicTypes.CHARACTER );
+		booleanType = basicTypeRegistry.resolve( StandardBasicTypes.BOOLEAN );
+		stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		binaryType = basicTypeRegistry.resolve( StandardBasicTypes.BINARY );
+		integerType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
+		doubleType = basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -103,8 +103,8 @@ public class CommonFunctionFactory {
 	public void cot() {
 		functionRegistry.namedDescriptorBuilder( "cot" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.setInvariantType(doubleType)
+				.setParameterTypes( NUMERIC )
+				.setInvariantType( doubleType )
 				.register();
 	}
 
@@ -114,17 +114,17 @@ public class CommonFunctionFactory {
 	public void log() {
 		functionRegistry.namedDescriptorBuilder( "log" )
 				.setArgumentCountBetween( 1, 2 )
-				.setParameterTypes(NUMERIC, NUMERIC)
-				.setInvariantType(doubleType)
+				.setParameterTypes( NUMERIC, NUMERIC )
+				.setInvariantType( doubleType )
 				.register();
 	}
 
 	public void log_ln() {
 		functionRegistry.patternDescriptorBuilder( "log", "ln(?2)/ln(?1)" )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(NUMERIC, NUMERIC)
-				.setInvariantType(doubleType)
-				.setArgumentListSignature("(NUMERIC base, NUMERIC arg)")
+				.setParameterTypes( NUMERIC, NUMERIC )
+				.setInvariantType( doubleType )
+				.setArgumentListSignature( "(NUMERIC base, NUMERIC arg)" )
 				.register();
 	}
 
@@ -134,9 +134,9 @@ public class CommonFunctionFactory {
 	public void log_log() {
 		functionRegistry.patternDescriptorBuilder( "log", "log(?2,?1)" )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(NUMERIC, NUMERIC)
-				.setInvariantType(doubleType)
-				.setArgumentListSignature("(NUMERIC base, NUMERIC arg)")
+				.setParameterTypes( NUMERIC, NUMERIC )
+				.setInvariantType( doubleType )
+				.setArgumentListSignature( "(NUMERIC base, NUMERIC arg)" )
 				.register();
 	}
 
@@ -146,9 +146,9 @@ public class CommonFunctionFactory {
 	public void log_loglog() {
 		functionRegistry.patternDescriptorBuilder( "log", "log(?2)/log(?1)" )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(NUMERIC, NUMERIC)
-				.setInvariantType(doubleType)
-				.setArgumentListSignature("(NUMERIC base, NUMERIC arg)")
+				.setParameterTypes( NUMERIC, NUMERIC )
+				.setInvariantType( doubleType )
+				.setArgumentListSignature( "(NUMERIC base, NUMERIC arg)" )
 				.register();
 	}
 
@@ -157,17 +157,17 @@ public class CommonFunctionFactory {
 	 */
 	public void ln_log() {
 		functionRegistry.namedDescriptorBuilder( "ln", "log" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
 	public void log10() {
 		functionRegistry.namedDescriptorBuilder( "log10" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.setInvariantType(doubleType)
+				.setParameterTypes( NUMERIC )
+				.setInvariantType( doubleType )
 				.register();
 	}
 
@@ -177,24 +177,24 @@ public class CommonFunctionFactory {
 	public void log10_log() {
 		functionRegistry.patternDescriptorBuilder( "log10", "log(10,?1)" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.setInvariantType(doubleType)
+				.setParameterTypes( NUMERIC )
+				.setInvariantType( doubleType )
 				.register();
 	}
 
 	public void log2() {
 		functionRegistry.namedDescriptorBuilder( "log2" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
 	public void radians() {
 		functionRegistry.namedDescriptorBuilder( "radians" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.setInvariantType(doubleType)
+				.setParameterTypes( NUMERIC )
+				.setInvariantType( doubleType )
 				.register();
 	}
 
@@ -203,17 +203,17 @@ public class CommonFunctionFactory {
 	 */
 	public void radians_acos() {
 		functionRegistry.patternDescriptorBuilder( "radians", "(?1*acos(-1)/180)" )
-				.setInvariantType(doubleType)
-				.setExactArgumentCount(1)
-				.setParameterTypes(NUMERIC)
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
 	public void degrees() {
 		functionRegistry.namedDescriptorBuilder( "degrees" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.setInvariantType(doubleType)
+				.setParameterTypes( NUMERIC )
+				.setInvariantType( doubleType )
 				.register();
 	}
 
@@ -222,75 +222,75 @@ public class CommonFunctionFactory {
 	 */
 	public void degrees_acos() {
 		functionRegistry.patternDescriptorBuilder( "degrees", "(?1/acos(-1)*180)" )
-				.setInvariantType(doubleType)
-				.setExactArgumentCount(1)
-				.setParameterTypes(NUMERIC)
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
 	public void sinh() {
 		functionRegistry.namedDescriptorBuilder( "sinh" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.setInvariantType(doubleType)
+				.setParameterTypes( NUMERIC )
+				.setInvariantType( doubleType )
 				.register();
 	}
 
 	public void sinh_exp() {
 		functionRegistry.patternDescriptorBuilder( "sinh", "((exp(?1)-exp(-?1))/2)" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.setInvariantType(doubleType)
+				.setParameterTypes( NUMERIC )
+				.setInvariantType( doubleType )
 				.register();
 	}
 
 	public void cosh() {
 		functionRegistry.namedDescriptorBuilder( "cosh" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.setInvariantType(doubleType)
+				.setParameterTypes( NUMERIC )
+				.setInvariantType( doubleType )
 				.register();
 	}
 
 	public void cosh_exp() {
 		functionRegistry.patternDescriptorBuilder( "cosh", "((exp(?1)+exp(-?1))/2)" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.setInvariantType(doubleType)
+				.setParameterTypes( NUMERIC )
+				.setInvariantType( doubleType )
 				.register();
 	}
 
 	public void tanh() {
 		functionRegistry.namedDescriptorBuilder( "tanh" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.setInvariantType(doubleType)
+				.setParameterTypes( NUMERIC )
+				.setInvariantType( doubleType )
 				.register();
 	}
 
 	public void tanh_exp() {
 		functionRegistry.patternDescriptorBuilder( "tanh", "((exp(2*?1)-1)/(exp(2*?1)+1))" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
-				.setInvariantType(doubleType)
+				.setParameterTypes( NUMERIC )
+				.setInvariantType( doubleType )
 				.register();
 	}
 
 	public void moreHyperbolic() {
 		functionRegistry.namedDescriptorBuilder( "acosh" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "asinh" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "atanh" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
@@ -350,7 +350,8 @@ public class CommonFunctionFactory {
 	 * SAP HANA
 	 */
 	public void trunc_roundMode() {
-		trunc( "round(?1,0,round_down)", "round(?1,?2,round_down)", TruncFunction.DatetimeTrunc.FORMAT, "to_timestamp" );
+		trunc( "round(?1,0,round_down)", "round(?1,?2,round_down)", TruncFunction.DatetimeTrunc.FORMAT,
+				"to_timestamp" );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -362,18 +363,18 @@ public class CommonFunctionFactory {
 	public void rand() {
 		functionRegistry.namedDescriptorBuilder( "rand" )
 				.setArgumentCountBetween( 0, 1 )
-				.setParameterTypes(INTEGER)
+				.setParameterTypes( INTEGER )
 				.setUseParenthesesWhenNoArgs( true )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setArgumentListSignature( "([INTEGER seed])" )
 				.register();
 	}
 
 	public void median() {
 		functionRegistry.namedAggregateDescriptorBuilder( "median" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
@@ -381,11 +382,11 @@ public class CommonFunctionFactory {
 		functionRegistry.patternDescriptorBuilder(
 						"median",
 						"percentile_cont(0.5) within group (order by ?1)"
-								+ ( over ? " over()" : "" )
+						+ (over ? " over()" : "")
 				)
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
@@ -398,9 +399,9 @@ public class CommonFunctionFactory {
 						"median",
 						"percentile_cont(0.5) within group (order by cast(?1 as double precision))"
 				)
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
@@ -413,9 +414,9 @@ public class CommonFunctionFactory {
 	 */
 	public void stddev() {
 		functionRegistry.namedAggregateDescriptorBuilder( "stddev" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
@@ -428,56 +429,56 @@ public class CommonFunctionFactory {
 	 */
 	public void variance() {
 		functionRegistry.namedAggregateDescriptorBuilder( "variance" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
 	public void stddevPopSamp() {
 		functionRegistry.namedAggregateDescriptorBuilder( "stddev_pop" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 		functionRegistry.namedAggregateDescriptorBuilder( "stddev_samp" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
 	public void varPopSamp() {
 		functionRegistry.namedAggregateDescriptorBuilder( "var_pop" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 		functionRegistry.namedAggregateDescriptorBuilder( "var_samp" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
 	public void covarPopSamp() {
 		functionRegistry.namedAggregateDescriptorBuilder( "covar_pop" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(NUMERIC, NUMERIC)
+				.setParameterTypes( NUMERIC, NUMERIC )
 				.register();
 		functionRegistry.namedAggregateDescriptorBuilder( "covar_samp" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(NUMERIC, NUMERIC)
+				.setParameterTypes( NUMERIC, NUMERIC )
 				.register();
 	}
 
 	public void corr() {
 		functionRegistry.namedAggregateDescriptorBuilder( "corr" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(NUMERIC, NUMERIC)
+				.setParameterTypes( NUMERIC, NUMERIC )
 				.register();
 	}
 
@@ -488,9 +489,9 @@ public class CommonFunctionFactory {
 				)
 				.forEach(
 						fnName -> functionRegistry.namedAggregateDescriptorBuilder( fnName )
-								.setInvariantType(doubleType)
+								.setInvariantType( doubleType )
 								.setExactArgumentCount( 2 )
-								.setParameterTypes(NUMERIC, NUMERIC)
+								.setParameterTypes( NUMERIC, NUMERIC )
 								.register()
 				);
 	}
@@ -535,14 +536,14 @@ public class CommonFunctionFactory {
 	 */
 	public void stddevPopSamp_stdevp() {
 		functionRegistry.namedAggregateDescriptorBuilder( "stdev" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 		functionRegistry.namedAggregateDescriptorBuilder( "stdevp" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 		functionRegistry.registerAlternateKey( "stddev_samp", "stdev" );
 		functionRegistry.registerAlternateKey( "stddev_pop", "stdevp" );
@@ -553,14 +554,14 @@ public class CommonFunctionFactory {
 	 */
 	public void varPopSamp_varp() {
 		functionRegistry.namedAggregateDescriptorBuilder( "var" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 		functionRegistry.namedAggregateDescriptorBuilder( "varp" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 		functionRegistry.registerAlternateKey( "var_samp", "var" );
 		functionRegistry.registerAlternateKey( "var_pop", "varp" );
@@ -568,17 +569,17 @@ public class CommonFunctionFactory {
 
 	public void pi() {
 		functionRegistry.noArgsBuilder( "pi" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setUseParenthesesWhenNoArgs( true )
-				.setArgumentListSignature("")
+				.setArgumentListSignature( "" )
 				.register();
 	}
 
 	public void pi_acos() {
 		functionRegistry.patternDescriptorBuilder( "pi", "acos(-1)" )
-				.setInvariantType(doubleType)
-				.setExactArgumentCount(0)
-				.setArgumentListSignature("")
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 0 )
+				.setArgumentListSignature( "" )
 				.register();
 	}
 
@@ -588,51 +589,51 @@ public class CommonFunctionFactory {
 	public void soundex() {
 		functionRegistry.namedDescriptorBuilder( "soundex" )
 				.setExactArgumentCount( 1 )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.register();
 	}
 
 	public void trim2() {
 		functionRegistry.namedDescriptorBuilder( "ltrim" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setArgumentCountBetween( 1, 2 )
-				.setParameterTypes(STRING, STRING)
+				.setParameterTypes( STRING, STRING )
 				.setArgumentListSignature( "(STRING string[, STRING characters])" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "rtrim" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setArgumentCountBetween( 1, 2 )
-				.setParameterTypes(STRING, STRING)
+				.setParameterTypes( STRING, STRING )
 				.setArgumentListSignature( "(STRING string[, STRING characters])" )
 				.register();
 	}
 
 	public void trim1() {
 		functionRegistry.namedDescriptorBuilder( "ltrim" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
+				.setParameterTypes( STRING )
 				.setArgumentListSignature( "(STRING string)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "rtrim" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
+				.setParameterTypes( STRING )
 				.setArgumentListSignature( "(STRING string)" )
 				.register();
 	}
 
 	public void pad() {
 		functionRegistry.namedDescriptorBuilder( "lpad" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setArgumentCountBetween( 2, 3 )
-				.setParameterTypes(STRING, INTEGER, STRING)
+				.setParameterTypes( STRING, INTEGER, STRING )
 				.setArgumentListSignature( "(STRING string, INTEGER length[, STRING padding])" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "rpad" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setArgumentCountBetween( 2, 3 )
-				.setParameterTypes(STRING, INTEGER, STRING)
+				.setParameterTypes( STRING, INTEGER, STRING )
 				.setArgumentListSignature( "(STRING string, INTEGER length[, STRING padding])" )
 				.register();
 	}
@@ -724,64 +725,64 @@ public class CommonFunctionFactory {
 
 	public void reverse() {
 		functionRegistry.namedDescriptorBuilder( "reverse" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
+				.setParameterTypes( STRING )
 				.register();
 	}
 
 	public void space() {
 		functionRegistry.namedDescriptorBuilder( "space" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(INTEGER)
+				.setParameterTypes( INTEGER )
 				.register();
 	}
 
 	public void repeat() {
 		functionRegistry.namedDescriptorBuilder( "repeat" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, INTEGER)
+				.setParameterTypes( STRING, INTEGER )
 				.setArgumentListSignature( "(STRING string, INTEGER times)" )
 				.register();
 	}
 
 	public void repeat_rpad() {
 		functionRegistry.patternDescriptorBuilder( "repeat", "rpad(?1,?2*length(?1),?1)" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, INTEGER)
+				.setParameterTypes( STRING, INTEGER )
 				.setArgumentListSignature( "(STRING string, INTEGER times)" )
 				.register();
 	}
 
 	public void leftRight() {
 		functionRegistry.namedDescriptorBuilder( "left" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, INTEGER)
+				.setParameterTypes( STRING, INTEGER )
 				.setArgumentListSignature( "(STRING string, INTEGER length)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "right" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, INTEGER)
+				.setParameterTypes( STRING, INTEGER )
 				.setArgumentListSignature( "(STRING string, INTEGER length)" )
 				.register();
 	}
 
 	public void leftRight_substr() {
 		functionRegistry.patternDescriptorBuilder( "left", "substr(?1,1,?2)" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, INTEGER)
+				.setParameterTypes( STRING, INTEGER )
 				.setArgumentListSignature( "(STRING string, INTEGER length)" )
 				.register();
 		functionRegistry.patternDescriptorBuilder( "right", "substr(?1,-?2)" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, INTEGER)
+				.setParameterTypes( STRING, INTEGER )
 				.setArgumentListSignature( "(STRING string, INTEGER length)" )
 				.register();
 	}
@@ -793,15 +794,15 @@ public class CommonFunctionFactory {
 	 */
 	public void leftRight_substrLength() {
 		functionRegistry.patternDescriptorBuilder( "left", "substr(?1,1,?2)" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, INTEGER)
+				.setParameterTypes( STRING, INTEGER )
 				.setArgumentListSignature( "(STRING string, INTEGER length)" )
 				.register();
 		functionRegistry.patternDescriptorBuilder( "right", "substr(?1,length(?1)-?2+1)" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, INTEGER)
+				.setParameterTypes( STRING, INTEGER )
 				.setArgumentListSignature( "(STRING string, INTEGER length)" )
 				.setArgumentRenderingMode( SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER )
 				.register();
@@ -809,9 +810,9 @@ public class CommonFunctionFactory {
 
 	public void repeat_replicate() {
 		functionRegistry.namedDescriptorBuilder( "replicate" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, INTEGER)
+				.setParameterTypes( STRING, INTEGER )
 				.setArgumentListSignature( "(STRING string, INTEGER times)" )
 				.register();
 		functionRegistry.registerAlternateKey( "repeat", "replicate" );
@@ -820,7 +821,7 @@ public class CommonFunctionFactory {
 	@Deprecated(since = "7")
 	public void md5() {
 		functionRegistry.namedDescriptorBuilder( "md5" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
@@ -828,7 +829,7 @@ public class CommonFunctionFactory {
 
 	public void initcap() {
 		functionRegistry.namedDescriptorBuilder( "initcap" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
@@ -836,25 +837,25 @@ public class CommonFunctionFactory {
 
 	public void instr() {
 		functionRegistry.namedDescriptorBuilder( "instr" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setArgumentCountBetween( 2, 4 )
-				.setParameterTypes(STRING, STRING, INTEGER, INTEGER)
+				.setParameterTypes( STRING, STRING, INTEGER, INTEGER )
 				.setArgumentListSignature( "(STRING string, STRING pattern[, INTEGER start[, INTEGER occurrence]])" )
 				.register();
 	}
 
 	public void substr() {
 		functionRegistry.namedDescriptorBuilder( "substr" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setArgumentCountBetween( 2, 3 )
-				.setParameterTypes(STRING, INTEGER, INTEGER)
+				.setParameterTypes( STRING, INTEGER, INTEGER )
 				.setArgumentListSignature( "(STRING string, INTEGER start[, INTEGER length])" )
 				.register();
 	}
 
 	public void translate() {
 		functionRegistry.namedDescriptorBuilder( "translate" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 3 )
 				.setParameterTypes( STRING, STRING, STRING )
 				.register();
@@ -997,15 +998,15 @@ public class CommonFunctionFactory {
 	public void everyAny() {
 		functionRegistry.namedAggregateDescriptorBuilder( "every" )
 				.setExactArgumentCount( 1 )
-				.setInvariantType(booleanType)
-				.setParameterTypes(BOOLEAN)
+				.setInvariantType( booleanType )
+				.setParameterTypes( BOOLEAN )
 				.setArgumentListSignature( "(BOOLEAN predicate)" )
 				.register();
 
 		functionRegistry.namedAggregateDescriptorBuilder( "any" )
 				.setExactArgumentCount( 1 )
-				.setInvariantType(booleanType)
-				.setParameterTypes(BOOLEAN)
+				.setInvariantType( booleanType )
+				.setParameterTypes( BOOLEAN )
 				.setArgumentListSignature( "(BOOLEAN predicate)" )
 				.register();
 	}
@@ -1018,16 +1019,16 @@ public class CommonFunctionFactory {
 	public void everyAny_boolAndOr() {
 		functionRegistry.namedAggregateDescriptorBuilder( "bool_and" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(BOOLEAN)
-				.setInvariantType(booleanType)
+				.setParameterTypes( BOOLEAN )
+				.setInvariantType( booleanType )
 				.setArgumentListSignature( "(BOOLEAN predicate)" )
 				.register();
 		functionRegistry.registerAlternateKey( "every", "bool_and" );
 
 		functionRegistry.namedAggregateDescriptorBuilder( "bool_or" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(BOOLEAN)
-				.setInvariantType(booleanType)
+				.setParameterTypes( BOOLEAN )
+				.setInvariantType( booleanType )
 				.setArgumentListSignature( "(BOOLEAN predicate)" )
 				.register();
 		functionRegistry.registerAlternateKey( "any", "bool_or" );
@@ -1075,19 +1076,19 @@ public class CommonFunctionFactory {
 	 */
 	public void yearMonthDay() {
 		functionRegistry.namedDescriptorBuilder( "day" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(DATE)
+				.setParameterTypes( DATE )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "month" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(DATE)
+				.setParameterTypes( DATE )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "year" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(DATE)
+				.setParameterTypes( DATE )
 				.register();
 	}
 
@@ -1098,104 +1099,104 @@ public class CommonFunctionFactory {
 	 */
 	public void hourMinuteSecond() {
 		functionRegistry.namedDescriptorBuilder( "hour" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(TIME)
+				.setParameterTypes( TIME )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "minute" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(TIME)
+				.setParameterTypes( TIME )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "second" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(TIME)
+				.setParameterTypes( TIME )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "microsecond" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(TIME)
+				.setParameterTypes( TIME )
 				.register();
 	}
 
 	public void dayofweekmonthyear() {
 		functionRegistry.namedDescriptorBuilder( "dayofweek" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(DATE)
+				.setParameterTypes( DATE )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "dayofmonth" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(DATE)
+				.setParameterTypes( DATE )
 				.register();
 		functionRegistry.registerAlternateKey( "day", "dayofmonth" );
 		functionRegistry.namedDescriptorBuilder( "dayofyear" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(DATE)
+				.setParameterTypes( DATE )
 				.register();
 	}
 
 	public void dayOfWeekMonthYear() {
 		functionRegistry.namedDescriptorBuilder( "day_of_week" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(DATE)
+				.setParameterTypes( DATE )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "day_of_month" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(DATE)
+				.setParameterTypes( DATE )
 				.register();
 		functionRegistry.registerAlternateKey( "day", "day_of_month" );
 		functionRegistry.namedDescriptorBuilder( "day_of_year" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(DATE)
+				.setParameterTypes( DATE )
 				.register();
 	}
 
 	public void daynameMonthname() {
 		functionRegistry.namedDescriptorBuilder( "monthname" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(DATE)
+				.setParameterTypes( DATE )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "dayname" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(DATE)
+				.setParameterTypes( DATE )
 				.register();
 	}
 
 	public void weekQuarter() {
 		functionRegistry.namedDescriptorBuilder( "week" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(DATE)
+				.setParameterTypes( DATE )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "quarter" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(DATE)
-				.setInvariantType(integerType)
+				.setParameterTypes( DATE )
+				.setInvariantType( integerType )
 				.register();
 	}
 
 	public void lastDay() {
 		functionRegistry.namedDescriptorBuilder( "last_day" )
-				.setInvariantType(dateType)
+				.setInvariantType( dateType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(DATE)
+				.setParameterTypes( DATE )
 				.register();
 	}
 
 	public void lastDay_eomonth() {
 		functionRegistry.namedDescriptorBuilder( "eomonth" )
-				.setInvariantType(dateType)
+				.setInvariantType( dateType )
 				.setArgumentCountBetween( 1, 2 )
-				.setParameterTypes(DATE, INTEGER)
+				.setParameterTypes( DATE, INTEGER )
 				.register();
 		functionRegistry.registerAlternateKey( "last_date", "eomonth" );
 	}
@@ -1203,7 +1204,7 @@ public class CommonFunctionFactory {
 	public void ceiling_ceil() {
 		functionRegistry.namedDescriptorBuilder( "ceil" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				// To avoid truncating to a specific data type, we default to using the argument type
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.register();
@@ -1216,25 +1217,25 @@ public class CommonFunctionFactory {
 				//always 1 arg on HSQL and Cache, always 2 on Postgres
 				.setArgumentCountBetween( 1, 3 )
 				.setParameterTypes( STRING, STRING, STRING )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "to_char" )
 				.setArgumentCountBetween( 1, 3 )
 				.setParameterTypes( ANY, STRING, STRING )
 				//always 2 args on HSQL and Postgres
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "to_date" )
 				//always 2 args on HSQL and Postgres
 				.setArgumentCountBetween( 1, 3 )
 				.setParameterTypes( STRING, STRING, STRING )
-				.setInvariantType(dateType)
+				.setInvariantType( dateType )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "to_timestamp" )
 				//always 2 args on HSQL and Postgres
 				.setArgumentCountBetween( 1, 3 )
 				.setParameterTypes( STRING, STRING, STRING )
-				.setInvariantType(timestampType)
+				.setInvariantType( timestampType )
 				.register();
 	}
 
@@ -1248,7 +1249,7 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "timestamp" )
 				.setArgumentCountBetween( 1, 2 )
 				//accepts (DATE,TIME) (DATE,INTEGER) or DATE or STRING
-				.setInvariantType(timestampType)
+				.setInvariantType( timestampType )
 				.register();
 	}
 
@@ -1256,7 +1257,7 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "time" )
 				.setExactArgumentCount( 1 )
 				//accepts TIME or STRING
-				.setInvariantType(timeType)
+				.setInvariantType( timeType )
 				.register();
 	}
 
@@ -1264,45 +1265,45 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "date" )
 				.setExactArgumentCount( 1 )
 				//accepts DATE or STRING
-				.setInvariantType(dateType)
+				.setInvariantType( dateType )
 				.register();
 	}
 
 	public void utcDateTimeTimestamp() {
 		functionRegistry.noArgsBuilder( "utc_date" )
 				.setUseParenthesesWhenNoArgs( false )
-				.setInvariantType(dateType)
+				.setInvariantType( dateType )
 				.register();
 		functionRegistry.noArgsBuilder( "utc_time" )
 				.setUseParenthesesWhenNoArgs( false )
-				.setInvariantType(timeType)
+				.setInvariantType( timeType )
 				.register();
 		functionRegistry.noArgsBuilder( "utc_timestamp" )
 				.setUseParenthesesWhenNoArgs( false )
-				.setInvariantType(timestampType)
+				.setInvariantType( timestampType )
 				.register();
 	}
 
 	public void currentUtcdatetimetimestamp() {
 		functionRegistry.noArgsBuilder( "current_utcdate" )
 				.setUseParenthesesWhenNoArgs( false )
-				.setInvariantType(dateType)
+				.setInvariantType( dateType )
 				.register();
 		functionRegistry.noArgsBuilder( "current_utctime" )
 				.setUseParenthesesWhenNoArgs( false )
-				.setInvariantType(timeType)
+				.setInvariantType( timeType )
 				.register();
 		functionRegistry.noArgsBuilder( "current_utctimestamp" )
 				.setUseParenthesesWhenNoArgs( false )
-				.setInvariantType(timestampType)
+				.setInvariantType( timestampType )
 				.register();
 	}
 
 	public void week_weekofyear() {
 		functionRegistry.namedDescriptorBuilder( "weekofyear" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(DATE)
+				.setParameterTypes( DATE )
 				.register();
 		functionRegistry.registerAlternateKey( "week", "weekofyear" );
 	}
@@ -1312,7 +1313,7 @@ public class CommonFunctionFactory {
 	 */
 	public void concat_pipeOperator() {
 		functionRegistry.patternDescriptorBuilder( "concat", "(?1||?2...)" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setMinArgumentCount( 1 )
 				.setArgumentTypeResolver(
 						StandardFunctionArgumentTypeResolvers.impliedOrInvariant( typeConfiguration, STRING )
@@ -1330,11 +1331,11 @@ public class CommonFunctionFactory {
 	 */
 	public void rownumRowid() {
 		functionRegistry.noArgsBuilder( "rowid" )
-				.setInvariantType(longType)
+				.setInvariantType( longType )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 		functionRegistry.noArgsBuilder( "rownum" )
-				.setInvariantType(longType)
+				.setInvariantType( longType )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 	}
@@ -1344,7 +1345,7 @@ public class CommonFunctionFactory {
 	 */
 	public void rownum() {
 		functionRegistry.noArgsBuilder( "rownum" )
-				.setInvariantType(longType)
+				.setInvariantType( longType )
 				.setUseParenthesesWhenNoArgs( true ) //H2 and HSQL require the parens
 				.register();
 	}
@@ -1354,20 +1355,20 @@ public class CommonFunctionFactory {
 	 */
 	public void rownumInstOrderbyGroupbyNum() {
 		functionRegistry.noArgsBuilder( "rownum" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 
 		functionRegistry.noArgsBuilder( "inst_num" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setUseParenthesesWhenNoArgs( true )
 				.register();
 		functionRegistry.noArgsBuilder( "orderby_num" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setUseParenthesesWhenNoArgs( true )
 				.register();
 		functionRegistry.noArgsBuilder( "groupby_num" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setUseParenthesesWhenNoArgs( true )
 				.register();
 	}
@@ -1377,15 +1378,15 @@ public class CommonFunctionFactory {
 	 */
 	public void makedateMaketime() {
 		functionRegistry.namedDescriptorBuilder( "makedate" )
-				.setInvariantType(dateType)
+				.setInvariantType( dateType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(INTEGER, INTEGER)
+				.setParameterTypes( INTEGER, INTEGER )
 				.setArgumentListSignature( "(INTEGER year, INTEGER dayofyear)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "maketime" )
-				.setInvariantType(timeType)
+				.setInvariantType( timeType )
 				.setExactArgumentCount( 3 )
-				.setParameterTypes(INTEGER, INTEGER, INTEGER)
+				.setParameterTypes( INTEGER, INTEGER, INTEGER )
 				.setArgumentListSignature( "(INTEGER hour, INTEGER min, INTEGER sec)" )
 				.register();
 	}
@@ -1395,31 +1396,31 @@ public class CommonFunctionFactory {
 	 */
 	public void makeDateTimeTimestamp() {
 		functionRegistry.namedDescriptorBuilder( "make_date" )
-				.setInvariantType(dateType)
+				.setInvariantType( dateType )
 				.setExactArgumentCount( 3 )
-				.setParameterTypes(INTEGER, INTEGER, INTEGER)
+				.setParameterTypes( INTEGER, INTEGER, INTEGER )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "make_time" )
-				.setInvariantType(timeType)
+				.setInvariantType( timeType )
 				.setExactArgumentCount( 3 )
-				.setParameterTypes(INTEGER, INTEGER, INTEGER)
+				.setParameterTypes( INTEGER, INTEGER, INTEGER )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "make_timestamp" )
 				.setInvariantType( timestampType )
 				.setExactArgumentCount( 6 )
-				.setParameterTypes(INTEGER, INTEGER, INTEGER, INTEGER, INTEGER, INTEGER)
+				.setParameterTypes( INTEGER, INTEGER, INTEGER, INTEGER, INTEGER, INTEGER )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "make_timestamptz" )
 				.setInvariantType( timestampType )
 				.setArgumentCountBetween( 6, 7 )
-				.setParameterTypes(INTEGER, INTEGER, INTEGER, INTEGER, INTEGER, INTEGER, INTEGER)
+				.setParameterTypes( INTEGER, INTEGER, INTEGER, INTEGER, INTEGER, INTEGER, INTEGER )
 				.register();
 	}
 
 	public void sysdate() {
 		// returns a local timestamp
 		functionRegistry.noArgsBuilder( "sysdate" )
-				.setInvariantType(timestampType)
+				.setInvariantType( timestampType )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 	}
@@ -1429,7 +1430,7 @@ public class CommonFunctionFactory {
 	 */
 	public void sysdateParens() {
 		functionRegistry.noArgsBuilder( "sysdate" )
-				.setInvariantType(timestampType)
+				.setInvariantType( timestampType )
 				.setUseParenthesesWhenNoArgs( true )
 				.register();
 	}
@@ -1439,7 +1440,7 @@ public class CommonFunctionFactory {
 	 */
 	public void sysdateExplicitMicros() {
 		functionRegistry.patternDescriptorBuilder( "sysdate", "sysdate(6)" )
-				.setInvariantType(timestampType)
+				.setInvariantType( timestampType )
 				.setExactArgumentCount( 0 )
 				.register();
 	}
@@ -1447,7 +1448,7 @@ public class CommonFunctionFactory {
 	public void systimestamp() {
 		// returns a timestamp with timezone
 		functionRegistry.noArgsBuilder( "systimestamp" )
-				.setInvariantType(timestampType)
+				.setInvariantType( timestampType )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 	}
@@ -1455,11 +1456,11 @@ public class CommonFunctionFactory {
 	public void localtimeLocaltimestamp() {
 		//these functions return times without timezones
 		functionRegistry.noArgsBuilder( "localtime" )
-				.setInvariantType(timeType)
+				.setInvariantType( timeType )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 		functionRegistry.noArgsBuilder( "localtimestamp" )
-				.setInvariantType(timestampType)
+				.setInvariantType( timestampType )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 
@@ -1469,52 +1470,52 @@ public class CommonFunctionFactory {
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 		functionRegistry.noArgsBuilder( "local_datetime", "localtimestamp" )
-				.setInvariantType ( basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_DATE_TIME ) )
+				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_DATE_TIME ) )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
 	}
 
 	public void trigonometry() {
 		functionRegistry.namedDescriptorBuilder( "sin" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "cos" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "tan" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "asin" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "acos" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "atan" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "atan2" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(NUMERIC, NUMERIC)
+				.setParameterTypes( NUMERIC, NUMERIC )
 				.register();
 	}
 
@@ -1523,9 +1524,9 @@ public class CommonFunctionFactory {
 	 */
 	public void atan2_atn2() {
 		functionRegistry.namedDescriptorBuilder( "atan2", "atn2" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(NUMERIC, NUMERIC)
+				.setParameterTypes( NUMERIC, NUMERIC )
 				.register();
 	}
 
@@ -1559,9 +1560,9 @@ public class CommonFunctionFactory {
 	 */
 	public void length_characterLength() {
 		functionRegistry.namedDescriptorBuilder( "character_length" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING_OR_CLOB)
+				.setParameterTypes( STRING_OR_CLOB )
 				.register();
 		functionRegistry.registerAlternateKey( "length", "character_length" );
 	}
@@ -1579,9 +1580,9 @@ public class CommonFunctionFactory {
 	 */
 	public void characterLength_len() {
 		functionRegistry.namedDescriptorBuilder( "character_length", "len" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING_OR_CLOB)
+				.setParameterTypes( STRING_OR_CLOB )
 				.register();
 		functionRegistry.registerAlternateKey( "len", "character_length" );
 		functionRegistry.registerAlternateKey( "length", "character_length" );
@@ -1592,9 +1593,9 @@ public class CommonFunctionFactory {
 	 */
 	public void characterLength_length(SqlAstNodeRenderingMode argumentRenderingMode) {
 		functionRegistry.namedDescriptorBuilder( "character_length", "length" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING_OR_CLOB)
+				.setParameterTypes( STRING_OR_CLOB )
 				.setArgumentRenderingMode( argumentRenderingMode )
 				.register();
 		functionRegistry.registerAlternateKey( "length", "character_length" );
@@ -1610,9 +1611,9 @@ public class CommonFunctionFactory {
 
 	public void octetLength() {
 		functionRegistry.namedDescriptorBuilder( "octet_length" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING_OR_CLOB)
+				.setParameterTypes( STRING_OR_CLOB )
 				.register();
 	}
 
@@ -1622,9 +1623,9 @@ public class CommonFunctionFactory {
 
 	public void octetLength_pattern(String pattern, SqlAstNodeRenderingMode renderingMode) {
 		functionRegistry.patternDescriptorBuilder( "octet_length", pattern )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING_OR_CLOB)
+				.setParameterTypes( STRING_OR_CLOB )
 				.setArgumentRenderingMode( renderingMode )
 				.register();
 	}
@@ -1638,9 +1639,9 @@ public class CommonFunctionFactory {
 
 	public void bitLength() {
 		functionRegistry.namedDescriptorBuilder( "bit_length" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING_OR_CLOB)
+				.setParameterTypes( STRING_OR_CLOB )
 				.register();
 	}
 
@@ -1650,9 +1651,9 @@ public class CommonFunctionFactory {
 
 	public void bitLength_pattern(String pattern, SqlAstNodeRenderingMode renderingMode) {
 		functionRegistry.patternDescriptorBuilder( "bit_length", pattern )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING_OR_CLOB)
+				.setParameterTypes( STRING_OR_CLOB )
 				.setArgumentRenderingMode( renderingMode )
 				.register();
 	}
@@ -1669,18 +1670,18 @@ public class CommonFunctionFactory {
 	 */
 	public void position() {
 		functionRegistry.patternDescriptorBuilder( "position", "position(?1 in ?2)" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, STRING)
+				.setParameterTypes( STRING, STRING )
 				.setArgumentListSignature( "(STRING pattern in STRING string)" )
 				.register();
 	}
 
 	public void locate() {
 		functionRegistry.namedDescriptorBuilder( "locate" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setArgumentCountBetween( 2, 3 )
-				.setParameterTypes(STRING, STRING, INTEGER)
+				.setParameterTypes( STRING, STRING, INTEGER )
 				.setArgumentListSignature( "(STRING pattern, STRING string[, INTEGER start])" )
 				.register();
 	}
@@ -1690,9 +1691,9 @@ public class CommonFunctionFactory {
 	 */
 	public void locate_charindex() {
 		functionRegistry.namedDescriptorBuilder( "charindex" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setArgumentCountBetween( 2, 3 )
-				.setParameterTypes(STRING, STRING, INTEGER)
+				.setParameterTypes( STRING, STRING, INTEGER )
 				.setArgumentListSignature( "(STRING pattern, STRING string[, INTEGER start])" )
 				.register();
 		functionRegistry.registerAlternateKey( "locate", "charindex" );
@@ -1711,6 +1712,7 @@ public class CommonFunctionFactory {
 				)
 				.setArgumentListSignature( "(STRING pattern, STRING string[, INTEGER start])" );
 	}
+
 	/**
 	 * ANSI-style substring
 	 */
@@ -1730,9 +1732,9 @@ public class CommonFunctionFactory {
 	 */
 	public void substring() {
 		functionRegistry.namedDescriptorBuilder( "substring" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setArgumentCountBetween( 2, 3 )
-				.setParameterTypes(STRING, INTEGER, INTEGER)
+				.setParameterTypes( STRING, INTEGER, INTEGER )
 				.setArgumentListSignature( "(STRING string{ from|,} INTEGER start[{ for|,} INTEGER length])" )
 				.register();
 	}
@@ -1759,16 +1761,16 @@ public class CommonFunctionFactory {
 	public void substring_substr() {
 		functionRegistry.namedDescriptorBuilder( "substring", "substr" )
 				.setArgumentListSignature( "(STRING string{ from|,} INTEGER start[{ for|,} INTEGER length])" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setArgumentCountBetween( 2, 3 )
-				.setParameterTypes(STRING, INTEGER, INTEGER)
+				.setParameterTypes( STRING, INTEGER, INTEGER )
 				.register();
 	}
 
 	public void insert() {
 		functionRegistry.namedDescriptorBuilder( "insert" )
-				.setInvariantType(stringType)
-				.setParameterTypes(STRING, INTEGER, INTEGER, STRING)
+				.setInvariantType( stringType )
+				.setParameterTypes( STRING, INTEGER, INTEGER, STRING )
 				.setArgumentListSignature( "(STRING string, INTEGER start, INTEGER length, STRING replacement)" )
 				.register();
 	}
@@ -1781,9 +1783,9 @@ public class CommonFunctionFactory {
 						"insert",
 						"overlay(?1 placing ?4 from ?2 for ?3)"
 				)
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 4 )
-				.setParameterTypes(STRING, INTEGER, INTEGER, STRING)
+				.setParameterTypes( STRING, INTEGER, INTEGER, STRING )
 				.setArgumentListSignature( "(STRING string, INTEGER start, INTEGER length, STRING replacement)" )
 				.register();
 	}
@@ -1811,7 +1813,8 @@ public class CommonFunctionFactory {
 		functionRegistry.registerTernaryQuaternaryPattern(
 						"overlay",
 						stringType,
-						"overlay(?1 placing ?2 from ?3 for character_length(?2" + (withCodeUnits ? ",codeunits32" : "") + ")" + codeUnits + ")",
+						"overlay(?1 placing ?2 from ?3 for character_length(?2" + (withCodeUnits ? ",codeunits32"
+								: "") + ")" + codeUnits + ")",
 						"overlay(?1 placing ?2 from ?3 for ?4" + codeUnits + ")",
 						STRING, STRING, INTEGER, INTEGER,
 						typeConfiguration
@@ -1821,9 +1824,9 @@ public class CommonFunctionFactory {
 
 	public void replace() {
 		functionRegistry.namedDescriptorBuilder( "replace" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 3 )
-				.setParameterTypes(STRING, STRING, STRING)
+				.setParameterTypes( STRING, STRING, STRING )
 				.setArgumentListSignature( "(STRING string, STRING pattern, STRING replacement)" )
 				.register();
 	}
@@ -1833,9 +1836,9 @@ public class CommonFunctionFactory {
 	 */
 	public void replace_strReplace() {
 		functionRegistry.namedDescriptorBuilder( "str_replace" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 3 )
-				.setParameterTypes(STRING, STRING, STRING)
+				.setParameterTypes( STRING, STRING, STRING )
 				.setArgumentListSignature( "(STRING string, STRING pattern, STRING replacement)" )
 				.register();
 		functionRegistry.registerAlternateKey( "replace", "str_replace" );
@@ -1843,7 +1846,7 @@ public class CommonFunctionFactory {
 
 	public void concat() {
 		functionRegistry.namedDescriptorBuilder( "concat" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setMinArgumentCount( 1 )
 				.setArgumentTypeResolver(
 						StandardFunctionArgumentTypeResolvers.impliedOrInvariant( typeConfiguration, STRING )
@@ -1854,15 +1857,15 @@ public class CommonFunctionFactory {
 
 	public void lowerUpper() {
 		functionRegistry.namedDescriptorBuilder( "lower" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
+				.setParameterTypes( STRING )
 				.setArgumentListSignature( "(STRING string)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "upper" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
+				.setParameterTypes( STRING )
 				.setArgumentListSignature( "(STRING string)" )
 				.register();
 	}
@@ -1876,16 +1879,16 @@ public class CommonFunctionFactory {
 	public void ascii() {
 		functionRegistry.namedDescriptorBuilder( "ascii" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
-				.setInvariantType(integerType)//should it be BYTE??
+				.setParameterTypes( STRING )
+				.setInvariantType( integerType )//should it be BYTE??
 				.register();
 	}
 
 	public void char_chr() {
 		functionRegistry.namedDescriptorBuilder( "chr" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(INTEGER)
-				.setInvariantType(characterType)
+				.setParameterTypes( INTEGER )
+				.setInvariantType( characterType )
 				.register();
 		functionRegistry.registerAlternateKey( "char", "chr" );
 	}
@@ -1893,8 +1896,8 @@ public class CommonFunctionFactory {
 	public void chr_char() {
 		functionRegistry.namedDescriptorBuilder( "char" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(INTEGER)
-				.setInvariantType(characterType)
+				.setParameterTypes( INTEGER )
+				.setInvariantType( characterType )
 				.register();
 		functionRegistry.registerAlternateKey( "chr", "char" );
 	}
@@ -1907,13 +1910,13 @@ public class CommonFunctionFactory {
 //				.setInvariantType( StandardBasicTypes.INTEGER )
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(TEMPORAL_UNIT, TEMPORAL)
+				.setParameterTypes( TEMPORAL_UNIT, TEMPORAL )
 				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL arg)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "datename" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(TEMPORAL_UNIT, TEMPORAL)
+				.setParameterTypes( TEMPORAL_UNIT, TEMPORAL )
 				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL arg)" )
 				.register();
 	}
@@ -1925,15 +1928,15 @@ public class CommonFunctionFactory {
 	// Postgres: now() means current_timestamp
 	public void nowCurdateCurtime() {
 		functionRegistry.noArgsBuilder( "curtime" )
-				.setInvariantType(timeType)
+				.setInvariantType( timeType )
 				.setUseParenthesesWhenNoArgs( true )
 				.register();
 		functionRegistry.noArgsBuilder( "curdate" )
-				.setInvariantType(dateType)
+				.setInvariantType( dateType )
 				.setUseParenthesesWhenNoArgs( true )
 				.register();
 		functionRegistry.noArgsBuilder( "now" )
-				.setInvariantType(timestampType)
+				.setInvariantType( timestampType )
 				.setUseParenthesesWhenNoArgs( true )
 				.register();
 	}
@@ -1941,12 +1944,12 @@ public class CommonFunctionFactory {
 	public void leastGreatest() {
 		functionRegistry.namedDescriptorBuilder( "least" )
 				.setMinArgumentCount( 2 )
-				.setParameterTypes(COMPARABLE, COMPARABLE)
+				.setParameterTypes( COMPARABLE, COMPARABLE )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "greatest" )
 				.setMinArgumentCount( 2 )
-				.setParameterTypes(COMPARABLE, COMPARABLE)
+				.setParameterTypes( COMPARABLE, COMPARABLE )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
@@ -1954,12 +1957,12 @@ public class CommonFunctionFactory {
 	public void leastGreatest_minMax() {
 		functionRegistry.namedDescriptorBuilder( "least", "min" )
 				.setMinArgumentCount( 2 )
-				.setParameterTypes(COMPARABLE, COMPARABLE)
+				.setParameterTypes( COMPARABLE, COMPARABLE )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "greatest", "max" )
 				.setMinArgumentCount( 2 )
-				.setParameterTypes(COMPARABLE, COMPARABLE)
+				.setParameterTypes( COMPARABLE, COMPARABLE )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
@@ -1967,12 +1970,12 @@ public class CommonFunctionFactory {
 	public void leastGreatest_minMaxValue() {
 		functionRegistry.namedDescriptorBuilder( "least", "minvalue" )
 				.setMinArgumentCount( 2 )
-				.setParameterTypes(COMPARABLE, COMPARABLE)
+				.setParameterTypes( COMPARABLE, COMPARABLE )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "greatest", "maxvalue" )
 				.setMinArgumentCount( 2 )
-				.setParameterTypes(COMPARABLE, COMPARABLE)
+				.setParameterTypes( COMPARABLE, COMPARABLE )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
 	}
@@ -1981,14 +1984,14 @@ public class CommonFunctionFactory {
 		functionRegistry.namedAggregateDescriptorBuilder( "max" )
 				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(COMPARABLE)
+				.setParameterTypes( COMPARABLE )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
 
 		functionRegistry.namedAggregateDescriptorBuilder( "min" )
 				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(COMPARABLE)
+				.setParameterTypes( COMPARABLE )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE )
 				.register();
 
@@ -2182,75 +2185,75 @@ public class CommonFunctionFactory {
 				// To avoid truncating to a specific data type, we default to using the argument type
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "ceiling" )
 				// To avoid truncating to a specific data type, we default to using the argument type
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "mod" )
 				// According to JPA spec 4.6.17.2.2.
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(INTEGER, INTEGER)
+				.setParameterTypes( INTEGER, INTEGER )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "abs" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "sign" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 
 		//transcendental functions are by nature of floating point type
 
 		functionRegistry.namedDescriptorBuilder( "sqrt" )
 				// According to JPA spec 4.6.17.2.2.
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "ln" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "exp" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 
 		functionRegistry.namedDescriptorBuilder( "power" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(NUMERIC, NUMERIC)
+				.setParameterTypes( NUMERIC, NUMERIC )
 				.register();
 	}
 
 	public void mod_operator() {
 		functionRegistry.patternDescriptorBuilder( "mod", "(?1%?2)" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(INTEGER, INTEGER)
+				.setParameterTypes( INTEGER, INTEGER )
 				.register();
 	}
 
 	public void power_expLn() {
 		functionRegistry.patternDescriptorBuilder( "power", "exp(ln(?1)*?2)" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(NUMERIC, NUMERIC)
+				.setParameterTypes( NUMERIC, NUMERIC )
 				.register();
 	}
 
@@ -2259,7 +2262,7 @@ public class CommonFunctionFactory {
 				// To avoid truncating to a specific data type, we default to using the argument type
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setArgumentCountBetween( 1, 2 )
-				.setParameterTypes(NUMERIC, INTEGER)
+				.setParameterTypes( NUMERIC, INTEGER )
 				.setArgumentListSignature( "(NUMERIC number[, INTEGER places])" )
 				.register();
 	}
@@ -2306,22 +2309,22 @@ public class CommonFunctionFactory {
 	public void square() {
 		functionRegistry.namedDescriptorBuilder( "square" )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
 	public void cbrt() {
 		functionRegistry.namedDescriptorBuilder( "cbrt" )
-				.setInvariantType(doubleType)
+				.setInvariantType( doubleType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
 	@Deprecated(since = "7")
 	public void crc32() {
 		functionRegistry.namedDescriptorBuilder( "crc32" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setParameterTypes( STRING )
 				.setExactArgumentCount( 1 )
 				.register();
@@ -2329,7 +2332,7 @@ public class CommonFunctionFactory {
 
 	public void hex(String pattern) {
 		functionRegistry.patternDescriptorBuilder( "hex", pattern )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setParameterTypes( BINARY )
 				.setExactArgumentCount( 1 )
 				.register();
@@ -2337,7 +2340,7 @@ public class CommonFunctionFactory {
 
 	public void md5(String pattern) {
 		functionRegistry.patternDescriptorBuilder( "md5", pattern )
-				.setInvariantType(binaryType)
+				.setInvariantType( binaryType )
 				.setParameterTypes( STRING )
 				.setExactArgumentCount( 1 )
 				.register();
@@ -2345,7 +2348,7 @@ public class CommonFunctionFactory {
 
 	public void sha(String pattern) {
 		functionRegistry.patternDescriptorBuilder( "sha", pattern )
-				.setInvariantType(binaryType)
+				.setInvariantType( binaryType )
 				.setParameterTypes( STRING )
 				.setExactArgumentCount( 1 )
 				.register();
@@ -2354,7 +2357,7 @@ public class CommonFunctionFactory {
 	@Deprecated(since = "7")
 	public void sha1() {
 		functionRegistry.namedDescriptorBuilder( "sha1" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setParameterTypes( STRING )
 				.setExactArgumentCount( 1 )
 				.register();
@@ -2363,7 +2366,7 @@ public class CommonFunctionFactory {
 	@Deprecated(since = "7")
 	public void sha2() {
 		functionRegistry.namedDescriptorBuilder( "sha2" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setParameterTypes( STRING, INTEGER )
 				.setExactArgumentCount( 2 )
 				.register();
@@ -2372,7 +2375,7 @@ public class CommonFunctionFactory {
 	@Deprecated(since = "7")
 	public void sha() {
 		functionRegistry.namedDescriptorBuilder( "sha" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setParameterTypes( STRING )
 				.setExactArgumentCount( 1 )
 				.register();
@@ -2406,9 +2409,9 @@ public class CommonFunctionFactory {
 	 */
 	public void datediff() {
 		functionRegistry.namedDescriptorBuilder( "datediff" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(DATE, DATE)
+				.setParameterTypes( DATE, DATE )
 				.setArgumentListSignature( "(DATE end, DATE start)" )
 				.register();
 	}
@@ -2420,25 +2423,25 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "adddate" )
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(DATE, INTEGER)
+				.setParameterTypes( DATE, INTEGER )
 				.setArgumentListSignature( "(DATE datetime, INTEGER days)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "subdate" )
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(DATE, INTEGER)
+				.setParameterTypes( DATE, INTEGER )
 				.setArgumentListSignature( "(DATE datetime, INTEGER days)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "addtime" )
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(TIME, TIME)
+				.setParameterTypes( TIME, TIME )
 				.setArgumentListSignature( "(TIME datetime, TIME time)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "subtime" )
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(TIME, TIME)
+				.setParameterTypes( TIME, TIME )
 				.setArgumentListSignature( "(TIME datetime, TIME time)" )
 				.register();
 	}
@@ -2448,72 +2451,72 @@ public class CommonFunctionFactory {
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setArgumentListSignature( "(DATE datetime, INTEGER months)" )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(DATE, INTEGER)
+				.setParameterTypes( DATE, INTEGER )
 				.register();
 	}
 
 	public void monthsBetween() {
 		functionRegistry.namedDescriptorBuilder( "months_between" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 2 )
 				.setArgumentListSignature( "(DATE end, DATE start)" )
-				.setParameterTypes(DATE, DATE)
+				.setParameterTypes( DATE, DATE )
 				.register();
 	}
 
 	public void daysBetween() {
 		functionRegistry.namedDescriptorBuilder( "days_between" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(DATE, DATE)
+				.setParameterTypes( DATE, DATE )
 				.setArgumentListSignature( "(DATE end, DATE start)" )
 				.register();
 	}
 
 	public void secondsBetween() {
 		functionRegistry.namedDescriptorBuilder( "seconds_between" )
-				.setInvariantType(longType)
+				.setInvariantType( longType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(TIME, TIME)
+				.setParameterTypes( TIME, TIME )
 				.setArgumentListSignature( "(TIME end, TIME start)" )
 				.register();
 	}
 
 	public void yearsMonthsDaysHoursMinutesSecondsBetween() {
 		functionRegistry.namedDescriptorBuilder( "years_between" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(DATE, DATE)
+				.setParameterTypes( DATE, DATE )
 				.setArgumentListSignature( "(DATE end, DATE start)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "months_between" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(DATE, DATE)
+				.setParameterTypes( DATE, DATE )
 				.setArgumentListSignature( "(DATE end, DATE start)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "days_between" )
-				.setInvariantType(integerType)
+				.setInvariantType( integerType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(DATE, DATE)
+				.setParameterTypes( DATE, DATE )
 				.setArgumentListSignature( "(DATE end, DATE start)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "hours_between" )
-				.setInvariantType(longType)
+				.setInvariantType( longType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(TIME, TIME)
+				.setParameterTypes( TIME, TIME )
 				.setArgumentListSignature( "(TIME end, TIME start)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "minutes_between" )
-				.setInvariantType(longType)
+				.setInvariantType( longType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(TIME, TIME)
+				.setParameterTypes( TIME, TIME )
 				.setArgumentListSignature( "(TIME end, TIME start)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "seconds_between" )
-				.setInvariantType(longType)
+				.setInvariantType( longType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(TIME, TIME)
+				.setParameterTypes( TIME, TIME )
 				.setArgumentListSignature( "(TIME end, TIME start)" )
 				.register();
 	}
@@ -2522,37 +2525,37 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "add_years" )
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(DATE, INTEGER)
+				.setParameterTypes( DATE, INTEGER )
 				.setArgumentListSignature( "(DATE datetime, INTEGER years)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "add_months" )
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(DATE, INTEGER)
+				.setParameterTypes( DATE, INTEGER )
 				.setArgumentListSignature( "(DATE datetime, INTEGER months)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "add_days" )
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(DATE, INTEGER)
+				.setParameterTypes( DATE, INTEGER )
 				.setArgumentListSignature( "(DATE datetime, INTEGER days)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "add_hours" )
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(TIME, INTEGER)
+				.setParameterTypes( TIME, INTEGER )
 				.setArgumentListSignature( "(TIME datetime, INTEGER hours)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "add_minutes" )
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(TIME, INTEGER)
+				.setParameterTypes( TIME, INTEGER )
 				.setArgumentListSignature( "(TIME datetime, INTEGER minutes)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "add_seconds" )
 				.setReturnTypeResolver( useArgType( 1 ) )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(TIME, INTEGER)
+				.setParameterTypes( TIME, INTEGER )
 				.setArgumentListSignature( "(TIME datetime, INTEGER seconds)" )
 				.register();
 	}
@@ -2594,7 +2597,7 @@ public class CommonFunctionFactory {
 	/**
 	 * HANA's name for to_char() is still Oracle-style
 	 *
-	 *  @see org.hibernate.dialect.OracleDialect#datetimeFormat
+	 * @see org.hibernate.dialect.OracleDialect#datetimeFormat
 	 */
 	public void format_toVarchar() {
 		functionRegistry.register( "format", new FormatFunction( "to_varchar", typeConfiguration ) );
@@ -2604,11 +2607,11 @@ public class CommonFunctionFactory {
 	 * Use the 'collate' operator which exists on at least Postgres, MySQL, Oracle, and SQL Server
 	 */
 	public void collate() {
-		functionRegistry.patternDescriptorBuilder("collate", "(?1 collate ?2)")
-				.setInvariantType(stringType)
+		functionRegistry.patternDescriptorBuilder( "collate", "(?1 collate ?2)" )
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, COLLATION)
-				.setArgumentListSignature("(STRING string as COLLATION collation)")
+				.setParameterTypes( STRING, COLLATION )
+				.setArgumentListSignature( "(STRING string as COLLATION collation)" )
 				.register();
 	}
 
@@ -2616,11 +2619,11 @@ public class CommonFunctionFactory {
 	 * HSQL requires quotes around certain collations
 	 */
 	public void collate_quoted() {
-		functionRegistry.patternDescriptorBuilder("collate", "(?1 collate '?2')")
-				.setInvariantType(stringType)
+		functionRegistry.patternDescriptorBuilder( "collate", "(?1 collate '?2')" )
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
-				.setParameterTypes(STRING, COLLATION)
-				.setArgumentListSignature("(STRING string as COLLATION collation)")
+				.setParameterTypes( STRING, COLLATION )
+				.setArgumentListSignature( "(STRING string as COLLATION collation)" )
 				.register();
 	}
 
@@ -2759,19 +2762,24 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayContains_postgresql() {
 		functionRegistry.register( "array_contains", new ArrayContainsOperatorFunction( false, typeConfiguration ) );
-		functionRegistry.register( "array_contains_nullable", new ArrayContainsOperatorFunction( true, typeConfiguration ) );
+		functionRegistry.register( "array_contains_nullable",
+				new ArrayContainsOperatorFunction( true, typeConfiguration ) );
 		functionRegistry.register( "array_includes", new ArrayIncludesOperatorFunction( false, typeConfiguration ) );
-		functionRegistry.register( "array_includes_nullable", new ArrayIncludesOperatorFunction( true, typeConfiguration ) );
+		functionRegistry.register( "array_includes_nullable",
+				new ArrayIncludesOperatorFunction( true, typeConfiguration ) );
 	}
 
 	/**
 	 * GaussDB array contains operator
 	 */
 	public void arrayContains_gaussdb() {
-		functionRegistry.register( "array_contains", new GaussDBArrayContainsOperatorFunction( false, typeConfiguration ) );
-		functionRegistry.register( "array_contains_nullable", new GaussDBArrayContainsOperatorFunction( true, typeConfiguration ) );
+		functionRegistry.register( "array_contains",
+				new GaussDBArrayContainsOperatorFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_contains_nullable",
+				new GaussDBArrayContainsOperatorFunction( true, typeConfiguration ) );
 		functionRegistry.register( "array_includes", new ArrayIncludesOperatorFunction( false, typeConfiguration ) );
-		functionRegistry.register( "array_includes_nullable", new ArrayIncludesOperatorFunction( true, typeConfiguration ) );
+		functionRegistry.register( "array_includes_nullable",
+				new ArrayIncludesOperatorFunction( true, typeConfiguration ) );
 	}
 
 	/**
@@ -2779,9 +2787,11 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayContains_oracle() {
 		functionRegistry.register( "array_contains", new OracleArrayContainsFunction( false, typeConfiguration ) );
-		functionRegistry.register( "array_contains_nullable", new OracleArrayContainsFunction( true, typeConfiguration ) );
+		functionRegistry.register( "array_contains_nullable",
+				new OracleArrayContainsFunction( true, typeConfiguration ) );
 		functionRegistry.register( "array_includes", new OracleArrayIncludesFunction( false, typeConfiguration ) );
-		functionRegistry.register( "array_includes_nullable", new OracleArrayIncludesFunction( true, typeConfiguration ) );
+		functionRegistry.register( "array_includes_nullable",
+				new OracleArrayIncludesFunction( true, typeConfiguration ) );
 	}
 
 	/**
@@ -2820,8 +2830,10 @@ public class CommonFunctionFactory {
 	 * CockroachDB and PostgreSQL array intersects operator
 	 */
 	public void arrayIntersects_postgresql() {
-		functionRegistry.register( "array_intersects", new ArrayIntersectsOperatorFunction( false, typeConfiguration ) );
-		functionRegistry.register( "array_intersects_nullable", new ArrayIntersectsOperatorFunction( true, typeConfiguration ) );
+		functionRegistry.register( "array_intersects",
+				new ArrayIntersectsOperatorFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_intersects_nullable",
+				new ArrayIntersectsOperatorFunction( true, typeConfiguration ) );
 		functionRegistry.registerAlternateKey( "array_overlaps", "array_intersects" );
 		functionRegistry.registerAlternateKey( "array_overlaps_nullable", "array_intersects_nullable" );
 	}
@@ -2830,8 +2842,10 @@ public class CommonFunctionFactory {
 	 * GaussDB array intersects operator
 	 */
 	public void arrayIntersects_gaussdb() {
-		functionRegistry.register( "array_intersects", new ArrayIntersectsOperatorFunction( false, typeConfiguration ) );
-		functionRegistry.register( "array_intersects_nullable", new ArrayIntersectsOperatorFunction( true, typeConfiguration ) );
+		functionRegistry.register( "array_intersects",
+				new ArrayIntersectsOperatorFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_intersects_nullable",
+				new ArrayIntersectsOperatorFunction( true, typeConfiguration ) );
 		functionRegistry.registerAlternateKey( "array_overlaps", "array_intersects" );
 		functionRegistry.registerAlternateKey( "array_overlaps_nullable", "array_intersects_nullable" );
 	}
@@ -2870,7 +2884,8 @@ public class CommonFunctionFactory {
 	 * H2 array_position() function
 	 */
 	public void arrayPosition_h2(int maximumArraySize) {
-		functionRegistry.register( "array_position", new H2ArrayPositionFunction( maximumArraySize, typeConfiguration ) );
+		functionRegistry.register( "array_position",
+				new H2ArrayPositionFunction( maximumArraySize, typeConfiguration ) );
 	}
 
 	/**
@@ -2957,7 +2972,8 @@ public class CommonFunctionFactory {
 				)
 				.setArgumentListSignature( "(ARRAY array)" )
 				.register();
-		functionRegistry.register( "length", new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
+		functionRegistry.register( "length",
+				new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
 	}
 
 	/**
@@ -2965,7 +2981,8 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayLength_oracle() {
 		functionRegistry.register( "array_length", new OracleArrayLengthFunction( typeConfiguration ) );
-		functionRegistry.register( "length", new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
+		functionRegistry.register( "length",
+				new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
 	}
 
 	/**
@@ -3068,6 +3085,7 @@ public class CommonFunctionFactory {
 				.setArgumentListSignature( "(ARRAY array, INTEGER index)" )
 				.register();
 	}
+
 	/**
 	 * CockroachDB and PostgreSQL array_get() function via bracket syntax
 	 */
@@ -3161,7 +3179,7 @@ public class CommonFunctionFactory {
 	 * GaussDB array_remove() function
 	 */
 	public void arrayRemove_gaussdb() {
-		functionRegistry.register( "array_remove",  new GaussDBArrayRemoveFunction());
+		functionRegistry.register( "array_remove", new GaussDBArrayRemoveFunction() );
 	}
 
 	/**
@@ -3182,7 +3200,7 @@ public class CommonFunctionFactory {
 	 * GaussDB array_remove_index() function
 	 */
 	public void arrayRemoveIndex_gaussdb() {
-		functionRegistry.register( "array_remove_index", new GaussDBArrayRemoveIndexFunction(false) );
+		functionRegistry.register( "array_remove_index", new GaussDBArrayRemoveIndexFunction( false ) );
 	}
 
 	/**
@@ -3210,7 +3228,8 @@ public class CommonFunctionFactory {
 	 * H2 array_slice() function
 	 */
 	public void arraySlice() {
-		functionRegistry.patternAggregateDescriptorBuilder( "array_slice", "case when ?1 is null or ?2 is null or ?3 is null then null else coalesce(array_slice(?1,?2,?3),array[]) end" )
+		functionRegistry.patternAggregateDescriptorBuilder( "array_slice",
+						"case when ?1 is null or ?2 is null or ?3 is null then null else coalesce(array_slice(?1,?2,?3),array[]) end" )
 				.setArgumentsValidator(
 						StandardArgumentsValidators.composite(
 								new ArgumentTypesValidator( null, ANY, INTEGER, INTEGER ),
@@ -3404,7 +3423,8 @@ public class CommonFunctionFactory {
 	 * H2 array_to_string() function
 	 */
 	public void arrayToString_h2(int maximumArraySize) {
-		functionRegistry.register( "array_to_string", new H2ArrayToStringFunction( maximumArraySize, typeConfiguration ) );
+		functionRegistry.register( "array_to_string",
+				new H2ArrayToStringFunction( maximumArraySize, typeConfiguration ) );
 	}
 
 	/**
@@ -3453,7 +3473,8 @@ public class CommonFunctionFactory {
 	 * PostgreSQL json_value() function
 	 */
 	public void jsonValue_postgresql(boolean supportsStandard) {
-		functionRegistry.register( "json_value", new PostgreSQLJsonValueFunction( supportsStandard, typeConfiguration ) );
+		functionRegistry.register( "json_value",
+				new PostgreSQLJsonValueFunction( supportsStandard, typeConfiguration ) );
 	}
 
 	/**
@@ -3509,7 +3530,7 @@ public class CommonFunctionFactory {
 	 * GaussDB json_query() function
 	 */
 	public void jsonQuery_gaussdb() {
-		functionRegistry.register( "json_query", new GaussdbJsonQueryFunction( typeConfiguration ) );
+		functionRegistry.register( "json_query", new GaussDBJsonQueryFunction( typeConfiguration ) );
 	}
 
 	/**
@@ -3579,7 +3600,7 @@ public class CommonFunctionFactory {
 	 * json_exists() function
 	 */
 	public void jsonExists_gaussdb() {
-		functionRegistry.register( "json_exists", new GaussdbJsonExistsFunction( typeConfiguration, false, false ) );
+		functionRegistry.register( "json_exists", new GaussDBJsonExistsFunction( typeConfiguration, false, false ) );
 	}
 
 	/**
@@ -3607,7 +3628,8 @@ public class CommonFunctionFactory {
 	 * SQL Server json_exists() function
 	 */
 	public void jsonExists_sqlserver(boolean supportsExtendedJson) {
-		functionRegistry.register( "json_exists", new SQLServerJsonExistsFunction( supportsExtendedJson, typeConfiguration ) );
+		functionRegistry.register( "json_exists",
+				new SQLServerJsonExistsFunction( supportsExtendedJson, typeConfiguration ) );
 	}
 
 	/**
@@ -3663,7 +3685,8 @@ public class CommonFunctionFactory {
 	 * SQL Server json_object() function
 	 */
 	public void jsonObject_sqlserver(boolean supportsExtendedJson) {
-		functionRegistry.register( "json_object", new SQLServerJsonObjectFunction( supportsExtendedJson, typeConfiguration ) );
+		functionRegistry.register( "json_object",
+				new SQLServerJsonObjectFunction( supportsExtendedJson, typeConfiguration ) );
 	}
 
 	/**
@@ -3726,7 +3749,8 @@ public class CommonFunctionFactory {
 	 * SQL Server json_array() function
 	 */
 	public void jsonArray_sqlserver(boolean supportsExtendedJson) {
-		functionRegistry.register( "json_array", new SQLServerJsonArrayFunction( supportsExtendedJson, typeConfiguration ) );
+		functionRegistry.register( "json_array",
+				new SQLServerJsonArrayFunction( supportsExtendedJson, typeConfiguration ) );
 	}
 
 	/**
@@ -3796,21 +3820,24 @@ public class CommonFunctionFactory {
 	 * PostgreSQL json_arrayagg() function
 	 */
 	public void jsonArrayAgg_postgresql(boolean supportsStandard) {
-		functionRegistry.register( "json_arrayagg", new PostgreSQLJsonArrayAggFunction( supportsStandard, typeConfiguration ) );
+		functionRegistry.register( "json_arrayagg",
+				new PostgreSQLJsonArrayAggFunction( supportsStandard, typeConfiguration ) );
 	}
 
 	/**
 	 * GaussDB json_arrayagg() function
 	 */
 	public void jsonArrayAgg_gaussdb(boolean supportsStandard) {
-		functionRegistry.register( "json_arrayagg", new GaussDBJsonArrayAggFunction( supportsStandard, typeConfiguration ) );
+		functionRegistry.register( "json_arrayagg",
+				new GaussDBJsonArrayAggFunction( supportsStandard, typeConfiguration ) );
 	}
 
 	/**
 	 * SQL Server json_arrayagg() function
 	 */
 	public void jsonArrayAgg_sqlserver(boolean supportsExtendedJson) {
-		functionRegistry.register( "json_arrayagg", new SQLServerJsonArrayAggFunction( supportsExtendedJson, typeConfiguration ) );
+		functionRegistry.register( "json_arrayagg",
+				new SQLServerJsonArrayAggFunction( supportsExtendedJson, typeConfiguration ) );
 	}
 
 	/**
@@ -3859,14 +3886,16 @@ public class CommonFunctionFactory {
 	 * PostgreSQL json_objectagg() function
 	 */
 	public void jsonObjectAgg_postgresql(boolean supportsStandard) {
-		functionRegistry.register( "json_objectagg", new PostgreSQLJsonObjectAggFunction( supportsStandard, typeConfiguration ) );
+		functionRegistry.register( "json_objectagg",
+				new PostgreSQLJsonObjectAggFunction( supportsStandard, typeConfiguration ) );
 	}
 
 	/**
 	 * GaussDB json_objectagg() function
 	 */
 	public void jsonObjectAgg_gaussdb(boolean supportsStandard) {
-		functionRegistry.register( "json_objectagg", new GaussDBJsonObjectAggFunction( supportsStandard, typeConfiguration ) );
+		functionRegistry.register( "json_objectagg",
+				new GaussDBJsonObjectAggFunction( supportsStandard, typeConfiguration ) );
 	}
 
 	/**
@@ -3887,7 +3916,8 @@ public class CommonFunctionFactory {
 	 * SQL Server json_objectagg() function
 	 */
 	public void jsonObjectAgg_sqlserver(boolean supportsExtendedJson) {
-		functionRegistry.register( "json_objectagg", new SQLServerJsonObjectAggFunction( supportsExtendedJson, typeConfiguration ) );
+		functionRegistry.register( "json_objectagg",
+				new SQLServerJsonObjectAggFunction( supportsExtendedJson, typeConfiguration ) );
 	}
 
 	/**
@@ -4042,7 +4072,8 @@ public class CommonFunctionFactory {
 	 * SQL server json_replace() function
 	 */
 	public void jsonReplace_sqlserver(boolean supportsExtendedJson) {
-		functionRegistry.register( "json_replace", new SQLServerJsonReplaceFunction( supportsExtendedJson, typeConfiguration ) );
+		functionRegistry.register( "json_replace",
+				new SQLServerJsonReplaceFunction( supportsExtendedJson, typeConfiguration ) );
 	}
 
 	/**
@@ -4087,7 +4118,8 @@ public class CommonFunctionFactory {
 	 * SQL server json_insert() function
 	 */
 	public void jsonInsert_sqlserver(boolean supportsExtendedJson) {
-		functionRegistry.register( "json_insert", new SQLServerJsonInsertFunction( supportsExtendedJson, typeConfiguration ) );
+		functionRegistry.register( "json_insert",
+				new SQLServerJsonInsertFunction( supportsExtendedJson, typeConfiguration ) );
 	}
 
 	/**
@@ -4131,14 +4163,16 @@ public class CommonFunctionFactory {
 	 * PostgreSQL json_array_append() function
 	 */
 	public void jsonArrayAppend_postgresql(boolean supportsLax) {
-		functionRegistry.register( "json_array_append", new PostgreSQLJsonArrayAppendFunction( supportsLax, typeConfiguration ) );
+		functionRegistry.register( "json_array_append",
+				new PostgreSQLJsonArrayAppendFunction( supportsLax, typeConfiguration ) );
 	}
 
 	/**
 	 * GaussDB json_array_append() function
 	 */
 	public void jsonArrayAppend_gaussdb(boolean supportsLax) {
-		functionRegistry.register( "json_array_append", new GaussDBJsonArrayAppendFunction( supportsLax, typeConfiguration ) );
+		functionRegistry.register( "json_array_append",
+				new GaussDBJsonArrayAppendFunction( supportsLax, typeConfiguration ) );
 	}
 
 	/**
@@ -4176,7 +4210,8 @@ public class CommonFunctionFactory {
 	 * SQL server json_array_append() function
 	 */
 	public void jsonArrayAppend_sqlserver(boolean supportsExtendedJson) {
-		functionRegistry.register( "json_array_append", new SQLServerJsonArrayAppendFunction( supportsExtendedJson, typeConfiguration ) );
+		functionRegistry.register( "json_array_append",
+				new SQLServerJsonArrayAppendFunction( supportsExtendedJson, typeConfiguration ) );
 	}
 
 	/**
@@ -4411,7 +4446,8 @@ public class CommonFunctionFactory {
 	 * Standard unnest() function
 	 */
 	public void unnest(@Nullable String defaultBasicArrayElementColumnName, String defaultIndexSelectionExpression) {
-		functionRegistry.register( "unnest", new UnnestFunction( defaultBasicArrayElementColumnName, defaultIndexSelectionExpression ) );
+		functionRegistry.register( "unnest",
+				new UnnestFunction( defaultBasicArrayElementColumnName, defaultIndexSelectionExpression ) );
 	}
 
 	/**
@@ -4475,42 +4511,50 @@ public class CommonFunctionFactory {
 	 * Standard generate_series() function
 	 */
 	public void generateSeries(@Nullable String defaultValueColumnName, String defaultIndexSelectionExpression, boolean coerceToTimestamp) {
-		functionRegistry.register( "generate_series", new GenerateSeriesFunction( defaultValueColumnName, defaultIndexSelectionExpression, coerceToTimestamp, typeConfiguration ) );
+		functionRegistry.register( "generate_series",
+				new GenerateSeriesFunction( defaultValueColumnName, defaultIndexSelectionExpression, coerceToTimestamp,
+						typeConfiguration ) );
 	}
 
 	/**
 	 * Recursive CTE generate_series() function
 	 */
 	public void generateSeries_recursive(int maxSeriesSize, boolean supportsInterval, boolean coerceToTimestamp) {
-		functionRegistry.register( "generate_series", new CteGenerateSeriesFunction( maxSeriesSize, supportsInterval, coerceToTimestamp, typeConfiguration ) );
+		functionRegistry.register( "generate_series",
+				new CteGenerateSeriesFunction( maxSeriesSize, supportsInterval, coerceToTimestamp,
+						typeConfiguration ) );
 	}
 
 	/**
 	 * H2 generate_series() function
 	 */
 	public void generateSeries_h2(int maxSeriesSize) {
-		functionRegistry.register( "generate_series", new H2GenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
+		functionRegistry.register( "generate_series",
+				new H2GenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
 	}
 
 	/**
 	 * SQL Server generate_series() function
 	 */
 	public void generateSeries_sqlserver(int maxSeriesSize) {
-		functionRegistry.register( "generate_series", new SQLServerGenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
+		functionRegistry.register( "generate_series",
+				new SQLServerGenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
 	}
 
 	/**
 	 * Sybase ASE generate_series() function
 	 */
 	public void generateSeries_sybasease(int maxSeriesSize) {
-		functionRegistry.register( "generate_series", new SybaseASEGenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
+		functionRegistry.register( "generate_series",
+				new SybaseASEGenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
 	}
 
 	/**
 	 * HANA generate_series() function
 	 */
 	public void generateSeries_hana(int maxSeriesSize) {
-		functionRegistry.register( "generate_series", new HANAGenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
+		functionRegistry.register( "generate_series",
+				new HANAGenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
 	}
 
 	/**

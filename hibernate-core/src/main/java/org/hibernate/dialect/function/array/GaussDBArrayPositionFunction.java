@@ -18,7 +18,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * GaussDB variant of the function.
  *
  * @author liubao
- *
+ * <p>
  * Notes: Original code of this class is based on PostgreSQLArrayPositionFunction.
  */
 public class GaussDBArrayPositionFunction extends AbstractArrayPositionFunction {

@@ -22,7 +22,7 @@ import org.hibernate.type.BasicPluralType;
  * GaussDB variant of the function to properly return {@code null} when the array argument is null.
  *
  * @author liubao
- *
+ * <p>
  * Notes: Original code of this class is based on PostgreSQLArrayConcatElementFunction.
  */
 public class GaussDBArrayConcatElementFunction extends ArrayConcatElementFunction {
@@ -52,9 +52,9 @@ public class GaussDBArrayConcatElementFunction extends ArrayConcatElementFunctio
 		final String elementCastType;
 		if ( needsElementCasting( elementArgument ) ) {
 			final JdbcMappingContainer arrayType = arrayArgument.getExpressionType();
-			final Size size = arrayType instanceof SqlTypedMapping ? ( (SqlTypedMapping) arrayType ).toSize() : null;
+			final Size size = arrayType instanceof SqlTypedMapping ? ((SqlTypedMapping) arrayType).toSize() : null;
 			elementCastType = DdlTypeHelper.getCastTypeName(
-					( (BasicPluralType<?, ?>) returnType ).getElementType(),
+					((BasicPluralType<?, ?>) returnType).getElementType(),
 					size,
 					walker.getSessionFactory().getTypeConfiguration()
 			);
@@ -65,7 +65,7 @@ public class GaussDBArrayConcatElementFunction extends ArrayConcatElementFunctio
 		sqlAppender.append( "case when " );
 		walker.render( arrayArgument, SqlAstNodeRenderingMode.DEFAULT );
 		sqlAppender.append( " is not null then " );
-		if ( prepend && elementCastType != null) {
+		if ( prepend && elementCastType != null ) {
 			sqlAppender.append( "cast(" );
 			walker.render( firstArgument, SqlAstNodeRenderingMode.DEFAULT );
 			sqlAppender.append( " as " );
@@ -76,7 +76,7 @@ public class GaussDBArrayConcatElementFunction extends ArrayConcatElementFunctio
 			walker.render( firstArgument, SqlAstNodeRenderingMode.DEFAULT );
 		}
 		sqlAppender.append( "||" );
-		if ( !prepend && elementCastType != null) {
+		if ( !prepend && elementCastType != null ) {
 			sqlAppender.append( "cast(" );
 			walker.render( secondArgument, SqlAstNodeRenderingMode.DEFAULT );
 			sqlAppender.append( " as " );
@@ -93,7 +93,7 @@ public class GaussDBArrayConcatElementFunction extends ArrayConcatElementFunctio
 		// GaussDB needs casting of null and string literal expressions
 		return elementExpression instanceof Literal && (
 				elementExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString()
-						|| ( (Literal) elementExpression ).getLiteralValue() == null
+				|| ((Literal) elementExpression).getLiteralValue() == null
 		);
 	}
 }

@@ -82,7 +82,7 @@ public class NamedQueryTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.gauss's bug")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.gauss's bug")
 	public void testNativeWithMaxResults(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

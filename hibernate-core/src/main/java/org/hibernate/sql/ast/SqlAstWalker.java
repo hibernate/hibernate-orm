@@ -188,10 +188,13 @@ public interface SqlAstWalker {
 	void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate);
 
 	void visitBetweenPredicate(BetweenPredicate betweenPredicate);
+
 	void visitLessThanPredicate(LessThanPredicate lessThanPredicate);
 
 	void visitFilterPredicate(FilterPredicate filterPredicate);
+
 	void visitFilterFragmentPredicate(FilterPredicate.FilterFragmentPredicate fragmentPredicate);
+
 	void visitSqlFragmentPredicate(SqlFragmentPredicate predicate);
 
 	void visitGroupedPredicate(GroupedPredicate groupedPredicate);

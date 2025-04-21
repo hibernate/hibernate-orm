@@ -44,7 +44,7 @@ public class StatelessSessionVersioningTest {
 			assertEquals( 0, v.version );
 			s.update( v );
 			assertEquals( 1, v.version );
-			if ( !( dialect instanceof SQLServerDialect ) ) {
+			if ( !(dialect instanceof SQLServerDialect) ) {
 				//TODO: upsert() with IDENTITY not working on SQL Server
 				s.upsert( v );
 				assertEquals( 2, v.version );

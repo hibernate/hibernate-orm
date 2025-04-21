@@ -9,7 +9,7 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
- * @author Steve Ebersole
+ * @author chen zhida
  */
 public class LessThanPredicate extends AbstractPredicate {
 

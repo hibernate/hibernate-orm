@@ -30,7 +30,7 @@ public class HHH111877Test extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Foo.class };
+		return new Class<?>[] {Foo.class};
 	}
 
 	@Test

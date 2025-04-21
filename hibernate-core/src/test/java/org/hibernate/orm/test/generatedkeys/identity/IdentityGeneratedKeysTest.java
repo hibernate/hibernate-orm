@@ -43,7 +43,7 @@ public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	public String[] getMappings() {
-		return new String[] { "generatedkeys/identity/MyEntity.hbm.xml" };
+		return new String[] {"generatedkeys/identity/MyEntity.hbm.xml"};
 	}
 
 	@Test
@@ -87,7 +87,7 @@ public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({"unchecked"})
 	public void testPersistOutsideTransactionCascadedToNonInverseCollection() {
 		long initialInsertCount = sessionFactory().getStatistics().getEntityInsertCount();
 		Session s = openSession();
@@ -114,7 +114,7 @@ public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({"unchecked"})
 	public void testPersistOutsideTransactionCascadedToInverseCollection() {
 		long initialInsertCount = sessionFactory().getStatistics().getEntityInsertCount();
 		Session s = openSession();

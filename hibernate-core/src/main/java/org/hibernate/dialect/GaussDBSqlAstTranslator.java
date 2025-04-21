@@ -39,7 +39,7 @@ import org.hibernate.type.SqlTypes;
  * A SQL AST translator for GaussDB.
  *
  * @author liubao
- *
+ * <p>
  * Notes: Original code of this class is based on PostgreSQLSqlAstTranslator.
  */
 public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithMerge<T> {
@@ -99,8 +99,8 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
 		final Statement currentStatement = getStatementStack().getCurrent();
-		if ( !( currentStatement instanceof UpdateStatement updateStatement )
-			|| !hasNonTrivialFromClause( updateStatement.getFromClause() ) ) {
+		if ( !(currentStatement instanceof UpdateStatement updateStatement)
+			 || !hasNonTrivialFromClause( updateStatement.getFromClause() ) ) {
 			// For UPDATE statements we render a full FROM clause and a join condition to match target table rows,
 			// but for that to work, we have to omit the alias for the target table reference here
 			renderTableReferenceIdentificationVariable( tableReference );
@@ -126,7 +126,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
 		if ( lhsExpressionType != null && lhsExpressionType.getJdbcTypeCount() == 1
-				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
+			 && lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
 			// In GaussDB, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
 			switch ( operator ) {
 				case EQUAL:

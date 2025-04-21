@@ -37,7 +37,7 @@ public class BlobByteArrayTest extends BaseEntityManagerFunctionalTestCase {
 					final Product product = new Product();
 					product.setId( 1 );
 					product.setName( "Mobile phone" );
-					product.setImage( new byte[] { 1, 2, 3 } );
+					product.setImage( new byte[] {1, 2, 3} );
 
 					entityManager.persist( product );
 					return product.getId();
@@ -47,7 +47,7 @@ public class BlobByteArrayTest extends BaseEntityManagerFunctionalTestCase {
 				this::entityManagerFactory, entityManager -> {
 					Product product = entityManager.find( Product.class, productId );
 
-					assertArrayEquals( new byte[] { 1, 2, 3 }, product.getImage() );
+					assertArrayEquals( new byte[] {1, 2, 3}, product.getImage() );
 				}
 		);
 	}

@@ -236,7 +236,7 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 			if ( this == obj ) {
 				return true;
 			}
-			if ( !( obj instanceof Child ) ) {
+			if ( !(obj instanceof Child) ) {
 				return false;
 			}
 			Child other = (Child) obj;
@@ -279,7 +279,7 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 			if ( this == obj ) {
 				return true;
 			}
-			if ( !( obj instanceof MappingId ) ) {
+			if ( !(obj instanceof MappingId) ) {
 				return false;
 			}
 			MappingId other = (MappingId) obj;
@@ -388,7 +388,7 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 			if ( this == obj ) {
 				return true;
 			}
-			if ( !( obj instanceof UnversionedParent ) ) {
+			if ( !(obj instanceof UnversionedParent) ) {
 				return false;
 			}
 			UnversionedParent other = (UnversionedParent) obj;
@@ -499,7 +499,7 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 			if ( this == obj ) {
 				return true;
 			}
-			if ( !( obj instanceof VersionedParent ) ) {
+			if ( !(obj instanceof VersionedParent) ) {
 				return false;
 			}
 			VersionedParent other = (VersionedParent) obj;
@@ -621,7 +621,7 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 			if ( this == obj ) {
 				return true;
 			}
-			if ( !( obj instanceof VersionedMappingUnversionedParent ) ) {
+			if ( !(obj instanceof VersionedMappingUnversionedParent) ) {
 				return false;
 			}
 			VersionedMappingUnversionedParent other = (VersionedMappingUnversionedParent) obj;
@@ -743,7 +743,7 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 			if ( this == obj ) {
 				return true;
 			}
-			if ( !( obj instanceof VersionedMappingVersionedParent ) ) {
+			if ( !(obj instanceof VersionedMappingVersionedParent) ) {
 				return false;
 			}
 			VersionedMappingVersionedParent other = (VersionedMappingVersionedParent) obj;

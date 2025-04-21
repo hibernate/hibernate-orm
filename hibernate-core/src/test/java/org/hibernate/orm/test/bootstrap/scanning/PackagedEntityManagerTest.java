@@ -223,7 +223,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 			if ( nested == null ) {
 				throw e;
 			}
-			if ( !( nested instanceof ClassNotFoundException ) ) {
+			if ( !(nested instanceof ClassNotFoundException) ) {
 				throw e;
 			}
 			fail( "Try to process hbm file: " + e.getMessage() );

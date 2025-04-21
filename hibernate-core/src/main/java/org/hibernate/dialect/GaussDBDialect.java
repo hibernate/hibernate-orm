@@ -143,13 +143,13 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * <a href="https://support.huaweicloud.com/function-gaussdb/index.html">GaussDB documentation</a>.
  *
  * @author liubao
- *
+ * <p>
  * Notes: Original code of this class is based on PostgreSQLDialect.
  */
 public class GaussDBDialect extends Dialect {
 	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2 );
 
-	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate( this );
 	private final StandardTableExporter gaussDBTableExporter = new StandardTableExporter( this ) {
 		@Override
 		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
@@ -165,11 +165,11 @@ public class GaussDBDialect extends Dialect {
 	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
 
 	public GaussDBDialect() {
-		this(MINIMUM_VERSION);
+		this( MINIMUM_VERSION );
 	}
 
 	public GaussDBDialect(DialectResolutionInfo info) {
-		this( info.makeCopyOrDefault( MINIMUM_VERSION ));
+		this( info.makeCopyOrDefault( MINIMUM_VERSION ) );
 		registerKeywords( info );
 	}
 
@@ -200,7 +200,7 @@ public class GaussDBDialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		return switch (sqlTypeCode) {
+		return switch ( sqlTypeCode ) {
 			// no tinyint
 			case TINYINT -> "smallint";
 
@@ -221,7 +221,7 @@ public class GaussDBDialect extends Dialect {
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		return switch (sqlTypeCode) {
+		return switch ( sqlTypeCode ) {
 			case CHAR, NCHAR, VARCHAR, NVARCHAR -> "varchar";
 			case LONG32VARCHAR, LONG32NVARCHAR -> "text";
 			case NCLOB -> "clob";
@@ -331,7 +331,8 @@ public class GaussDBDialect extends Dialect {
 				// GaussDB names array types by prepending an underscore to the base name
 				if ( columnTypeName.charAt( 0 ) == '_' ) {
 					final String componentTypeName = columnTypeName.substring( 1 );
-					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
+					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName,
+							jdbcTypeRegistry.getTypeConfiguration() );
 					if ( sqlTypeCode != null ) {
 						return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
 								jdbcTypeCode,
@@ -339,7 +340,8 @@ public class GaussDBDialect extends Dialect {
 								ColumnTypeInformation.EMPTY
 						);
 					}
-					final SqlTypedJdbcType elementDescriptor = jdbcTypeRegistry.findSqlTypedDescriptor( componentTypeName );
+					final SqlTypedJdbcType elementDescriptor = jdbcTypeRegistry.findSqlTypedDescriptor(
+							componentTypeName );
 					if ( elementDescriptor != null ) {
 						return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
 								jdbcTypeCode,
@@ -364,7 +366,7 @@ public class GaussDBDialect extends Dialect {
 
 	@Override
 	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
-		return switch (columnTypeName) {
+		return switch ( columnTypeName ) {
 			case "bool" -> Types.BOOLEAN;
 			case "float4" -> Types.REAL; // Use REAL instead of FLOAT to get Float as recommended Java type
 			case "float8" -> Types.DOUBLE;
@@ -388,22 +390,22 @@ public class GaussDBDialect extends Dialect {
 				.append( " as enum (" );
 		String separator = "";
 		for ( String value : values ) {
-			type.append( separator ).append('\'').append( value ).append('\'');
+			type.append( separator ).append( '\'' ).append( value ).append( '\'' );
 			separator = ",";
 		}
 		type.append( ')' );
 		String cast1 = "create cast (varchar as " +
-				name +
-				") with inout as implicit";
+					   name +
+					   ") with inout as implicit";
 		String cast2 = "create cast (" +
-				name +
-				" as varchar) with inout as implicit";
-		return new String[] { type.toString(), cast1, cast2 };
+					   name +
+					   " as varchar) with inout as implicit";
+		return new String[] {type.toString(), cast1, cast2};
 	}
 
 	@Override
 	public String[] getDropEnumTypeCommand(String name) {
-		return new String[] { "drop type if exists " + name + " cascade" };
+		return new String[] {"drop type if exists " + name + " cascade"};
 	}
 
 	@Override
@@ -429,9 +431,9 @@ public class GaussDBDialect extends Dialect {
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		return switch (unit) {
+		return switch ( unit ) {
 			case DAY_OF_WEEK -> "(" + super.extractPattern( unit ) + "+1)";
-			default -> super.extractPattern(unit);
+			default -> super.extractPattern( unit );
 		};
 	}
 
@@ -458,7 +460,8 @@ public class GaussDBDialect extends Dialect {
 		return 1_000_000_000; //seconds
 	}
 
-	@Override @SuppressWarnings("deprecation")
+	@Override
+	@SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return intervalType != null
 				? "(?2+?3)"
@@ -466,7 +469,7 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	private static String intervalPattern(TemporalUnit unit) {
-		return switch (unit) {
+		return switch ( unit ) {
 			case NANOSECOND -> "(?2)/1e3*interval '1 microsecond'";
 			case NATIVE -> "(?2)*interval '1 second'";
 			case QUARTER -> "(?2)*interval '3 month'"; // quarter is not supported in interval literals
@@ -475,7 +478,8 @@ public class GaussDBDialect extends Dialect {
 		};
 	}
 
-	@Override @SuppressWarnings("deprecation")
+	@Override
+	@SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( unit == null ) {
 			return "(?3-?2)";
@@ -484,17 +488,18 @@ public class GaussDBDialect extends Dialect {
 			// special case: subtraction of two dates
 			// results in an integer number of days
 			// instead of an INTERVAL
-			return switch (unit) {
+			return switch ( unit ) {
 				case YEAR, MONTH, QUARTER -> "extract(" + translateDurationField( unit ) + " from age(?3,?2))";
 				default -> "(?3-?2)" + DAY.conversionFactor( unit, this );
 			};
 		}
 		else {
-			return switch (unit) {
+			return switch ( unit ) {
 				case YEAR -> "extract(year from ?3-?2)";
 				case QUARTER -> "(extract(year from ?3-?2)*4+extract(month from ?3-?2)/3)";
 				case MONTH -> "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
-				case WEEK -> "(extract(day from ?3-?2)/7)"; // week is not supported by extract() when the argument is a duration
+				case WEEK ->
+						"(extract(day from ?3-?2)/7)"; // week is not supported by extract() when the argument is a duration
 				case DAY -> "extract(day from ?3-?2)";
 				// in order to avoid multiple calls to extract(),
 				// we use extract(epoch from x - y) * factor for
@@ -513,9 +518,9 @@ public class GaussDBDialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory( functionContributions );
 
 		functionFactory.cot();
 		functionFactory.radians();
@@ -580,7 +585,7 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.arrayFill_gaussdb();
 		functionFactory.arrayPosition_gaussdb();
 
-		functionFactory.jsonValue_gaussdb(true);
+		functionFactory.jsonValue_gaussdb( true );
 		functionFactory.jsonQuery_gaussdb();
 		functionFactory.jsonExists_gaussdb();
 		functionFactory.jsonArray();
@@ -763,6 +768,7 @@ public class GaussDBDialect extends Dialect {
 	public boolean supportsNonQueryWithCTE() {
 		return true;
 	}
+
 	@Override
 	public boolean supportsConflictClauseForInsertCTE() {
 		return true;
@@ -800,7 +806,7 @@ public class GaussDBDialect extends Dialect {
 			LockMode lockMode = lockOptions.getLockMode();
 			for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
 				// seek the highest lock mode
-				if ( entry.getValue().greaterThan(lockMode) ) {
+				if ( entry.getValue().greaterThan( lockMode ) ) {
 					aliases = entry.getKey();
 				}
 			}
@@ -809,7 +815,7 @@ public class GaussDBDialect extends Dialect {
 		if ( lockMode == null ) {
 			lockMode = lockOptions.getLockMode();
 		}
-		return switch (lockMode) {
+		return switch ( lockMode ) {
 			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeOut() );
 			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeOut() );
 			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
@@ -824,7 +830,7 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
-	public String getCaseInsensitiveLike(){
+	public String getCaseInsensitiveLike() {
 		return "ilike";
 	}
 
@@ -963,7 +969,8 @@ public class GaussDBDialect extends Dialect {
 							return extractUsingTemplate( "violates unique constraint \"", "\"", sqle.getMessage() );
 						// FOREIGN KEY VIOLATION
 						case 23503:
-							return extractUsingTemplate( "violates foreign key constraint \"", "\"", sqle.getMessage() );
+							return extractUsingTemplate( "violates foreign key constraint \"", "\"",
+									sqle.getMessage() );
 						// NOT NULL VIOLATION
 						case 23502:
 							return extractUsingTemplate(
@@ -1037,7 +1044,8 @@ public class GaussDBDialect extends Dialect {
 	@Override
 	public ResultSet getResultSet(CallableStatement statement, int position) throws SQLException {
 		if ( position != 1 ) {
-			throw new UnsupportedOperationException( "GaussDB only supports REF_CURSOR parameters as the first parameter" );
+			throw new UnsupportedOperationException(
+					"GaussDB only supports REF_CURSOR parameters as the first parameter" );
 		}
 		return (ResultSet) statement.getObject( 1 );
 	}
@@ -1096,27 +1104,27 @@ public class GaussDBDialect extends Dialect {
 
 	public Replacer datetimeFormat(String format) {
 		return OracleDialect.datetimeFormat( format, true, false )
-				.replace("SSSSSS", "US")
-				.replace("SSSSS", "US")
-				.replace("SSSS", "US")
-				.replace("SSS", "MS")
-				.replace("SS", "MS")
-				.replace("S", "MS")
+				.replace( "SSSSSS", "US" )
+				.replace( "SSSSS", "US" )
+				.replace( "SSSS", "US" )
+				.replace( "SSS", "MS" )
+				.replace( "SS", "MS" )
+				.replace( "S", "MS" )
 				//use ISO day in week, as per DateTimeFormatter
-				.replace("ee", "ID")
-				.replace("e", "fmID")
+				.replace( "ee", "ID" )
+				.replace( "e", "fmID" )
 				//TZR is TZ
-				.replace("zzz", "TZ")
-				.replace("zz", "TZ")
-				.replace("z", "TZ")
-				.replace("xxx", "OF")
-				.replace("xx", "OF")
-				.replace("x", "OF");
+				.replace( "zzz", "TZ" )
+				.replace( "zz", "TZ" )
+				.replace( "z", "TZ" )
+				.replace( "xxx", "OF" )
+				.replace( "xx", "OF" )
+				.replace( "x", "OF" );
 	}
 
 	@Override
 	public String translateExtractField(TemporalUnit unit) {
-		return switch (unit) {
+		return switch ( unit ) {
 			//WEEK means the ISO week number
 			case DAY_OF_MONTH -> "day";
 			case DAY_OF_YEAR -> "doy";
@@ -1235,7 +1243,7 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	private String withTimeout(String lockString, int timeout) {
-		return switch (timeout) {
+		return switch ( timeout ) {
 			case LockOptions.NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
 			case LockOptions.SKIP_LOCKED -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
 			default -> lockString;
@@ -1254,12 +1262,12 @@ public class GaussDBDialect extends Dialect {
 
 	@Override
 	public String getReadLockString(int timeout) {
-		return withTimeout(" for share", timeout );
+		return withTimeout( " for share", timeout );
 	}
 
 	@Override
 	public String getReadLockString(String aliases, int timeout) {
-		return withTimeout(" for share of " + aliases, timeout );
+		return withTimeout( " for share of " + aliases, timeout );
 	}
 
 	@Override
@@ -1273,7 +1281,7 @@ public class GaussDBDialect extends Dialect {
 	public String getForUpdateNowaitString(String aliases) {
 		return supportsNoWait()
 				? " for update of " + aliases + " nowait"
-				: getForUpdateString(aliases);
+				: getForUpdateString( aliases );
 	}
 
 	@Override
@@ -1364,8 +1372,8 @@ public class GaussDBDialect extends Dialect {
 
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		super.contributeTypes(typeContributions, serviceRegistry);
-		contributeGaussDBTypes( typeContributions, serviceRegistry);
+		super.contributeTypes( typeContributions, serviceRegistry );
+		contributeGaussDBTypes( typeContributions, serviceRegistry );
 	}
 
 	/**

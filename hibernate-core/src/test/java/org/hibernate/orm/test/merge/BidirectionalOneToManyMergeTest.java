@@ -177,10 +177,10 @@ public class BidirectionalOneToManyMergeTest extends org.hibernate.orm.test.jpa.
 			if ( this == o ) {
 				return true;
 			}
-			if ( !( o instanceof PostComment ) ) {
+			if ( !(o instanceof PostComment) ) {
 				return false;
 			}
-			return id != null && id.equals( ( (PostComment) o ).getId() );
+			return id != null && id.equals( ((PostComment) o).getId() );
 		}
 
 		@Override

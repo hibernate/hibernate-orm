@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  * GaussDB variant of the function to properly return {@code null} when one of the arguments is null.
  *
  * @author liubao
- *
+ * <p>
  * Notes: Original code of this class is based on PostgreSQLArrayConcatFunction.
  */
 public class GaussDBArrayConcatFunction extends ArrayConcatFunction {

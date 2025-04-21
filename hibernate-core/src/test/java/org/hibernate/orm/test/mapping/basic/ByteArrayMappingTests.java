@@ -75,7 +75,7 @@ public class ByteArrayMappingTests {
 			if ( dialect.supportsStandardArrays() ) {
 				assertThat( jdbcMapping.getJdbcType(), instanceOf( ArrayJdbcType.class ) );
 				assertThat(
-						( (ArrayJdbcType) jdbcMapping.getJdbcType() ).getElementJdbcType(),
+						((ArrayJdbcType) jdbcMapping.getJdbcType()).getElementJdbcType(),
 						is( jdbcTypeRegistry.getDescriptor( Types.TINYINT ) )
 				);
 			}
@@ -120,7 +120,7 @@ public class ByteArrayMappingTests {
 		scope.inTransaction(
 				(session) -> {
 					session.persist(
-							new EntityOfByteArrays( 1, "abc".getBytes(), new Byte[] { (byte) 1 } )
+							new EntityOfByteArrays( 1, "abc".getBytes(), new Byte[] {(byte) 1} )
 					);
 				}
 		);

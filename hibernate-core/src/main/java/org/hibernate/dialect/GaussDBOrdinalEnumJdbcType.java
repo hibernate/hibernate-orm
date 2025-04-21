@@ -18,13 +18,12 @@ import static org.hibernate.type.SqlTypes.NAMED_ORDINAL_ENUM;
  * &#64;JdbcTypeCode(SqlTypes.NAMED_ORDINAL_ENUM)
  * </pre>
  *
+ * @author liubao
+ * <p>
+ * Notes: Original code of this class is based on PostgreSQLOrdinalEnumJdbcType.
  * @see org.hibernate.type.SqlTypes#NAMED_ORDINAL_ENUM
  * @see GaussDBDialect#getEnumTypeDeclaration(String, String[])
  * @see GaussDBDialect#getCreateEnumTypeCommand(String, String[])
- *
- * @author liubao
- *
- * Notes: Original code of this class is based on PostgreSQLOrdinalEnumJdbcType.
  */
 public class GaussDBOrdinalEnumJdbcType extends GaussDBEnumJdbcType {
 

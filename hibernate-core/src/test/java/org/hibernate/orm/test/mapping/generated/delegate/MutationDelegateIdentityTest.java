@@ -178,7 +178,8 @@ public class MutationDelegateIdentityTest {
 			);
 
 			final boolean shouldHaveRowId = delegate != null && delegate.supportsRowId()
-					&& scope.getSessionFactory().getJdbcServices().getDialect().rowId( "" ) != null;
+											&& scope.getSessionFactory().getJdbcServices().getDialect()
+													   .rowId( "" ) != null;
 			if ( shouldHaveRowId ) {
 				// assert row-id was populated in entity entry
 				final PersistenceContext pc = session.getPersistenceContextInternal();
@@ -235,7 +236,8 @@ public class MutationDelegateIdentityTest {
 			}
 
 			final boolean shouldHaveRowId = delegate != null && delegate.supportsRowId()
-					&& scope.getSessionFactory().getJdbcServices().getDialect().rowId( "" ) != null;
+											&& scope.getSessionFactory().getJdbcServices().getDialect()
+													   .rowId( "" ) != null;
 			if ( shouldHaveRowId ) {
 				// assert row-id was populated in entity entry
 				final PersistenceContext pc = session.getPersistenceContextInternal();

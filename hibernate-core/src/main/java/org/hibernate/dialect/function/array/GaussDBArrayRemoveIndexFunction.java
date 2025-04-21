@@ -19,7 +19,6 @@ import java.util.List;
 public class GaussDBArrayRemoveIndexFunction extends ArrayRemoveIndexUnnestFunction {
 
 
-
 	public GaussDBArrayRemoveIndexFunction(boolean castEmptyArrayLiteral) {
 		super( castEmptyArrayLiteral );
 	}
@@ -33,7 +32,7 @@ public class GaussDBArrayRemoveIndexFunction extends ArrayRemoveIndexUnnestFunct
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression indexExpression = (Expression) sqlAstArguments.get( 1 );
 
-		sqlAppender.append( "case when ");
+		sqlAppender.append( "case when " );
 		arrayExpression.accept( walker );
 		sqlAppender.append( " IS NOT NULL THEN COALESCE((SELECT array_agg(" );
 		arrayExpression.accept( walker );

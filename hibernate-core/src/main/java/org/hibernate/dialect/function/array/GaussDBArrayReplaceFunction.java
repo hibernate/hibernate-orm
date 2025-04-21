@@ -25,29 +25,29 @@ public class GaussDBArrayReplaceFunction extends ArrayReplaceUnnestFunction {
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 
-		sqlAppender.append( "CASE WHEN ");
+		sqlAppender.append( "CASE WHEN " );
 		sqlAstArguments.get( 0 ).accept( walker );
-		sqlAppender.append( " IS NULL THEN NULL ELSE COALESCE((SELECT array_agg(CASE ");
+		sqlAppender.append( " IS NULL THEN NULL ELSE COALESCE((SELECT array_agg(CASE " );
 		final Expression originValueExpression = (Expression) sqlAstArguments.get( 1 );
 		if ( originValueExpression instanceof Literal ) {
 			Literal literal = (Literal) originValueExpression;
 			Object literalValue = literal.getLiteralValue();
 			if ( literalValue != null ) {
-				sqlAppender.append( "WHEN val =  ");
+				sqlAppender.append( "WHEN val =  " );
 				sqlAstArguments.get( 1 ).accept( walker );
 			}
 			else {
-				sqlAppender.append( "WHEN val is null  ");
+				sqlAppender.append( "WHEN val is null  " );
 			}
 		}
 		else {
-			sqlAppender.append( "WHEN val =  ");
+			sqlAppender.append( "WHEN val =  " );
 			sqlAstArguments.get( 1 ).accept( walker );
 		}
-		sqlAppender.append( " THEN  ");
+		sqlAppender.append( " THEN  " );
 		sqlAstArguments.get( 2 ).accept( walker );
-		sqlAppender.append( " ELSE val END) FROM unnest( ");
+		sqlAppender.append( " ELSE val END) FROM unnest( " );
 		sqlAstArguments.get( 0 ).accept( walker );
-		sqlAppender.append( ") AS val ), CAST(ARRAY[] AS VARCHAR[]) ) END AS result_array");
+		sqlAppender.append( ") AS val ), CAST(ARRAY[] AS VARCHAR[]) ) END AS result_array" );
 	}
 }

@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
+
 import java.lang.reflect.Array;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -56,18 +57,19 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * is probably not very efficient.
  *
  * @author liubao
- *
+ * <p>
  * Notes: Original code of this class is based on AbstractPostgreSQLStructJdbcType.
  */
 public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcType {
 
 	private static final DateTimeFormatter LOCAL_DATE_TIME;
+
 	static {
 		LOCAL_DATE_TIME = new DateTimeFormatterBuilder()
 				.parseCaseInsensitive()
-				.append(DateTimeFormatter.ISO_LOCAL_DATE)
-				.appendLiteral(' ')
-				.append(DateTimeFormatter.ISO_LOCAL_TIME)
+				.append( DateTimeFormatter.ISO_LOCAL_DATE )
+				.appendLiteral( ' ' )
+				.append( DateTimeFormatter.ISO_LOCAL_TIME )
 				.optionalStart()
 				.appendOffset( "+HH:mm", "+00" )
 				.toFormatter();
@@ -75,17 +77,19 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 
 	// Need a custom formatter for parsing what PostgresPlus/EDB produces
 	private static final DateTimeFormatter LOCAL_DATE;
+
 	static {
 		LOCAL_DATE = new DateTimeFormatterBuilder()
 				.parseCaseInsensitive()
-				.append(DateTimeFormatter.ISO_LOCAL_DATE)
+				.append( DateTimeFormatter.ISO_LOCAL_DATE )
 				.optionalStart()
-				.appendLiteral(' ')
-				.append(DateTimeFormatter.ISO_LOCAL_TIME)
+				.appendLiteral( ' ' )
+				.append( DateTimeFormatter.ISO_LOCAL_TIME )
 				.optionalStart()
 				.appendOffset( "+HH:mm", "+00" )
 				.toFormatter();
 	}
+
 	private final String typeName;
 	private final int[] orderMapping;
 	private final int[] inverseOrderMapping;
@@ -162,7 +166,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 				if ( object == null ) {
 					return null;
 				}
-				return ( (AbstractGaussDBStructJdbcType) getJdbcType() ).fromString(
+				return ((AbstractGaussDBStructJdbcType) getJdbcType()).fromString(
 						object.toString(),
 						getJavaType(),
 						options
@@ -185,12 +189,14 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 			array = values.toArray();
 		}
 		else {
-			array = new Object[embeddableMappingType.getJdbcValueCount() + ( embeddableMappingType.isPolymorphic() ? 1 : 0 )];
+			array = new Object[embeddableMappingType.getJdbcValueCount() + (embeddableMappingType.isPolymorphic() ? 1
+					: 0)];
 			end = deserializeStruct( string, 0, 0, array, returnEmbeddable, options );
 		}
 		assert end == string.length();
 		if ( returnEmbeddable ) {
-			final StructAttributeValues attributeValues = getAttributeValues( embeddableMappingType, orderMapping, array, options );
+			final StructAttributeValues attributeValues = getAttributeValues( embeddableMappingType, orderMapping,
+					array, options );
 			//noinspection unchecked
 			return (X) instantiate( embeddableMappingType, attributeValues );
 		}
@@ -324,7 +330,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 					// Fall-through since a backslash is an escaping mechanism for a start quote within arrays
 				case '"':
 					if ( inQuote ) {
-						if ( isDoubleQuote( string, i, 1 << ( quotes + 1 ) ) ) {
+						if ( isDoubleQuote( string, i, 1 << (quotes + 1) ) ) {
 							// Skip quote escaping as that will be unescaped later
 							if ( escapingSb == null ) {
 								escapingSb = new StringBuilder();
@@ -332,7 +338,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 							escapingSb.append( string, start, i );
 							escapingSb.append( '"' );
 							// Move forward to the last quote
-							i += ( 1 << ( quotes + 1 ) ) - 1;
+							i += (1 << (quotes + 1)) - 1;
 							start = i + 1;
 							continue;
 						}
@@ -400,7 +406,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 							case SqlTypes.VARBINARY:
 							case SqlTypes.LONGVARBINARY:
 							case SqlTypes.LONG32VARBINARY:
-								final int backslashes = 1 << ( quotes + 1 );
+								final int backslashes = 1 << (quotes + 1);
 								assert repeatsChar( string, start, backslashes, '\\' );
 								final int xCharPosition = start + backslashes;
 								assert string.charAt( xCharPosition ) == 'x';
@@ -469,7 +475,8 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 											subValues,
 											options
 									);
-									values[column] = instantiate( structJdbcType.embeddableMappingType, attributeValues );
+									values[column] = instantiate( structJdbcType.embeddableMappingType,
+											attributeValues );
 								}
 								else {
 									if ( structJdbcType.inverseOrderMapping != null ) {
@@ -554,7 +561,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 								);
 							}
 							else if ( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass().isEnum()
-									&& jdbcMapping.getJdbcType().isInteger() ) {
+									  && jdbcMapping.getJdbcType().isInteger() ) {
 								values[column] = fromRawObject(
 										jdbcMapping,
 										IntegerJavaType.INSTANCE.fromEncodedString( string, start, i ),
@@ -590,7 +597,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 									);
 								}
 								else if ( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass().isEnum()
-										&& jdbcMapping.getJdbcType().isInteger() ) {
+										  && jdbcMapping.getJdbcType().isInteger() ) {
 									values[column] = fromRawObject(
 											jdbcMapping,
 											IntegerJavaType.INSTANCE.fromEncodedString( string, start, i ),
@@ -612,7 +619,8 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 					break;
 				case '{':
 					if ( !inQuote ) {
-						final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) getJdbcValueSelectable( column ).getJdbcMapping();
+						final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) getJdbcValueSelectable(
+								column ).getJdbcMapping();
 						final ArrayList<Object> arrayList = new ArrayList<>();
 						//noinspection unchecked
 						i = deserializeArray(
@@ -710,7 +718,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 					// Fall-through since a backslash is an escaping mechanism for a start quote within arrays
 				case '"':
 					if ( inQuote ) {
-						if ( isDoubleQuote( string, i, 1 << ( quotes + 1 ) ) ) {
+						if ( isDoubleQuote( string, i, 1 << (quotes + 1) ) ) {
 							// Skip quote escaping as that will be unescaped later
 							if ( escapingSb == null ) {
 								escapingSb = new StringBuilder();
@@ -718,7 +726,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 							escapingSb.append( string, start, i );
 							escapingSb.append( '"' );
 							// Move forward to the last quote
-							i += ( 1 << ( quotes + 1 ) ) - 1;
+							i += (1 << (quotes + 1)) - 1;
 							start = i + 1;
 							continue;
 						}
@@ -793,7 +801,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 							case SqlTypes.VARBINARY:
 							case SqlTypes.LONGVARBINARY:
 							case SqlTypes.LONG32VARBINARY:
-								final int backslashes = 1 << ( quotes + 1 );
+								final int backslashes = 1 << (quotes + 1);
 								assert repeatsChar( string, start, backslashes, '\\' );
 								final int xCharPosition = start + backslashes;
 								assert string.charAt( xCharPosition ) == 'x';
@@ -904,7 +912,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 						case SqlTypes.LONGVARBINARY:
 						case SqlTypes.LONG32VARBINARY:
 							// Skip past the backslashes in the binary literal, this will be handled later
-							final int backslashes = 1 << ( quotes + 1 );
+							final int backslashes = 1 << (quotes + 1);
 							assert repeatsChar( string, start, backslashes, '\\' );
 							i += backslashes;
 							break;
@@ -926,7 +934,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 								);
 							}
 							else if ( elementType.getJavaTypeDescriptor().getJavaTypeClass().isEnum()
-									&& elementType.getJdbcType().isInteger() ) {
+									  && elementType.getJdbcType().isInteger() ) {
 								values.add(
 										fromRawObject(
 												elementType,
@@ -965,7 +973,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 								);
 							}
 							else if ( elementType.getJavaTypeDescriptor().getJavaTypeClass().isEnum()
-									&& elementType.getJdbcType().isInteger() ) {
+									  && elementType.getJdbcType().isInteger() ) {
 								values.add(
 										fromRawObject(
 												elementType,
@@ -997,14 +1005,15 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 	private SelectableMapping getJdbcValueSelectable(int jdbcValueSelectableIndex) {
 		if ( orderMapping != null ) {
 			final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
-			final int size = numberOfAttributeMappings + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
+			final int size = numberOfAttributeMappings + (embeddableMappingType.isPolymorphic() ? 1 : 0);
 			int count = 0;
 			for ( int i = 0; i < size; i++ ) {
 				final ValuedModelPart modelPart = getEmbeddedPart( embeddableMappingType, orderMapping[i] );
 				if ( modelPart.getMappedType() instanceof EmbeddableMappingType embeddableMappingType ) {
 					final SelectableMapping aggregateMapping = embeddableMappingType.getAggregateMapping();
 					if ( aggregateMapping == null ) {
-						final SelectableMapping subSelectable = embeddableMappingType.getJdbcValueSelectable( jdbcValueSelectableIndex - count );
+						final SelectableMapping subSelectable = embeddableMappingType.getJdbcValueSelectable(
+								jdbcValueSelectableIndex - count );
 						if ( subSelectable != null ) {
 							return subSelectable;
 						}
@@ -1046,7 +1055,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 		if ( escapes == 1 ) {
 			return string.charAt( start ) == '"';
 		}
-		assert ( escapes & 1 ) == 0 : "Only an even number of escapes allowed";
+		assert (escapes & 1) == 0 : "Only an even number of escapes allowed";
 		final int end = start + escapes;
 		if ( end < string.length() ) {
 			for ( ; start < end; start += 2 ) {
@@ -1177,7 +1186,8 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 		return sb.toString();
 	}
 
-	private void serializeStructTo(PostgreSQLAppender appender, Object value, WrapperOptions options) throws SQLException {
+	private void serializeStructTo(PostgreSQLAppender appender, Object value, WrapperOptions options)
+			throws SQLException {
 		serializeDomainValueTo( appender, options, value, '(' );
 		appender.append( ')' );
 	}
@@ -1296,7 +1306,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 						byte[].class,
 						options
 				);
-				appender.ensureCanFit( appender.quote + 1 + ( bytes.length << 1 ) );
+				appender.ensureCanFit( appender.quote + 1 + (bytes.length << 1) );
 				appender.append( '\\' );
 				appender.append( '\\' );
 				appender.append( 'x' );
@@ -1352,7 +1362,8 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 				}
 				break;
 			default:
-				throw new UnsupportedOperationException( "Unsupported JdbcType nested in struct: " + jdbcMapping.getJdbcType() );
+				throw new UnsupportedOperationException(
+						"Unsupported JdbcType nested in struct: " + jdbcMapping.getJdbcType() );
 		}
 	}
 
@@ -1362,7 +1373,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 			Object[] rawJdbcValues,
 			WrapperOptions options) throws SQLException {
 		final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
-		final int size = numberOfAttributeMappings + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
+		final int size = numberOfAttributeMappings + (embeddableMappingType.isPolymorphic() ? 1 : 0);
 		final StructAttributeValues attributeValues = new StructAttributeValues(
 				numberOfAttributeMappings,
 				orderMapping != null ?
@@ -1489,7 +1500,8 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 					appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
 				}
 				else if ( value instanceof TemporalAccessor temporalAccessor ) {
-					appendAsTimestampWithMicros( appender, temporalAccessor, temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ), jdbcTimeZone );
+					appendAsTimestampWithMicros( appender, temporalAccessor,
+							temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ), jdbcTimeZone );
 				}
 				else {
 					appendAsTimestampWithMicros(
@@ -1505,6 +1517,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 
 		appender.append( '"' );
 	}
+
 	private static TimeZone getJdbcTimeZone(WrapperOptions options) {
 		return options == null || options.getJdbcTimeZone() == null
 				? TimeZone.getDefault()

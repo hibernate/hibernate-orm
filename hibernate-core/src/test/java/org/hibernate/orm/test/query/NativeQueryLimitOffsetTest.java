@@ -22,11 +22,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
  * @author Jan Schatteman
  */
 @DomainModel(
-		annotatedClasses = { NativeQueryLimitOffsetTest.Person.class }
+		annotatedClasses = {NativeQueryLimitOffsetTest.Person.class}
 )
 @SessionFactory
 @JiraKey("HHH-16020")
@@ -57,12 +58,13 @@ public class NativeQueryLimitOffsetTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.guass's bug,page not supported")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.guass's bug,page not supported")
 	public void testFullLimitOffsetOnNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List<Long> l = session.createNativeQuery( "select id from Person where name like :name", Long.class)
-							.setParameter("name", "J%")
+					List<Long> l = session.createNativeQuery( "select id from Person where name like :name",
+									Long.class )
+							.setParameter( "name", "J%" )
 							.setFirstResult( 1 )
 							.setMaxResults( 4 )
 							.getResultList();
@@ -73,19 +75,20 @@ public class NativeQueryLimitOffsetTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.guass's bug,page not supported")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.guass's bug,page not supported")
 	public void testPartialLimitOffsetOnNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List<Long> l = session.createNativeQuery( "select id from Person where name like :name", Long.class)
-							.setParameter("name", "J%")
-							.setFirstResult(1)
+					List<Long> l = session.createNativeQuery( "select id from Person where name like :name",
+									Long.class )
+							.setParameter( "name", "J%" )
+							.setFirstResult( 1 )
 							.getResultList();
 					assertEquals( 2, l.get( 0 ) );
 					assertEquals( 4, l.size() );
 
-					l = session.createNativeQuery( "select id from Person where name like :name", Long.class)
-							.setParameter("name", "J%")
+					l = session.createNativeQuery( "select id from Person where name like :name", Long.class )
+							.setParameter( "name", "J%" )
 							.setMaxResults( 3 )
 							.getResultList();
 					assertEquals( 1, l.get( 0 ) );
@@ -95,7 +98,7 @@ public class NativeQueryLimitOffsetTest {
 	}
 
 	@Test
-	@Jira( "https://hibernate.atlassian.net/browse/HHH-18309" )
+	@Jira("https://hibernate.atlassian.net/browse/HHH-18309")
 	public void testLimitOffsetZeroValue(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			List<Long> l = session.createNativeQuery( "select id from Person where name like :name", Long.class )

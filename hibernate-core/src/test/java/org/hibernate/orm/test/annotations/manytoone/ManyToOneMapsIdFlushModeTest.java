@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 public class ManyToOneMapsIdFlushModeTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { ParentEntity.class, ChildEntity.class };
+		return new Class<?>[] {ParentEntity.class, ChildEntity.class};
 	}
 
 	@Test

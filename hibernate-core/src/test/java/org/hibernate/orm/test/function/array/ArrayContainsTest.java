@@ -44,7 +44,7 @@ public class ArrayContainsTest {
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			em.persist( new EntityWithArrays( 1L, new String[] {} ) );
-			em.persist( new EntityWithArrays( 2L, new String[] { "abc", null, "def" } ) );
+			em.persist( new EntityWithArrays( 2L, new String[] {"abc", null, "def"} ) );
 			em.persist( new EntityWithArrays( 3L, null ) );
 		} );
 	}
@@ -94,10 +94,10 @@ public class ArrayContainsTest {
 					root.get( "id" ),
 					cb.arrayContains( root.<String[]>get( "theArray" ), cb.literal( "xyz" ) ),
 					cb.arrayContains( root.get( "theArray" ), "xyz" ),
-					cb.arrayContains( new String[] { "abc", "xyz" }, cb.literal( "xyz" ) ),
+					cb.arrayContains( new String[] {"abc", "xyz"}, cb.literal( "xyz" ) ),
 					cb.arrayContainsNullable( root.<String[]>get( "theArray" ), cb.literal( "xyz" ) ),
 					cb.arrayContainsNullable( root.get( "theArray" ), "xyz" ),
-					cb.arrayContainsNullable( new String[] { "abc", "xyz" }, cb.literal( "xyz" ) )
+					cb.arrayContainsNullable( new String[] {"abc", "xyz"}, cb.literal( "xyz" ) )
 			);
 			em.createQuery( cq ).getResultList();
 
@@ -182,8 +182,8 @@ public class ArrayContainsTest {
 		scope.inSession( em -> {
 			List<Tuple> results = em.createQuery(
 							"select e.id " +
-									"from EntityWithArrays e " +
-									"where :p in e.theArray",
+							"from EntityWithArrays e " +
+							"where :p in e.theArray",
 							Tuple.class
 					)
 					.setParameter( "p", "abc" )

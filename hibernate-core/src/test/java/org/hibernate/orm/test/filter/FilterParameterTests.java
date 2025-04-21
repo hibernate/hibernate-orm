@@ -62,12 +62,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = {
+@DomainModel(annotatedClasses = {
 		FilterParameterTests.EntityOne.class,
 		FilterParameterTests.EntityTwo.class,
 		FilterParameterTests.EntityThree.class,
 		FilterParameterTests.EntityFour.class
-} )
+})
 public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 
 	@ParameterizedTest
@@ -99,13 +99,18 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL silently converts a boolean to string types")
 	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB silently converts a boolean to string types")
 	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "Cockroach silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus silently converts a boolean to string types")
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true,
+			reason = "Sybase silently converts a boolean to string types")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true,
+			reason = "HANA silently converts a boolean to string types")
+	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true,
+			reason = "Cockroach silently converts a boolean to string types")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class,
+			reason = "PostgresPlus silently converts a boolean to string types")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird silently converts a boolean to string")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase silently converts a boolean to string")
-	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23, reason = "Oracle 23 interprets Y and T as true and N and F as false, so this works")
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23,
+			reason = "Oracle 23 interprets Y and T as true and N and F as false, so this works")
 	public void testYesNoMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );
@@ -147,19 +152,26 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@ParameterizedTest
 	@MethodSource("transactionKind")
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.gaussdb silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = GaussDBDialect.class,
+			reason = "type:resolved.gaussdb silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = MariaDBDialect.class,
+			reason = "MariaDB silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = FirebirdDialect.class, matchSubTypes = true, reason = "Firebird silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = SQLServerDialect.class,
+			reason = "SQL Server silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = AltibaseDialect.class,
+			reason = "Altibase silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true,
+			reason = "Sybase silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true,
+			reason = "HANA silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = FirebirdDialect.class, matchSubTypes = true,
+			reason = "Firebird silently converts a boolean to integral types")
 	public void testNumericMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );
@@ -183,7 +195,8 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL silently converts strings to integral types")
 	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB silently converts strings to integral types")
 	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB silently converts strings to integral types")
-	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus silently converts strings to integral types")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class,
+			reason = "PostgresPlus silently converts strings to integral types")
 	public void testMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );
@@ -208,7 +221,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 		final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
 				.disableDiscovery()
 				.addBeanClasses( EntityFourDepartmentResolver.class );
-		try ( final SeContainer cdiContainer = cdiInitializer.initialize() ) {
+		try (final SeContainer cdiContainer = cdiInitializer.initialize()) {
 			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 
 			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
@@ -217,14 +230,16 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 
 			try {
 				scope.inTransaction( (session) -> {
-					session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
-					final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
+					session.getEnabledFilter( "subDepartmentFilter" ).setParameter( "subdepartment", "FIRST_A" );
+					final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id",
+									EntityFour.class )
 							.setParameter( "id", 1 )
 							.getSingleResultOrNull();
 					assertThat( first_a ).isNotNull();
 					assertThat( first_a.getDepartment() ).isEqualTo( "FIRST" );
-					session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "SECOND_A"  );
-					final EntityFour second = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
+					session.getEnabledFilter( "subDepartmentFilter" ).setParameter( "subdepartment", "SECOND_A" );
+					final EntityFour second = session.createQuery( "from EntityFour e where e.id = :id",
+									EntityFour.class )
 							.setParameter( "id", 3 )
 							.getSingleResultOrNull();
 					assertThat( second ).isNull();
@@ -242,7 +257,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 		final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
 				.disableDiscovery()
 				.addBeanClasses( EntityFourDepartmentResolver.class );
-		try ( final SeContainer cdiContainer = cdiInitializer.initialize() ) {
+		try (final SeContainer cdiContainer = cdiInitializer.initialize()) {
 			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 
 			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
@@ -251,13 +266,15 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 
 			try {
 				scope.inTransaction( (session) -> {
-					session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
-					final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
+					session.getEnabledFilter( "subDepartmentFilter" ).setParameter( "subdepartment", "FIRST_A" );
+					final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id",
+									EntityFour.class )
 							.setParameter( "id", 1 )
 							.getSingleResultOrNull();
 					assertThat( first_a ).isNotNull();
 					assertThat( first_a.getDepartment() ).isEqualTo( "FIRST" );
-					final EntityFour first_b = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
+					final EntityFour first_b = session.createQuery( "from EntityFour e where e.id = :id",
+									EntityFour.class )
 							.setParameter( "id", 2 )
 							.getSingleResultOrNull();
 					assertThat( first_b ).isNull();
@@ -297,25 +314,25 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@FilterDef(
 			name = "filterYesNoConverter",
 			defaultCondition = "yes_no = :yesNo",
-			parameters = @ParamDef( name = "yesNo", type = YesNoConverter.class )
+			parameters = @ParamDef(name = "yesNo", type = YesNoConverter.class)
 	)
 	@FilterDef(
 			name = "filterYesNoBoolean",
 			defaultCondition = "yes_no = :yesNo",
-			parameters = @ParamDef( name = "yesNo", type = Boolean.class )
+			parameters = @ParamDef(name = "yesNo", type = Boolean.class)
 	)
-	@Filter( name = "filterYesNoConverter" )
-	@Filter( name = "filterYesNoBoolean" )
-	@Entity( name = "EntityOne" )
-	@Table( name = "EntityOne" )
+	@Filter(name = "filterYesNoConverter")
+	@Filter(name = "filterYesNoBoolean")
+	@Entity(name = "EntityOne")
+	@Table(name = "EntityOne")
 	public static class EntityOne {
 		@Id
 		private Integer id;
 		@Basic
 		private String name;
-		@Column( name = "yes_no" )
-		@JdbcTypeCode( Types.CHAR )
-		@Convert( converter = YesNoConverter.class )
+		@Column(name = "yes_no")
+		@JdbcTypeCode(Types.CHAR)
+		@Convert(converter = YesNoConverter.class)
 		private boolean yesNo = true;
 
 		private EntityOne() {
@@ -352,25 +369,25 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@FilterDef(
 			name = "filterNumberConverter",
 			defaultCondition = "zero_one = :zeroOne",
-			parameters = @ParamDef( name = "zeroOne", type = NumericBooleanConverter.class )
+			parameters = @ParamDef(name = "zeroOne", type = NumericBooleanConverter.class)
 	)
 	@FilterDef(
 			name = "filterNumberBoolean",
 			defaultCondition = "zero_one = :zeroOne",
-			parameters = @ParamDef( name = "zeroOne", type = Boolean.class )
+			parameters = @ParamDef(name = "zeroOne", type = Boolean.class)
 	)
-	@Filter( name = "filterNumberConverter" )
-	@Filter( name = "filterNumberBoolean" )
-	@Entity( name = "EntityTwo" )
-	@Table( name = "EntityTwo" )
+	@Filter(name = "filterNumberConverter")
+	@Filter(name = "filterNumberBoolean")
+	@Entity(name = "EntityTwo")
+	@Table(name = "EntityTwo")
 	public static class EntityTwo {
 		@Id
 		private Integer id;
 		@Basic
 		private String name;
-		@Column( name = "zero_one" )
-		@JdbcTypeCode( Types.TINYINT )
-		@Convert( converter = NumericBooleanConverter.class )
+		@Column(name = "zero_one")
+		@JdbcTypeCode(Types.TINYINT)
+		@Convert(converter = NumericBooleanConverter.class)
 		private boolean zeroOne = true;
 
 		private EntityTwo() {
@@ -406,19 +423,19 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@FilterDef(
 			name = "filterMismatchConverter",
 			defaultCondition = "mismatch = :mismatch",
-			parameters = @ParamDef( name = "mismatch", type = YesNoConverter.class )
+			parameters = @ParamDef(name = "mismatch", type = YesNoConverter.class)
 	)
-	@Filter( name = "filterMismatchConverter" )
-	@Entity( name = "EntityThree" )
-	@Table( name = "EntityThree" )
+	@Filter(name = "filterMismatchConverter")
+	@Entity(name = "EntityThree")
+	@Table(name = "EntityThree")
 	public static class EntityThree {
 		@Id
 		private Integer id;
 		@Basic
 		private String name;
-		@Column( name = "mismatch" )
-		@JdbcTypeCode( Types.TINYINT )
-		@Convert( converter = NumericBooleanConverter.class )
+		@Column(name = "mismatch")
+		@JdbcTypeCode(Types.TINYINT)
+		@Convert(converter = NumericBooleanConverter.class)
 		private boolean mismatch = true;
 
 		private EntityThree() {
@@ -454,19 +471,20 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@FilterDef(
 			name = "departmentFilter",
 			defaultCondition = "department = :department",
-			parameters = @ParamDef( name = "department", type = String.class, resolver = EntityFourDepartmentResolver.class),
+			parameters = @ParamDef(name = "department", type = String.class,
+					resolver = EntityFourDepartmentResolver.class),
 			autoEnabled = true
 	)
-	@Filter( name = "departmentFilter" )
+	@Filter(name = "departmentFilter")
 	@FilterDef(
 			name = "subDepartmentFilter",
 			defaultCondition = "subdepartment = :subdepartment",
-			parameters = @ParamDef( name = "subdepartment", type = String.class ),
+			parameters = @ParamDef(name = "subdepartment", type = String.class),
 			autoEnabled = true
 	)
-	@Filter( name = "subDepartmentFilter" )
-	@Entity( name = "EntityFour" )
-	@Table( name = "EntityFour" )
+	@Filter(name = "subDepartmentFilter")
+	@Entity(name = "EntityFour")
+	@Table(name = "EntityFour")
 	public static class EntityFour {
 		@Id
 		private Integer id;

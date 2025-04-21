@@ -126,31 +126,31 @@ public class PaginationTest {
 							.setMaxResults( 20 )
 							.list();
 					assertEquals( 20, result.size() );
-					assertEquals( 0, ( (DataPoint) result.get( 0 ) ).getSequence() );
-					assertEquals( 1, ( (DataPoint) result.get( 1 ) ).getSequence() );
+					assertEquals( 0, ((DataPoint) result.get( 0 )).getSequence() );
+					assertEquals( 1, ((DataPoint) result.get( 1 )).getSequence() );
 
 					result = generateBaseSelectionQuery( session )
 							.setFirstResult( 0 )
 							.setMaxResults( 20 )
 							.list();
 					assertEquals( 20, result.size() );
-					assertEquals( 0, ( (DataPoint) result.get( 0 ) ).getSequence() );
-					assertEquals( 1, ( (DataPoint) result.get( 1 ) ).getSequence() );
+					assertEquals( 0, ((DataPoint) result.get( 0 )).getSequence() );
+					assertEquals( 1, ((DataPoint) result.get( 1 )).getSequence() );
 
 					result = generateBaseQuery( session )
 							.setFirstResult( 1 )
 							.setMaxResults( 20 )
 							.list();
 					assertEquals( 20, result.size() );
-					assertEquals( 1, ( (DataPoint) result.get( 0 ) ).getSequence() );
-					assertEquals( 2, ( (DataPoint) result.get( 1 ) ).getSequence() );
+					assertEquals( 1, ((DataPoint) result.get( 0 )).getSequence() );
+					assertEquals( 2, ((DataPoint) result.get( 1 )).getSequence() );
 
 					result = generateBaseQuery( session )
 							.setFirstResult( 99 )
 							.setMaxResults( Integer.MAX_VALUE - 200 )
 							.list();
 					assertEquals( 1, result.size() );
-					assertEquals( 99, ( (DataPoint) result.get( 0 ) ).getSequence() );
+					assertEquals( 99, ((DataPoint) result.get( 0 )).getSequence() );
 
 					result = session.createQuery(
 									"select distinct description from DataPoint order by description",

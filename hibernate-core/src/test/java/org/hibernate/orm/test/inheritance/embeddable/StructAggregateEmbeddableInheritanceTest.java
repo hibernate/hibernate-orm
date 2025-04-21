@@ -54,15 +54,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
 )
-@DomainModel( annotatedClasses = {
+@DomainModel(annotatedClasses = {
 		StructAggregateEmbeddableInheritanceTest.TestEntity.class,
 		ParentEmbeddable.class,
 		ChildOneEmbeddable.class,
 		SubChildOneEmbeddable.class,
 		ChildTwoEmbeddable.class,
-} )
+})
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsStructAggregate.class )
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructAggregate.class)
 public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappingContributor {
 	@Test
 	public void testFind(SessionFactoryScope scope) {
@@ -70,7 +70,7 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 			final TestEntity result = session.find( TestEntity.class, 1L );
 			assertThat( result.getEmbeddable().getParentProp() ).isEqualTo( "embeddable_1" );
 			assertThat( result.getEmbeddable() ).isExactlyInstanceOf( ChildOneEmbeddable.class );
-			assertThat( ( (ChildOneEmbeddable) result.getEmbeddable() ).getChildOneProp() ).isEqualTo( 1 );
+			assertThat( ((ChildOneEmbeddable) result.getEmbeddable()).getChildOneProp() ).isEqualTo( 1 );
 		} );
 		scope.inTransaction( session -> {
 			final TestEntity result = session.find( TestEntity.class, 3L );
@@ -88,7 +88,7 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 			).getSingleResult();
 			assertThat( result.getEmbeddable().getParentProp() ).isEqualTo( "embeddable_2" );
 			assertThat( result.getEmbeddable() ).isExactlyInstanceOf( ChildTwoEmbeddable.class );
-			assertThat( ( (ChildTwoEmbeddable) result.getEmbeddable() ).getChildTwoProp() ).isEqualTo( 2L );
+			assertThat( ((ChildTwoEmbeddable) result.getEmbeddable()).getChildTwoProp() ).isEqualTo( 2L );
 		} );
 	}
 
@@ -101,8 +101,8 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 			).getSingleResult();
 			assertThat( result.getParentProp() ).isEqualTo( "embeddable_4" );
 			assertThat( result ).isExactlyInstanceOf( SubChildOneEmbeddable.class );
-			assertThat( ( (SubChildOneEmbeddable) result ).getChildOneProp() ).isEqualTo( 4 );
-			assertThat( ( (SubChildOneEmbeddable) result ).getSubChildOneProp() ).isEqualTo( 4.0 );
+			assertThat( ((SubChildOneEmbeddable) result).getChildOneProp() ).isEqualTo( 4 );
+			assertThat( ((SubChildOneEmbeddable) result).getSubChildOneProp() ).isEqualTo( 4.0 );
 		} );
 	}
 
@@ -115,7 +115,7 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 			).getSingleResult();
 			assertThat( result.getParentProp() ).isEqualTo( "embeddable_2" );
 			assertThat( result ).isExactlyInstanceOf( ChildTwoEmbeddable.class );
-			assertThat( ( (ChildTwoEmbeddable) result ).getChildTwoProp() ).isEqualTo( 2L );
+			assertThat( ((ChildTwoEmbeddable) result).getChildTwoProp() ).isEqualTo( 2L );
 		} );
 	}
 
@@ -125,28 +125,29 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 			final TestEntity result = session.find( TestEntity.class, 5L );
 			assertThat( result.getEmbeddable().getParentProp() ).isEqualTo( "embeddable_5" );
 			assertThat( result.getEmbeddable() ).isExactlyInstanceOf( ChildOneEmbeddable.class );
-			assertThat( ( (ChildOneEmbeddable) result.getEmbeddable() ).getChildOneProp() ).isEqualTo( 5 );
+			assertThat( ((ChildOneEmbeddable) result.getEmbeddable()).getChildOneProp() ).isEqualTo( 5 );
 			// update values
 			result.getEmbeddable().setParentProp( "embeddable_5_new" );
-			( (ChildOneEmbeddable) result.getEmbeddable() ).setChildOneProp( 55 );
+			((ChildOneEmbeddable) result.getEmbeddable()).setChildOneProp( 55 );
 		} );
 		scope.inTransaction( session -> {
 			final TestEntity result = session.find( TestEntity.class, 5L );
 			assertThat( result.getEmbeddable().getParentProp() ).isEqualTo( "embeddable_5_new" );
-			assertThat( ( (ChildOneEmbeddable) result.getEmbeddable() ).getChildOneProp() ).isEqualTo( 55 );
+			assertThat( ((ChildOneEmbeddable) result.getEmbeddable()).getChildOneProp() ).isEqualTo( 55 );
 			result.setEmbeddable( new SubChildOneEmbeddable( "embeddable_6", 6, 6.0 ) );
 		} );
 		scope.inTransaction( session -> {
 			final TestEntity result = session.find( TestEntity.class, 5L );
 			assertThat( result.getEmbeddable().getParentProp() ).isEqualTo( "embeddable_6" );
 			assertThat( result.getEmbeddable() ).isExactlyInstanceOf( SubChildOneEmbeddable.class );
-			assertThat( ( (SubChildOneEmbeddable) result.getEmbeddable() ).getChildOneProp() ).isEqualTo( 6 );
-			assertThat( ( (SubChildOneEmbeddable) result.getEmbeddable() ).getSubChildOneProp() ).isEqualTo( 6.0 );
+			assertThat( ((SubChildOneEmbeddable) result.getEmbeddable()).getChildOneProp() ).isEqualTo( 6 );
+			assertThat( ((SubChildOneEmbeddable) result.getEmbeddable()).getSubChildOneProp() ).isEqualTo( 6.0 );
 		} );
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.Function structfunction() does not exist.")
+	@SkipForDialect(dialectClass = GaussDBDialect.class,
+			reason = "type:resolving.Function structfunction() does not exist.")
 	public void testFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final ProcedureCall structFunction = session.createStoredProcedureCall( "structFunction" )
@@ -155,16 +156,19 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 			final ParentEmbeddable result = (ParentEmbeddable) structFunction.getSingleResult();
 			assertThat( result.getParentProp() ).isEqualTo( "function_embeddable" );
 			assertThat( result ).isExactlyInstanceOf( SubChildOneEmbeddable.class );
-			assertThat( ( (SubChildOneEmbeddable) result ).getChildOneProp() ).isEqualTo( 1 );
-			assertThat( ( (SubChildOneEmbeddable) result ).getSubChildOneProp() ).isEqualTo( 1.0 );
+			assertThat( ((SubChildOneEmbeddable) result).getChildOneProp() ).isEqualTo( 1 );
+			assertThat( ((SubChildOneEmbeddable) result).getSubChildOneProp() ).isEqualTo( 1.0 );
 		} );
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = PostgreSQLDialect.class, majorVersion = 10, reason = "Procedures were only introduced in version 11" )
-	@SkipForDialect( dialectClass = PostgresPlusDialect.class, majorVersion = 10, reason = "Procedures were only introduced in version 11" )
-	@SkipForDialect( dialectClass = DB2Dialect.class, reason = "DB2 does not support struct types in procedures" )
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.This statement does not declare an OUT parameter")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 10,
+			reason = "Procedures were only introduced in version 11")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, majorVersion = 10,
+			reason = "Procedures were only introduced in version 11")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 does not support struct types in procedures")
+	@SkipForDialect(dialectClass = GaussDBDialect.class,
+			reason = "type:resolving.This statement does not declare an OUT parameter")
 	public void testProcedure(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Dialect dialect = session.getJdbcServices().getDialect();
@@ -186,7 +190,7 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 			assertThat( result ).isInstanceOf( ParentEmbeddable.class );
 			assertThat( result.getParentProp() ).isEqualTo( "procedure_embeddable" );
 			assertThat( result ).isExactlyInstanceOf( ChildTwoEmbeddable.class );
-			assertThat( ( (ChildTwoEmbeddable) result ).getChildTwoProp() ).isEqualTo( 2 );
+			assertThat( ((ChildTwoEmbeddable) result).getChildTwoProp() ).isEqualTo( 2 );
 		} );
 	}
 
@@ -287,13 +291,13 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 						"Oracle structFunction",
 						namespace,
 						"create function structFunction return inheritance_embeddable is result inheritance_embeddable; begin " +
-								"result := inheritance_embeddable(" +
-								"parentProp => 'function_embeddable'," +
-								"childOneProp => 1," +
-								"subChildOneProp => 1.0," +
-								"childTwoProp => null," +
-								"embeddable_type => 'sub_child_one'" +
-								"); return result; end;",
+						"result := inheritance_embeddable(" +
+						"parentProp => 'function_embeddable'," +
+						"childOneProp => 1," +
+						"subChildOneProp => 1.0," +
+						"childTwoProp => null," +
+						"embeddable_type => 'sub_child_one'" +
+						"); return result; end;",
 						"drop function structFunction",
 						Set.of( OracleDialect.class.getName() )
 				)
@@ -303,26 +307,26 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 						"Oracle structProcedure",
 						namespace,
 						"create procedure structProcedure(result OUT inheritance_embeddable) AS begin " +
-								"result := inheritance_embeddable(" +
-								"parentProp => 'procedure_embeddable'," +
-								"childOneProp => null," +
-								"subChildOneProp => null," +
-								"childTwoProp => 2," +
-								"embeddable_type => 'ChildTwoEmbeddable'" +
-								"); end;",
+						"result := inheritance_embeddable(" +
+						"parentProp => 'procedure_embeddable'," +
+						"childOneProp => null," +
+						"subChildOneProp => null," +
+						"childTwoProp => 2," +
+						"embeddable_type => 'ChildTwoEmbeddable'" +
+						"); end;",
 						"drop procedure structProcedure",
 						Set.of( OracleDialect.class.getName() )
 				)
 		);
 	}
 
-	@Entity( name = "TestEntity" )
+	@Entity(name = "TestEntity")
 	static class TestEntity {
 		@Id
 		private Long id;
 
 		@Embedded
-		@Struct( name = "inheritance_embeddable" )
+		@Struct(name = "inheritance_embeddable")
 		private ParentEmbeddable embeddable;
 
 		public TestEntity() {

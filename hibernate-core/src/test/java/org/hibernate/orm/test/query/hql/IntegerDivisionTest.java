@@ -22,13 +22,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @ServiceRegistry(settings = @Setting(name = PORTABLE_INTEGER_DIVISION, value = "true"))
 public class IntegerDivisionTest {
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss has different behavior")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss has different behavior")
 	public void testIntegerDivision(SessionFactoryScope scope) {
-		scope.inTransaction(s -> {
-			assertFalse( s.createQuery("select 1 where 1/2 = 0 and 4/3 = 1", Integer.class)
+		scope.inTransaction( s -> {
+			assertFalse( s.createQuery( "select 1 where 1/2 = 0 and 4/3 = 1", Integer.class )
 					.getResultList().isEmpty() );
-			assertEquals( 1, s.createQuery("select 4/3", Integer.class)
+			assertEquals( 1, s.createQuery( "select 4/3", Integer.class )
 					.getSingleResult() );
-		});
+		} );
 	}
 }

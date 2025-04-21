@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class MutableNaturalIdTest extends AbstractJPATest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Group.class, ClassWithIdentityColumn.class };
+		return new Class[] {Group.class, ClassWithIdentityColumn.class};
 	}
 
 	@Test

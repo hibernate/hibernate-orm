@@ -151,7 +151,7 @@ public class DefaultGeneratedValueIdentityTest {
 		@Column(nullable = false)
 		private Date createdDate;
 
-		@Generated(event = { EventType.INSERT, EventType.UPDATE })
+		@Generated(event = {EventType.INSERT, EventType.UPDATE})
 		@ColumnDefault("CURRENT_TIMESTAMP")
 		@Column(nullable = false)
 		private Calendar alwaysDate;
@@ -244,7 +244,7 @@ public class DefaultGeneratedValueIdentityTest {
 
 		@Override
 		public String[] getReferencedColumnValues(Dialect dialect) {
-			return new String[] { "current_timestamp" };
+			return new String[] {"current_timestamp"};
 		}
 	}
 

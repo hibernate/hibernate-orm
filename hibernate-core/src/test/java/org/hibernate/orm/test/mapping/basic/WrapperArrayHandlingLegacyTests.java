@@ -55,7 +55,8 @@ public class WrapperArrayHandlingLegacyTests {
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
 		final JdbcTypeRegistry jdbcTypeRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
-		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor( WrapperArrayHandlingLegacyTests.EntityOfByteArrays.class );
+		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor(
+				WrapperArrayHandlingLegacyTests.EntityOfByteArrays.class );
 
 		{
 			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
@@ -92,7 +93,7 @@ public class WrapperArrayHandlingLegacyTests {
 		scope.inTransaction(
 				(session) -> {
 					session.persist(
-							new EntityOfByteArrays( 1, "abc".getBytes(), new Byte[] { (byte) 1 } )
+							new EntityOfByteArrays( 1, "abc".getBytes(), new Byte[] {(byte) 1} )
 					);
 				}
 		);
@@ -108,7 +109,8 @@ public class WrapperArrayHandlingLegacyTests {
 				.getRuntimeMetamodels()
 				.getMappingMetamodel();
 		final JdbcTypeRegistry jdbcRegistry = mappingMetamodel.getTypeConfiguration().getJdbcTypeRegistry();
-		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor( WrapperArrayHandlingLegacyTests.EntityWithCharArrays.class );
+		final EntityPersister entityDescriptor = mappingMetamodel.getEntityDescriptor(
+				WrapperArrayHandlingLegacyTests.EntityWithCharArrays.class );
 
 		{
 			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(

@@ -18,7 +18,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * Custom {@link TruncFunction} for GaussDB which uses the dialect-specific function for numeric truncation
  *
  * @author liubao
- *
+ * <p>
  * Notes: Original code of this class is based on PostgreSQLTruncFunction.
  */
 public class GaussDBTruncFunction extends TruncFunction {
@@ -41,7 +41,7 @@ public class GaussDBTruncFunction extends TruncFunction {
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		final List<SqmTypedNode<?>> args = new ArrayList<>( arguments );
-		if ( arguments.size() != 2 || !( arguments.get( 1 ) instanceof SqmExtractUnit ) ) {
+		if ( arguments.size() != 2 || !(arguments.get( 1 ) instanceof SqmExtractUnit) ) {
 			// numeric truncation
 			return gaussDBTruncRoundFunction.generateSqmFunctionExpression(
 					arguments,

@@ -238,7 +238,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 			Expression<String> theString = from.get( "theString" );
 			query.multiselect(
 					cb.overlay( theString, "33", 6 ),
-					cb.overlay( theString, ( (JpaExpression) from.get( "theInt" ) ).cast( String.class ), 6 ),
+					cb.overlay( theString, ((JpaExpression) from.get( "theInt" )).cast( String.class ), 6 ),
 					cb.overlay( theString, "1234", from.get( "theInteger" ), 2 )
 			).where( cb.equal( from.get( "id" ), 4 ) );
 
@@ -301,7 +301,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 			Expression<String> theString = from.get( "theString" );
 			query.multiselect(
 					cb.replace( theString, "thi", "12345" ),
-					cb.replace( theString, "t", ( (JpaExpression) from.get( "theInteger" ) ).cast( String.class ) )
+					cb.replace( theString, "t", ((JpaExpression) from.get( "theInteger" )).cast( String.class ) )
 			).where( cb.equal( from.get( "id" ), 4 ) );
 
 			Tuple result = session.createQuery( query ).getSingleResult();
@@ -315,7 +315,8 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	public void testRepeat(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
-			CriteriaQuery<String> query = cb.createQuery( String.class ).select( cb.repeat("hello", cb.literal(3)) );
+			CriteriaQuery<String> query = cb.createQuery( String.class )
+					.select( cb.repeat( "hello", cb.literal( 3 ) ) );
 			assertEquals( "hellohellohello", session.createQuery( query ).getSingleResult() );
 		} );
 	}
@@ -344,8 +345,9 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach has unreliable support for numeric types in log function")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.Unsupported function.")
+	@SkipForDialect(dialectClass = CockroachDialect.class,
+			reason = "Cockroach has unreliable support for numeric types in log function")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.Unsupported function.")
 	public void testLog(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -419,7 +421,8 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.Function sinh(double precision) does not exist.")
+	@SkipForDialect(dialectClass = GaussDBDialect.class,
+			reason = "type:resolved.Function sinh(double precision) does not exist.")
 	public void testHyperbolic(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -523,13 +526,13 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 			CriteriaQuery<Tuple> query = cb.createTupleQuery();
-			Root<EntityOfBasics> from = query.from(EntityOfBasics.class);
-			ParameterExpression<List<Integer>> ids = cb.listParameter(Integer.class);
-			query.where( from.get("id").in(ids));
-			assertEquals(3,
+			Root<EntityOfBasics> from = query.from( EntityOfBasics.class );
+			ParameterExpression<List<Integer>> ids = cb.listParameter( Integer.class );
+			query.where( from.get( "id" ).in( ids ) );
+			assertEquals( 3,
 					session.createQuery( query )
-							.setParameter(ids, List.of(2, 3, 5))
-							.getResultCount());
+							.setParameter( ids, List.of( 2, 3, 5 ) )
+							.getResultCount() );
 		} );
 	}
 }

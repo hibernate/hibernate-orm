@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 public class JsonArrayTest {
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class)
+	@SkipForDialect(dialectClass = GaussDBDialect.class)
 	public void testSimple(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-array-example[]
@@ -39,7 +39,7 @@ public class JsonArrayTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testNullClause(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-array-on-null-example[]

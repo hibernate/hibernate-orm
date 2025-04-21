@@ -23,10 +23,12 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.boot.registry.selector.internal.StrategySelectorImpl;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -161,25 +163,31 @@ public abstract class MockSessionFactory
 	private final MetadataContext metadataContext;
 
 	public MockSessionFactory() {
-
-		serviceRegistry = StandardServiceRegistryImpl.create(
-				new BootstrapServiceRegistryBuilder().applyClassLoaderService(new ClassLoaderServiceImpl() {
-					@Override
-					@SuppressWarnings("unchecked")
-					public Class<?> classForName(String className) {
-						try {
-							return super.classForName(className);
-						}
-						catch (ClassLoadingException e) {
-							if (isClassDefined(className)) {
-								return Object[].class;
-							}
-							else {
-								throw e;
-							}
-						}
+		final ClassLoaderService classLoaderService = new ClassLoaderServiceImpl() {
+			@Override
+			@SuppressWarnings("unchecked")
+			public Class<?> classForName(String className) {
+				try {
+					return super.classForName( className );
+				}
+				catch (ClassLoadingException e) {
+					if ( isClassDefined( className ) ) {
+						return Object[].class;
 					}
-				}).build(),
+					else {
+						throw e;
+					}
+				}
+			}
+		};
+		serviceRegistry = StandardServiceRegistryImpl.create(
+				new BootstrapServiceRegistryImpl(
+						true,
+						classLoaderService,
+						new StrategySelectorImpl( classLoaderService ),
+						() -> emptyList()
+				),
+//				new BootstrapServiceRegistryBuilder().applyClassLoaderService( classLoaderService ).build(),
 				singletonList(MockJdbcServicesInitiator.INSTANCE),
 				emptyList(),
 				emptyMap()

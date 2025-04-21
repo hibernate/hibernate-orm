@@ -304,7 +304,7 @@ Hibernate Processor defaults to using `EntityManager` as the session type, but o
 
 - `Session`,
 - `StatelessSession`, or
-- `Mutiny.Session` from Hibernate Reactive.
+- `Mutiny.Session` or `Mutiny.StatelessSession` from Hibernate Reactive.
 
 The real value of all this is in the checks which can now be done at compile time.
 Hibernate Processor verifies that the parameters of our abstract method declaration match the parameters of the HQL query, for example:

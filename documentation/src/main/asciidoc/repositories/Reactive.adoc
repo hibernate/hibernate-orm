@@ -49,6 +49,8 @@ interface Library {
 
 It's _not_ possible to mix blocking and non-blocking operations in the same repository interface.
 
+IMPORTANT: Depending on how you're managing the stateless session, you might need to declare the resource accessor method with the type `Uni<Mutiny.StatelessSession>`.
+
 === Obtaining a reactive repository
 
 To make use of our reactive repository, we'll need to bootstrap Hibernate Reactive and obtain a `Mutiny.SessionFactory`.
@@ -61,7 +63,9 @@ Mutiny.SessionFactory factory =
                 .unwrap(Mutiny.SessionFactory.class);
 ----
 
-Please refer to the documentation for Hibernate Reactive for more information on this topic.
+Please refer to the https://hibernate.org/reactive/documentation/[documentation for Hibernate Reactive] for more information on this topic.
+
+TIP: In Quarkus, this step is unnecessary, and you can let Quarkus manage and inject the reactive `SessionFactory`.
 
 Once we have the `SessionFactory`, we can easily obtain a `Mutiny.StatelessSession`, and use it to instantiate our repository:
 
@@ -73,7 +77,11 @@ factory.withStatelessTransaction(session -> {
 })
 ----
 
-TIP: In Quarkus, all this is unnecessary, and you can directly inject the `Library`.
+TIP: An even better approach is to make a `@RequestScoped` instance of `Mutiny.StatelessSession` or `Uni<Mutiny.StatelessSession>` available for injection by CDI.
+Then the `Library` repository itself may be directly injected, and you won't have to worry about managing the stateless session in application program code.
+This is a little bit tricky to get working perfectly, so hopefully by the time you're reading this, there will already be a built-in implementation in Quarkus.
+
+// TIP: In Quarkus, all this is unnecessary, and you can directly inject the `Library`.
 
 === Calling a reactive repository
 

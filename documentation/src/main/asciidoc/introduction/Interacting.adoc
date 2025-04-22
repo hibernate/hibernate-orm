@@ -1093,12 +1093,24 @@ We need the following methods of link:{doc-javadoc-url}org/hibernate/query/progr
 | `restrict()` | Add a `Restriction` on the query results
 | `sort()`, `resort()` | Specify how the query results should be ordered
 | `fetch()` | Add a fetched association `Path`
-| `augment()` | Add a custom function which directly manipulates the query
+| `augment()` | Add a custom function which directly manipulates the select query
+|===
+
+Two of these operations are also available for a link:{doc-javadoc-url}org/hibernate/query/programmatic/MutationSpecification.html[`MutationSpecification`]:
+
+.Methods for mutation restriction
+[%breakable,cols="20,~]
+|===
+| Method name | Purpose
+
+| `restrict()` | Add a `Restriction` on the records to be updated
+| `augment()` | Add a custom function which directly manipulates the update or delete query
 |===
 
 Alternatively, `Restriction` and `Order` can be used with <<paging-and-ordering,generated query or finder methods>>, and even with link:{doc-data-repositories-url}[Jakarta Data repositories].
 
 The interface link:{doc-javadoc-url}org/hibernate/query/restriction/Path.html[`Path`] may be used to express restrictions on fields of an embedded or associated entity class.
+It may even be used for association fetching.
 
 [source,java]
 ----
@@ -1110,6 +1122,20 @@ List<Book> booksForPublisher =
                 .createQuery(session)
                 .getResultList();
 ----
+
+Specifications aren't for everything, however.
+
+[NOTE]
+====
+`SelectionSpecification` (similar to its friend `MutationSpecification`) may be used in cases where a query returns a single "root" entity, possibly with some fetched associations.
+It's not useful in cases where a query should return multiple entities, a projection of entity fields, or an aggregation.
+For such cases, the full Criteria API is appropriate.
+====
+
+Finally, the `augment()` method deserves its own subsection.
+
+[[augmentation]]
+=== Augmentation
 
 When `Restriction`, `Path`, and `Order` aren't expressive enough, we can _augment_ the query by manipulating its representation as a criteria:
 
@@ -1125,7 +1151,7 @@ var books =
               .getResultList();
 ----
 
-For really advanced cases, `addAugmentation()` works quite nicely with <<criteria-definition,`CriteriaDefinition`>>.
+For really advanced cases, `augment()` works quite nicely with <<criteria-definition,`CriteriaDefinition`>>.
 
 [source,java]
 ----
@@ -1144,13 +1170,7 @@ var books =
 ----
 
 However, we emphasize that this API shines in cases where complex manipulations are _not_ required.
-
-[NOTE]
-====
-`SelectionSpecification` (similar to its friend `MutationSpecification`) may be used in cases where a query returns a single "root" entity, possibly with some fetched associations.
-It is not useful in cases where a query should return multiple entities, a projection of entity fields, or an aggregation.
-For such cases, the full Criteria API is appropriate.
-====
+For complicated queries involving multiple entities, or with aggregation and projection, you're best off heading straight to the `CriteriaBuilder`.
 
 Programmatic restrictions, and especially programmatic ordering, are often used together with pagination.
 

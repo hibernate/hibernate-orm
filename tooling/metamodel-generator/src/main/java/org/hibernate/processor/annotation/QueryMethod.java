@@ -96,8 +96,9 @@ public class QueryMethod extends AbstractQueryMethod {
 		chainSession( declaration );
 		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration );
-		createQuery( declaration );
+		createSpecification( declaration );
 		handleRestrictionParameters( declaration, paramTypes );
+		createQuery( declaration );
 		setParameters( declaration, paramTypes, "");
 		handlePageParameters( declaration, paramTypes, containerType );
 		boolean unwrapped = !isUsingEntityManager();
@@ -109,21 +110,58 @@ public class QueryMethod extends AbstractQueryMethod {
 		return declaration.toString();
 	}
 
+	String specificationType() {
+		return isUpdate
+				? "org.hibernate.query.programmatic.MutationSpecification"
+				: "org.hibernate.query.programmatic.SelectionSpecification";
+	}
+
 	@Override
 	void createQuery(StringBuilder declaration) {
-		declaration
-				.append(localSessionName())
-				.append('.')
-				.append(createQueryMethod())
-				.append("(")
-				.append(getConstantName());
-		if ( returnTypeClass != null && !isUpdate ) {
+		if ( returnTypeClass != null && !isReactive() && hasRestriction() ) {
 			declaration
-					.append(", ")
-					.append(annotationMetaEntity.importType(returnTypeClass))
-					.append(".class");
+					.append( "\t\t\t.createQuery(" )
+					.append( localSessionName() )
+					.append( ")\n" );
 		}
-		declaration.append(")\n");
+		else {
+			// can't use Specification
+			declaration
+					.append(localSessionName())
+					.append('.')
+					.append(createQueryMethod())
+					.append("(")
+					.append(getConstantName());
+			if ( returnTypeClass != null && !isUpdate ) {
+				declaration
+						.append(", ")
+						.append(annotationMetaEntity.importType(returnTypeClass))
+						.append(".class");
+			}
+			declaration.append(")\n");
+		}
+	}
+
+	private void createSpecification(StringBuilder declaration) {
+		if ( returnTypeClass != null && !isReactive() && hasRestriction() ) {
+			declaration
+					.append( annotationMetaEntity.importType( specificationType() ) )
+					.append( ".create(" )
+					.append( annotationMetaEntity.importType( returnTypeClass ) )
+					.append( ".class, " )
+					.append( getConstantName() )
+					.append( ")\n" );
+		}
+	}
+
+	@Override
+	boolean isUsingSpecification() {
+		return returnTypeClass != null && !isReactive() && hasRestriction();
+	}
+
+	private boolean hasRestriction() {
+		return parameterTypes().stream()
+				.anyMatch( type -> isRestrictionParam( type ) || isRangeParam( type ) );
 	}
 
 	private String createQueryMethod() {

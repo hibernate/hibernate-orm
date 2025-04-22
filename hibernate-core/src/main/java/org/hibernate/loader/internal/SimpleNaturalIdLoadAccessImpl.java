@@ -9,11 +9,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+import jakarta.persistence.EntityGraph;
+
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.loader.LoaderLogging;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
@@ -105,13 +106,13 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 	}
 
 	@Override
-	public SimpleNaturalIdLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
+	public SimpleNaturalIdLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic) {
 		super.with( graph, semantic );
 		return this;
 	}
 
 	@Override
-	public SimpleNaturalIdLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
+	public SimpleNaturalIdLoadAccess<T> withLoadGraph(EntityGraph<T> graph) {
 		return SimpleNaturalIdLoadAccess.super.withLoadGraph(graph);
 	}
 

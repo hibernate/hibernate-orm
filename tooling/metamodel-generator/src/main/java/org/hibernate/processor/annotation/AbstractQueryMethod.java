@@ -298,7 +298,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			if ( isRestrictionParam(paramType) ) {
 				if ( paramType.startsWith(LIST) || paramType.endsWith("[]") ) {
 					declaration
-							.append( "\t\t\t.addRestriction(" )
+							.append( "\t\t\t.restrict(" )
 							.append( annotationMetaEntity.importType(HIB_RESTRICTION) )
 							.append( ".all(" )
 							.append( paramName )
@@ -307,7 +307,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				}
 				else {
 					declaration
-							.append( "\t\t\t.addRestriction(" )
+							.append( "\t\t\t.restrict(" )
 							.append( paramName )
 							.append( ")\n" );
 				}
@@ -316,7 +316,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				final TypeElement entityElement = annotationMetaEntity.getContext().getElementUtils()
 						.getTypeElement( returnTypeName );
 				declaration
-						.append("\t\t\t.addRestriction(")
+						.append("\t\t\t.restrict(")
 						.append(annotationMetaEntity.importType(HIB_RESTRICTION))
 						.append(".restrict(")
 						.append(annotationMetaEntity.importType(
@@ -363,7 +363,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	}
 
 	void unwrapQuery(StringBuilder declaration, boolean unwrapped) {
-		if ( !unwrapped && isUsingEntityManager() ) {
+		if ( !unwrapped && isUsingEntityManager() && !isUsingSpecification() ) {
 			declaration
 					.append("\t\t\t.unwrap(")
 					.append(annotationMetaEntity.importType(HIB_SELECTION_QUERY))
@@ -650,6 +650,10 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			|| !orderBys.isEmpty();
 	}
 
+	boolean isUsingSpecification() {
+		return false;
+	}
+
 	protected void executeSelect(
 			StringBuilder declaration,
 			List<String> paramTypes,
@@ -751,7 +755,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					}
 					break;
 				default:
-					if ( isUsingEntityManager() && !unwrapped && mustUnwrap ) {
+					if ( isUsingEntityManager() && !unwrapped && mustUnwrap && !isUsingSpecification() ) {
 						declaration
 								.append("\t\t\t.unwrap(")
 								.append(annotationMetaEntity.importType(containerType))

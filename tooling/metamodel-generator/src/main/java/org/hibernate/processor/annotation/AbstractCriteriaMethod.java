@@ -74,13 +74,43 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	abstract String createQueryMethod();
 
+	String specificationType() {
+		return "org.hibernate.query.programmatic.SelectionSpecification";
+	}
+
 	@Override
 	void createQuery(StringBuilder declaration) {
-		declaration
-				.append(localSessionName())
-				.append(".")
-				.append(createQueryMethod())
-				.append("(_query)\n");
+		if ( !isReactive() && hasRestriction() ) {
+			declaration
+					.append( "\t\t\t.createQuery(" )
+					.append( localSessionName() )
+					.append( ")\n" );
+		}
+		else {
+			declaration
+					.append(localSessionName())
+					.append(".")
+					.append(createQueryMethod())
+					.append("(_query)\n");
+		}
+	}
+
+	void createSpecification(StringBuilder declaration) {
+		if ( !isReactive() && hasRestriction() ) {
+			declaration
+					.append( annotationMetaEntity.importType( specificationType() ) )
+					.append( ".create(_query)\n" );
+		}
+	}
+
+	@Override
+	boolean isUsingSpecification() {
+		return !isReactive() && hasRestriction();
+	}
+
+	private boolean hasRestriction() {
+		return parameterTypes().stream()
+				.anyMatch( type -> isRestrictionParam( type ) || isRangeParam( type ) );
 	}
 
 	void createCriteriaQuery(StringBuilder declaration) {

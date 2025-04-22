@@ -55,6 +55,8 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 	@Override
 	void executeQuery(StringBuilder declaration, List<String> paramTypes) {
 		tryReturn(declaration);
+		createSpecification( declaration );
+		handleRestrictionParameters( declaration, paramTypes );
 		createQuery( declaration );
 		execute( declaration );
 	}
@@ -73,6 +75,11 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 		return isUsingEntityManager() || isReactive()
 				? "createQuery"
 				: "createMutationQuery";
+	}
+
+	@Override
+	String specificationType() {
+		return "org.hibernate.query.programmatic.MutationSpecification";
 	}
 
 	private void execute(StringBuilder declaration) {

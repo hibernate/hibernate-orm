@@ -801,10 +801,38 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 
 		final EntityPersister persister = requireEntityPersister( entityClass.getName() );
-
 		final List<?> results = persister.multiLoad( ids.toArray(), this, new MultiLoadOptions(lockMode) );
 		//noinspection unchecked
 		return (List<T>) results;
+	}
+	@Override
+	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, List<?> ids) {
+		return getMultiple( entityGraph, GraphSemantic.LOAD, ids );
+	}
+
+	@Override
+	public <T> List<T> getMultiple(EntityGraph<T> entityGraph, GraphSemantic graphSemantic, List<?> ids) {
+		for ( Object id : ids ) {
+			if ( id == null ) {
+				throw new IllegalArgumentException( "Null id" );
+			}
+		}
+
+		final RootGraphImplementor<T> rootGraph = (RootGraphImplementor<T>) entityGraph;
+
+		final EffectiveEntityGraph effectiveEntityGraph =
+				getLoadQueryInfluencers().getEffectiveEntityGraph();
+		effectiveEntityGraph.applyGraph( rootGraph, graphSemantic );
+
+		try {
+			final EntityPersister persister = requireEntityPersister( rootGraph.getGraphedType().getTypeName() );
+			final List<?> results = persister.multiLoad( ids.toArray(), this, MULTI_ID_LOAD_OPTIONS );
+			//noinspection unchecked
+			return (List<T>) results;
+		}
+		finally {
+			effectiveEntityGraph.clear();
+		}
 	}
 
 	@Override
@@ -816,7 +844,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 
 		final EntityPersister persister = requireEntityPersister( entityClass.getName() );
-
 		final List<?> results = persister.multiLoad( ids.toArray(), this, MULTI_ID_LOAD_OPTIONS );
 		//noinspection unchecked
 		return (List<T>) results;

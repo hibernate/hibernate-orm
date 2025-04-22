@@ -10,9 +10,7 @@ import jakarta.persistence.criteria.CommonAbstractCriteria;
 
 import org.hibernate.Incubating;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.restriction.Restriction;
 
@@ -69,15 +67,9 @@ public interface QuerySpecification<T> {
 
 	/**
 	 * Validate the query.
+	 *
+	 * @return {@code this} if everything is fine
+	 * @throws Exception if it ain't all good
 	 */
-	default void validate(SessionFactory factory) {
-		// Extremely temporary implementation.
-		// We don't actually want to open a session here,
-		// nor create an instance of CommonQueryContract.
-		final SessionFactoryImplementor factoryImplementor =
-				(SessionFactoryImplementor) factory;
-		try ( var session = factoryImplementor.openTemporarySession() ) {
-			createQuery( session );
-		}
-	}
+	QuerySpecification<T> validate(CriteriaBuilder builder);
 }

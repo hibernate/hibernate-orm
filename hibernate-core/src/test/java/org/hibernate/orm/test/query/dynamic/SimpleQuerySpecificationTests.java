@@ -4,6 +4,9 @@
  */
 package org.hibernate.orm.test.query.dynamic;
 
+import jakarta.persistence.criteria.CommonAbstractCriteria;
+import jakarta.persistence.criteria.CriteriaQuery;
+
 import org.hibernate.SessionFactory;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.IllegalSelectQueryException;
@@ -255,7 +258,7 @@ public class SimpleQuerySpecificationTests {
 		final SessionFactory factory = factoryScope.getSessionFactory();
 		try {
 			SelectionSpecification.create( BasicEntity.class, "delete BasicEntity" )
-					.validate( factory );
+					.validate( factory.getCriteriaBuilder() );
 			fail( "Expecting a IllegalSelectQueryException, but not thrown" );
 		}
 		catch (IllegalSelectQueryException expected) {
@@ -267,10 +270,30 @@ public class SimpleQuerySpecificationTests {
 		final SessionFactory factory = factoryScope.getSessionFactory();
 		try {
 			MutationSpecification.create( BasicEntity.class, "from BasicEntity" )
-					.validate( factory );
+					.validate( factory.getCriteriaBuilder() );
 			fail( "Expecting a IllegalMutationQueryException, but not thrown" );
 		}
 		catch (IllegalMutationQueryException expected) {
 		}
+	}
+
+	@Test
+	void testBuildCriteriaDelete(SessionFactoryScope factoryScope) {
+		final SessionFactory factory = factoryScope.getSessionFactory();
+		CommonAbstractCriteria deleteBasicEntity =
+				MutationSpecification.create( BasicEntity.class,
+								"delete BasicEntity" )
+						.validate( factory.getCriteriaBuilder() )
+						.buildCriteriaQuery( factory.getCriteriaBuilder() );
+	}
+
+	@Test
+	void testBuildCriteriaQuery(SessionFactoryScope factoryScope) {
+		final SessionFactory factory = factoryScope.getSessionFactory();
+		CriteriaQuery<BasicEntity> query =
+				SelectionSpecification.create( BasicEntity.class,
+								"from BasicEntity" )
+						.validate( factory.getCriteriaBuilder() )
+						.buildCriteriaQuery( factory.getCriteriaBuilder() );
 	}
 }

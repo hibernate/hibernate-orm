@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+import static org.hibernate.query.sqm.internal.SqmUtil.validateCriteriaQuery;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 
 /**
@@ -174,6 +175,18 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	public CriteriaQuery<T> buildCriteriaQuery(CriteriaBuilder builder) {
 		final NodeBuilder nodeBuilder = (NodeBuilder) builder;
 		return build( nodeBuilder.getQueryEngine() );
+	}
+
+	@Override
+	public SelectionSpecification<T> validate(CriteriaBuilder builder) {
+		final NodeBuilder nodeBuilder = (NodeBuilder) builder;
+		final var statement = build( nodeBuilder.getQueryEngine() );
+		final var queryPart = statement.getQueryPart();
+		// For criteria queries, we have to validate the fetch structure here
+		queryPart.validateQueryStructureAndFetchOwners();
+		validateCriteriaQuery( queryPart );
+		statement.validateResultType( resultType );
+		return this;
 	}
 
 	/**

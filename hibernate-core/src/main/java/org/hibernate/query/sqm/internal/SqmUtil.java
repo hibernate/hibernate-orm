@@ -977,6 +977,33 @@ public class SqmUtil {
 		return  (SqmPredicate) restriction.toPredicate( root, sqmStatement.nodeBuilder() );
 	}
 
+	public static void validateCriteriaQuery(SqmQueryPart<?> queryPart) {
+		if ( queryPart instanceof SqmQuerySpec<?> sqmQuerySpec ) {
+			if ( sqmQuerySpec.getSelectClause().getSelections().isEmpty() ) {
+				// make sure there is at least one root
+				final List<SqmRoot<?>> sqmRoots = sqmQuerySpec.getFromClause().getRoots();
+				if ( sqmRoots == null || sqmRoots.isEmpty() ) {
+					throw new IllegalArgumentException( "Criteria did not define any query roots" );
+				}
+				// if there is a single root, use that as the selection
+				if ( sqmRoots.size() == 1 ) {
+					sqmQuerySpec.getSelectClause().add( sqmRoots.get( 0 ), null );
+				}
+				else {
+					throw new IllegalArgumentException( "Criteria has multiple query roots" );
+				}
+			}
+		}
+		else if ( queryPart instanceof SqmQueryGroup<?> queryGroup ) {
+			for ( SqmQueryPart<?> part : queryGroup.getQueryParts() ) {
+				validateCriteriaQuery( part );
+			}
+		}
+		else {
+			assert false;
+		}
+	}
+
 	private static class CriteriaParameterCollector {
 		private Set<SqmParameter<?>> sqmParameters;
 		private Map<JpaCriteriaParameter<?>, List<SqmJpaCriteriaParameterWrapper<?>>> jpaCriteriaParamResolutions;

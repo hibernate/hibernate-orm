@@ -25,6 +25,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.internal.SqmUtil;
+import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -131,6 +132,14 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 	public CommonAbstractCriteria buildCriteriaQuery(CriteriaBuilder builder) {
 		final NodeBuilder nodeBuilder = (NodeBuilder) builder;
 		return build( nodeBuilder.getQueryEngine() );
+	}
+
+	@Override
+	public MutationSpecification<T> validate(CriteriaBuilder builder) {
+		final NodeBuilder nodeBuilder = (NodeBuilder) builder;
+		final var statement = build( nodeBuilder.getQueryEngine() );
+		( (AbstractSqmDmlStatement<?>) statement ).validate( hql );
+		return this;
 	}
 
 	/**

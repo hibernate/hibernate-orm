@@ -1052,6 +1052,16 @@ public class SessionImpl
 	}
 
 	@Override
+	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options) {
+		final RootGraph<E> rootGraph = (RootGraph<E>) entityGraph;
+		final MultiIdentifierLoadAccess<E> loadAccess =
+				byMultipleIds( rootGraph.getGraphedType().getJavaType() );
+		loadAccess.withLoadGraph( rootGraph );
+		setMultiIdentifierLoadAccessOptions( options, loadAccess );
+		return loadAccess.multiLoad( ids );
+	}
+
+	@Override
 	public <T> T get(Class<T> entityClass, Object id) {
 		return byId( entityClass ).load( id );
 	}

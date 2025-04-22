@@ -968,6 +968,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options) {
+		return  delegate.findMultiple( entityGraph, ids, options );
+	}
+
+	@Override
 	public <T> T get(Class<T> theClass, Object id) {
 		return delegate.get( theClass, id );
 	}

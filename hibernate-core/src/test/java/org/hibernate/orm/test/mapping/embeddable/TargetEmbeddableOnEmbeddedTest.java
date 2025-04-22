@@ -9,53 +9,42 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
 import org.hibernate.annotations.TargetEmbeddable;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
 /**
- * @author Vlad Mihalcea
+ * @author Jan Schatteman
  */
-public class TargetEmbeddableOnEmbeddedTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			City.class,
-		};
-	}
-
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel( annotatedClasses = TargetEmbeddableOnEmbeddedTest.City.class )
+@SessionFactory
+public class TargetEmbeddableOnEmbeddedTest {
 	@Test
-	public void testLifecycle() {
-		//tag::embeddable-Target-persist-example[]
-		doInJPA(this::entityManagerFactory, entityManager -> {
-
+	public void testLifecycle(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
 			City cluj = new City();
-			cluj.setName("Cluj");
-			cluj.setCoordinates(new GPS(46.77120, 23.62360));
+			cluj.setName( "Cluj" );
+			cluj.setCoordinates( new GPS(46.77120, 23.62360 ) );
 
-			entityManager.persist(cluj);
-		});
-		//end::embeddable-Target-persist-example[]
+			session.persist( cluj );
+		} );
 
-
-		//tag::embeddable-Target-fetching-example[]
-		doInJPA(this::entityManagerFactory, entityManager -> {
-
-			City cluj = entityManager.find(City.class, 1L);
-
-			assertEquals(46.77120, cluj.getCoordinates().x(), 0.00001);
-			assertEquals(23.62360, cluj.getCoordinates().y(), 0.00001);
-		});
-		//end::embeddable-Target-fetching-example[]
+		factoryScope.inTransaction( (session) -> {
+//tag::embeddable-Target-fetching-example[]
+			City city = session.find(City.class, 1L);
+			assert city.getCoordinates() instanceof GPS;
+//end::embeddable-Target-fetching-example[]
+			assertEquals(46.77120, city.getCoordinates().x(), 0.00001);
+			assertEquals(23.62360, city.getCoordinates().y(), 0.00001);
+		} );
 	}
 
-	//tag::embeddable-Target-example[]
+//tag::embeddable-Target-example[]
 	public interface Coordinates {
 		double x();
 		double y();
@@ -63,6 +52,9 @@ public class TargetEmbeddableOnEmbeddedTest extends BaseEntityManagerFunctionalT
 
 	@Embeddable
 	public static class GPS implements Coordinates {
+		// Omitted for brevity
+
+//end::embeddable-Target-example[]
 
 		private double latitude;
 
@@ -85,24 +77,26 @@ public class TargetEmbeddableOnEmbeddedTest extends BaseEntityManagerFunctionalT
 		public double y() {
 			return longitude;
 		}
+
+//tag::embeddable-Target-example[]
 	}
 
 	@Entity(name = "City")
 	public static class City {
+		// Omitted for brevity
 
+//end::embeddable-Target-example[]
 		@Id
 		@GeneratedValue
 		private Long id;
 
 		private String name;
 
+//tag::embeddable-Target-example[]
 		@Embedded
 		@TargetEmbeddable(GPS.class)
 		private Coordinates coordinates;
-
-		//Getters and setters omitted for brevity
-
-	//end::embeddable-Target-example[]
+//end::embeddable-Target-example[]
 
 		public Long getId() {
 			return id;
@@ -123,7 +117,7 @@ public class TargetEmbeddableOnEmbeddedTest extends BaseEntityManagerFunctionalT
 		public void setCoordinates(Coordinates coordinates) {
 			this.coordinates = coordinates;
 		}
-	//tag::embeddable-Target-example[]
+//tag::embeddable-Target-example[]
 	}
-	//end::embeddable-Target-example[]
+//end::embeddable-Target-example[]
 }

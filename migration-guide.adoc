@@ -229,7 +229,11 @@ The effect can also often be mitigated using Hibernate's bytecode-based laziness
 [[targetembeddable-annotation]]
 === Replace @Target
 
-The `@Target` annotation has been replaced with the new `@TargetEmbeddable`. This new annotation is only allowed on elements that are designated as `@Embedded`, and its purpose is to indicate the `@Embeddable` class that is the implementation target of the embedded instance.
+The `@Target` annotation has been replaced with the new `@TargetEmbeddable`, which is intended to indicate the `@Embeddable` class that is the implementation target of the embedded instance.
+This new annotation is only allowed on members which are embedded (`@Embedded`) or are a collection-of-embeddables (`@ElementCollection`).
+For `@Embedded` cases, the annotation may be placed on the member or the member's declared type.
+For `@ElementCollection` cases, however, it must be placed on the member.
+See the link:{user-guide-url}#embeddable-Target[User Guide] for details.
 
 
 [[domain-metamodel-layering]]

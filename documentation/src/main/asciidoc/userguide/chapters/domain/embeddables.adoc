@@ -299,20 +299,16 @@ This usage is covered in detail in <<chapters/domain/identifiers.adoc#identifier
 Embeddable types that are used as collection entries, map keys or entity type identifiers cannot include their own collection mappings.
 ====
 
+
 [[embeddable-Target]]
 ==== `@TargetEmbeddable` mapping
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TargetEmbeddable.html[`@TargetEmbeddable`] annotation is used to specify the implementation class of an embeddable-valued mapping when the declared type is a non-concrete type (interface, etc.).
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TargetEmbeddable.html[`@TargetEmbeddable`] annotation is used to specify the implementation class of an embeddable-valued mapping when the declared type is a non-concrete type (interface, etc).
 
-[NOTE]
-====
-An "embeddable-valued mapping" may be an `@EmbeddedId`, `@Embedded` or `@ElementCollection`.
-====
-
-`@TargetEmbeddable` may be specified on the embeddable-valued mapping, as shown in <<embeddable-Target-example>>, or it may be defined on the interface/class used as the declared type, illustrated in <<embeddable-Target-example2>>.
+As an example, consider an `@Embedded` attribute (`City.coordinates`) whose declared type (`Coordinates`) is an interface.  However, Hibernate needs to know about the concrete type to use, which is `GPS` in this case.  The `@TargetEmbeddable` annotation is used to provide this information.
 
 [[embeddable-Target-example]]
-.Embeddable-valued mapping usage
+.Embedded mapping example
 ====
 [source, java, indent=0]
 ----
@@ -320,39 +316,22 @@ include::{example-dir-emeddable}/TargetEmbeddableOnEmbeddedTest.java[tags=embedd
 ----
 ====
 
-The `coordinates` embeddable type is mapped as the `Coordinates` interface.
-However, Hibernate needs to know the actual implementation type, which is `GPS` in this case,
-hence the `@TargetEmbeddable` annotation is used to provide this information.
+The mapping works just like any embeddable-valued mapping at this point, with Hibernate using `GPS` "under the covers":
 
-Assuming we have persisted the following `City` entity:
-
-[[embeddable-Target-persist-example]]
-.`@TargetEmbeddable` persist example
-====
-[source, java, indent=0]
-----
-include::{example-dir-emeddable}/TargetEmbeddableOnEmbeddedTest.java[tags=embeddable-Target-persist-example]
-----
-====
-
-When fetching the `City` entity, the `coordinates` property is mapped by the `@TargetEmbeddable` expression:
 
 [[embeddable-Target-fetching-example]]
-.`@TargetEmbeddable` fetching example
+.Usage example
 ====
 [source, java, indent=0]
 ----
 include::{example-dir-emeddable}/TargetEmbeddableOnEmbeddedTest.java[tags=embeddable-Target-fetching-example]
 ----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/embeddable/embeddable-Target-fetching-example.sql[]
-----
 ====
 
+For `@Embedded` and `@EmbeddedId` cases, `@TargetEmbeddable` may be specified on the member's declared type instead of the member itself:
+
 [[embeddable-Target-example2]]
-.Interface mapping usage
+.Interface mapping example
 ====
 [source, java, indent=0]
 ----

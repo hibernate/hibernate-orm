@@ -10,42 +10,40 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.TargetEmbeddable;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
-public class TargetEmbeddableOnInterfaceTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			City.class,
-		};
-	}
-
+/**
+ * @author Jan Schatteman
+ */
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel( annotatedClasses = TargetEmbeddableOnInterfaceTest.City.class )
+@SessionFactory
+public class TargetEmbeddableOnInterfaceTest {
 	@Test
-	public void testLifecycle() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-
+	public void testLifecycle(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
 			City cluj = new City();
 			cluj.setName("Cluj");
 			cluj.setCoordinates(new GPS(46.77120, 23.62360));
 
-			entityManager.persist(cluj);
-		});
+			session.persist(cluj);
+		} );
 
-		doInJPA(this::entityManagerFactory, entityManager -> {
-
-			City cluj = entityManager.find(City.class, 1L);
+		factoryScope.inTransaction( (session) -> {
+			City cluj = session.find(City.class, 1L);
+			assert cluj.getCoordinates() instanceof GPS;
 
 			assertEquals(46.77120, cluj.getCoordinates().x(), 0.00001);
 			assertEquals(23.62360, cluj.getCoordinates().y(), 0.00001);
-		});
+		} );
 	}
 
-	//tag::embeddable-Target-example2[]
+//tag::embeddable-Target-example2[]
 	@TargetEmbeddable(GPS.class)
 	public interface Coordinates {
 		double x();
@@ -54,10 +52,9 @@ public class TargetEmbeddableOnInterfaceTest extends BaseEntityManagerFunctional
 
 	@Embeddable
 	public static class GPS implements Coordinates {
+		// Omitted for brevity
 
-	// Omitted for brevity
-
-		//end::embeddable-Target-example2[]
+//end::embeddable-Target-example2[]
 
 		private double latitude;
 
@@ -80,24 +77,24 @@ public class TargetEmbeddableOnInterfaceTest extends BaseEntityManagerFunctional
 		public double y() {
 			return longitude;
 		}
-		//tag::embeddable-Target-example2[]
+//tag::embeddable-Target-example2[]
 	}
 
 	@Entity(name = "City")
 	public static class City {
+		// Omitted for brevity
 
+//end::embeddable-Target-example2[]
 		@Id
 		@GeneratedValue
 		private Long id;
 
 		private String name;
 
+//tag::embeddable-Target-example2[]
 		@Embedded
 		private Coordinates coordinates;
-
-		//Getters and setters omitted for brevity
-
-	//end::embeddable-Target-example2[]
+//end::embeddable-Target-example2[]
 
 		public Long getId() {
 			return id;
@@ -118,7 +115,7 @@ public class TargetEmbeddableOnInterfaceTest extends BaseEntityManagerFunctional
 		public void setCoordinates(Coordinates coordinates) {
 			this.coordinates = coordinates;
 		}
-	//tag::embeddable-Target-example2[]
+//tag::embeddable-Target-example2[]
 	}
-	//end::embeddable-Target-example2[]
+//end::embeddable-Target-example2[]
 }

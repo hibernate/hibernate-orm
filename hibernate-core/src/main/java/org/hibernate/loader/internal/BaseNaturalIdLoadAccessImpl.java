@@ -7,6 +7,8 @@ package org.hibernate.loader.internal;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.EntityGraph;
+
 import org.hibernate.HibernateException;
 import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.LockOptions;
@@ -18,7 +20,6 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.LoaderLogging;
 import org.hibernate.loader.ast.spi.NaturalIdLoadOptions;
@@ -63,7 +64,7 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		return lockOptions;
 	}
 
-	public Object with(RootGraph<T> graph, GraphSemantic semantic) {
+	public Object with(EntityGraph<T> graph, GraphSemantic semantic) {
 		this.rootGraph = (RootGraphImplementor<T>) graph;
 		this.graphSemantic = semantic;
 		return this;

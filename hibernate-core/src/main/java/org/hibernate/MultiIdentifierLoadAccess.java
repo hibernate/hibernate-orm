@@ -6,8 +6,9 @@ package org.hibernate;
 
 import java.util.List;
 
+import jakarta.persistence.EntityGraph;
+
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 
 /**
  * Loads multiple instances of a given entity type at once, by
@@ -65,7 +66,7 @@ public interface MultiIdentifierLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	default MultiIdentifierLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
+	default MultiIdentifierLoadAccess<T> withFetchGraph(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.FETCH );
 	}
 
@@ -76,7 +77,7 @@ public interface MultiIdentifierLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	default MultiIdentifierLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
+	default MultiIdentifierLoadAccess<T> withLoadGraph(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}
 
@@ -84,7 +85,7 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * @deprecated use {@link #withLoadGraph}
 	 */
 	@Deprecated(since = "6.3")
-	default MultiIdentifierLoadAccess<T> with(RootGraph<T> graph) {
+	default MultiIdentifierLoadAccess<T> with(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}
 
@@ -93,7 +94,7 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph},
 	 * and how it should be {@linkplain GraphSemantic interpreted}.
 	 */
-	MultiIdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
+	MultiIdentifierLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic);
 
 	/**
 	 * Customize the associations fetched by specifying a

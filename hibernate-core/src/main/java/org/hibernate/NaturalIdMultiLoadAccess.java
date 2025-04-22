@@ -4,8 +4,9 @@
  */
 package org.hibernate;
 
+import jakarta.persistence.EntityGraph;
+
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 
 import java.util.List;
 
@@ -61,7 +62,7 @@ public interface NaturalIdMultiLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	default NaturalIdMultiLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
+	default NaturalIdMultiLoadAccess<T> withFetchGraph(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.FETCH );
 	}
 
@@ -72,7 +73,7 @@ public interface NaturalIdMultiLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	default NaturalIdMultiLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
+	default NaturalIdMultiLoadAccess<T> withLoadGraph(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}
 
@@ -80,7 +81,7 @@ public interface NaturalIdMultiLoadAccess<T> {
 	 * @deprecated use {@link #withLoadGraph}
 	 */
 	@Deprecated(since = "6.3")
-	default NaturalIdMultiLoadAccess<T> with(RootGraph<T> graph) {
+	default NaturalIdMultiLoadAccess<T> with(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}
 
@@ -89,7 +90,7 @@ public interface NaturalIdMultiLoadAccess<T> {
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph},
 	 * and how it should be {@linkplain GraphSemantic interpreted}.
 	 */
-	NaturalIdMultiLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
+	NaturalIdMultiLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic);
 
 	/**
 	 * Specify a batch size, that is, how many entities should be

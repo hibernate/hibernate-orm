@@ -9,6 +9,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import jakarta.persistence.EntityGraph;
+
 import org.hibernate.CacheMode;
 import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.LockOptions;
@@ -23,7 +25,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
@@ -75,7 +76,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	}
 
 	@Override
-	public IdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
+	public IdentifierLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic) {
 		this.rootGraph = (RootGraphImplementor<T>) graph;
 		this.graphSemantic = semantic;
 		return this;

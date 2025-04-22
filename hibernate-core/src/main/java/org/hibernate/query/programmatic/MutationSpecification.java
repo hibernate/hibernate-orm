@@ -14,7 +14,6 @@ import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.MutationQuery;
-import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.programmatic.internal.MutationSpecificationImpl;
 import org.hibernate.query.restriction.Restriction;
 
@@ -28,7 +27,7 @@ import org.hibernate.query.restriction.Restriction;
  * kinds.
  * <p>
  * Once all {@linkplain #restrict restrictions} are specified, call
- * {@link #createQuery createQuery()} to obtain an {@linkplain SelectionQuery
+ * {@link #createQuery createQuery()} to obtain an {@linkplain MutationQuery
  * executable mutation query object}.
  *
  * @param <T> The entity type which is the target of the mutation.

@@ -50,7 +50,7 @@ public class JsonValueTest {
 			entity.getJson().put( "theString", "abc" );
 			entity.getJson().put( "theBoolean", true );
 			entity.getJson().put( "theNull", null );
-			entity.getJson().put( "theArray", new String[] {"a", "b", "c"} );
+			entity.getJson().put( "theArray", new String[] { "a", "b", "c" } );
 			entity.getJson().put( "theObject", new HashMap<>( entity.getJson() ) );
 			em.persist( entity );
 		} );
@@ -64,7 +64,7 @@ public class JsonValueTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testSimple(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-value-example[]
@@ -79,7 +79,7 @@ public class JsonValueTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testPassing(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-value-passing-example[]
@@ -94,7 +94,7 @@ public class JsonValueTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testReturning(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-value-returning-example[]
@@ -109,8 +109,7 @@ public class JsonValueTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = MariaDBDialect.class,
-			reason = "MariaDB reports the error 4038 as warning and simply returns null")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB reports the error 4038 as warning and simply returns null")
 	public void testOnError(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			try {
@@ -121,7 +120,7 @@ public class JsonValueTest {
 				fail( "error clause should fail because of invalid json document" );
 			}
 			catch (HibernateException e) {
-				if ( !(e instanceof JDBCException) && !(e instanceof ExecutionException) ) {
+				if ( !( e instanceof JDBCException ) && !( e instanceof ExecutionException ) ) {
 					throw e;
 				}
 			}
@@ -142,7 +141,7 @@ public class JsonValueTest {
 				fail( "empty clause should fail because of json path doesn't produce results" );
 			}
 			catch (HibernateException e) {
-				if ( !(e instanceof JDBCException) && !(e instanceof ExecutionException) ) {
+				if ( !( e instanceof JDBCException ) && !( e instanceof ExecutionException ) ) {
 					throw e;
 				}
 			}

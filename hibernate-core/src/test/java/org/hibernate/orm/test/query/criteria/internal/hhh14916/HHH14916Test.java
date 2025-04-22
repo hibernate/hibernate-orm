@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @JiraKey(value = "HHH-14916")
 @Jpa(
-		annotatedClasses = {Author.class, Book.class, Chapter.class}
+		annotatedClasses = { Author.class, Book.class, Chapter.class }
 )
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class HHH14916Test {

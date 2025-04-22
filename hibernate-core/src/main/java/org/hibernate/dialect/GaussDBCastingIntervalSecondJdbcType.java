@@ -29,8 +29,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
+ *
  * @author liubao
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLCastingIntervalSecondJdbcType.
  */
 public class GaussDBCastingIntervalSecondJdbcType implements AdjustableJdbcType {
@@ -138,8 +139,7 @@ public class GaussDBCastingIntervalSecondJdbcType implements AdjustableJdbcType 
 			}
 
 			@Override
-			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
-					throws SQLException {
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
 				return getObject( statement.getBigDecimal( name ), options );
 			}
 

@@ -50,13 +50,13 @@ public class ArrayRemoveIndexUnnestFunction extends AbstractSqmSelfRenderingFunc
 			SqlAstTranslator<?> walker) {
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression indexExpression = (Expression) sqlAstArguments.get( 1 );
-		sqlAppender.append( "case when " );
+		sqlAppender.append( "case when ");
 		arrayExpression.accept( walker );
 		sqlAppender.append( " is not null then coalesce((select array_agg(t.val) from unnest(" );
 		arrayExpression.accept( walker );
 		sqlAppender.append( ") with ordinality t(val,idx) where t.idx is distinct from " );
 		indexExpression.accept( walker );
-		sqlAppender.append( ")," );
+		sqlAppender.append( "),");
 		if ( castEmptyArrayLiteral ) {
 			sqlAppender.append( "cast(array[] as " );
 			sqlAppender.append( DdlTypeHelper.getCastTypeName(
@@ -68,6 +68,6 @@ public class ArrayRemoveIndexUnnestFunction extends AbstractSqmSelfRenderingFunc
 		else {
 			sqlAppender.append( "array[]" );
 		}
-		sqlAppender.append( ") end" );
+		sqlAppender.append(") end" );
 	}
 }

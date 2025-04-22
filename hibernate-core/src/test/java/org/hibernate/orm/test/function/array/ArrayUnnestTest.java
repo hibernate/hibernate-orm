@@ -37,8 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 @DomainModel(annotatedClasses = EntityWithArrays.class)
 @SessionFactory
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnnest.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsUnnest.class)
 // Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 @BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
 public class ArrayUnnestTest {
@@ -46,8 +46,8 @@ public class ArrayUnnestTest {
 	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-			em.persist( new EntityWithArrays( 1L, new String[] {} ) );
-			em.persist( new EntityWithArrays( 2L, new String[] {"abc", null, "def"} ) );
+			em.persist( new EntityWithArrays( 1L, new String[]{} ) );
+			em.persist( new EntityWithArrays( 2L, new String[]{ "abc", null, "def" } ) );
 			em.persist( new EntityWithArrays( 3L, null ) );
 		} );
 	}
@@ -60,15 +60,15 @@ public class ArrayUnnestTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testUnnest(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-array-unnest-example[]
 			List<Tuple> results = em.createQuery(
 							"select e.id, a " +
-							"from EntityWithArrays e " +
-							"join e.theArray a " +
-							"order by e.id, a nulls first",
+									"from EntityWithArrays e " +
+									"join e.theArray a " +
+									"order by e.id, a nulls first",
 							Tuple.class
 					)
 					.getResultList();
@@ -86,7 +86,7 @@ public class ArrayUnnestTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "xmltable can't be used with a left join")
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testNodeBuilderUnnest(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -115,14 +115,14 @@ public class ArrayUnnestTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testUnnestOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<Tuple> results = em.createQuery(
 							"select e.id, index(a), a " +
-							"from EntityWithArrays e " +
-							"join e.theArray a " +
-							"order by e.id, index(a)",
+									"from EntityWithArrays e " +
+									"join e.theArray a " +
+									"order by e.id, index(a)",
 							Tuple.class
 					)
 					.getResultList();
@@ -145,7 +145,7 @@ public class ArrayUnnestTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "xmltable can't be used with a left join")
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testNodeBuilderUnnestOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();

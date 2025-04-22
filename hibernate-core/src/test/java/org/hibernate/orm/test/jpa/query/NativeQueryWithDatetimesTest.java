@@ -28,23 +28,19 @@ public class NativeQueryWithDatetimesTest {
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class)
 	@SkipForDialect(dialectClass = OracleDialect.class)
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss will map localdate to timestamp")
-	@Test
-	void test(EntityManagerFactoryScope scope) {
-		scope.inTransaction( s -> s.persist( new Datetimes() ) );
-		Object[] result = scope.fromTransaction(
-				s -> (Object[]) s.createNativeQuery( "select ctime, cdate, cdatetime from tdatetimes", Object[].class )
-						.getSingleResult() );
-		assertInstanceOf( LocalTime.class, result[0] );
-		assertInstanceOf( LocalDate.class, result[1] );
-		assertInstanceOf( LocalDateTime.class, result[2] );
+	@Test void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction(s -> s.persist(new Datetimes()));
+		Object[] result = scope.fromTransaction(s -> (Object[]) s.createNativeQuery("select ctime, cdate, cdatetime from tdatetimes", Object[].class).getSingleResult());
+		assertInstanceOf(LocalTime.class, result[0]);
+		assertInstanceOf(LocalDate.class, result[1]);
+		assertInstanceOf(LocalDateTime.class, result[2]);
 //		result = scope.fromTransaction(s -> (Object[]) s.createNativeQuery("select current_time, current_date, current_timestamp from tdatetimes", Object[].class).getSingleResult());
 //		assertInstanceOf(LocalTime.class, result[0]);
 //		assertInstanceOf(LocalDate.class, result[1]);
 //		assertInstanceOf(LocalDateTime.class, result[2]);
 	}
 
-	@Entity
-	@Table(name = "tdatetimes")
+	@Entity @Table(name = "tdatetimes")
 	static class Datetimes {
 		@Id
 		long id;

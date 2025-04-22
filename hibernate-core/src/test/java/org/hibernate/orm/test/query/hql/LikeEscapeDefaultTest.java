@@ -53,7 +53,7 @@ public class LikeEscapeDefaultTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss's has different behavior")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss's has different behavior")
 	public void testDefaultEscapeBackslash(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Query<BasicEntity> q = session.createQuery(
@@ -67,7 +67,7 @@ public class LikeEscapeDefaultTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss's has different behavior")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss's has different behavior")
 	public void testDefaultEscapeBackslashLiteral(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Query<BasicEntity> q = session.createQuery(
@@ -81,7 +81,7 @@ public class LikeEscapeDefaultTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss's has different behavior")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss's has different behavior")
 	public void testDefaultEscapeNoResults(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Query<BasicEntity> q = session.createQuery(

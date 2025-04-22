@@ -20,7 +20,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * GaussDB json_arrayagg function.
  *
  * @author liubao
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLJsonArrayAggFunction.
  */
 public class GaussDBJsonArrayAggFunction extends JsonArrayAggFunction {

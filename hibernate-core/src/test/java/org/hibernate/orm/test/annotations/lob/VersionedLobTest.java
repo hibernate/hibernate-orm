@@ -56,7 +56,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		Editor editor = new Editor();
 		editor.setName( "O'Reilly" );
 		book.setEditor( editor );
-		book.setCode2( new char[] {'r'} );
+		book.setCode2( new char[] { 'r' } );
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -84,7 +84,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		tx = s.beginTransaction();
 		VersionedBook b = createBook();
 		b.setShortDescription( "Hibernate Bible" );
-		b.setCode( new Character[] {'a', 'b', 'c'} );
+		b.setCode( new Character[] { 'a', 'b', 'c' } );
 		s.persist( b );
 		tx.commit();
 		s.close();
@@ -166,7 +166,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		int codeSize = 5;
 		byte[] full = new byte[codeSize];
 		for ( int i = 0; i < codeSize; i++ ) {
-			full[i] = (byte) (1 + i);
+			full[i] = (byte) ( 1 + i );
 		}
 		cc.setFullCode( full );
 		s.persist( cc );

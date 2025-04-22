@@ -44,8 +44,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		JsonArrayUnnestTest.Label.class
 })
 @SessionFactory
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnnest.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsUnnest.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonAggregate.class)
 public class JsonArrayUnnestTest {
 
@@ -56,7 +56,7 @@ public class JsonArrayUnnestTest {
 			em.persist( new Book(
 					2L,
 					"book2",
-					new Publisher[] {new Publisher( "abc" ), null, new Publisher( "def" )},
+					new Publisher[] { new Publisher( "abc" ), null, new Publisher( "def" ) },
 					Arrays.asList( new Label( "k1", "v1" ), null, new Label( "k2", "v2" ) )
 			) );
 			em.persist( new Book( 3L, "book3", null, null ) );
@@ -71,16 +71,16 @@ public class JsonArrayUnnestTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testUnnest(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-array-unnest-aggregate-example[]
 			List<Tuple> results = em.createQuery(
 							"select e.id, p.name, l.name, l.value " +
-							"from Book e " +
-							"join lateral unnest(e.publishers) p " +
-							"join lateral unnest(e.labels) l " +
-							"order by e.id, p.name nulls first, l.name nulls first, l.value nulls first",
+									"from Book e " +
+									"join lateral unnest(e.publishers) p " +
+									"join lateral unnest(e.labels) l " +
+									"order by e.id, p.name nulls first, l.name nulls first, l.value nulls first",
 							Tuple.class
 					)
 					.getResultList();
@@ -101,7 +101,7 @@ public class JsonArrayUnnestTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testNodeBuilderUnnest(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -141,15 +141,15 @@ public class JsonArrayUnnestTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testUnnestOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-array-unnest-aggregate-with-ordinality-example[]
 			List<Tuple> results = em.createQuery(
 							"select e.id, index(p), p.name " +
-							"from Book e " +
-							"join lateral unnest(e.publishers) p " +
-							"order by e.id, index(p)",
+									"from Book e " +
+									"join lateral unnest(e.publishers) p " +
+									"order by e.id, index(p)",
 							Tuple.class
 					)
 					.getResultList();
@@ -165,7 +165,7 @@ public class JsonArrayUnnestTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testNodeBuilderUnnestOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();

@@ -19,7 +19,7 @@ import org.hibernate.type.BasicType;
  * because by default it assumes a {@code text[]}, which is not compatible with {@code varchar[]}.
  *
  * @author liubao
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLArrayConstructorFunction.
  */
 public class GaussDBArrayConstructorFunction extends ArrayConstructorFunction {

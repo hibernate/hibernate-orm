@@ -16,7 +16,7 @@ import java.util.List;
 
 /**
  * Gaussdb json_object function.
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLJsonObjectFunction.
  */
 public class GaussDBJsonObjectFunction extends JsonObjectFunction {
@@ -40,7 +40,7 @@ public class GaussDBJsonObjectFunction extends JsonObjectFunction {
 		else {
 			final JsonNullBehavior nullBehavior;
 			final int argumentsCount;
-			if ( (sqlAstArguments.size() & 1) == 1 ) {
+			if ( ( sqlAstArguments.size() & 1 ) == 1 ) {
 				nullBehavior = (JsonNullBehavior) sqlAstArguments.get( sqlAstArguments.size() - 1 );
 				argumentsCount = sqlAstArguments.size() - 1;
 			}
@@ -48,16 +48,16 @@ public class GaussDBJsonObjectFunction extends JsonObjectFunction {
 				nullBehavior = JsonNullBehavior.NULL;
 				argumentsCount = sqlAstArguments.size();
 			}
-			sqlAppender.appendSql( '(' );
+			sqlAppender.appendSql('(');
 			separator = ' ';
 			for ( int i = 0; i < argumentsCount; i += 2 ) {
 				final SqlAstNode key = sqlAstArguments.get( i );
-				Expression valueNode = (Expression) sqlAstArguments.get( i + 1 );
-				if ( nullBehavior == JsonNullBehavior.ABSENT && walker.getLiteralValue( valueNode ) == null ) {
+				Expression valueNode = (Expression) sqlAstArguments.get( i+1 );
+				if ( nullBehavior == JsonNullBehavior.ABSENT && walker.getLiteralValue( valueNode ) == null) {
 					continue;
 				}
-				if ( separator != ' ' ) {
-					sqlAppender.appendSql( separator );
+				if (separator != ' ') {
+					sqlAppender.appendSql(separator);
 				}
 				else {
 					separator = ',';

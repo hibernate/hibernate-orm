@@ -76,8 +76,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SessionFactory
 @ServiceRegistry(
 		settings = @Setting(name = AvailableSettings.USE_QUERY_CACHE, value = "true"),
-		settingProviders = @SettingProvider(settingName = AvailableSettings.IMPLICIT_NAMING_STRATEGY,
-				provider = QueryAndSQLTest.NamingStrategyProvider.class)
+		settingProviders = @SettingProvider(settingName = AvailableSettings.IMPLICIT_NAMING_STRATEGY, provider = QueryAndSQLTest.NamingStrategyProvider.class)
 )
 public class QueryAndSQLTest {
 
@@ -121,8 +120,7 @@ public class QueryAndSQLTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true,
-			reason = "invalid name of function or procedure: SYSDATE")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "invalid name of function or procedure: SYSDATE")
 	public void testNativeQueryWithFormulaAttributeWithoutAlias(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -398,7 +396,7 @@ public class QueryAndSQLTest {
 						assertEquals( n2.getDuration(), n.getDuration() );
 						List areas = session.getNamedQuery( "getAreaByNative" ).list();
 						assertTrue( 1 == areas.size() );
-						assertEquals( area.getName(), ((Area) areas.get( 0 )).getName() );
+						assertEquals( area.getName(), ( (Area) areas.get( 0 ) ).getName() );
 						session.remove( areas.get( 0 ) );
 						session.remove( n2 );
 						tx.commit();
@@ -472,7 +470,7 @@ public class QueryAndSQLTest {
 					q.setCacheable( true );
 					q.list();
 					assertEquals( 1, stats.getQueryCacheHitCount() );
-					Night n2 = (Night) ((Object[]) result.get( 0 ))[0];
+					Night n2 = (Night) ( (Object[]) result.get( 0 ) )[0];
 					assertEquals( n2.getDuration(), n.getDuration() );
 					session.remove( n2.getArea() );
 					session.remove( n2 );
@@ -500,7 +498,7 @@ public class QueryAndSQLTest {
 						Query q = session.getNamedQuery( "implicitSample" );
 						List result = q.list();
 						assertEquals( 1, result.size() );
-						assertEquals( ship.getModel(), ((SpaceShip) result.get( 0 )).getModel() );
+						assertEquals( ship.getModel(), ( (SpaceShip) result.get( 0 ) ).getModel() );
 						session.remove( result.get( 0 ) );
 						tx.commit();
 					}
@@ -563,9 +561,9 @@ public class QueryAndSQLTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class,
+	@SkipForDialect( dialectClass = GaussDBDialect.class,
 			reason = "type:resolved.If you operate a table with the same name as the system view under the schema, "
-					 + "you will be redirected to the system view and an error will be reported.")
+					+ "you will be redirected to the system view and an error will be reported.")
 	public void testDiscriminator(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
@@ -586,7 +584,7 @@ public class QueryAndSQLTest {
 						assertEquals( 2, results.size() );
 						assertTrue(
 								results.get( 0 ) instanceof SynonymousDictionary
-								|| results.get( 1 ) instanceof SynonymousDictionary
+										|| results.get( 1 ) instanceof SynonymousDictionary
 						);
 						session.remove( results.get( 0 ) );
 						session.remove( results.get( 1 ) );

@@ -50,7 +50,7 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-				XmlHolder.class
+			XmlHolder.class
 		};
 	}
 
@@ -58,10 +58,8 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	public void setUp() {
 		inTransaction(
 				session -> {
-					session.persist( new XmlHolder( 1L, "XYZ", 10, "String \"<abc>A&B</abc>\"",
-							EmbeddableAggregate.createAggregate1() ) );
-					session.persist(
-							new XmlHolder( 2L, null, 20, "String 'abc'", EmbeddableAggregate.createAggregate2() ) );
+					session.persist( new XmlHolder( 1L, "XYZ", 10, "String \"<abc>A&B</abc>\"", EmbeddableAggregate.createAggregate1() ) );
+					session.persist( new XmlHolder( 2L, null, 20, "String 'abc'", EmbeddableAggregate.createAggregate2() ) );
 				}
 		);
 	}
@@ -95,15 +93,13 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	public void testFetch() {
 		sessionFactoryScope().inSession(
 				entityManager -> {
-					List<XmlHolder> XmlHolders = entityManager.createQuery( "from XmlHolder b where b.id = 1",
-							XmlHolder.class ).getResultList();
+					List<XmlHolder> XmlHolders = entityManager.createQuery( "from XmlHolder b where b.id = 1", XmlHolder.class ).getResultList();
 					assertEquals( 1, XmlHolders.size() );
 					XmlHolder XmlHolder = XmlHolders.get( 0 );
 					assertEquals( 1L, XmlHolder.getId() );
 					assertEquals( "XYZ", XmlHolder.theXml.stringField );
 					assertEquals( 10, XmlHolder.theXml.simpleEmbeddable.integerField );
-					assertEquals( "String \"<abc>A&B</abc>\"",
-							XmlHolder.theXml.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
+					assertEquals( "String \"<abc>A&B</abc>\"", XmlHolder.theXml.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
 					assertStructEquals( EmbeddableAggregate.createAggregate1(), XmlHolder.getAggregate() );
 				}
 		);
@@ -113,8 +109,7 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	public void testFetchNull() {
 		sessionFactoryScope().inSession(
 				entityManager -> {
-					List<XmlHolder> XmlHolders = entityManager.createQuery( "from XmlHolder b where b.id = 2",
-							XmlHolder.class ).getResultList();
+					List<XmlHolder> XmlHolders = entityManager.createQuery( "from XmlHolder b where b.id = 2", XmlHolder.class ).getResultList();
 					assertEquals( 1, XmlHolders.size() );
 					XmlHolder XmlHolder = XmlHolders.get( 0 );
 					assertEquals( 2L, XmlHolder.getId() );
@@ -129,57 +124,54 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	public void testDomainResult() {
 		sessionFactoryScope().inSession(
 				entityManager -> {
-					List<TheXml> structs = entityManager.createQuery( "select b.theXml from XmlHolder b where b.id = 1",
-							TheXml.class ).getResultList();
+					List<TheXml> structs = entityManager.createQuery( "select b.theXml from XmlHolder b where b.id = 1", TheXml.class ).getResultList();
 					assertEquals( 1, structs.size() );
 					TheXml theXml = structs.get( 0 );
 					assertEquals( "XYZ", theXml.stringField );
 					assertEquals( 10, theXml.simpleEmbeddable.integerField );
-					assertEquals( "String \"<abc>A&B</abc>\"",
-							theXml.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
+					assertEquals( "String \"<abc>A&B</abc>\"", theXml.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
 					assertStructEquals( EmbeddableAggregate.createAggregate1(), theXml.nested );
 				}
 		);
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class,
-			reason = "type:resolving.argument of XMLTABLE must be type xmltype, not type xml")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.argument of XMLTABLE must be type xmltype, not type xml")
 	public void testSelectionItems() {
 		sessionFactoryScope().inSession(
 				entityManager -> {
 					List<Tuple> tuples = entityManager.createQuery(
 							"select " +
-							"b.theXml.nested.theInt," +
-							"b.theXml.nested.theDouble," +
-							"b.theXml.nested.theBoolean," +
-							"b.theXml.nested.theNumericBoolean," +
-							"b.theXml.nested.theStringBoolean," +
-							"b.theXml.nested.theString," +
-							"b.theXml.nested.theInteger," +
-							"b.theXml.nested.theUrl," +
-							"b.theXml.nested.theClob," +
-							"b.theXml.nested.theBinary," +
-							"b.theXml.nested.theDate," +
-							"b.theXml.nested.theTime," +
-							"b.theXml.nested.theTimestamp," +
-							"b.theXml.nested.theInstant," +
-							"b.theXml.nested.theUuid," +
-							"b.theXml.nested.gender," +
-							"b.theXml.nested.convertedGender," +
-							"b.theXml.nested.ordinalGender," +
-							"b.theXml.nested.theDuration," +
-							"b.theXml.nested.theLocalDateTime," +
-							"b.theXml.nested.theLocalDate," +
-							"b.theXml.nested.theLocalTime," +
-							"b.theXml.nested.theZonedDateTime," +
-							"b.theXml.nested.theOffsetDateTime," +
-							"b.theXml.nested.mutableValue," +
-							"b.theXml.simpleEmbeddable," +
-							"b.theXml.simpleEmbeddable.doubleNested," +
-							"b.theXml.simpleEmbeddable.doubleNested.theNested," +
-							"b.theXml.simpleEmbeddable.doubleNested.theNested.theLeaf " +
-							"from XmlHolder b where b.id = 1",
+									"b.theXml.nested.theInt," +
+									"b.theXml.nested.theDouble," +
+									"b.theXml.nested.theBoolean," +
+									"b.theXml.nested.theNumericBoolean," +
+									"b.theXml.nested.theStringBoolean," +
+									"b.theXml.nested.theString," +
+									"b.theXml.nested.theInteger," +
+									"b.theXml.nested.theUrl," +
+									"b.theXml.nested.theClob," +
+									"b.theXml.nested.theBinary," +
+									"b.theXml.nested.theDate," +
+									"b.theXml.nested.theTime," +
+									"b.theXml.nested.theTimestamp," +
+									"b.theXml.nested.theInstant," +
+									"b.theXml.nested.theUuid," +
+									"b.theXml.nested.gender," +
+									"b.theXml.nested.convertedGender," +
+									"b.theXml.nested.ordinalGender," +
+									"b.theXml.nested.theDuration," +
+									"b.theXml.nested.theLocalDateTime," +
+									"b.theXml.nested.theLocalDate," +
+									"b.theXml.nested.theLocalTime," +
+									"b.theXml.nested.theZonedDateTime," +
+									"b.theXml.nested.theOffsetDateTime," +
+									"b.theXml.nested.mutableValue," +
+									"b.theXml.simpleEmbeddable," +
+									"b.theXml.simpleEmbeddable.doubleNested," +
+									"b.theXml.simpleEmbeddable.doubleNested.theNested," +
+									"b.theXml.simpleEmbeddable.doubleNested.theNested.theLeaf " +
+									"from XmlHolder b where b.id = 1",
 							Tuple.class
 					).getResultList();
 					assertEquals( 1, tuples.size() );
@@ -217,8 +209,7 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 					assertEquals( simpleEmbeddable.doubleNested.theNested, tuple.get( 27, Nested.class ) );
 					assertEquals( simpleEmbeddable.doubleNested.theNested.theLeaf, tuple.get( 28, Leaf.class ) );
 					assertEquals( 10, simpleEmbeddable.integerField );
-					assertEquals( "String \"<abc>A&B</abc>\"",
-							simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
+					assertEquals( "String \"<abc>A&B</abc>\"", simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
 				}
 		);
 	}
@@ -227,8 +218,7 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	public void testDeleteWhere() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					entityManager.createMutationQuery( "delete XmlHolder b where b.theXml is not null" )
-							.executeUpdate();
+					entityManager.createMutationQuery( "delete XmlHolder b where b.theXml is not null" ).executeUpdate();
 					assertNull( entityManager.find( XmlHolder.class, 1L ) );
 
 				}
@@ -246,33 +236,31 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@Jira("https://hibernate.atlassian.net/browse/HHH-17695")
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17695" )
 	public void testNullNestedAggregate() {
 		sessionFactoryScope().inTransaction(
-				entityManager -> {
-					XmlHolder XmlHolder = new XmlHolder( 3L, "abc", 30, "String 'xyz'", null );
-					entityManager.persist( XmlHolder );
-				}
+			entityManager -> {
+				XmlHolder XmlHolder = new XmlHolder(3L, "abc", 30, "String 'xyz'", null );
+				entityManager.persist( XmlHolder );
+			}
 		);
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					XmlHolder XmlHolder = entityManager.createQuery( "from XmlHolder b where b.id = 3",
-							XmlHolder.class ).getSingleResult();
+					XmlHolder XmlHolder = entityManager.createQuery( "from XmlHolder b where b.id = 3", XmlHolder.class ).getSingleResult();
 					assertEquals( "abc", XmlHolder.theXml.stringField );
 					assertEquals( 30, XmlHolder.theXml.simpleEmbeddable.integerField );
-					assertEquals( "String 'xyz'",
-							XmlHolder.theXml.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
+					assertEquals( "String 'xyz'", XmlHolder.theXml.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
 					assertNull( XmlHolder.getAggregate() );
 				}
 		);
 	}
 
 	@Test
-	@Jira("https://hibernate.atlassian.net/browse/HHH-17695")
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17695" )
 	public void testNullNestedEmbeddable() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					XmlHolder XmlHolder = new XmlHolder();
+					XmlHolder XmlHolder = new XmlHolder( );
 					XmlHolder.setId( 3L );
 					XmlHolder.setTheXml( new TheXml( "abc", null, EmbeddableAggregate.createAggregate1() ) );
 					entityManager.persist( XmlHolder );
@@ -280,8 +268,7 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		);
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					XmlHolder XmlHolder = entityManager.createQuery( "from XmlHolder b where b.id = 3",
-							XmlHolder.class ).getSingleResult();
+					XmlHolder XmlHolder = entityManager.createQuery( "from XmlHolder b where b.id = 3", XmlHolder.class ).getSingleResult();
 					assertEquals( "abc", XmlHolder.theXml.stringField );
 					assertNull( XmlHolder.theXml.simpleEmbeddable );
 					assertStructEquals( EmbeddableAggregate.createAggregate1(), XmlHolder.getAggregate() );
@@ -290,11 +277,11 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	@Jira("https://hibernate.atlassian.net/browse/HHH-17695")
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17695" )
 	public void testNullNestedEmbeddableAndAggregate() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					XmlHolder XmlHolder = new XmlHolder();
+					XmlHolder XmlHolder = new XmlHolder( );
 					XmlHolder.setId( 3L );
 					XmlHolder.setTheXml( new TheXml( "abc", null, null ) );
 					entityManager.persist( XmlHolder );
@@ -302,8 +289,7 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		);
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					XmlHolder XmlHolder = entityManager.createQuery( "from XmlHolder b where b.id = 3",
-							XmlHolder.class ).getSingleResult();
+					XmlHolder XmlHolder = entityManager.createQuery( "from XmlHolder b where b.id = 3", XmlHolder.class ).getSingleResult();
 					assertEquals( "abc", XmlHolder.theXml.stringField );
 					assertNull( XmlHolder.theXml.simpleEmbeddable );
 					assertNull( XmlHolder.getAggregate() );
@@ -313,13 +299,11 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
-	@SkipForDialect(dialectClass = GaussDBDialect.class,
-			reason = "type:resolving.argument of XMLTABLE must be type xmltype, not type xml")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.argument of XMLTABLE must be type xmltype, not type xml")
 	public void testUpdateAggregateMember() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					entityManager.createMutationQuery( "update XmlHolder b set b.theXml.nested.theString = null" )
-							.executeUpdate();
+					entityManager.createMutationQuery( "update XmlHolder b set b.theXml.nested.theString = null" ).executeUpdate();
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
 					struct.setTheString( null );
 					assertStructEquals( struct, entityManager.find( XmlHolder.class, 1L ).getAggregate() );
@@ -329,32 +313,24 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
-	@SkipForDialect(dialectClass = GaussDBDialect.class,
-			reason = "type:resolving.argument of XMLTABLE must be type xmltype, not type xml")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.argument of XMLTABLE must be type xmltype, not type xml")
 	public void testUpdateAggregateMemberOnNestedNull() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					entityManager.createMutationQuery(
-							"update XmlHolder b set b.theXml.simpleEmbeddable.doubleNested = null" ).executeUpdate();
-					entityManager.createMutationQuery(
-									"update XmlHolder b set b.theXml.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField = 'Abc'" )
-							.executeUpdate();
-					assertEquals( "Abc", entityManager.find( XmlHolder.class, 1L )
-							.getTheXml().simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
+					entityManager.createMutationQuery( "update XmlHolder b set b.theXml.simpleEmbeddable.doubleNested = null" ).executeUpdate();
+					entityManager.createMutationQuery( "update XmlHolder b set b.theXml.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField = 'Abc'" ).executeUpdate();
+					assertEquals( "Abc", entityManager.find( XmlHolder.class, 1L ).getTheXml().simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
 				}
 		);
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
-	@SkipForDialect(dialectClass = GaussDBDialect.class,
-			reason = "type:resolving.argument of XMLTABLE must be type xmltype, not type xml")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.argument of XMLTABLE must be type xmltype, not type xml")
 	public void testUpdateMultipleAggregateMembers() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
-					entityManager.createMutationQuery(
-									"update XmlHolder b set b.theXml.nested.theString = null, b.theXml.nested.theUuid = null" )
-							.executeUpdate();
+					entityManager.createMutationQuery( "update XmlHolder b set b.theXml.nested.theString = null, b.theXml.nested.theUuid = null" ).executeUpdate();
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
 					struct.setTheString( null );
 					struct.setTheUuid( null );
@@ -365,14 +341,13 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsXmlComponentUpdate.class)
-	@SkipForDialect(dialectClass = GaussDBDialect.class,
-			reason = "type:resolving.argument of XMLTABLE must be type xmltype, not type xml")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.argument of XMLTABLE must be type xmltype, not type xml")
 	public void testUpdateAllAggregateMembers() {
 		sessionFactoryScope().inTransaction(
 				entityManager -> {
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
 					entityManager.createMutationQuery(
-									"update XmlHolder b set " +
+							"update XmlHolder b set " +
 									"b.theXml.nested.theInt = :theInt," +
 									"b.theXml.nested.theDouble = :theDouble," +
 									"b.theXml.nested.theBoolean = :theBoolean," +
@@ -400,7 +375,7 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 									"b.theXml.nested.mutableValue = :mutableValue," +
 									"b.theXml.simpleEmbeddable.integerField = :integerField " +
 									"where b.id = 2"
-							)
+					)
 							.setParameter( "theInt", struct.getTheInt() )
 							.setParameter( "theDouble", struct.getTheDouble() )
 							.setParameter( "theBoolean", struct.isTheBoolean() )
@@ -545,7 +520,7 @@ public class NestedXmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		@Override
 		public int hashCode() {
 			int result = integerField != null ? integerField.hashCode() : 0;
-			result = 31 * result + (doubleNested != null ? doubleNested.hashCode() : 0);
+			result = 31 * result + ( doubleNested != null ? doubleNested.hashCode() : 0 );
 			return result;
 		}
 	}

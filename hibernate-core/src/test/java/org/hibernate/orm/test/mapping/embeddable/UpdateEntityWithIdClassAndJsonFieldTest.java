@@ -56,8 +56,7 @@ public class UpdateEntityWithIdClassAndJsonFieldTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class,
-			reason = "type:resolving.operator does not exist: jsonb || jsonb")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.operator does not exist: jsonb || jsonb")
 	public void updateTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -84,7 +83,7 @@ public class UpdateEntityWithIdClassAndJsonFieldTest {
 				session -> {
 					int updatedRows = session.createQuery(
 									"UPDATE MyEntity u SET u.description.text = :description WHERE u.id2 = :entityId" )
-							.setParameter( "description", UPDATED_DESCRIPTION )
+							.setParameter( "description",  UPDATED_DESCRIPTION  )
 							.setParameter( "entityId", ID_2 )
 							.executeUpdate();
 					assertTrue( updatedRows > 0 );

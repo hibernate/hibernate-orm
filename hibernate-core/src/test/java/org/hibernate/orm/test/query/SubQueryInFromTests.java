@@ -64,11 +64,11 @@ public class SubQueryInFromTests {
 
 					final Query<Tuple> query = session.createQuery(
 							"select a.firstName " +
-							"from (" +
-							"select c.name.first as firstName " +
-							"from Contact c " +
-							"where c.id = 1" +
-							") a",
+									"from (" +
+									"select c.name.first as firstName " +
+									"from Contact c " +
+									"where c.id = 1" +
+									") a",
 							Tuple.class
 					);
 					verifySame(
@@ -91,11 +91,11 @@ public class SubQueryInFromTests {
 					try {
 						session.createQuery(
 								"select c.name, a.name from Contact c " +
-								"join (" +
-								"select c2.name as name " +
-								"from Contact c2 " +
-								"where c2 = c" +
-								") a",
+										"join (" +
+										"select c2.name as name " +
+										"from Contact c2 " +
+										"where c2 = c" +
+										") a",
 								Tuple.class
 						).getResultList();
 					}
@@ -114,10 +114,10 @@ public class SubQueryInFromTests {
 					try {
 						session.createQuery(
 								"select c.name, a.address from Contact c " +
-								"join (" +
-								"select address.line1 as address " +
-								"from c.addresses address " +
-								") a",
+										"join (" +
+										"select address.line1 as address " +
+										"from c.addresses address " +
+										") a",
 								Tuple.class
 						).getResultList();
 					}
@@ -151,12 +151,12 @@ public class SubQueryInFromTests {
 
 					final Query<Tuple> query = session.createQuery(
 							"select c.name, a.address from Contact c " +
-							"join lateral (" +
-							"select address.line1 as address " +
-							"from c.addresses address " +
-							"order by address.line1 " +
-							"limit 1" +
-							") a",
+									"join lateral (" +
+									"select address.line1 as address " +
+									"from c.addresses address " +
+									"order by address.line1 " +
+									"limit 1" +
+									") a",
 							Tuple.class
 					);
 					verifySame(
@@ -182,8 +182,7 @@ public class SubQueryInFromTests {
 					final Root<Contact> subQueryRoot = subquery.from( Contact.class );
 					final Join<Object, Object> address = subQueryRoot.join( "addresses" );
 
-					subquery.multiselect( subQueryRoot.get( "name" ).alias( "name" ),
-							address.get( "postalCode" ).alias( "zip" ) );
+					subquery.multiselect( subQueryRoot.get( "name" ).alias( "name" ), address.get( "postalCode" ).alias( "zip" ) );
 					subquery.where( cb.equal( subQueryRoot.get( "id" ), 1 ) );
 
 					final JpaDerivedRoot<Tuple> a = cq.from( subquery );
@@ -193,12 +192,12 @@ public class SubQueryInFromTests {
 
 					final Query<Tuple> query = session.createQuery(
 							"select a.name, a.zip " +
-							"from (" +
-							"select c.name as name, address.postalCode as zip " +
-							"from Contact c join c.addresses address " +
-							"where c.id = 1" +
-							") a " +
-							"order by a.zip.zipCode",
+									"from (" +
+									"select c.name as name, address.postalCode as zip " +
+									"from Contact c join c.addresses address " +
+									"where c.id = 1" +
+									") a " +
+									"order by a.zip.zipCode",
 							Tuple.class
 					);
 					verifySame(
@@ -219,7 +218,7 @@ public class SubQueryInFromTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resovling.not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resovling.not support")
 	public void testEmbedded(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -240,12 +239,12 @@ public class SubQueryInFromTests {
 
 					final Query<Tuple> query = session.createQuery(
 							"select c.name, a.zip from Contact c " +
-							"join lateral (" +
-							"select address.postalCode as zip " +
-							"from c.addresses address " +
-							"order by address.line1 " +
-							"limit 1" +
-							") a",
+									"join lateral (" +
+									"select address.postalCode as zip " +
+									"from c.addresses address " +
+									"order by address.line1 " +
+									"limit 1" +
+									") a",
 							Tuple.class
 					);
 					verifySame(
@@ -271,8 +270,7 @@ public class SubQueryInFromTests {
 					final Root<Contact> subQueryRoot = subquery.from( Contact.class );
 					final Join<Object, Object> alternativeContact = subQueryRoot.join( "alternativeContact" );
 
-					subquery.multiselect( subQueryRoot.get( "name" ).alias( "name" ),
-							alternativeContact.alias( "contact" ) );
+					subquery.multiselect( subQueryRoot.get( "name" ).alias( "name" ), alternativeContact.alias( "contact" ) );
 					subquery.where( cb.equal( subQueryRoot.get( "id" ), 1 ) );
 
 					final JpaDerivedRoot<Tuple> a = cq.from( subquery );
@@ -281,11 +279,11 @@ public class SubQueryInFromTests {
 
 					final Query<Tuple> query = session.createQuery(
 							"select a.name, a.contact.id " +
-							"from (" +
-							"select c.name as name, alt as contact " +
-							"from Contact c join c.alternativeContact alt " +
-							"where c.id = 1" +
-							") a",
+									"from (" +
+									"select c.name as name, alt as contact " +
+									"from Contact c join c.alternativeContact alt " +
+									"where c.id = 1" +
+									") a",
 							Tuple.class
 					);
 					verifySame(
@@ -325,13 +323,13 @@ public class SubQueryInFromTests {
 
 					final Query<Tuple> query = session.createQuery(
 							"select c.name, a.contact.id from Contact c " +
-							"left join lateral (" +
-							"select alt as contact " +
-							"from c.alternativeContact alt " +
-							"order by alt.name.first " +
-							"limit 1" +
-							") a " +
-							"where c.id = 1",
+									"left join lateral (" +
+									"select alt as contact " +
+									"from c.alternativeContact alt " +
+									"order by alt.name.first " +
+									"limit 1" +
+									") a " +
+									"where c.id = 1",
 							Tuple.class
 					);
 					verifySame(
@@ -372,14 +370,14 @@ public class SubQueryInFromTests {
 
 					final Query<Tuple> query = session.createQuery(
 							"select c.name, alt.name from Contact c " +
-							"left join lateral (" +
-							"select alt as contact " +
-							"from c.alternativeContact alt " +
-							"order by alt.name.first desc " +
-							"limit 1" +
-							") a " +
-							"join a.contact alt " +
-							"where c.id = 1",
+									"left join lateral (" +
+									"select alt as contact " +
+									"from c.alternativeContact alt " +
+									"order by alt.name.first desc " +
+									"limit 1" +
+									") a " +
+									"join a.contact alt " +
+									"where c.id = 1",
 							Tuple.class
 					);
 					verifySame(
@@ -419,13 +417,13 @@ public class SubQueryInFromTests {
 
 					final Query<Tuple> query = session.createQuery(
 							"select c.name, a.contact.name from Contact c " +
-							"left join lateral (" +
-							"select alt as contact " +
-							"from c.alternativeContact alt " +
-							"order by alt.name.first desc " +
-							"limit 1" +
-							") a " +
-							"where c.id = 1",
+									"left join lateral (" +
+									"select alt as contact " +
+									"from c.alternativeContact alt " +
+									"order by alt.name.first desc " +
+									"limit 1" +
+									") a " +
+									"where c.id = 1",
 							Tuple.class
 					);
 					verifySame(

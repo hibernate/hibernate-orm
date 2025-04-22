@@ -76,7 +76,7 @@ public class XmlFunctionTests {
 					entity.xml.put( "theString", "abc" );
 					entity.xml.put( "theBoolean", true );
 					entity.xml.put( "theNull", null );
-					entity.xml.put( "theArray", new String[] {"a", "b", "c"} );
+					entity.xml.put( "theArray", new String[] { "a", "b", "c" } );
 					entity.xml.put( "theObject", new HashMap<>( entity.xml ) );
 					entity.xml.put(
 							"theNestedObjects",
@@ -121,12 +121,12 @@ public class XmlFunctionTests {
 				session -> {
 					Tuple tuple = session.createQuery(
 							"select " +
-							"xmlelement(name empty), " +
-							"xmlelement(name `the-element`), " +
-							"xmlelement(name myElement, 'myContent'), " +
-							"xmlelement(name myElement, xmlattributes('123' as attr1)), " +
-							"xmlelement(name myElement, xmlattributes('123' as attr1, '456' as `attr-2`)), " +
-							"xmlelement(name myElement, xmlattributes('123' as attr1), 'myContent', xmlelement(name empty))",
+									"xmlelement(name empty), " +
+									"xmlelement(name `the-element`), " +
+									"xmlelement(name myElement, 'myContent'), " +
+									"xmlelement(name myElement, xmlattributes('123' as attr1)), " +
+									"xmlelement(name myElement, xmlattributes('123' as attr1, '456' as `attr-2`)), " +
+									"xmlelement(name myElement, xmlattributes('123' as attr1), 'myContent', xmlelement(name empty))",
 							Tuple.class
 					).getSingleResult();
 					assertXmlEquals( "<empty/>", tuple.get( 0, String.class ) );
@@ -149,8 +149,8 @@ public class XmlFunctionTests {
 				session -> {
 					Tuple tuple = session.createQuery(
 							"select " +
-							"xmlcomment('Abc'), " +
-							"xmlcomment('<>')",
+									"xmlcomment('Abc'), " +
+									"xmlcomment('<>')",
 							Tuple.class
 					).getSingleResult();
 					assertXmlEquals( "<!--Abc--><a/>", tuple.get( 0, String.class ) + "<a/>" );
@@ -166,8 +166,8 @@ public class XmlFunctionTests {
 				session -> {
 					Tuple tuple = session.createQuery(
 							"select xmlforest(123 as e1, 'text' as e2)," +
-							"xmlforest(e.id, e.theString) " +
-							"from EntityOfBasics e where e.id = 1",
+									"xmlforest(e.id, e.theString) " +
+									"from EntityOfBasics e where e.id = 1",
 							Tuple.class
 					).getSingleResult();
 					assertXmlEquals(
@@ -189,8 +189,8 @@ public class XmlFunctionTests {
 				session -> {
 					Tuple tuple = session.createQuery(
 							"select xmlconcat(xmlelement(name e1, 123), xmlelement(name e2, 'text'))," +
-							"xmlconcat(xmlelement(name id, e.id), xmlelement(name theString, e.theString)) " +
-							"from EntityOfBasics e where e.id = 1",
+									"xmlconcat(xmlelement(name id, e.id), xmlelement(name theString, e.theString)) " +
+									"from EntityOfBasics e where e.id = 1",
 							Tuple.class
 					).getSingleResult();
 					assertXmlEquals(
@@ -254,7 +254,7 @@ public class XmlFunctionTests {
 				session -> {
 					Tuple tuple = session.createQuery(
 							"select xmlagg(xmlelement(name a, e.theString) order by e.id) " +
-							"from from EntityOfBasics e",
+									"from from EntityOfBasics e",
 							Tuple.class
 					).getSingleResult();
 					assertXmlEquals( "<r><a>Dog</a><a>Cat</a></r>", "<r>" + tuple.get( 0, String.class ) + "</r>" );

@@ -290,8 +290,8 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 		final Expression lowerBound = replaceExpression( betweenPredicate.getLowerBound() );
 		final Expression upperBound = replaceExpression( betweenPredicate.getUpperBound() );
 		if ( expression != betweenPredicate.getExpression()
-			 || lowerBound != betweenPredicate.getLowerBound()
-			 || upperBound != betweenPredicate.getUpperBound() ) {
+				|| lowerBound != betweenPredicate.getLowerBound()
+				|| upperBound != betweenPredicate.getUpperBound() ) {
 			returnedNode = new BetweenPredicate(
 					expression,
 					lowerBound,
@@ -355,7 +355,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 		final Expression testExpression = replaceExpression( inSubQueryPredicate.getTestExpression() );
 		final SelectStatement subQuery = replaceExpression( inSubQueryPredicate.getSubQuery() );
 		if ( testExpression != inSubQueryPredicate.getTestExpression()
-			 || subQuery != inSubQueryPredicate.getSubQuery() ) {
+				|| subQuery != inSubQueryPredicate.getSubQuery() ) {
 			returnedNode = new InSubQueryPredicate(
 					testExpression,
 					subQuery,
@@ -416,8 +416,8 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 				? null
 				: replaceExpression( likePredicate.getEscapeCharacter() );
 		if ( matchExpression != likePredicate.getMatchExpression()
-			 || patternExpression != likePredicate.getPattern()
-			 || escapeExpression != likePredicate.getEscapeCharacter() ) {
+				|| patternExpression != likePredicate.getPattern()
+				|| escapeExpression != likePredicate.getEscapeCharacter() ) {
 			returnedNode = new LikePredicate(
 					matchExpression,
 					patternExpression,
@@ -479,7 +479,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 		final Expression lhs = replaceExpression( comparisonPredicate.getLeftHandExpression() );
 		final Expression rhs = replaceExpression( comparisonPredicate.getRightHandExpression() );
 		if ( lhs != comparisonPredicate.getLeftHandExpression()
-			 || rhs != comparisonPredicate.getRightHandExpression() ) {
+				|| rhs != comparisonPredicate.getRightHandExpression() ) {
 			returnedNode = new ComparisonPredicate(
 					lhs,
 					comparisonPredicate.getOperator(),
@@ -494,8 +494,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate) {
-		final SelfRenderingExpression selfRenderingExpression = replaceExpression(
-				selfRenderingPredicate.getSelfRenderingExpression() );
+		final SelfRenderingExpression selfRenderingExpression = replaceExpression( selfRenderingPredicate.getSelfRenderingExpression() );
 		if ( selfRenderingExpression != selfRenderingPredicate.getSelfRenderingExpression() ) {
 			returnedNode = new SelfRenderingPredicate(
 					selfRenderingExpression

@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.regex.Pattern;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceException;
@@ -54,7 +53,7 @@ public class SchemaDatabaseFileGenerationFailureTest {
 	@BeforeEach
 	public void setUp() throws IOException, SQLException {
 		connection = Mockito.mock( Connection.class );
-		when( connection.getAutoCommit() ).thenReturn( true );
+		when ( connection.getAutoCommit() ).thenReturn( true );
 		Statement statement = Mockito.mock( Statement.class );
 		when( connection.createStatement() ).thenReturn( statement );
 		when( statement.execute( anyString() ) ).thenThrow( new SQLException( "Expected" ) );
@@ -76,8 +75,7 @@ public class SchemaDatabaseFileGenerationFailureTest {
 	@JiraKey(value = "HHH-12192")
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true,
 			reason = "on postgres we send 'set client_min_messages = WARNING'")
-	@SkipForDialect(dialectClass = GaussDBDialect.class,
-			reason = "type:resolved.on gauss we send 'set client_min_messages = WARNING'")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.on gauss we send 'set client_min_messages = WARNING'")
 	public void testErrorMessageContainsTheFailingDDLCommand() {
 		try {
 			entityManagerFactoryBuilder.generateSchema();
@@ -120,8 +118,7 @@ public class SchemaDatabaseFileGenerationFailureTest {
 	}
 
 	private PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
-		return new EntityManagerFactoryBasedFunctionalTest.TestingPersistenceUnitDescriptorImpl(
-				getClass().getSimpleName() );
+		return new EntityManagerFactoryBasedFunctionalTest.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
 	}
 
 	private Map getConfig() {
@@ -132,7 +129,7 @@ public class SchemaDatabaseFileGenerationFailureTest {
 		config.put( AvailableSettings.HBM2DDL_HALT_ON_ERROR, true );
 		ArrayList<Class> classes = new ArrayList<>();
 
-		classes.addAll( Arrays.asList( new Class[] {TestEntity.class} ) );
+		classes.addAll( Arrays.asList( new Class[] { TestEntity.class } ) );
 		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		return config;
 	}

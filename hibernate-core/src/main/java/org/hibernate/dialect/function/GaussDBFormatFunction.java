@@ -59,8 +59,9 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
  * A format function with support for composite temporal expressions.
  *
  * @author Christian Beikov
- * <p>
+ *
  * Notes: Original code of this class is based on FormatFunction.
+ *
  */
 public class GaussDBFormatFunction extends AbstractSqmFunctionDescriptor implements FunctionRenderer {
 
@@ -130,7 +131,7 @@ public class GaussDBFormatFunction extends AbstractSqmFunctionDescriptor impleme
 
 	private boolean isTimeTemporal(SqlAstNode expression) {
 		if ( expression instanceof Expression ) {
-			final JdbcMappingContainer expressionType = ((Expression) expression).getExpressionType();
+			final JdbcMappingContainer expressionType = ( (Expression) expression ).getExpressionType();
 			if ( expressionType.getJdbcTypeCount() == 1 ) {
 				switch ( expressionType.getSingleJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
 					case SqlTypes.TIME:
@@ -210,7 +211,7 @@ public class GaussDBFormatFunction extends AbstractSqmFunctionDescriptor impleme
 				// SqlTupleContainer means this is a composite temporal type i.e. uses `@TimeZoneStorage(COLUMN)`
 				// The support for this kind of type requires that we inject the offset from the second column
 				// as literal into the pattern, and apply the formatting on the date time part
-				final SqlTuple sqlTuple = ((SqlTupleContainer) expression).getSqlTuple();
+				final SqlTuple sqlTuple = ( (SqlTupleContainer) expression ).getSqlTuple();
 				final FunctionRenderer timestampaddFunction = getFunction( walker, "timestampadd" );
 				final BasicType<Integer> integerType = typeConfiguration.getBasicTypeRegistry()
 						.resolve( StandardBasicTypes.INTEGER );
@@ -494,10 +495,10 @@ public class GaussDBFormatFunction extends AbstractSqmFunctionDescriptor impleme
 						concatFunction,
 						stringType,
 						concat(
-								concatFunction,
-								stringType,
-								concat( concatFunction, stringType, caseSearchedExpression, hours ),
-								minuteStart
+							concatFunction,
+							stringType,
+							concat( concatFunction, stringType, caseSearchedExpression, hours ),
+							minuteStart
 						),
 						minutes
 				);
@@ -630,16 +631,16 @@ public class GaussDBFormatFunction extends AbstractSqmFunctionDescriptor impleme
 				return expression2;
 			}
 			else if ( expression instanceof SelfRenderingFunctionSqlAstExpression selfRenderingFunction
-					  && "concat".equals( selfRenderingFunction.getFunctionName() ) ) {
+					&& "concat".equals( selfRenderingFunction.getFunctionName() ) ) {
 				final List<SqlAstNode> list = (List<SqlAstNode>) selfRenderingFunction.getArguments();
 				final SqlAstNode lastOperand = list.get( list.size() - 1 );
 				if ( expression2 instanceof QueryLiteral<?> literal2
-					 && lastOperand instanceof QueryLiteral<?> literalOperand ) {
+						&& lastOperand instanceof QueryLiteral<?> literalOperand ) {
 					list.set(
 							list.size() - 1,
 							new QueryLiteral<>(
 									literalOperand.getLiteralValue().toString()
-									+ literal2.getLiteralValue().toString(),
+											+ literal2.getLiteralValue().toString(),
 									stringType
 							)
 					);
@@ -650,16 +651,16 @@ public class GaussDBFormatFunction extends AbstractSqmFunctionDescriptor impleme
 				return expression;
 			}
 			else if ( expression2 instanceof SelfRenderingFunctionSqlAstExpression selfRenderingFunction
-					  && "concat".equals( selfRenderingFunction.getFunctionName() ) ) {
+					&& "concat".equals( selfRenderingFunction.getFunctionName() ) ) {
 				final List<SqlAstNode> list = (List<SqlAstNode>) selfRenderingFunction.getArguments();
 				final SqlAstNode firstOperand = list.get( 0 );
 				if ( expression instanceof QueryLiteral<?> literal
-					 && firstOperand instanceof QueryLiteral<?> literalOperand ) {
+						&& firstOperand instanceof QueryLiteral<?> literalOperand ) {
 					list.set(
 							list.size() - 1,
 							new QueryLiteral<>(
 									literal.getLiteralValue().toString() +
-									literalOperand.getLiteralValue().toString(),
+											literalOperand.getLiteralValue().toString(),
 									stringType
 							)
 					);
@@ -670,10 +671,10 @@ public class GaussDBFormatFunction extends AbstractSqmFunctionDescriptor impleme
 				return expression2;
 			}
 			else if ( expression instanceof QueryLiteral<?> literal
-					  && expression2 instanceof QueryLiteral<?> literal2 ) {
+					&& expression2 instanceof QueryLiteral<?> literal2 ) {
 				return new QueryLiteral<>(
 						literal.getLiteralValue().toString() +
-						literal2.getLiteralValue().toString(),
+								literal2.getLiteralValue().toString(),
 						stringType
 				);
 			}
@@ -682,12 +683,12 @@ public class GaussDBFormatFunction extends AbstractSqmFunctionDescriptor impleme
 				list.add( expression );
 				list.add( expression2 );
 				return new SelfRenderingFunctionSqlAstExpression(
-						"concat",
-						concatFunction,
-						list,
-						stringType,
-						stringType
-				);
+							"concat",
+							concatFunction,
+							list,
+							stringType,
+							stringType
+					);
 			}
 		}
 
@@ -697,26 +698,26 @@ public class GaussDBFormatFunction extends AbstractSqmFunctionDescriptor impleme
 			BinaryArithmeticExpression divisionExpr = new BinaryArithmeticExpression(
 					offsetExpression,
 					DIVIDE_PORTABLE,
-					new QueryLiteral<>( 3600, integerType ),
+					new QueryLiteral<>(3600, integerType),
 					integerType
 			);
-			return floor( divisionExpr );
+			return floor(divisionExpr);
 		}
 
 		private Expression getMinutes(
 				BasicType<Integer> integerType,
-				Expression offsetExpression) {
+				Expression offsetExpression){
 			return new BinaryArithmeticExpression(
-					abs( new BinaryArithmeticExpression(
-							offsetExpression,
-							MODULO,
-							new QueryLiteral<>( 3600, integerType ),
-							integerType
-					) ),
-					DIVIDE_PORTABLE,
-					new QueryLiteral<>( 60, integerType ),
-					integerType
-			);
+					abs(new BinaryArithmeticExpression(
+											offsetExpression,
+											MODULO,
+											new QueryLiteral<>( 3600, integerType ),
+											integerType
+									)),
+									DIVIDE_PORTABLE,
+									new QueryLiteral<>( 60, integerType ),
+									integerType
+							);
 		}
 
 		private Expression abs(Expression expression) {
@@ -751,15 +752,15 @@ public class GaussDBFormatFunction extends AbstractSqmFunctionDescriptor impleme
 	}
 
 	private static CaseSearchedExpression zoneOffsetSeconds(BasicType<String> stringType, BasicType<Integer> integerType, Expression offsetExpression) {
-		final CaseSearchedExpression caseSearchedExpression = new CaseSearchedExpression( stringType );
+		final CaseSearchedExpression caseSearchedExpression = new CaseSearchedExpression(stringType);
 		caseSearchedExpression.getWhenFragments().add(
 				new CaseSearchedExpression.WhenFragment(
 						new ComparisonPredicate(
 								offsetExpression,
 								LESS_THAN_OR_EQUAL,
-								new QueryLiteral<>( -36000, integerType )
+								new QueryLiteral<>( -36000, integerType)
 						),
-						new QueryLiteral<>( "-", stringType )
+						new QueryLiteral<>( "-", stringType)
 				)
 		);
 		caseSearchedExpression.getWhenFragments().add(
@@ -767,9 +768,9 @@ public class GaussDBFormatFunction extends AbstractSqmFunctionDescriptor impleme
 						new ComparisonPredicate(
 								offsetExpression,
 								LESS_THAN,
-								new QueryLiteral<>( 0, integerType )
+								new QueryLiteral<>( 0, integerType)
 						),
-						new QueryLiteral<>( "-0", stringType )
+						new QueryLiteral<>( "-0", stringType)
 				)
 		);
 		caseSearchedExpression.getWhenFragments().add(
@@ -777,12 +778,12 @@ public class GaussDBFormatFunction extends AbstractSqmFunctionDescriptor impleme
 						new ComparisonPredicate(
 								offsetExpression,
 								GREATER_THAN_OR_EQUAL,
-								new QueryLiteral<>( 36000, integerType )
+								new QueryLiteral<>( 36000, integerType)
 						),
-						new QueryLiteral<>( "+", stringType )
+						new QueryLiteral<>( "+", stringType)
 				)
 		);
-		caseSearchedExpression.otherwise( new QueryLiteral<>( "+0", stringType ) );
+		caseSearchedExpression.otherwise( new QueryLiteral<>( "+0", stringType) );
 		return caseSearchedExpression;
 	}
 

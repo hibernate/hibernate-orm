@@ -89,7 +89,7 @@ public class JsonFunctionTests {
 					entity.json.put( "theString", "abc" );
 					entity.json.put( "theBoolean", true );
 					entity.json.put( "theNull", null );
-					entity.json.put( "theArray", new String[] {"a", "b", "c"} );
+					entity.json.put( "theArray", new String[] { "a", "b", "c" } );
 					entity.json.put( "theObject", new HashMap<>( entity.json ) );
 					entity.json.put(
 							"theNestedObjects",
@@ -134,18 +134,18 @@ public class JsonFunctionTests {
 				session -> {
 					Tuple tuple = session.createQuery(
 							"select " +
-							"json_value(e.json, '$.theInt'), " +
-							"json_value(e.json, '$.theFloat'), " +
-							"json_value(e.json, '$.theString'), " +
-							"json_value(e.json, '$.theBoolean'), " +
-							"json_value(e.json, '$.theNull'), " +
-							"json_value(e.json, '$.theArray'), " +
-							"json_value(e.json, '$.theArray[1]'), " +
-							"json_value(e.json, '$.theObject'), " +
-							"json_value(e.json, '$.theObject.theInt'), " +
-							"json_value(e.json, '$.theObject.theArray[2]') " +
-							"from JsonHolder e " +
-							"where e.id = 1L",
+									"json_value(e.json, '$.theInt'), " +
+									"json_value(e.json, '$.theFloat'), " +
+									"json_value(e.json, '$.theString'), " +
+									"json_value(e.json, '$.theBoolean'), " +
+									"json_value(e.json, '$.theNull'), " +
+									"json_value(e.json, '$.theArray'), " +
+									"json_value(e.json, '$.theArray[1]'), " +
+									"json_value(e.json, '$.theObject'), " +
+									"json_value(e.json, '$.theObject.theInt'), " +
+									"json_value(e.json, '$.theObject.theArray[2]') " +
+									"from JsonHolder e " +
+									"where e.id = 1L",
 							Tuple.class
 					).getSingleResult();
 					assertEquals( entity.json.get( "theInt" ).toString(), tuple.get( 0 ) );
@@ -155,11 +155,11 @@ public class JsonFunctionTests {
 					assertNull( tuple.get( 4 ) );
 					// PostgreSQL emulation returns non-null value
 //					assertNull( tuple.get( 5 ) );
-					assertEquals( ((String[]) entity.json.get( "theArray" ))[1], tuple.get( 6 ) );
+					assertEquals( ( (String[]) entity.json.get( "theArray" ) )[1], tuple.get( 6 ) );
 					// PostgreSQL emulation returns non-null value
 //					assertNull( tuple.get( 7 ) );
 					assertEquals( entity.json.get( "theInt" ).toString(), tuple.get( 8 ) );
-					assertEquals( ((String[]) entity.json.get( "theArray" ))[2], tuple.get( 9 ) );
+					assertEquals( ( (String[]) entity.json.get( "theArray" ) )[2], tuple.get( 9 ) );
 				}
 		);
 	}
@@ -199,11 +199,11 @@ public class JsonFunctionTests {
 				session -> {
 					Tuple tuple = session.createQuery(
 							"select " +
-							"json_query(e.json, '$.theArray'), " +
-							"json_query(e.json, '$.theNestedObjects'), " +
-							"json_query(e.json, '$.theNestedObjects[$idx]' passing :idx as idx with wrapper) " +
-							"from JsonHolder e " +
-							"where e.id = 1L",
+									"json_query(e.json, '$.theArray'), " +
+									"json_query(e.json, '$.theNestedObjects'), " +
+									"json_query(e.json, '$.theNestedObjects[$idx]' passing :idx as idx with wrapper) " +
+									"from JsonHolder e " +
+									"where e.id = 1L",
 							Tuple.class
 					).setParameter( "idx", 0 ).getSingleResult();
 					assertEquals( parseJson( "[\"a\",\"b\",\"c\"]" ), parseJson( tuple.get( 0, String.class ) ) );
@@ -228,9 +228,9 @@ public class JsonFunctionTests {
 				session -> {
 					Tuple tuple = session.createQuery(
 							"select " +
-							"json_query(e.json, '$.theNestedObjects[*].id' with wrapper) " +
-							"from JsonHolder e " +
-							"where e.id = 1L",
+									"json_query(e.json, '$.theNestedObjects[*].id' with wrapper) " +
+									"from JsonHolder e " +
+									"where e.id = 1L",
 							Tuple.class
 					).getSingleResult();
 					assertEquals( parseJson( "[1,2,3]" ), parseJson( tuple.get( 0, String.class ) ) );
@@ -245,23 +245,23 @@ public class JsonFunctionTests {
 				session -> {
 					Tuple tuple = session.createQuery(
 							"select " +
-							"json_array(), " +
-							"json_array(1, 2, 3), " +
-							"json_array(0.1, 0.2, 0.3), " +
-							"json_array('a', 'b', 'c'), " +
-							"json_array(true, false, true), " +
-							"json_array(null, null null on null), " +
-							"json_array(json_array(), json_array(1), json_array('a'), null null on null)",
+									"json_array(), " +
+									"json_array(1, 2, 3), " +
+									"json_array(0.1, 0.2, 0.3), " +
+									"json_array('a', 'b', 'c'), " +
+									"json_array(true, false, true), " +
+									"json_array(null, null null on null), " +
+									"json_array(json_array(), json_array(1), json_array('a'), null null on null)",
 							Tuple.class
 					).getSingleResult();
 					assertEquals( "[]", tuple.get( 0 ) );
-					assertArrayEquals( new Integer[] {1, 2, 3}, parseArray( tuple.get( 1 ).toString() ) );
-					assertArrayEquals( new Double[] {0.1, 0.2, 0.3}, parseArray( tuple.get( 2 ).toString() ) );
-					assertArrayEquals( new String[] {"a", "b", "c"}, parseArray( tuple.get( 3 ).toString() ) );
-					assertArrayEquals( new Boolean[] {true, false, true}, parseArray( tuple.get( 4 ).toString() ) );
-					assertArrayEquals( new Object[] {null, null}, parseArray( tuple.get( 5 ).toString() ) );
+					assertArrayEquals( new Integer[] { 1, 2, 3 }, parseArray( tuple.get( 1 ).toString() ) );
+					assertArrayEquals( new Double[] { 0.1, 0.2, 0.3 }, parseArray( tuple.get( 2 ).toString() ) );
+					assertArrayEquals( new String[] { "a", "b", "c" }, parseArray( tuple.get( 3 ).toString() ) );
+					assertArrayEquals( new Boolean[] { true, false, true }, parseArray( tuple.get( 4 ).toString() ) );
+					assertArrayEquals( new Object[] { null, null }, parseArray( tuple.get( 5 ).toString() ) );
 					assertArrayEquals(
-							new Object[] {List.of(), List.of( 1 ), List.of( "a" ), null},
+							new Object[] { List.of(), List.of( 1 ), List.of( "a" ), null },
 							parseArray( tuple.get( 6 ).toString() )
 					);
 				}
@@ -275,19 +275,19 @@ public class JsonFunctionTests {
 				session -> {
 					String json = session.createQuery(
 							"select json_object(" +
-							"'theInt', 1, " +
-							"'theFloat', 0.1, " +
-							"'theString', 'abc', " +
-							"'theBoolean', true, " +
-							"'theNull', null, " +
-							"'theObject', json_object(" +
-							"    'theInt', 1, " +
-							"    'theFloat', 0.1, " +
-							"    'theString', 'abc', " +
-							"    'theBoolean', true, " +
-							"    'theNull', null " +
-							"    absent on null" +
-							")) ",
+									"'theInt', 1, " +
+									"'theFloat', 0.1, " +
+									"'theString', 'abc', " +
+									"'theBoolean', true, " +
+									"'theNull', null, " +
+									"'theObject', json_object(" +
+									"    'theInt', 1, " +
+									"    'theFloat', 0.1, " +
+									"    'theString', 'abc', " +
+									"    'theBoolean', true, " +
+									"    'theNull', null " +
+									"    absent on null" +
+									")) ",
 							String.class
 					).getSingleResult();
 					Map<String, Object> map = parseObject( json );
@@ -309,7 +309,7 @@ public class JsonFunctionTests {
 					assertEquals( entity.json.get( "theString" ), nested.get( "theString" ) );
 					assertEquals( entity.json.get( "theBoolean" ), nested.get( "theBoolean" ) );
 					// HSQLDB bug: https://sourceforge.net/p/hsqldb/bugs/1720/
-					if ( !(DialectContext.getDialect() instanceof HSQLDialect) ) {
+					if ( !( DialectContext.getDialect() instanceof HSQLDialect ) ) {
 						assertFalse( nested.containsKey( "theNull" ) );
 					}
 					assertNull( nested.get( "theNull" ) );
@@ -325,11 +325,11 @@ public class JsonFunctionTests {
 				session -> {
 					Tuple tuple = session.createQuery(
 							"select json_object(" +
-							"'a', json_array( 1, 2, 3 ), " +
-							"'b', json_object(" +
-							"    'c', json_array( 4, 5, 6 ) " +
-							")), " +
-							"json_array(json_object('a', 1), json_object('b', 'c'), json_object('c', null))",
+									"'a', json_array( 1, 2, 3 ), " +
+									"'b', json_object(" +
+									"    'c', json_array( 4, 5, 6 ) " +
+									")), " +
+									"json_array(json_object('a', 1), json_object('b', 'c'), json_object('c', null))",
 							Tuple.class
 					).getSingleResult();
 					Map<String, Object> map = parseObject( tuple.get( 0 ).toString() );
@@ -343,8 +343,8 @@ public class JsonFunctionTests {
 					assertInstanceOf( Map.class, array[0] );
 					assertInstanceOf( Map.class, array[1] );
 					assertInstanceOf( Map.class, array[2] );
-					assertEquals( 1, ((Map<String, Object>) array[0]).get( "a" ) );
-					assertEquals( "c", ((Map<String, Object>) array[1]).get( "b" ) );
+					assertEquals( 1, ( (Map<String, Object>) array[0] ).get( "a" ) );
+					assertEquals( "c", ( (Map<String, Object>) array[1] ).get( "b" ) );
 					Map<String, Object> nested2 = (Map<String, Object>) array[2];
 					assertTrue( nested2.containsKey( "c" ) );
 					assertNull( nested2.get( "c" ) );
@@ -354,19 +354,18 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonExists.class)
-	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 21, matchSubTypes = true,
-			reason = "Oracle bug in versions before 23")
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 21, matchSubTypes = true, reason = "Oracle bug in versions before 23")
 	public void testJsonExists(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					Tuple tuple = session.createQuery(
 							"select " +
-							"json_exists(e.json, '$.theUnknown'), " +
-							"json_exists(e.json, '$.theInt'), " +
-							"json_exists(e.json, '$.theArray[0]'), " +
-							"json_exists(e.json, '$.theArray[$idx]' passing :idx as idx) " +
-							"from JsonHolder e " +
-							"where e.id = 1L",
+									"json_exists(e.json, '$.theUnknown'), " +
+									"json_exists(e.json, '$.theInt'), " +
+									"json_exists(e.json, '$.theArray[0]'), " +
+									"json_exists(e.json, '$.theArray[$idx]' passing :idx as idx) " +
+									"from JsonHolder e " +
+									"where e.id = 1L",
 							Tuple.class
 					).setParameter( "idx", 3 ).getSingleResult();
 					assertEquals( false, tuple.get( 0 ) );
@@ -384,7 +383,7 @@ public class JsonFunctionTests {
 				session -> {
 					String jsonArray = session.createQuery(
 							"select json_arrayagg(e.theString) " +
-							"from EntityOfBasics e",
+									"from EntityOfBasics e",
 							String.class
 					).getSingleResult();
 					Object[] array = parseArray( jsonArray );
@@ -402,11 +401,11 @@ public class JsonFunctionTests {
 				session -> {
 					String jsonArray = session.createQuery(
 							"select json_arrayagg(e.theString order by e.theString)" +
-							"from EntityOfBasics e",
+									"from EntityOfBasics e",
 							String.class
 					).getSingleResult();
 					Object[] array = parseArray( jsonArray );
-					assertArrayEquals( new Object[] {"Cat", "Dog"}, array );
+					assertArrayEquals( new Object[] { "Cat", "Dog" }, array );
 				}
 		);
 	}
@@ -418,7 +417,7 @@ public class JsonFunctionTests {
 				session -> {
 					String jsonArray = session.createQuery(
 							"select json_objectagg(e.theString value e.id) " +
-							"from EntityOfBasics e",
+									"from EntityOfBasics e",
 							String.class
 					).getSingleResult();
 					Map<String, Object> object = parseObject( jsonArray );
@@ -437,7 +436,7 @@ public class JsonFunctionTests {
 				session -> {
 					String jsonArray = session.createQuery(
 							"select json_objectagg(e.theString value e.theUuid) " +
-							"from EntityOfBasics e",
+									"from EntityOfBasics e",
 							String.class
 					).getSingleResult();
 					Map<String, Object> object = parseObject( jsonArray );
@@ -454,7 +453,7 @@ public class JsonFunctionTests {
 				session -> {
 					String jsonArray = session.createQuery(
 							"select json_objectagg(e.theString value e.theUuid null on null) " +
-							"from EntityOfBasics e",
+									"from EntityOfBasics e",
 							String.class
 					).getSingleResult();
 					Map<String, Object> object = parseObject( jsonArray );
@@ -468,18 +467,12 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObjectAgg.class)
-	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true,
-			reason = "MySQL has no way to throw an error on duplicate json object keys. The last one always wins.")
-	@SkipForDialect(dialectClass = SQLServerDialect.class,
-			reason = "SQL Server has no way to throw an error on duplicate json object keys.")
-	@SkipForDialect(dialectClass = HANADialect.class,
-			reason = "HANA has no way to throw an error on duplicate json object keys.")
-	@SkipForDialect(dialectClass = DB2Dialect.class,
-			reason = "DB2 has no way to throw an error on duplicate json object keys.")
-	@SkipForDialect(dialectClass = CockroachDialect.class,
-			reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 15, matchSubTypes = true,
-			reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
+	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL has no way to throw an error on duplicate json object keys. The last one always wins.")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server has no way to throw an error on duplicate json object keys.")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA has no way to throw an error on duplicate json object keys.")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 has no way to throw an error on duplicate json object keys.")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 15, matchSubTypes = true, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.not supported")
 	public void testJsonObjectAggUniqueKeys(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -487,7 +480,7 @@ public class JsonFunctionTests {
 					try {
 						session.createQuery(
 								"select json_objectagg(str(e.theInteger) value e.theString with unique keys) " +
-								"from EntityOfBasics e",
+										"from EntityOfBasics e",
 								String.class
 						).getSingleResult();
 						fail( "Should fail because keys are not unique" );
@@ -642,8 +635,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonMergepatch.class)
-	@SkipForDialect(dialectClass = GaussDBDialect.class,
-			reason = "type:resolved.gauss has different function definition")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss has different function definition")
 	public void testJsonMergepatch(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

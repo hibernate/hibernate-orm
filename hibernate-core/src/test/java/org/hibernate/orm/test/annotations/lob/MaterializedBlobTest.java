@@ -32,26 +32,24 @@ import static org.junit.Assert.assertTrue;
 public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {MaterializedBlobEntity.class};
+		return new Class<?>[] { MaterializedBlobEntity.class };
 	}
 
 	@Test
-	@SkipForDialect(value = CockroachDialect.class,
-			comment = "Blob in CockroachDB is same as a varbinary, to assertions will fail")
+	@SkipForDialect(value = CockroachDialect.class, comment = "Blob in CockroachDB is same as a varbinary, to assertions will fail")
 	public void testTypeSelection() {
 		final EntityPersister entityDescriptor = sessionFactory().getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( MaterializedBlobEntity.class.getName() );
 		final AttributeMapping theBytesAttr = entityDescriptor.findAttributeMapping( "theBytes" );
 		assertThat( theBytesAttr ).isInstanceOf( BasicValuedModelPart.class );
-		final JdbcMapping mapping = ((BasicValuedModelPart) theBytesAttr).getJdbcMapping();
+		final JdbcMapping mapping = ( (BasicValuedModelPart) theBytesAttr ).getJdbcMapping();
 		assertTrue( mapping.getJavaTypeDescriptor() instanceof PrimitiveByteArrayJavaType );
 		assertTrue( mapping.getJdbcType() instanceof BlobJdbcType );
 	}
 
 	@Test
-	@org.hibernate.testing.orm.junit.SkipForDialect(dialectClass = GaussDBDialect.class,
-			reason = "opengauss don't support")
+	@org.hibernate.testing.orm.junit.SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testSaving() {
 		byte[] testData = "test data".getBytes();
 

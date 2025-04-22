@@ -11,7 +11,7 @@ import org.hibernate.dialect.GaussDBDialect;
  * Sequence support for {@link GaussDBDialect}.
  *
  * @author liubao
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLAggregateSupport.
  */
 public class GaussDBSequenceSupport implements SequenceSupport {

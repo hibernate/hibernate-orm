@@ -55,7 +55,7 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 )
 @SessionFactory
 @BytecodeEnhanced
-@CustomEnhancementContext({DirtyCheckEnhancementContext.class, NoDirtyCheckEnhancementContext.class})
+@CustomEnhancementContext({ DirtyCheckEnhancementContext.class, NoDirtyCheckEnhancementContext.class })
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 public class LoadAndUpdateEntitiesWithCollectionsTest {

@@ -32,7 +32,7 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "Looks like SERIALIZABLE is not supported")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "Looks like SERIALIZABLE is not supported")
 	public void testSettingIsolationAsNumeric() throws Exception {
 		Properties properties = Environment.getProperties();
 		augmentConfigurationSettings( properties );
@@ -41,10 +41,10 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 		ConnectionProvider provider = getConnectionProviderUnderTest();
 
 		try {
-			((Configurable) provider).configure( PropertiesHelper.map( properties ) );
+			( (Configurable) provider ).configure( PropertiesHelper.map( properties ) );
 
 			if ( provider instanceof Startable ) {
-				((Startable) provider).start();
+				( (Startable) provider ).start();
 			}
 
 			Connection connection = provider.getConnection();
@@ -52,12 +52,12 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 			provider.closeConnection( connection );
 		}
 		finally {
-			((Stoppable) provider).stop();
+			( (Stoppable) provider ).stop();
 		}
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "Looks like SERIALIZABLE is not supported")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "Looks like SERIALIZABLE is not supported")
 	public void testSettingIsolationAsNumericString() throws Exception {
 		Properties properties = Environment.getProperties();
 		augmentConfigurationSettings( properties );
@@ -66,10 +66,10 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 		ConnectionProvider provider = getConnectionProviderUnderTest();
 
 		try {
-			((Configurable) provider).configure( PropertiesHelper.map( properties ) );
+			( (Configurable) provider ).configure( PropertiesHelper.map( properties ) );
 
 			if ( provider instanceof Startable ) {
-				((Startable) provider).start();
+				( (Startable) provider ).start();
 			}
 
 			Connection connection = provider.getConnection();
@@ -77,12 +77,12 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 			provider.closeConnection( connection );
 		}
 		finally {
-			((Stoppable) provider).stop();
+			( (Stoppable) provider ).stop();
 		}
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "Looks like SERIALIZABLE is not supported")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "Looks like SERIALIZABLE is not supported")
 	public void testSettingIsolationAsName() throws Exception {
 		Properties properties = Environment.getProperties();
 		augmentConfigurationSettings( properties );
@@ -91,10 +91,10 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 		ConnectionProvider provider = getConnectionProviderUnderTest();
 
 		try {
-			((Configurable) provider).configure( PropertiesHelper.map( properties ) );
+			( (Configurable) provider ).configure( PropertiesHelper.map( properties ) );
 
 			if ( provider instanceof Startable ) {
-				((Startable) provider).start();
+				( (Startable) provider ).start();
 			}
 
 			Connection connection = provider.getConnection();
@@ -102,12 +102,12 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 			provider.closeConnection( connection );
 		}
 		finally {
-			((Stoppable) provider).stop();
+			( (Stoppable) provider ).stop();
 		}
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "Looks like SERIALIZABLE is not supported")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "Looks like SERIALIZABLE is not supported")
 	public void testSettingIsolationAsNameAlt() throws Exception {
 		Properties properties = Environment.getProperties();
 		augmentConfigurationSettings( properties );
@@ -116,10 +116,10 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 		ConnectionProvider provider = getConnectionProviderUnderTest();
 
 		try {
-			((Configurable) provider).configure( PropertiesHelper.map( properties ) );
+			( (Configurable) provider ).configure( PropertiesHelper.map( properties ) );
 
 			if ( provider instanceof Startable ) {
-				((Startable) provider).start();
+				( (Startable) provider ).start();
 			}
 
 			Connection connection = provider.getConnection();
@@ -127,7 +127,7 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 			provider.closeConnection( connection );
 		}
 		finally {
-			((Stoppable) provider).stop();
+			( (Stoppable) provider ).stop();
 		}
 	}
 }

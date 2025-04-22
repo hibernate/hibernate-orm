@@ -16,7 +16,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * Factory for {@link GaussDBArrayJdbcType}.
  *
  * @author liubao
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLArrayJdbcTypeConstructor.
  */
 public class GaussDBArrayJdbcTypeConstructor implements JdbcTypeConstructor {

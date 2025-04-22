@@ -12,8 +12,9 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 
 /**
+ *
  * @author liubao
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLCastingJsonJdbcType.
  */
 public class GaussDBCastingJsonJdbcType extends JsonJdbcType {

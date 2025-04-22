@@ -90,8 +90,7 @@ public class JsonWithArrayEmbeddableTest {
 					jsonHolder.setAggregate( EmbeddableWithArrayAggregate.createAggregate2() );
 					entityManager.flush();
 					entityManager.clear();
-					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate2(),
-							entityManager.find( JsonHolder.class, 1L ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate2(), entityManager.find( JsonHolder.class, 1L ).getAggregate() );
 				}
 		);
 	}
@@ -100,12 +99,10 @@ public class JsonWithArrayEmbeddableTest {
 	public void testFetch(SessionFactoryScope scope) {
 		scope.inSession(
 				entityManager -> {
-					List<JsonHolder> jsonHolders = entityManager.createQuery( "from JsonHolder b where b.id = 1",
-							JsonHolder.class ).getResultList();
+					List<JsonHolder> jsonHolders = entityManager.createQuery( "from JsonHolder b where b.id = 1", JsonHolder.class ).getResultList();
 					assertEquals( 1, jsonHolders.size() );
 					assertEquals( 1L, jsonHolders.get( 0 ).getId() );
-					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(),
-							jsonHolders.get( 0 ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), jsonHolders.get( 0 ).getAggregate() );
 				}
 		);
 	}
@@ -114,12 +111,10 @@ public class JsonWithArrayEmbeddableTest {
 	public void testFetchNull(SessionFactoryScope scope) {
 		scope.inSession(
 				entityManager -> {
-					List<JsonHolder> jsonHolders = entityManager.createQuery( "from JsonHolder b where b.id = 2",
-							JsonHolder.class ).getResultList();
+					List<JsonHolder> jsonHolders = entityManager.createQuery( "from JsonHolder b where b.id = 2", JsonHolder.class ).getResultList();
 					assertEquals( 1, jsonHolders.size() );
 					assertEquals( 2L, jsonHolders.get( 0 ).getId() );
-					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate2(),
-							jsonHolders.get( 0 ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate2(), jsonHolders.get( 0 ).getAggregate() );
 				}
 		);
 	}
@@ -128,12 +123,9 @@ public class JsonWithArrayEmbeddableTest {
 	public void testDomainResult(SessionFactoryScope scope) {
 		scope.inSession(
 				entityManager -> {
-					List<EmbeddableWithArrayAggregate> structs = entityManager.createQuery(
-									"select b.aggregate from JsonHolder b where b.id = 1", EmbeddableWithArrayAggregate.class )
-							.getResultList();
+					List<EmbeddableWithArrayAggregate> structs = entityManager.createQuery( "select b.aggregate from JsonHolder b where b.id = 1", EmbeddableWithArrayAggregate.class ).getResultList();
 					assertEquals( 1, structs.size() );
-					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(),
-							structs.get( 0 ) );
+					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), structs.get( 0 ) );
 				}
 		);
 	}
@@ -144,32 +136,32 @@ public class JsonWithArrayEmbeddableTest {
 				entityManager -> {
 					List<Tuple> tuples = entityManager.createQuery(
 							"select " +
-							"b.aggregate.theInt," +
-							"b.aggregate.theDouble," +
-							"b.aggregate.theBoolean," +
-							"b.aggregate.theNumericBoolean," +
-							"b.aggregate.theStringBoolean," +
-							"b.aggregate.theString," +
-							"b.aggregate.theInteger," +
-							"b.aggregate.theUrl," +
-							"b.aggregate.theClob," +
-							"b.aggregate.theBinary," +
-							"b.aggregate.theDate," +
-							"b.aggregate.theTime," +
-							"b.aggregate.theTimestamp," +
-							"b.aggregate.theInstant," +
-							"b.aggregate.theUuid," +
-							"b.aggregate.gender," +
-							"b.aggregate.convertedGender," +
-							"b.aggregate.ordinalGender," +
-							"b.aggregate.theDuration," +
-							"b.aggregate.theLocalDateTime," +
-							"b.aggregate.theLocalDate," +
-							"b.aggregate.theLocalTime," +
-							"b.aggregate.theZonedDateTime," +
-							"b.aggregate.theOffsetDateTime," +
-							"b.aggregate.mutableValue " +
-							"from JsonHolder b where b.id = 1",
+									"b.aggregate.theInt," +
+									"b.aggregate.theDouble," +
+									"b.aggregate.theBoolean," +
+									"b.aggregate.theNumericBoolean," +
+									"b.aggregate.theStringBoolean," +
+									"b.aggregate.theString," +
+									"b.aggregate.theInteger," +
+									"b.aggregate.theUrl," +
+									"b.aggregate.theClob," +
+									"b.aggregate.theBinary," +
+									"b.aggregate.theDate," +
+									"b.aggregate.theTime," +
+									"b.aggregate.theTimestamp," +
+									"b.aggregate.theInstant," +
+									"b.aggregate.theUuid," +
+									"b.aggregate.gender," +
+									"b.aggregate.convertedGender," +
+									"b.aggregate.ordinalGender," +
+									"b.aggregate.theDuration," +
+									"b.aggregate.theLocalDateTime," +
+									"b.aggregate.theLocalDate," +
+									"b.aggregate.theLocalTime," +
+									"b.aggregate.theZonedDateTime," +
+									"b.aggregate.theOffsetDateTime," +
+									"b.aggregate.mutableValue " +
+									"from JsonHolder b where b.id = 1",
 							Tuple.class
 					).getResultList();
 					assertEquals( 1, tuples.size() );
@@ -200,8 +192,7 @@ public class JsonWithArrayEmbeddableTest {
 					struct.setTheZonedDateTime( tuple.get( 22, ZonedDateTime[].class ) );
 					struct.setTheOffsetDateTime( tuple.get( 23, OffsetDateTime[].class ) );
 					struct.setMutableValue( tuple.get( 24, MutableValue[].class ) );
-					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(),
-							struct );
+					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), struct );
 				}
 		);
 	}
@@ -210,8 +201,7 @@ public class JsonWithArrayEmbeddableTest {
 	public void testDeleteWhere(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					entityManager.createMutationQuery( "delete JsonHolder b where b.aggregate is not null" )
-							.executeUpdate();
+					entityManager.createMutationQuery( "delete JsonHolder b where b.aggregate is not null" ).executeUpdate();
 					assertNull( entityManager.find( JsonHolder.class, 1L ) );
 
 				}
@@ -230,74 +220,69 @@ public class JsonWithArrayEmbeddableTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.do not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.do not support")
 	public void testUpdateAggregateMember(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					entityManager.createMutationQuery( "update JsonHolder b set b.aggregate.theString = null" )
-							.executeUpdate();
+					entityManager.createMutationQuery( "update JsonHolder b set b.aggregate.theString = null" ).executeUpdate();
 					EmbeddableWithArrayAggregate struct = EmbeddableWithArrayAggregate.createAggregate1();
 					struct.setTheString( null );
-					EmbeddableWithArrayAggregate.assertEquals( struct,
-							entityManager.find( JsonHolder.class, 1L ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals( struct, entityManager.find( JsonHolder.class, 1L ).getAggregate() );
 				}
 		);
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.do not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.do not support")
 	public void testUpdateMultipleAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					entityManager.createMutationQuery(
-									"update JsonHolder b set b.aggregate.theString = null, b.aggregate.theUuid = null" )
-							.executeUpdate();
+					entityManager.createMutationQuery( "update JsonHolder b set b.aggregate.theString = null, b.aggregate.theUuid = null" ).executeUpdate();
 					EmbeddableWithArrayAggregate struct = EmbeddableWithArrayAggregate.createAggregate1();
 					struct.setTheString( null );
 					struct.setTheUuid( null );
-					EmbeddableWithArrayAggregate.assertEquals( struct,
-							entityManager.find( JsonHolder.class, 1L ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals( struct, entityManager.find( JsonHolder.class, 1L ).getAggregate() );
 				}
 		);
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
-	@SkipForDialect(dialectClass = OracleDialect.class, reason = "External driver fix required")
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.do not support")
+	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.do not support")
 	public void testUpdateAllAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
 					EmbeddableWithArrayAggregate struct = EmbeddableWithArrayAggregate.createAggregate1();
 					entityManager.createMutationQuery(
 									"update JsonHolder b set " +
-									"b.aggregate.theInt = :theInt," +
-									"b.aggregate.theDouble = :theDouble," +
-									"b.aggregate.theBoolean = :theBoolean," +
-									"b.aggregate.theNumericBoolean = :theNumericBoolean," +
-									"b.aggregate.theStringBoolean = :theStringBoolean," +
-									"b.aggregate.theString = :theString," +
-									"b.aggregate.theInteger = :theInteger," +
-									"b.aggregate.theUrl = :theUrl," +
-									"b.aggregate.theClob = :theClob," +
-									"b.aggregate.theBinary = :theBinary," +
-									"b.aggregate.theDate = :theDate," +
-									"b.aggregate.theTime = :theTime," +
-									"b.aggregate.theTimestamp = :theTimestamp," +
-									"b.aggregate.theInstant = :theInstant," +
-									"b.aggregate.theUuid = :theUuid," +
-									"b.aggregate.gender = :gender," +
-									"b.aggregate.convertedGender = :convertedGender," +
-									"b.aggregate.ordinalGender = :ordinalGender," +
-									"b.aggregate.theDuration = :theDuration," +
-									"b.aggregate.theLocalDateTime = :theLocalDateTime," +
-									"b.aggregate.theLocalDate = :theLocalDate," +
-									"b.aggregate.theLocalTime = :theLocalTime," +
-									"b.aggregate.theZonedDateTime = :theZonedDateTime," +
-									"b.aggregate.theOffsetDateTime = :theOffsetDateTime," +
-									"b.aggregate.mutableValue = :mutableValue " +
-									"where b.id = 2"
+											"b.aggregate.theInt = :theInt," +
+											"b.aggregate.theDouble = :theDouble," +
+											"b.aggregate.theBoolean = :theBoolean," +
+											"b.aggregate.theNumericBoolean = :theNumericBoolean," +
+											"b.aggregate.theStringBoolean = :theStringBoolean," +
+											"b.aggregate.theString = :theString," +
+											"b.aggregate.theInteger = :theInteger," +
+											"b.aggregate.theUrl = :theUrl," +
+											"b.aggregate.theClob = :theClob," +
+											"b.aggregate.theBinary = :theBinary," +
+											"b.aggregate.theDate = :theDate," +
+											"b.aggregate.theTime = :theTime," +
+											"b.aggregate.theTimestamp = :theTimestamp," +
+											"b.aggregate.theInstant = :theInstant," +
+											"b.aggregate.theUuid = :theUuid," +
+											"b.aggregate.gender = :gender," +
+											"b.aggregate.convertedGender = :convertedGender," +
+											"b.aggregate.ordinalGender = :ordinalGender," +
+											"b.aggregate.theDuration = :theDuration," +
+											"b.aggregate.theLocalDateTime = :theLocalDateTime," +
+											"b.aggregate.theLocalDate = :theLocalDate," +
+											"b.aggregate.theLocalTime = :theLocalTime," +
+											"b.aggregate.theZonedDateTime = :theZonedDateTime," +
+											"b.aggregate.theOffsetDateTime = :theOffsetDateTime," +
+											"b.aggregate.mutableValue = :mutableValue " +
+											"where b.id = 2"
 							)
 							.setParameter( "theInt", struct.getTheInt() )
 							.setParameter( "theDouble", struct.getTheDouble() )
@@ -325,8 +310,7 @@ public class JsonWithArrayEmbeddableTest {
 							.setParameter( "theOffsetDateTime", struct.getTheOffsetDateTime() )
 							.setParameter( "mutableValue", struct.getMutableValue() )
 							.executeUpdate();
-					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(),
-							entityManager.find( JsonHolder.class, 2L ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), entityManager.find( JsonHolder.class, 2L ).getAggregate() );
 				}
 		);
 	}

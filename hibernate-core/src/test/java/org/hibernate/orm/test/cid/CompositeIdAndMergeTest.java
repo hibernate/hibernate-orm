@@ -81,7 +81,7 @@ public class CompositeIdAndMergeTest {
 		@Column(nullable = false)
 		private String description;
 
-		@ManyToOne(cascade = {CascadeType.ALL})
+		@ManyToOne(cascade = { CascadeType.ALL })
 		private Invoice invoice;
 
 		public Order() {
@@ -113,7 +113,7 @@ public class CompositeIdAndMergeTest {
 		@Column(name = "number_column")
 		private String number;
 
-		@OneToMany(mappedBy = "invoice", cascade = {CascadeType.ALL}, orphanRemoval = true)
+		@OneToMany(mappedBy = "invoice", cascade = { CascadeType.ALL }, orphanRemoval = true)
 		private List<LineItem> lines = new ArrayList<>();
 
 		public Invoice() {

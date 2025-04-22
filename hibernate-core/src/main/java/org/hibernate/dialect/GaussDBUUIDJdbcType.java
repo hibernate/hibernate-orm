@@ -16,8 +16,9 @@ import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 
 /**
+ *
  * @author liubao
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLUUIDJdbcType.
  */
 public class GaussDBUUIDJdbcType extends UUIDJdbcType {

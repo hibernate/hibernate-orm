@@ -18,12 +18,12 @@ import java.util.Map;
 /**
  * PostgreSQL json_query function.
  */
-public class GaussDBJsonExistsFunction extends JsonExistsFunction {
+public class GaussdbJsonExistsFunction extends JsonExistsFunction {
 
-	public GaussDBJsonExistsFunction(TypeConfiguration typeConfiguration,
-									 boolean supportsJsonPathExpression,
-									 boolean supportsJsonPathPassingClause) {
-		super( typeConfiguration, supportsJsonPathExpression, supportsJsonPathPassingClause );
+	public GaussdbJsonExistsFunction(TypeConfiguration typeConfiguration,
+									boolean supportsJsonPathExpression,
+									boolean supportsJsonPathPassingClause) {
+		super(typeConfiguration, supportsJsonPathExpression, supportsJsonPathPassingClause);
 	}
 
 	@Override
@@ -43,13 +43,11 @@ public class GaussDBJsonExistsFunction extends JsonExistsFunction {
 			final Map<String, Expression> passingExpressions = passingClause.getPassingExpressions();
 			final Iterator<Map.Entry<String, Expression>> iterator = passingExpressions.entrySet().iterator();
 			Map.Entry<String, Expression> entry = iterator.next();
-			literalValue = literalValue.replace( "$" + entry.getKey(),
-					walker.getLiteralValue( entry.getValue() ).toString() );
+			literalValue = literalValue.replace( "$"+entry.getKey(), walker.getLiteralValue( entry.getValue()).toString() );
 			while ( iterator.hasNext() ) {
 				entry = iterator.next();
 				sqlAppender.appendSql( ',' );
-				literalValue = literalValue.replace( "$" + entry.getKey(),
-						walker.getLiteralValue( entry.getValue() ).toString() );
+				literalValue = literalValue.replace( "$"+entry.getKey(), walker.getLiteralValue( entry.getValue()).toString() );
 			}
 		}
 

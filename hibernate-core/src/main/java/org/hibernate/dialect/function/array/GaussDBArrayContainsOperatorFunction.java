@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * Special array contains function that also applies a cast to the element argument. PostgreSQL needs this,
  * because by default it assumes a {@code text[]}, which is not compatible with {@code varchar[]}.
- * <p>
+ *
  * Notes: Original code of this class is based on ArrayContainsOperatorFunction.
  */
 public class GaussDBArrayContainsOperatorFunction extends ArrayContainsUnnestFunction {

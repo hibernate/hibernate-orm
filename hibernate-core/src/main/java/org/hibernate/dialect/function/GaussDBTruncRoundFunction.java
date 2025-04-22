@@ -42,7 +42,7 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUM
  * </ul>
  *
  * @author liubao
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLTruncRoundFunction.
  */
 public class GaussDBTruncRoundFunction extends AbstractSqmFunctionDescriptor implements FunctionRenderer {

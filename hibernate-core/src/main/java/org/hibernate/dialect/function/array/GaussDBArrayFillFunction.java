@@ -17,7 +17,7 @@ import org.hibernate.sql.ast.tree.expression.Literal;
  * Custom casting for the array fill function.
  *
  * @author liubao
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLArrayFillFunction.
  */
 public class GaussDBArrayFillFunction extends AbstractArrayFillFunction {
@@ -60,7 +60,7 @@ public class GaussDBArrayFillFunction extends AbstractArrayFillFunction {
 		// GaussDB needs casting of null and string literal expressions
 		return elementExpression instanceof Literal && (
 				elementExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString()
-				|| ((Literal) elementExpression).getLiteralValue() == null
+						|| ( (Literal) elementExpression ).getLiteralValue() == null
 		);
 	}
 }

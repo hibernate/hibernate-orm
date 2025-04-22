@@ -49,14 +49,14 @@ public class LazyInitializationWithoutInlineDirtyTrackingTest {
 			File file = new File();
 			file.setId( 1L );
 			file.setName( "file" );
-			file.setBytes( new byte[] {0} );
+			file.setBytes( new byte[] { 0 } );
 
 			s.persist( file );
 		} );
 
 		scope.inTransaction( s -> {
 			File file = s.find( File.class, 1L );
-			file.setBytes( new byte[] {1} );
+			file.setBytes( new byte[] { 1 } );
 			s.persist( file );
 		} );
 	}

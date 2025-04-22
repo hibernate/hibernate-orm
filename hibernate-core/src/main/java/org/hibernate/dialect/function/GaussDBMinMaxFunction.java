@@ -31,7 +31,7 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.COM
  * and finally cast the result back to uuid.
  *
  * @author liubao
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLDialect.
  */
 public class GaussDBMinMaxFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
@@ -62,8 +62,7 @@ public class GaussDBMinMaxFunction extends AbstractSqmSelfRenderingFunctionDescr
 			Predicate filter,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect()
-				.supportsFilterClause();
+		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
 		sqlAppender.appendSql( getName() );
 		sqlAppender.appendSql( '(' );
 		final Expression arg = (Expression) sqlAstArguments.get( 0 );

@@ -9,8 +9,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcType;
 
 /**
+ *
  * @author liubao
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLCastingJsonArrayJdbcType.
  */
 public class GaussDBCastingJsonArrayJdbcType extends JsonArrayJdbcType {

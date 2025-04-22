@@ -45,7 +45,7 @@ import static org.hibernate.annotations.FetchMode.SUBSELECT;
 				Event.class
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory( useCollectingStatementInspector = true )
 @JiraKey(value = "HHH-15713")
 public class ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest {
 
@@ -72,7 +72,7 @@ public class ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest {
 
 					Plan plan = new Plan( 1 );
 					plan.addTransfer( transfer );
-					plan.addTransfer( transfer2 );
+					plan.addTransfer( transfer2  );
 
 					session.persist( plan );
 				}
@@ -80,9 +80,9 @@ public class ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class,
+	@SkipForDialect( dialectClass = GaussDBDialect.class,
 			reason = "type:resolved.If you operate a table with the same name as the system view under the schema, "
-					 + "you will be redirected to the system view and an error will be reported.")
+					+ "you will be redirected to the system view and an error will be reported.")
 	public void testInitializeCollection(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();
@@ -107,17 +107,17 @@ public class ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest {
 					Assertions.assertThat( statementInspector.getSqlQueries() ).hasSize( 0 );
 
 					SubPlan subPlan = transfer.getSubPlan();
-					assertThat( Hibernate.isInitialized( subPlan.getEvents() ) ).isFalse();
+					assertThat( Hibernate.isInitialized( subPlan.getEvents()) ).isFalse();
 
 					SubPlan subPlan1 = transfer1.getSubPlan();
 					assertThat( Hibernate.isInitialized( subPlan1.getEvents() ) ).isFalse();
 
 					List<Event> events = subPlan.getEvents();
 					Event event = events.get( 0 );
-					assertThat( Hibernate.isInitialized( subPlan.getEvents() ) ).isTrue();
+					assertThat( Hibernate.isInitialized( subPlan.getEvents()) ).isTrue();
 
 					Assertions.assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-					assertThat( event ).isNotNull();
+					assertThat(event).isNotNull();
 					assertThat( Hibernate.isInitialized( event ) ).isTrue();
 
 				}

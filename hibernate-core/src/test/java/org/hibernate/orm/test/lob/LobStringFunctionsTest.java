@@ -69,7 +69,7 @@ public class LobStringFunctionsTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testLengthFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Query<Tuple> query = session.createQuery(
@@ -89,7 +89,7 @@ public class LobStringFunctionsTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testOctetLengthFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Query<Tuple> query = session.createQuery(
@@ -110,7 +110,7 @@ public class LobStringFunctionsTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testBitLengthFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Query<Tuple> query = session.createQuery(
@@ -131,7 +131,7 @@ public class LobStringFunctionsTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class)
 	public void testConcatFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			// Use trim('') instead of '' since Sybase interprets that as single space string...

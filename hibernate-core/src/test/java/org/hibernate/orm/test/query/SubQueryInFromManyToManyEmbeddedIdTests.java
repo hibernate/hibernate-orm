@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
-@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resovling.not support")
+@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resovling.not support")
 public class SubQueryInFromManyToManyEmbeddedIdTests {
 
 	@Test
@@ -72,13 +72,13 @@ public class SubQueryInFromManyToManyEmbeddedIdTests {
 
 					final Query<Tuple> query = session.createQuery(
 							"select c.name, a.contact.id from Contact c " +
-							"left join lateral (" +
-							"select alt as contact " +
-							"from c.alternativeContacts alt " +
-							"order by alt.name.first " +
-							"limit 1" +
-							") a " +
-							"order by c.id",
+									"left join lateral (" +
+									"select alt as contact " +
+									"from c.alternativeContacts alt " +
+									"order by alt.name.first " +
+									"limit 1" +
+									") a " +
+									"order by c.id",
 							Tuple.class
 					);
 					verifySame(
@@ -123,14 +123,14 @@ public class SubQueryInFromManyToManyEmbeddedIdTests {
 
 					final Query<Tuple> query = session.createQuery(
 							"select c.name, alt.name from Contact c " +
-							"left join lateral (" +
-							"select alt as contact " +
-							"from c.alternativeContacts alt " +
-							"order by alt.name.first desc " +
-							"limit 1" +
-							") a " +
-							"join a.contact alt " +
-							"order by c.id",
+									"left join lateral (" +
+									"select alt as contact " +
+									"from c.alternativeContacts alt " +
+									"order by alt.name.first desc " +
+									"limit 1" +
+									") a " +
+									"join a.contact alt " +
+									"order by c.id",
 							Tuple.class
 					);
 					verifySame(
@@ -170,13 +170,13 @@ public class SubQueryInFromManyToManyEmbeddedIdTests {
 
 					final Query<Tuple> query = session.createQuery(
 							"select c.name, a.contact.name from Contact c " +
-							"left join lateral (" +
-							"select alt as contact " +
-							"from c.alternativeContacts alt " +
-							"order by alt.name.first desc " +
-							"limit 1" +
-							") a " +
-							"order by c.id",
+									"left join lateral (" +
+									"select alt as contact " +
+									"from c.alternativeContacts alt " +
+									"order by alt.name.first desc " +
+									"limit 1" +
+									") a " +
+									"order by c.id",
 							Tuple.class
 					);
 					verifySame(
@@ -232,9 +232,9 @@ public class SubQueryInFromManyToManyEmbeddedIdTests {
 	/**
 	 * @author Steve Ebersole
 	 */
-	@Entity(name = "Contact")
-	@Table(name = "contacts")
-	@SecondaryTable(name = "contact_supp")
+	@Entity( name = "Contact")
+	@Table( name = "contacts" )
+	@SecondaryTable( name="contact_supp" )
 	public static class Contact {
 		private ContactId id;
 		private Name name;

@@ -46,8 +46,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		ArrayUnnestStructTest.Label.class
 })
 @SessionFactory
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTypedArrays.class)
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnnest.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTypedArrays.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsUnnest.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructAggregate.class)
 // Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 @BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
@@ -60,7 +60,7 @@ public class ArrayUnnestStructTest {
 			em.persist( new Book(
 					2L,
 					"book2",
-					new Publisher[] {new Publisher( "abc" ), null, new Publisher( "def" )},
+					new Publisher[] { new Publisher( "abc" ), null, new Publisher( "def" ) },
 					Arrays.asList( new Label( "k1", "v1" ), null, new Label( "k2", "v2" ) )
 			) );
 			em.persist( new Book( 3L, "book3", null, null ) );
@@ -75,16 +75,16 @@ public class ArrayUnnestStructTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.do not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.do not support")
 	public void testUnnest(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-array-unnest-aggregate-example[]
 			List<Tuple> results = em.createQuery(
 							"select e.id, p.name, l.name, l.value " +
-							"from Book e " +
-							"join lateral unnest(e.publishers) p " +
-							"join lateral unnest(e.labels) l " +
-							"order by e.id, p.name nulls first, l.name nulls first, l.value nulls first",
+									"from Book e " +
+									"join lateral unnest(e.publishers) p " +
+									"join lateral unnest(e.labels) l " +
+									"order by e.id, p.name nulls first, l.name nulls first, l.value nulls first",
 							Tuple.class
 					)
 					.getResultList();
@@ -106,7 +106,7 @@ public class ArrayUnnestStructTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "xmltable can't be used with a left join")
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.do not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.do not support")
 	public void testNodeBuilderUnnest(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -146,15 +146,15 @@ public class ArrayUnnestStructTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.do not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.do not support")
 	public void testUnnestOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-array-unnest-aggregate-with-ordinality-example[]
 			List<Tuple> results = em.createQuery(
 							"select e.id, index(p), p.name " +
-							"from Book e " +
-							"join lateral unnest(e.publishers) p " +
-							"order by e.id, index(p)",
+									"from Book e " +
+									"join lateral unnest(e.publishers) p " +
+									"order by e.id, index(p)",
 							Tuple.class
 					)
 					.getResultList();
@@ -170,7 +170,7 @@ public class ArrayUnnestStructTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.do not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.do not support")
 	public void testNodeBuilderUnnestOrdinality(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -235,7 +235,7 @@ public class ArrayUnnestStructTest {
 	}
 
 	@Embeddable
-	@Struct(name = "publisher_type")
+	@Struct( name = "publisher_type")
 	public static class Publisher {
 
 		private String name;
@@ -257,7 +257,7 @@ public class ArrayUnnestStructTest {
 	}
 
 	@Embeddable
-	@Struct(name = "label_type")
+	@Struct( name = "label_type")
 	public static class Label {
 
 		private String name;

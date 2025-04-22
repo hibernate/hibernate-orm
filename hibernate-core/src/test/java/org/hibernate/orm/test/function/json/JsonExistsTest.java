@@ -49,7 +49,7 @@ public class JsonExistsTest {
 			entity.getJson().put( "theString", "abc" );
 			entity.getJson().put( "theBoolean", true );
 			entity.getJson().put( "theNull", null );
-			entity.getJson().put( "theArray", new String[] {"a", "b", "c"} );
+			entity.getJson().put( "theArray", new String[] { "a", "b", "c" } );
 			entity.getJson().put( "theObject", new HashMap<>( entity.getJson() ) );
 			em.persist( entity );
 		} );
@@ -78,8 +78,7 @@ public class JsonExistsTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 21, matchSubTypes = true,
-			reason = "Oracle bug in versions before 23")
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 21, matchSubTypes = true, reason = "Oracle bug in versions before 23")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testPassing(SessionFactoryScope scope) {
 		scope.inSession( em -> {
@@ -95,8 +94,7 @@ public class JsonExistsTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = MariaDBDialect.class,
-			reason = "MariaDB reports the error 4038 as warning and simply returns null")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB reports the error 4038 as warning and simply returns null")
 	public void testOnError(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			try {
@@ -107,7 +105,7 @@ public class JsonExistsTest {
 				fail( "error clause should fail because of invalid json document" );
 			}
 			catch (HibernateException e) {
-				if ( !(e instanceof JDBCException) && !(e instanceof ExecutionException) ) {
+				if ( !( e instanceof JDBCException ) && !( e instanceof ExecutionException ) ) {
 					throw e;
 				}
 			}

@@ -38,7 +38,7 @@ public class ScrollableResultsObjectArrayCastingTest {
 		scope.inTransaction(
 				(entityManager) -> {
 					Product product = new Product();
-					product.binaryValue = new byte[] {1, 2, 3};
+					product.binaryValue = new byte[] { 1, 2, 3 };
 					entityManager.persist( product );
 				}
 		);

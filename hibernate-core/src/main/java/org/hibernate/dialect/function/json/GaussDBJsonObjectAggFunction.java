@@ -14,7 +14,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * GaussDB json_objectagg function.
  *
  * @author liubao
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLJsonObjectAggFunction.
  */
 public class GaussDBJsonObjectAggFunction extends JsonObjectAggFunction {

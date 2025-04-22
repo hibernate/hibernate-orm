@@ -22,8 +22,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
+ *
  * @author liubao
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLCastingInetJdbcType.
  */
 public class GaussDBCastingInetJdbcType implements JdbcType {
@@ -96,8 +97,7 @@ public class GaussDBCastingInetJdbcType implements JdbcType {
 			}
 
 			@Override
-			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
-					throws SQLException {
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
 				return getObject( statement.getString( name ), options );
 			}
 

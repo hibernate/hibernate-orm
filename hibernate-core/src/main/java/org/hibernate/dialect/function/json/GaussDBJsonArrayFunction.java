@@ -63,7 +63,7 @@ public class GaussDBJsonArrayFunction extends AbstractSqmSelfRenderingFunctionDe
 			}
 			for ( int i = 0; i < argumentsCount; i++ ) {
 				Expression valueNode = (Expression) sqlAstArguments.get( i );
-				if ( nullBehavior == JsonNullBehavior.ABSENT && valueNode instanceof Literal ) {
+				if ( nullBehavior ==  JsonNullBehavior.ABSENT && valueNode instanceof Literal ) {
 					Object literalValue = ((Literal) valueNode).getLiteralValue();
 					if ( literalValue == null ) {
 						continue;

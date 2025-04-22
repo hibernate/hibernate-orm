@@ -44,7 +44,7 @@ public class ArrayPositionTest {
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			em.persist( new EntityWithArrays( 1L, new String[] {} ) );
-			em.persist( new EntityWithArrays( 2L, new String[] {"abc", null, "def"} ) );
+			em.persist( new EntityWithArrays( 2L, new String[] { "abc", null, "def" } ) );
 			em.persist( new EntityWithArrays( 3L, null ) );
 		} );
 	}

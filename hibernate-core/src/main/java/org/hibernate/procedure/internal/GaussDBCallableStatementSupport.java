@@ -24,7 +24,7 @@ import jakarta.persistence.ParameterMode;
  * GaussDB implementation of CallableStatementSupport.
  *
  * @author liubao
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLTruncFunction.
  */
 public class GaussDBCallableStatementSupport extends AbstractStandardCallableStatementSupport {
@@ -46,7 +46,7 @@ public class GaussDBCallableStatementSupport extends AbstractStandardCallableSta
 		final FunctionReturnImplementor<?> functionReturn = procedureCall.getFunctionReturn();
 		final ProcedureParameterMetadataImplementor parameterMetadata = procedureCall.getParameterMetadata();
 		final boolean firstParamIsRefCursor = parameterMetadata.getParameterCount() != 0
-											  && isFirstParameterModeRefCursor( parameterMetadata );
+				&& isFirstParameterModeRefCursor( parameterMetadata );
 
 		final List<? extends ProcedureParameterImplementor<?>> registrations = parameterMetadata.getRegistrationsAsList();
 		final int paramStringSizeEstimate;
@@ -68,14 +68,12 @@ public class GaussDBCallableStatementSupport extends AbstractStandardCallableSta
 				if ( firstParamIsRefCursor ) {
 					// validate that the parameter strategy is positional (cannot mix, and REF_CURSOR is inherently positional)
 					if ( parameterMetadata.hasNamedParameters() ) {
-						throw new HibernateException(
-								"Cannot mix named parameters and REF_CURSOR parameter on GaussDB" );
+						throw new HibernateException( "Cannot mix named parameters and REF_CURSOR parameter on GaussDB" );
 					}
 					callMode = CallMode.CALL_RETURN;
 					startIndex = 1;
 					jdbcParameterOffset = 1;
-					builder.addParameterRegistration(
-							registrations.get( 0 ).toJdbcParameterRegistration( 1, procedureCall ) );
+					builder.addParameterRegistration( registrations.get( 0 ).toJdbcParameterRegistration( 1, procedureCall ) );
 				}
 				else {
 					callMode = CallMode.TABLE_FUNCTION;
@@ -115,8 +113,7 @@ public class GaussDBCallableStatementSupport extends AbstractStandardCallableSta
 			callMode = CallMode.CALL;
 		}
 
-		final StringBuilder buffer = new StringBuilder(
-				callMode.start.length() + callMode.end.length() + procedureName.length() + paramStringSizeEstimate )
+		final StringBuilder buffer = new StringBuilder( callMode.start.length() + callMode.end.length() + procedureName.length() + paramStringSizeEstimate )
 				.append( callMode.start );
 		buffer.append( procedureName );
 
@@ -143,7 +140,7 @@ public class GaussDBCallableStatementSupport extends AbstractStandardCallableSta
 				}
 				if ( type != null && type.getJdbcType() instanceof AbstractGaussDBStructJdbcType ) {
 					// We have to cast struct type parameters so that GaussDB understands nulls
-					castType = ((AbstractGaussDBStructJdbcType) type.getJdbcType()).getStructTypeName();
+					castType = ( (AbstractGaussDBStructJdbcType) type.getJdbcType() ).getStructTypeName();
 					buffer.append( "cast(" );
 				}
 				else {
@@ -168,11 +165,11 @@ public class GaussDBCallableStatementSupport extends AbstractStandardCallableSta
 	}
 
 	enum CallMode {
-		TABLE_FUNCTION( "select * from ", ")" ),
-		FUNCTION( "select ", ")" ),
-		NATIVE_CALL( "call ", ")" ),
-		CALL_RETURN( "{?=call ", ")}" ),
-		CALL( "{call ", ")}" );
+		TABLE_FUNCTION("select * from ", ")"),
+		FUNCTION("select ", ")"),
+		NATIVE_CALL("call ", ")"),
+		CALL_RETURN("{?=call ", ")}"),
+		CALL("{call ", ")}");
 
 		private final String start;
 		private final String end;

@@ -23,35 +23,33 @@ import org.junit.jupiter.api.Test;
 @DomainModel
 @SessionFactory
 @ServiceRegistry(settings = @Setting(name = QuerySettings.JSON_FUNCTIONS_ENABLED, value = "true"))
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObject.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJsonObject.class)
 public class JsonObjectTest {
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testSimple(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-object-example[]
-			em.createQuery(
-							"select json_object('key', 'value'), json_object(KEY 'key1' VALUE 'value1', 'key2' VALUE 'value2', 'key3': 'value3')" )
-					.getResultList();
+			em.createQuery( "select json_object('key', 'value'), json_object(KEY 'key1' VALUE 'value1', 'key2' VALUE 'value2', 'key3': 'value3')" ).getResultList();
 			//end::hql-json-object-example[]
 		} );
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testNullClause(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			em.createQuery( "select json_object('key': null null on null)" ).getResultList();
+			em.createQuery("select json_object('key': null null on null)" ).getResultList();
 		} );
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "not support")
 	public void testAbsentOnNull(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-object-on-null-example[]
-			em.createQuery( "select json_object('key': null absent on null)" ).getResultList();
+			em.createQuery("select json_object('key': null absent on null)" ).getResultList();
 			//end::hql-json-object-on-null-example[]
 		} );
 	}

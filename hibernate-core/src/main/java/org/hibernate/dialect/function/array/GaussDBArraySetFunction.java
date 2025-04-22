@@ -50,16 +50,16 @@ public class GaussDBArraySetFunction extends AbstractSqmSelfRenderingFunctionDes
 		final Expression indexExpression = (Expression) sqlAstArguments.get( 1 );
 		final Expression elementExpression = (Expression) sqlAstArguments.get( 2 );
 
-		sqlAppender.append( "( SELECT array_agg( CASE WHEN idx_gen = " );
+		sqlAppender.append( "( SELECT array_agg( CASE WHEN idx_gen = ");
 		indexExpression.accept( walker );
-		sqlAppender.append( " THEN " );
+		sqlAppender.append( " THEN ");
 		elementExpression.accept( walker );
-		sqlAppender.append( " ELSE CASE  WHEN idx_gen <= array_length(ewa1_0.the_array, 1) " );
-		sqlAppender.append( " THEN ewa1_0.the_array[idx_gen] ELSE NULL END END ORDER BY idx_gen ) " );
-		sqlAppender.append( " FROM generate_series(1, GREATEST(COALESCE(array_length( " );
+		sqlAppender.append( " ELSE CASE  WHEN idx_gen <= array_length(ewa1_0.the_array, 1) ");
+		sqlAppender.append( " THEN ewa1_0.the_array[idx_gen] ELSE NULL END END ORDER BY idx_gen ) ");
+		sqlAppender.append( " FROM generate_series(1, GREATEST(COALESCE(array_length( ");
 		arrayExpression.accept( walker );
-		sqlAppender.append( " , 1), 0),  " );
+		sqlAppender.append( " , 1), 0),  ");
 		indexExpression.accept( walker );
-		sqlAppender.append( " )) AS idx_gen ) AS result_array " );
+		sqlAppender.append( " )) AS idx_gen ) AS result_array ");
 	}
 }

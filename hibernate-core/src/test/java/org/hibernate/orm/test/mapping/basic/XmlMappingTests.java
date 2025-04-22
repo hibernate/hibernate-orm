@@ -138,16 +138,11 @@ public abstract class XmlMappingTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = DerbyDialect.class,
-			reason = "Derby doesn't support comparing CLOBs with the = operator")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true,
-			reason = "HANA doesn't support comparing LOBs with the = operator")
-	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true,
-			reason = "Sybase doesn't support comparing LOBs with the = operator")
-	@SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true,
-			reason = "Oracle doesn't support comparing JSON with the = operator")
-	@SkipForDialect(dialectClass = AltibaseDialect.class,
-			reason = "Altibase doesn't support comparing CLOBs with the = operator")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support comparing CLOBs with the = operator")
+	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA doesn't support comparing LOBs with the = operator")
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase doesn't support comparing LOBs with the = operator")
+	@SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true, reason = "Oracle doesn't support comparing JSON with the = operator")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase doesn't support comparing CLOBs with the = operator")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void verifyComparisonWorks(SessionFactoryScope scope) {
 		scope.inTransaction(

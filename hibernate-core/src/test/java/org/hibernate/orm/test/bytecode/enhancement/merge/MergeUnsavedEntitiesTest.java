@@ -136,7 +136,7 @@ public class MergeUnsavedEntitiesTest {
 
 		private Long version;
 
-		@OneToMany(mappedBy = "parent", cascade = {MERGE}, orphanRemoval = true, fetch = FetchType.LAZY)
+		@OneToMany(mappedBy = "parent", cascade = { MERGE }, orphanRemoval = true, fetch = FetchType.LAZY)
 		private List<Child> children = new ArrayList<>();
 
 		public Parent() {

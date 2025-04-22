@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
-@DomainModel(annotatedClasses = {MapsIdClassTest.User.class, MapsIdClassTest.UserAuthority.class})
+@DomainModel(annotatedClasses = { MapsIdClassTest.User.class, MapsIdClassTest.UserAuthority.class })
 public class MapsIdClassTest {
 
 	@Test
@@ -81,7 +81,7 @@ public class MapsIdClassTest {
 		}
 
 		@OneToMany(
-				cascade = {PERSIST, MERGE, REMOVE},
+				cascade = { PERSIST, MERGE, REMOVE },
 				mappedBy = "user",
 				orphanRemoval = true)
 		private Set<UserAuthority> userAuthorities = new HashSet<>();

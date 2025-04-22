@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ServiceRegistry
-@DomainModel(standardModels = {StandardDomainModel.GAMBIT, StandardDomainModel.CONTACTS})
+@DomainModel(standardModels = { StandardDomainModel.GAMBIT, StandardDomainModel.CONTACTS })
 @SessionFactory
 @JiraKey("HHH-17506")
 public class InsertConflictTests {
@@ -61,15 +61,14 @@ public class InsertConflictTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class,
-			reason = "type:resolving.syntax error at or near \"conflict do\"")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict do\"")
 	public void testOnConflictDoNothing(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					int updated = session.createMutationQuery(
 							"insert into BasicEntity (id, data) " +
-							"values (1, 'John') " +
-							"on conflict do nothing"
+									"values (1, 'John') " +
+									"on conflict do nothing"
 					).executeUpdate();
 					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) {
 						// Since JDBC set the MySQL CLIENT_FOUND_ROWS flag, the updated count is 1 even if values didn't change
@@ -87,17 +86,16 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
-	@SkipForDialect(dialectClass = GaussDBDialect.class,
-			reason = "type:resolving.syntax error at or near \"conflict(\"")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict(\"")
 	public void testOnConflictDoUpdate(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					//tag::hql-insert-conflict-example[]
 					int updated = session.createMutationQuery(
 							"insert into BasicEntity (id, data) " +
-							"values (1, 'John') " +
-							"on conflict(id) do update " +
-							"set data = excluded.data"
+									"values (1, 'John') " +
+									"on conflict(id) do update " +
+									"set data = excluded.data"
 					).executeUpdate();
 					//end::hql-insert-conflict-example[]
 					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) {
@@ -116,16 +114,16 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict(")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict(")
 	public void testOnConflictDoUpdateWithWhere(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					int updated = session.createMutationQuery(
 							"insert into BasicEntity (id, data) " +
-							"values (1, 'John') " +
-							"on conflict(id) do update " +
-							"set data = excluded.data " +
-							"where id > 1"
+									"values (1, 'John') " +
+									"on conflict(id) do update " +
+									"set data = excluded.data " +
+									"where id > 1"
 					).executeUpdate();
 					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) {
 						// Since JDBC set the MySQL CLIENT_FOUND_ROWS flag, the updated count is 1 even if values didn't change
@@ -147,13 +145,12 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict(")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict(")
 	public void testOnConflictDoUpdateWithWhereCriteria(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
-					final JpaCriteriaInsertValues<BasicEntity> insert = cb.createCriteriaInsertValues(
-							BasicEntity.class );
+					final JpaCriteriaInsertValues<BasicEntity> insert = cb.createCriteriaInsertValues( BasicEntity.class );
 					insert.setInsertionTargetPaths(
 							insert.getTarget().get( "id" ),
 							insert.getTarget().get( "data" )
@@ -184,15 +181,14 @@ public class InsertConflictTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class,
-			reason = "type:resolving.syntax error at or near \"conflict do\"")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict do\"")
 	public void testOnConflictDoNothingMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					int updated = session.createMutationQuery(
 							"insert into Contact (id, name) " +
-							"values (1, ('John', 'Doe')) " +
-							"on conflict do nothing"
+									"values (1, ('John', 'Doe')) " +
+									"on conflict do nothing"
 					).executeUpdate();
 					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) {
 						// Since JDBC set the MySQL CLIENT_FOUND_ROWS flag, the updated count is 1 even if values didn't change
@@ -212,17 +208,16 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
-	@SkipForDialect(dialectClass = SybaseASEDialect.class,
-			reason = "MERGE into a table that has a self-referential FK does not work")
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict(")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "MERGE into a table that has a self-referential FK does not work")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict(")
 	public void testOnConflictDoUpdateMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					int updated = session.createMutationQuery(
 							"insert into Contact (id, name, gender) " +
-							"values (1, ('John', 'Doe'), MALE) " +
-							"on conflict(id) do update " +
-							"set name = excluded.name, gender = excluded.gender"
+									"values (1, ('John', 'Doe'), MALE) " +
+									"on conflict(id) do update " +
+									"set name = excluded.name, gender = excluded.gender"
 					).executeUpdate();
 					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) {
 						// Strange MySQL returns 2 if the conflict action updates a row
@@ -242,18 +237,17 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
-	@SkipForDialect(dialectClass = SybaseASEDialect.class,
-			reason = "MERGE into a table that has a self-referential FK does not work")
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "syntax error at or near \"conflict(\"")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "MERGE into a table that has a self-referential FK does not work")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "syntax error at or near \"conflict(\"")
 	public void testOnConflictDoUpdateWithWhereMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					int updated = session.createMutationQuery(
 							"insert into Contact (id, name, gender) " +
-							"values (1, ('John', 'Doe'), FEMALE) " +
-							"on conflict(id) do update " +
-							"set name = excluded.name, gender = excluded.gender " +
-							"where id > 1"
+									"values (1, ('John', 'Doe'), FEMALE) " +
+									"on conflict(id) do update " +
+									"set name = excluded.name, gender = excluded.gender " +
+									"where id > 1"
 					).executeUpdate();
 					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) {
 						// Since JDBC set the MySQL CLIENT_FOUND_ROWS flag, the updated count is 1 even if values didn't change

@@ -36,13 +36,13 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_FETCH_GRAPH;
 /**
  * @author Marco Belladelli
  */
-@DomainModel(annotatedClasses = {
+@DomainModel( annotatedClasses = {
 		EntityGraphAndJoinTest.Person.class,
 		EntityGraphAndJoinTest.Address.class,
-})
-@SessionFactory(useCollectingStatementInspector = true)
-@Jira("https://hibernate.atlassian.net/browse/HHH-17629")
-@Jira("https://hibernate.atlassian.net/browse/HHH-18378")
+} )
+@SessionFactory( useCollectingStatementInspector = true )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-17629" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-18378" )
 public class EntityGraphAndJoinTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
@@ -118,7 +118,7 @@ public class EntityGraphAndJoinTest {
 		} );
 	}
 
-	@Entity(name = "Address")
+	@Entity( name = "Address" )
 	public static class Address {
 		@Id
 		private Long id;
@@ -142,10 +142,10 @@ public class EntityGraphAndJoinTest {
 		}
 	}
 
-	@Entity(name = "Person")
-	@NamedEntityGraph(name = "test-graph", attributeNodes = {
-			@NamedAttributeNode("address"),
-	})
+	@Entity( name = "Person" )
+	@NamedEntityGraph( name = "test-graph", attributeNodes = {
+			@NamedAttributeNode( "address" ),
+	} )
 	public static class Person {
 		@Id
 		@GeneratedValue
@@ -153,8 +153,8 @@ public class EntityGraphAndJoinTest {
 
 		private String name;
 
-		@ManyToOne(fetch = FetchType.LAZY)
-		@JoinColumn(name = "address_id")
+		@ManyToOne( fetch = FetchType.LAZY )
+		@JoinColumn( name = "address_id" )
 		private Address address;
 
 		public Person() {

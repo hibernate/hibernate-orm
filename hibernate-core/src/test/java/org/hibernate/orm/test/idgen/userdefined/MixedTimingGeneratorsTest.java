@@ -61,12 +61,9 @@ import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
 @Jira("https://hibernate.atlassian.net/browse/HHH-17322")
 public class MixedTimingGeneratorsTest {
 	@Test
-	@SkipForDialect(dialectClass = SQLServerDialect.class,
-			reason = "SQLServer does not support setting explicit values for identity columns")
-	@SkipForDialect(dialectClass = OracleDialect.class,
-			reason = "Oracle does not support setting explicit values for identity columns")
-	@SkipForDialect(dialectClass = SybaseASEDialect.class,
-			reason = "Sybase does not support setting explicit values for identity columns")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQLServer does not support setting explicit values for identity columns")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle does not support setting explicit values for identity columns")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase does not support setting explicit values for identity columns")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testIdentityOrAssignedId(SessionFactoryScope scope) {
 		// on execution generation
@@ -84,12 +81,9 @@ public class MixedTimingGeneratorsTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = SQLServerDialect.class,
-			reason = "SQLServer does not support setting explicit values for identity columns")
-	@SkipForDialect(dialectClass = OracleDialect.class,
-			reason = "Oracle does not support setting explicit values for identity columns")
-	@SkipForDialect(dialectClass = SybaseASEDialect.class,
-			reason = "Sybase does not support setting explicit values for identity columns")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQLServer does not support setting explicit values for identity columns")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle does not support setting explicit values for identity columns")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase does not support setting explicit values for identity columns")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testIdentityOrAssignedIdStateless(SessionFactoryScope scope) {
 		// on execution generation
@@ -107,12 +101,9 @@ public class MixedTimingGeneratorsTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = SQLServerDialect.class,
-			reason = "SQLServer does not support setting explicit values for identity columns")
-	@SkipForDialect(dialectClass = OracleDialect.class,
-			reason = "Oracle does not support setting explicit values for identity columns")
-	@SkipForDialect(dialectClass = SybaseASEDialect.class,
-			reason = "Sybase does not support setting explicit values for identity columns")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQLServer does not support setting explicit values for identity columns")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle does not support setting explicit values for identity columns")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase does not support setting explicit values for identity columns")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testIdentityOrRandomId(SessionFactoryScope scope) {
 		// on execution generation
@@ -230,7 +221,7 @@ public class MixedTimingGeneratorsTest {
 
 	@ValueGenerationType(generatedBy = LiteralOrGeneratedStringGenerator.class)
 	@Retention(RUNTIME)
-	@Target({FIELD, METHOD})
+	@Target({ FIELD, METHOD })
 	public @interface GeneratedString {
 		/**
 		 * Specifies how the timestamp is generated. By default, it is generated
@@ -325,7 +316,7 @@ public class MixedTimingGeneratorsTest {
 
 		@Override
 		public boolean generatedBeforeExecution(Object entity, SharedSessionContractImplementor session) {
-			return ((RandomEntity) entity).getName().contains( "random" );
+			return ( (RandomEntity) entity ).getName().contains( "random" );
 		}
 	}
 
@@ -357,7 +348,7 @@ public class MixedTimingGeneratorsTest {
 
 		@Override
 		public boolean generatedBeforeExecution(Object entity, SharedSessionContractImplementor session) {
-			return ((StringGeneratedEntity) entity).getName().contains( "generated" );
+			return ( (StringGeneratedEntity) entity ).getName().contains( "generated" );
 		}
 
 		@Override
@@ -377,7 +368,7 @@ public class MixedTimingGeneratorsTest {
 
 		@Override
 		public String[] getReferencedColumnValues(Dialect dialect) {
-			return new String[] {"'literal_" + count++ + "'"};
+			return new String[] { "'literal_" + count++ + "'" };
 		}
 	}
 }

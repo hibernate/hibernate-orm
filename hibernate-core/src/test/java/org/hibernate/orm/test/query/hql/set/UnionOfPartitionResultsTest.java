@@ -28,7 +28,7 @@ import jakarta.persistence.ManyToOne;
  * @author Jan Schatteman
  */
 @DomainModel(
-		annotatedClasses = {UnionOfPartitionResultsTest.Apple.class, UnionOfPartitionResultsTest.Pie.class}
+		annotatedClasses = { UnionOfPartitionResultsTest.Apple.class, UnionOfPartitionResultsTest.Pie.class }
 )
 @SessionFactory
 @JiraKey("HHH-18069")
@@ -112,18 +112,18 @@ public class UnionOfPartitionResultsTest {
 				session -> {
 					String q =
 							"SELECT new CurrentApple(id, bakedPie.id, dir) " +
-							"FROM (" +
-							"(" +
-							"SELECT id id, bakedPie bakedPie, bakedOn bakedOn, MAX(bakedOn) OVER (PARTITION BY bakedPie.id) mbo, -1 dir " +
-							"FROM Apple c " +
-							"WHERE bakedPie.id IN (1,2,3,4) AND bakedOn <= :now" +
-							") UNION ALL (" +
-							"SELECT id id, bakedPie bakedPie, bakedOn bakedOn, MIN(bakedOn) OVER (PARTITION BY bakedPie.id) mbo, 1 dir " +
-							"FROM Apple c " +
-							"WHERE bakedPie.id IN (1,2,3,4) AND bakedOn > :now" +
-							")" +
-							") " +
-							"WHERE bakedOn = mbo ORDER BY dir";
+									"FROM (" +
+									"(" +
+									"SELECT id id, bakedPie bakedPie, bakedOn bakedOn, MAX(bakedOn) OVER (PARTITION BY bakedPie.id) mbo, -1 dir " +
+									"FROM Apple c " +
+									"WHERE bakedPie.id IN (1,2,3,4) AND bakedOn <= :now" +
+									") UNION ALL (" +
+									"SELECT id id, bakedPie bakedPie, bakedOn bakedOn, MIN(bakedOn) OVER (PARTITION BY bakedPie.id) mbo, 1 dir " +
+									"FROM Apple c " +
+									"WHERE bakedPie.id IN (1,2,3,4) AND bakedOn > :now" +
+									")" +
+									") " +
+									"WHERE bakedOn = mbo ORDER BY dir";
 
 					Query<CurrentApple> query = session.createQuery( q, CurrentApple.class );
 					query.setParameter( "now", LocalDate.now() );

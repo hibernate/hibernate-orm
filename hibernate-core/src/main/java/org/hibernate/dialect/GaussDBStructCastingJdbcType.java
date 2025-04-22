@@ -19,14 +19,14 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 
 /**
+ *
  * @author liubao
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLStructCastingJdbcType.
  */
 public class GaussDBStructCastingJdbcType extends AbstractGaussDBStructJdbcType {
 
 	public static final GaussDBStructCastingJdbcType INSTANCE = new GaussDBStructCastingJdbcType();
-
 	public GaussDBStructCastingJdbcType() {
 		this( null, null, null );
 	}
@@ -72,7 +72,7 @@ public class GaussDBStructCastingJdbcType extends AbstractGaussDBStructJdbcType 
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				final String stringValue = ((GaussDBStructCastingJdbcType) getJdbcType()).toString(
+				final String stringValue = ( (GaussDBStructCastingJdbcType) getJdbcType() ).toString(
 						value,
 						getJavaType(),
 						options
@@ -83,7 +83,7 @@ public class GaussDBStructCastingJdbcType extends AbstractGaussDBStructJdbcType 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final String stringValue = ((GaussDBStructCastingJdbcType) getJdbcType()).toString(
+				final String stringValue = ( (GaussDBStructCastingJdbcType) getJdbcType() ).toString(
 						value,
 						getJavaType(),
 						options
@@ -93,7 +93,7 @@ public class GaussDBStructCastingJdbcType extends AbstractGaussDBStructJdbcType 
 
 			@Override
 			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
-				return ((GaussDBStructCastingJdbcType) getJdbcType()).getBindValue( value, options );
+				return ( (GaussDBStructCastingJdbcType) getJdbcType() ).getBindValue( value, options );
 			}
 		};
 	}

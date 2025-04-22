@@ -33,26 +33,24 @@ import static org.assertj.core.api.Assertions.fail;
 /**
  * @author Marco Belladelli
  */
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStandardArrays.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsStandardArrays.class )
 public class ArrayOfArraysTest {
-	@DomainModel(annotatedClasses = ArrayOfArraysTest.EntityWithDoubleByteArray.class)
+	@DomainModel( annotatedClasses = ArrayOfArraysTest.EntityWithDoubleByteArray.class )
 	@SessionFactory
-	@ServiceRegistry(settings = @Setting(name = AvailableSettings.HBM2DDL_AUTO, value = "create-drop"))
+	@ServiceRegistry( settings = @Setting( name = AvailableSettings.HBM2DDL_AUTO, value = "create-drop" ) )
 	@Test
-	@SkipForDialect(dialectClass = CockroachDialect.class,
-			reason = "Unable to find server array type for provided name bytes")
-	@SkipForDialect(dialectClass = GaussDBDialect.class,
-			reason = "type:resolved.Method com.huawei.gaussdb.jdbc.jdbc.PgArray.getArrayImpl(long,int,Map) is not yet implemented.")
+	@SkipForDialect( dialectClass = CockroachDialect.class, reason = "Unable to find server array type for provided name bytes" )
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.Method com.huawei.gaussdb.jdbc.jdbc.PgArray.getArrayImpl(long,int,Map) is not yet implemented.")
 	public void testDoubleByteArrayWorks(SessionFactoryScope scope) {
 		final Long id = scope.fromTransaction( session -> {
 			final EntityWithDoubleByteArray entity = new EntityWithDoubleByteArray();
-			entity.setByteArray( new byte[][] {new byte[] {1}} );
+			entity.setByteArray( new byte[][] { new byte[] { 1 } } );
 			session.persist( entity );
 			return entity.getId();
 		} );
 		scope.inSession( session -> {
 			final byte[][] byteArray = session.find( EntityWithDoubleByteArray.class, id ).getByteArray();
-			assertThat( byteArray ).hasDimensions( 1, 1 ).contains( new byte[] {1}, Index.atIndex( 0 ) );
+			assertThat( byteArray ).hasDimensions( 1, 1 ).contains( new byte[] { 1 }, Index.atIndex( 0 ) );
 		} );
 	}
 
@@ -64,18 +62,17 @@ public class ArrayOfArraysTest {
 			fail( "Expecting Integer[][] to trigger exception as non-byte multidimensional arrays are not supported" );
 		}
 		catch (Exception e) {
-			assertThat( e ).isInstanceOf( MappingException.class )
-					.hasMessage( "Nested arrays (with the exception of byte[][]) are not supported" );
+			assertThat( e ).isInstanceOf( MappingException.class ).hasMessage( "Nested arrays (with the exception of byte[][]) are not supported" );
 		}
 	}
 
-	@Entity(name = "EntityWithDoubleByteArray")
+	@Entity( name = "EntityWithDoubleByteArray" )
 	static class EntityWithDoubleByteArray {
 		@Id
 		@GeneratedValue
 		private Long id;
 
-		@JdbcTypeCode(SqlTypes.ARRAY)
+		@JdbcTypeCode( SqlTypes.ARRAY )
 		private byte[][] byteArray;
 
 		public Long getId() {
@@ -91,13 +88,13 @@ public class ArrayOfArraysTest {
 		}
 	}
 
-	@Entity(name = "EntityWithDoubleIntegerArray")
+	@Entity( name = "EntityWithDoubleIntegerArray" )
 	static class EntityWithDoubleIntegerArray {
 		@Id
 		@GeneratedValue
 		private Long id;
 
-		@JdbcTypeCode(SqlTypes.ARRAY)
+		@JdbcTypeCode( SqlTypes.ARRAY )
 		private Integer[][] integers;
 	}
 }

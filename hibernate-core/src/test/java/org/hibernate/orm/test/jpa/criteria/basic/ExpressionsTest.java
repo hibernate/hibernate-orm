@@ -68,7 +68,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 					product.setId( "product1" );
 					product.setPrice( 1.23d );
 					product.setQuantity( 2 );
-					product.setPartNumber( ((long) Integer.MAX_VALUE) + 1 );
+					product.setPartNumber( ( (long) Integer.MAX_VALUE ) + 1 );
 					product.setRating( 1.999f );
 					product.setSomeBigInteger( BigInteger.valueOf( 987654321 ) );
 					product.setSomeBigDecimal( BigDecimal.valueOf( 987654.32 ) );
@@ -432,11 +432,10 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = DerbyDialect.class,
-			reason = "By default, unless some kind of context enables inference," +
-					 "a numeric/decimal parameter has the type DECIMAL(31,31) which might cause an overflow on certain arithmetics." +
-					 "Fixing this would require a custom SqmToSqlAstConverter that creates a special JdbcParameter " +
-					 "that is always rendered as literal. Since numeric literal + parameter arithmetic is rare, we skip this for now.")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "By default, unless some kind of context enables inference," +
+			"a numeric/decimal parameter has the type DECIMAL(31,31) which might cause an overflow on certain arithmetics." +
+			"Fixing this would require a custom SqmToSqlAstConverter that creates a special JdbcParameter " +
+			"that is always rendered as literal. Since numeric literal + parameter arithmetic is rare, we skip this for now.")
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "Same reason as for Derby")
 	public void testQuotientAndMultiply() {
 		doInJPA(
@@ -503,7 +502,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 					Root<Product> from = criteria.from( Product.class );
 					criteria.where( from.get( Product_.partNumber )
-							.in( Collections.singletonList( ((long) Integer.MAX_VALUE) + 1 ) ) );
+											.in( Collections.singletonList( ( (long) Integer.MAX_VALUE ) + 1 ) ) );
 					List<Product> result = entityManager.createQuery( criteria ).getResultList();
 					assertEquals( 1, result.size() );
 				}
@@ -517,7 +516,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 				entityManager -> {
 					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 					Root<Product> from = criteria.from( Product.class );
-					criteria.where( from.get( Product_.partNumber ).in( ((long) Integer.MAX_VALUE) + 1 ) );
+					criteria.where( from.get( Product_.partNumber ).in( ( (long) Integer.MAX_VALUE ) + 1 ) );
 					List<Product> result = entityManager.createQuery( criteria ).getResultList();
 					assertEquals( 1, result.size() );
 				}

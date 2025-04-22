@@ -18,7 +18,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * GaussDB xmlquery function.
  *
  * @author liubao
- * <p>
+ *
  * Notes: Original code of this class is based on PostgreSQLXmlQueryFunction.
  */
 public class GaussDBXmlQueryFunction extends XmlQueryFunction {

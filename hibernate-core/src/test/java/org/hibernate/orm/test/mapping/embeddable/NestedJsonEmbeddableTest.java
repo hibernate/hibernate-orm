@@ -171,36 +171,36 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 				entityManager -> {
 					List<Tuple> tuples = entityManager.createQuery(
 							"select " +
-							"b.theJson.nested.theInt," +
-							"b.theJson.nested.theDouble," +
-							"b.theJson.nested.theBoolean," +
-							"b.theJson.nested.theNumericBoolean," +
-							"b.theJson.nested.theStringBoolean," +
-							"b.theJson.nested.theString," +
-							"b.theJson.nested.theInteger," +
-							"b.theJson.nested.theUrl," +
-							"b.theJson.nested.theClob," +
-							"b.theJson.nested.theBinary," +
-							"b.theJson.nested.theDate," +
-							"b.theJson.nested.theTime," +
-							"b.theJson.nested.theTimestamp," +
-							"b.theJson.nested.theInstant," +
-							"b.theJson.nested.theUuid," +
-							"b.theJson.nested.gender," +
-							"b.theJson.nested.convertedGender," +
-							"b.theJson.nested.ordinalGender," +
-							"b.theJson.nested.theDuration," +
-							"b.theJson.nested.theLocalDateTime," +
-							"b.theJson.nested.theLocalDate," +
-							"b.theJson.nested.theLocalTime," +
-							"b.theJson.nested.theZonedDateTime," +
-							"b.theJson.nested.theOffsetDateTime," +
-							"b.theJson.nested.mutableValue," +
-							"b.theJson.simpleEmbeddable," +
-							"b.theJson.simpleEmbeddable.doubleNested," +
-							"b.theJson.simpleEmbeddable.doubleNested.theNested," +
-							"b.theJson.simpleEmbeddable.doubleNested.theNested.theLeaf " +
-							"from JsonHolder b where b.id = 1",
+									"b.theJson.nested.theInt," +
+									"b.theJson.nested.theDouble," +
+									"b.theJson.nested.theBoolean," +
+									"b.theJson.nested.theNumericBoolean," +
+									"b.theJson.nested.theStringBoolean," +
+									"b.theJson.nested.theString," +
+									"b.theJson.nested.theInteger," +
+									"b.theJson.nested.theUrl," +
+									"b.theJson.nested.theClob," +
+									"b.theJson.nested.theBinary," +
+									"b.theJson.nested.theDate," +
+									"b.theJson.nested.theTime," +
+									"b.theJson.nested.theTimestamp," +
+									"b.theJson.nested.theInstant," +
+									"b.theJson.nested.theUuid," +
+									"b.theJson.nested.gender," +
+									"b.theJson.nested.convertedGender," +
+									"b.theJson.nested.ordinalGender," +
+									"b.theJson.nested.theDuration," +
+									"b.theJson.nested.theLocalDateTime," +
+									"b.theJson.nested.theLocalDate," +
+									"b.theJson.nested.theLocalTime," +
+									"b.theJson.nested.theZonedDateTime," +
+									"b.theJson.nested.theOffsetDateTime," +
+									"b.theJson.nested.mutableValue," +
+									"b.theJson.simpleEmbeddable," +
+									"b.theJson.simpleEmbeddable.doubleNested," +
+									"b.theJson.simpleEmbeddable.doubleNested.theNested," +
+									"b.theJson.simpleEmbeddable.doubleNested.theNested.theLeaf " +
+									"from JsonHolder b where b.id = 1",
 							Tuple.class
 					).getResultList();
 					assertEquals( 1, tuples.size() );
@@ -388,33 +388,33 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
 					entityManager.createMutationQuery(
 									"update JsonHolder b set " +
-									"b.theJson.nested.theInt = :theInt," +
-									"b.theJson.nested.theDouble = :theDouble," +
-									"b.theJson.nested.theBoolean = :theBoolean," +
-									"b.theJson.nested.theNumericBoolean = :theNumericBoolean," +
-									"b.theJson.nested.theStringBoolean = :theStringBoolean," +
-									"b.theJson.nested.theString = :theString," +
-									"b.theJson.nested.theInteger = :theInteger," +
-									"b.theJson.nested.theUrl = :theUrl," +
-									"b.theJson.nested.theClob = :theClob," +
-									"b.theJson.nested.theBinary = :theBinary," +
-									"b.theJson.nested.theDate = :theDate," +
-									"b.theJson.nested.theTime = :theTime," +
-									"b.theJson.nested.theTimestamp = :theTimestamp," +
-									"b.theJson.nested.theInstant = :theInstant," +
-									"b.theJson.nested.theUuid = :theUuid," +
-									"b.theJson.nested.gender = :gender," +
-									"b.theJson.nested.convertedGender = :convertedGender," +
-									"b.theJson.nested.ordinalGender = :ordinalGender," +
-									"b.theJson.nested.theDuration = :theDuration," +
-									"b.theJson.nested.theLocalDateTime = :theLocalDateTime," +
-									"b.theJson.nested.theLocalDate = :theLocalDate," +
-									"b.theJson.nested.theLocalTime = :theLocalTime," +
-									"b.theJson.nested.theZonedDateTime = :theZonedDateTime," +
-									"b.theJson.nested.theOffsetDateTime = :theOffsetDateTime," +
-									"b.theJson.nested.mutableValue = :mutableValue," +
-									"b.theJson.simpleEmbeddable.integerField = :integerField " +
-									"where b.id = 2"
+											"b.theJson.nested.theInt = :theInt," +
+											"b.theJson.nested.theDouble = :theDouble," +
+											"b.theJson.nested.theBoolean = :theBoolean," +
+											"b.theJson.nested.theNumericBoolean = :theNumericBoolean," +
+											"b.theJson.nested.theStringBoolean = :theStringBoolean," +
+											"b.theJson.nested.theString = :theString," +
+											"b.theJson.nested.theInteger = :theInteger," +
+											"b.theJson.nested.theUrl = :theUrl," +
+											"b.theJson.nested.theClob = :theClob," +
+											"b.theJson.nested.theBinary = :theBinary," +
+											"b.theJson.nested.theDate = :theDate," +
+											"b.theJson.nested.theTime = :theTime," +
+											"b.theJson.nested.theTimestamp = :theTimestamp," +
+											"b.theJson.nested.theInstant = :theInstant," +
+											"b.theJson.nested.theUuid = :theUuid," +
+											"b.theJson.nested.gender = :gender," +
+											"b.theJson.nested.convertedGender = :convertedGender," +
+											"b.theJson.nested.ordinalGender = :ordinalGender," +
+											"b.theJson.nested.theDuration = :theDuration," +
+											"b.theJson.nested.theLocalDateTime = :theLocalDateTime," +
+											"b.theJson.nested.theLocalDate = :theLocalDate," +
+											"b.theJson.nested.theLocalTime = :theLocalTime," +
+											"b.theJson.nested.theZonedDateTime = :theZonedDateTime," +
+											"b.theJson.nested.theOffsetDateTime = :theOffsetDateTime," +
+											"b.theJson.nested.mutableValue = :mutableValue," +
+											"b.theJson.simpleEmbeddable.integerField = :integerField " +
+											"where b.id = 2"
 							)
 							.setParameter( "theInt", struct.getTheInt() )
 							.setParameter( "theDouble", struct.getTheDouble() )
@@ -565,7 +565,7 @@ public class NestedJsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 		@Override
 		public int hashCode() {
 			int result = integerField != null ? integerField.hashCode() : 0;
-			result = 31 * result + (doubleNested != null ? doubleNested.hashCode() : 0);
+			result = 31 * result + ( doubleNested != null ? doubleNested.hashCode() : 0 );
 			return result;
 		}
 	}

@@ -36,7 +36,7 @@ public class TestFlushModeWithIdentitySelfReferenceTest extends BaseCoreFunction
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {SelfRefEntity.class, SelfRefEntityWithEmbeddable.class};
+		return new Class<?>[] { SelfRefEntity.class, SelfRefEntityWithEmbeddable.class };
 	}
 
 	@Test

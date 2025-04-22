@@ -91,7 +91,7 @@ public class XmlTableTest {
 					entity.xml.put( "theString", "abc" );
 					entity.xml.put( "theBoolean", true );
 					entity.xml.put( "theNull", null );
-					entity.xml.put( "theArray", new String[] {"a", "b", "c"} );
+					entity.xml.put( "theArray", new String[] { "a", "b", "c" } );
 					entity.xml.put( "theObject", new HashMap<>( entity.xml ) );
 					entity.xml.put(
 							"theNestedObjects",
@@ -101,7 +101,7 @@ public class XmlTableTest {
 									Map.of( "id", 3, "name", "val3" )
 							)
 					);
-					em.persist( entity );
+					em.persist(entity);
 				}
 		);
 	}
@@ -116,7 +116,7 @@ public class XmlTableTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resoving.not support")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resoving.not support")
 	public void testSimple(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-xml-table-example[]
@@ -157,9 +157,8 @@ public class XmlTableTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = SybaseASEDialect.class,
-			reason = "Sybase ASE needs a special emulation for query columns that is impossible with parameters")
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resoving.not support")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE needs a special emulation for query columns that is impossible with parameters")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resoving.not support")
 	public void testNodeBuilderXmlTableObject(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -197,9 +196,8 @@ public class XmlTableTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = SybaseASEDialect.class,
-			reason = "Sybase doesn't support such xpath expressions directly in xmltable. We could emulate that through generating xmlextract calls though")
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resoving.not support")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase doesn't support such xpath expressions directly in xmltable. We could emulate that through generating xmlextract calls though")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resoving.not support")
 	public void testCorrelateXmlTable(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final String query = """
@@ -233,8 +231,8 @@ public class XmlTableTest {
 		assertEquals( "abc", tuple.get( 2 ) );
 		assertEquals( true, tuple.get( 3 ) );
 		if ( DialectContext.getDialect() instanceof OracleDialect
-			 || DialectContext.getDialect() instanceof HANADialect
-			 || DialectContext.getDialect() instanceof SybaseASEDialect ) {
+				|| DialectContext.getDialect() instanceof HANADialect
+				|| DialectContext.getDialect() instanceof SybaseASEDialect ) {
 			// Some databases return null for empty tags rather than an empty string
 			assertNull( tuple.get( 4 ) );
 		}
@@ -243,7 +241,7 @@ public class XmlTableTest {
 			assertEquals( "", tuple.get( 4 ) );
 		}
 
-		assertXmlEquals( "<theObject><nested>Abc</nested></theObject>", tuple.get( 5, String.class ) );
+		assertXmlEquals("<theObject><nested>Abc</nested></theObject>", tuple.get( 5, String.class ) );
 
 		assertEquals( "Abc", tuple.get( 6 ) );
 		assertNull( tuple.get( 7 ) );
@@ -302,7 +300,7 @@ public class XmlTableTest {
 		final TransformerFactory tf = TransformerFactory.newInstance();
 		try {
 			final Transformer transformer = tf.newTransformer();
-			transformer.setOutputProperty( OutputKeys.OMIT_XML_DECLARATION, "yes" );
+			transformer.setOutputProperty( OutputKeys.OMIT_XML_DECLARATION, "yes");
 			transformer.setOutputProperty( OutputKeys.INDENT, "yes" );
 			final StringWriter writer = new StringWriter();
 			transformer.transform( new DOMSource( document ), new StreamResult( writer ) );

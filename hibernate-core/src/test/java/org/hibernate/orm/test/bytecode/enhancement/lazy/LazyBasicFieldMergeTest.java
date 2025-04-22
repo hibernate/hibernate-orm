@@ -48,7 +48,7 @@ public class LazyBasicFieldMergeTest {
 		scope.inTransaction( session -> {
 			Manager manager = new Manager();
 			manager.setName( "John Doe" );
-			manager.setResume( new byte[] {1, 2, 3} );
+			manager.setResume( new byte[] { 1, 2, 3 } );
 
 			Company company = new Company();
 			company.setName( "Company" );

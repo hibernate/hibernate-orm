@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 )
 @SessionFactory
 @JiraKey("HHH-19314")
-@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resovling.not support")
+@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resovling.not support")
 public class InsertConflictWithCriteriaCopyTreeEnabledTests {
 
 	@Test

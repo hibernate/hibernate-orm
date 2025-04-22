@@ -8,6 +8,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Root;
+
 import org.hibernate.Incubating;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
@@ -165,6 +166,18 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 
 	@Override
 	SelectionQuery<T> createQuery(EntityManager entityManager);
+
+	/**
+	 * Build a {@link CriteriaQuery criteria query}
+	 * satisfying this specification, using the given
+	 * {@link CriteriaBuilder}.
+	 * <p>
+	 * If the returned criteria query is mutated, the mutations
+	 * will not be not reflected in this specification.
+	 *
+	 * @return a new criteria query
+	 */
+	CriteriaQuery<T> buildCriteriaQuery(CriteriaBuilder builder);
 
 	/**
 	 * Returns a specification reference which can be used to programmatically,

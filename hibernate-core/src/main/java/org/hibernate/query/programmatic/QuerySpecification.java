@@ -5,6 +5,8 @@
 package org.hibernate.query.programmatic;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CommonAbstractCriteria;
 
 import org.hibernate.Incubating;
 import org.hibernate.Session;
@@ -52,6 +54,18 @@ public interface QuerySpecification<T> {
 	 * Finalize the building and create executable query instance.
 	 */
 	CommonQueryContract createQuery(EntityManager entityManager);
+
+	/**
+	 * Build a {@link CommonAbstractCriteria criteria query}
+	 * satisfying this specification, using the given
+	 * {@link CriteriaBuilder}.
+	 * <p>
+	 * If the returned criteria query is mutated, the mutations
+	 * will not be not reflected in this specification.
+	 *
+	 * @return a new criteria query
+	 */
+	CommonAbstractCriteria buildCriteriaQuery(CriteriaBuilder builder);
 
 	/**
 	 * Validate the query.

@@ -59,6 +59,7 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 		castResult( declaration );
 		createSpecification( declaration );
 		handleRestrictionParameters( declaration, paramTypes );
+		handleSorting( declaration, paramTypes, containerType );
 		createQuery( declaration );
 		handlePageParameters( declaration, paramTypes, containerType );
 		boolean unwrapped = !isUsingEntityManager();

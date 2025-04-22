@@ -13,9 +13,10 @@ import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.offset;
 
 /**
  * @author Jan Schatteman
@@ -39,8 +40,8 @@ public class TargetEmbeddableOnEmbeddedTest {
 			City city = session.find(City.class, 1L);
 			assert city.getCoordinates() instanceof GPS;
 //end::embeddable-Target-fetching-example[]
-			assertEquals(46.77120, city.getCoordinates().x(), 0.00001);
-			assertEquals(23.62360, city.getCoordinates().y(), 0.00001);
+			assertThat( city.getCoordinates().x() ).isCloseTo( 46.77120, offset( 0.00001 ) );
+			assertThat( city.getCoordinates().y() ).isCloseTo( 23.62360, offset( 0.00001 ) );
 		} );
 	}
 

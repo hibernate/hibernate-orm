@@ -383,8 +383,6 @@ public interface StatelessSession extends SharedSessionContract {
 	 *
 	 * @param entityGraph The {@link EntityGraph}, interpreted as a
 	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}
-	 * @param graphSemantic a {@link GraphSemantic} specifying
-	 *                      how the graph should be interpreted
 	 * @param ids The ids of the entities to retrieve
 	 * @return an ordered list of detached entity instances, with
 	 *         null elements representing missing entities

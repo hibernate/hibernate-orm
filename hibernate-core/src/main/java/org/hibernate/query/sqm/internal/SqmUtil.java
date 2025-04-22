@@ -865,22 +865,17 @@ public class SqmUtil {
 
 	public static SqmSortSpecification sortSpecification(SqmSelectStatement<?> sqm, Order<?> order) {
 		final List<SqmSelectableNode<?>> items = sqm.getQuerySpec().getSelectClause().getSelectionItems();
-		final int element = order.getElement();
-		if ( element < 1) {
-			throw new IllegalQueryOperationException("Cannot order by element " + element
-					+ " (the first select item is element 1)");
-		}
-		if ( element > items.size() ) {
-			throw new IllegalQueryOperationException("Cannot order by element " + element
-					+ " (there are only " + items.size() + " select items)");
-		}
-		final SqmSelectableNode<?> selected = items.get( element-1 );
+		final SqmSelectableNode<?> selected = selectedNode( sqm, order ); // does validation by side effect!
+		return createSortSpecification( sqm, order, items, selected );
+	}
 
+	private static SqmSortSpecification createSortSpecification(
+			SqmSelectStatement<?> sqm, Order<?> order, List<SqmSelectableNode<?>> items, SqmSelectableNode<?> selected) {
 		final NodeBuilder builder = sqm.nodeBuilder();
 		if ( order.getEntityClass() == null ) {
 			// ordering by an element of the select list
 			return new SqmSortSpecification(
-					new SqmAliasedNodeRef( element, builder.getIntegerType(), builder ),
+					new SqmAliasedNodeRef( order.getElement(), builder.getIntegerType(), builder ),
 					order.getDirection(),
 					order.getNullPrecedence(),
 					order.isCaseInsensitive()
@@ -888,7 +883,7 @@ public class SqmUtil {
 		}
 		else {
 			// ordering by an attribute of the returned entity
-			if ( items.size() == 1) {
+			if ( items.size() <= 1) {
 				if ( selected instanceof SqmFrom<?, ?> root ) {
 					if ( !order.getEntityClass().isAssignableFrom( root.getJavaType() ) ) {
 						throw new IllegalQueryOperationException("Select item was of wrong entity type");
@@ -898,7 +893,10 @@ public class SqmUtil {
 					while ( tokens.hasMoreTokens() ) {
 						path = path.get( tokens.nextToken() );
 					}
-					return builder.sort( path, order.getDirection(), order.getNullPrecedence(), order.isCaseInsensitive() );
+					return builder.sort( path,
+							order.getDirection(),
+							order.getNullPrecedence(),
+							order.isCaseInsensitive() );
 				}
 				else {
 					throw new IllegalQueryOperationException("Select item was not an entity type");
@@ -907,6 +905,32 @@ public class SqmUtil {
 			else {
 				throw new IllegalQueryOperationException("Query has multiple items in the select list");
 			}
+		}
+	}
+
+	private static SqmSelectableNode<?> selectedNode(SqmSelectStatement<?> sqm, Order<?> order) {
+		final int element = order.getElement();
+		if ( element < 1) {
+			throw new IllegalQueryOperationException("Cannot order by element " + element
+					+ " (the first select item is element 1)");
+		}
+		final var selectionItems = sqm.getQuerySpec().getSelectClause().getSelectionItems();
+		final int items = selectionItems.size();
+		if ( items == 0 && element == 1 ) {
+			if ( order.getEntityClass() == null || sqm.getQuerySpec().getRootList().size() > 1 ) {
+				throw new IllegalQueryOperationException("Cannot order by element " + element
+						+ " (there is no select list)");
+			}
+			else {
+				return sqm.getQuerySpec().getRootList().get(0);
+			}
+		}
+		else if ( element > items ) {
+			throw new IllegalQueryOperationException( "Cannot order by element " + element
+					+ " (there are only " + items + " select items)");
+		}
+		else {
+			return selectionItems.get( element - 1 );
 		}
 	}
 

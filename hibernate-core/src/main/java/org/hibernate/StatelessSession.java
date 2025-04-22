@@ -373,6 +373,45 @@ public interface StatelessSession extends SharedSessionContract {
 	<T> List<T> getMultiple(Class<T> entityClass, List<?> ids, LockMode lockMode);
 
 	/**
+	 * Retrieve multiple rows, returning instances of the root
+	 * entity of the given {@link EntityGraph} with the fetched
+	 * associations specified by the graph, in a list where the
+	 * position of an instance in the list matches the position
+	 * of its identifier in the given array, and the list
+	 * contains a null value if there is no persistent instance
+	 * matching a given identifier.
+	 *
+	 * @param entityGraph The {@link EntityGraph}, interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}
+	 * @param graphSemantic a {@link GraphSemantic} specifying
+	 *                      how the graph should be interpreted
+	 * @param ids The ids of the entities to retrieve
+	 * @return an ordered list of detached entity instances, with
+	 *         null elements representing missing entities
+	 * @since 7.0
+	 */
+	<T> List<T> getMultiple(EntityGraph<T> entityGraph, List<?> ids);
+
+	/**
+	 * Retrieve multiple rows, returning instances of the root
+	 * entity of the given {@link EntityGraph} with the fetched
+	 * associations specified by the graph, in a list where the
+	 * position of an instance in the list matches the position
+	 * of its identifier in the given array, and the list
+	 * contains a null value if there is no persistent instance
+	 * matching a given identifier.
+	 *
+	 * @param entityGraph The {@link EntityGraph}
+	 * @param graphSemantic a {@link GraphSemantic} specifying
+	 *                      how the graph should be interpreted
+	 * @param ids The ids of the entities to retrieve
+	 * @return an ordered list of detached entity instances, with
+	 *         null elements representing missing entities
+	 * @since 7.0
+	 */
+	<T> List<T> getMultiple(EntityGraph<T> entityGraph, GraphSemantic graphSemantic, List<?> ids);
+
+	/**
 	 * Refresh the entity instance state from the database.
 	 *
 	 * @param entity The entity to be refreshed.

@@ -18,22 +18,25 @@ import static org.hibernate.query.SortDirection.DESCENDING;
 /**
  * A rule for sorting a query result set.
  * <p>
- * This is a convenience class which allows query result ordering
- * rules to be passed around the system before being applied to
- * a {@link Query} by calling {@link SelectionQuery#setOrder(Order)}.
+ * This is a convenience class which allows query result ordering rules to be
+ * passed around the system before being applied to a {@link Query} by calling
+ * {@link org.hibernate.query.programmatic.SelectionSpecification#sort(Order)}.
  * <pre>
- * session.createSelectionQuery("from Book b join b.authors a where a.name = :name", Book.class)
+ * SelectionSpecification.create(Book.class,
+ *             "from Book b join b.authors a where a.name = :name")
+ *         .sort(asc(Book_.publicationDate))
+ *         .createQuery(session)
  *         .setParameter("name", authorName)
- *         .setOrder(asc(Book_.publicationDate))
  *         .getResultList();
  * </pre>
  * <p>
  * {@code Order}s may be stacked using {@link List#of} and
- * {@link SelectionQuery#setOrder(List)}.
+ * {@link org.hibernate.query.programmatic.SelectionSpecification#resort(List)}.
  * <pre>
- * session.createSelectionQuery("from Book b join b.authors a where a.name = :name", Book.class)
+ * SelectionSpecification.create(Book.class,
+ *             "from Book b join b.authors a where a.name = :name")
+ *         .sort(List.of(asc(Book_.publicationDate), desc(Book_.ssn)))
  *         .setParameter("name", authorName)
- *         .setOrder(List.of(asc(Book_.publicationDate), desc(Book_.ssn)))
  *         .getResultList();
  * </pre>
  * <p>
@@ -49,8 +52,8 @@ import static org.hibernate.query.SortDirection.DESCENDING;
  *          used by Hibernate Data Repositories to implement Jakarta Data
  *          query methods.
  *
- * @see SelectionQuery#setOrder(Order)
- * @see SelectionQuery#setOrder(java.util.List)
+ * @see org.hibernate.query.programmatic.SelectionSpecification#sort(Order)
+ * @see org.hibernate.query.programmatic.SelectionSpecification#resort(List)
  * @see org.hibernate.query.restriction.Restriction
  *
  * @author Gavin King

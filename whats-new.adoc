@@ -129,17 +129,17 @@ A new API has been added for incremental definition of a query, with support for
 ====
 [source, java, indent=0]
 ----
-SelectionQuery<Book> qry = session.createSelectionSpecification(
-    "from Book",
-    Book.class
-).restriction(
+SelectionQuery<Book> qry = SelectionSpecification.create(
+    Book.class,
+    "from Book"
+).restrict(
     Restriction.restrict(
         Book_.suggestedCost,
         Range.closed(10.00, 19.99)
     )
-).order(
+).sort(
     Order.asc(Book_.suggestedCost)
-).createQuery();
+).createQuery(session);
 ----
 ====
 
@@ -148,15 +148,15 @@ as well as mutations -
 ====
 [source, java, indent=0]
 ----
-MutationQuery<Book> qry = session.createMutationSpecification(
-    "delete Book",
-    Book.class
-).restriction(
+MutationQuery<Book> qry = MutationSpecification.create(
+    Book.class,
+    "delete Book"
+).restrict(
     Restriction.restrict(
         Book_.suggestedCost,
         Range.closed(10.00, 19.99)
     )
-).createQuery();
+).createQuery(session);
 ----
 ====
 

@@ -15,7 +15,6 @@ import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.QueryLogging;
-import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.internal.QuerySplitter;
@@ -205,16 +204,16 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		return this;
 	}
 
-	@Override
-	public SelectionQuery<R> addRestriction(Restriction<? super R> restriction) {
-		final SqmSelectStatement<R> selectStatement = getSqmSelectStatement().copy( noParamCopyContext( SqmQuerySource.CRITERIA ) );
-		restriction.apply( selectStatement, selectStatement.<R>getRoot( 0, getExpectedResultType() ) );
-		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
-		//       simply cache the new SQM as if it were a criteria query, and remove this:
-		getQueryOptions().setQueryPlanCachingEnabled( false );
-		setSqmStatement( selectStatement );
-		return this;
-	}
+//	@Override
+//	public SelectionQuery<R> addRestriction(Restriction<? super R> restriction) {
+//		final SqmSelectStatement<R> selectStatement = getSqmSelectStatement().copy( noParamCopyContext( SqmQuerySource.CRITERIA ) );
+//		restriction.apply( selectStatement, selectStatement.<R>getRoot( 0, getExpectedResultType() ) );
+//		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
+//		//       simply cache the new SQM as if it were a criteria query, and remove this:
+//		getQueryOptions().setQueryPlanCachingEnabled( false );
+//		setSqmStatement( selectStatement );
+//		return this;
+//	}
 
 	@Override
 	public SelectionQuery<R> setPage(Page page) {

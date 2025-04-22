@@ -216,7 +216,7 @@ gaussdb() {
 
     # config param
     CONTAINER_NAME=opengauss
-    IMAGE=enmotech/opengauss:latest
+    IMAGE=opengauss/opengauss:7.0.0-RC1
     PORT=5432
     DB_USER=hibernate_orm_test
     DB_PASSWORD=Hibernate_orm_test@1234

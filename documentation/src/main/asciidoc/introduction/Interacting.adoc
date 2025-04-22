@@ -346,6 +346,8 @@ Finally, the Hibernate `Session` offers the following method, which is capable o
 
 | `findMultiple(Class,List<Object>,FindOption...)`
 | Obtain a list of persistent objects given their type and their ids, using the specified options
+| `findMultiple(EntityGraph,List<Object>,FindOption...)`
+| Obtain a list of persistent objects given their ids and an `EntityGraph` specifying their type and associations which should be eagerly fetched, using the specified options
 |===
 
 The following code results in a single SQL `select` statement:

@@ -64,7 +64,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	}
 
 	@Override
-	public SelectionSpecification<T> addRestriction(Restriction<T> restriction) {
+	public SelectionSpecification<T> restrict(Restriction<T> restriction) {
 		specifications.add( (sqmStatement, root) -> {
 			final SqmPredicate sqmPredicate = SqmUtil.restriction( sqmStatement, resultType, restriction );
 			sqmStatement.getQuerySpec().applyPredicate( sqmPredicate );
@@ -73,20 +73,20 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	}
 
 	@Override
-	public SelectionSpecification<T> addAugmentation(Augmentation<T> augmentation) {
+	public SelectionSpecification<T> augment(Augmentation<T> augmentation) {
 		specifications.add( (sqmStatement, root) ->
 				augmentation.augment( sqmStatement.nodeBuilder(), sqmStatement, root ) );
 		return this;
 	}
 
 	@Override
-	public SelectionSpecification<T> addFetching(Path<T, ?> fetchPath) {
+	public SelectionSpecification<T> fetch(Path<T, ?> fetchPath) {
 		specifications.add( (sqmStatement, root) -> fetchPath.fetch( root ) );
 		return this;
 	}
 
 	@Override
-	public SelectionSpecification<T> addOrdering(Order<T> order) {
+	public SelectionSpecification<T> sort(Order<T> order) {
 		specifications.add( (sqmStatement, root) -> {
 			addOrder( order, sqmStatement );
 		} );
@@ -94,7 +94,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	}
 
 	@Override
-	public final SelectionSpecification<T> setOrdering(Order<T> order) {
+	public final SelectionSpecification<T> resort(Order<T> order) {
 		specifications.add( (sqmStatement, root) -> {
 			sqmStatement.getQuerySpec().setOrderByClause( new SqmOrderByClause() );
 			addOrder( order, sqmStatement );
@@ -103,7 +103,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	}
 
 	@Override
-	public final SelectionSpecification<T> setOrdering(List<Order<T>> orders) {
+	public final SelectionSpecification<T> resort(List<Order<T>> orders) {
 		specifications.add( (sqmStatement, root) -> {
 			sqmStatement.getQuerySpec().setOrderByClause( new SqmOrderByClause() );
 			orders.forEach( order -> addOrder( order, sqmStatement ) );

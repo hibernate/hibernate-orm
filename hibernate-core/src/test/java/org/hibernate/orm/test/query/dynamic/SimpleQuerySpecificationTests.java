@@ -38,7 +38,7 @@ public class SimpleQuerySpecificationTests {
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
 			SelectionSpecification.create( BasicEntity.class, "from BasicEntity" )
-					.addOrdering( Order.asc( BasicEntity_.position ) )
+					.sort( Order.asc( BasicEntity_.position ) )
 					.createQuery( session )
 					.list();
 		} );
@@ -54,8 +54,8 @@ public class SimpleQuerySpecificationTests {
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
 			SelectionSpecification.create( BasicEntity.class, "from BasicEntity" )
-					.addOrdering( Order.asc( BasicEntity_.position ) )
-					.addOrdering( Order.asc( BasicEntity_.id ) )
+					.sort( Order.asc( BasicEntity_.position ) )
+					.sort( Order.asc( BasicEntity_.id ) )
 					.createQuery( session )
 					.list();
 		} );
@@ -71,7 +71,7 @@ public class SimpleQuerySpecificationTests {
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
 			SelectionSpecification.create( BasicEntity.class, "from BasicEntity" )
-					.setOrdering( Order.asc( BasicEntity_.position ) )
+					.resort( Order.asc( BasicEntity_.position ) )
 					.createQuery( session )
 					.list();
 		} );
@@ -87,7 +87,7 @@ public class SimpleQuerySpecificationTests {
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
 			SelectionSpecification.create( BasicEntity.class, "from BasicEntity" )
-					.setOrdering( List.of( Order.asc( BasicEntity_.position ), Order.asc( BasicEntity_.id ) ) )
+					.resort( List.of( Order.asc( BasicEntity_.position ), Order.asc( BasicEntity_.id ) ) )
 					.createQuery( session )
 					.list();
 		} );
@@ -103,8 +103,8 @@ public class SimpleQuerySpecificationTests {
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
 			SelectionSpecification.create( BasicEntity.class, "from BasicEntity" )
-					.setOrdering( Order.asc( BasicEntity_.id ) )
-					.setOrdering( Order.asc( BasicEntity_.position ) )
+					.resort( Order.asc( BasicEntity_.id ) )
+					.resort( Order.asc( BasicEntity_.position ) )
 					.createQuery( session )
 					.list();
 		} );
@@ -115,8 +115,8 @@ public class SimpleQuerySpecificationTests {
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
 			SelectionSpecification.create( BasicEntity.class, "from BasicEntity" )
-					.addOrdering( Order.asc( BasicEntity_.id ) )
-					.setOrdering( Order.asc( BasicEntity_.position ) )
+					.sort( Order.asc( BasicEntity_.id ) )
+					.resort( Order.asc( BasicEntity_.position ) )
 					.createQuery( session )
 					.list();
 		} );
@@ -132,7 +132,7 @@ public class SimpleQuerySpecificationTests {
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
 			SelectionSpecification.create( BasicEntity.class, "from BasicEntity" )
-					.addRestriction( Restriction.restrict( BasicEntity_.position, Range.closed( 1, 5 ) ) )
+					.restrict( Restriction.restrict( BasicEntity_.position, Range.closed( 1, 5 ) ) )
 					.createQuery( session )
 					.list();
 		} );
@@ -148,7 +148,7 @@ public class SimpleQuerySpecificationTests {
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
 			MutationSpecification.create( BasicEntity.class, "delete BasicEntity" )
-					.addRestriction( Restriction.restrict( BasicEntity_.position, Range.closed( 1, 5 ) ) )
+					.restrict( Restriction.restrict( BasicEntity_.position, Range.closed( 1, 5 ) ) )
 					.createQuery( session )
 					.executeUpdate();
 		} );
@@ -164,7 +164,7 @@ public class SimpleQuerySpecificationTests {
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
 			SelectionSpecification.create( BasicEntity.class )
-					.addOrdering( Order.asc( BasicEntity_.position ) )
+					.sort( Order.asc( BasicEntity_.position ) )
 					.createQuery( session )
 					.getResultList();
 		} );
@@ -185,8 +185,8 @@ public class SimpleQuerySpecificationTests {
 			query.select( entity );
 			query.where( criteriaBuilder.like( entity.get( BasicEntity_.name ), "%" ) );
 			SelectionSpecification.create( query )
-					.addOrdering( Order.asc( BasicEntity_.position ) )
-					.addFetching( Path.from(BasicEntity.class).to( BasicEntity_.other ) )
+					.sort( Order.asc( BasicEntity_.position ) )
+					.fetch( Path.from(BasicEntity.class).to( BasicEntity_.other ) )
 					.createQuery( session )
 					.getResultList();
 		} );
@@ -202,8 +202,8 @@ public class SimpleQuerySpecificationTests {
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
 			SelectionSpecification.create( BasicEntity.class )
-					.addAugmentation( (builder, query, entity) -> query.where( builder.like( entity.get( BasicEntity_.name ), "%" ) ) )
-					.addOrdering( Order.asc( BasicEntity_.position ) )
+					.augment( (builder, query, entity) -> query.where( builder.like( entity.get( BasicEntity_.name ), "%" ) ) )
+					.sort( Order.asc( BasicEntity_.position ) )
 					.createQuery( session )
 					.getResultList();
 		} );
@@ -219,13 +219,13 @@ public class SimpleQuerySpecificationTests {
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
 			SelectionSpecification.create( BasicEntity.class )
-					.addAugmentation( (builder, query, entity) ->
+					.augment( (builder, query, entity) ->
 							new CriteriaDefinition<>( query ) {{
 								where( like( entity.get( BasicEntity_.name ), "%" ),
 										equal( entity.get( BasicEntity_.position), 1 ) );
 							}}
 					)
-					.addOrdering( Order.asc( BasicEntity_.position ) )
+					.sort( Order.asc( BasicEntity_.position ) )
 					.createQuery( session )
 					.getResultList();
 		} );
@@ -240,7 +240,7 @@ public class SimpleQuerySpecificationTests {
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
 			SelectionSpecification.create( BasicEntity.class, "from BasicEntity where id > :id" )
-					.addRestriction( Restriction.restrict( BasicEntity_.position, Range.closed( 1, 5 ) ) )
+					.restrict( Restriction.restrict( BasicEntity_.position, Range.closed( 1, 5 ) ) )
 					.createQuery( session )
 					.setParameter( "id", 200 )
 					.getResultList();

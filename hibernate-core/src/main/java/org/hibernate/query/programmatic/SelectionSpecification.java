@@ -22,21 +22,22 @@ import java.util.List;
  * Specialization of {@link QuerySpecification} for programmatic customization of
  * {@linkplain SelectionQuery selection queries} with ordering and restriction criteria.
  * <ul>
- * <li>The method {@link #addRestriction(Restriction)} allows application of additional
+ * <li>The method {@link #restrict(Restriction)} allows application of additional
  *     {@linkplain Restriction filtering} to the query results. The static factory methods
  *     of {@link Restriction} are used to express filtering criteria of various kinds.
  * <li>Refinement or replacement of the query sorting criteria is possible via the methods
- *     {@link #addOrdering(Order)} and {@link #setOrdering(List)}, together with the static
+ *     {@link #sort(Order)} and {@link #resort(List)}, together with the static
  *     factory methods of {@link Order}.
  * </ul>
  * <p>
- * Once all {@linkplain #addOrdering sorting} and {@linkplain #addRestriction restrictions}
+ * Once all {@linkplain #sort sorting} and {@linkplain #restrict restrictions}
  * are specified, call {@link #createQuery createQuery()} to obtain an
  * {@linkplain SelectionQuery executable selection query object}.
  * <pre>
  * SelectionSpecification.create(Book.class, "from Book where discontinued = false")
- *         .addRestriction(Restriction.contains(Book_.title, "hibernate", false))
- *         .setOrdering(Order.desc(Book_.title))
+ *         .restrict(Restriction.contains(Book_.title, "hibernate", false))
+ *         .sort(Order.desc(Book_.title))
+ *         .fetch(Path.from(Book.class).to(Book_publisher))
  *         .createQuery(session)                       // obtain a SelectionQuery
  *         .setPage(Page.first(50))
  *         .getResultList();
@@ -62,7 +63,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	SelectionSpecification<T> addOrdering(Order<T> order);
+	SelectionSpecification<T> sort(Order<T> order);
 
 	/**
 	 * Sets the ordering for this selection specification.
@@ -73,7 +74,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	SelectionSpecification<T> setOrdering(Order<T> order);
+	SelectionSpecification<T> resort(Order<T> order);
 
 	/**
 	 * Sets the sorting for this selection specification.
@@ -84,13 +85,13 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	SelectionSpecification<T> setOrdering(List<Order<T>> orders);
+	SelectionSpecification<T> resort(List<Order<T>> orders);
 
 	/**
 	 * Covariant override.
 	 */
 	@Override
-	SelectionSpecification<T> addRestriction(Restriction<T> restriction);
+	SelectionSpecification<T> restrict(Restriction<T> restriction);
 
 	/**
 	 * Add a fetch {@linkplain Path path} to the specification.
@@ -99,7 +100,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	SelectionSpecification<T> addFetching(Path<T,?> fetchPath);
+	SelectionSpecification<T> fetch(Path<T,?> fetchPath);
 
 	/**
 	 * A function capable of modifying or augmenting a criteria query.
@@ -117,7 +118,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 * For example:
 	 * <pre>
 	 * SelectionSpecification.create(Book.class)
-	 *       .addAugmentation((builder, query, book) ->
+	 *       .augment((builder, query, book) ->
 	 *               // augment the query via JPA Criteria API
 	 *               query.where(builder.like(book.get(Book_.title), titlePattern)),
 	 *                           builder.greaterThan(book.get(Book_.pages), minPages))
@@ -130,7 +131,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 * the {@link CriteriaBuilder}.
 	 * <pre>
 	 * SelectionSpecification.create(Book.class)
-	 *       .addAugmentation((builder, query, book) ->
+	 *       .augment((builder, query, book) ->
 	 *           // eliminate explicit references to 'builder'
 	 *           new CriteriaDefinition<>(query) {{
 	 *               where(like(entity.get(BasicEntity_.title), titlePattern),
@@ -146,7 +147,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	SelectionSpecification<T> addAugmentation(Augmentation<T> augmentation);
+	SelectionSpecification<T> augment(Augmentation<T> augmentation);
 
 	/**
 	 * Covariant override.
@@ -157,8 +158,8 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	/**
 	 * Returns a specification reference which can be used to programmatically,
 	 * iteratively build a {@linkplain SelectionQuery} for the given entity type,
-	 * allowing the addition of {@linkplain SelectionSpecification#addOrdering sorting}
-	 * and {@linkplain SelectionSpecification#addRestriction restrictions}.
+	 * allowing the addition of {@linkplain SelectionSpecification#sort sorting}
+	 * and {@linkplain SelectionSpecification#restrict restrictions}.
 	 * This is effectively the same as calling {@linkplain #create(Class, String)}
 	 * with {@code "from {rootEntityType}"} as the HQL.
 	 *
@@ -174,8 +175,8 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	/**
 	 * Returns a specification reference which can be used to programmatically,
 	 * iteratively build a {@linkplain SelectionQuery} based on a base HQL statement,
-	 * allowing the addition of {@linkplain SelectionSpecification#addOrdering sorting}
-	 * and {@linkplain SelectionSpecification#addRestriction restrictions}.
+	 * allowing the addition of {@linkplain SelectionSpecification#sort sorting}
+	 * and {@linkplain SelectionSpecification#restrict restrictions}.
 	 *
 	 * @param hql The base HQL query.
 	 * @param resultType The result type which will ultimately be returned from the {@linkplain SelectionQuery}
@@ -193,8 +194,8 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	/**
 	 * Returns a specification reference which can be used to programmatically,
 	 * iteratively build a {@linkplain SelectionQuery} for the given criteria query,
-	 * allowing the addition of {@linkplain SelectionSpecification#addOrdering sorting}
-	 * and {@linkplain SelectionSpecification#addRestriction restrictions}.
+	 * allowing the addition of {@linkplain SelectionSpecification#sort sorting}
+	 * and {@linkplain SelectionSpecification#restrict restrictions}.
 	 *
 	 * @param criteria The criteria query
 	 *

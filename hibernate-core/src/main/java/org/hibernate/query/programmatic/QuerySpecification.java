@@ -33,7 +33,7 @@ public interface QuerySpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	QuerySpecification<T> addRestriction(Restriction<T> restriction);
+	QuerySpecification<T> restrict(Restriction<T> restriction);
 
 	/**
 	 * Finalize the building and create executable query instance.

@@ -62,7 +62,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 	}
 
 	@Override
-	public MutationSpecification<T> addRestriction(Restriction<T> restriction) {
+	public MutationSpecification<T> restrict(Restriction<T> restriction) {
 		specifications.add( (sqmStatement, mutationTargetRoot) -> {
 			final SqmPredicate sqmPredicate = (SqmPredicate) restriction.toPredicate(
 					mutationTargetRoot,
@@ -74,7 +74,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 	}
 
 	@Override
-	public MutationSpecification<T> addAugmentation(Augmentation<T> augmentation) {
+	public MutationSpecification<T> augment(Augmentation<T> augmentation) {
 		specifications.add( (sqmStatement, mutationTargetRoot) ->
 				augmentation.augment( sqmStatement.nodeBuilder(), sqmStatement, mutationTargetRoot ) );
 		return this;
